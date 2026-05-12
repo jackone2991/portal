@@ -1,0 +1,8 @@
+package: handler
+generate:
+  chi-server: true
+  models: true
+  embedded-spec: true
+output: internal/handler/api.gen.go
+output-options:
+  skip-prune: true

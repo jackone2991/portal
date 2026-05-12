@@ -1,0 +1,21 @@
+Tổng hợp lỗi gitnexus analyze treo 60% / Segmentation fault
+Triệu chứng
+Thanh progress dừng ở 60% | Loading into LadybugDB... rồi crash.
+Sau khi bật --verbose: process exit với Segmentation fault ngay sau dòng "Skipped 7 large files", chưa parse file nào.
+Khi chạy npm rebuild / gitnexus clean: lỗi EBUSY: resource busy or locked trên lbugjs.node.
+Nguyên nhân gốc
+Native binding @ladybugdb/core/lbugjs.node bị MCP server của GitNexus (chạy trong Claude Code) giữ load, dẫn tới hai hệ quả liên kết:
+
+Treo / segfault khi analyze — LadybugDB là embedded DB chỉ cho phép một writer độc quyền. MCP server đang đọc → analyze không lấy được lock ghi → process chết ở phase "Loading into LadybugDB".
+EBUSY khi rebuild / clean — Windows khoá mọi .node (DLL) đang được nạp vào tiến trình; không thể ghi đè hoặc xoá file đang bị MCP server nắm.
+Lưu ý phụ: template-main/ (~189 MB, ~9.9K file) không phải nguyên nhân, chỉ làm nặng phase load nếu lock thành công.
+
+Cách xử lý (đúng thứ tự)
+Thoát hẳn Claude Code → tiến trình node.exe chạy gitnexus mcp kết thúc → file lbugjs.node được release.
+Kiểm tra không còn tiến trình treo: Get-Process node (nếu còn liên quan thì Stop-Process -Id <PID> -Force).
+Xoá index dở: Remove-Item .gitnexus -Recurse -Force (hoặc npx gitnexus clean --force).
+Chạy lại: npx gitnexus analyze --verbose 2>&1 | Tee-Object gitnexus-analyze.log -Encoding utf8.
+Mở lại Claude Code → MCP server khởi động lại và load index mới.
+Phòng ngừa lần sau
+Không chạy gitnexus analyze khi Claude Code (hoặc bất kỳ client MCP nào của GitNexus) đang mở.
+Khi Tee-Object log để debug, luôn thêm -Encoding utf8 (mặc định PowerShell ghi UTF-16, log đọc rất khó).

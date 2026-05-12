@@ -1,0 +1,50 @@
+{{-- file: /app/views/layouts/master.blade.php --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {{-- Part: all meta-related contents --}}
+    @yield('head-meta')
+    
+    {{-- Part: site title with default value in parent --}}
+    @section('head-title')
+        <title>Site title</title>
+    @stop
+
+    {{-- Part: load fonts --}}
+    @yield('head-fonts')
+    {{-- Part: load styles for the page --}}
+    @yield('head-styles')
+    {{-- Part: load scripts needed --}}
+    @yield('head-scripts')
+    {{-- Part: anything else in head --}}
+    @yield('head-extra')
+</head>
+<body>
+{{-- Part: something at start of body --}}
+@yield('body-start')
+
+{{-- Part: header of body --}}
+@section('body-header')
+    {{-- Part: navigation bar --}}
+    @include('partials.navbar')
+@show
+
+{{-- Part: create main content of the page --}}
+@yield('body-content')
+
+{{-- Part: footer --}}
+@section('body-footer')
+    {{-- Part: footer is probably shared across many pages --}}
+    @include('partials.footer')
+@show
+
+{{-- Part: load scripts --}}
+@yield('body-scripts')
+{{-- Part: something else to do --}}
+@yield('body-others')
+{{-- Part: finalize stuffs if there is --}}
+@yield('body-end')
+
+</body>
+</html>

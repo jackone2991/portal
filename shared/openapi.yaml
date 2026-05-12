@@ -1,0 +1,402 @@
+openapi: 3.1.0
+info:
+  title: Portal API
+  version: 0.1.0
+  description: |
+    Portal — self-hosted media platform API.
+
+    This document is the **source of truth** for the HTTP contract.
+    Server stubs (Go) and the TypeScript client are both generated from it.
+
+servers:
+  - url: https://api.portal.localhost
+    description: Local dev (via Traefik)
+  - url: http://localhost:8080
+    description: Direct (no proxy)
+
+tags:
+  - name: health
+  - name: auth
+  - name: assets
+  - name: movies
+  - name: music
+  - name: stories
+
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /auth/login:
+    get:
+      tags: [auth]
+      summary: Begin OIDC login (redirects to IdP)
+      description: |
+        Generates state + nonce, sets a short-lived binding cookie, and
+        redirects the browser to the OIDC provider's authorization endpoint.
+      operationId: startLogin
+      responses:
+        "302":
+          description: Redirect to OIDC provider
+
+  /auth/callback:
+    get:
+      tags: [auth]
+      summary: OIDC callback (exchanges code, sets session cookies)
+      operationId: oidcCallback
+      parameters:
+        - in: query
+          name: state
+          required: true
+          schema: { type: string }
+        - in: query
+          name: code
+          required: true
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirect to post-login URL with cookies set
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate refresh token, mint new access token
+      description: |
+        Reads the refresh token from `portal_refresh` cookie (browser) or the
+        `refresh_token` body field (API client). Rotates the token (old is
+        revoked, new is issued), and returns a fresh access token. Reuse of
+        an already-rotated token revokes the entire chain (token theft).
+      operationId: refreshToken
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, expires_in, token_type]
+                properties:
+                  access_token: { type: string }
+                  expires_in:   { type: integer, description: "seconds until expiry" }
+                  token_type:   { type: string,  enum: [Bearer] }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoke current session and bump token_version
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        "204": { description: Logged out }
+
+  /auth/logout-all:
+    post:
+      tags: [auth]
+      summary: Revoke every session for the current user
+      description: |
+        Revokes all refresh tokens and bumps `users.token_version`,
+        invalidating any access tokens already in flight.
+      operationId: logoutAll
+      security:
+        - bearerAuth: []
+      responses:
+        "204": { description: All sessions revoked }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Get the currently authenticated user
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user (with role codes for UI gating)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /assets:
+    post:
+      tags: [assets]
+      summary: Begin a media upload
+      description: |
+        Returns a presigned S3 multipart URL set. The client uploads parts
+        directly to S3 and then calls `/assets/{id}/complete` with the part etags.
+      operationId: createAssetUpload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssetRequest"
+      responses:
+        "201":
+          description: Upload session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetUploadSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /assets/{id}:
+    get:
+      tags: [assets]
+      summary: Get asset metadata
+      operationId: getAsset
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: Asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /assets/{id}/complete:
+    post:
+      tags: [assets]
+      summary: Complete a multipart upload
+      description: |
+        After completion, the API enqueues a transcode (video) or thumbnail
+        (image) job on Asynq. Asset status transitions to `processing` and
+        eventually `ready` or `failed`.
+      operationId: completeAssetUpload
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteAssetRequest"
+      responses:
+        "202":
+          description: Processing started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AssetID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Malformed request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Authenticated, but lacks required permission
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, displayName]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+
+    CurrentUser:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required: [roles]
+          properties:
+            roles:
+              type: array
+              description: Role codes (e.g. ["user","creator"]). Frontend uses these to render UI affordances; the server is the authority on perm checks.
+              items:
+                type: string
+
+    AssetKind:
+      type: string
+      enum: [video, audio, image]
+
+    AssetStatus:
+      type: string
+      enum: [uploaded, processing, ready, failed]
+
+    Asset:
+      type: object
+      required: [id, ownerId, kind, status, mimeType, sizeBytes, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/AssetKind"
+        status:
+          $ref: "#/components/schemas/AssetStatus"
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        durationMs:
+          type: integer
+          nullable: true
+        width:
+          type: integer
+          nullable: true
+        height:
+          type: integer
+          nullable: true
+        outputPrefix:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateAssetRequest:
+      type: object
+      required: [kind, mimeType, sizeBytes, fileName]
+      properties:
+        kind:
+          $ref: "#/components/schemas/AssetKind"
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        fileName:
+          type: string
+
+    AssetUploadSession:
+      type: object
+      required: [assetId, uploadId, partUrls]
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        uploadId:
+          type: string
+        partUrls:
+          type: array
+          items:
+            type: object
+            required: [partNumber, url]
+            properties:
+              partNumber:
+                type: integer
+              url:
+                type: string
+                format: uri
+
+    CompleteAssetRequest:
+      type: object
+      required: [uploadId, parts]
+      properties:
+        uploadId:
+          type: string
+        parts:
+          type: array
+          items:
+            type: object
+            required: [partNumber, etag]
+            properties:
+              partNumber:
+                type: integer
+              etag:
+                type: string

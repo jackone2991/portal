@@ -1,0 +1,95 @@
+version: "2"
+
+# One block per module. Each block reads ALL migrations as schema (so it
+# knows the full DB shape) but only generates from its own queries —
+# repository code stays inside the module's tree.
+#
+# Convention: package name = `<module>repo` (e.g. accountrepo, mediarepo)
+# to make import paths self-documenting at call sites.
+
+sql:
+  - engine: "postgresql"
+    queries: "internal/modules/account/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "accountrepo"
+        out:     "internal/modules/account/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/tenant/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "tenantrepo"
+        out:     "internal/modules/tenant/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/media/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "mediarepo"
+        out:     "internal/modules/media/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/movie/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "movierepo"
+        out:     "internal/modules/movie/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/music/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "musicrepo"
+        out:     "internal/modules/music/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/story/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "storyrepo"
+        out:     "internal/modules/story/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true
+
+  - engine: "postgresql"
+    queries: "internal/modules/comic/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "comicrepo"
+        out:     "internal/modules/comic/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_pointers_for_null_types: true

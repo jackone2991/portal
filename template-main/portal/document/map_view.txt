@@ -1,0 +1,26 @@
+views/
+├── v1/
+│   ├── master
+|   |   ├── master-public.blade.php
+|   |   ├── master-admin.blade.php
+|   |   ├── master-user.blade.php
+|   ├── components
+|   │   ├── navigation
+|   |   |   ├── public.blade.php
+|   |   |   ├── admin.blade.php
+|   |   |   ├── user.blade.php
+|   |   ├── headers
+|   |   ├── footers
+|   ├── views
+|   |   ├── home
+|   |   ├── chat
+|   |   ├── order
+|   |   ├── reports
+|   ├── partials
+|   |   ├── ads.blade.php
+|   |   ├── sidebar.blade.php
+|   ├── public
+|   |   ├── registration.blade.php
+|   |   ├── login.blade.php
+├── v2/
+└── v2.2/

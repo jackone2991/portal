@@ -1,0 +1,42 @@
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+node_modules/
+
+# Go
+backend/bin/
+backend/*.test
+backend/coverage.out
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Generated code (re-generate via `make sqlc` / `make openapi`)
+backend/internal/modules/*/repository/*.sql.go
+backend/internal/handler/api.gen.go
+frontend/src/lib/types.gen.ts
+
+# Docker volumes (when running locally with bind mounts)
+data/
+
+# Logs
+*.log
+logs/
+
+# GitNexus index — keep config, ignore the binary index
+.gitnexus/lbug

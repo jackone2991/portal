@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+.turbo/
+next-env.d.ts
+*.tsbuildinfo
+
+# Generated from OpenAPI — re-create with `pnpm openapi`
+src/lib/types.gen.ts
