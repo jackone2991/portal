@@ -5,7 +5,7 @@
 >
 > **Companion docs:**
 > - [archivetech.md](archivetech.md) — full functional roadmap (UI, modules, phasing)
-> - [CLAUDE.md](CLAUDE.md) — architecture decisions + working agreement
+> - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
 >
 > When this document conflicts with code, this doc wins. Update the doc as
 > part of the same change-set, never afterwards.
@@ -75,7 +75,7 @@ Authentik is the IdP. No local password auth. Flow:
 3. `GET /auth/callback` — server validates state (CSRF) and nonce (ID-token replay), exchanges code, upserts the user.
 4. Server issues access + refresh tokens, sets cookies, redirects to the post-login URL.
 
-Key implementation: [oidc.go](backend/internal/auth/oidc.go).
+Key implementation: [oidc.go](../../backend/internal/auth/oidc.go).
 
 ### 2.2 Tokens
 
@@ -85,7 +85,7 @@ Key implementation: [oidc.go](backend/internal/auth/oidc.go).
 | Refresh | 30 days | `portal_refresh` cookie (`Path=/auth`) OR JSON body | 256-bit random, SHA-256 hashed at rest | Mint new access token |
 | Step-up (TOTP) | 5 min | session-bound; not a separate cookie | n/a — flag on the session record | Authorize destructive ops |
 
-Cookies always: `HttpOnly; Secure; SameSite=Strict`. Implementation in [jwt.go](backend/internal/auth/jwt.go) and [refresh.go](backend/internal/auth/refresh.go).
+Cookies always: `HttpOnly; Secure; SameSite=Strict`. Implementation in [jwt.go](../../backend/internal/auth/jwt.go) and [refresh.go](../../backend/internal/auth/refresh.go).
 
 ### 2.3 Two revocation channels  *([BUILT])*
 
@@ -296,7 +296,7 @@ For each `(user_id, organization_id)`, compute the set in this order, **per requ
 4. Collect every **active** policy attached to any group on the path (`group_policy_attachments` JOIN `policies` on `is_active = true`).
 5. Add every **active** policy attached directly to the user (`user_policy_attachments` scoped to the same org).
 6. Expand each policy → permissions (`policy_permissions`). For permissions with `requires_file = true`, drop them unless the user has a corresponding `user_permission_files` row with `status = 'approved'` and `expires_at > now()`.
-7. Apply wildcard / scope rules from [permission.go](backend/internal/rbac/permission.go).
+7. Apply wildcard / scope rules from [permission.go](../../backend/internal/rbac/permission.go).
 
 Cached in Redis under key `rbac:perms:<userID>:<orgID>:v<token_version>`. TTL 5 min. **Bumping `token_version` is the only canonical invalidation channel.**
 
@@ -360,7 +360,7 @@ This same pattern (`requireStepUp`) wraps every other destructive op:
 
 ### 5.1 Audit  *([BUILT] core; UI [PLANNED])*
 
-Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](backend/internal/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
+Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
 
 Add for multi-tenancy: every audit row carries `organization_id` (NULL for system events). Migration delta:
 
@@ -372,7 +372,7 @@ CREATE INDEX audit_log_org_idx ON audit_log(organization_id, occurred_at DESC);
 
 ### 5.2 Rate limiting  *([BUILT] in-memory; Redis-backed [PLANNED])*
 
-Token bucket per IP for `/auth/*`. Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures). Implementation in [ratelimit.go](backend/internal/middleware/ratelimit.go); for production, swap the in-memory store for `redis_rate.Limiter`.
+Token bucket per IP for `/auth/*`. Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures). Implementation in [ratelimit.go](../../backend/internal/middleware/ratelimit.go); for production, swap the in-memory store for `redis_rate.Limiter`.
 
 ### 5.3 Secrets handling
 
@@ -474,7 +474,7 @@ POST   /me/web-push/subscribe          register browser push subscription
 DELETE /me/web-push/{id}               unsubscribe
 ```
 
-OpenAPI source-of-truth at [shared/openapi.yaml](shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`.
+OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`.
 
 ---
 

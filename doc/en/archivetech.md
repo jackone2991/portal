@@ -2,7 +2,7 @@
 
 > Canonical feature spec for the Portal ecosystem + multimedia platform.
 > Derived from UI mocks in `template-main/portal/document/anh{1,2,3}.png`
-> and from architectural decisions captured in [CLAUDE.md](CLAUDE.md).
+> and from architectural decisions captured in [CLAUDE.md](../../CLAUDE.md).
 >
 > **Status legend** used throughout this document:
 >
@@ -66,7 +66,7 @@ Compute a user's effective set in this order, then **deduplicate**:
 2. For each group on the path, collect every **active** policy attached to it.
 3. Add every **active** policy attached directly to the user.
 4. For each policy, expand into its permissions, **filtering out file-gated permissions whose required file is missing or expired**.
-5. Apply the wildcard / scope rules from [permission.go](backend/internal/rbac/permission.go).
+5. Apply the wildcard / scope rules from [permission.go](../../backend/internal/rbac/permission.go).
 
 Cached per `(user_id, token_version)` in Redis. Bumping `users.token_version` is the canonical invalidation channel.
 
@@ -225,10 +225,10 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| OIDC login (Authentik) with state + nonce | [BUILT] | [oidc.go](backend/internal/auth/oidc.go) |
-| Access token (HS256, rotating `kid`, 5 min) | [BUILT] | [jwt.go](backend/internal/auth/jwt.go) |
-| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](backend/internal/auth/refresh.go) |
-| Logout / logout-all | [BUILT] | [auth.go handler](backend/internal/handler/auth.go) |
+| OIDC login (Authentik) with state + nonce | [BUILT] | [oidc.go](../../backend/internal/auth/oidc.go) |
+| Access token (HS256, rotating `kid`, 5 min) | [BUILT] | [jwt.go](../../backend/internal/auth/jwt.go) |
+| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../backend/internal/auth/refresh.go) |
+| Logout / logout-all | [BUILT] | [auth.go handler](../../backend/internal/handler/auth.go) |
 | Session list per user (devices + revoke) | [PARTIAL] | Query exists (`ListActiveRefreshTokensForUser`); UI [PLANNED] |
 | Wire issuer + verifier + handler in `cmd/api/main.go` | [PLANNED] | Blocked on `make sqlc` |
 | Repository adapters (UserUpserter, RefreshStore, etc.) | [PLANNED] | Wrap sqlc-generated code |
@@ -247,7 +247,7 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Append-only audit log table | [BUILT] | Migration 0002 |
-| Audit logger best-effort writes | [BUILT] | [audit/logger.go](backend/internal/audit/logger.go) |
+| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/audit/logger.go) |
 | Audit viewer UI (table + filters) | [PLANNED] | Restricted to `audit:read` |
 | Export audit range (CSV/JSON) | [PLANNED] | Async job — large ranges shouldn't tie up the API |
 | Retention policy & archival to cold storage | [PLANNED] | Cloudflare R2 archive bucket |
@@ -259,8 +259,8 @@ Out of scope for the access-control redesign but listed for completeness; functi
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Asset upload (S3 multipart with presigned URLs) | [PARTIAL] | OpenAPI defined; handler [PLANNED] |
-| Transcode worker (FFmpeg → HLS) | [PARTIAL] | Stub in [transcode.go](backend/internal/worker/transcode.go) |
-| Thumbnail worker | [PARTIAL] | Stub in [thumbnail.go](backend/internal/worker/thumbnail.go) |
+| Transcode worker (FFmpeg → HLS) | [PARTIAL] | Stub in [transcode.go](../../backend/internal/worker/transcode.go) |
+| Thumbnail worker | [PARTIAL] | Stub in [thumbnail.go](../../backend/internal/worker/thumbnail.go) |
 | Movies / Music / Stories CRUD | [PLANNED] | Domain packages under `internal/domain/` |
 | Vidstack player integration on the frontend | [PLANNED] | |
 | Comments, ratings, watchlist | [PLANNED] | Permission-gated via `comments:write` / `comments:delete:*` |
@@ -292,7 +292,7 @@ All admin routes go through `RequirePermission` middleware on the backend; the f
 
 ## 5. API surface delta
 
-Beyond the auth endpoints already in [shared/openapi.yaml](shared/openapi.yaml):
+Beyond the auth endpoints already in [shared/openapi.yaml](../../shared/openapi.yaml):
 
 ```text
 POST   /admin/groups                    create
