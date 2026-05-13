@@ -96,60 +96,142 @@ Source: [backend/internal/modules/comic/](backend/internal/modules/comic/) (skel
 
 ---
 
-## 8. Social Layer △ (planned — not yet a module)
+## 8. Personal Finance / Bank — module `bank` △ (planned — not yet a module)
+
+Tracks **every form of money a user has** in one place: accounts, transactions, debts (owed), loans (lent out), investments, savings, budgets. New module; no scaffold yet. Will follow the standard layout in [backend/MODULES.md](backend/MODULES.md) §3.
+
+### 8.1 Accounts
+- **Account types**: cash, checking, savings, credit card, loan account, investment account, retirement, crypto wallet, gift card, "other".
+- **Currency per account**; multi-currency reporting via daily FX rates.
+- **Opening balance**, **active / archived** state.
+- **Institution metadata** (bank name, account number masked at rest).
+
+### 8.2 Transactions
+- **Debit / credit / transfer** primitives — every entry has a source or destination account (transfer = one source + one destination, no category needed).
+- **Splits** — one transaction across multiple categories (e.g. supermarket bill = groceries + household + alcohol).
+- **Categories** — hierarchical (Income → Salary; Expense → Food → Groceries…); seed defaults, user-extensible.
+- **Tags** for cross-cutting labels (`vacation-2026`, `tax-deductible`).
+- **Recurring transactions** — rent, salary, subscriptions; cron-style schedule, generated as drafts the user confirms.
+- **Notes & attachments** (receipts) — via `mediaapi`.
+
+### 8.3 Debts — money the user owes
+- **Counterparty** (person or institution).
+- **Principal**, **interest rate**, **schedule** (one-shot or amortising).
+- **Repayment plan** — generated installments; on-time / late tracking.
+- **Outstanding balance** derived from payments, not stored mutable.
+- **Status**: active, paid, defaulted.
+
+### 8.4 Loans — money the user lent out
+- Mirror of Debts; same fields, opposite cash-flow direction.
+- **Due-date reminders** via Asynq `notify:loan_due`.
+
+### 8.5 Investments
+- **Holdings** — positions of securities / crypto inside an investment account.
+- **Cost basis** vs **current market value**; unrealised gain / loss.
+- **Lots / FIFO** for accurate cost basis on partial sells.
+- **Price feed** — manual entry first, pluggable provider later.
+- **Dividends / interest** booked as income transactions tied to the holding.
+
+### 8.6 Savings goals
+- **Goal** = target amount + target date + linked account(s).
+- **Progress** computed from contributions.
+- **Auto-contribute rules** — "round up every transaction", "X% of every salary".
+
+### 8.7 Budgets
+- **Per-category caps** for a period (week / month / custom).
+- **Roll-over** option for unused budget.
+- **Threshold alerts** (50% / 80% / 100%) — Asynq `notify:budget_alert`.
+
+### 8.8 Net worth & reports
+- **Net worth = assets − liabilities**, time-series (daily snapshot in a denormalised table for fast reads).
+- **Cash-flow report** — income vs expense by category, by period.
+- **Savings rate**, **debt-to-income**, **investment performance**.
+- **Forecast** — project balance trajectory from recurring rules + active goals.
+
+### 8.9 Multi-currency
+- **Per-account currency** + **reporting currency** preference on the user.
+- **FX rates** snapshotted daily; historical reports value foreign accounts at the as-of-date FX.
+
+### 8.10 Import / Export
+- **CSV import** with column mapping + dedupe (hash on date+amount+counterparty).
+- **OFX / QFX** later.
+- **Bank API integrations** (Plaid-style) deferred to v2.
+- **Export** to CSV / JSON for user-owned backup.
+
+### 8.11 Permissions & sharing
+- Default: each user owns their own bank data — RBAC scope `bank:*:own`.
+- **Household sharing** — invite another user to view/edit shared accounts; uses `tenant` for the household + RBAC `bank:*:any` within it.
+
+### 8.12 Privacy
+- Bank data is the most sensitive in the system. **Encrypt account numbers and counterparty names at rest** via envelope encryption with a platform-managed key.
+- **Audit every read** by anyone other than the owner; route via the shared `audit.Logger`.
+
+### Schema ownership
+Tables under `bank.*`: `accounts`, `transactions`, `transaction_splits`, `categories`, `tags`, `transaction_tags`, `recurring_rules`, `debts`, `loans`, `repayments`, `holdings`, `holding_lots`, `price_history`, `fx_rates`, `goals`, `budgets`, `budget_periods`, `networth_snapshots`. All RLS-scoped on `user_id` (or `household_id` once sharing lands). Owning module: `bank` — no other module joins these.
+
+### Async events
+- **Emits**: `bank:transaction_created`, `bank:debt_overdue`, `bank:budget_threshold_crossed`, `bank:goal_reached`.
+- **Subscribes**: none initially; could consume `media:asset_ready` once receipt-attachment flow is wired.
+
+### Migration sequencing
+Bank tables land in their own migration block, e.g. `00NN_bank_init.up.sql` followed by `00NN+1_bank_investments.up.sql` etc. RLS enablement folds into the existing `*_rls_enable` migration.
+
+---
+
+## 9. Social Layer △ (planned — not yet a module)
 
 Source: [template-main/social/](template-main/social/) page inventory. Will likely become a `social/` module (or be split across `social`, `messaging`, `community`).
 
-### 8.1 Newsfeed
+### 9.1 Newsfeed
 - Reverse-chronological + algorithmic feed (`Newsfeed.html`, `Newsfeed - Masonry.html`).
 - **Post composer** — text, image, video, link, poll (post versions: `Post Versions.html`).
 - **Reactions, comments, shares**.
 - **Masonry vs list** layout toggle.
 
-### 8.2 Profile
+### 9.2 Profile
 - **Public profile** (`Profile Page.html`, `ProfilePage-LoggedOut.html`).
 - Tabs: **About**, **Friends**, **Photos**, **Videos** (`Profile Page - About/Friends/Photos/Videos.html`).
 - **Cover & avatar**, custom widgets (`Manage Widgets.html`).
 
-### 8.3 Friend graph
+### 9.3 Friend graph
 - **Friend requests** (`Your Account - Friends Requests.html`).
 - **Friend groups** (`Friend Groups.html`) — close friends, work, family, etc.
 - **Block / mute**.
 
-### 8.4 Communities / "Favourite Pages"
+### 9.4 Communities / "Favourite Pages"
 - **Page Feed** (`Favorit Page Feed.html`), **About** (`Favorit Page - About.html`), **Events** (`Favorit Page - Events.html`), **Tabs** (`Favourite Page With Tabs.html`).
 - **Page settings & create-page popup** (`Fav Page - Settings And Create Popup.html`).
 - **Roles within a page** (admin / mod / member) — slots into the existing RBAC engine with a page-scoped resource.
 
-### 8.5 Events
+### 9.5 Events
 - **Calendar view**, **create event** popup with **private / public** scope (`Calendar and Events - Create Event POPUP (Private_Public).html`).
 - **RSVP** (going / interested / declined).
 - Reminders → Asynq `notify:event_reminder`.
 
-### 8.6 Messaging
+### 9.6 Messaging
 - **Direct chat** (`Your Account - Chat Messages.html`).
 - 1:1 and group threads, typing/read indicators, attachments via `mediaapi`.
 
-### 8.7 Notifications
+### 9.7 Notifications
 - In-app feed + email + push (`Your Account - Notifications.html`).
 - Preferences per notification category.
 - Asynq-driven: every module emits notification tasks; a single notifications module fans them out.
 
-### 8.8 Search
+### 9.8 Search
 - **Unified search** across people, posts, movies, music, stories, comics, events, pages (`Social Search Results.html`).
 
-### 8.9 Community badges & gamification
+### 9.9 Community badges & gamification
 - **Badges** (`Community Badges.html`) — earned for contributions, streaks, etc.
 
-### 8.10 Statistics dashboard
+### 9.10 Statistics dashboard
 - Per-user engagement view (`Statistics.html`).
 
-### 8.11 Widgets
+### 9.11 Widgets
 - **Weather widget** (`Weather Widget.html`), **sticky sidebars**, customisable per profile (`Sticky Sidebars.html`, `Manage Widgets.html`).
 
 ---
 
-## 9. Company / Marketing Microsite △
+## 10. Company / Marketing Microsite △
 
 Source: [template-main/social/Olympus Company/](template-main/social/Olympus%20Company/) — likely a separate Next.js route group, served from the same Traefik entry, possibly tenant-aware.
 
@@ -162,7 +244,7 @@ Source: [template-main/social/Olympus Company/](template-main/social/Olympus%20C
 
 ---
 
-## 10. Platform & Cross-cutting — `internal/platform/` ✓
+## 11. Platform & Cross-cutting — `internal/platform/` ✓
 
 Source: [backend/internal/platform/](backend/internal/platform/).
 
@@ -176,7 +258,7 @@ Source: [backend/internal/platform/](backend/internal/platform/).
 
 ---
 
-## 11. API Contract — `shared/openapi.yaml`
+## 12. API Contract — `shared/openapi.yaml`
 
 - OpenAPI is the source of truth — every endpoint flows: edit spec → `make openapi` → implement generated interface.
 - Generated Go server stub: `backend/internal/handler/api.gen.go` (gitignored).
@@ -184,7 +266,7 @@ Source: [backend/internal/platform/](backend/internal/platform/).
 
 ---
 
-## 12. Frontend — `frontend/` (Next.js 15)
+## 13. Frontend — `frontend/` (Next.js 15)
 
 - App Router + RSC.
 - Route groups: `(movies)`, `(music)`, `(stories)`, plus `(social)` / `(comics)` to add.
@@ -195,7 +277,7 @@ Source: [backend/internal/platform/](backend/internal/platform/).
 
 ---
 
-## 13. Out-of-band / Operational
+## 14. Out-of-band / Operational
 
 - **Migrations** — single numeric sequence in `backend/db/migrations/`, files prefixed by owning module.
 - **sqlc** — per-module blocks in `backend/sqlc.yaml`; output lives inside each module's `repository/`.
@@ -213,6 +295,7 @@ Source: [backend/internal/platform/](backend/internal/platform/).
 3. Media pipeline end-to-end on one asset type.
 4. One vertical end-to-end (movies suggested) — catalog → playback → resume.
 5. Repeat verticals for music / stories / comics, sharing the media plumbing.
-6. Social layer (newsfeed → profile → friends → pages → events → messaging → notifications).
-7. Company microsite + marketing pages.
-8. Search & badges/gamification last.
+6. **Bank module** — accounts + transactions + categories first; debts, loans, investments, budgets, goals as later passes. Encryption-at-rest and audit are non-negotiable from day one.
+7. Social layer (newsfeed → profile → friends → pages → events → messaging → notifications).
+8. Company microsite + marketing pages.
+9. Search & badges / gamification last.
