@@ -320,7 +320,7 @@ sequenceDiagram
             PG-->>Mw: tenant_id
             Mw->>Ca: cache set
         end
-        Mw->>PG: BEGIN; SELECT set_config('app.tenant_id', $1, true)
+        Mw->>PG: BEGIN tx + SET LOCAL app.tenant_id GUC
     end
 
     rect rgb(240, 255, 240)
@@ -463,11 +463,11 @@ sequenceDiagram
         end
     end
 
-    Note over M,R: Replication
-    M-.continuous replication.->R
+    Note over M,R: replication lien tuc async sang R2
 
-    U->>R: GET HLS chunk (signed URL tu API)
-    R-.cache miss, origin pull.->M
+    U->>R: GET HLS chunk qua signed URL tu API
+    R->>M: cache miss origin pull
+    M-->>R: segments
     R-->>U: chunk serve tu edge
 
     alt transcode fail 3 lan
