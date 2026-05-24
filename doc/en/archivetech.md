@@ -72,7 +72,7 @@ Cached per `(user_id, token_version)` in Redis. Bumping `users.token_version` is
 
 ### 2.3 Conflict & precedence
 
-- **Deny is not currently in scope.** Policies grant only. If two paths would deny+allow the same permission, the allow wins. This keeps reasoning tractable; revisit if/when stricter compliance demands it.
+- **Deny-wins precedence (fail-safe default).** Policies grant only. If two paths would deny+allow the same permission, the **deny wins**. This is the secure default (matches AWS IAM / OPA semantics); explicit deny rules can be layered in later without changing the precedence contract.
 - **Per-user policies are additive**, not overrides. If a user is in a group with `movies:read` and they have a personal policy with `movies:write:own`, they get both.
 - **File-gated permissions disappear silently** when their file expires. The audit log records when a permission becomes ineffective.
 
@@ -399,7 +399,7 @@ Separate track that doesn't block 0–4. See `internal/domain/{movie,music,story
 
 State these explicitly so future PRs don't drift:
 
-- **Deny rules.** Not implemented. If a real compliance need appears, model as `policy_permissions.effect` enum rather than retrofitting onto the matcher.
+- **Deny rules.** Not implemented yet; the matcher is grant-only today. The precedence contract is already **deny-wins** (§2.3), so when a real compliance need appears, model explicit deny as a `policy_permissions.effect` enum — the resolution order won't change.
 - **Time-bounded grants beyond `expires_at`.** No business-hours / geo / device fences.
 - **Federated multi-tenant.** All groups live in one DB. Splitting tenants per DB is a Phase-N exercise.
 - **Self-service password reset.** Authentik owns this; Portal never sees passwords.

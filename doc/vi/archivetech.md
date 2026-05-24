@@ -71,7 +71,7 @@ Cache theo `(user_id, token_version)` trong Redis. Bump `users.token_version` l�
 
 ### 2.3 Xung đột & precedence
 
-- **Deny chưa nằm trong scope.** Policy chỉ grant. Nếu hai đường dẫn vừa deny vừa allow cùng một permission, allow thắng. Giữ logic dễ suy luận; xem xét lại nếu/khi compliance khắt khe đòi hỏi.
+- **Precedence deny-wins (fail-safe default).** Policy chỉ grant. Nếu hai đường dẫn vừa deny vừa allow cùng một permission, **deny thắng**. Đây là secure default (khớp semantic AWS IAM / OPA); explicit deny rule có thể layer vào sau mà không đổi precedence contract.
 - **Per-user policy là additive**, không phải override. Nếu user ở trong group có `movies:read` và có personal policy `movies:write:own`, họ có cả hai.
 - **File-gated permission biến mất silently** khi file hết hạn. Audit log ghi lại thời điểm permission mất hiệu lực.
 
@@ -398,7 +398,7 @@ Track riêng không block 0–4. Xem package `internal/domain/{movie,music,story
 
 Nói rõ để PR tương lai không drift:
 
-- **Deny rule.** Không implement. Nếu một nhu cầu compliance thật xuất hiện, model thành enum `policy_permissions.effect` chứ không retrofit vào matcher.
+- **Deny rule.** Chưa implement; matcher hiện tại grant-only. Precedence contract đã là **deny-wins** (§2.3), nên khi nhu cầu compliance thật xuất hiện, model explicit deny thành enum `policy_permissions.effect` — thứ tự resolution không đổi.
 - **Grant time-bounded ngoài `expires_at`.** Không có fence business-hours / geo / device.
 - **Multi-tenant federated.** Tất cả group sống trong một DB. Tách tenant per DB là exercise của Phase-N.
 - **Self-service password reset.** Authentik sở hữu cái này; Portal không bao giờ thấy mật khẩu.
