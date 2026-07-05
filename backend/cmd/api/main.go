@@ -17,6 +17,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -24,8 +26,12 @@ import (
 
 	"github.com/portal/backend/internal/modules/account"
 	"github.com/portal/backend/internal/modules/account/auth"
+	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
+	"github.com/portal/backend/internal/modules/media"
+	mediarepo "github.com/portal/backend/internal/modules/media/repository"
 	"github.com/portal/backend/internal/platform/config"
+	"github.com/portal/backend/internal/platform/storage"
 )
 
 func main() {
@@ -105,6 +111,45 @@ func run() error {
 		return fmt.Errorf("account module: %w", err)
 	}
 
+	// ── Media module ────────────────────────────────────────────────
+	store, err := storage.NewS3(storage.Config{
+		Endpoint:     cfg.S3Endpoint,
+		Region:       cfg.S3Region,
+		Bucket:       cfg.S3Bucket,
+		AccessKey:    cfg.S3AccessKey,
+		SecretKey:    cfg.S3SecretKey,
+		UsePathStyle: cfg.S3UsePathStyle,
+	})
+	if err != nil {
+		return fmt.Errorf("storage: %w", err)
+	}
+
+	asynqRedis, err := asynq.ParseRedisURI(cfg.AsynqRedisURL)
+	if err != nil {
+		return fmt.Errorf("asynq redis: %w", err)
+	}
+	asynqClient := asynq.NewClient(asynqRedis)
+	defer func() { _ = asynqClient.Close() }()
+
+	mediaMod, err := media.New(media.Deps{
+		Store:       store,
+		Repo:        mediarepo.NewAdapter(pool),
+		Enqueuer:    asynqClient,
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+		PublicBase: cfg.APIBaseURL,
+		UploadTTL:  15 * time.Minute,
+	})
+	if err != nil {
+		return fmt.Errorf("media module: %w", err)
+	}
+
 	// ── HTTP ────────────────────────────────────────────────────────
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
@@ -123,6 +168,7 @@ func run() error {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/healthz", healthz(pool, rdb))
 		accountMod.MountHTTP(r)
+		mediaMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{

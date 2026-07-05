@@ -7,9 +7,11 @@ Living scratchpad for the v1 demo loop. **Auth direction changed** ([ADR-06](doc
 Authentik / OIDC is **removed** — Portal owns credentials (Argon2id). Scope is
 [ADR-01](doc/en/architecture/01-v1-scope-cut.md). Tick as each check passes.
 
-**Where we are:** auth + the whole Olympus UI shell + the **storage layer
-(Phase 2)** are **done and running**. The remaining v1 work is the **media
-vertical slice (Phase 5)** — the actual upload → transcode → playback path.
+**Where we are:** the **v1 demo loop is closed** — local sign-in → home → upload
+mp4 → worker transcodes to HLS → Vidstack playback → logout all work end-to-end.
+Auth, the Olympus UI shell, storage (Phase 2), and the media slice (Phase 5) are
+done and running. What's left is hardening: CI drift, tests, and the known-issues
+cleanup below.
 
 Stack status: 8 services up (postgres · pgbouncer · dragonfly · minio(+setup) ·
 traefik · api · worker · frontend). DB migrations at **v6**. Committed at
@@ -64,15 +66,14 @@ traefik · api · worker · frontend). DB migrations at **v6**. Committed at
 
 ---
 
-## ▶️ Remaining for the v1 demo loop
+### Backend — media vertical slice (Phase 5)
+- [x] **T5.1** Migration `0007_media_assets` (owner/kind/status/source_key/output_prefix/dims); `media` block re-enabled in `sqlc.yaml` → `mediarepo` generated.
+- [x] **T5.2** Upload: `POST /assets` (asset + presigned PUT) · `PUT /assets/{id}/source` (API-proxied upload, dev) · `POST /assets/{id}/complete` (enqueue transcode). `mediarepo` adapter + `media.Service`/`Handler`.
+- [x] **T5.3** Transcode worker: `worker.Transcoder` — download original → `ffprobe` dims/duration → `ffmpeg` VOD HLS (h264/aac) → upload manifest+segments → `MarkAssetReady`. Wired into `cmd/worker` (+ `cmd/api` enqueue).
+- [x] **T5.4** Public HLS proxy `GET /assets/{id}/hls/*` + **Vidstack** player at `/upload` (progress, poll, library). **e2e verified**: mp4 → transcode → `ready` (dims + duration) → manifest `#EXTM3U` + segment served.
+- [x] **Dragonfly fix**: `--default_lua_flags=allow-undeclared-keys` (Asynq's Lua scripts use undeclared keys; Dragonfly rejects them by default).
 
-### Phase 5 — Media vertical slice (upload → transcode → playback) — **NEXT**
-> Uses `platform/storage` (done). First wire `storage.NewS3(...)` into `cmd/api`
-> + `cmd/worker` from the `S3_*` config, then:
-- [ ] **T5.1** Migration `0007_media_assets` (the deferred `assets` table, media-owned) → re-enable the `media` block in `sqlc.yaml`.
-- [ ] **T5.2** Upload session with presigned PUT (browser → MinIO/R2 directly); create `assets` row `status=uploading`.
-- [ ] **T5.3** Transcode worker (`cmd/worker`): ffmpeg HLS ladder → upload variants → `assets.status=ready` → emit `media:asset_ready`.
-- [ ] **T5.4** Vidstack HLS playback on an authenticated page. **Check:** upload 1 mp4 → plays back → **v1 demo loop complete**.
+## ▶️ Remaining (hardening — demo loop already works)
 
 ### Phase 6 — CI drift + housekeeping
 - [ ] **T6.1** `.github/workflows/ci.yml`: `sqlc-drift` + `openapi-drift` + `go build ./...` + `next build`.

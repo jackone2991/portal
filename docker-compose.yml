@@ -105,7 +105,10 @@ services:
     restart: unless-stopped
     ulimits:
       memlock: -1
-    command: ["--logtostderr", "--cluster_mode=emulated"]
+    # Asynq's Lua scripts access keys dynamically (undeclared in KEYS[]), which
+    # Dragonfly rejects by default. allow-undeclared-keys lets those scripts run
+    # (Asynq is built for single-node Redis, which permits this).
+    command: ["--logtostderr", "--default_lua_flags=allow-undeclared-keys"]
     healthcheck:
       # Dragonfly's image ships no redis-cli; a successful TCP connect to the
       # main port means it's up and accepting clients (bash is in the image).

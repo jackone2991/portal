@@ -27,15 +27,25 @@ sql:
         emit_exact_table_names: false
         emit_pointers_for_null_types: true
 
+  # media — assets table (0007). Active for the v1 upload → transcode → playback slice.
+  - engine: "postgresql"
+    queries: "internal/modules/media/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "mediarepo"
+        out:     "internal/modules/media/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
   # ── Re-enable per module when it has query files ──────────────────
   # - engine: "postgresql"
   #   queries: "internal/modules/tenant/query"
   #   schema:  "db/migrations"
   #   gen: { go: { package: "tenantrepo", out: "internal/modules/tenant/repository", sql_package: "pgx/v5", emit_json_tags: true, emit_interface: true, emit_pointers_for_null_types: true } }
-  #
-  # - engine: "postgresql"
-  #   queries: "internal/modules/media/query"       # needs the assets table (T5.1)
-  #   schema:  "db/migrations"
-  #   gen: { go: { package: "mediarepo", out: "internal/modules/media/repository", sql_package: "pgx/v5", emit_json_tags: true, emit_interface: true, emit_pointers_for_null_types: true } }
   #
   # - movie / music / story / comic: same shape as above.

@@ -14,6 +14,7 @@ import { Icon } from "../ui/Icon";
 
 const ITEMS: { icon: string; label: string; href?: Route; active?: boolean }[] = [
   { icon: "newsfeed-icon", label: "Newsfeed", href: "/", active: true },
+  { icon: "multimedia-icon", label: "Upload Video", href: "/upload" },
   { icon: "star-icon", label: "Fav Pages Feed", href: "/library/comic" },
   { icon: "happy-faces-icon", label: "Friend Groups" },
   { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" as Route },
