@@ -120,6 +120,12 @@ func (granted Permission) Matches(required Permission) bool {
 	if !segMatch(granted.Action, required.Action) {
 		return false
 	}
+	// A wildcard-action grant ("movies:*") covers every action AND scope on the
+	// resource — per the package doc it satisfies movies:<anything>[:<anything>],
+	// including ":own". (A specific-action grant keeps the implicit-scope rule.)
+	if granted.Action == "*" {
+		return true
+	}
 	// Scope rules:
 	//   granted scope "" ↔ required scope "" or "any"
 	//   granted scope "any" ↔ required scope "" or "any"

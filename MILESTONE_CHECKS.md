@@ -76,14 +76,21 @@ traefik · api · worker · frontend). DB migrations at **v6**. Committed at
 ## ▶️ Remaining (hardening — demo loop already works)
 
 ### Phase 6 — CI drift + housekeeping
-- [ ] **T6.1** `.github/workflows/ci.yml`: `sqlc-drift` + `openapi-drift` + `go build ./...` + `next build`.
-- [ ] **T6.2** Reserve `notify:*` task prefix in `backend/MODULES.md` §5.2.
+- [x] **T6.1** `.github/workflows/ci.yml`: backend (build · vet · `go test -race` · **sqlc-drift**), frontend (`next build` = typecheck + lint), openapi (spec well-formed). *(Full openapi-drift activates once `make openapi` stubs are committed/used.)*
+- [x] **T6.2** Reserved `notify:*` task prefix in `backend/MODULES.md` §5.2.
+- [x] **Fixed `rbac.TestMatches`**: a wildcard-action grant (`movies:*`) now covers every scope incl. `:own`, matching the package doc. `go test ./...` green.
 - [ ] **T6.3** *(optional)* `make certs` reads `APP_DOMAIN` instead of hard-coding `portal.localhost`.
+
+### Tests (added)
+- [x] `account/auth/password_test.go` — Argon2id hash/verify (correct/wrong/malformed, per-call salt).
+- [x] `media/service_test.go` — upload session, complete (owner + not-ready + enqueue), HLS path-traversal safety, owner-scoped Get (in-memory fakes).
+- [x] `platform/storage/s3_test.go` — S3 round-trip (integration, gated on `S3_ENDPOINT`).
 
 ---
 
 ## ⚠️ Known issues / cleanup
-- [ ] `rbac.TestMatches` **fails** (pre-existing): `movies:*` vs `movies:write:own` wildcard-scope semantics disagree between test and impl — decide the intended rule, then fix one side.
+- [ ] Presigned **direct** upload (`POST /assets` → PUT to bucket) needs a browser-reachable S3 endpoint (a `PublicEndpoint`/Traefik route for MinIO); the frontend uses the API-**proxied** `PUT /assets/{id}/source` instead, which needs no extra host. Fine for v1 dev; wire the direct path for prod/R2.
+- [ ] Vidstack loads hls.js from a CDN at runtime — playback needs internet. Bundle hls.js if offline playback is required.
 - [ ] UI **sample data**: feed, friends panel, notification dropdowns, weather/calendar are static placeholders (no social/media backend in v1). Wire to real APIs as modules land.
 - [ ] UI **placeholder actions**: Profile Settings / Create Fav Page / About links + per-item "Settings"/"⋯" are non-functional (visual, as in the template).
 - [ ] Old dev OIDC client secret is in git history (`authentik/blueprints/portal.yaml`, since-deleted). Inert now (no Authentik), but rotate if that value was reused anywhere.

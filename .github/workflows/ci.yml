@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (build · vet · test · sqlc-drift)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache-dependency-path: backend/go.sum
+
+      - name: Build + vet + test
+        run: |
+          go build ./...
+          go vet ./...
+          go test ./... -race -count=1   # storage integration test skips without S3_ENDPOINT
+
+      # sqlc output is committed and used — fail if it drifts from queries/schema.
+      - uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: "1.31.1"
+
+      - name: sqlc drift check
+        run: |
+          sqlc generate
+          if ! git diff --quiet -- internal/modules; then
+            echo "::error::Generated sqlc code is stale. Run 'make sqlc' and commit."
+            git --no-pager diff -- internal/modules
+            exit 1
+          fi
+
+  openapi:
+    name: OpenAPI spec valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shared/openapi.yaml
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 - <<'PY'
+          import yaml
+          doc = yaml.safe_load(open("shared/openapi.yaml"))
+          assert isinstance(doc, dict), "openapi.yaml is not a mapping"
+          for key in ("openapi", "info", "paths"):
+              assert key in doc, f"missing top-level key: {key}"
+          print("openapi.yaml OK —", doc["openapi"], "·", len(doc["paths"]), "paths")
+          PY
+
+  frontend:
+    name: Frontend (build · typecheck · lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_API_BASE_URL: https://api.portal.localhost
+      NEXT_PUBLIC_TEMPLATE_VERSION: v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install + build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build   # next build runs typecheck + ESLint

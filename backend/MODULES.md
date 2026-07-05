@@ -232,6 +232,10 @@ For loose coupling, modules publish events. Conventions:
 
 Example: when transcode finishes, media emits `media:asset_ready { asset_id, hls_master_url }`. Movie module subscribes to update `movies.status = ready`. The two modules don't need to know each other's table schema.
 
+#### Reserved task prefixes
+
+- **`notify:*`** — reserved for the **notification** module's task types (e.g. `notify:email`, `notify:web_push`, `notify:in_app`): the delivery fan-out that other modules enqueue into rather than sending mail/push themselves. The account module already stubs `RegisterTasks` for it (password-reset, refresh-reuse alerts, …). Do not repurpose the `notify:` prefix for a different owning module.
+
 ### 5.3 No shared transactions across modules
 
 If module X starts a tx, it does not call into module Y's service inside that tx. Y's writes belong in its own tx. If you genuinely need atomicity across modules, that's a design smell — promote the operation to an event, or fold the entities into one module.
