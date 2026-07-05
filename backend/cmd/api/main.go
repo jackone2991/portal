@@ -84,28 +84,14 @@ func run() error {
 		return err
 	}
 
-	// OIDC is best-effort: if the IdP isn't reachable/configured yet, the API
-	// still starts and /api/v1/auth/login returns 503 until it is.
-	oidcClient, oidcErr := auth.NewOIDC(ctx, auth.OIDCConfig{
-		Issuer:       cfg.OIDCIssuer,
-		ClientID:     cfg.OIDCClientID,
-		ClientSecret: cfg.OIDCClientSecret,
-		RedirectURL:  cfg.OIDCRedirectURL,
-		Scopes:       []string{"openid", "profile", "email", "groups"},
-	})
-	if oidcErr != nil {
-		log.Warn().Err(oidcErr).Msg("OIDC unavailable — /api/v1/auth/login returns 503 until configured")
-	}
-
 	accountMod, err := account.New(account.Deps{
 		Redis:           rdb,
 		Issuer:          issuer,
 		Verifier:        verifier,
 		Refresh:         refresh,
-		OIDC:            oidcClient,
 		SnapshotFetcher: adapter,
 		PermFetcher:     adapter,
-		UserUpserter:    adapter,
+		Users:           adapter,
 		AuditStore:      adapter,
 		APIUsers:        adapter,
 		CacheTTL:        cfg.PermissionCacheTTL,
@@ -126,23 +112,17 @@ func run() error {
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.Timeout(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   cfg.CORSAllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-		AllowCredentials: false,
+		AllowCredentials: true, // login form POSTs cross-subdomain and needs Set-Cookie honoured
 		MaxAge:           300,
 	}))
 
 	r.Get("/healthz", healthz(pool, rdb))
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/healthz", healthz(pool, rdb))
-		if oidcClient != nil {
-			accountMod.MountHTTP(r)
-		} else {
-			// OIDC not ready — surface a clear 503 instead of a 404/panic.
-			r.Get("/auth/login", oidcUnavailable)
-			r.Get("/auth/callback", oidcUnavailable)
-		}
+		accountMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{
@@ -158,7 +138,7 @@ func run() error {
 	defer stop()
 
 	go func() {
-		log.Info().Str("addr", srv.Addr).Str("env", cfg.AppEnv).Bool("oidc", oidcClient != nil).Msg("api listening")
+		log.Info().Str("addr", srv.Addr).Str("env", cfg.AppEnv).Msg("api listening")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error().Err(err).Msg("server error")
 			stop()
@@ -195,10 +175,4 @@ func healthz(pool *pgxpool.Pool, rdb *redis.Client) http.HandlerFunc {
 		}
 		_, _ = fmt.Fprintf(w, `{"status":"ok","db":%t,"cache":%t}`, dbOK, cacheOK)
 	}
-}
-
-func oidcUnavailable(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusServiceUnavailable)
-	_, _ = w.Write([]byte(`{"code":"oidc_not_configured","message":"OIDC provider not configured yet"}`))
 }

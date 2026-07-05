@@ -17,6 +17,8 @@ type Querier interface {
 	// Invalidates all outstanding access tokens for this user (forced logout-all).
 	// Refresh tokens are NOT touched here; revoke them separately when needed.
 	BumpUserTokenVersion(ctx context.Context, id pgtype.UUID) (int32, error)
+	// Registration. password_hash is an Argon2id PHC string; oidc_subject stays NULL.
+	CreateLocalUser(ctx context.Context, arg CreateLocalUserParams) (User, error)
 	CreatePermission(ctx context.Context, arg CreatePermissionParams) (Permission, error)
 	// ── Refresh tokens ────────────────────────────────────────────────
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
@@ -36,8 +38,9 @@ type Querier interface {
 	// Minimal projection used by JWT middleware on each request to validate
 	// token_version + disabled state. Indexed PK lookup.
 	GetUserAuthSnapshot(ctx context.Context, id pgtype.UUID) (GetUserAuthSnapshotRow, error)
+	// Primary login lookup (ADR-06 local auth). Email is UNIQUE.
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
-	GetUserByOIDCSubject(ctx context.Context, oidcSubject string) (User, error)
 	GrantPermissionToRole(ctx context.Context, arg GrantPermissionToRoleParams) error
 	ListActiveRefreshTokensForUser(ctx context.Context, userID pgtype.UUID) ([]ListActiveRefreshTokensForUserRow, error)
 	ListAuditEvents(ctx context.Context, arg ListAuditEventsParams) ([]AuditLog, error)
@@ -58,8 +61,10 @@ type Querier interface {
 	// revoking every link. Used on suspected token theft (reuse detection).
 	RevokeRefreshTokenChain(ctx context.Context, arg RevokeRefreshTokenChainParams) error
 	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error
+	// Change-password / admin reset. Pair with BumpUserTokenVersion to force a
+	// re-login everywhere after a credential change.
+	SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
-	UpsertUserFromOIDC(ctx context.Context, arg UpsertUserFromOIDCParams) (User, error)
 	// ── Audit log ─────────────────────────────────────────────────────
 	WriteAuditEvent(ctx context.Context, arg WriteAuditEventParams) error
 }

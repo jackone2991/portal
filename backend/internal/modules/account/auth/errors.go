@@ -1,6 +1,6 @@
-// Package auth implements authentication for Portal: OIDC login, JWT access
-// tokens with key rotation and token-version revocation, and refresh tokens
-// with rotation + reuse detection.
+// Package auth implements authentication for Portal: local password login
+// (Argon2id), JWT access tokens with key rotation and token-version revocation,
+// and refresh tokens with rotation + reuse detection.
 //
 // Authorization (role/permission decisions) lives in package rbac; auth only
 // answers "who is this principal?", not "what may they do?".

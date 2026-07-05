@@ -10,18 +10,20 @@ Status legend: **✓ scaffolded** = module + một số code đã có, **○ pla
 
 Nguồn: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
 
-- **OIDC sign-in qua Authentik** — `/auth/login` → `/auth/callback`; CSRF + nonce bind trong cookie `portal_oidc` 5-phút. Không có local password.
+> **Hướng auth đã cập nhật — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Đăng nhập là **local password auth** (Portal tự giữ credential); các mục OIDC-qua-Authentik gắn [D-26]/[D-28] bên dưới đã **bị thay thế** và loại bỏ. Các mục token/refresh/RBAC/revocation/audit không đổi.
+
+- **Đăng nhập mật khẩu local** — `POST /auth/login {email, password}` xác minh `users.password_hash` (Argon2id, thời-gian-hằng-số) và phát các token bên dưới; `POST /auth/register {email, password, display_name}` tạo tài khoản. Không IdP, không `/auth/callback`, không `state`/`nonce`. Rate-limit + khóa brute-force bảo vệ endpoint. *(Thay cho luồng OIDC-qua-Authentik cũ.)*
 - **Session hai-token** — access JWT HS256 5-phút (`kid` xoay) + refresh token 256-bit 30 ngày (SHA-256 khi lưu).
 - **Mode Cookie + Bearer** — cookie `portal_access` / `portal_refresh` HttpOnly Secure cho browser, `Authorization: Bearer` cho API client.
 - **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bump `users.token_version`).
 - **Phát hiện refresh-token reuse** — trình một token đã rotate revoke toàn bộ chain và emit `auth.refresh.reuse_detected`.
 - **`/auth/me`** — trả snapshot user hiện tại.
 - **RBAC engine** — grammar permission `<resource>:<action>[:<scope>]`, wildcards, parser fail-closed, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) với walk effective-permission qua recursive CTE.
-- **OIDC group → role sync** — env `OIDC_GROUP_ROLE_MAP` map group Authentik → role global Portal; reconcile vào `user_oidc_roles` mỗi callback. Effective permission là union với `user_roles` Portal-managed. Grant tenant-scoped chỉ Portal. Bootstrap qua `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. [D-26]
-- **Step-up auth** — middleware `account.RequireACR("acr:portal:recent_mfa")` trên route nhạy cảm; 403 + Problem `step_up_required` trigger round trip re-auth với `acr_values=mfa prompt=login`. Window mặc định 5 phút. [D-27]
-- **MFA enforcement** — hoàn toàn Authentik-managed (không có 2FA secret trong Portal). Lúc login, nếu user có permission `bank:*` nào và `amr` thiếu `mfa`, trả `mfa_enrollment_required` với deep-link sang Authentik MFA dashboard. [D-28]
+- **Gán role** — role chỉ do Portal quản (`user_roles`); effective permission walk theo phân cấp role. *(~~[D-26] sync group-OIDC→role vào `user_oidc_roles` — bị loại bởi [ADR-06](architecture/06-local-auth-model.md); không còn nhóm IdP để sync.~~)*
+- **Step-up auth** — middleware `account.RequireACR("acr:portal:recent_mfa")` trên route nhạy cảm; 403 + `step_up_required` trigger re-auth. Window mặc định 5 phút. **Dựng trong Portal** (Portal giờ tự sở hữu MFA; không round-trip IdP). [D-27]
+- **MFA enforcement** — TOTP dựng trong Portal (trước Authentik-managed theo [D-28], nay thay bởi [ADR-06](architecture/06-local-auth-model.md)). Lúc login, nếu user có permission `bank:*` nào mà chưa enroll yếu tố thứ hai, trả `mfa_enrollment_required` trỏ tới enrolment TOTP của chính Portal. [D-28]
 - **Permission cache** — Redis-backed, namespace theo `token_version` nên revocation = cache bust trong một bump.
-- **UI Account-settings** (△ từ template): `Account Settings`, `Change Password` (cho fallback non-OIDC nếu thêm), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, preference `Notifications`.
+- **UI Account-settings** (△ từ template): `Account Settings`, `Change Password` (giờ là first-class — Portal tự giữ mật khẩu), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, preference `Notifications`.
 - **Audit log** — write best-effort qua `audit.Logger`; không bao giờ block request.
 
 ---

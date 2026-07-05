@@ -17,8 +17,8 @@ export function AuthLanding({ defaultTab }: { defaultTab: "login" | "register" }
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(55% 55% at 18% 22%, rgba(124,92,255,0.20), transparent 70%)," +
-            "radial-gradient(45% 45% at 90% 85%, rgba(124,92,255,0.12), transparent 70%)",
+            "radial-gradient(55% 55% at 18% 22%, rgba(255,94,58,0.14), transparent 70%)," +
+            "radial-gradient(45% 45% at 90% 85%, rgba(56,169,255,0.10), transparent 70%)",
         }}
       />
 

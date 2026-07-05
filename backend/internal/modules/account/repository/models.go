@@ -63,24 +63,20 @@ type RolePermission struct {
 }
 
 type User struct {
-	ID           pgtype.UUID        `json:"id"`
-	OidcSubject  string             `json:"oidc_subject"`
-	Email        string             `json:"email"`
-	DisplayName  string             `json:"display_name"`
-	AvatarUrl    *string            `json:"avatar_url"`
-	Role         string             `json:"role"`
-	Locale       string             `json:"locale"`
-	Timezone     string             `json:"timezone"`
-	TokenVersion int32              `json:"token_version"`
-	DisabledAt   pgtype.Timestamptz `json:"disabled_at"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-type UserOidcRole struct {
-	UserID   pgtype.UUID        `json:"user_id"`
-	RoleID   pgtype.UUID        `json:"role_id"`
-	SyncedAt pgtype.Timestamptz `json:"synced_at"`
+	ID                pgtype.UUID        `json:"id"`
+	OidcSubject       *string            `json:"oidc_subject"`
+	Email             string             `json:"email"`
+	DisplayName       string             `json:"display_name"`
+	AvatarUrl         *string            `json:"avatar_url"`
+	Role              string             `json:"role"`
+	Locale            string             `json:"locale"`
+	Timezone          string             `json:"timezone"`
+	TokenVersion      int32              `json:"token_version"`
+	DisabledAt        pgtype.Timestamptz `json:"disabled_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	PasswordHash      *string            `json:"password_hash"`
+	PasswordUpdatedAt pgtype.Timestamptz `json:"password_updated_at"`
 }
 
 type UserRole struct {

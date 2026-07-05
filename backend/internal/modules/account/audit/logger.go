@@ -20,6 +20,7 @@ import (
 // Keep this list canonical — searches and dashboards depend on it.
 const (
 	// authentication
+	ActionAuthRegister         = "auth.register"
 	ActionAuthLogin            = "auth.login"
 	ActionAuthLogout           = "auth.logout"
 	ActionAuthRefresh          = "auth.refresh"

@@ -1,31 +1,16 @@
 # Local-development overrides — auto-merged by `docker compose` (NOT used in prod;
-# prod overlays go in docker-compose.prod.yml). Wires locally-trusted TLS and the
-# OIDC blueprint so the full login flow works on https://*.portal.localhost.
+# prod overlays go in docker-compose.prod.yml). Wires locally-trusted TLS so the
+# app is reachable over https://*.portal.localhost.
+#
+# Login is local password auth (ADR-06): no IdP, so no OIDC blueprint mounts and
+# no SSL_CERT_FILE trust hack (the API no longer makes outbound TLS calls to an IdP).
 #
 # One-time setup:
 #   1) make certs (or the openssl self-signed fallback)   # trusted local cert
 #   2) TRAEFIK_CERTRESOLVER= (empty) in .env               # routers use that cert
-#   3) OIDC_CLIENT_ID/OIDC_CLIENT_SECRET in .env match authentik/blueprints/portal.yaml
-#   4) hosts (127.0.0.1): portal / api / auth / minio / traefik .portal.localhost
+#   3) hosts (127.0.0.1): portal / api / minio / traefik .portal.localhost
 services:
   traefik:
     volumes:
       - ./certs:/certs:ro
       - ./traefik/dynamic.dev.yml:/etc/traefik/dynamic/tls-local.yml:ro
-
-  # The API's OIDC client reaches https://auth.portal.localhost (via Traefik's
-  # network alias) — trust the local self-signed cert so discovery/JWKS/token
-  # calls verify. (In prod the Let's Encrypt cert is publicly trusted.)
-  api:
-    volumes:
-      - ./certs/portal.localhost.pem:/certs/portal.localhost.pem:ro
-    environment:
-      - SSL_CERT_FILE=/certs/portal.localhost.pem
-
-  # Provision the Portal OIDC provider + application declaratively.
-  authentik-server:
-    volumes:
-      - ./authentik/blueprints:/blueprints/custom:ro
-  authentik-worker:
-    volumes:
-      - ./authentik/blueprints:/blueprints/custom:ro

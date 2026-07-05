@@ -13,43 +13,28 @@
 #   - Prod overlay (docker-compose.prod.yml): drop MinIO, S3_* -> Cloudflare R2
 #     (R2-only, per doc/en/architecture/04-storage-tier-budget.md).
 #
-# Authentik (OIDC IdP) is part of the default stack — the v1 login flow needs it.
-# It reuses Dragonfly as its Redis and runs its own Postgres (so Portal's DB stays
-# isolated from the IdP schema).
+# Login is local password auth (ADR-06) — Portal owns credentials, so there is
+# no external IdP in the stack. (Historically this ran Authentik/OIDC; removed.)
 #
 # Dashboards:
-#   https://traefik.${APP_DOMAIN}   https://auth.${APP_DOMAIN}
+#   https://traefik.${APP_DOMAIN}
 #   https://minio.${APP_DOMAIN}     (MinIO console)
 #
 # New .env keys this file needs (see .env.example):
-#   AUTHENTIK_SECRET_KEY, AUTHENTIK_PG_PASSWORD, AUTHENTIK_BOOTSTRAP_PASSWORD,
-#   AUTHENTIK_BOOTSTRAP_EMAIL, AUTHENTIK_TAG, NEXT_PUBLIC_TEMPLATE_VERSION
+#   NEXT_PUBLIC_TEMPLATE_VERSION, NEXT_PUBLIC_API_BASE_URL, CORS_ALLOWED_ORIGINS
 #
 # Note: hostnames inside the compose network match service names below.
 
 name: portal
 
 networks:
-  edge:        # external-facing: traefik <-> api/frontend/authentik
+  edge:        # external-facing: traefik <-> api/frontend
   internal:    # backend-only: db, cache, storage
 
 volumes:
   postgres_data:
   traefik_acme:
-  authentik_pgdata:
-  authentik_media:
   # MinIO uses a bind-mount (./data/minio), not a named volume — see the minio service.
-
-# ── Reusable fragments ──────────────────────────────────────────────
-# Shared Authentik config for the server + worker (they must match).
-x-authentik-env: &authentik-env
-  AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
-  AUTHENTIK_POSTGRESQL__HOST: authentik-postgres
-  AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
-  AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
-  AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASSWORD}
-  AUTHENTIK_REDIS__HOST: dragonfly          # shared with Asynq; distinct key prefixes
-  AUTHENTIK_REDIS__PORT: 6379
 
 services:
   # ── Reverse proxy ───────────────────────────────────────────────
@@ -77,12 +62,7 @@ services:
       - traefik.http.routers.dashboard.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
       - traefik.http.routers.dashboard.middlewares=dashboard-auth
       - traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}
-    networks:
-      edge:
-        # Let in-cluster services (the API's OIDC client) reach Authentik via the
-        # public hostname, routed through Traefik — mirrors the browser path.
-        aliases:
-          - auth.${APP_DOMAIN}
+    networks: [edge]
 
   # ── Database ────────────────────────────────────────────────────
   postgres:
@@ -181,75 +161,6 @@ services:
     restart: "no"
     networks: [internal]
 
-  # ── Identity provider (Authentik / OIDC) ────────────────────────
-  authentik-postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${AUTHENTIK_PG_DB:-authentik}
-      POSTGRES_USER: ${AUTHENTIK_PG_USER:-authentik}
-      POSTGRES_PASSWORD: ${AUTHENTIK_PG_PASSWORD}
-    volumes:
-      - authentik_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTHENTIK_PG_USER:-authentik} -d ${AUTHENTIK_PG_DB:-authentik}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks: [internal]
-
-  authentik-server:
-    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2024.10.5}
-    restart: unless-stopped
-    command: server
-    environment:
-      <<: *authentik-env
-      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@portal.localhost}
-      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
-    volumes:
-      - authentik_media:/media
-    depends_on:
-      authentik-postgres:
-        condition: service_healthy
-      dragonfly:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "ak", "healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.authentik.rule=Host(`auth.${APP_DOMAIN}`)
-      - traefik.http.routers.authentik.entrypoints=websecure
-      - traefik.http.routers.authentik.tls=true
-      - traefik.http.routers.authentik.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
-      - traefik.http.services.authentik.loadbalancer.server.port=9000
-    networks: [edge, internal]
-
-  authentik-worker:
-    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2024.10.5}
-    restart: unless-stopped
-    command: worker
-    environment:
-      <<: *authentik-env
-    volumes:
-      - authentik_media:/media
-      - /var/run/docker.sock:/var/run/docker.sock   # used by Authentik to manage outposts
-    depends_on:
-      authentik-postgres:
-        condition: service_healthy
-      dragonfly:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "ak", "healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    networks: [internal]
-
   # ── Application services ────────────────────────────────────────
   api:
     build:
@@ -266,8 +177,6 @@ services:
         condition: service_healthy
       minio-setup:
         condition: service_completed_successfully
-      authentik-server:
-        condition: service_started      # OIDC issuer reachable for login
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=Host(`api.${APP_DOMAIN}`)

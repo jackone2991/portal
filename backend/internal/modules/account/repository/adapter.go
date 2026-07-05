@@ -6,7 +6,7 @@ package accountrepo
 //   - middleware.AuthSnapshotFetcher   (GetUserAuthSnapshot)
 //   - rbac.PermissionFetcher           (GetEffectivePermissions)
 //   - auth.RefreshStore                (Create/GetByHash/MarkReplaced/Revoke/…)
-//   - handler.UserUpserter             (UpsertUserFromOIDC/Bump/ListUserRoleCodes)
+//   - handler.UserStore                (GetUserByEmail/CreateLocalUser/AssignRoleByCode/Bump/ListUserRoleCodes)
 //   - audit.EventStore                 (WriteAuditEvent)
 //   - account.APIUserFetcher           (GetUserSummaryByID)
 //
@@ -24,6 +24,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	accountapi "github.com/portal/backend/internal/modules/account/api"
@@ -63,24 +64,57 @@ func (a *Adapter) GetEffectivePermissions(ctx context.Context, userID uuid.UUID)
 	return a.q.GetEffectivePermissions(ctx, pgUUID(userID))
 }
 
-// ── handler.UserUpserter ────────────────────────────────────────────
+// ── handler.UserStore (local password auth, ADR-06) ─────────────────
 
-func (a *Adapter) UpsertUserFromOIDC(ctx context.Context, in handler.UpsertUserInput) (handler.UpsertedUser, error) {
-	u, err := a.q.UpsertUserFromOIDC(ctx, UpsertUserFromOIDCParams{
-		OidcSubject: in.OIDCSubject,
-		Email:       in.Email,
-		DisplayName: in.DisplayName,
-		AvatarUrl:   strPtrOrNil(in.AvatarURL),
+func (a *Adapter) GetUserByEmail(ctx context.Context, email string) (handler.LocalUser, error) {
+	u, err := a.q.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return handler.LocalUser{}, handler.ErrUserNotFound
+		}
+		return handler.LocalUser{}, err
+	}
+	return toLocalUser(u), nil
+}
+
+func (a *Adapter) CreateLocalUser(ctx context.Context, in handler.CreateLocalUserInput) (handler.LocalUser, error) {
+	u, err := a.q.CreateLocalUser(ctx, CreateLocalUserParams{
+		Email:        in.Email,
+		DisplayName:  in.DisplayName,
+		PasswordHash: strPtrOrNil(in.PasswordHash),
 	})
 	if err != nil {
-		return handler.UpsertedUser{}, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique_violation (email)
+			return handler.LocalUser{}, handler.ErrEmailTaken
+		}
+		return handler.LocalUser{}, err
 	}
-	return handler.UpsertedUser{
+	return toLocalUser(u), nil
+}
+
+// AssignRoleByCode grants a role by its code (e.g. "user") to a user. Used at
+// registration to seed the default role. granted_by is NULL (system grant).
+func (a *Adapter) AssignRoleByCode(ctx context.Context, userID uuid.UUID, roleCode string) error {
+	role, err := a.q.GetRoleByCode(ctx, roleCode)
+	if err != nil {
+		return err
+	}
+	return a.q.AssignRoleToUser(ctx, AssignRoleToUserParams{
+		UserID: pgUUID(userID),
+		RoleID: role.ID,
+	})
+}
+
+func toLocalUser(u User) handler.LocalUser {
+	return handler.LocalUser{
 		ID:           uuidFrom(u.ID),
 		Email:        u.Email,
 		DisplayName:  u.DisplayName,
+		PasswordHash: derefStr(u.PasswordHash),
 		TokenVersion: int(u.TokenVersion),
-	}, nil
+		Disabled:     u.DisabledAt.Valid,
+	}
 }
 
 func (a *Adapter) BumpUserTokenVersion(ctx context.Context, id uuid.UUID) (int, error) {
@@ -236,6 +270,13 @@ func strPtrOrNil(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func ipToAddr(ip net.IP) *netip.Addr {

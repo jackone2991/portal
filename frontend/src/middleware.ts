@@ -1,23 +1,40 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Auth gate. A guest (no `portal_access` session cookie) hitting the app root is
- * redirected to the login page — so https://portal.localhost/ shows login first.
+ * Auth gate (ADR-06 local auth). A guest (no `portal_session` marker cookie) is
+ * sent to the Portal `/login` page — a real email+password form served by Portal
+ * itself, no IdP redirect. The path they were heading to is preserved in `?next=`
+ * so the form can bounce them back after a successful login.
  *
- * Once the OIDC flow sets `portal_access`, an authenticated user passes through
- * to the home/newsfeed at `/`. To protect more routes later, add them to
- * `matcher` (e.g. "/library/:path*", "/account/:path*").
+ * Authenticated users who land on /login or /register are bounced to the app root.
  */
 export function middleware(req: NextRequest) {
-  const authenticated = req.cookies.has("portal_access");
-  if (!authenticated) {
+  // Gate on the durable session marker (`portal_session`), not the short-lived
+  // access cookie: the access token expires every few minutes and is silently
+  // re-minted client-side by SessionKeeper, so its absence ≠ logged out.
+  const authenticated = req.cookies.has("portal_session");
+  const { pathname } = req.nextUrl;
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  if (!authenticated && !isAuthPage) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
+
+  if (authenticated && isAuthPage) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/"],
+  // App entry + the auth pages. Next excludes _next/* assets automatically.
+  matcher: ["/", "/login", "/register", "/library/:path*"],
 };

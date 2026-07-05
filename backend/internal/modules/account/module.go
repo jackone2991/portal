@@ -1,6 +1,6 @@
 // Package account is the registration entry-point for the account module.
 //
-// The account module owns: users, authentication (OIDC + JWT + refresh), the
+// The account module owns: users, authentication (local password + JWT + refresh), the
 // RBAC engine (roles, permissions, policies), 2FA/TOTP, sessions, and audit
 // logging. Other modules talk to this one only via the api/ subpackage.
 //
@@ -45,10 +45,9 @@ type Deps struct {
 	Issuer          *auth.Issuer
 	Verifier        *auth.Verifier
 	Refresh         *auth.RefreshManager
-	OIDC            *auth.OIDC
 	SnapshotFetcher accountmw.AuthSnapshotFetcher
 	PermFetcher     rbac.PermissionFetcher
-	UserUpserter    handler.UserUpserter
+	Users           handler.UserStore
 	AuditStore      audit.EventStore
 	APIUsers        APIUserFetcher
 	CacheTTL        time.Duration
@@ -85,11 +84,11 @@ func New(d Deps) (*Module, error) {
 	engine := rbac.NewEngine(loader)
 
 	h := &handler.AuthHandler{
-		OIDC:    d.OIDC,
 		Issuer:  d.Issuer,
 		Refresh: d.Refresh,
-		Users:   d.UserUpserter,
+		Users:   d.Users,
 		Audit:   logger,
+		Redis:   d.Redis,
 
 		AccessTTL:    d.AccessTTL,
 		RefreshTTL:   d.RefreshTTL,
@@ -111,8 +110,8 @@ func New(d Deps) (*Module, error) {
 // for the surrounding middleware chain (request ID, CORS, rate limit, tenant).
 func (m *Module) MountHTTP(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/login", m.handler.Login)
-		r.Get("/callback", m.handler.Callback)
+		r.Post("/login", m.handler.Login)
+		r.Post("/register", m.handler.Register)
 		r.Post("/refresh", m.handler.HandleRefresh)
 
 		// Authenticated routes

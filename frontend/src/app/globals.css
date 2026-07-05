@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0b10;
-  --foreground: #f5f5f7;
+  /* Olympus light theme (see templates/v1/theme/theme.css for the full token set) */
+  --background: #f5f6fa;
+  --foreground: #515365;
 }
 
 html, body {

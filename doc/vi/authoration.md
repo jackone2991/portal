@@ -64,23 +64,27 @@ Mỗi request đi qua ba lớp enforce độc lập. Mỗi lớp trả lời đ�
 
 ## 2. Lớp Identity (authentication)
 
-### 2.1 OIDC login flow  *([BUILT])*
+> **Được thay thế bởi [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Portal giờ tự giữ credential và xác thực cục bộ; Authentik bị loại khỏi luồng login. Toàn bộ máy móc **token, refresh, RBAC, thu hồi và audit** từ §2.2 trở đi không đổi và được tái dùng — chỉ mục login này thay đổi. Mọi nhắc tới "OIDC / callback / nonce / Authentik" còn sót ở nơi khác trong tài liệu này đều đã bị bỏ.
 
-Authentik là IdP. Không có local password auth. Flow:
+### 2.1 Luồng đăng nhập mật khẩu local  *([BUILT])*
 
-1. `GET /auth/login` — server tạo `state` + `nonce`, set cookie `portal_oidc` ngắn hạn signed bind cả hai, redirect tới IdP.
-2. IdP xác thực user (mọi factor đã cấu hình upstream — gồm cả MFA của Authentik).
-3. `GET /auth/callback` — server validate state (CSRF) và nonce (chống ID-token replay), exchange code, upsert user.
-4. Server phát access + refresh token, set cookie, redirect tới URL post-login.
+Portal là nhà cung cấp danh tính. Credential nằm ở `users.password_hash` (Argon2id). Flow:
 
-Implementation chính: [oidc.go](../../backend/internal/auth/oidc.go).
+1. `POST /auth/login {email, password}` — server tra user theo email, xác minh mật khẩu với `users.password_hash` (Argon2id, thời-gian-hằng-số), và kiểm tra `disabled_at`.
+2. Thành công: server phát access + refresh token, set cookie, trả `200`. Thất bại: trả `401` chung chung (không lộ có/không tồn tại user) và tăng bộ đếm brute-force.
+3. `POST /auth/register {email, password, display_name}` — tạo tài khoản (băm Argon2id), gán role mặc định `user`, rồi phát token y như login. Đăng ký có thể bị giới hạn theo admin tùy triển khai.
+4. **Không** còn `/auth/callback`, `state`, hay `nonce` — trình duyệt không bao giờ rời domain Portal.
+
+Trách nhiệm bảo mật mới Portal phải gánh (trước của Authentik): băm mật khẩu, rate-limit + khóa brute-force trên `/auth/login`, chính sách mật khẩu, và đặt lại mật khẩu (token gửi email khi có module notification; admin/CLI trước đó). MFA/step-up (§2.4) và "Login with Google" giờ tự dựng trong Portal, không cấu hình ở IdP.
+
+Implementation chính: [password.go](../../backend/internal/modules/account/auth/password.go) + [handler/auth.go](../../backend/internal/modules/account/handler/auth.go).
 
 ### 2.2 Token
 
 | Token | Tuổi thọ | Storage | Thuật toán | Mục đích |
 |-------|----------|---------|-----------|---------|
 | Access | 5 phút | cookie `portal_access` HOẶC `Authorization: Bearer` | HS256 với `kid` xoay | Authn per-request |
-| Refresh | 30 ngày | cookie `portal_refresh` (`Path=/auth`) HOẶC JSON body | random 256-bit, hash SHA-256 lúc lưu | Mint access token mới |
+| Refresh | 30 ngày | cookie `portal_refresh` (`Path=/api/v1/auth`) HOẶC JSON body | random 256-bit, hash SHA-256 lúc lưu | Mint access token mới |
 | Step-up (TOTP) | 5 phút | session-bound; không phải cookie riêng | n/a — flag trên session record | Authorize op huỷ diệt |
 
 Cookie luôn: `HttpOnly; Secure; SameSite=Strict`. Implementation trong [jwt.go](../../backend/internal/auth/jwt.go) và [refresh.go](../../backend/internal/auth/refresh.go).
@@ -441,8 +445,8 @@ Route public (vd `GET /movies` cho guest) skip 7–10. Một vài route "tenant-
 
 ```text
 # Authentication
-GET    /auth/login                     bắt đầu flow OIDC
-GET    /auth/callback                  hoàn tất OIDC; mint token
+POST   /auth/login                     xác minh email+password; mint token
+POST   /auth/register                  tạo tài khoản (Argon2id); mint token
 POST   /auth/refresh                   xoay refresh; mint access
 POST   /auth/logout                    revoke refresh hiện tại; bump token_version
 POST   /auth/logout-all                revoke mọi refresh; bump token_version  [step-up]
@@ -485,12 +489,13 @@ Cái chúng ta defend rõ ràng, và cách defend.
 | Access token bị trộm | TTL ngắn (5 phút) + check DB snapshot mỗi request (`token_version`) — revoke tức thì. |
 | Refresh token bị trộm | Rotation per use + reuse detection burn chain. Hash khi lưu. |
 | Hijack session qua XSS | Cookie `HttpOnly`; CSP enforce server-side. Không bao giờ expose token cho JS. |
-| CSRF | Cookie `SameSite=Strict`. Login dùng `Lax` chỉ cho redirect IdP; callback OIDC verify state. |
+| CSRF | Cookie `SameSite=Strict` cho mọi cookie phiên. Login là `POST` cùng-origin (không redirect chéo site), nên không cần nới `Lax`. |
+| Brute force mật khẩu | Rate-limit + khóa tạm trên `/auth/login` theo IP và theo tài khoản; trả `401` chung chung (không lộ user); Argon2id (memory-hard) làm crack offline tốn kém. |
 | Leak data cross-tenant qua bug app | RLS enforce trong Postgres. `app.current_tenant` set transactionally per request. Role `BYPASSRLS` cô lập vào binary Go riêng. |
 | Escalation quyền bởi admin tenant | `superadmin` là role system, không bao giờ grant được từ context tenant. Chỉ bootstrap CLI. |
 | Brute force TOTP | Code 6 số + 5 lần thử/15-phút lockout per user; so sánh constant-time. Recovery code single-use, hash Argon2id. |
 | Replay refresh token across device | Mỗi refresh token ghi IP phát hành + UA. Reuse từ fingerprint khác emit audit event severity cao hơn (vẫn revoke chain). |
-| Replay OIDC ID-token | Nonce validate against cookie bound. State validate session origin (CSRF). |
+| Dump DB mật khẩu | `password_hash` là Argon2id (64 MB, t=3, p=2) với salt riêng từng user — memory-hard, không lưu plaintext hay dạng khả nghịch. |
 | Extract TOTP secret khi at rest | Mã hoá với `TOTP_KMS_KEY` riêng; chỉ decrypt in-memory lúc verify. |
 | Sửa đổi audit log | Append-only ở app layer. Retention dài hạn sang bucket archive R2 (policy bucket immutable). |
 | Poisoning cache permission | Key cache Redis gồm `token_version` và `org_id`; mutation bump version → buộc re-fetch từ DB. |
@@ -498,8 +503,7 @@ Cái chúng ta defend rõ ràng, và cách defend.
 
 Cái chúng ta **KHÔNG** defend (out of scope cho v1):
 
-- Compromise của Postgres host bản thân nó.
-- Compromise của IdP Authentik (chúng ta tin issuer của nó).
+- Compromise của Postgres host bản thân nó (chứa `password_hash`; Argon2id giảm nhẹ, không loại bỏ).
 - Một administrator quyết tâm bên trong tenant exfiltrate data của tenant đó (sử dụng hợp pháp).
 - DDoS — xử lý ở Cloudflare, không phải ở đây.
 

@@ -63,10 +63,13 @@ The account module ([backend/internal/modules/account/](backend/internal/modules
 
 > **RBAC schism — know this before touching auth.** Two access-control specs conflict: the **role-hierarchy** model documented here (built, in code) vs the **policy-bundle / file-gated-permission** model in `doc/*/archivetech.md` (specced, no code). [ADR-02](doc/en/architecture/02-rbac-model-reconciliation.md) resolves it: **role-hierarchy is canonical for v1**; policy bundles + user groups layer *on top of* roles in a later phase — they don't replace them. Disregard `archivetech.md`'s "spec wins, adjust code" clause for v1.
 
+> **Direction change (2026-07-05) — local password auth.** [ADR-06](doc/en/architecture/06-local-auth-model.md) supersedes the OIDC-login decision: **Portal owns credentials (`users.password_hash`, Argon2id) and Authentik is dropped from the login path.** The token / refresh / RBAC / revocation / audit machinery below is **unchanged and reused** — only the identity-proof step (`/auth/login` + account creation) changed. Anything below that still says "OIDC / Authentik / callback / nonce" is retired; the Identity flow now reads as follows.
+
 ### Identity flow
-1. **OIDC via Authentik.** No local password auth. `/auth/login` sets a 5-min `portal_oidc` cookie binding `state` (CSRF) + `nonce` (ID-token replay). Callback validates both before exchange.
-2. **Two tokens:** short-lived JWT access token (5min, HS256, rotating `kid` keys) + long-lived random refresh token (256-bit, SHA-256-hashed at rest, 30d).
-3. **Cookies:** `portal_access` (Path=/, SameSite=Strict) and `portal_refresh` (Path=/auth, SameSite=Strict) — both `HttpOnly Secure`. API clients use `Authorization: Bearer` headers instead.
+1. **Local password auth.** No IdP in the login path. `POST /api/v1/auth/login {email, password}` looks the user up by email, verifies the password against `users.password_hash` (Argon2id, constant-time), checks `disabled_at`, and on success issues the tokens below and sets the cookies. `POST /api/v1/auth/register {email, password, display_name}` creates the account (or admin-provisioned). There is **no** `/auth/callback`, `state`, or `nonce` anymore.
+2. **Two tokens:** short-lived JWT access token (5min, HS256, rotating `kid` keys) + long-lived random refresh token (256-bit, SHA-256-hashed at rest, 30d). *(Unchanged from the OIDC design.)*
+3. **Cookies:** `portal_access` (Path=/, SameSite=Strict) and `portal_refresh` (Path=/api/v1/auth, SameSite=Strict) — both `HttpOnly Secure`. API clients use `Authorization: Bearer` headers instead.
+4. **New responsibilities Portal now owns** (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, password reset (needs the notification module; admin/CLI until then), and — later — MFA/step-up and "Login with Google". See ADR-06 §"New responsibilities".
 
 ### Two revocation channels — both are needed
 - **`users.token_version`** — bump it and every existing access token fails its DB snapshot check inside `RequireAuth` middleware. The "instant logout-all" channel. Middleware verifies the JWT *and then* re-reads `users.token_version` + `disabled_at` on every request — a still-valid signature is not sufficient.
@@ -135,7 +138,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **portal** (17074 symbols, 29241 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **portal** (17488 symbols, 30266 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

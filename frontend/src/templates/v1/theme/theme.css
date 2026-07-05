@@ -1,18 +1,50 @@
 /*
- * Template v1 design tokens (Olympus theme).
+ * Template v1 design tokens — Olympus LIGHT theme
+ * (template-main/social — colours sampled from css/light.css).
  *
  * Imported by app/layout.tsx. When switching the active template version,
- * swap this import alongside NEXT_PUBLIC_TEMPLATE_VERSION. Tokens are scoped
- * under [data-template] so multiple versions could coexist if needed.
+ * swap this import alongside NEXT_PUBLIC_TEMPLATE_VERSION.
  */
 :root,
 [data-template="v1"] {
-  --tpl-accent: #7c5cff;
+  /* Brand */
+  --tpl-accent: #ff5e3a;          /* Olympus primary (orange-red) */
+  --tpl-accent-2: #ff763a;        /* gradient end */
   --tpl-accent-contrast: #ffffff;
-  --tpl-surface: #14141b;
-  --tpl-surface-2: #1c1c26;
-  --tpl-border: rgba(255, 255, 255, 0.1);
-  --tpl-muted: rgba(245, 245, 247, 0.6);
-  --tpl-header-h: 3.5rem;
-  --tpl-sidebar-w: 15rem;
+  --tpl-blue: #38a9ff;            /* secondary / add-friend */
+  --tpl-blue-2: #08ddc1;          /* teal accent */
+
+  /* Surfaces */
+  --tpl-bg: #f5f6fa;              /* page background */
+  --tpl-surface: #ffffff;         /* cards */
+  --tpl-surface-2: #f6f7fb;       /* insets / hovers */
+  --tpl-header: #3f4257;          /* dark top bar */
+  --tpl-header-2: #4b4f6b;        /* header hover / search field */
+
+  /* Text */
+  --tpl-text: #515365;
+  --tpl-heading: #3f4257;
+  --tpl-muted: #888da8;
+
+  /* Lines */
+  --tpl-border: #e6ecf5;
+
+  /* Weather widget gradient */
+  --tpl-weather-1: #5faee3;
+  --tpl-weather-2: #3d93dd;
+
+  /* Metrics */
+  --tpl-header-h: 4.5rem;         /* 72px */
+  --tpl-rail-w: 4.25rem;          /* 68px collapsed left menu / right avatar rail */
+  --tpl-sidebar-w: 17rem;         /* 272px expanded left menu */
+  --tpl-sidebar-cur: var(--tpl-sidebar-w); /* current left menu width (JS toggles) */
+  --tpl-rightbar-w: 17.5rem;      /* 280px expanded right friends panel */
+  --tpl-rightbar-cur: var(--tpl-rightbar-w); /* current right panel width (JS toggles) */
+
+  /* Presence status dots */
+  --tpl-status-online: #08ddc1;
+  --tpl-status-work: #38a9ff;
+  --tpl-status-away: #ffce54;
+  --tpl-status-offline: #ff5e3a;
+  --tpl-status-invisible: #c2c5d9;
 }

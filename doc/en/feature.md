@@ -10,18 +10,20 @@ Status legend: **✓ scaffolded** = module + some code exists, **○ planned** =
 
 Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
 
-- **OIDC sign-in via Authentik** — `/auth/login` → `/auth/callback`; CSRF + nonce bound in a 5-min `portal_oidc` cookie. No local passwords.
+> **Auth direction updated — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
+
+- **Local password sign-in** — `POST /auth/login {email, password}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account. No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
 - **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 30-day 256-bit refresh token (SHA-256 at rest).
 - **Cookie + Bearer modes** — `portal_access` / `portal_refresh` HttpOnly Secure cookies for browser, `Authorization: Bearer` for API clients.
 - **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bumps `users.token_version`).
 - **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and emits `auth.refresh.reuse_detected`.
 - **`/auth/me`** — returns the current user snapshot.
 - **RBAC engine** — `<resource>:<action>[:<scope>]` permission grammar, wildcards, fail-closed parser, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) with recursive-CTE effective-permission walk.
-- **OIDC group → role sync** — `OIDC_GROUP_ROLE_MAP` env maps Authentik groups → global Portal roles; reconciled into `user_oidc_roles` on every callback. Effective permissions are union with Portal-managed `user_roles`. Tenant-scoped grants are Portal-only. Bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. [D-26]
-- **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` Problem triggers a re-auth round trip with `acr_values=mfa prompt=login`. 5-min default window. [D-27]
-- **MFA enforcement** — entirely Authentik-managed (no 2FA secrets in Portal). At login, if user has any `bank:*` permission and `amr` claim lacks `mfa`, return `mfa_enrollment_required` with deep-link to Authentik's MFA dashboard. [D-28]
+- **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](architecture/06-local-auth-model.md); no IdP groups to sync.~~)*
+- **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` triggers a re-auth. 5-min default window. **Portal-built** (Portal now owns MFA; no IdP round-trip). [D-27]
+- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](architecture/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. [D-28]
 - **Permission cache** — Redis-backed, namespaced by `token_version` so revocation = cache bust in one bump.
-- **Account-settings UI** (△ from template): `Account Settings`, `Change Password` (for non-OIDC fallback if added), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, `Notifications` preferences.
+- **Account-settings UI** (△ from template): `Account Settings`, `Change Password` (now first-class — Portal owns the password), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, `Notifications` preferences.
 - **Audit log** — best-effort writes via `audit.Logger`; never blocks the request.
 
 ---

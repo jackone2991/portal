@@ -37,6 +37,7 @@ The existing design corpus assumes none of these explicitly. Most of the 40 deci
 | [03-single-vps-topology](./03-single-vps-topology.md) | Proposed | Compose service set, resource budget, and what to disable for v1 |
 | [04-storage-tier-budget](./04-storage-tier-budget.md) | Proposed | MinIO origin + R2 edge vs R2-only vs MinIO-only under the budget ceiling |
 | [05-phase0-wiring-order](./05-phase0-wiring-order.md) | Proposed | Critical-path order for closing the existing wiring gap in `cmd/api/main.go` |
+| [06-local-auth-model](./06-local-auth-model.md) | Proposed | Switch login from OIDC/Authentik to Portal-owned local password auth (supersedes ADR-05's OIDC login) |
 
 ## Diagrams
 

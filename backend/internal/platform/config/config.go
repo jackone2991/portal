@@ -28,7 +28,7 @@ type Config struct {
 	JWTIssuer      string        `env:"JWT_ISSUER"     envDefault:"portal"`
 	JWTAudience    string        `env:"JWT_AUDIENCE"   envDefault:"portal-api"`
 	AccessTokenTTL time.Duration `env:"ACCESS_TOKEN_TTL"   envDefault:"5m"`
-	RefreshTTL     time.Duration `env:"REFRESH_TOKEN_TTL"  envDefault:"720h"` // 30 days
+	RefreshTTL     time.Duration `env:"REFRESH_TOKEN_TTL"  envDefault:"24h"` // 1 day (remember-me window)
 	PermissionCacheTTL time.Duration `env:"PERMISSION_CACHE_TTL" envDefault:"5m"`
 
 	S3Endpoint     string `env:"S3_ENDPOINT,required"`
@@ -38,14 +38,16 @@ type Config struct {
 	S3SecretKey    string `env:"S3_SECRET_KEY,required"`
 	S3UsePathStyle bool   `env:"S3_USE_PATH_STYLE" envDefault:"true"`
 
-	OIDCIssuer       string `env:"OIDC_ISSUER"`
-	OIDCClientID     string `env:"OIDC_CLIENT_ID"`
-	OIDCClientSecret string `env:"OIDC_CLIENT_SECRET"`
-	OIDCRedirectURL  string `env:"OIDC_REDIRECT_URL"`
+	// Login is local password auth (ADR-06); no external IdP config.
 
 	CookieDomain    string `env:"COOKIE_DOMAIN"   envDefault:""`
 	CookieSecure    bool   `env:"COOKIE_SECURE"   envDefault:"true"`
 	PostLoginURL    string `env:"POST_LOGIN_URL"  envDefault:"/"`
+
+	// Browser origins allowed to make credentialed (cookie-bearing) calls to the
+	// API. The frontend login form POSTs cross-subdomain, so the exact origin
+	// must be allowlisted — a wildcard is invalid with credentials.
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"https://portal.localhost"`
 }
 
 // SigningKey is the parsed form of one entry in JWTKeys.

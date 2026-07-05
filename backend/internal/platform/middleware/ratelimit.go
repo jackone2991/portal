@@ -10,7 +10,7 @@ import (
 )
 
 // IPRateLimiter is a token-bucket limiter keyed by client IP. Use it on the
-// outer perimeter of auth endpoints (login, refresh, oidc callback) to slow
+// outer perimeter of auth endpoints (login, register, refresh) to slow
 // brute-force / token-spray attacks.
 //
 // Buckets that have not been used recently are GC'd to bound memory.
@@ -111,4 +111,12 @@ func trimSpace(s string) string {
 		s = s[:len(s)-1]
 	}
 	return s
+}
+
+// writeJSONError emits a compact {code,message} JSON error. code/message come
+// from trusted constants at the call sites, so no escaping is needed here.
+func writeJSONError(w http.ResponseWriter, status int, code, msg string) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(`{"code":"` + code + `","message":"` + msg + `"}`))
 }

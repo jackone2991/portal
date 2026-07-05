@@ -66,23 +66,27 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 ## 2. Identity layer (authentication)
 
-### 2.1 OIDC login flow  *([BUILT])*
+> **Superseded by [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
 
-Authentik is the IdP. No local password auth. Flow:
+### 2.1 Local password login flow  *([BUILT])*
 
-1. `GET /auth/login` — server generates `state` + `nonce`, sets short-lived signed `portal_oidc` cookie binding both, redirects to IdP.
-2. IdP authenticates the user (any factor configured upstream — including Authentik's own MFA).
-3. `GET /auth/callback` — server validates state (CSRF) and nonce (ID-token replay), exchanges code, upserts the user.
-4. Server issues access + refresh tokens, sets cookies, redirects to the post-login URL.
+Portal is the identity provider. Credentials live in `users.password_hash` (Argon2id). Flow:
 
-Key implementation: [oidc.go](../../backend/internal/auth/oidc.go).
+1. `POST /auth/login {email, password}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), and checks `disabled_at`.
+2. On success, server issues access + refresh tokens, sets cookies, returns `200`. On failure it returns a generic `401` (no user-enumeration) and increments the brute-force counter.
+3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash), assigns the default `user` role, then issues tokens exactly as login does. Registration may be admin-gated depending on deployment.
+4. There is **no** `/auth/callback`, `state`, or `nonce` — the browser never leaves the Portal domain.
+
+New security responsibilities Portal now owns (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, and password reset (emailed token once the notification module lands; admin/CLI until then). MFA/step-up (§2.4) and "Login with Google" are now built in Portal, not configured in an IdP.
+
+Key implementation: [password.go](../../backend/internal/modules/account/auth/password.go) + [handler/auth.go](../../backend/internal/modules/account/handler/auth.go).
 
 ### 2.2 Tokens
 
 | Token | Lifetime | Storage | Algorithm | Purpose |
 |-------|----------|---------|-----------|---------|
 | Access | 5 min | `portal_access` cookie OR `Authorization: Bearer` | HS256 with rotating `kid` keys | Per-request authn |
-| Refresh | 30 days | `portal_refresh` cookie (`Path=/auth`) OR JSON body | 256-bit random, SHA-256 hashed at rest | Mint new access token |
+| Refresh | 30 days | `portal_refresh` cookie (`Path=/api/v1/auth`) OR JSON body | 256-bit random, SHA-256 hashed at rest | Mint new access token |
 | Step-up (TOTP) | 5 min | session-bound; not a separate cookie | n/a — flag on the session record | Authorize destructive ops |
 
 Cookies always: `HttpOnly; Secure; SameSite=Strict`. Implementation in [jwt.go](../../backend/internal/auth/jwt.go) and [refresh.go](../../backend/internal/auth/refresh.go).
@@ -443,8 +447,8 @@ Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-
 
 ```text
 # Authentication
-GET    /auth/login                     start OIDC flow
-GET    /auth/callback                  finish OIDC; mint tokens
+POST   /auth/login                     verify email+password; mint tokens
+POST   /auth/register                  create account (Argon2id); mint tokens
 POST   /auth/refresh                   rotate refresh; mint access
 POST   /auth/logout                    revoke current refresh; bump token_version
 POST   /auth/logout-all                revoke all refresh; bump token_version  [step-up]
@@ -487,12 +491,13 @@ What we explicitly defend against, and how.
 | Stolen access token | Short TTL (5 min) + DB snapshot check on every request (`token_version`) — instant revocation. |
 | Stolen refresh token | Rotation per use + reuse detection burns the chain. Hashed at rest. |
 | Session hijack via XSS | `HttpOnly` cookies; CSP enforced server-side. Never expose tokens to JS. |
-| CSRF | `SameSite=Strict` cookies. Login uses `Lax` only for the IdP redirect; OIDC callback verifies state. |
+| CSRF | `SameSite=Strict` cookies on all session cookies. Login is a same-origin `POST` (no cross-site redirect), so no `Lax` relaxation is needed. |
+| Password brute force | Rate-limit + temporary lockout on `/auth/login` per IP and per account; generic `401` (no user enumeration); Argon2id (memory-hard) makes offline cracking expensive. |
 | Cross-tenant data leak via app bug | RLS enforced in Postgres. `app.current_tenant` set transactionally per request. `BYPASSRLS` role isolated to a separate Go binary. |
 | Privilege escalation by a tenant admin | `superadmin` is a system role, never grantable from tenant context. CLI bootstrap only. |
 | TOTP brute force | 6-digit code + 5 attempts/15-min lockout per user; constant-time compare. Recovery codes are single-use, Argon2id-hashed. |
 | Refresh-token replay across devices | Each refresh token records issuing IP + UA. Reuse from a different fingerprint emits a higher-severity audit event (still revokes chain). |
-| OIDC ID-token replay | Nonce validated against bound cookie. State validates session origin (CSRF). |
+| Password DB dump | `password_hash` is Argon2id (64 MB, t=3, p=2) with per-user salt — memory-hard, no plaintext or reversible form stored. |
 | TOTP secret extraction at rest | Encrypted with separate `TOTP_KMS_KEY`; only decrypted in-memory at verify time. |
 | Audit log tampering | Append-only at app layer. Long-term retention to R2 archive bucket (immutable bucket policy). |
 | Permission cache poisoning | Redis cache key includes `token_version` and `org_id`; mutations bump version → forces re-fetch from DB. |
@@ -500,8 +505,7 @@ What we explicitly defend against, and how.
 
 What we do **NOT** defend against (out of scope for v1):
 
-- Compromise of the Postgres host itself.
-- Compromise of the Authentik IdP (we trust its issuer).
+- Compromise of the Postgres host itself (holds `password_hash`; mitigated by Argon2id, not eliminated).
 - A determined administrator within a tenant exfiltrating their own tenant's data (legitimate usage).
 - DDoS — handled at Cloudflare, not here.
 
