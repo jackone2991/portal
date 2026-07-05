@@ -5,6 +5,14 @@
 **Deciders:** kirito
 **Affects:** [docker-compose.yml](../../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1] (system landscape)
 
+## Update (2026-06-06) — local dev runs MinIO on a local folder; R2-only still applies to deployed environments
+
+The R2-only decision below stands **for deployed environments** (staging/prod): no MinIO origin tier, no replication. For **local development**, the dev `docker-compose.yml` keeps MinIO as the S3-compatible origin, **bound to the local folder `./data/minio`** (a bind-mount, not a named volume), with a one-shot `minio-setup` (`mc`) that creates the media bucket.
+
+Rationale: the media upload flow uses **presigned URLs** (the browser PUTs directly to the store). A plain local-filesystem driver cannot issue presigned URLs, which would force a second, dev-only upload path (client → API → disk) and make dev diverge from prod. MinIO speaks S3, so dev keeps the exact presigned flow and **going live is an `.env` change only** — repoint `S3_ENDPOINT` + `S3_ACCESS_KEY`/`S3_SECRET_KEY` at R2 and set `S3_USE_PATH_STYLE=false`. No code difference; `platform/storage/` stays a single S3 client.
+
+Net: **dev = MinIO (local folder) · prod = R2.** This *refines*, not reverses, the decision below. Action items 1–2 are superseded accordingly: MinIO is removed only from the prod overlay (`docker-compose.prod.yml`); the dev base keeps it on a bind-mount.
+
 ## Context
 
 `diagrams.md` §1 draws a two-tier storage architecture:
@@ -144,8 +152,8 @@ The cost of NOT removing MinIO from v1 is concrete: ~$15/mo disk + 150 MB RAM + 
 
 ## Action items
 
-1. [ ] Remove the `minio` service block from `docker-compose.yml` for v1. Comment a one-liner: `# v1 uses R2 only — see doc/en/architecture/04-storage-tier-budget.md`.
-2. [ ] Remove `volumes.minio_data` from `docker-compose.yml`.
+1. [x] ~~Remove the `minio` service block from `docker-compose.yml` for v1.~~ **Revised (Update 2026-06-06):** keep MinIO in the dev compose bound to `./data/minio`; remove it only in `docker-compose.prod.yml`.
+2. [x] ~~Remove `volumes.minio_data` from `docker-compose.yml`.~~ Done a different way: switched MinIO to a `./data/minio` bind-mount (the named volume is gone).
 3. [ ] Add `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_USE_PATH_STYLE=false` to `.env.example` with R2-shaped placeholders.
 4. [ ] In `backend/internal/platform/storage/`, ensure the S3 client constructor reads endpoint + region from config (not hard-coded to MinIO). If the package is still empty, scaffold it as a thin wrapper over `aws-sdk-go-v2/service/s3`.
 5. [ ] In `cmd/api`, the upload handler signs PUTs (`s3:PutObject`, 5-minute expiry) and returns the URL + key to the frontend; the frontend uploads directly to R2.

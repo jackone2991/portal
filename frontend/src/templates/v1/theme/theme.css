@@ -1,0 +1,18 @@
+/*
+ * Template v1 design tokens (Olympus theme).
+ *
+ * Imported by app/layout.tsx. When switching the active template version,
+ * swap this import alongside NEXT_PUBLIC_TEMPLATE_VERSION. Tokens are scoped
+ * under [data-template] so multiple versions could coexist if needed.
+ */
+:root,
+[data-template="v1"] {
+  --tpl-accent: #7c5cff;
+  --tpl-accent-contrast: #ffffff;
+  --tpl-surface: #14141b;
+  --tpl-surface-2: #1c1c26;
+  --tpl-border: rgba(255, 255, 255, 0.1);
+  --tpl-muted: rgba(245, 245, 247, 0.6);
+  --tpl-header-h: 3.5rem;
+  --tpl-sidebar-w: 15rem;
+}

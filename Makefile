@@ -10,6 +10,15 @@ COMPOSE := docker compose
 env: ## Copy .env.example -> .env if missing
 	@test -f .env || (cp .env.example .env && echo "Created .env — fill in secrets before running 'make up'.")
 
+# ── TLS (local dev) ─────────────────────────────────────────────
+.PHONY: certs
+certs: ## Issue locally-trusted TLS certs for *.portal.localhost (needs mkcert)
+	@command -v mkcert >/dev/null || { echo "mkcert not found — install: https://github.com/FiloSottile/mkcert#installation"; exit 1; }
+	@mkdir -p certs
+	mkcert -install
+	mkcert -cert-file certs/portal.localhost.pem -key-file certs/portal.localhost-key.pem portal.localhost "*.portal.localhost"
+	@echo "✓ certs in ./certs — ensure TRAEFIK_CERTRESOLVER= (empty) in .env, then 'make up'."
+
 # ── Stack lifecycle ─────────────────────────────────────────────
 .PHONY: up down restart logs ps
 up: env ## Start all services in background

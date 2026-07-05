@@ -16,6 +16,7 @@ package handler
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -86,8 +87,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "portal_oidc",
-		Value:    string(bindCookie),
-		Path:     "/auth",
+		Value:    base64.RawURLEncoding.EncodeToString(bindCookie),
+		Path:     "/api/v1/auth",
 		MaxAge:   int((5 * time.Minute).Seconds()),
 		HttpOnly: true,
 		Secure:   h.CookieSecure,
@@ -117,8 +118,13 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 	clearOIDCCookie(w, h.CookieSecure)
 
+	rawBind, derr := base64.RawURLEncoding.DecodeString(bind.Value)
+	if derr != nil {
+		writeError(w, http.StatusBadRequest, "bad_request", "invalid oidc binding")
+		return
+	}
 	var bound struct{ S, N string }
-	if err := json.Unmarshal([]byte(bind.Value), &bound); err != nil {
+	if err := json.Unmarshal(rawBind, &bound); err != nil {
 		writeError(w, http.StatusBadRequest, "bad_request", "invalid oidc binding")
 		return
 	}
@@ -184,7 +190,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 //
 // Reads refresh cookie OR `refresh_token` body field (for non-browser clients),
 // rotates it, mints a new access token. Detects reuse and burns the chain.
-func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	plaintext := h.extractRefreshToken(r)
 	if plaintext == "" {
 		writeError(w, http.StatusUnauthorized, "unauthorized", "missing refresh token")
@@ -323,7 +329,7 @@ func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh s
 	http.SetCookie(w, &http.Cookie{
 		Name:     "portal_refresh",
 		Value:    refresh,
-		Path:     "/auth",
+		Path:     "/api/v1/auth",
 		Domain:   h.CookieDomain,
 		MaxAge:   int(h.RefreshTTL.Seconds()),
 		HttpOnly: true,
@@ -335,7 +341,7 @@ func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh s
 func clearSessionCookies(w http.ResponseWriter, secure bool) {
 	for _, c := range []http.Cookie{
 		{Name: middleware.AccessCookieName, Path: "/", MaxAge: -1, HttpOnly: true, Secure: secure, SameSite: http.SameSiteStrictMode},
-		{Name: "portal_refresh", Path: "/auth", MaxAge: -1, HttpOnly: true, Secure: secure, SameSite: http.SameSiteStrictMode},
+		{Name: "portal_refresh", Path: "/api/v1/auth", MaxAge: -1, HttpOnly: true, Secure: secure, SameSite: http.SameSiteStrictMode},
 	} {
 		c := c
 		http.SetCookie(w, &c)
@@ -345,7 +351,7 @@ func clearSessionCookies(w http.ResponseWriter, secure bool) {
 func clearOIDCCookie(w http.ResponseWriter, secure bool) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "portal_oidc",
-		Path:     "/auth",
+		Path:     "/api/v1/auth",
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   secure,

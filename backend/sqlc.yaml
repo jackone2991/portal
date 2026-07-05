@@ -6,6 +6,11 @@ version: "2"
 #
 # Convention: package name = `<module>repo` (e.g. accountrepo, mediarepo)
 # to make import paths self-documenting at call sites.
+#
+# NOTE (v1): only the `account` block is active. The tenant/media/movie/music/
+# story/comic modules have no query files yet, and `media` needs the deferred
+# `assets` table (see MILESTONE_CHECKS.md T5.1). Their blocks stay commented out
+# so `sqlc generate` is green. Re-enable a block when its module gains queries.
 
 sql:
   - engine: "postgresql"
@@ -22,74 +27,15 @@ sql:
         emit_exact_table_names: false
         emit_pointers_for_null_types: true
 
-  - engine: "postgresql"
-    queries: "internal/modules/tenant/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "tenantrepo"
-        out:     "internal/modules/tenant/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
-
-  - engine: "postgresql"
-    queries: "internal/modules/media/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "mediarepo"
-        out:     "internal/modules/media/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
-
-  - engine: "postgresql"
-    queries: "internal/modules/movie/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "movierepo"
-        out:     "internal/modules/movie/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
-
-  - engine: "postgresql"
-    queries: "internal/modules/music/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "musicrepo"
-        out:     "internal/modules/music/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
-
-  - engine: "postgresql"
-    queries: "internal/modules/story/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "storyrepo"
-        out:     "internal/modules/story/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
-
-  - engine: "postgresql"
-    queries: "internal/modules/comic/query"
-    schema:  "db/migrations"
-    gen:
-      go:
-        package: "comicrepo"
-        out:     "internal/modules/comic/repository"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        emit_pointers_for_null_types: true
+  # ── Re-enable per module when it has query files ──────────────────
+  # - engine: "postgresql"
+  #   queries: "internal/modules/tenant/query"
+  #   schema:  "db/migrations"
+  #   gen: { go: { package: "tenantrepo", out: "internal/modules/tenant/repository", sql_package: "pgx/v5", emit_json_tags: true, emit_interface: true, emit_pointers_for_null_types: true } }
+  #
+  # - engine: "postgresql"
+  #   queries: "internal/modules/media/query"       # needs the assets table (T5.1)
+  #   schema:  "db/migrations"
+  #   gen: { go: { package: "mediarepo", out: "internal/modules/media/repository", sql_package: "pgx/v5", emit_json_tags: true, emit_interface: true, emit_pointers_for_null_types: true } }
+  #
+  # - movie / music / story / comic: same shape as above.

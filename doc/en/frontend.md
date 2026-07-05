@@ -14,21 +14,40 @@ frontend/
 ├── next.config.ts
 ├── package.json
 ├── postcss.config.mjs
-├── tsconfig.json
+├── tsconfig.json                     ← @/* → src/*
 └── src/
-    ├── app/
+    ├── app/                          ← ROUTING ONLY (thin); views resolve via the registry
     │   ├── globals.css
-    │   ├── layout.tsx
-    │   └── page.tsx
+    │   ├── layout.tsx                ← root: <html>, Providers, active-template theme import
+    │   ├── providers.tsx            ← TanStack Query client ('use client')
+    │   ├── (public)/                 ← guest shell (MasterPublic)
+    │   │   ├── layout.tsx
+    │   │   ├── login/page.tsx
+    │   │   └── register/page.tsx
+    │   └── (app)/                    ← authenticated shell (MasterBase)
+    │       ├── layout.tsx
+    │       ├── page.tsx              ← "/" home / newsfeed
+    │       └── library/
+    │           ├── comic/page.tsx
+    │           └── novel/[id]/page.tsx
+    ├── templates/                    ← VERSIONED presentation layer (see §1.1)
+    │   ├── types.ts                  ← TemplateManifest contract
+    │   ├── registry.ts               ← single version-switch point (env NEXT_PUBLIC_TEMPLATE_VERSION)
+    │   ├── README.md
+    │   └── v1/                       ← "Olympus" theme, ported from template-main
+    │       ├── index.ts              ← v1 manifest
+    │       ├── theme/theme.css
+    │       ├── master/{MasterBase,MasterPublic}.tsx
+    │       ├── components/{headers,menu,footers,popup}/*
+    │       ├── partials/{HelloPreloader,GoToTop}.tsx
+    │       └── views/{home,auth,library/{comic,novel}}/*
     └── lib/
-        └── api-client.ts          ← will be replaced by generated + server-only client (D-34)
+        └── api-client.ts             ← will be replaced by generated + server-only client (D-34)
 ```
 
-Status: **bare scaffold**. Phase 0 lands the real structure:
-- `app-router` + RSC, Tailwind v4, TypeScript already chosen.
-- Vidstack for HLS playback ([§3 Media](feature.md)).
-- Zustand + TanStack Query + React Hook Form for state ([D-32]).
-- `next-intl` for i18n ([D-7]).
+Status: **Phase-0 presentation scaffold implemented** — the versioned template layer (§1.1) is in place and the routes above render. Layout shells, sidebars, partials, and views are ported from the Blade reference; popups and the SVG sprite are placeholders, and most views are skeletons (data wiring follows the roadmap in §10). Still to land: server-only API client + refresh-and-return ([D-34], §4), generated OpenAPI types, OIDC flow, i18n, Radix component library.
+
+Stack already chosen: App Router + RSC, Tailwind v4, TypeScript; Vidstack for HLS ([§3 Media](feature.md)); Zustand + TanStack Query + React Hook Form for state ([D-32]); `next-intl` for i18n ([D-7]).
 
 Two visual-design sources, both **reference only — not active code**:
 
@@ -38,6 +57,73 @@ Two visual-design sources, both **reference only — not active code**:
 | [template-main/social/](../../template-main/social/) | Static HTML (Olympus theme) | Social product UI: ~70 pages across newsfeed/profile/friends/communities/events/messaging |
 
 The Next.js rewrite reinvents both **with React + Tailwind**. Original CSS/JS is not imported. Only structure + interaction patterns + asset layout are reused as references.
+
+### 1.1 Versioned template layer (implementation)
+
+The whole UI lives under `src/templates/v{N}/`, **one folder per template version**. This mirrors the Blade reference at `template-main/portal/resources/views/v1/`, where the entire presentation layer is namespaced by version so a redesign can ship as `v2/` without touching `v1/`.
+
+The load-bearing rule: **`app/` is routing only.** Route files never import a specific version — they call `activeTemplate()` and render whatever shell/view the active version provides. URLs stay clean (`/`, `/login`, `/library/comic`); the version is an internal concern, **never a URL segment**.
+
+```
+app/(public)/login/page.tsx ─┐
+app/(app)/page.tsx ──────────┼─→ activeTemplate() ──→ registry.ts ──→ templates/v1/index.ts
+app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
+```
+
+- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`). Every version implements this exact shape.
+- **`templates/registry.ts`** — the single switch point: maps version id → manifest, picks the active one from `NEXT_PUBLIC_TEMPLATE_VERSION`, throws on an unknown id.
+- **`templates/v1/index.ts`** — the v1 manifest binding the Olympus components to the contract.
+
+A route file is therefore a 3-line resolver, e.g. `app/(app)/page.tsx`:
+
+```typescript
+import { activeTemplate } from "@/templates/registry";
+export default function HomePage() {
+  const View = activeTemplate().views.home;
+  return <View />;
+}
+```
+
+Layouts resolve the shells the same way: `(public)/layout.tsx` wraps children in `shells.public`, `(app)/layout.tsx` in `shells.app` (≈ Blade `master-public` / `master-base`). Theme tokens are per version (`templates/v1/theme/theme.css`, scoped under `[data-template="v1"]`) and imported once in `app/layout.tsx`.
+
+### 1.2 Adding a new version (e.g. v2)
+
+1. `cp -r templates/v1 templates/v2`; restyle / rebuild the components.
+2. Set `version: "v2"` in `templates/v2/index.ts`.
+3. Register it: `const REGISTRY = { v1, v2 }` in `registry.ts`.
+4. Run with `NEXT_PUBLIC_TEMPLATE_VERSION=v2` and swap the theme import in `app/layout.tsx`.
+
+No `app/` route file changes; v1 and v2 coexist in the repo indefinitely. This is the same intent as the Blade `v1/` namespace, adapted to App Router.
+
+### 1.3 Blade → Next.js mapping (v1)
+
+Source: `template-main/portal/resources/views/v1/` (Crumina "Olympus" theme).
+
+| Blade | Next.js (`templates/v1/`) |
+|---|---|
+| `master/master-base.blade.php` | `master/MasterBase.tsx` (app shell: preloader + sidebars + popups + sprite) |
+| `master/master-public.blade.php` | `master/MasterPublic.tsx` (guest shell) |
+| `components/head/*` (css/js/fonts) | `app/layout.tsx` `metadata` + `theme/theme.css` |
+| `components/headers/menu` | `components/headers/TopMenu.tsx` |
+| `components/menu/sidebar{Left,Right}` | `components/menu/Sidebar{Left,Right}.tsx` |
+| `components/menu/sidebarCenter(+Responsive)` | `components/menu/SidebarCenter.tsx` |
+| `components/footers/svg` | `components/footers/SvgSprite.tsx` (placeholder) |
+| `components/footers/js` / `ico` | React hooks / `metadata` favicons (no component) |
+| `components/popup/*` | `components/popup/*.tsx` (modal stubs → `null` until open-state wired) |
+| `partials/hellopreloader` / `goToTop` | `partials/HelloPreloader.tsx` / `GoToTop.tsx` |
+| `views/home/home` | `views/home/HomeView.tsx` |
+| `public/login` / `register` | `views/auth/{LoginView,RegisterView}.tsx` + shared `AuthForm.tsx` |
+| `views/library/commic/index` | `views/library/comic/ComicIndexView.tsx` (typo "commic" fixed) |
+| `views/library/novel/detail` | `views/library/novel/NovelDetailView.tsx` |
+
+### 1.4 Relationship to the target route tree (§2.1)
+
+The full route tree in §2.1 (`/t/{tenant}/(app)/...`, marketing, admin, all verticals) is the **long-horizon target**. The routes implemented today are the v1-cut subset, and the tenant prefix `/t/[tenant]` ([D-23]) is deferred. Because routing resolves through the registry, **the final URL shape and the template version are independent** — adding `/t/[tenant]` later, or swapping to `v2`, touches neither `templates/` nor the resolver pattern.
+
+Two reconciliations with later sections:
+
+- **Components vs. templates.** §7 describes a cross-version primitives/feature library under `src/components/` (Radix + Tailwind). That layer is for shared, version-agnostic building blocks; `src/templates/v{N}/` composes them (plus version-specific markup) into the shells and views a given design version ships. Primitives go in `components/`, version-specific composition goes in `templates/`.
+- **Register page.** §6.1 lists register as "out of scope — Authentik handles". The implemented `RegisterView` is a **visual scaffold only**: `AuthForm` keeps the email/password fields unwired and routes the real entry point through the SSO button → `/api/v1/auth/login`. There is no local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
 
 ---
 
@@ -776,6 +862,7 @@ What to take, what to leave.
 
 - Avatars / placeholders from `template-main/social/img/` — usable as dev fixtures; replace with real CDN content in prod.
 - Logo: needs redesign — current `template-main/social/img/logo.png` is "Olympus" branded.
+- **Storage origin (decided):** media bytes live in **MinIO bound to the local folder `./data/minio` in dev**, and **Cloudflare R2 in prod**. Both speak S3, so the app reads `S3_*` for either — going live is an `.env` change, not a code change (see [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md)). The frontend builds media URLs from the configured S3/R2 endpoint; image optimisation in prod via Cloudflare Image Resizing on R2.
 
 ### 9.4 Don't auto-port
 
@@ -907,7 +994,7 @@ These aren't blocking but each needs an answer when the relevant phase opens:
 5. **End-to-end test framework.** Playwright default; Cypress as alternate. Playwright recommended for parity with axe-core integration.
 6. **Bundle splitting strategy.** Per-route splitting is default. Revisit if any route exceeds 200 KB JS budget.
 7. **Theme system.** CSS variables + Tailwind v4 native theme support. Confirm token list before component library matures.
-8. **Image CDN.** Cloudflare R2 with on-the-fly resize (Cloudflare Image Resizing) vs `next/image` self-hosted. R2 + Cloudflare Resize is the lower-friction default.
+8. **Image CDN / storage origin.** *Decided:* dev = MinIO on the local folder `./data/minio`; prod = Cloudflare R2 (S3-compatible). The switch is `.env`-only (`S3_*`), no code change — see [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md). Image optimisation in prod via Cloudflare Image Resizing on R2; `next/image` self-hosted remains the fallback.
 
 ---
 

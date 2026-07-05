@@ -776,6 +776,7 @@ Lấy cái gì, bỏ cái gì.
 
 - Avatar / placeholder từ `template-main/social/img/` — usable như fixture dev; thay bằng content CDN thực ở prod.
 - Logo: cần redesign — `template-main/social/img/logo.png` hiện tại branded "Olympus".
+- **Storage origin (đã chốt):** media bytes lưu ở **MinIO trỏ vào folder local `./data/minio` lúc dev**, và **Cloudflare R2 ở prod**. Cả hai đều nói giọng S3, app đọc `S3_*` cho cả hai — lên live chỉ đổi `.env`, không sửa code (xem [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md)). Frontend dựng URL media từ S3/R2 endpoint đã cấu hình; tối ưu ảnh ở prod qua Cloudflare Image Resizing trên R2.
 
 ### 9.4 Không auto-port
 
@@ -907,7 +908,7 @@ Những cái này không block nhưng mỗi cái cần answer khi phase liên qu
 5. **Framework test end-to-end.** Playwright default; Cypress là alternate. Playwright recommended cho parity với integration axe-core.
 6. **Strategy bundle splitting.** Splitting per-route là default. Revisit nếu route nào vượt budget 200 KB JS.
 7. **System theme.** CSS variable + support theme native Tailwind v4. Confirm list token trước khi component library mature.
-8. **Image CDN.** Cloudflare R2 với resize on-the-fly (Cloudflare Image Resizing) vs `next/image` self-hosted. R2 + Cloudflare Resize là default friction-thấp hơn.
+8. **Image CDN / storage origin.** *Đã chốt:* dev = MinIO trên folder local `./data/minio`; prod = Cloudflare R2 (S3-compatible). Chuyển đổi chỉ bằng `.env` (`S3_*`), không sửa code — xem [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md). Tối ưu ảnh ở prod qua Cloudflare Image Resizing trên R2; `next/image` self-hosted là fallback.
 
 ---
 

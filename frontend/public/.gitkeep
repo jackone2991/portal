@@ -1,0 +1,2 @@
+# Keeps the Next.js public/ directory present (static assets, favicon, robots.txt).
+# The Dockerfile runner stage copies this dir; without it the build fails.

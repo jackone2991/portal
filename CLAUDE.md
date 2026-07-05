@@ -8,6 +8,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `now.png` is a legacy architecture diagram from the original spec.
 - `template-main/` is **reference material, not active code** — a Laravel/PHP portal scaffold and a static HTML social template. Don't edit, don't import. The Go scaffold under `backend/` is the real implementation.
 
+## Project scope & constraints (read before planning work)
+
+Everything below describes the **full, multi-year platform** — it is NOT the current scope. A recent evaluation pass ([doc/en/architecture/](doc/en/architecture/), ADRs 00–05) cut v1 down to a hard envelope: **1 developer · 2 weeks · ≤ $100/mo · single VPS.** Default to the v1 cut unless the user says otherwise — do not reach for the bank/social/marketplace modules.
+
+- **v1 = Phase 0 wiring + one video-upload happy path, nothing else** ([01-v1-scope-cut.md](doc/en/architecture/01-v1-scope-cut.md)). The whole demo loop: OIDC sign-in → authenticated Next.js home → upload mp4 → R2 → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout. No tenants, no domain CRUD, no bank, no social, no observability stack, no mediamtx/LiveKit.
+- **The critical path is the wiring gap, in strict order** ([05-phase0-wiring-order.md](doc/en/architecture/05-phase0-wiring-order.md)): migration-tree audit → `make sqlc` → repository adapters → construct `account.New(...)` in `cmd/api/main.go` → OIDC end-to-end → frontend RSC auth handoff. Migrations must be split/audited **before** sqlc freezes the schema — that ordering is non-negotiable.
+- **Deferred outright for v1:** bank, social (+ advanced social), creator economy, marketplace, ML safety, LiveKit/mediamtx, the 5-service observability stack. Compose profiles `--profile observability`, `--profile live`, and `--calls` stay disabled.
+- **Storage for v1 is R2-only** ([04-storage-tier-budget.md](doc/en/architecture/04-storage-tier-budget.md)); the MinIO-origin + R2-edge two-tier design in the next section is the long-horizon target.
+
+The decision log lives in [doc/](doc/): `feature.md` (40 numbered decisions `D-1`…`D-40` across 12 phases — cite these IDs when restating a settled decision), `diagrams.md` (Mermaid system/module/flow diagrams), `archivetech.md` (a competing RBAC vision — see the schism note in the Account section), plus `authoration.md` / `frontend.md`. Every doc exists in both `doc/en/` and `doc/vi/`; keep the pair in sync when you edit one.
+
 ## Stack & decisions
 
 Self-hosted media + ecosystem monorepo (movies / music / stories / comics). Resolved choices:
@@ -17,7 +28,7 @@ Self-hosted media + ecosystem monorepo (movies / music / stories / comics). Reso
 - **Job queue: Asynq** (not BullMQ — BullMQ is Node-only). Three priority queues: `transcode` (5), `thumbnail` (3), `default` (1).
 - **API contract: OpenAPI** at [shared/openapi.yaml](shared/openapi.yaml) is the source of truth. Go server stubs (`oapi-codegen`) and TS client types (`openapi-typescript`) are both generated from it. Hand-editing generated files is forbidden.
 - **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Route groups planned: `(movies)`, `(music)`, `(stories)`.
-- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (origin) + **Cloudflare R2** (CDN edge).
+- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (origin) + **Cloudflare R2** (CDN edge). *(v1 ships R2-only — see the scope section / [ADR-04](doc/en/architecture/04-storage-tier-budget.md).)*
 
 ## Backend module boundaries (read before editing across modules)
 
@@ -49,6 +60,8 @@ Adding a new module: follow the checklist in `backend/MODULES.md` §8 (create th
 ## Account module — auth + RBAC architecture (non-obvious)
 
 The account module ([backend/internal/modules/account/](backend/internal/modules/account/)) is intentionally strict; behavior diverges from textbook RBAC in subtle ways.
+
+> **RBAC schism — know this before touching auth.** Two access-control specs conflict: the **role-hierarchy** model documented here (built, in code) vs the **policy-bundle / file-gated-permission** model in `doc/*/archivetech.md` (specced, no code). [ADR-02](doc/en/architecture/02-rbac-model-reconciliation.md) resolves it: **role-hierarchy is canonical for v1**; policy bundles + user groups layer *on top of* roles in a later phase — they don't replace them. Disregard `archivetech.md`'s "spec wins, adjust code" clause for v1.
 
 ### Identity flow
 1. **OIDC via Authentik.** No local password auth. `/auth/login` sets a 5-min `portal_oidc` cookie binding `state` (CSRF) + `nonce` (ID-token replay). Callback validates both before exchange.
@@ -122,7 +135,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **portal** (17499 symbols, 34457 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **portal** (17074 symbols, 29241 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

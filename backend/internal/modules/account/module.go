@@ -15,10 +15,12 @@
 package account
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
@@ -29,6 +31,12 @@ import (
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	"github.com/portal/backend/internal/modules/account/rbac"
 )
+
+// APIUserFetcher is the projection the cross-module API (accountapi.Impl) needs.
+// The same repository adapter that implements SnapshotFetcher provides it.
+type APIUserFetcher interface {
+	GetUserSummaryByID(ctx context.Context, id uuid.UUID) (*accountapi.UserSummary, error)
+}
 
 // Deps are the cross-cutting infrastructure dependencies the account module
 // needs. Provided by cmd/api or cmd/worker at construction time. No globals.
@@ -42,7 +50,15 @@ type Deps struct {
 	PermFetcher     rbac.PermissionFetcher
 	UserUpserter    handler.UserUpserter
 	AuditStore      audit.EventStore
+	APIUsers        APIUserFetcher
 	CacheTTL        time.Duration
+
+	// Session settings applied to the auth handler (cookie flags + token TTLs).
+	AccessTTL    time.Duration
+	RefreshTTL   time.Duration
+	CookieDomain string
+	CookieSecure bool
+	PostLoginURL string
 }
 
 // Module is the runtime handle for the account domain.
@@ -74,6 +90,12 @@ func New(d Deps) (*Module, error) {
 		Refresh: d.Refresh,
 		Users:   d.UserUpserter,
 		Audit:   logger,
+
+		AccessTTL:    d.AccessTTL,
+		RefreshTTL:   d.RefreshTTL,
+		CookieDomain: d.CookieDomain,
+		CookieSecure: d.CookieSecure,
+		PostLoginURL: d.PostLoginURL,
 	}
 
 	return &Module{
@@ -81,7 +103,7 @@ func New(d Deps) (*Module, error) {
 		engine:    engine,
 		logger:    logger,
 		handler:   h,
-		publicAPI: accountapi.NewImpl(engine, d.SnapshotFetcher),
+		publicAPI: accountapi.NewImpl(engine, d.APIUsers),
 	}, nil
 }
 
@@ -91,7 +113,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/login", m.handler.Login)
 		r.Get("/callback", m.handler.Callback)
-		r.Post("/refresh", m.handler.Refresh)
+		r.Post("/refresh", m.handler.HandleRefresh)
 
 		// Authenticated routes
 		r.Group(func(r chi.Router) {

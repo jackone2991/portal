@@ -58,13 +58,13 @@ WHERE id = $1;
 -- revoking every link. Used on suspected token theft (reuse detection).
 WITH RECURSIVE
   forward AS (
-    SELECT id FROM refresh_tokens WHERE id = $1
+    SELECT rt.id FROM refresh_tokens rt WHERE rt.id = $1
     UNION
     SELECT rt.id FROM refresh_tokens rt
     JOIN forward f ON rt.parent_id = f.id
   ),
   backward AS (
-    SELECT id, parent_id FROM refresh_tokens WHERE id = $1
+    SELECT rt.id, rt.parent_id FROM refresh_tokens rt WHERE rt.id = $1
     UNION
     SELECT rt.id, rt.parent_id FROM refresh_tokens rt
     JOIN backward b ON b.parent_id = rt.id

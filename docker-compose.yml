@@ -1,22 +1,55 @@
 # Portal — local development compose.
 # Production overlays should live in docker-compose.prod.yml.
 #
-# Bring up infrastructure only:    docker compose up -d postgres pgbouncer dragonfly minio traefik
-# Bring up everything:              docker compose up -d
-# View Traefik dashboard:           https://traefik.${APP_DOMAIN}
+# Bring up everything (incl. local MinIO storage):
+#   docker compose up -d
+# Infrastructure only:
+#   docker compose up -d postgres pgbouncer dragonfly minio traefik
+#
+# Object storage:
+#   - Dev (this file): MinIO, bytes live in the local folder ./data/minio. The app
+#     speaks S3 to it, so going live = an .env change only — point S3_ENDPOINT +
+#     S3_ACCESS_KEY/SECRET at R2/S3 and set S3_USE_PATH_STYLE=false. No code change.
+#   - Prod overlay (docker-compose.prod.yml): drop MinIO, S3_* -> Cloudflare R2
+#     (R2-only, per doc/en/architecture/04-storage-tier-budget.md).
+#
+# Authentik (OIDC IdP) is part of the default stack — the v1 login flow needs it.
+# It reuses Dragonfly as its Redis and runs its own Postgres (so Portal's DB stays
+# isolated from the IdP schema).
+#
+# Dashboards:
+#   https://traefik.${APP_DOMAIN}   https://auth.${APP_DOMAIN}
+#   https://minio.${APP_DOMAIN}     (MinIO console)
+#
+# New .env keys this file needs (see .env.example):
+#   AUTHENTIK_SECRET_KEY, AUTHENTIK_PG_PASSWORD, AUTHENTIK_BOOTSTRAP_PASSWORD,
+#   AUTHENTIK_BOOTSTRAP_EMAIL, AUTHENTIK_TAG, NEXT_PUBLIC_TEMPLATE_VERSION
 #
 # Note: hostnames inside the compose network match service names below.
 
 name: portal
 
 networks:
-  edge:        # external-facing: traefik <-> api/frontend
+  edge:        # external-facing: traefik <-> api/frontend/authentik
   internal:    # backend-only: db, cache, storage
 
 volumes:
   postgres_data:
-  minio_data:
   traefik_acme:
+  authentik_pgdata:
+  authentik_media:
+  # MinIO uses a bind-mount (./data/minio), not a named volume — see the minio service.
+
+# ── Reusable fragments ──────────────────────────────────────────────
+# Shared Authentik config for the server + worker (they must match).
+x-authentik-env: &authentik-env
+  AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+  AUTHENTIK_POSTGRESQL__HOST: authentik-postgres
+  AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
+  AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
+  AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASSWORD}
+  AUTHENTIK_REDIS__HOST: dragonfly          # shared with Asynq; distinct key prefixes
+  AUTHENTIK_REDIS__PORT: 6379
 
 services:
   # ── Reverse proxy ───────────────────────────────────────────────
@@ -30,7 +63,7 @@ services:
       - "443:443"
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
       - traefik_acme:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
@@ -40,10 +73,16 @@ services:
       - traefik.http.routers.dashboard.rule=Host(`traefik.${APP_DOMAIN}`)
       - traefik.http.routers.dashboard.service=api@internal
       - traefik.http.routers.dashboard.entrypoints=websecure
-      - traefik.http.routers.dashboard.tls.certresolver=letsencrypt
+      - traefik.http.routers.dashboard.tls=true
+      - traefik.http.routers.dashboard.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
       - traefik.http.routers.dashboard.middlewares=dashboard-auth
       - traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}
-    networks: [edge]
+    networks:
+      edge:
+        # Let in-cluster services (the API's OIDC client) reach Authentik via the
+        # public hostname, routed through Traefik — mirrors the browser path.
+        aliases:
+          - auth.${APP_DOMAIN}
 
   # ── Database ────────────────────────────────────────────────────
   postgres:
@@ -63,7 +102,7 @@ services:
     networks: [internal]
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.23.1-p3
     restart: unless-stopped
     environment:
       DB_HOST: postgres
@@ -87,9 +126,18 @@ services:
     ulimits:
       memlock: -1
     command: ["--logtostderr", "--cluster_mode=emulated"]
+    healthcheck:
+      # Dragonfly's image ships no redis-cli; a successful TCP connect to the
+      # main port means it's up and accepting clients (bash is in the image).
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/6379"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks: [internal]
 
-  # ── Object storage ──────────────────────────────────────────────
+  # ── Object storage (dev: MinIO backed by the local folder ./data/minio) ──
+  # Prod swaps S3_* to Cloudflare R2 and drops this service (see header / ADR-04).
   minio:
     image: minio/minio:latest
     restart: unless-stopped
@@ -98,14 +146,109 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
-      - minio_data:/data
+      - ./data/minio:/data          # ← your local storage folder (gitignored)
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     labels:
       - traefik.enable=true
       - traefik.http.routers.minio-console.rule=Host(`minio.${APP_DOMAIN}`)
       - traefik.http.routers.minio-console.entrypoints=websecure
-      - traefik.http.routers.minio-console.tls.certresolver=letsencrypt
+      - traefik.http.routers.minio-console.tls=true
+      - traefik.http.routers.minio-console.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
       - traefik.http.services.minio-console.loadbalancer.server.port=9001
     networks: [edge, internal]
+
+  # One-shot: create the media bucket in MinIO so the first upload doesn't 404.
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${S3_BUCKET}" &&
+        echo "minio bucket ready: $${S3_BUCKET}"
+    restart: "no"
+    networks: [internal]
+
+  # ── Identity provider (Authentik / OIDC) ────────────────────────
+  authentik-postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AUTHENTIK_PG_DB:-authentik}
+      POSTGRES_USER: ${AUTHENTIK_PG_USER:-authentik}
+      POSTGRES_PASSWORD: ${AUTHENTIK_PG_PASSWORD}
+    volumes:
+      - authentik_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTHENTIK_PG_USER:-authentik} -d ${AUTHENTIK_PG_DB:-authentik}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2024.10.5}
+    restart: unless-stopped
+    command: server
+    environment:
+      <<: *authentik-env
+      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@portal.localhost}
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+    volumes:
+      - authentik_media:/media
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authentik.rule=Host(`auth.${APP_DOMAIN}`)
+      - traefik.http.routers.authentik.entrypoints=websecure
+      - traefik.http.routers.authentik.tls=true
+      - traefik.http.routers.authentik.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
+      - traefik.http.services.authentik.loadbalancer.server.port=9000
+    networks: [edge, internal]
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2024.10.5}
+    restart: unless-stopped
+    command: worker
+    environment:
+      <<: *authentik-env
+    volumes:
+      - authentik_media:/media
+      - /var/run/docker.sock:/var/run/docker.sock   # used by Authentik to manage outposts
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks: [internal]
 
   # ── Application services ────────────────────────────────────────
   api:
@@ -118,14 +261,19 @@ services:
       postgres:
         condition: service_healthy
       dragonfly:
-        condition: service_started
+        condition: service_healthy
       minio:
-        condition: service_started
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+      authentik-server:
+        condition: service_started      # OIDC issuer reachable for login
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=Host(`api.${APP_DOMAIN}`)
       - traefik.http.routers.api.entrypoints=websecure
-      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
       - traefik.http.services.api.loadbalancer.server.port=8080
     networks: [edge, internal]
 
@@ -139,14 +287,23 @@ services:
       postgres:
         condition: service_healthy
       dragonfly:
-        condition: service_started
+        condition: service_healthy
       minio:
-        condition: service_started
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
     networks: [internal]
 
   frontend:
     build:
       context: ./frontend
+      args:
+        # NEXT_PUBLIC_* are inlined into the client bundle at build time, so they
+        # must be passed as build args (the Dockerfile should declare matching ARGs).
+        # Switching template version = rebuild with a different value (see
+        # frontend/src/templates/registry.ts).
+        NEXT_PUBLIC_TEMPLATE_VERSION: ${NEXT_PUBLIC_TEMPLATE_VERSION:-v1}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.${APP_DOMAIN}}
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -155,6 +312,7 @@ services:
       - traefik.enable=true
       - traefik.http.routers.frontend.rule=Host(`${APP_DOMAIN}`)
       - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
       - traefik.http.services.frontend.loadbalancer.server.port=3000
     networks: [edge]

@@ -1,0 +1,12 @@
+# Dev-only TLS — locally-trusted mkcert certificate for *.portal.localhost.
+# Mounted into the Traefik file-provider directory by docker-compose.override.yml.
+# Generate the cert with `make certs` (runs mkcert). Not used in prod (ACME there).
+tls:
+  certificates:
+    - certFile: /certs/portal.localhost.pem
+      keyFile: /certs/portal.localhost-key.pem
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/portal.localhost.pem
+        keyFile: /certs/portal.localhost-key.pem

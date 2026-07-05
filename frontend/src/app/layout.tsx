@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+// Active template theme tokens. Swap this import when changing
+// NEXT_PUBLIC_TEMPLATE_VERSION (see src/templates/registry.ts).
+import "@/templates/v1/theme/theme.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

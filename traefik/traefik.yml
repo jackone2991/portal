@@ -23,7 +23,9 @@ providers:
     exposedByDefault: false
     network: portal_edge
   file:
-    filename: /etc/traefik/dynamic.yml
+    # Directory so dev can drop an extra cert file (dynamic.dev.yml) alongside
+    # dynamic.yml via docker-compose.override.yml. Prod has only dynamic.yml here.
+    directory: /etc/traefik/dynamic
     watch: true
 
 certificatesResolvers:
