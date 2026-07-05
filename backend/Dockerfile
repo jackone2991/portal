@@ -3,7 +3,7 @@
 # Both share the same Go build cache via a common `builder` stage.
 
 # ── Builder ─────────────────────────────────────────────────────
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /src
 
 RUN apk add --no-cache git ca-certificates
