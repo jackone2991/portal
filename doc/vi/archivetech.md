@@ -1,16 +1,24 @@
 # ArchiveTech — Đặc tả chức năng hệ thống
 
-> Tài liệu đặc tả tính năng chính thức cho hệ sinh thái Portal + nền tảng đa phương tiện.
+> **Trạng thái (cập nhật 2026-07-06):** Đặc tả bị hoãn (post-v1) cho tầng policy-bundle / user-group / file-gated-permission.
+> Theo [ADR-02](architecture/02-rbac-model-reconciliation.md), RBAC role-hierarchy trong code là chính tắc (canonical) cho v1 — tầng này xếp chồng lên trên roles sau này, và điều khoản "spec thắng, điều chỉnh code" bên dưới **bị tạm hoãn cho v1**.
+> Auth hiện là mật khẩu local (Argon2id) theo [ADR-06](architecture/06-local-auth-model.md) — Authentik/OIDC đã bị gỡ bỏ; mọi nhắc đến OIDC/Authentik bên dưới đều mang tính lịch sử.
+> Các tag build-status trong §3.5/§3.8 đã được làm mới ngày 2026-07-06; bộ theo dõi trạng thái sống là [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md).
+
+> Đặc tả tính năng bị hoãn (post-v1) cho tầng kiểm soát truy cập policy-bundle của hệ sinh thái Portal + nền tảng đa phương tiện.
 > Bắt nguồn từ các UI mock trong `template-main/portal/document/anh{1,2,3}.png`
 > và từ các quyết định kiến trúc đã ghi trong [CLAUDE.md](../../CLAUDE.md).
 >
-> **Status legend** dùng xuyên suốt tài liệu:
+> **Status legend** dùng xuyên suốt tài liệu này:
 >
 > - **[BUILT]**  — code đã có trong `backend/`
 > - **[PARTIAL]** — đã làm một phần; schema hoặc interface đã có nhưng chưa wire
 > - **[PLANNED]** — đã thiết kế nhưng chưa có code
 >
-> Khi spec xung đột với code hiện tại, **spec thắng** — điều chỉnh code, không phải ngược lại. Cập nhật tài liệu này khi quyết định thay đổi.
+> Khi spec xung đột với code hiện tại, **spec thắng** — điều chỉnh code,
+> không phải ngược lại. Cập nhật tài liệu này khi quyết định thay đổi.
+>
+> **Cập nhật (2026-07-06):** điều khoản bị tạm hoãn theo ADR-02 — mô hình role-hierarchy trong code là chính tắc cho v1; spec này mô tả một tầng sau này xếp chồng lên trên roles, chứ không thay thế chúng.
 
 ---
 
@@ -20,7 +28,7 @@ Một nền tảng media self-hosted với **hệ thống kiểm soát truy cậ
 
 1. **Domain media** — Movies, Music, Stories. Pipeline upload → transcode → stream.
 2. **Kiểm soát truy cập tổ chức** — User Group, User, User Role, Policy, Permission file-gated.
-3. **Tính toàn vẹn vận hành** — audit trail đầy đủ, revoke tức thì, OIDC SSO, không có secret hard-coded.
+3. **Tính toàn vẹn vận hành** — audit trail đầy đủ, revoke tức thì, auth mật khẩu first-party ([ADR-06](architecture/06-local-auth-model.md); social login tuỳ chọn sau này), không có secret hard-coded trong code.
 
 Các mock thể hiện ArchiveTech là một hệ thống **policy-driven, group-scoped** — không phải hệ thống role phẳng. Mô hình dữ liệu bên dưới phản ánh điều đó.
 
@@ -32,18 +40,18 @@ Các mock giới thiệu bốn entity tương tác với nhau:
 
 ```text
                  ┌────────────┐
-                 │ User Group │  phân cấp (parent_id), có thể duplicate
+                 │ User Group │  hierarchical (parent_id), can be duplicated
                  └─────┬──────┘
-              members  │  có policies
+              members  │  has policies
                 ┌──────┴──────┐
                 ▼             ▼
             ┌──────┐     ┌────────┐
-            │ User │     │ Policy │  bundle permission tái sử dụng
+            │ User │     │ Policy │  reusable permission bundle
             └──┬───┘     └───┬────┘
    has policies│             │ has permissions
                ▼             ▼
             ┌──────┐     ┌────────────┐
-            │Policy│ ◄── │ Permission │  atomic; một số là file-gated
+            │Policy│ ◄── │ Permission │  atomic; some are file-gated
             └──────┘     └────────────┘
 ```
 
@@ -65,7 +73,7 @@ Tính effective set của user theo thứ tự, sau đó **deduplicate**:
 2. Với mỗi group trên đường đi, collect mọi policy **active** đã attach vào đó.
 3. Thêm mọi policy **active** attach trực tiếp vào user.
 4. Với mỗi policy, expand thành các permission, **lọc bỏ permission file-gated mà file required đang thiếu hoặc hết hạn**.
-5. Apply rule wildcard / scope từ [permission.go](../../backend/internal/rbac/permission.go).
+5. Apply rule wildcard / scope từ [permission.go](../../backend/internal/modules/account/rbac/permission.go).
 
 Cache theo `(user_id, token_version)` trong Redis. Bump `users.token_version` là kênh invalidation chính tắc.
 
@@ -103,7 +111,7 @@ CREATE TABLE user_groups (
     name        TEXT NOT NULL,
     description TEXT,
     parent_id   UUID REFERENCES user_groups(id) ON DELETE CASCADE,
-    -- field soft cho flow duplicate
+    -- soft fields for the duplicate flow
     cloned_from UUID REFERENCES user_groups(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -111,7 +119,7 @@ CREATE TABLE user_groups (
 CREATE TABLE user_group_members (
     group_id    UUID REFERENCES user_groups(id) ON DELETE CASCADE,
     user_id     UUID REFERENCES users(id)       ON DELETE CASCADE,
-    role_label  TEXT,                  -- 'Manager', 'Junior', v.v. (nullable)
+    role_label  TEXT,                  -- 'Manager', 'Junior', etc. (nullable)
     joined_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (group_id, user_id)
 );
@@ -165,7 +173,7 @@ CREATE TABLE policies (
     code         TEXT UNIQUE NOT NULL,
     name         TEXT NOT NULL,
     description  TEXT,
-    functionality TEXT,                -- đoạn blurb dài trong anh2
+    functionality TEXT,                -- the long-form blurb in anh2
     is_active    BOOLEAN NOT NULL DEFAULT true,
     is_system    BOOLEAN NOT NULL DEFAULT false,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -174,9 +182,9 @@ CREATE TABLE policies (
 CREATE TABLE policy_permissions (
     policy_id     UUID REFERENCES policies(id)    ON DELETE CASCADE,
     permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-    -- permission file-gated: cần file đã upload để enable
+    -- file-gated permission: required uploaded file to enable
     requires_file BOOLEAN NOT NULL DEFAULT false,
-    file_label    TEXT,                -- 'Radiologist license', 'NDA', v.v.
+    file_label    TEXT,                -- 'Radiologist license', 'NDA', etc.
     PRIMARY KEY (policy_id, permission_id)
 );
 CREATE TABLE group_policy_attachments (
@@ -224,13 +232,13 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 
 | Tính năng | Trạng thái | Ghi chú |
 |---------|--------|-------|
-| OIDC login (Authentik) với state + nonce | [BUILT] | [oidc.go](../../backend/internal/auth/oidc.go) |
-| Access token (HS256, `kid` xoay, 5 phút) | [BUILT] | [jwt.go](../../backend/internal/auth/jwt.go) |
-| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../backend/internal/auth/refresh.go) |
-| Logout / logout-all | [BUILT] | [auth.go handler](../../backend/internal/handler/auth.go) |
+| Đăng nhập + đăng ký bằng mật khẩu local (Argon2id, rate-limit/lockout chống brute-force) | [BUILT] | [ADR-06](architecture/06-local-auth-model.md) (2026-07-05); OIDC/Authentik đã bị gỡ — không còn callback/state/nonce. [password.go](../../backend/internal/modules/account/auth/password.go) |
+| Access token (HS256, `kid` xoay, 5 phút) | [BUILT] | [jwt.go](../../backend/internal/modules/account/auth/jwt.go) |
+| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../backend/internal/modules/account/auth/refresh.go) |
+| Logout / logout-all | [BUILT] | [auth.go handler](../../backend/internal/modules/account/handler/auth.go) |
 | Danh sách session per user (devices + revoke) | [PARTIAL] | Query đã có (`ListActiveRefreshTokensForUser`); UI [PLANNED] |
-| Wire issuer + verifier + handler trong `cmd/api/main.go` | [PLANNED] | Block bởi `make sqlc` |
-| Repository adapter (UserUpserter, RefreshStore, v.v.) | [PLANNED] | Bao bọc code sqlc-generated |
+| Wire issuer + verifier + handler trong `cmd/api/main.go` | [BUILT] | `account.New(...)` đã được construct và mount dưới `/api/v1`; xem [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) |
+| Repository adapter (RefreshStore, PermissionFetcher, v.v.) | [BUILT] | sqlc adapter trong `internal/modules/account/repository/` (đường OIDC `UserUpserter` đã bị retire theo ADR-06) |
 
 ### 3.6 Module: Search & Discovery *(anh3)*
 
@@ -246,22 +254,22 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 | Tính năng | Trạng thái | Ghi chú |
 |---------|--------|-------|
 | Audit log table append-only | [BUILT] | Migration 0002 |
-| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/audit/logger.go) |
+| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/modules/account/audit/logger.go) |
 | UI viewer audit (table + filters) | [PLANNED] | Hạn chế với `audit:read` |
 | Export range audit (CSV/JSON) | [PLANNED] | Job async — range lớn không nên block API |
 | Retention policy & archival vào cold storage | [PLANNED] | Bucket archive Cloudflare R2 |
 
 ### 3.8 Module: Domain Media (movies / music / stories)
 
-Out of scope cho redesign access-control nhưng liệt kê cho đầy đủ; chức năng từ [README.md](README.md) gốc (đã xoá) được chuyển tiếp.
+Out of scope cho redesign access-control nhưng liệt kê cho đầy đủ; bộ theo dõi build-status sống là [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) (README gốc mà section này từng tham chiếu đã bị xoá).
 
 | Tính năng | Trạng thái | Ghi chú |
 |---------|--------|-------|
-| Upload asset (S3 multipart với presigned URL) | [PARTIAL] | OpenAPI đã định nghĩa; handler [PLANNED] |
-| Worker transcode (FFmpeg → HLS) | [PARTIAL] | Stub trong [transcode.go](../../backend/internal/worker/transcode.go) |
-| Worker thumbnail | [PARTIAL] | Stub trong [thumbnail.go](../../backend/internal/worker/thumbnail.go) |
-| CRUD Movies / Music / Stories | [PLANNED] | Package domain dưới `internal/domain/` |
-| Tích hợp Vidstack player trên frontend | [PLANNED] | |
+| Upload asset (S3 presigned URL) | [BUILT] | Đã live: `POST /assets` (presigned PUT), `PUT /assets/{id}/source` (dev proxy), `POST /assets/{id}/complete`, `GET /assets[/{id}]`, `GET /assets/{id}/hls/*` |
+| Worker transcode (FFmpeg → HLS) | [BUILT] | [transcode.go](../../backend/internal/modules/media/worker/transcode.go): download → ffprobe → ffmpeg VOD HLS → upload → `MarkAssetReady` |
+| Worker thumbnail | [PARTIAL] | Stub trong [thumbnail.go](../../backend/internal/modules/media/worker/thumbnail.go) |
+| CRUD Movies / Music / Stories | [PLANNED] | Scaffold dưới `internal/modules/{movie,music,story}/` |
+| Tích hợp Vidstack player trên frontend | [BUILT] | Studio `/upload` hoạt động end-to-end (vòng demo v1) |
 | Comment, rating, watchlist | [PLANNED] | Permission-gated qua `comments:write` / `comments:delete:*` |
 | Search xuyên content (Postgres FTS → Meilisearch) | [PLANNED] | |
 
@@ -342,6 +350,8 @@ Bốn migration cần thiết trên `0002_rbac`:
 | `0005_file_gated_permissions.up.sql` | `user_permission_files` + column workflow review. |
 | `0006_effective_permissions_view.up.sql` | Materialized view (hoặc function) tính effective perm per user với file-gating apply. Refresh khi grant/revoke hoặc qua trigger. |
 
+> **Ghi chú (2026-07-06):** các số chỉ mang tính minh hoạ — `0003`–`0007` đã được dùng và áp dụng (đến `0007_media_assets`). Khi tầng này được lên lịch, hãy lấy số thứ tự trống tiếp theo với prefix module theo quy ước `000N_<owning-module>_<description>`, ví dụ `0008_account_user_groups`.
+
 Table `roles` hiện tại được giữ cho **role thô cấp hệ thống** (admin, superadmin) — vẫn hữu ích cho quyết định "ai administer cả hệ thống này". Mô hình Policy nằm trên đó cho grant fine-grained, group-scoped.
 
 ---
@@ -351,6 +361,8 @@ Table `roles` hiện tại được giữ cho **role thô cấp hệ thống** (
 Sắp xếp theo least-blocking và most-leverage:
 
 ### Phase 0 — Wire những gì đã build  *(không có tính năng mới)*
+
+> **Cập nhật (2026-07-06):** Phase 0 đã hoàn tất — xem [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md). Tiêu chí exit đã thay đổi theo [ADR-06](architecture/06-local-auth-model.md): **đăng nhập bằng mật khẩu local** end-to-end, không phải OIDC/Authentik (đã gỡ bỏ). Bố cục repository theo từng module (`internal/modules/*/repository/`).
 
 - `make sqlc` generate `internal/repository/`.
 - Adapter cho `AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`.
@@ -388,20 +400,20 @@ Sắp xếp theo least-blocking và most-leverage:
 - Retention policy.
 - **Tiêu chí exit**: audit trail đầy đủ có thể replay cho mọi hành động user/group trong N ngày gần nhất.
 
-### Phase 5 — Domain media (sẵn sàng parallel)
+### Phase 5 — Domain media (sẵn sàng chạy song song)
 
-Track riêng không block 0–4. Xem package `internal/domain/{movie,music,story}/` và pipeline upload + transcode đã stub. Permission code cũng đã seed cho nó.
+Track riêng, không block 0–4. Pipeline upload + transcode đã ship trong v1 (module media, `internal/modules/media/`); phần việc Phase-5 còn lại là CRUD movie/music/story trong `internal/modules/{movie,music,story}/` (mới chỉ scaffold, chưa được construct). Permission code đã được seed sẵn cho nó.
 
 ---
 
 ## 8. Non-goals (tạm thời)
 
-Nói rõ để PR tương lai không drift:
+Nói rõ những điều này để PR tương lai không bị trôi (drift):
 
-- **Deny rule.** Chưa implement; matcher hiện tại grant-only. Precedence contract đã là **deny-wins** (§2.3), nên khi nhu cầu compliance thật xuất hiện, model explicit deny thành enum `policy_permissions.effect` — thứ tự resolution không đổi.
+- **Deny rule.** Chưa implement; matcher hiện tại chỉ grant-only. Precedence contract đã là **deny-wins** (§2.3), nên khi nhu cầu compliance thật xuất hiện, model explicit deny thành enum `policy_permissions.effect` — thứ tự resolution không đổi.
 - **Grant time-bounded ngoài `expires_at`.** Không có fence business-hours / geo / device.
-- **Multi-tenant federated.** Tất cả group sống trong một DB. Tách tenant per DB là exercise của Phase-N.
-- **Self-service password reset.** Authentik sở hữu cái này; Portal không bao giờ thấy mật khẩu.
+- **Multi-tenant federated.** Tất cả group sống trong một DB. Tách tenant theo từng DB là việc của Phase-N.
+- **Self-service password reset.** Vẫn bị hoãn — nhưng Portal giờ sở hữu credentials theo [ADR-06](architecture/06-local-auth-model.md); reset chỉ qua admin/CLI cho đến khi module notification ra đời.
 - **App mobile native.** Chỉ PWA qua Next.js.
 
 ---

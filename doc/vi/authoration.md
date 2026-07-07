@@ -1,12 +1,25 @@
 # Authoration — Xác thực, Phân quyền, và Multi-Tenancy
 
-> Đặc tả bảo mật chính tắc cho Portal. Bao gồm identity (authn), quyết định permission (authz), và cô lập tenant (data segregation).
+> Đặc tả bảo mật chính tắc cho Portal. Bao gồm identity (authn), quyết định
+> permission (authz), và cô lập tenant (data segregation).
 >
 > **Tài liệu đi kèm:**
 > - [archivetech.md](archivetech.md) — roadmap chức năng đầy đủ (UI, module, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — quyết định kiến trúc + working agreement
+> - [ADR-02](architecture/02-rbac-model-reconciliation.md) — RBAC role-hierarchy là chính tắc cho v1; policy bundle layer lên trên sau
+> - [ADR-06](architecture/06-local-auth-model.md) — xác thực mật khẩu local; Authentik/OIDC bị loại bỏ
 >
-> Khi tài liệu này xung đột với code, tài liệu thắng. Cập nhật doc như một phần cùng change-set, không bao giờ sau đó.
+> Đối với các bề mặt đã build (v1), code + ADR là chính tắc (ADR-02 nói rõ bỏ
+> qua clause "spec thắng" cho v1); đối với các lớp post-v1 được đặc tả ở đây,
+> tài liệu này là thiết kế chính thức (design of record). Cập nhật tài liệu
+> trong cùng change-set với bất kỳ thay đổi hành vi nào.
+
+> **Trạng thái (2026-07-06):** Lớp identity (§2 — xác thực mật khẩu local, token, hai kênh
+> revoke, audit, khóa brute-force khi login) đã **BUILT** và đang chạy trong closed v1 demo loop
+> (xem `MILESTONE_CHECKS.md`, [ADR-06](architecture/06-local-auth-model.md)). Mọi thứ mang
+> hình dạng tenant/policy — §1 lớp tenant L2, §2.4 TOTP, §3 tenancy+RLS, §4 authorization theo
+> policy-bundle, §5.4 notification, §6 bước 8–9, §9 migration sau 0007 — là **THIẾT KẾ POST-V1**,
+> không phải hành vi hiện tại. Với v1, RBAC role-hierarchy là chính tắc theo [ADR-02](architecture/02-rbac-model-reconciliation.md).
 
 ---
 
@@ -27,7 +40,7 @@ Câu trả lời đã chốt cho các open question nêu trong `archivetech.md �
 
 ## 1. Kiến trúc bảo mật ba lớp
 
-Mỗi request đi qua ba lớp enforce độc lập. Mỗi lớp trả lời đúng một câu hỏi; không overlap.
+Mỗi request đi qua ba lớp enforce độc lập. Mỗi lớp trả lời đúng một câu hỏi; không overlap. *(Kiến trúc mục tiêu — v1 đã ship chỉ wire L1 + L3 role-hierarchy; lớp tenant L2 và RLS là post-v1. Xem status banner ở trên.)*
 
 ```text
                 ┌──────────────────────────────────────┐
@@ -70,9 +83,9 @@ Mỗi request đi qua ba lớp enforce độc lập. Mỗi lớp trả lời đ�
 
 Portal là nhà cung cấp danh tính. Credential nằm ở `users.password_hash` (Argon2id). Flow:
 
-1. `POST /auth/login {email, password}` — server tra user theo email, xác minh mật khẩu với `users.password_hash` (Argon2id, thời-gian-hằng-số), và kiểm tra `disabled_at`.
-2. Thành công: server phát access + refresh token, set cookie, trả `200`. Thất bại: trả `401` chung chung (không lộ có/không tồn tại user) và tăng bộ đếm brute-force.
-3. `POST /auth/register {email, password, display_name}` — tạo tài khoản (băm Argon2id), gán role mặc định `user`, rồi phát token y như login. Đăng ký có thể bị giới hạn theo admin tùy triển khai.
+1. `POST /auth/login {email, password, remember}` — server tra user theo email, xác minh mật khẩu với `users.password_hash` (Argon2id, thời-gian-hằng-số), và kiểm tra `disabled_at`. `remember=true` → cookie refresh persistent (`Max-Age` = refresh TTL); `false` → cookie session.
+2. Thành công: server phát access + refresh token, set cookie, trả `200`. Thất bại: trả `401` chung chung (không lộ user-enumeration) và tăng bộ đếm brute-force.
+3. `POST /auth/register {email, password, display_name}` — tạo tài khoản (băm Argon2id), gán role mặc định `user`, và trả về `201` **không** phát session; user được redirect về `/login` để đăng nhập (quyết định sản phẩm). Đăng ký có thể bị giới hạn theo admin tùy triển khai.
 4. **Không** còn `/auth/callback`, `state`, hay `nonce` — trình duyệt không bao giờ rời domain Portal.
 
 Trách nhiệm bảo mật mới Portal phải gánh (trước của Authentik): băm mật khẩu, rate-limit + khóa brute-force trên `/auth/login`, chính sách mật khẩu, và đặt lại mật khẩu (token gửi email khi có module notification; admin/CLI trước đó). MFA/step-up (§2.4) và "Login with Google" giờ tự dựng trong Portal, không cấu hình ở IdP.
@@ -83,11 +96,11 @@ Implementation chính: [password.go](../../backend/internal/modules/account/auth
 
 | Token | Tuổi thọ | Storage | Thuật toán | Mục đích |
 |-------|----------|---------|-----------|---------|
-| Access | 5 phút | cookie `portal_access` HOẶC `Authorization: Bearer` | HS256 với `kid` xoay | Authn per-request |
-| Refresh | 30 ngày | cookie `portal_refresh` (`Path=/api/v1/auth`) HOẶC JSON body | random 256-bit, hash SHA-256 lúc lưu | Mint access token mới |
+| Access | 5 phút | cookie `portal_access` HOẶC `Authorization: Bearer` | HS256 với key `kid` xoay | Authn per-request |
+| Refresh | 24 giờ trong triển khai hiện tại (`REFRESH_TOKEN_TTL`; thiết kế cho phép tới 30 ngày) | cookie `portal_refresh` (`Path=/api/v1/auth`) HOẶC JSON body | random 256-bit, hash SHA-256 lúc lưu | Mint access token mới |
 | Step-up (TOTP) | 5 phút | session-bound; không phải cookie riêng | n/a — flag trên session record | Authorize op huỷ diệt |
 
-Cookie luôn: `HttpOnly; Secure; SameSite=Strict`. Implementation trong [jwt.go](../../backend/internal/auth/jwt.go) và [refresh.go](../../backend/internal/auth/refresh.go).
+Cookie luôn: `HttpOnly; Secure; SameSite=Strict`. Còn một cookie thứ ba: `portal_session` — cookie marker không nhạy cảm (`Path=/`), được Next.js middleware đọc cho route-level auth gate; giá trị của nó encode persistent (`p`) hay session (`s`). Implementation trong [jwt.go](../../backend/internal/modules/account/auth/jwt.go) và [refresh.go](../../backend/internal/modules/account/auth/refresh.go).
 
 ### 2.3 Hai kênh revoke  *([BUILT])*
 
@@ -218,7 +231,7 @@ Mỗi table tenant-scoped mang `organization_id` và RLS policy tương ứng.
 | `refresh_tokens` | NO — bound vào user, không tenant | n/a |
 | `organizations`, `organization_memberships` | n/a | policy đặc biệt |
 
-**Vì sao `users` global**: một người là một người across org. Email và OIDC subject identify họ một lần. Truy cập của họ trong một org cụ thể được mediate qua `organization_memberships`. Denormalize `organization_id` lên users sẽ buộc unique user per org — sai shape.
+**Vì sao `users` global**: một người là một người across org. Email của họ identify họ một lần. Truy cập của họ trong một org cụ thể được mediate qua `organization_memberships`. Denormalize `organization_id` lên users sẽ buộc unique user per org — sai shape.
 
 ### 3.4 RLS PostgreSQL — cơ chế enforce
 
@@ -298,9 +311,9 @@ Với mỗi `(user_id, organization_id)`, tính tập theo thứ tự, **per req
 4. Collect mọi policy **active** đã attach vào group trên đường đi (`group_policy_attachments` JOIN `policies` on `is_active = true`).
 5. Thêm mọi policy **active** attach trực tiếp vào user (`user_policy_attachments` scope cùng org).
 6. Expand mỗi policy → permission (`policy_permissions`). Với permission `requires_file = true`, bỏ trừ khi user có row `user_permission_files` tương ứng với `status = 'approved'` và `expires_at > now()`.
-7. Apply rule wildcard / scope từ [permission.go](../../backend/internal/rbac/permission.go).
+7. Apply rule wildcard / scope từ [permission.go](../../backend/internal/modules/account/rbac/permission.go).
 
-Cache trong Redis dưới key `rbac:perms:<userID>:<orgID>:v<token_version>`. TTL 5 phút. **Bump `token_version` là kênh invalidation chính tắc duy nhất.**
+Cache trong Redis dưới key `rbac:perms:<userID>:<orgID>:v<token_version>`. TTL 5 phút. **Bump `token_version` là kênh invalidation chính tắc duy nhất.** Lưu ý: cache key đã build ở v1 là `rbac:perms:<userID>:v<token_version>` ([cache.go](../../backend/internal/modules/account/rbac/cache.go)) — đoạn `<orgID>` sẽ được thêm khi multi-tenancy lên.
 
 ### 4.3 Versioning policy + notify user
 
@@ -362,7 +375,7 @@ Pattern này (`requireStepUp`) bọc mọi op huỷ diệt khác:
 
 ### 5.1 Audit  *([BUILT] core; UI [PLANNED])*
 
-Mọi event nhạy cảm bảo mật được ghi vào `audit_log` (append-only). Xem [audit/logger.go](../../backend/internal/audit/logger.go). Action code dotted, vd `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failure ồn ào nhưng non-blocking** cho user request.
+Mọi event nhạy cảm bảo mật được ghi vào `audit_log` (append-only). Xem [audit/logger.go](../../backend/internal/modules/account/audit/logger.go). Action code dotted, vd `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failure ồn ào nhưng non-blocking** cho user request.
 
 Thêm cho multi-tenancy: mỗi row audit mang `organization_id` (NULL cho event system). Migration delta:
 
@@ -372,15 +385,15 @@ ALTER TABLE audit_log
 CREATE INDEX audit_log_org_idx ON audit_log(organization_id, occurred_at DESC);
 ```
 
-### 5.2 Rate limiting  *([BUILT] in-memory; Redis-backed [PLANNED])*
+### 5.2 Rate limiting  *([BUILT] — xem breakdown)*
 
-Token bucket per IP cho `/auth/*`. Bucket nghiêm hơn per `(IP, action)` cho endpoint nhạy cảm (TOTP verify: 5/phút/IP+user, lockout 15 phút sau 5 lần fail). Implementation trong [ratelimit.go](../../backend/internal/middleware/ratelimit.go); cho production, đổi in-memory store thành `redis_rate.Limiter`.
+Bộ đếm brute-force + lockout cho `/auth/login` đã **[BUILT], Redis-backed** ([handler/auth.go](../../backend/internal/modules/account/handler/auth.go)). Token bucket generic per-IP đã **[BUILT], in-memory** tại [ratelimit.go](../../backend/internal/platform/middleware/ratelimit.go). Bucket nghiêm hơn per `(IP, action)` cho endpoint nhạy cảm (TOTP verify: 5/phút/IP+user, lockout 15 phút sau 5 lần fail) và bucket generic Redis-backed (`redis_rate.Limiter`) vẫn còn [PLANNED].
 
 ### 5.3 Xử lý secret
 
 - Key signing JWT: env `JWT_SIGNING_KEYS`, list xoay. Key active sign token mới; key cũ vẫn hợp lệ để verify trong rotation window.
 - Key encrypt TOTP: env `TOTP_KMS_KEY` riêng. Blast radius khác với JWT.
-- Client secret OIDC: `OIDC_CLIENT_SECRET` — không bao giờ log.
+- ~~Client secret OIDC: `OIDC_CLIENT_SECRET` — không bao giờ log.~~ *(đã bỏ — Authentik/OIDC bị loại theo ADR-06)*
 - Production: Doppler quản lý mọi thứ trên; deployment không bao giờ đọc `.env` từ disk.
 
 ### 5.4 Channel notification
@@ -423,19 +436,21 @@ Frontend dùng TanStack Query + channel SSE `/me/notifications/stream` để del
 Theo thứ tự — áp dụng cho mọi route đã authenticate:
 
 ```text
-1. RealIP            ← preserve X-Forwarded-For (Traefik trusted)
+1. RealIP            ← giữ X-Forwarded-For (Traefik trusted)
 2. RequestID         ← unique per request, trong log + audit
 3. Recoverer         ← bắt panic, trả 500
 4. Timeout(30s)      ← lifetime request giới hạn
 5. CORS              ← allowlist origin từ config
 6. RateLimit         ← token bucket per-IP; nghiêm hơn trên /auth/*
 7. RequireAuth       ← JWT + DB snapshot; set auth.Identity vào ctx
-8. RequireTenant     ← đọc org_id từ JWT; set app.current_tenant trên DB conn; set tenant.Context vào ctx
-9. RequireStepUp     ← (tuỳ chọn, per-route) — verify TOTP fresh cho op huỷ diệt
+8. RequireTenant     ← [PLANNED] đọc org_id từ JWT; set app.current_tenant trên DB conn; set tenant.Context vào ctx
+9. RequireStepUp     ← [PLANNED] (tuỳ chọn, per-route) — verify TOTP fresh cho op huỷ diệt
 10. RequirePermission ← rbac.Engine.Authorize, trả 403 on deny
 11. Handler
 12. AuditMiddleware  ← (deferred) ghi audit event cho op mutate
 ```
+
+Pipeline v1 trong production là bước 1–7 + 10 (`RequirePermission`); middleware tenant và step-up (8–9) sẽ lên cùng các phase tenancy/TOTP.
 
 Route public (vd `GET /movies` cho guest) skip 7–10. Một vài route "tenant-scoped nhưng public-readable" dùng `OptionalAuth` + `RequireTenant`.
 
@@ -444,31 +459,31 @@ Route public (vd `GET /movies` cho guest) skip 7–10. Một vài route "tenant-
 ## 7. API surface (auth + tenant)
 
 ```text
-# Authentication
+# Authentication  [BUILT]
 POST   /auth/login                     xác minh email+password; mint token
-POST   /auth/register                  tạo tài khoản (Argon2id); mint token
+POST   /auth/register                  tạo tài khoản (Argon2id); trả 201, không session — user đăng nhập qua /auth/login
 POST   /auth/refresh                   xoay refresh; mint access
 POST   /auth/logout                    revoke refresh hiện tại; bump token_version
 POST   /auth/logout-all                revoke mọi refresh; bump token_version  [step-up]
 
-# 2FA (TOTP)
+# 2FA (TOTP)  [PLANNED]
 POST   /auth/totp/enroll               bắt đầu enrolment; trả secret + QR URI
-POST   /auth/totp/verify               verify code; activate enrolment HOẶC step-up
+POST   /auth/totp/verify               verify code; activate enrolment HOẶC thực hiện step-up
 POST   /auth/totp/recovery-codes/regen tạo lại recovery code  [step-up]
 DELETE /auth/totp                      disenrol  [step-up + recovery-code]
 
-# Tenant
+# Tenant  [PLANNED]
 GET    /me/organizations               list org user thuộc về
 POST   /auth/switch-tenant             switch org active; mint token mới  [step-up nếu elevated]
 
-# Identity
+# Identity  [BUILT]
 GET    /auth/me                        user hiện tại + role + org context
 
-# Session
+# Sessions  [PLANNED]
 GET    /me/sessions                    list refresh token active (device)
 DELETE /me/sessions/{id}               revoke session cụ thể  [step-up]
 
-# Notification
+# Notifications  [PLANNED]
 GET    /me/notifications               list (phân trang, lọc unread)
 POST   /me/notifications/read          đánh dấu ID đã đọc
 GET    /me/notifications/stream        channel SSE cho update live
@@ -476,7 +491,7 @@ POST   /me/web-push/subscribe          register subscription push browser
 DELETE /me/web-push/{id}               unsubscribe
 ```
 
-OpenAPI source-of-truth tại [shared/openapi.yaml](../../shared/openapi.yaml). Mỗi endpoint annotate permission yêu cầu qua `x-required-permission` và yêu cầu step-up qua `x-step-up: true`.
+OpenAPI source-of-truth tại [shared/openapi.yaml](../../shared/openapi.yaml). Mỗi endpoint annotate permission yêu cầu qua `x-required-permission` và yêu cầu step-up qua `x-step-up: true`. Drift đã biết (2026-07-06): `shared/openapi.yaml` đang thiếu `/auth/register` và vẫn liệt kê `/auth/callback` đã retired; annotation `x-required-permission` / `x-step-up` là convention mục tiêu, chưa hiện diện đồng nhất.
 
 ---
 
@@ -511,22 +526,27 @@ Cái chúng ta **KHÔNG** defend (out of scope cho v1):
 
 ## 9. Roadmap migration
 
-Số để hợp sequence migration đang có trong `backend/db/migrations/`.
+Đánh số để khớp sequence migration hiện có trong `backend/db/migrations/` (một sequence số duy nhất, đặt tên `000N_<owning-module>_<description>`). Migration 0001–0007 đã applied (schema v7, 2026-07-06); migration tenancy/policy bắt đầu từ 0008.
 
 | # | File | Mục đích |
 |---|------|---------|
-| 0001 | `init.up.sql` | [BUILT] table foundational users + assets |
-| 0002 | `rbac.up.sql` | [BUILT] roles + permissions + refresh_tokens + audit_log |
-| 0003 | `organizations.up.sql` | [PLANNED] organizations + organization_memberships; scaffolding RLS |
-| 0004 | `user_groups.up.sql` | [PLANNED] user_groups + user_group_members (org-scoped) |
-| 0005 | `policies.up.sql` | [PLANNED] policies + policy_permissions + group_policy_attachments + user_policy_attachments |
-| 0006 | `file_gated_permissions.up.sql` | [PLANNED] user_permission_files + workflow review |
-| 0007 | `totp.up.sql` | [PLANNED] users.totp_*, totp_recovery_codes |
-| 0008 | `notifications.up.sql` | [PLANNED] notifications + web_push_subscriptions |
-| 0009 | `rls_enable.up.sql` | [PLANNED] enable RLS + policy trên mọi table tenant-scoped |
-| 0010 | `audit_log_org.up.sql` | [PLANNED] thêm organization_id vào audit_log |
+| 0001 | `0001_platform_init` | [BUILT/APPLIED] database extension + helper dùng chung |
+| 0002 | `0002_account_users` | [BUILT/APPLIED] table users (identity core, token_version, disabled_at) |
+| 0003 | `0003_account_rbac` | [BUILT/APPLIED] roles (hierarchy) + permissions + role_permissions + user_roles |
+| 0004 | `0004_account_sessions` | [BUILT/APPLIED] refresh_tokens với phát hiện trộm qua rotation-chain |
+| 0005 | `0005_platform_audit` | [BUILT/APPLIED] audit_log append-only |
+| 0006 | `0006_account_local_auth` | [BUILT/APPLIED] users.password_hash (ADR-06); drop user_oidc_roles |
+| 0007 | `0007_media_assets` | [BUILT/APPLIED] table media assets (lifecycle upload/transcode) |
+| 0008 | `0008_tenant_organizations` | [PLANNED] organizations + organization_memberships; scaffolding RLS |
+| 0009 | `0009_account_user_groups` | [PLANNED] user_groups + user_group_members (org-scoped) |
+| 0010 | `0010_account_policies` | [PLANNED] policies + policy_permissions + group_policy_attachments + user_policy_attachments |
+| 0011 | `0011_account_file_gated_permissions` | [PLANNED] user_permission_files + workflow review |
+| 0012 | `0012_account_totp` | [PLANNED] users.totp_*, totp_recovery_codes |
+| 0013 | `0013_notification_core` | [PLANNED] notifications + web_push_subscriptions |
+| 0014 | `0014_tenant_rls_enable` | [PLANNED] enable RLS + policy trên mọi table tenant-scoped |
+| 0015 | `0015_platform_audit_org` | [PLANNED] thêm organization_id vào audit_log |
 
-RLS chủ ý enable trong **một migration riêng, muộn** để development sớm có thể chạy không phiền hà RLS. Production deployment phải bao gồm 0009 trước khi go live; CI gate verify nó.
+RLS chủ ý được enable trong **một migration riêng, muộn** để development sớm có thể chạy không phiền hà RLS. Production deployment phải bao gồm `0014_tenant_rls_enable` trước khi phase tenancy go live; CI gate verify nó.
 
 ---
 
@@ -535,7 +555,7 @@ RLS chủ ý enable trong **một migration riêng, muộn** để development s
 ### 10.1 Skeleton tenant middleware  *([PLANNED])*
 
 ```go
-// internal/middleware/tenant.go
+// internal/modules/tenant/middleware/tenant.go  (bố cục module theo backend/MODULES.md)
 //
 // RequireTenant resolve organization active cho request, validate
 // membership của user, và bind app.current_tenant trên DB connection
@@ -571,7 +591,7 @@ func RequireTenant(memberships MembershipFetcher, db DB) func(http.Handler) http
 ### 10.2 Skeleton step-up middleware  *([PLANNED])*
 
 ```go
-// internal/middleware/stepup.go
+// internal/modules/account/middleware/stepup.go  (bố cục module theo backend/MODULES.md)
 func RequireStepUp(verifier *auth.TOTPVerifier, store StepUpStore, ttl time.Duration) func(http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -605,7 +625,7 @@ Mỗi PR thêm table tenant-scoped phải bao gồm integration test:
 2. Switch sang `app.current_tenant = B` — `SELECT *` trả 0 row; `INSERT ... organization_id = A` bị reject.
 3. Connect như `portal_system` (`BYPASSRLS`) — thấy cả hai tenant.
 
-Đặt dưới `backend/internal/repository/rls_test.go`. Không cho CI green nếu thiếu.
+Đặt dưới package repository của module sở hữu (vd `backend/internal/modules/tenant/repository/rls_test.go` — repository là per-module; không có `internal/repository/` dùng chung). Không cho CI green nếu thiếu.
 
 ---
 

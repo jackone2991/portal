@@ -1,9 +1,16 @@
 # ADR-06: Xác thực bằng mật khẩu local — Portal tự giữ thông tin đăng nhập (bỏ Authentik khỏi luồng login)
 
-**Trạng thái:** Đề xuất (Proposed)
+**Trạng thái:** Được chấp nhận (Accepted)
 **Ngày:** 2026-07-05
 **Người quyết định:** kirito
 **Thay thế:** quyết định đăng nhập-OIDC trong [ADR-05](./05-phase0-wiring-order.md) (Milestone 0.4) và câu "Không có mật khẩu local. OIDC qua Authentik" trong [CLAUDE.md](../../../CLAUDE.md) (module account).
+
+## Cập nhật (2026-07-06) — đã triển khai
+
+- Tất cả endpoint đã lên: `POST /auth/login {email, password, remember}` (rate-limit + khóa tài khoản chống brute-force qua Redis), `POST /auth/register` (trả về 201, không tạo session — user quay lại `/login`), cùng các endpoint không đổi `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/me`. Argon2id ở mức 64 MB / t=3 / p=2, định dạng PHC.
+- Các sai khác so với spec bên dưới: cờ `remember` chọn giữa cookie bền vững (persistent, 24h) và cookie phiên (session); một cookie thứ ba `portal_session` (Path=/, marker được cổng middleware của Next.js đọc) đi kèm `portal_access`/`portal_refresh`; `.env` hiện tại set `ACCESS_TOKEN_TTL=5m` và `REFRESH_TOKEN_TTL=24h` (không phải 30d).
+- Code OIDC, các service compose của Authentik, blueprint, và cấu hình `OIDC_*` đã bị xóa hoàn toàn.
+- Drift còn sót lại: `shared/openapi.yaml` vẫn liệt kê `/auth/callback` đã bị loại bỏ và còn thiếu `/auth/register`.
 
 ## Bối cảnh
 
@@ -124,11 +131,11 @@ Ghi đầy đủ trong phần thảo luận trước ADR này; tóm tắt:
 
 ## Hạng mục hành động (kế hoạch triển khai — tách khỏi thay đổi tài liệu này)
 
-1. [ ] Migration: thêm `users.password_hash TEXT` (+ `password_updated_at`); bỏ `user_oidc_roles` (hoặc để ngủ đông). Đưa `oidc_subject` về nullable.
-2. [ ] `platform/crypto` (hoặc `account/auth/password.go`): hàm băm + xác minh Argon2id.
-3. [ ] Query/adapter: `GetUserByEmail`, `CreateUserLocal`, `SetPassword`.
-4. [ ] Handler: thay `Login`/`Callback` bằng `POST /auth/login {email,password}` + `POST /auth/register`; giữ `refresh`/`logout`/`logout-all`/`me`.
-5. [ ] Middleware rate-limit + khóa tài khoản trên `/auth/login`.
-6. [ ] Frontend: form `/login` thật → `POST /auth/login`; đưa `middleware` về chặn khách về `/login`; bỏ nút SSO/Google (hoặc trỏ Google về một Google-OAuth local tương lai).
-7. [ ] Gỡ OIDC: `auth/oidc.go`, callback, cấu hình `OIDC_*`, dịch vụ Authentik + blueprint khỏi compose, alias Traefik + override `SSL_CERT_FILE`.
-8. [ ] Tài liệu: đồng bộ mục Account của CLAUDE.md, `doc/*/authoration.md`, `doc/*/feature.md §1`, và bản mirror tiếng Anh của ADR này.
+1. [x] Migration: thêm `users.password_hash TEXT` (+ `password_updated_at`); bỏ `user_oidc_roles` (hoặc để ngủ đông). Đưa `oidc_subject` về nullable.
+2. [x] `platform/crypto` (hoặc `account/auth/password.go`): hàm băm + xác minh Argon2id.
+3. [x] Query/adapter: `GetUserByEmail`, `CreateUserLocal`, `SetPassword`.
+4. [x] Handler: thay `Login`/`Callback` bằng `POST /auth/login {email,password}` + `POST /auth/register`; giữ `refresh`/`logout`/`logout-all`/`me`.
+5. [x] Middleware rate-limit + khóa tài khoản trên `/auth/login`.
+6. [x] Frontend: form `/login` thật → `POST /auth/login`; đưa `middleware` về chặn khách về `/login`; bỏ nút SSO/Google (hoặc trỏ Google về một Google-OAuth local tương lai).
+7. [x] Gỡ OIDC: `auth/oidc.go`, callback, cấu hình `OIDC_*`, dịch vụ Authentik + blueprint khỏi compose, alias Traefik + override `SSL_CERT_FILE`.
+8. [ ] Tài liệu: đồng bộ mục Account của CLAUDE.md, `doc/*/authoration.md`, `doc/*/feature.md §1`, và bản mirror tiếng Việt của ADR này. *(2026-07-06: hoàn thành một phần — CLAUDE.md và bản mirror tiếng Việt đã được đồng bộ; `shared/openapi.yaml` vẫn liệt kê `/auth/callback` đã bị loại bỏ và còn thiếu `/auth/register`.)*

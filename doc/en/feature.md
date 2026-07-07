@@ -1,27 +1,29 @@
 # Portal — Feature List
 
+> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout ([MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) is the living tracker). v1 scope is the hard cut in [ADR-01](architecture/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](architecture/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
+
 Derived from [CLAUDE.md](../../CLAUDE.md) (architecture + module split) and [template-main/social/](../../template-main/social/) (visual/UX reference for the social layer). Each feature is mapped to the backend module that should own it ([backend/MODULES.md](../../backend/MODULES.md) rules apply: cross-module access goes through `api/` only).
 
-Status legend: **✓ scaffolded** = module + some code exists, **○ planned** = directory/spec exists but empty, **△ inferred** = derived from template, not yet a module.
+Status legend: **✅ shipped** = wired, mounted, tested end-to-end, **✓ scaffolded** = module + some code exists, **○ planned** = directory/spec exists but empty, **△ inferred** = derived from template, not yet a module.
 
 ---
 
-## 1. Identity, Auth & Access — module `account` ✓
+## 1. Identity, Auth & Access — module `account` ✅
 
 Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
 
 > **Auth direction updated — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
 
-- **Local password sign-in** — `POST /auth/login {email, password}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account. No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
-- **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 30-day 256-bit refresh token (SHA-256 at rest).
-- **Cookie + Bearer modes** — `portal_access` / `portal_refresh` HttpOnly Secure cookies for browser, `Authorization: Bearer` for API clients.
+- **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account and returns 201 **without a session** (the user then signs in at `/login`). No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
+- **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 256-bit refresh token (SHA-256 at rest; TTL via `REFRESH_TOKEN_TTL`, currently 24h). Login's `remember` flag selects a persistent 24h cookie vs a session cookie.
+- **Cookie + Bearer modes** — `portal_access` (Path=/) / `portal_refresh` (Path=/api/v1/auth) HttpOnly Secure cookies for browser, plus a `portal_session` marker cookie (Path=/) read by the Next.js middleware auth gate; `Authorization: Bearer` for API clients.
 - **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bumps `users.token_version`).
 - **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and emits `auth.refresh.reuse_detected`.
 - **`/auth/me`** — returns the current user snapshot.
 - **RBAC engine** — `<resource>:<action>[:<scope>]` permission grammar, wildcards, fail-closed parser, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) with recursive-CTE effective-permission walk.
 - **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](architecture/06-local-auth-model.md); no IdP groups to sync.~~)*
-- **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` triggers a re-auth. 5-min default window. **Portal-built** (Portal now owns MFA; no IdP round-trip). [D-27]
-- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](architecture/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. [D-28]
+- **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` triggers a re-auth. 5-min default window. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-27]
+- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](architecture/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-28]
 - **Permission cache** — Redis-backed, namespaced by `token_version` so revocation = cache bust in one bump.
 - **Account-settings UI** (△ from template): `Account Settings`, `Change Password` (now first-class — Portal owns the password), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, `Notifications` preferences.
 - **Audit log** — best-effort writes via `audit.Logger`; never blocks the request.
@@ -39,16 +41,16 @@ Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant
 
 ---
 
-## 3. Media Pipeline — module `media` ✓
+## 3. Media Pipeline — module `media` ✅
 
 Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (has `worker/transcode.go`, `worker/thumbnail.go`, `query/assets.sql`).
 
-- **Asset upload** — multipart → MinIO origin bucket, tenant-prefixed key.
-- **Transcode worker** (Asynq queue `transcode`, priority 5) — FFmpeg HLS ladder.
-- **Thumbnail worker** (queue `thumbnail`, priority 3) — poster + sprite generation.
-- **Asset state machine** — `pending → processing → ready | failed`; transitions emit `media:asset_ready` for downstream modules.
-- **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` for time-limited playback.
-- **CDN edge** — Cloudflare R2 in front of MinIO origin; cache invalidation hook on asset replacement.
+- **Asset upload** — `POST /assets` returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` enqueues the transcode. *(No tenant prefixes in v1.)*
+- **Transcode worker** (Asynq queue `transcode`, priority 5) — FFmpeg VOD HLS (h264/aac; multi-rung ladder planned).
+- **Thumbnail worker** (queue `thumbnail`, priority 3) — *(stub — registered but not implemented; poster + sprite generation planned)*.
+- **Asset state machine** — `pending → processing → ready | failed` ✓; the `media:asset_ready` event is **not yet emitted** (no consumer module exists yet).
+- **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` for time-limited playback *(planned — v1 ships a public HLS proxy at `GET /assets/{id}/hls/*` instead)*.
+- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](architecture/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target.
 - **HLS playback** — frontend uses Vidstack.
 
 ---
@@ -529,12 +531,12 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Config loader** (env-based) — `internal/platform/config/`.
 - **DB pool** (pgx) + `BeginTenantScope` — `internal/platform/db/` ○.
 - **Cache** (Redis/Dragonfly) with tenant-aware key helpers — `internal/platform/cache/` ○.
-- **Storage** (S3/MinIO + R2) with tenant-prefixed keys — `internal/platform/storage/` ○.
+- **Storage** — single S3 client (`aws-sdk-go-v2`, `BaseEndpoint` + `UsePathStyle`), tested (`s3_test.go`); MinIO dev / R2 prod; tenant prefixes deferred — `internal/platform/storage/` ✓.
 - **Jobs** (Asynq client setup) — `internal/platform/jobs/` ○.
 - **Realtime** (SSE + WebSocket, Dragonfly pub/sub backplane) — `internal/platform/realtime/` ○. [D-3]
 - **Mail** (SMTP) — `internal/platform/mail/` ○. [D-4]
 - **Observability** (OTel SDK, Prometheus `/metrics`, Sentry/GlitchTip init) — `internal/platform/observability/` ○. [D-8]
-- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ○. [D-25]
+- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ○ *(table shipped as migration `0005_platform_audit`; the Go package move `account/audit` → `platform/audit` is still pending)*. [D-25]
 - **Middleware** — rate limit ✓ (`ratelimit.go`), request ID, logging, recovery, **tenant URL-prefix resolver** [D-23].
 - **Reverse proxy** — Traefik v3 routes via `docker-compose.yml` labels.
 
@@ -542,7 +544,8 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 
 ## 15. API Contract — `shared/openapi.yaml`
 
-- OpenAPI is the source of truth — every endpoint flows: edit spec → `make openapi` → implement generated interface. **Spec-first is non-negotiable** [D-29]; CI drift check fails any handler-without-spec PR.
+- OpenAPI is the source of truth — every endpoint flows: edit spec → `make openapi` → implement generated interface. **Spec-first is non-negotiable** [D-29]; CI currently validates the spec is well-formed only — the handler-drift gate is planned [D-9].
+- **Known drift (2026-07-06):** `openapi.yaml` is missing `/auth/register` and still lists the retired `/auth/callback` (ADR-06) — fix pending.
 - **URL versioning** `/api/v{N}/`; currently `/api/v1/`. Additive changes free within a major; breaking changes require a new major + 6-month RFC 9745 sunset [D-31].
 - **File layout:** single `shared/openapi.yaml` until ~2000 lines; split per-module via `$ref` afterwards [D-29].
 - **Cross-module schemas** (must land in Phase 0): `Problem` (RFC 7807), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem` for `/api/v1/continue` [D-29].
@@ -554,18 +557,19 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 ## 16. Frontend — `frontend/` (Next.js 15)
 
 - App Router + RSC. **RSC-first by default**; opt into `'use client'` only when actually needed (event handlers, hooks, browser APIs) [D-33].
-- Route groups: `(movies)`, `(music)`, `(stories)`, plus `(social)` / `(comics)` to add.
+- Route groups today: `(app)` / `(public)`, with a middleware auth gate on the `portal_session` cookie for `/`, `/upload`, `/library/*`. Domain groups `(movies)` / `(music)` / `(stories)` / `(comics)` / `(social)` are planned.
+- **Versioned presentation layer** — templates live under `frontend/src/templates/v{N}/`, selected via `registry.ts` + `NEXT_PUBLIC_TEMPLATE_VERSION` (current: Olympus light-theme port). Feed / friends / notification widgets are static placeholders in v1.
 - **Rendering strategy by surface** [D-33]: catalogue/detail = server components with client interactivity islands; player/reader = mostly client; account/bank = server shell + client interactivity; newsfeed = client primary with server-rendered first page.
 - **State boundary** [D-32]:
   - TanStack Query — all server state (no Zustand store may hold API-fetched data).
   - Zustand — persistent UI preferences (theme, sidebar) and ephemeral UI state (modals, toasts).
   - React Hook Form — form state.
   - URL query params — shareable filter / pagination (read by TanStack).
-- **Auth handoff for RSC** [D-34]: `frontend/src/lib/api-server.ts` (`import "server-only"`) wraps `fetch`, reads `cookies()`, injects `Cookie:` on outgoing requests. 401 from API → `redirect()` to `/auth/refresh-and-return?return_to=...` which calls `/auth/refresh` server-side then redirects back.
+- **Auth handoff for RSC** [D-34]: `SessionKeeper` performs client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker (supersedes the refresh-and-return route — see D-34.r1). The server-only API client (`frontend/src/lib/api-server.ts`, `import "server-only"`, `cookies()` forwarding) remains future work — only `api-client.ts` exists today.
 - **Same-site domain mandate** [D-34]: Next.js host + Portal API host MUST share a registrable domain (e.g. `portal.example.com` + `api.portal.example.com`) for SameSite=Strict to work. Single-domain deployments use one Traefik host with path-based routing.
 - **Styling**: Tailwind v4.
 - **Player**: Vidstack for HLS.
-- **API client**: generated from OpenAPI; cookies forwarded automatically by the server-only wrapper.
+- **API client**: types generated from OpenAPI; cookie forwarding via the server-only wrapper is planned (see D-34 above — today's `api-client.ts` relies on same-site cookies).
 - **Conventions doc** at `frontend/CLAUDE.md` (created in Phase 0) records the boundary rules + an anti-pattern example [D-32, D-33].
 
 ---
@@ -577,8 +581,8 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Hot-reload dev** — `make dev` (`air` for Go, `pnpm dev` for Next).
 - **Tests** — `go test ./... -race -count=1` + `pnpm test`. Single test: `cd backend && go test ./internal/modules/account/rbac -run TestMatches -v`. Coverage targets per module in [D-9].
 - **Lint** — `golangci-lint` (incl. depguard enforcing module-boundary rules) + `pnpm lint`. Optional pre-commit hook via `lefthook` [D-9].
-- **CI/CD** — GitHub Actions: `.github/workflows/{ci,release}.yml` with lint, test, sqlc/openapi-drift, migration-roundtrip, build, security [D-9].
-- **Observability** — opt-in `--profile observability` in `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip [D-8].
+- **CI/CD** — done: `.github/workflows/ci.yml` — backend go build/vet/test `-race` + sqlc-drift; frontend `next build` (typecheck + lint); OpenAPI well-formedness check. Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
+- **Observability** — opt-in `--profile observability` in `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip *(planned per [D-8]; deferred for v1 by ADR-01 — not in `docker-compose.yml` yet)*.
 - **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; quarterly restore drill. Targets + procedures in `docs/operations/backups.md` [D-10].
 - **Secrets** — `.env` in dev, Compose/K8s secrets (or optional SOPS) in prod; rotation policy per secret class in `docs/operations/secrets.md` [D-11].
 - **GitNexus** — code-intelligence index (see `<!-- gitnexus:start -->` section in `CLAUDE.md`); run impact analysis before symbol edits.
@@ -591,6 +595,8 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 0 — Foundation wiring (immediate)
 
+> **Status (2026-07-06): DONE** — wiring landed (see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md)): migrations 0001–0007 applied (schema v7), `make sqlc` run, account + media repository adapters, `cmd/api/main.go` constructs and mounts both modules under `/api/v1`, healthz 200. The applied migration tree diverged slightly from the plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — see the D-18 update note). OIDC items below are retired per [ADR-06](architecture/06-local-auth-model.md); the audit package move, RFC 7807 `Problem` shape, and eager cross-module schemas remain open.
+
 *Goal: turn the existing scaffolds into a running, end-to-end auth flow.*
 
 - **Wire `cmd/api/main.go`** — load `platform/config`, open the pgx pool, construct `account.Module`, mount `MountHTTP(r)` under a `/api/v1` chain with the standard middleware (request-id, CORS, rate-limit, tenant). Replace the `TODO: mount OpenAPI-generated handlers` comment.
@@ -600,17 +606,17 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7]
 - **Move `audit/` from account → `platform/audit/`** — audit is cross-cutting; account becomes a consumer. Rename event `auth.refresh.reuse_detected` → `account.refresh.reuse_detected` to fit the new `<module>.<resource>.<action>` taxonomy. [D-25]
 - **Define event-type taxonomy registry** in `backend/MODULES.md` §5.3 to prevent collisions. [D-25]
-- **Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.
-- **Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.
+- ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](architecture/06-local-auth-model.md) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
+- ~~**Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.~~ → retired by [ADR-06](architecture/06-local-auth-model.md) (no IdP in the login path; table dropped by migration `0006` — see D-26.r1).
 - **Adopt RFC 7807 `Problem` shape** for every 4xx/5xx in `shared/openapi.yaml`; stable `type` URIs become the i18n keys. [D-7]
 - **Reserve the `notify:*` Asynq task prefix** in `backend/MODULES.md` §5.2 so future modules don't accidentally collide. [D-1]
 - **Extend OpenAPI spec** — add comics + tenant tags. **Eager cross-module schemas** must land before Phase 0 closes [D-29]: `Problem` (RFC 7807 with Portal extensions like `required_acr`/`enrollment_url`), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem`, standard 4xx/5xx response components.
 - **Lock URL versioning** — every route lives under `/api/v1/`; document the additive-only policy + RFC 9745 deprecation procedure in `docs/api/versioning.md`. [D-31]
-- **Frontend server-only API client** — `frontend/src/lib/api-server.ts` wraps `fetch` with `cookies()` forwarding; `/auth/refresh-and-return` route handles RSC 401s. [D-34]
+- ~~**Frontend server-only API client** — `frontend/src/lib/api-server.ts` wraps `fetch` with `cookies()` forwarding; `/auth/refresh-and-return` route handles RSC 401s. [D-34]~~ → superseded (see D-34.r1): shipped instead as `SessionKeeper` client-side silent refresh + Next.js middleware gate on `portal_session`; the server-only API client (`api-server.ts`) remains future work — only `api-client.ts` exists today.
 - **Frontend conventions doc** — `frontend/CLAUDE.md` documents the Zustand/TanStack/RHF state boundary [D-32] and the RSC-first rendering decision tree [D-33] with worked anti-pattern examples.
 - **Land CI workflows** — `.github/workflows/ci.yml` with lint + test + sqlc-drift + openapi-drift + migration-roundtrip + build + security jobs. Drift detection from day one. [D-9]
 
-**Exit:** a developer can `make up && make dev`, sign in via Authentik, hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift.
+**Exit:** a developer can `make up && make dev`, sign in via `POST /api/v1/auth/login` (local password, [ADR-06](architecture/06-local-auth-model.md)), hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift. *(Exit criterion met — 2026-07-06.)*
 
 ### Phase 1 — Tenancy + RLS
 
@@ -625,6 +631,8 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 **Exit:** an integration test proves rows for tenant A are invisible to a request bound to tenant B, while `cmd/sysjobs` sees both. Grafana shows per-route request latency split by tenant.
 
 ### Phase 2 — Media pipeline end-to-end
+
+> **Update (2026-07-06):** exit criterion met by the v1 slice (single-pipeline VOD HLS h264/aac → Vidstack playback). Still open: multi-rung ladder, quotas/backpressure, poster/sprite, `media:asset_ready` emission [D-13].
 
 - Pick **video** first (it's the highest-fidelity test of the full pipeline).
 - Upload endpoint → `platform/storage` → MinIO origin → enqueue Asynq `transcode`.
@@ -666,6 +674,8 @@ Substantial; ship in sub-phases each delivering user-visible value. Encryption-a
 - **`RequireACR` step-up middleware** wired into `account` module. Implementation reads `acr` + `auth_time` claims; sensitive route annotation pattern in place; frontend recognises `auth.step_up_required` Problem and runs the re-auth round trip. [D-27]
 - **MFA-enforcement login gate** — at OIDC callback, if user has any `bank:*` permission and `amr` lacks `mfa`, refuse session with `auth.mfa_enrollment_required` Problem (carries Authentik enrollment URL). [D-28]
 - **Authentik configured** with TOTP + WebAuthn stages and an ACR policy that elevates to `mfa` on demand. Documented in `docs/operations/authentik.md`.
+
+> **Update (2026-07-05, ADR-06):** Authentik dropped — this prerequisite becomes Portal-built TOTP enrolment + `RequireACR` against Portal-issued claims; `docs/operations/authentik.md` is retired.
 
 - **5a — Core ledger** — `bank.currencies` (ISO 4217 + cryptos seed), `accounts` (with `type` ∈ `ASSET|LIABILITY|INCOME|EXPENSE|EQUITY`) [D-15], `categories` (auto-created income/expense accounts, hierarchical), `transactions`, `ledger_entries` with per-tx-per-currency `CHECK SUM(amount)=0` [D-15]. Money columns are `numeric(20,8)`; Go uses `shopspring/decimal` wrapped in a currency-safe `Money` value type [D-14]. Destructive operations (`accounts.delete`, `transactions.delete`) gated by `RequireACR("acr:portal:recent_mfa")` [D-27].
 - **5b — Multi-currency** — `fx_rates` daily snapshots; reporting currency on `users`. Cross-currency arithmetic explicit via FX conversion entries on transactions.
@@ -817,9 +827,9 @@ Decisions deferred. Each affects at least one upcoming phase; many should land b
 
 ### 16.D — Auth / RBAC ✓ all resolved
 
-26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`.
-27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; `RequireACR` middleware returns 403 + `step_up_required` Problem; explicit per-route opt-in; 5-min default window.
-28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — entirely Authentik-managed; Portal enforces "MFA required for bank-permission users" at login via the `amr` claim; settings deep-links to Authentik's MFA dashboard.
+26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **superseded by [ADR-06](architecture/06-local-auth-model.md) (2026-07-05)**: no IdP; roles are Portal-managed only (see D-26.r1).
+27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; `RequireACR` middleware returns 403 + `step_up_required` Problem; explicit per-route opt-in; 5-min default window. — mechanism updated by ADR-06: Portal-issued `acr`/`amr` claims, no OIDC round trip (see D-27.r1).
+28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — entirely Authentik-managed; Portal enforces "MFA required for bank-permission users" at login via the `amr` claim; settings deep-links to Authentik's MFA dashboard. — **superseded by ADR-06**: Portal-built TOTP; enforcement logic unchanged (see D-28.r1).
 
 ### 16.E — API / contract ✓ all resolved
 
@@ -831,7 +841,7 @@ Decisions deferred. Each affects at least one upcoming phase; many should land b
 
 32. ~~**Zustand vs TanStack boundary.**~~ → **Resolved [D-32]** — TanStack owns server state (hard rule: no API data in Zustand); Zustand owns UI state; React Hook Form owns form state; URL params for shareable filters. Documented in `frontend/CLAUDE.md`.
 33. ~~**SSR vs CSR for catalogues.**~~ → **Resolved [D-33]** — RSC-first catalogue/detail shells; client islands for interactivity; player/reader mostly client; default to server components, opt into `'use client'` only when needed.
-34. ~~**Auth handoff for RSC.**~~ → **Resolved [D-34]** — server-only API client wraps `fetch` with `cookies()` forwarding; refresh-and-return route handles 401s; Next.js + API must share a registrable domain.
+34. ~~**Auth handoff for RSC.**~~ → **Resolved [D-34]** — server-only API client wraps `fetch` with `cookies()` forwarding; refresh-and-return route handles 401s; Next.js + API must share a registrable domain. — refresh mechanism superseded: `SessionKeeper` client-side silent refresh + `portal_session` middleware gate (see D-34.r1); cookie forwarding and same-site mandate unchanged.
 
 ### 16.G — Advanced social, creator economy, safety ✓ all resolved
 
@@ -1018,7 +1028,7 @@ New doc: `docs/operations/backups.md`. Pre-prod-launch deliverable.
 | Secret | Cadence | Notes |
 |---|---|---|
 | `JWT_SIGNING_KEYS` | Quarterly | Comma-separated key set supports overlap window |
-| `OIDC_CLIENT_SECRET` | Per Authentik policy (annual typical) | |
+| ~~`OIDC_CLIENT_SECRET`~~ | — | Retired by ADR-06 (no IdP) |
 | `WEB_PUSH_VAPID_*` | **Never** | Rotation invalidates every push subscription |
 | `POSTGRES_PASSWORD` | Quarterly + on personnel change | Coordinate with PgBouncer reload |
 | `S3_*` / `R2_*` | Quarterly | Atomic swap; app re-reads env on next request |
@@ -1176,6 +1186,8 @@ No production data yet — splitting once costs less than living with mixed-conc
 ```
 
 `assets.owner_id` FK to `users.id` still valid because users (`0002`) lands before assets (`0005`). Audit log table moves to `platform/audit/` in the same pass (see [D-25]). Lands in Phase 0.
+
+**Update (2026-07-06):** applied tree is `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](architecture/06-local-auth-model.md)) / `0007_media_assets` (schema v7). Tenant and RLS migrations land with Phase 1.
 
 ### D-19 — Profile vs Account split: identity on `users`, rich profile in `social.profiles` *(resolves §16.C-19)*
 
@@ -1344,6 +1356,8 @@ BOOTSTRAP_ADMIN_GROUPS=
 
 Lands in Phase 0 (`user_oidc_roles` table) and the OIDC callback handler.
 
+**D-26.r1 (2026-07-05)** — superseded by [ADR-06](architecture/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is now admin/CLI provisioning.
+
 ### D-27 — Step-up auth: OIDC ACR-based; sensitive ops annotated explicitly *(resolves §16.D-27)*
 
 Sensitive bank + account + tenant operations need fresher guarantees than "this session existed five hours ago". Re-prompting via OIDC `acr_values` is standard practice (GitHub, Google, AWS all do equivalents).
@@ -1393,6 +1407,8 @@ Frontend recognises the `type`, redirects to `/auth/login?step_up=mfa&return_to=
 
 Lands jointly with [D-28] as a Phase 5 prerequisite.
 
+**D-27.r1 (2026-07-05)** — mechanism updated by [ADR-06](architecture/06-local-auth-model.md): `acr`/`amr`/`auth_time` are Portal-issued claims; step-up re-auth happens against Portal's own login/MFA, not an IdP. The ACR levels and the gated-operation table stand.
+
 ### D-28 — 2FA: entirely Authentik-managed; Portal enforces MFA at login for bank-permission users *(resolves §16.D-28)*
 
 Authentik already ships TOTP, WebAuthn, SMS, push, recovery codes, and a polished enrollment UX. Reimplementing any of this in Portal duplicates work, adds a second 2FA secret store to compromise, and splits the user's mental model.
@@ -1414,6 +1430,8 @@ Authentik already ships TOTP, WebAuthn, SMS, push, recovery codes, and a polishe
   - Group: `portal-bank-users` (or any tag) — used by an Authentik policy to gate the MFA-required flow on the IDP side too, as defence in depth.
 
 Lands jointly with [D-27] as a Phase 5 prerequisite. Step-up to a single-factor session adds no security, so D-27 and D-28 are useless without each other.
+
+**D-28.r1 (2026-07-05)** — superseded by [ADR-06](architecture/06-local-auth-model.md): Portal builds and stores TOTP (later phase); login-time MFA enforcement for `bank:*` users is retained; Authentik stages/deep-links are retired.
 
 ### D-29 — OpenAPI: spec-first non-negotiable; monolith until ~2000 lines; eager cross-module schemas in Phase 0 *(resolves §16.E-29)*
 
@@ -1514,6 +1532,8 @@ Three sub-problems:
 - **CSRF.** Next.js server actions are origin-checked by the framework. Combined with SameSite=Strict, the threat surface is closed.
 
 Lands in Phase 0 (server-only API client + refresh-and-return route).
+
+**D-34.r1 (2026-07-06)** — refresh strategy superseded: `SessionKeeper` does client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker cookie; no refresh-and-return route exists. `portal_refresh`'s path is `/api/v1/auth` (not `/auth`). Cookie forwarding via `api-server.ts` and the same-site domain mandate are unchanged.
 
 ### D-35 — "For You" feed: hand-tuned three-layer pipeline; "Following" chronological is default; DSA-aligned transparency *(resolves §16.G-35)*
 
@@ -1748,9 +1768,9 @@ Lands in Phase 11.
 
 ## How to read this document
 
-- The status legend (✓ / ○ / △) on every section reflects the **code reality**, not aspiration.
+- The status legend (✅ / ✓ / ○ / △) on every section reflects the **code reality**, not aspiration.
 - The roadmap is **sequential** — each phase's exit criterion guards the next.
 - Open questions are **gates** — the marked items should be answered before the phase that depends on them opens; if not, the phase ships on assumptions that will need rework.
-- **Stable identifiers vs section numbers** — the open-question IDs (`16.A-1`, `16.B-8`, …, `16.G-40`) and the decision IDs (`D-1` … `D-34`) are **stable strings**, not references to a current section number. The top-level sections holding them (§19 Open questions, §20 Decisions log) may renumber as new sections are inserted, but the IDs never change. Always cite by ID, not section number.
+- **Stable identifiers vs section numbers** — the open-question IDs (`16.A-1`, `16.B-8`, …, `16.G-40`) and the decision IDs (`D-1` … `D-40`) are **stable strings**, not references to a current section number. The top-level sections holding them (§19 Open questions, §20 Decisions log) may renumber as new sections are inserted, but the IDs never change. Always cite by ID, not section number.
 - Resolved questions get struck through with a `→ Resolved [D-N]` pointer. Never renumbered.
 - Decisions are also stable; overturning one appends a revision (`D-N.r1`), never edits in place. The audit trail matters when the rationale stops applying.

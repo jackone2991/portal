@@ -1,24 +1,24 @@
 # Portal — Sơ đồ hệ thống
 
+> **Trạng thái (2026-07-06):** Các sơ đồ này trộn lẫn hệ thống v1 đã ship với target dài hạn nhiều năm. v1 (đã ship) = xác thực mật khẩu local (ADR-06 — Authentik/OIDC bị loại bỏ hoàn toàn), slice upload media single-tenant → phát HLS, 8 compose service (postgres, pgbouncer, dragonfly, minio+minio-setup, traefik, api, worker, frontend), CI. Các phần gắn nhãn **[TARGET]** thể hiện thiết kế dài hạn; xem `MILESTONE_CHECKS.md` để biết trạng thái hiện hành và [doc/en/architecture/](architecture/) để biết phần cắt scope v1.
+
 Bản đồ kiến trúc trực quan. Sơ đồ dùng Mermaid — render native trong GitHub, GitLab, VS Code preview, và `mermaid.live`. Source là text, nên diff được và version-controlled (không như export Miro/Figma).
 
 Bảy view, mỗi cái trả lời một câu hỏi khác nhau:
 
-1. **Landscape hệ thống** — service nào chạy và data flow giữa chúng thế nào.
-2. **Bản đồ module backend** — phân chia modular monolith.
-3. **Quy tắc boundary module** — cái gì được import cái gì.
-4. **Flow request đã authenticate** — chain middleware trên mọi endpoint protected.
-5. **Sequence OIDC login** — handshake auth với Authentik.
+1. **Landscape hệ thống** — service nào chạy và data flow giữa chúng ra sao.
+2. **Bản đồ module backend** — cách chia modular monolith.
+3. **Quy tắc boundary module** — cái gì được phép import cái gì.
+4. **Flow request đã authenticate** — chuỗi middleware trên mọi endpoint protected.
+5. **Sequence login mật khẩu local** — flow `/auth/login` (ADR-06).
 6. **Flow upload + transcode asset** — pipeline media end-to-end.
 7. **Phase roadmap** — thứ tự implementation.
-
-Sơ đồ giữ nguyên label tiếng Anh (technical terms). Narrative xung quanh là tiếng Việt.
 
 ---
 
 ## 1. Landscape hệ thống
 
-View "Miro" — mọi component và mọi connection trong một lượt nhìn.
+View "Miro" — mọi component và mọi connection trong một cái nhìn.
 
 ```mermaid
 graph TB
@@ -30,26 +30,26 @@ graph TB
     classDef external fill:#fafafa,stroke:#616161,color:#000
     classDef observability fill:#f9fbe7,stroke:#827717,color:#000
 
-    Browser[Web Browser]:::user
-    PWA[Installable PWA<br/>Web Push]:::user
+    Browser[Trình duyệt Web]:::user
+    PWA[PWA cài được<br/>Web Push]:::user
 
-    subgraph EDGE[Edge / CDN layer]
+    subgraph EDGE[Lớp Edge / CDN]
         direction TB
-        R2[Cloudflare R2<br/>HLS chunks edge]:::edge
-        Traefik[Traefik v3<br/>reverse proxy + TLS<br/>routes /api -> Go, / -> Next.js]:::edge
+        R2[Cloudflare R2<br/>HLS chunk ở edge]:::edge
+        Traefik[Traefik v3<br/>reverse proxy + TLS<br/>route /api -> Go, / -> Next.js]:::edge
     end
 
     subgraph FRONTEND[Frontend - Next.js 15]
         direction TB
-        Next[App Router + RSC<br/>RSC-first; client islands]:::frontend
-        APIServer[api-server.ts<br/>server-only fetch wrapper<br/>cookies forwarding]:::frontend
+        Next[App Router + RSC<br/>ưu tiên RSC; client islands]:::frontend
+        APIServer[api-server.ts<br/>fetch wrapper server-only<br/>forward cookie]:::frontend
     end
 
     subgraph BACKENDPROC[Backend processes]
         direction TB
         CmdAPI[cmd/api<br/>Chi HTTP server<br/>port 8080]:::backend
         CmdWorker[cmd/worker<br/>Asynq consumer<br/>transcode/thumbnail/notify]:::backend
-        CmdSysJobs[cmd/sysjobs<br/>BYPASSRLS cross-tenant<br/>nightly batch]:::backend
+        CmdSysJobs[cmd/sysjobs<br/>BYPASSRLS cross-tenant<br/>batch đêm]:::backend
         MediaMTX[mediamtx sidecar<br/>RTMP -> LL-HLS<br/>profile: live]:::backend
         LiveKit[LiveKit SFU<br/>group calls<br/>profile: calls]:::backend
     end
@@ -58,12 +58,12 @@ graph TB
         direction LR
         PG[(Postgres 17<br/>+ PgBouncer<br/>+ RLS policies)]:::datastore
         Dragonfly[(Dragonfly<br/>Redis-compat<br/>cache + Asynq broker + pub/sub)]:::datastore
-        MinIO[(MinIO<br/>S3 origin<br/>tenant-prefixed keys)]:::datastore
+        MinIO[(MinIO<br/>S3 origin<br/>key theo tenant-prefix)]:::datastore
     end
 
     subgraph EXT[External services]
         direction TB
-        Authentik[Authentik<br/>OIDC IdP<br/>+ TOTP/WebAuthn MFA]:::external
+        GoogleOAuth[Google OAuth<br/>social login<br/>tương lai, ADR-06]:::external
         SMTP[SMTP provider<br/>SES/Mailgun/Postfix]:::external
         WebPush[Web Push<br/>VAPID]:::external
         Stripe[Stripe Connect<br/>creator payouts<br/>opt-in]:::external
@@ -71,8 +71,8 @@ graph TB
 
     subgraph OBS[Observability profile: opt-in]
         direction LR
-        Grafana[Grafana<br/>unified UI]:::observability
-        Loki[Loki<br/>logs]:::observability
+        Grafana[Grafana<br/>UI hợp nhất]:::observability
+        Loki[Loki<br/>log]:::observability
         Prom[Prometheus<br/>metrics]:::observability
         Tempo[Tempo<br/>traces]:::observability
         GlitchTip[GlitchTip<br/>errors]:::observability
@@ -80,19 +80,19 @@ graph TB
 
     Browser --> Traefik
     PWA --> Traefik
-    Browser -.HLS playback.-> R2
+    Browser -.phát HLS.-> R2
     R2 -.origin pull.-> MinIO
 
     Traefik --> Next
     Traefik --> CmdAPI
     Next --> APIServer
-    APIServer -->|server-side fetch<br/>cookie forwarded| CmdAPI
+    APIServer -->|fetch server-side<br/>forward cookie| CmdAPI
 
     CmdAPI <--> PG
     CmdAPI <--> Dragonfly
     CmdAPI <--> MinIO
     CmdAPI -->|enqueue| Dragonfly
-    CmdAPI -->|OIDC| Authentik
+    CmdAPI -.social login tương lai.-> GoogleOAuth
 
     CmdWorker <--> Dragonfly
     CmdWorker <--> PG
@@ -105,27 +105,29 @@ graph TB
 
     MediaMTX --> MinIO
     LiveKit --> MinIO
-    CmdAPI -.token mint.-> LiveKit
+    CmdAPI -.mint token.-> LiveKit
 
     CmdAPI -.metrics+traces+logs+errors.-> OBS
     CmdWorker -.metrics+traces+logs+errors.-> OBS
 
-    Browser -.optional payouts.-> Stripe
+    Browser -.payout tùy chọn.-> Stripe
 ```
 
-**Flow chính được show:**
+**Landscape [TARGET].** v1 đang chạy hôm nay: chỉ có 8 compose service (postgres, pgbouncer, dragonfly, minio+minio-setup, traefik, api, worker, frontend). Storage là single-tier — MinIO (dev, bind-mount `./data/minio`) / R2 (prod) theo ADR-04; origin-pull MinIO→R2 là thiết kế dài hạn, còn HLS playback ở v1 được proxy qua API (`GET /api/v1/assets/{id}/hls/*`). sysjobs, mediamtx, LiveKit, observability stack, Stripe, SMTP, và Web Push đều chưa được xây dựng. Authentik đã bị loại bỏ hoàn toàn (ADR-06); auth do Portal tự sở hữu bằng mật khẩu local, MFA sẽ do Portal tự sở hữu sau này.
 
-- **Path playback của user** — browser pull HLS chunk trực tiếp từ Cloudflare R2 (origin-pull từ MinIO khi cache miss). Tránh round-trip qua API.
-- **Path API** — mọi request đã authenticate đi Browser → Traefik → API.
-- **RSC fetch** — server component Next.js gọi API qua `api-server.ts` với cookie forward, không bao giờ expose token cho JS browser.
+**Flow chính được thể hiện:**
+
+- **Path playback của user [TARGET]** — browser pull HLS chunk trực tiếp từ Cloudflare R2 (origin-pull từ MinIO khi cache miss). Tránh round-trip qua API. *(v1: playback đi qua HLS proxy của API.)*
+- **Path API** — mọi request đã authenticate đều đi Browser → Traefik → API.
+- **RSC fetch** — server component Next.js gọi API qua `api-server.ts` với cookie được forward, không bao giờ expose token cho JS phía browser.
 - **Worker** — process độc lập; consume queue Asynq, hit Postgres + MinIO; emit notification qua SMTP + Web Push.
-- **Service optional** — LiveKit (call), mediamtx (live streaming), observability stack đều sau flag `--profile` trong docker-compose; self-host single-VM có thể skip.
+- **Service optional** — LiveKit (calls), mediamtx (live streaming), observability stack đều nằm sau flag `--profile` trong docker-compose; self-host single-VM có thể skip.
 
 ---
 
 ## 2. Bản đồ module backend
 
-Modular monolith. Một family binary Go duy nhất, nhưng source tree split thành các bounded context.
+Modular monolith. Một family binary Go duy nhất, nhưng source tree được chia thành các bounded context.
 
 ```mermaid
 graph TB
@@ -142,7 +144,7 @@ graph TB
     end
 
     subgraph DOMAIN[Domain modules - internal/modules/]
-        account[account<br/>auth + RBAC<br/>OIDC + JWT]:::domain
+        account[account<br/>auth + RBAC<br/>local password Argon2id + JWT]:::domain
         tenant[tenant<br/>orgs + memberships<br/>kind: org/household]:::domain
         media[media<br/>assets + transcode<br/>thumbnail workers]:::domain
         movie[movie<br/>catalog + episodes]:::domain
@@ -198,19 +200,20 @@ graph TB
 
 **Hướng dẫn đọc:**
 
-- **Domain modules** (xanh dương) — bounded context. Nói chuyện với nhau chỉ qua subpackage `api/`.
-- **Bridge modules** (vàng) — `creator` và `marketplace` chủ ý span social + bank.
+- **Trạng thái xây dựng (2026-07-06):** **đã build + đã wire** — `account`, `media`; **chỉ có scaffold** — `tenant`, `movie`, `music`, `story`, `comic` (`repository/` rỗng, chưa được construct trong `main.go`); **mới lên kế hoạch, chưa có code** — `bank`, `notification`, `social`, `creator`, `marketplace`, `safety`.
+- **Domain modules** (xanh dương) — bounded context. Chỉ nói chuyện với nhau qua subpackage `api/`.
+- **Bridge modules** (vàng) — `creator` và `marketplace` chủ ý span cả social lẫn bank.
 - **Cross-cutting** (hồng) — `safety` consume event từ `media` + `social` để chạy classifier NSFW/CSAM/toxicity.
-- **Platform** (chàm) — không có logic nghiệp vụ; hạ tầng cross-cutting.
+- **Platform** (chàm) — không có business logic; hạ tầng cross-cutting.
 - **cmd/** (xanh ngọc) — chỉ wiring; construct mỗi module một lần và gọi `MountHTTP` / `RegisterTasks`.
 
-Giao tiếp cross-module: synchronous qua call `<module>api.X(ctx, ...)`, asynchronous qua event Asynq với naming `<emitting-module>:<event>`.
+Giao tiếp cross-module: đồng bộ qua call `<module>api.X(ctx, ...)`, bất đồng bộ qua event Asynq với naming `<emitting-module>:<event>`.
 
 ---
 
 ## 3. Quy tắc boundary module
 
-Cái gì được import cái gì — enforce bởi `golangci-lint depguard`.
+Cái gì được phép import cái gì — convention theo [backend/MODULES.md](../../backend/MODULES.md) (authoritative); enforcement bằng `golangci-lint depguard` mới đang được lên kế hoạch — chưa có file `.golangci.yml` nào, và CI hiện chạy `go build`/`vet`/`test` + sqlc-drift, chưa chạy golangci-lint.
 
 ```mermaid
 graph TB
@@ -268,27 +271,29 @@ graph TB
     Xservice --> Xrepo
 ```
 
-**Quy tắc cứng** (enforce bởi depguard, fail CI):
+**Quy tắc cứng** (convention hiện tại; depguard-trong-CI mới lên kế hoạch):
 
 | Caller | Được import | KHÔNG được import |
 |---|---|---|
 | `cmd/api`, `cmd/worker` | mọi module, `platform/*` | `internal/sysrepository` |
-| `cmd/sysjobs` | `internal/sysrepository` (chỉ nơi duy nhất!), package `api/` của module | — |
+| `cmd/sysjobs` | `internal/sysrepository` (nơi duy nhất được phép!), package `api/` của module | — |
 | `modules/X/service` | internal của module mình + `platform/*` + chỉ `api/` của module khác | `service/`, `handler/`, `repository/`, `query/`, package subdomain của module khác |
-| Module bất kỳ | internal mình + `platform/*` + `api/` khác | `internal/sysrepository` |
+| Module bất kỳ | internal của mình + `platform/*` + `api/` của module khác | `internal/sysrepository` |
 
-Quy tắc load-bearing duy nhất: **module nói chuyện với nhau chỉ qua package `api/`. Không bao giờ JOIN across table của nhau.**
+Quy tắc load-bearing duy nhất: **module chỉ nói chuyện với nhau qua package `api/`. Không bao giờ JOIN across table của nhau.**
 
 ---
 
 ## 4. Flow request đã authenticate
 
-Chain middleware trên mỗi endpoint protected, với một nhánh error path show.
+Chuỗi middleware trên mọi endpoint protected, với một nhánh error path được thể hiện.
+
+**Chain v1 hiện tại:** RealIP → RequestID → Recoverer → Timeout → RequireAuth → RequirePermission. Các lớp tenant và step-up bên dưới là post-v1.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as User Browser
+    actor U as Người dùng (Trình duyệt)
     participant T as Traefik
     participant Mw as Middleware chain
     participant H as Handler
@@ -303,181 +308,189 @@ sequenceDiagram
 
     rect rgb(240, 248, 255)
         Note over Mw: RequireAuth
-        Mw->>Mw: parse JWT, verify HS256
+        Mw->>Mw: parse JWT, xác minh HS256
         Mw->>PG: SELECT token_version, disabled_at FROM users WHERE id=?
         PG-->>Mw: snapshot
-        alt JWT bad / user disabled / token_version mismatch
+        alt JWT không hợp lệ / user bị disable / token_version không khớp
             Mw-->>U: 401 + Problem
         end
     end
 
     rect rgb(255, 248, 240)
-        Note over Mw: RequireTenant
-        Mw->>Mw: extract /t/{slug} from path
-        Mw->>Ca: cache lookup tenant_id
+        Note over Mw: RequireTenant<br/>(post-v1 — tenancy/RLS chưa ship)
+        Mw->>Mw: extract /t/{slug} từ path
+        Mw->>Ca: tra cache tenant_id
         alt cache miss
             Mw->>PG: SELECT tenant + membership check
             PG-->>Mw: tenant_id
-            Mw->>Ca: cache set
+            Mw->>Ca: set cache
         end
         Mw->>PG: BEGIN tx + SET LOCAL app.tenant_id GUC
     end
 
     rect rgb(240, 255, 240)
-        Note over Mw: RequireACR (step-up, op nhạy cảm)
-        Mw->>Mw: check claim acr + auth_time
-        alt ACR không đủ
-            Mw-->>U: 403 + Problem step_up_required<br/>(frontend redirect sang /auth/login?step_up=mfa)
+        Note over Mw: Kiểm tra step-up MFA (op nhạy cảm)<br/>(post-v1 — MFA do Portal tự sở hữu theo ADR-06)
+        Mw->>Mw: kiểm tra step-up level của session
+        alt step-up level không đủ
+            Mw-->>U: 403 + Problem step_up_required<br/>(frontend yêu cầu step-up MFA)
         end
     end
 
     rect rgb(255, 240, 245)
         Note over Mw: RequirePermission
-        Mw->>Ca: rbac:perms:userID:tenantID:v<token_version>
+        Mw->>Ca: rbac:perms:<userID>:v<token_version><br/>(không có segment tenant — tenant scoping là post-v1)
         alt cache miss
             Mw->>PG: recursive CTE: roles -> ancestors -> permissions
             PG-->>Mw: effective set
-            Mw->>Ca: cache set TTL 5 phut
+            Mw->>Ca: set cache TTL 5 phút
         end
         alt deny
             Mw-->>U: 403 + Problem
         end
     end
 
-    Mw->>H: pass sang handler với ctx<br/>(identity + tenant + tx)
+    Mw->>H: pass sang handler kèm ctx<br/>(identity + tenant + tx)
     H->>S: service.Movies.Create(ctx, input)
     S->>R: repo.Movies.Insert(ctx, ...)
-    R->>PG: INSERT (RLS auto-filter theo app.tenant_id)
+    R->>PG: INSERT (RLS tự động filter theo app.tenant_id)
     PG-->>R: row
     R-->>S: result
     S->>Au: audit.Logger.Write(ctx, "movie.created", ...) (non-blocking)
-    Au-->>PG: best-effort insert vao audit_log
+    Au-->>PG: insert best-effort vào audit_log
     S-->>H: response
     H->>PG: COMMIT
     H-->>U: 201 + Location + body
 ```
 
-Mỗi route protected walk hết năm lớp middleware theo thứ tự. RLS ở database là **đường phòng thủ cuối cùng**: kể cả khi handler quên clause `WHERE tenant_id = ...`, Postgres từ chối trả row.
+Mọi route protected đều đi qua các lớp này theo đúng thứ tự — ở v1 nghĩa là lớp auth + permission; tenant và step-up là post-v1. Khi tenancy được ship, RLS ở tầng database là **tuyến phòng thủ cuối cùng**: kể cả khi handler quên clause `WHERE tenant_id = ...`, Postgres vẫn từ chối trả về row.
 
 ---
 
-## 5. Sequence OIDC login
+## 5. Sequence login mật khẩu local
 
-Handshake auth đầy đủ từ "user click Sign In" tới "cookie session đã set".
+Flow `/auth/login` (ADR-06 — Portal tự sở hữu credential; Authentik/OIDC bị loại bỏ hoàn toàn). Từ "user submit form đăng nhập" tới "cookie session đã được set".
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as User Browser
-    participant N as Next.js<br/>(login button)
+    actor U as Người dùng (Trình duyệt)
+    participant N as Next.js<br/>(form đăng nhập)
     participant A as Portal API<br/>cmd/api
-    participant Ak as Authentik<br/>(IdP)
+    participant Rd as Dragonfly<br/>(rate limit)
     participant PG as Postgres
 
-    U->>N: click "Sign in"
-    N->>A: GET /auth/login
-    A->>A: generate state + nonce<br/>set cookie portal_oidc<br/>(HttpOnly, TTL 5 phut)
-    A-->>U: 302 sang Authentik authorize<br/>+ Set-Cookie portal_oidc
+    U->>N: submit email + mật khẩu<br/>(+ checkbox remember)
+    N->>A: POST /api/v1/auth/login<br/>{email, password, remember}
 
-    U->>Ak: GET /application/o/portal/authorize<br/>?state=...&nonce=...&acr_values=...
-    Ak->>U: prompt password
-    U->>Ak: nhap credentials
-    Ak->>U: prompt MFA (TOTP/WebAuthn)<br/>neu acr_values=mfa
-    U->>Ak: code 6 so hoac assertion WebAuthn
-    Ak-->>U: 302 sang /auth/callback?code=...&state=...
-
-    U->>A: GET /auth/callback?code=...&state=...<br/>Cookie: portal_oidc
-    A->>A: verify state match cookie<br/>(check CSRF)
-    A->>Ak: POST /token<br/>code + client_secret
-    Ak-->>A: { access_token, id_token, refresh_token }
-    A->>A: verify chu ky ID token<br/>verify nonce match cookie
-
-    rect rgb(240, 255, 240)
-        Note over A,PG: Upsert user + sync role
-        A->>PG: UPSERT users (oidc_subject, email, display_name)
-        A->>PG: SYNC user_oidc_roles<br/>tu id_token.groups<br/>(theo OIDC_GROUP_ROLE_MAP)
-        opt user co permission bank:* VA amr thieu 'mfa'
-            A-->>U: 403 + mfa_enrollment_required<br/>(deep-link sang Authentik MFA dashboard)
-        end
+    A->>Rd: kiểm tra rate-limit + lockout chống brute-force
+    alt vượt limit
+        A-->>U: 429 + Problem (bị khóa tạm)
     end
 
-    A->>A: mint access JWT (5 phut, HS256)<br/>mint refresh token (256-bit, hashed)
-    A->>PG: INSERT refresh_tokens<br/>+ audit account.login
-    A-->>U: 302 sang /<br/>+ Set-Cookie portal_access (Path=/)<br/>+ Set-Cookie portal_refresh (Path=/auth)<br/>+ Delete portal_oidc
+    A->>PG: SELECT user theo email
+    A->>A: xác minh password_hash Argon2id<br/>(constant-time) + kiểm tra disabled_at
+    alt credentials sai / user bị disable
+        A-->>U: 401 + Problem
+    end
 
-    U->>N: GET / voi cookie moi
-    N-->>U: page home rendered<br/>(da authenticated)
+    A->>A: mint access JWT (5 phút, HS256, kid xoay vòng)<br/>mint refresh token (256-bit random,<br/>băm SHA-256 khi lưu)
+    A->>PG: INSERT refresh_tokens<br/>+ audit account.login
+    A-->>U: 200 + Set-Cookie portal_access (Path=/)<br/>+ Set-Cookie portal_refresh (Path=/api/v1/auth)<br/>+ Set-Cookie portal_session marker (Path=/)
+
+    U->>N: GET / kèm cookie mới
+    N-->>U: trang home đã render<br/>(giờ đã authenticated)
+
+    rect rgb(240, 255, 240)
+        Note over U,PG: Luồng đăng ký (registration)
+        U->>A: POST /api/v1/auth/register<br/>{email, password, display_name}
+        A->>PG: INSERT users<br/>(password_hash = Argon2id)
+        A-->>U: 201 Created — không có session,<br/>quay lại /login
+    end
 ```
 
-Hai cookie được set với path khác nhau nên refresh token chỉ travel sang endpoint `/auth/*`. Rotation refresh-token + reuse detection sống trong call `/auth/refresh` sau đó.
+Ba cookie với path khác nhau: `portal_access` (Path=/) và `portal_refresh` (Path=/api/v1/auth) là `HttpOnly Secure`; `portal_session` (Path=/) là một marker được Next.js middleware auth gate đọc. Việc tách path nghĩa là refresh token chỉ bao giờ đi tới các endpoint `/api/v1/auth/*`. `remember=true` → cookie persistent 24h (`REFRESH_TOKEN_TTL=24h`), ngược lại là cookie session. Rotation refresh-token + reuse detection (thu hồi cả chuỗi + audit event `auth.refresh.reuse_detected`) nằm trong các call `POST /auth/refresh` tiếp theo.
 
 ---
 
 ## 6. Flow upload + transcode asset
 
-Pipeline media end-to-end show một video upload trở thành HLS playback thế nào.
+Pipeline media end-to-end cho thấy một video được upload trở thành HLS playback như thế nào.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as User Browser
+    actor U as Người dùng (Trình duyệt)
     participant A as cmd/api
-    participant S as platform/storage
-    participant M as MinIO origin
-    participant Q as Dragonfly<br/>(queue Asynq)
-    participant W as cmd/worker<br/>(handler transcode)
+    participant M as Object storage<br/>MinIO (dev) / R2 (prod)
+    participant Q as Dragonfly<br/>(Asynq queue)
+    participant W as cmd/worker<br/>(transcode handler)
     participant F as FFmpeg
-    participant Sa as safety worker<br/>(D-38)
-    participant R as Cloudflare R2 CDN
+    participant Sa as safety worker<br/>(D-38, đã lên kế hoạch)
+    participant R as Cloudflare R2 CDN<br/>[TARGET] tầng edge
 
-    U->>A: POST /api/v1/t/{tenant}/media/uploads<br/>(multipart)
-    A->>A: RBAC: media:upload + check quota<br/>(MAX_QUEUED_TRANSCODES_PER_TENANT)
-    A->>S: storage.Put(ctx, key)
-    S->>M: PUT org/<tid>/assets/source/<id>.mp4
+    U->>A: POST /api/v1/assets<br/>{filename, content_type}
+    A->>A: RBAC: media:upload<br/>(quota theo tenant: post-v1)
     A->>A: INSERT assets (status=pending)
-    A->>Q: Enqueue task transcode<br/>{tenant_id, asset_id, source_key}
-    A-->>U: 202 Accepted + asset_id
+    A-->>U: 201 + asset_id<br/>+ presigned PUT URL
 
-    Q->>W: deliver task
-    W->>W: TenantMiddleware: BeginTenantScope
-    W->>A: UPDATE assets SET status=processing
-    W->>F: ffmpeg -i source.mp4<br/>-c:v libx264 (hoac NVENC/VAAPI)<br/>-hls_time 6 -hls_playlist_type vod<br/>-master_pl_name index.m3u8<br/>+ rendition 1080/720/480/360
-    F->>M: write HLS segment sang<br/>org/<tid>/assets/hls/<id>/
-
-    par Generate thumbnail
-        W->>F: ffmpeg generate poster + sprite
-        F->>M: write thumbnail
+    alt upload qua presigned URL
+        U->>M: PUT source object<br/>(presigned URL)
+    else upload qua API proxy (dev)
+        U->>A: PUT /api/v1/assets/{id}/source
+        A->>M: PUT source object
     end
 
-    W->>A: UPDATE assets SET status=ready,<br/>hls_master_url, duration_ms, thumbnail_url
-    W->>Q: emit event media:asset_ready<br/>(consume boi movie/music/etc.)
+    U->>A: POST /api/v1/assets/{id}/complete
+    A->>Q: Enqueue task transcode {asset_id}
+    A-->>U: 202 Accepted
 
-    par Safety scan (Phase 12+)
-        Q->>Sa: media:asset_ready consumed
-        Sa->>Sa: chay classifier nsfwjs + phash
-        alt CSAM hash match
+    Q->>W: giao task
+    W->>A: UPDATE assets SET status=processing
+    W->>M: download source
+    W->>F: ffprobe source
+    W->>F: ffmpeg VOD HLS<br/>h264/aac, một rendition duy nhất<br/>[TARGET: ladder 1080/720/480/360,<br/>NVENC/VAAPI]
+    F-->>W: manifest + segments
+    W->>M: upload assets/hls/{id}/*
+
+    par Sinh thumbnail (stub ở v1 — chưa có output)
+        W->>F: ffmpeg tạo poster + sprite
+        F->>M: ghi thumbnail
+    end
+
+    W->>A: MarkAssetReady: UPDATE assets<br/>SET status=ready, hls_master_url, duration_ms
+    W-->>Q: emit event media:asset_ready<br/>(đã lên kế hoạch — chưa emit ở v1, chưa có consumer;<br/>worker set status=ready trực tiếp)
+
+    par Quét safety (Phase 12+, đã lên kế hoạch)
+        Q->>Sa: consume media:asset_ready
+        Sa->>Sa: chạy classifier nsfwjs + phash
+        alt hash khớp CSAM
             Sa->>A: UPDATE assets SET status=quarantined
             Sa->>A: page operator qua webhook
-        else NSFW > threshold
+        else NSFW > ngưỡng
             Sa->>A: UPDATE assets SET nsfw_flag=true
         end
     end
 
-    Note over M,R: replication lien tuc async sang R2
+    Note over U,M: playback v1 — HLS proxy công khai qua API
+    U->>A: GET /api/v1/assets/{id}/hls/*<br/>(Vidstack player)
+    A->>M: fetch manifest / segment
+    M-->>A: bytes
+    A-->>U: HLS được serve qua API
 
-    U->>R: GET HLS chunk qua signed URL tu API
+    Note over M,R: [TARGET] replication async liên tục sang R2<br/>(ADR-04: môi trường deploy là R2-only single-tier)
+    U->>R: [TARGET] GET HLS chunk từ edge
     R->>M: cache miss origin pull
     M-->>R: segments
-    R-->>U: chunk serve tu edge
+    R-->>U: chunk được serve từ edge
 
-    alt transcode fail 3 lan
+    alt transcode fail 3 lần (design intent — dead-letter + asset_failed chưa implement ở v1)
         W->>Q: move sang transcode:dead
         W->>A: UPDATE assets SET status=failed, error_message
         W->>A: emit event media:asset_failed
     end
 ```
 
-Toàn bộ flow **non-blocking từ perspective của user**: upload trả về ngay 202, transcode chạy background. Failure route sang dead-letter queue cần action operator.
+Flow này **non-blocking từ góc nhìn của user**: `/complete` trả về 202 và transcode chạy background; asset trở nên playable khi `assets.status=ready` (`GET /api/v1/assets/{id}`), rồi Vidstack play qua HLS proxy của API. Dead-letter queue cho failure là design intent, chưa được implement.
 
 ---
 
@@ -491,13 +504,13 @@ graph LR
     classDef next fill:#bbdefb,stroke:#0d47a1,color:#000
     classDef later fill:#e0e0e0,stroke:#616161,color:#000
 
-    P0[Phase 0<br/>Wiring foundation]:::next
+    P0[Phase 0<br/>Foundation wiring]:::done
     P1[Phase 1<br/>Tenancy + RLS]:::later
     P2[Phase 2<br/>Media pipeline]:::later
-    P3[Phase 3<br/>Vertical Movies]:::later
+    P3[Phase 3<br/>Movies vertical]:::later
     P4[Phase 4<br/>Music/Stories/Comics<br/>+ progress + ratings]:::later
-    P5pre[Prereq Phase 5<br/>step-up auth + MFA]:::later
-    P5[Phase 5<br/>Bank 5a..5i<br/>ledger/debt/investment]:::later
+    P5pre[Phase 5 prereq<br/>step-up auth + MFA]:::later
+    P5[Phase 5<br/>Bank 5a..5i<br/>ledger/debts/investments]:::later
     P6[Phase 6<br/>Notifications<br/>SSE + email + Web Push]:::later
     P7[Phase 7<br/>Social baseline<br/>newsfeed + follow + DM]:::later
     P8[Phase 8<br/>Search<br/>Postgres FTS]:::later
@@ -524,22 +537,24 @@ graph LR
     P10 --> P12
 ```
 
+> **Cập nhật (2026-07-06):** Phase 0 đã hoàn thành (migration 0001–0007, sqlc, repository adapter, account + media đã wire trong `cmd/api`, healthz xanh). v1 còn ship thêm một happy path upload media→HLS single-tenant — một subset của Phase 2 được lấy trước Phase 1 tenancy theo [01-v1-scope-cut.md](architecture/01-v1-scope-cut.md) — cộng với CI. Nội dung phase là authoritative trong [feature.md](feature.md); sơ đồ này chỉ track dependency.
+
 **Quy tắc gate:**
 
-- Tiêu chí exit của Phase N phải đạt trước khi Phase N+1 mở.
-- Phase 5 (bank) gate bởi sub-phase prereq tường minh land step-up auth + MFA enforcement trước — op money không thể ship mà không có chúng.
-- Phase 9 (microsite) đủ độc lập để ship parallel với bất kỳ phase nào khác khi Phase 0 xong.
-- Phase 10–12 build trên trio social + creator + bank.
+- Tiêu chí exit của Phase N phải đạt được trước khi Phase N+1 mở.
+- Phase 5 (bank) bị gate bởi một sub-phase prereq tường minh, land step-up auth + MFA enforcement trước (MFA do Portal tự sở hữu theo ADR-06 — không có IdP bên ngoài) — money operation không thể ship nếu thiếu những thứ này.
+- Phase 9 (microsite) đủ độc lập để ship song song với bất kỳ phase nào khác một khi Phase 0 đã xong.
+- Phase 10–12 build trên bộ ba social + creator + bank.
 
 ---
 
-## Source sơ đồ
+## Nguồn sơ đồ
 
-Tất cả sơ đồ là cú pháp Mermaid 10+. Để preview:
+Tất cả sơ đồ dùng cú pháp Mermaid 10+. Để preview:
 
 - **GitHub**: render native khi xem file này.
-- **VS Code**: install extension "Markdown Preview Mermaid Support".
-- **Edit live**: paste code-block bất kỳ vào [mermaid.live](https://mermaid.live).
-- **Export PNG/SVG**: dùng Mermaid CLI (`@mermaid-js/mermaid-cli`) hoặc button download của `mermaid.live`.
+- **VS Code**: cài extension "Markdown Preview Mermaid Support".
+- **Live edit**: paste code-block bất kỳ vào [mermaid.live](https://mermaid.live).
+- **Export PNG/SVG**: dùng Mermaid CLI (`@mermaid-js/mermaid-cli`) hoặc nút download của `mermaid.live`.
 
-Updates: edit in place. Sơ đồ là phần của cùng git diff với code change — nếu module thêm hoặc flow đổi, update sơ đồ tương ứng trong cùng PR.
+Updates: edit in place. Sơ đồ là một phần của cùng git diff với code change — nếu module được thêm hoặc flow thay đổi, update sơ đồ tương ứng trong cùng PR.

@@ -25,11 +25,11 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	accountapi "github.com/portal/backend/internal/modules/account/api"
-	"github.com/portal/backend/internal/modules/account/audit"
 	"github.com/portal/backend/internal/modules/account/auth"
 	"github.com/portal/backend/internal/modules/account/handler"
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	"github.com/portal/backend/internal/modules/account/rbac"
+	"github.com/portal/backend/internal/platform/audit"
 )
 
 // APIUserFetcher is the projection the cross-module API (accountapi.Impl) needs.
@@ -125,8 +125,8 @@ func (m *Module) MountHTTP(r chi.Router) {
 }
 
 // RegisterTasks attaches the module's Asynq handlers (notifications,
-// auth.refresh.reuse alerting, etc.). Placeholder — wired when notifications
-// subpackage lands.
+// account.refresh.reuse_detected alerting, etc.). Placeholder — wired when the
+// notifications subpackage lands.
 func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
 
 // API exposes the account module's public surface to other modules.

@@ -1,5 +1,7 @@
 # ArchiveTech — Backend Architecture for Multi-Tenancy
 
+> **Status (2026-07-06): forward-looking design spec — none of this is built.** v1 shipped with no tenancy ([01-v1-scope-cut](architecture/01-v1-scope-cut.md)); the tenant module is scaffold-only and is not constructed in `cmd/api/main.go`. Per [ADR-02](architecture/02-rbac-model-reconciliation.md), the user-group/policy model this doc builds on layers on top of the shipped role-hierarchy RBAC in a later phase. Where the code layout here conflicts with [backend/MODULES.md](../../backend/MODULES.md) (modules + platform structure, per-module sqlc `repository/`), MODULES.md wins. OIDC references are retired per [ADR-06](architecture/06-local-auth-model.md) (local password auth). Migration numbers cited below (0003/0004/0009) are stale — 0001–0007 are already applied; tenant migrations take the next free `000N_tenant_…` numbers.
+
 > Engineering patterns for running Portal's Go backend in a multi-tenant
 > setting. The **security model** lives in [authoration.md](authoration.md);
 > this doc is about the **code architecture** that implements it safely
@@ -204,6 +206,8 @@ func (r *Repo) WithTx(tx pgx.Tx) *Repo {
 }
 ```
 
+> **As built:** queriers are generated per module (`internal/modules/<name>/repository/`, multi-block `sqlc.yaml`; adapters shipped for account + media) and modules never share a `Repo` struct — the `WithTx` pattern applies within each module's repository instead.
+
 The handler does **not** call `WithTx` directly — the tenant middleware put the tx in context. The service pulls it out:
 
 ```go
@@ -233,7 +237,7 @@ This shape keeps the service's contract clean while ensuring every DB call lands
 
 ### 4.3 The system role for cross-tenant work
 
-A **separate** `pgxpool.Pool` connects as `portal_system` (with `BYPASSRLS`). It is wired only into `cmd/sysjobs/` — the API and worker binaries do not import it. This is enforced by package layout:
+A **separate** `pgxpool.Pool` connects as `portal_system` (with `BYPASSRLS`). It is wired only into `cmd/sysjobs/` — the API and worker binaries do not import it (planned — `cmd/sysjobs` is not built yet; see milestone M1). This is enforced by package layout:
 
 ```
 backend/
@@ -243,7 +247,7 @@ backend/
                           (the BYPASSRLS pool — the only place it's referenced)
 ```
 
-Add a `go vet`-style check (or `golangci-lint forbidigo`) that forbids importing `internal/sysrepository` from any package outside `cmd/sysjobs/`.
+Add a `go vet`-style check (or `golangci-lint forbidigo`) that forbids importing `internal/sysrepository` from any package outside `cmd/sysjobs/` — this is already the documented `depguard` convention in CLAUDE.md.
 
 ---
 
@@ -297,7 +301,7 @@ The repository ensures lookup by ID is RLS-scoped; the service translates pgx's 
 Every task payload carries the organization ID. No exceptions.
 
 ```go
-// internal/worker/transcode.go (updated for multi-tenant)
+// internal/modules/media/… (future multi-tenant shape — shipped payload has no OrganizationID)
 type TranscodePayload struct {
     OrganizationID uuid.UUID `json:"organization_id"`  // REQUIRED
     AssetID        uuid.UUID `json:"asset_id"`
@@ -452,7 +456,7 @@ Audit log archive is its own bucket (`portal-audit-archive`) with **immutable bu
 
 Always, no exceptions. Examples:
 
-- `rbac:perms:<org_id>:<user_id>:v<token_version>`
+- `rbac:perms:<org_id>:<user_id>:v<token_version>` *(proposed multi-tenant evolution; the shipped single-tenant key is `rbac:perms:<user_id>:v<token_version>`)*
 - `policy:detail:<org_id>:<policy_id>`
 - `movie:list:<org_id>:page<n>`
 - `session:<user_id>` ← global (user identity, not tenant)
@@ -480,7 +484,7 @@ forbidigo:
 
 ### 8.3 Cross-tenant caches
 
-The only legitimate global cache is identity (refresh tokens by hash, OIDC provider metadata, user profile by id). These keys explicitly omit `<org_id>` and undergo a code-review checklist: "Is this truly tenant-independent?"
+The only legitimate global cache is identity (refresh tokens by hash, user profile by id). These keys explicitly omit `<org_id>` and undergo a code-review checklist: "Is this truly tenant-independent?"
 
 ---
 
@@ -491,7 +495,7 @@ The only legitimate global cache is identity (refresh tokens by hash, OIDC provi
 Tenant-scoped `tsvector` columns + RLS = isolation for free. No extra configuration.
 
 ```sql
--- in 0004_user_groups.up.sql or wherever movies live
+-- in the future movie-module migration (next free 000N_movie_… number)
 ALTER TABLE movies
     ADD COLUMN search_tsv tsvector
     GENERATED ALWAYS AS (
@@ -716,6 +720,8 @@ This catches the worst-class bug: an endpoint mounted without `RequireTenant`.
 
 ## 14. Code organization
 
+> **Superseded by [backend/MODULES.md](../../backend/MODULES.md)** — the shipped layout is `internal/modules/<name>/` + `internal/platform/`. Read this tree as a responsibility map (`tenant/` → `internal/modules/tenant/`, `storage`/`cache`/`jobs` → `internal/platform/`, per-domain service+repository → each module). Where they conflict, MODULES.md wins.
+
 ```text
 backend/
 ├── cmd/
@@ -724,7 +730,7 @@ backend/
 │   └── sysjobs/main.go      ← BYPASSRLS pool — cross-tenant batch
 │
 ├── internal/
-│   ├── auth/                ← identity (JWT, OIDC, refresh, TOTP)
+│   ├── auth/                ← identity (JWT, local password auth, refresh; TOTP later)
 │   ├── tenant/              ← tenant.Context, MustEqual, helpers
 │   ├── rbac/                ← engine, permission, role, cache
 │   ├── middleware/          ← RequireAuth, RequireTenant, RequireStepUp,
@@ -751,6 +757,8 @@ backend/
 │   └── queries/
 └── go.mod
 ```
+
+OIDC is retired per [ADR-06](architecture/06-local-auth-model.md); identity code lives in `internal/modules/account/`.
 
 ### Allowed-import rules
 
@@ -783,20 +791,20 @@ Use `golangci-lint`'s `depguard` linter to enforce.
 
 ## 16. Implementation milestones
 
-These build on the phases in [archivetech.md §7](archivetech.md):
+These build on the phases in [archivetech.md §7](archivetech.md) — per [ADR-02](architecture/02-rbac-model-reconciliation.md) those phases layer on top of the shipped role-hierarchy RBAC in a post-v1 phase; none of M0–M5 is in the v1 envelope:
 
 ### M0 — Tenant primitives  *(blocks Phase 1)*
 
-- Migration 0003 (organizations + memberships).
+- Next free `000N_tenant_organizations` migration (0008+ as of 2026-07-06) — organizations + memberships.
 - `internal/tenant/` package: Context, helpers.
 - `internal/middleware/tenant.go`: `RequireTenant` with `BeginTenantScope`.
 - `internal/repository/db.go`: tenant-scoped tx wrapper.
-- Update `cmd/api/main.go` to mount `RequireTenant` after `RequireAuth`.
+- Add `RequireTenant` after the existing `RequireAuth` in the already-wired `cmd/api/main.go` router.
 - One end-to-end test: GET `/auth/me` returns user's orgs; `POST /auth/switch-tenant` mints a new token; subsequent request lands in the new tenant context.
 
 ### M1 — RLS rollout
 
-- Migration 0009 (RLS enable on every tenant-scoped table).
+- A follow-up `000N_tenant_rls` migration (number assigned at implementation time) — RLS enable on every tenant-scoped table.
 - `cmd/sysjobs/` skeleton with `BYPASSRLS` pool.
 - `internal/sysrepository/` (system-only Querier).
 - RLS test fixtures + the `TestRLS_*_Isolation` family across every domain table.

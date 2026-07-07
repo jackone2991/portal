@@ -8,6 +8,20 @@ info:
     This document is the **source of truth** for the HTTP contract.
     Server stubs (Go) and the TypeScript client are both generated from it.
 
+    ## Errors
+
+    Error responses use the **RFC 7807** `application/problem+json` shape
+    (`#/components/schemas/Problem`). The stable `type` URI doubles as the i18n
+    key; the `code` extension is a machine-stable slug (e.g. `invalid_credentials`).
+
+    > **Migration note (v1):** RFC 7807 is the target contract per [D-7]/[D-29].
+    > Some handlers still emit the legacy `{code, message}` body
+    > (`#/components/schemas/Error`); they are retrofitted to `Problem` as they
+    > are touched, not in a sweep (see ADR-01). Treat `Problem` as authoritative.
+
+    Auth is **local password** ([ADR-06](../doc/en/architecture/06-local-auth-model.md));
+    the OIDC/Authentik login + `/auth/callback` flow was removed.
+
 servers:
   - url: https://api.portal.localhost
     description: Local dev (via Traefik)
@@ -35,50 +49,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Health"
+        "503":
+          description: A dependency (DB or cache) is down
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
 
   /auth/login:
-    get:
+    post:
       tags: [auth]
-      summary: Begin OIDC login (redirects to IdP)
+      summary: Local password login
       description: |
-        Generates state + nonce, sets a short-lived binding cookie, and
-        redirects the browser to the OIDC provider's authorization endpoint.
-      operationId: startLogin
+        Verifies `email` + `password` against `users.password_hash` (Argon2id,
+        constant-time). On success, mints an access JWT + refresh token, sets the
+        `portal_access` / `portal_refresh` / `portal_session` cookies, and returns
+        the access token in the body for API clients. Brute-force attempts are
+        rate-limited per IP and per account (429).
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        "302":
-          description: Redirect to OIDC provider
-
-  /auth/callback:
-    get:
-      tags: [auth]
-      summary: OIDC callback (exchanges code, sets session cookies)
-      operationId: oidcCallback
-      parameters:
-        - in: query
-          name: state
-          required: true
-          schema: { type: string }
-        - in: query
-          name: code
-          required: true
-          schema: { type: string }
-      responses:
-        "302":
-          description: Redirect to post-login URL with cookies set
+        "200":
+          description: Authenticated; cookies set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Account is disabled
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Create a local account
+      description: |
+        Creates a local account (Argon2id hash) and seeds the default `user`
+        role. Returns **201 without a session** — the user is sent back to
+        `/login` to sign in with the new credentials. Deployments that want
+        invite-only signup gate this route at the router.
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Account created (no session issued)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, email]
+                properties:
+                  status: { type: string, enum: [registered] }
+                  email:  { type: string, format: email }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Email already registered
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 
   /auth/refresh:
     post:
       tags: [auth]
       summary: Rotate refresh token, mint new access token
       description: |
-        Reads the refresh token from `portal_refresh` cookie (browser) or the
+        Reads the refresh token from the `portal_refresh` cookie (browser) or the
         `refresh_token` body field (API client). Rotates the token (old is
-        revoked, new is issued), and returns a fresh access token. Reuse of
-        an already-rotated token revokes the entire chain (token theft).
+        revoked, new is issued) and returns a fresh access token. Reuse of an
+        already-rotated token revokes the entire chain (token theft) and emits an
+        `account.refresh.reuse_detected` audit event.
       operationId: refreshToken
       requestBody:
         required: false
@@ -94,12 +154,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [access_token, expires_in, token_type]
-                properties:
-                  access_token: { type: string }
-                  expires_in:   { type: integer, description: "seconds until expiry" }
-                  token_type:   { type: string,  enum: [Bearer] }
+                $ref: "#/components/schemas/AccessToken"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -146,12 +201,35 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /assets:
+    get:
+      tags: [assets]
+      summary: List the caller's assets
+      operationId: listAssets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The caller's assets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assets]
+                properties:
+                  assets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       tags: [assets]
       summary: Begin a media upload
       description: |
-        Returns a presigned S3 multipart URL set. The client uploads parts
-        directly to S3 and then calls `/assets/{id}/complete` with the part etags.
+        Creates the asset row and returns a **presigned PUT** for the original
+        bytes. The browser PUTs directly to object storage (prod/R2); in dev it
+        may proxy through `PUT /assets/{id}/source`. Then call
+        `POST /assets/{id}/complete` to enqueue transcoding.
       operationId: createAssetUpload
       security:
         - bearerAuth: []
@@ -168,6 +246,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssetUploadSession"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -182,23 +262,28 @@ paths:
         - $ref: "#/components/parameters/AssetID"
       responses:
         "200":
-          description: Asset
+          description: Asset (includes `hlsUrl` once status is `ready`)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /assets/{id}/complete:
-    post:
+  /assets/{id}/source:
+    put:
       tags: [assets]
-      summary: Complete a multipart upload
+      summary: API-proxied upload of the original bytes (dev path)
       description: |
-        After completion, the API enqueues a transcode (video) or thumbnail
-        (image) job on Asynq. Asset status transitions to `processing` and
-        eventually `ready` or `failed`.
-      operationId: completeAssetUpload
+        Streams the raw original into object storage via the API. Used in dev
+        where the presigned PUT endpoint is not browser-reachable; prod uploads
+        go straight to the presigned URL from `POST /assets`. Body is the raw
+        file; `Content-Type` is the media type.
+      operationId: uploadAssetSource
       security:
         - bearerAuth: []
       parameters:
@@ -206,16 +291,83 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/octet-stream:
             schema:
-              $ref: "#/components/schemas/CompleteAssetRequest"
+              type: string
+              format: binary
+      responses:
+        "204": { description: Stored }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /assets/{id}/complete:
+    post:
+      tags: [assets]
+      summary: Confirm the upload and enqueue processing
+      description: |
+        Marks the source uploaded and enqueues a transcode (video) or thumbnail
+        (image) job on Asynq. Asset status transitions to `processing` and
+        eventually `ready` or `failed`.
+      operationId: completeAssetUpload
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
       responses:
         "202":
           description: Processing started
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Asset"
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [processing] }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Source upload is not complete
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /assets/{id}/hls/{path}:
+    get:
+      tags: [assets]
+      summary: Public HLS proxy (manifest + segments)
+      description: |
+        Serves the HLS master/variant manifests and media segments for a `ready`
+        asset. **Public** (no bearer) so the `<video>`/Vidstack player can fetch
+        segments directly; access to the asset id is the capability.
+      operationId: getAssetHLS
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+        - name: path
+          in: path
+          required: true
+          description: Manifest or segment path under the asset's HLS output prefix.
+          schema: { type: string }
+      responses:
+        "200":
+          description: HLS manifest or media segment
+          content:
+            application/vnd.apple.mpegurl: {}
+            video/mp2t: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   securitySchemes:
@@ -232,32 +384,48 @@ components:
       schema:
         type: string
         format: uuid
+    TenantSlug:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Tenant slug for the `/t/{tenant}/…` prefix. `me` selects the caller's
+        personal scope. Multi-tenant routing is deferred to Phase 1 (see
+        `#/components/schemas/TenantContext`); v1 runs single-tenant.
+      schema:
+        type: string
 
   responses:
     BadRequest:
       description: Malformed request
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Problem"
     Unauthorized:
       description: Missing or invalid credentials
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Problem"
     Forbidden:
-      description: Authenticated, but lacks required permission
+      description: Authenticated, but lacks permission (or step-up required)
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Problem"
     NotFound:
       description: Resource not found
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Problem"
+    TooManyRequests:
+      description: Rate limit / lockout tripped
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
 
   schemas:
     Health:
@@ -267,8 +435,53 @@ components:
         status:
           type: string
           enum: [ok, degraded]
+        db:
+          type: boolean
+        cache:
+          type: boolean
 
+    # ── RFC 7807 error contract (D-7 / D-29) ────────────────────────────────
+    Problem:
+      type: object
+      description: |
+        RFC 7807 problem detail, served as `application/problem+json`. `type` is a
+        stable URI (also the i18n key); Portal adds the extensions below.
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+          default: "about:blank"
+          description: Stable problem-type URI (i18n key).
+        title:
+          type: string
+          description: Short, human-readable summary of the problem type.
+        status:
+          type: integer
+          description: HTTP status code, repeated for convenience.
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence.
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying the specific occurrence.
+        code:
+          type: string
+          description: Portal-stable machine slug (e.g. `invalid_credentials`).
+        required_acr:
+          type: string
+          description: For step-up (403) — the ACR the caller must satisfy [D-27].
+        enrollment_url:
+          type: string
+          format: uri
+          description: For MFA-enrollment (403) — where to enroll a second factor [D-28].
+      additionalProperties: true
+
+    # Legacy error body still emitted by un-migrated handlers. Superseded by
+    # Problem; kept for reference during the RFC 7807 migration (see info.description).
     Error:
+      deprecated: true
       type: object
       required: [code, message]
       properties:
@@ -276,6 +489,53 @@ components:
           type: string
         message:
           type: string
+
+    # ── Auth ────────────────────────────────────────────────────────────────
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:    { type: string, format: email }
+        password: { type: string, format: password }
+        remember:
+          type: boolean
+          default: false
+          description: Persist the session (durable refresh cookie) vs a session cookie.
+
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:    { type: string, format: email }
+        password: { type: string, format: password, minLength: 8 }
+        display_name:
+          type: string
+          description: Optional; defaults to the email local-part.
+
+    AccessToken:
+      type: object
+      required: [access_token, expires_in, token_type]
+      properties:
+        access_token: { type: string }
+        expires_in:   { type: integer, description: "seconds until expiry" }
+        token_type:   { type: string, enum: [Bearer] }
+
+    LoginResponse:
+      allOf:
+        - $ref: "#/components/schemas/AccessToken"
+        - type: object
+          required: [user]
+          properties:
+            user:
+              type: object
+              required: [id, email, display_name, roles]
+              properties:
+                id:           { type: string, format: uuid }
+                email:        { type: string, format: email }
+                display_name: { type: string }
+                roles:
+                  type: array
+                  items: { type: string }
 
     User:
       type: object
@@ -306,6 +566,7 @@ components:
               items:
                 type: string
 
+    # ── Media ───────────────────────────────────────────────────────────────
     AssetKind:
       type: string
       enum: [video, audio, image]
@@ -316,18 +577,15 @@ components:
 
     Asset:
       type: object
-      required: [id, ownerId, kind, status, mimeType, sizeBytes, createdAt]
+      required: [id, status, kind, mimeType, sizeBytes, createdAt]
       properties:
         id:
           type: string
           format: uuid
-        ownerId:
-          type: string
-          format: uuid
-        kind:
-          $ref: "#/components/schemas/AssetKind"
         status:
           $ref: "#/components/schemas/AssetStatus"
+        kind:
+          $ref: "#/components/schemas/AssetKind"
         mimeType:
           type: string
         sizeBytes:
@@ -342,61 +600,131 @@ components:
         height:
           type: integer
           nullable: true
-        outputPrefix:
+        hlsUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Master playlist URL; present once `status` is `ready`.
+        error:
           type: string
           nullable: true
+          description: Failure reason; present when `status` is `failed`.
         createdAt:
           type: string
           format: date-time
 
     CreateAssetRequest:
       type: object
-      required: [kind, mimeType, sizeBytes, fileName]
+      required: [filename, sizeBytes]
       properties:
-        kind:
-          $ref: "#/components/schemas/AssetKind"
-        mimeType:
+        filename:
           type: string
+        contentType:
+          type: string
+          default: application/octet-stream
         sizeBytes:
           type: integer
           format: int64
-        fileName:
-          type: string
 
     AssetUploadSession:
       type: object
-      required: [assetId, uploadId, partUrls]
+      required: [asset, upload]
       properties:
-        assetId:
+        asset:
+          $ref: "#/components/schemas/Asset"
+        upload:
+          type: object
+          required: [url, method]
+          description: Presigned request the client performs to store the original.
+          properties:
+            url:    { type: string, format: uri }
+            method: { type: string, enum: [PUT] }
+            headers:
+              type: object
+              additionalProperties: { type: string }
+
+    # ── Cross-module schemas (eager, per D-29) ──────────────────────────────
+    # Defined ahead of the modules that need them so the contract is stable when
+    # bank / tenant / the domain verticals land. Not all are referenced yet.
+    Money:
+      type: object
+      description: Exact monetary amount [D-14/D-15]. `amount` is a decimal string to avoid float error.
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          description: Decimal string, e.g. "1234.56" (numeric(20,8) at rest).
+          pattern: '^-?[0-9]+(\.[0-9]+)?$'
+        currency:
+          type: string
+          description: ISO 4217 code, e.g. "USD".
+          minLength: 3
+          maxLength: 3
+
+    PaginatedResult:
+      type: object
+      description: |
+        Cursor-paginated envelope. Concrete endpoints override `items` with their
+        element type (OpenAPI has no generics — compose with `allOf` + an `items`
+        override, or document the element type in the operation).
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {}
+        nextCursor:
+          type: string
+          nullable: true
+          description: Opaque cursor for the next page; null on the last page.
+        total:
+          type: integer
+          nullable: true
+          description: Total count when cheap to compute; otherwise omitted.
+
+    TenantContext:
+      type: object
+      description: |
+        Resolved tenant scope for the `/t/{tenant}/…` prefix [D-23]. Multi-tenancy
+        is deferred to Phase 1; v1 runs single-tenant (`me`).
+      required: [tenantId, slug]
+      properties:
+        tenantId:
           type: string
           format: uuid
-        uploadId:
+        slug:
           type: string
-        partUrls:
-          type: array
-          items:
-            type: object
-            required: [partNumber, url]
-            properties:
-              partNumber:
-                type: integer
-              url:
-                type: string
-                format: uri
+        kind:
+          type: string
+          enum: [org, household]
 
-    CompleteAssetRequest:
+    ContinuingItem:
       type: object
-      required: [uploadId, parts]
+      description: |
+        One "continue watching / reading / listening" entry for the cross-domain
+        `/continue` rail [D-20]. Aggregated from each vertical's progress table.
+      required: [module, id, title, progress, updatedAt]
       properties:
-        uploadId:
+        module:
           type: string
-        parts:
-          type: array
-          items:
-            type: object
-            required: [partNumber, etag]
-            properties:
-              partNumber:
-                type: integer
-              etag:
-                type: string
+          enum: [movie, music, story, comic]
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        progress:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Fractional completion 0..1.
+        resourceUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time

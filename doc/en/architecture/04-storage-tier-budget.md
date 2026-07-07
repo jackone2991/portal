@@ -1,6 +1,6 @@
 # ADR-04: Storage tier — R2 only for v1; defer MinIO origin to multi-region phase
 
-**Status:** Proposed
+**Status:** Accepted (see Updates 2026-06-06, 2026-07-06)
 **Date:** 2026-05-24
 **Deciders:** kirito
 **Affects:** [docker-compose.yml](../../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1] (system landscape)
@@ -12,6 +12,14 @@ The R2-only decision below stands **for deployed environments** (staging/prod): 
 Rationale: the media upload flow uses **presigned URLs** (the browser PUTs directly to the store). A plain local-filesystem driver cannot issue presigned URLs, which would force a second, dev-only upload path (client → API → disk) and make dev diverge from prod. MinIO speaks S3, so dev keeps the exact presigned flow and **going live is an `.env` change only** — repoint `S3_ENDPOINT` + `S3_ACCESS_KEY`/`S3_SECRET_KEY` at R2 and set `S3_USE_PATH_STYLE=false`. No code difference; `platform/storage/` stays a single S3 client.
 
 Net: **dev = MinIO (local folder) · prod = R2.** This *refines*, not reverses, the decision below. Action items 1–2 are superseded accordingly: MinIO is removed only from the prod overlay (`docker-compose.prod.yml`); the dev base keeps it on a bind-mount.
+
+## Update (2026-07-06) — implemented; deltas from the decision text
+
+- **Shipped:** `backend/internal/platform/storage/` is a single aws-sdk-go-v2 S3 client (`BaseEndpoint` + `UsePathStyle`, tested in `s3_test.go`); `.env.example` carries the `S3_*` block (names are `S3_ACCESS_KEY`/`S3_SECRET_KEY`).
+- **Upload paths:** `POST /api/v1/assets` returns a presigned PUT (the prod path); dev also uses an API-proxied `PUT /api/v1/assets/{id}/source` — "the API never holds upload bytes" holds for the presigned path only.
+- **Playback:** v1 serves HLS through the API's public proxy `GET /api/v1/assets/{id}/hls/*`, not directly from R2/edge; direct-edge fetch remains the deployed-prod target.
+- **Object keys as-built:** `uploads/<id>/original<ext>` and `hls/<assetID>` — the `org/<tid>` tenant prefix in Decision item 4 is deferred until tenancy lands.
+- The Authentik reference in "Why MinIO existed" item 3 is retired ([ADR-06](./06-local-auth-model.md)).
 
 ## Context
 
@@ -39,7 +47,7 @@ Three legitimate reasons, none of which apply to v1:
 
 1. **Data sovereignty** — some operators legally cannot send user data to Cloudflare. v1 has one operator (you) and is hosted at a Hetzner site that already isn't sovereignty-compliant for many jurisdictions.
 2. **Cost ceiling under huge bandwidth** — at very high egress (>10 TB/mo), running your own origin with a cheaper CDN can beat R2. v1 demo egress is measured in MB.
-3. **Air-gapped operation** — some self-hosters can't reach the public internet from the VPS. Not v1; the VPS already needs internet for Authentik OIDC flows, image pulls, and DNS.
+3. **Air-gapped operation** — some self-hosters can't reach the public internet from the VPS. Not v1; the VPS already needs internet for Authentik OIDC flows, image pulls, and DNS. *(Authentik since removed — ADR-06; image pulls and DNS still apply.)*
 
 ### What R2 alone gets you
 
@@ -154,9 +162,9 @@ The cost of NOT removing MinIO from v1 is concrete: ~$15/mo disk + 150 MB RAM + 
 
 1. [x] ~~Remove the `minio` service block from `docker-compose.yml` for v1.~~ **Revised (Update 2026-06-06):** keep MinIO in the dev compose bound to `./data/minio`; remove it only in `docker-compose.prod.yml`.
 2. [x] ~~Remove `volumes.minio_data` from `docker-compose.yml`.~~ Done a different way: switched MinIO to a `./data/minio` bind-mount (the named volume is gone).
-3. [ ] Add `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_USE_PATH_STYLE=false` to `.env.example` with R2-shaped placeholders.
-4. [ ] In `backend/internal/platform/storage/`, ensure the S3 client constructor reads endpoint + region from config (not hard-coded to MinIO). If the package is still empty, scaffold it as a thin wrapper over `aws-sdk-go-v2/service/s3`.
-5. [ ] In `cmd/api`, the upload handler signs PUTs (`s3:PutObject`, 5-minute expiry) and returns the URL + key to the frontend; the frontend uploads directly to R2.
-6. [ ] In the transcode worker, source download uses presigned GET; HLS segments are uploaded via the SDK directly. Cap the worker's `/tmp` usage at 10 GB.
-7. [ ] Write a one-page `docs/operations/r2-setup.md` with: bucket creation, CORS config (allow `${APP_DOMAIN}`), lifecycle rules (none for v1), how to mint the R2 token with `Object Read & Write` scope.
+3. [x] Add `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_USE_PATH_STYLE=false` to `.env.example` with R2-shaped placeholders. **Done (2026-07-06)** — env names are `S3_ACCESS_KEY`/`S3_SECRET_KEY` (not `*_ACCESS_KEY_ID`); defaults are MinIO-shaped with R2 values in comments, `S3_USE_PATH_STYLE=true` for dev.
+4. [x] In `backend/internal/platform/storage/`, ensure the S3 client constructor reads endpoint + region from config (not hard-coded to MinIO). If the package is still empty, scaffold it as a thin wrapper over `aws-sdk-go-v2/service/s3`. **Done (2026-07-06)** — aws-sdk-go-v2 wrapper reading endpoint/region/path-style from config.
+5. [x] In `cmd/api`, the upload handler signs PUTs (`s3:PutObject`, 5-minute expiry) and returns the URL + key to the frontend; the frontend uploads directly to R2. **Done (2026-07-06)** — `POST /api/v1/assets` presigns PUT; dev also has API-proxied `PUT /assets/{id}/source`.
+6. [x] In the transcode worker, source download uses presigned GET; HLS segments are uploaded via the SDK directly. Cap the worker's `/tmp` usage at 10 GB. **Done (2026-07-06)** except the 10 GB `/tmp` cap — still open.
+7. [ ] Write a one-page `docs/operations/r2-setup.md` with: bucket creation, CORS config (allow `${APP_DOMAIN}`), lifecycle rules (none for v1), how to mint the R2 token with `Object Read & Write` scope. *(`docs/operations/` does not exist yet.)*
 8. [ ] In `diagrams/system-landscape.md` (this ADR set), the v1-scoped diagram already shows R2-only; keep `diagrams.md` (the full vision) as-is — it shows the destination architecture.

@@ -1,8 +1,10 @@
 # Portal — Kiến trúc Frontend
 
-Tài liệu đi kèm [feature.md](feature.md). Trong khi `feature.md` định nghĩa toàn hệ thống, doc này focus vào app **`frontend/`** Next.js 15: cấu trúc, state, rendering, auth handoff, và page inventory build từ `template-main/`.
+Tài liệu đi kèm [feature.md](feature.md). Trong khi `feature.md` định nghĩa toàn bộ hệ thống, tài liệu này tập trung vào app **`frontend/`** Next.js 15: cấu trúc, state, rendering, auth handoff, và page inventory được build từ `template-main/`.
 
-Đọc [§16 Frontend](feature.md) của feature.md trước cho high-level decision ([D-32], [D-33], [D-34], [D-7]); doc này mở rộng chúng với pattern cụ thể và roadmap build-out.
+Đọc [§16 Frontend](feature.md) trong feature.md trước để nắm các quyết định ở tầm cao ([D-32], [D-33], [D-34] — đã bị thay thế bởi SessionKeeper phía client, xem banner ở §4 — và [D-7]); tài liệu này mở rộng chúng với các pattern cụ thể và roadmap build-out.
+
+> **Trạng thái (2026-07-06).** Vòng demo v1 đã khép kín và được commit: đăng nhập bằng mật khẩu local → home đã authenticate → upload mp4 (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker transcode HLS → playback → logout có thể revoke (tracker sống: `MILESTONE_CHECKS.md`). Theo [ADR-06](architecture/06-local-auth-model.md), Authentik/OIDC đã bị gỡ bỏ hoàn toàn — mọi nhắc đến OIDC/callback/Authentik bên dưới chỉ còn tính lịch sử. Thiết kế refresh-and-return ở §4 đã bị thay thế bởi `SessionKeeper` phía client. Route tree ở §2.1 và các phase ở §6/§10 là mục tiêu dài hạn, không phải scope v1 (xem [architecture/01-v1-scope-cut.md](architecture/01-v1-scope-cut.md)).
 
 ---
 
@@ -14,30 +16,124 @@ frontend/
 ├── next.config.ts
 ├── package.json
 ├── postcss.config.mjs
-├── tsconfig.json
+├── tsconfig.json                     ← @/* → src/*
 └── src/
-    ├── app/
+    ├── middleware.ts                 ← auth gate: portal_session marker → redirect guests to /login (matcher: /, /login, /register, /upload, /library/*)
+    ├── app/                          ← ROUTING ONLY (thin); views resolve via the registry
     │   ├── globals.css
-    │   ├── layout.tsx
-    │   └── page.tsx
+    │   ├── layout.tsx                ← root: <html>, Providers, active-template theme import
+    │   ├── providers.tsx            ← TanStack Query client ('use client')
+    │   ├── (public)/                 ← guest shell (MasterPublic)
+    │   │   ├── layout.tsx
+    │   │   ├── login/page.tsx
+    │   │   └── register/page.tsx
+    │   └── (app)/                    ← authenticated shell (MasterBase)
+    │       ├── layout.tsx
+    │       ├── page.tsx              ← "/" home / newsfeed
+    │       ├── upload/page.tsx       ← v1 upload → transcode → HLS playback studio
+    │       └── library/
+    │           ├── comic/page.tsx
+    │           └── novel/[id]/page.tsx
+    ├── templates/                    ← VERSIONED presentation layer (see §1.1)
+    │   ├── types.ts                  ← TemplateManifest contract
+    │   ├── registry.ts               ← single version-switch point (env NEXT_PUBLIC_TEMPLATE_VERSION)
+    │   ├── README.md
+    │   └── v1/                       ← "Olympus" theme, ported from template-main
+    │       ├── index.ts              ← v1 manifest
+    │       ├── theme/theme.css
+    │       ├── master/{MasterBase,MasterPublic}.tsx
+    │       ├── components/headers/{TopMenu,NotifMenus}.tsx   ← NotifMenus = header dropdowns (static placeholder data)
+    │       ├── components/{menu,footers,popup}/*
+    │       ├── components/ui/{Avatar,Icon}.tsx
+    │       ├── partials/{HelloPreloader,GoToTop,SessionKeeper}.tsx  ← SessionKeeper = client-side silent token refresh (§4 banner)
+    │       └── views/
+    │           ├── home/HomeView.tsx
+    │           ├── auth/{LoginView,RegisterView,AuthForm,AuthLanding}.tsx
+    │           ├── upload/UploadStudio.tsx   ← Vidstack studio: presigned upload → poll status → HLS playback
+    │           └── library/{comic,novel}/*
     └── lib/
-        └── api-client.ts          ← sẽ thay bằng generated + server-only client (D-34)
+        └── api-client.ts             ← working fetch wrapper (credentials: include, throws ApiError); gets typed via types.gen.ts once `make openapi` runs — D-34 server-client design superseded, see §4 banner
 ```
 
-Trạng thái: **scaffold trần**. Phase 0 land cấu trúc thực:
-- `app-router` + RSC, Tailwind v4, TypeScript đã chọn.
-- Vidstack cho HLS playback ([§3 Media](feature.md)).
-- Zustand + TanStack Query + React Hook Form cho state ([D-32]).
-- `next-intl` cho i18n ([D-7]).
+Trạng thái (2026-07-06): **vòng demo v1 đã khép kín** — đăng nhập/đăng ký bằng mật khẩu local (ADR-06), auth gate ở middleware trên `portal_session`, silent refresh của `SessionKeeper`, và `/upload` Vidstack studio đều hoạt động end-to-end. Các layout shell, sidebar, partial, và view được port từ Blade reference; popup và SVG sprite là placeholder, và widget feed/friends/notification vẫn là placeholder tĩnh. Còn phải làm: TS type generated từ OpenAPI (`types.gen.ts`), API client server-only, i18n, component library Radix.
 
-Hai nguồn visual-design, cả hai **chỉ tham chiếu — không phải code active**:
+Stack đã chọn: App Router + RSC, Tailwind v4, TypeScript; Vidstack cho HLS ([§3 Media](feature.md)); Zustand + TanStack Query + React Hook Form cho state ([D-32]); `next-intl` cho i18n ([D-7]).
+
+Hai nguồn visual-design, cả hai đều **chỉ tham chiếu — không phải code active**:
 
 | Nguồn | Tech | Dùng cho |
 |---|---|---|
-| [template-main/portal/](../../template-main/portal/) | Laravel/Blade + Bootstrap 4 + jQuery | Primitive UI admin/portal: master layouts, sidebars, popups, header/menu, sidebar widget, page-loader |
-| [template-main/social/](../../template-main/social/) | HTML tĩnh (Olympus theme) | UI sản phẩm social: ~70 page across newsfeed/profile/friends/communities/events/messaging |
+| [template-main/portal/](../../template-main/portal/) | Laravel/Blade + Bootstrap 4 + jQuery | Primitive UI admin/portal: master layout, sidebar, popup, header/menu, sidebar widget, page-loader |
+| [template-main/social/](../../template-main/social/) | HTML tĩnh (theme Olympus) | UI sản phẩm social: ~70 page trải khắp newsfeed/profile/friends/communities/events/messaging |
 
-Bản rewrite Next.js viết lại cả hai **với React + Tailwind**. CSS/JS gốc không import. Chỉ structure + pattern interaction + layout asset được reuse như tham chiếu.
+Bản rewrite Next.js viết lại cả hai **bằng React + Tailwind**. CSS/JS gốc không được import. Chỉ structure + pattern tương tác + bố cục asset được tái sử dụng làm tham chiếu.
+
+### 1.1 Lớp template được versioned (implementation)
+
+Toàn bộ UI sống dưới `src/templates/v{N}/`, **mỗi phiên bản template một folder**. Cách này mirror Blade reference tại `template-main/portal/resources/views/v1/`, nơi toàn bộ lớp presentation được namespace theo version để một bản redesign có thể ship dưới dạng `v2/` mà không đụng vào `v1/`.
+
+Quy tắc load-bearing: **`app/` chỉ làm routing.** File route không bao giờ import một version cụ thể — chúng gọi `activeTemplate()` và render bất kỳ shell/view nào mà version đang active cung cấp. URL giữ sạch (`/`, `/login`, `/library/comic`); version là mối quan tâm nội bộ, **không bao giờ là một URL segment**.
+
+```
+app/(public)/login/page.tsx ─┐
+app/(app)/page.tsx ──────────┼─→ activeTemplate() ──→ registry.ts ──→ templates/v1/index.ts
+app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
+```
+
+- **`templates/types.ts`** — hợp đồng `TemplateManifest`: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`). Mỗi version implement đúng shape này.
+- **`templates/registry.ts`** — điểm switch duy nhất: map version id → manifest, chọn cái active từ `NEXT_PUBLIC_TEMPLATE_VERSION`, throw nếu gặp id không xác định.
+- **`templates/v1/index.ts`** — manifest v1 bind các component Olympus vào hợp đồng.
+
+Do đó một file route là một resolver 3 dòng, ví dụ `app/(app)/page.tsx`:
+
+```typescript
+import { activeTemplate } from "@/templates/registry";
+export default function HomePage() {
+  const View = activeTemplate().views.home;
+  return <View />;
+}
+```
+
+Layout resolve shell theo cùng cách: `(public)/layout.tsx` bọc children trong `shells.public`, `(app)/layout.tsx` trong `shells.app` (≈ Blade `master-public` / `master-base`). Theme token là per version (`templates/v1/theme/theme.css`, scoped dưới `[data-template="v1"]`) và được import một lần trong `app/layout.tsx`.
+
+### 1.2 Thêm version mới (vd v2)
+
+1. `cp -r templates/v1 templates/v2`; restyle / rebuild component.
+2. Set `version: "v2"` trong `templates/v2/index.ts`.
+3. Đăng ký nó: `const REGISTRY = { v1, v2 }` trong `registry.ts`.
+4. Chạy với `NEXT_PUBLIC_TEMPLATE_VERSION=v2` và swap theme import trong `app/layout.tsx`.
+
+Không sửa file route `app/` nào; v1 và v2 coexist trong repo vô thời hạn. Đây là cùng ý định như namespace Blade `v1/`, được adapt cho App Router.
+
+### 1.3 Mapping Blade → Next.js (v1)
+
+Nguồn: `template-main/portal/resources/views/v1/` (theme "Olympus" của Crumina).
+
+| Blade | Next.js (`templates/v1/`) |
+|---|---|
+| `master/master-base.blade.php` | `master/MasterBase.tsx` (app shell: preloader + sidebar + popup + sprite) |
+| `master/master-public.blade.php` | `master/MasterPublic.tsx` (guest shell) |
+| `components/head/*` (css/js/fonts) | `app/layout.tsx` `metadata` + `theme/theme.css` |
+| `components/headers/menu` | `components/headers/TopMenu.tsx` |
+| `components/menu/sidebar{Left,Right}` | `components/menu/Sidebar{Left,Right}.tsx` |
+| `components/menu/sidebarCenter(+Responsive)` | `components/menu/SidebarCenter.tsx` |
+| `components/footers/svg` | `components/footers/SvgSprite.tsx` (placeholder) |
+| `components/footers/js` / `ico` | React hooks / favicon `metadata` (không có component) |
+| `components/popup/*` | `components/popup/*.tsx` (modal stub → `null` cho tới khi open-state được wire) |
+| `partials/hellopreloader` / `goToTop` | `partials/HelloPreloader.tsx` / `GoToTop.tsx` |
+| `views/home/home` | `views/home/HomeView.tsx` |
+| `public/login` / `register` | `views/auth/{LoginView,RegisterView}.tsx` + `AuthForm.tsx` dùng chung |
+| `views/library/commic/index` | `views/library/comic/ComicIndexView.tsx` (đã sửa lỗi chính tả "commic") |
+| `views/library/novel/detail` | `views/library/novel/NovelDetailView.tsx` |
+
+### 1.4 Quan hệ với route tree mục tiêu (§2.1)
+
+Route tree đầy đủ ở §2.1 (`/t/{tenant}/(app)/...`, marketing, admin, mọi vertical) là **mục tiêu dài hạn**. Các route được implement hôm nay là tập con bị cắt cho v1, và prefix tenant `/t/[tenant]` ([D-23]) bị deferred. Vì routing resolve qua registry, **hình dạng URL cuối cùng và version template độc lập với nhau** — thêm `/t/[tenant]` sau này, hoặc đổi sang `v2`, không đụng tới `templates/` lẫn resolver pattern.
+
+Hai điểm cần đối chiếu với các section sau:
+
+- **Components vs. templates.** §7 mô tả một library primitives/feature cross-version dưới `src/components/` (Radix + Tailwind). Lớp đó dành cho building block dùng chung, không phụ thuộc version; `src/templates/v{N}/` compose chúng (cộng với markup riêng của version) thành shell và view mà một design version cụ thể ship ra. Primitive nằm trong `components/`, composition riêng-version nằm trong `templates/`.
+- **Trang Register.** Đã implement và wire theo local auth [ADR-06](architecture/06-local-auth-model.md): `AuthForm` POST email + password (+ `remember`) tới `POST /api/v1/auth/login`; `RegisterView` POST `POST /api/v1/auth/register` (201, không tạo session, redirect về `/login`). Entry cũ "Authentik handles" ở §6.1 đã retired — CHỈ CÒN local-password auth (xem [CLAUDE.md](../../CLAUDE.md) mục "Account module").
 
 ---
 
@@ -45,15 +141,15 @@ Bản rewrite Next.js viết lại cả hai **với React + Tailwind**. CSS/JS g
 
 ### 2.1 Cấu trúc route group
 
-Route group của Next.js App Router (`(name)`) không xuất hiện trong URL — chúng để tổ chức layout.
+Route group của Next.js App Router (`(name)`) không xuất hiện trong URL — chúng dùng để tổ chức layout.
 
 ```
 src/app/
-├── layout.tsx                                ← root layout: provider, font, theme
+├── layout.tsx                                ← root layout: providers, fonts, theme
 ├── globals.css
 ├── page.tsx                                  ← marketing home (RSC)
 │
-├── (marketing)/                              ← page public-facing, SEO-heavy
+├── (marketing)/                              ← public-facing pages, SEO-heavy
 │   ├── about/page.tsx
 │   ├── careers/page.tsx
 │   ├── faqs/page.tsx
@@ -62,24 +158,24 @@ src/app/
 │   │   └── [slug]/page.tsx                   ← post
 │   └── layout.tsx                            ← marketing header + footer
 │
-├── auth/                                     ← KHÔNG phải group; là path segment thực
+├── auth/                                     ← NOT a group; real path segment
 │   ├── login/page.tsx
-│   ├── callback/page.tsx                     ← target redirect OIDC
-│   ├── refresh-and-return/page.tsx           ← D-34 handler refresh server-side
-│   └── layout.tsx                            ← chrome tối thiểu cho "auth pages"
+│   ├── ~~callback/page.tsx~~                 ← retired by ADR-06 — no OIDC callback exists
+│   ├── ~~refresh-and-return/page.tsx~~       ← superseded by SessionKeeper (templates/v1/partials/SessionKeeper.tsx)
+│   └── layout.tsx                            ← minimal "auth pages" chrome
 │
-├── t/                                        ← URL prefix tenant (D-23)
-│   └── [tenant]/                             ← tenant slug (hoặc "me" cho personal)
-│       ├── layout.tsx                        ← provider context tenant + chrome
+├── t/                                        ← tenant URL prefix (D-23)
+│   └── [tenant]/                             ← tenant slug (or "me" for personal)
+│       ├── layout.tsx                        ← tenant context provider + chrome
 │       │
-│       ├── (app)/                            ← shell app đã authenticate
-│       │   ├── layout.tsx                    ← sidebar trái + header + widget phải
-│       │   ├── page.tsx                      ← home / dashboard user
+│       ├── (app)/                            ← authenticated app shell
+│       │   ├── layout.tsx                    ← left sidebar + header + right widgets
+│       │   ├── page.tsx                      ← user home / dashboard
 │       │   │
 │       │   ├── (movies)/
 │       │   │   ├── movies/page.tsx           ← catalog
 │       │   │   ├── movies/[id]/page.tsx      ← detail + player
-│       │   │   └── continue/page.tsx         ← "continue watching" per-user
+│       │   │   └── continue/page.tsx         ← per-user "continue watching"
 │       │   ├── (music)/
 │       │   ├── (stories)/
 │       │   ├── (comics)/
@@ -110,91 +206,93 @@ src/app/
 │       │   │   ├── earnings/page.tsx
 │       │   │   └── payouts/page.tsx
 │       │   │
-│       │   └── account/                      ← settings user
+│       │   └── account/                      ← user settings
 │       │       ├── profile/page.tsx
 │       │       ├── notifications/page.tsx
 │       │       ├── privacy/page.tsx
 │       │       ├── security/page.tsx
 │       │       └── sessions/page.tsx
 │       │
-│       └── (admin)/                          ← gate cho role admin/superadmin
-│           ├── layout.tsx                    ← chrome admin-only
+│       └── (admin)/                          ← gated to admin/superadmin role
+│           ├── layout.tsx                    ← admin-only chrome
 │           ├── users/page.tsx
 │           ├── groups/page.tsx
 │           ├── policies/page.tsx
 │           ├── audit/page.tsx
 │           └── safety/page.tsx               ← T&S dashboard (Phase 12)
 │
-├── search/page.tsx                           ← cross-tenant; không lấy prefix /t/
-├── company/                                  ← marketing microsite optional
+├── search/page.tsx                           ← cross-tenant; doesn't take /t/ prefix
+├── company/                                  ← optional marketing microsite
 │   ├── about/...
 │   ├── help/...
 │   └── careers/...
 └── not-found.tsx
 ```
 
+Các route auth v1 đã implement là `/login` và `/register` qua group `(public)` (§1), không phải segment `auth/` này.
+
 **Vì sao shape này:**
 
-- **`/t/{tenant}/...`** là path thực, match quyết định URL prefix tenant của [D-23]. Route data cá nhân dùng `/t/me/...`.
+- **`/t/{tenant}/...`** là path thực, khớp với quyết định URL prefix tenant của [D-23]. Route dữ liệu cá nhân dùng `/t/me/...`.
 - **Route group** `(app)`, `(admin)`, `(marketing)`, `(movies)`, v.v. chỉ tổ chức layout — invisible trong URL.
-- **`/auth/*`** KHÔNG nằm trong `/t/{tenant}/` vì callback OIDC xảy ra trước khi tenant context biết.
+- **`/auth/*`** KHÔNG nằm trong `/t/{tenant}/` vì login xảy ra trước khi có tenant context.
 - **`/search`** cross-tenant (aggregator `D-2`); không lấy prefix.
 - Slug tenant `[tenant]` được resolve bởi middleware → inject qua React context (xem §4.2).
 
-### 2.2 Phân cấp layout (3-deep)
+### 2.2 Phân cấp layout (3 tầng)
 
 ```
 RootLayout                          src/app/layout.tsx
-├── <html>, <body>, font
+├── <html>, <body>, fonts
 ├── ThemeProvider (dark/light)
 ├── TanStackQueryProvider
 ├── NextIntlClientProvider
 └── Toaster (global)
     │
-    ├── (marketing)/layout.tsx     ← chrome marketing
-    ├── auth/layout.tsx            ← page auth tối thiểu, căn giữa
+    ├── (marketing)/layout.tsx     ← marketing chrome
+    ├── auth/layout.tsx            ← minimal centered auth pages
     │
-    └── /t/[tenant]/layout.tsx     ← tenant context load server-side
+    └── /t/[tenant]/layout.tsx     ← tenant context loaded server-side
         ├── TenantProvider (org_id, kind, settings)
-        ├── AuthGuard               ← redirect /auth/login nếu unauth
+        ├── AuthGuard               ← redirects to /auth/login if unauth
         │
-        ├── (app)/layout.tsx       ← sidebar + header + widget phải
-        │   ├── LeftSidebar (nav, community mình ở)
-        │   ├── HeaderBar (search, bell notification, menu user)
+        ├── (app)/layout.tsx       ← sidebar + header + right widgets
+        │   ├── LeftSidebar (nav, communities I'm in)
+        │   ├── HeaderBar (search, notifications bell, user menu)
         │   ├── <main>{children}</main>
-        │   └── RightSidebar (widget: weather, suggested friend, ad, v.v.)
+        │   └── RightSidebar (widgets: weather, suggested friends, ads, etc.)
         │
-        └── (admin)/layout.tsx     ← sidebar admin + header admin
+        └── (admin)/layout.tsx     ← admin sidebar + admin header
 ```
 
-**Quy tắc:** layout compose top-down. Child layout không bao giờ override cái parent cung cấp — parent wrap.
+**Quy tắc:** layout compose top-down. Layout con không bao giờ override cái layout cha cung cấp — cha wrap con.
 
-### 2.3 Strategy rendering per surface ([D-33])
+### 2.3 Chiến lược rendering theo surface ([D-33])
 
 | Surface | Mode | Vì sao |
 |---|---|---|
 | Page marketing, blog | RSC full + ISR | SEO; cache qua `next.revalidate` |
 | **Catalogue** movie/music/story/comic | RSC + client list-pagination island | SEO; list lớn stream HTML; user-state qua `cookies()` |
-| **Detail** movie/music/story/comic | RSC shell + client player island | Metadata SEO; player cần JS |
-| **Player / reader** | Chủ yếu client component | Stateful; post-auth; SEO irrelevant |
-| **Newsfeed** | SSR page đầu + sau đó client-paginated | Initial paint nhanh; load-more là client |
-| **Account / bank** | RSC shell + island interactivity client | Interactive nhưng private; ergonomic fetch server-side |
+| **Detail** movie/music/story/comic | RSC shell + client player island | Metadata là SEO; player cần JS |
+| **Player / reader** | Chủ yếu client component | Stateful; post-auth; SEO không liên quan |
+| **Newsfeed** | SSR trang đầu + client-paginated cho các trang sau | Initial paint nhanh; load-more là client |
+| **Account / bank** | RSC shell + island interactivity client | Interactive nhưng private; ergonomic để fetch server-side |
 | **Surface real-time** (chat, live stream, notification live) | Client component | Cần WebSocket / SSE |
 | **Form Studio / admin** | Client component | Form state nặng qua React Hook Form |
 
-**Quy tắc cứng:** default sang RSC. Chỉ `'use client'` khi bạn có:
+**Quy tắc cứng:** mặc định dùng RSC. Chỉ `'use client'` khi bạn có:
 - Event handler (`onClick`, `onChange`, `onSubmit`)
 - React hook (`useState`, `useEffect`, `useReducer`, hook custom)
 - Browser API (`window`, `localStorage`, `Notification`, `navigator`)
-- Vidstack player hoặc bất cứ gì cần DOM
+- Vidstack player hoặc bất cứ thứ gì cần DOM
 
-Nếu page có cả hai — làm RSC với client component island nhỏ cho interactivity. Ví dụ: page detail movie là RSC; chỉ `<MoviePlayer />` và `<RatingForm />` là client.
+Nếu một page có cả hai — làm nó RSC với một component island `'use client'` nhỏ cho interactivity. Ví dụ: page detail movie là RSC; chỉ `<MoviePlayer />` và `<RatingForm />` là client.
 
 ---
 
 ## 3. Quản lý state ([D-32])
 
-Năm loại state trực giao. Mỗi cái có đúng một owner.
+Năm loại state trực giao (orthogonal). Mỗi loại có đúng một owner.
 
 | Category state | Owner | Ví dụ | Persistence |
 |---|---|---|---|
@@ -281,7 +379,7 @@ export function useMovies(filters: Filters) {
   return useQuery({
     queryKey: moviesKeys.list(filters),
     queryFn: () => apiClient.movies.list(filters),
-    staleTime: 60 * 1000,            // 1 phút
+    staleTime: 60 * 1000,            // 1 min
     placeholderData: keepPreviousData,
   });
 }
@@ -295,9 +393,9 @@ export function useUpsertProgress(movieId: string) {
 }
 ```
 
-**Key-factories:** mỗi module có một (`moviesKeys`, `bankKeys`, `socialKeys`). Mọi key đi qua factory — không bao giờ inline.
+**Key-factories:** mỗi module có một cái (`moviesKeys`, `bankKeys`, `socialKeys`). Mọi key đi qua factory — không bao giờ inline.
 
-**Stale time:** 1 phút default, 5 phút cho catalogue, 0 (luôn fresh) cho counter cá nhân (unread, notification).
+**Stale time:** 1 phút mặc định, 5 phút cho catalogue, 0 (luôn fresh) cho counter cá nhân (unread, notification).
 
 ### 3.4 React Hook Form
 
@@ -339,17 +437,19 @@ const { data } = useMovies(filters);
 
 ## 4. Auth handoff ([D-34])
 
+> **Đã bị thay thế (2026-07-05).** OIDC đã biến mất ([ADR-06](architecture/06-local-auth-model.md)) và route refresh-and-return bên dưới đã được thay bằng `SessionKeeper` phía client (`templates/v1/partials/SessionKeeper.tsx` — interval 4 phút + refresh khi focus, throttle multi-tab qua `localStorage`, hard redirect về `/login` khi refresh thất bại). §4.2–4.4 được giữ lại như lịch sử thiết kế; API client server-only vẫn là việc cần làm trong tương lai. §4.1 là fact hiện tại.
+
 ### 4.1 Scheme cookie
 
 | Cookie | Path | Lifetime | Mục đích |
 |---|---|---|---|
 | `portal_access` | `/` | 5 phút | Bearer cho API; JWT HS256 |
-| `portal_refresh` | `/auth` | 30 ngày | Mint access mới qua `/auth/refresh` |
-| `portal_oidc` | `/auth/callback` | 5 phút | Bind state + nonce trong flow OIDC |
+| `portal_refresh` | `/api/v1/auth` | `REFRESH_TOKEN_TTL` (hiện tại 24h; là session cookie trừ khi `remember=true`) | Mint access mới qua `/api/v1/auth/refresh` |
+| `portal_session` | `/` | khớp lifetime của refresh | Marker đăng nhập không nhạy cảm, được Next.js middleware đọc (auth gate cho `/`, `/upload`, `/library/*`); không cần `HttpOnly`-nhạy cảm — không mang token |
 
-Tất cả: `HttpOnly Secure SameSite=Strict`.
+Tất cả: `HttpOnly Secure SameSite=Strict` (marker `portal_session` đọc được bởi edge middleware và không giữ secret nào).
 
-**Mandate same-site** ([D-34]): host Next.js + host API PHẢI chia sẻ registrable domain (eTLD+1), vd `portal.example.com` + `api.portal.example.com`. Setup single-host route qua Traefik path-based.
+**Mandate same-site** ([D-34]): host Next.js + host API PHẢI chia sẻ một registrable domain (eTLD+1), vd `portal.example.com` + `api.portal.example.com`. Setup single-host route qua Traefik theo path.
 
 ### 4.2 Server-only API client
 
@@ -381,7 +481,7 @@ export async function apiFetch(path: string, opts: FetchOpts = {}): Promise<Resp
   return res;
 }
 
-// Wrapper typed per module — dùng type generated từ OpenAPI
+// Typed wrappers per module — uses generated OpenAPI types
 export const apiServer = {
   movies: {
     list: (filters: MovieFilters) =>
@@ -393,7 +493,7 @@ export const apiServer = {
 };
 ```
 
-`import "server-only"` làm file không thể bundle vào client code — chống vô tình ship sang browser.
+`import "server-only"` khiến file này không thể bundle vào code client — ngăn việc vô tình ship nó sang browser.
 
 ### 4.3 Route refresh-and-return
 
@@ -409,30 +509,30 @@ export default async function RefreshAndReturn({
 }) {
   const { return_to = "/" } = await searchParams;
 
-  // Cookie refresh có Path=/auth nên SẼ được send ở đây.
+  // Refresh cookie has Path=/auth so it WILL be sent here.
   const res = await apiFetch("/auth/refresh", {
     method: "POST",
-    skipRefresh: true,       // tránh loop vô hạn
+    skipRefresh: true,       // avoid infinite loop
   });
 
   if (!res.ok) {
     redirect(`/auth/login?return_to=${encodeURIComponent(return_to)}`);
   }
 
-  // Set-Cookie server-side từ response /auth/refresh tự động được forward
-  // bởi fetch + redirect của Next.js; access cookie giờ fresh ở request kế tiếp.
+  // Server-side Set-Cookie from /auth/refresh response is automatically forwarded
+  // by Next.js' fetch + redirect; access cookie now fresh on next request.
   redirect(return_to);
 }
 ```
 
-User thấy một flash navigation; không cần re-auth full nếu refresh token còn hợp lệ.
+User thấy một flash navigation duy nhất; không cần re-auth đầy đủ nếu refresh token vẫn còn hợp lệ.
 
-### 4.4 Mutation client-side
+### 4.4 Mutation phía client
 
-Client component POST/PATCH/DELETE qua TanStack Query. Cookie travel với `credentials: 'include'` vì same-site.
+Client component POST/PATCH/DELETE qua TanStack Query. Cookie đi kèm nhờ `credentials: 'include'` vì same-site.
 
 ```typescript
-// frontend/src/lib/api-client.ts (khác với api-server.ts!)
+// frontend/src/lib/api-client.ts (different from api-server.ts!)
 export async function apiMutate(path: string, opts: RequestInit) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${path}`, {
     ...opts,
@@ -450,7 +550,7 @@ export async function apiMutate(path: string, opts: RequestInit) {
 
 ### 4.5 UX step-up auth ([D-27])
 
-Khi op nhạy cảm trả 403 + Problem `auth.step_up_required`:
+Khi một thao tác nhạy cảm trả về 403 + Problem `auth.step_up_required`:
 
 ```typescript
 // frontend/src/lib/error-handlers.ts
@@ -465,7 +565,7 @@ export function handleProblem(problem: Problem): void {
       return;
 
     case "https://portal/errors/auth.mfa_enrollment_required":
-      // Show modal giải thích MFA yêu cầu, với deep-link sang Authentik
+      // Show modal explaining MFA is required, pointing at Portal-native MFA enrollment (later phase — ADR-06)
       showModal({
         title: "MFA required for this feature",
         body: "Bank operations require multi-factor authentication.",
@@ -479,7 +579,7 @@ export function handleProblem(problem: Problem): void {
 }
 ```
 
-Button "Manage MFA" trong settings account-security deep-link sang dashboard Authentik ([D-28]).
+Nút "Manage MFA" trong settings account-security mở MFA enrollment Portal-native (phase sau — [ADR-06](architecture/06-local-auth-model.md) §"New responsibilities"). [D-28] vẫn chi phối yêu cầu step-up, nhưng deep-link sang dashboard Authentik của nó đã bị thay thế — Authentik đã bị gỡ bỏ hoàn toàn.
 
 ---
 
@@ -560,7 +660,7 @@ export function formatDateTime(
 }
 
 export function formatRelative(isoUTC: string, locale: string): string {
-  // "2 phút trước", "trong 3 ngày" — qua Intl.RelativeTimeFormat
+  // "2 minutes ago", "in 3 days" — via Intl.RelativeTimeFormat
 }
 ```
 
@@ -579,20 +679,20 @@ Map mỗi template asset sang một page Next.js. Status:
 | Template asset | Route Next.js | Phase | Status |
 |---|---|---|---|
 | `portal/resources/views/v1/views/home/home.blade.php` | `/t/{tenant}/(app)/page.tsx` | Phase 0 stub | A |
-| `portal/resources/views/v1/public/login.blade.php` | `/auth/login/page.tsx` | Phase 0 | A |
-| `portal/resources/views/v1/public/register.blade.php` | (out of scope — Authentik xử lý) | — | — |
+| `portal/resources/views/v1/public/login.blade.php` | `/login` qua `app/(public)/login/page.tsx` | Phase 0 — done | A |
+| `portal/resources/views/v1/public/register.blade.php` | `/register` qua `app/(public)/register/page.tsx` (local auth [ADR-06](architecture/06-local-auth-model.md)) | Phase 0 — done | A |
 | `portal/resources/views/v1/views/library/...` | `/t/{tenant}/(app)/(stories)/library/page.tsx` | Phase 4 | A |
 | `portal/resources/views/v1/components/menu/sidebarLeft.blade.php` | Component `<LeftSidebar />` | Phase 0 | A |
 | `portal/resources/views/v1/components/menu/sidebarRight.blade.php` | Component `<RightSidebar />` | Phase 0 | A |
-| `portal/resources/views/v1/components/headers/menu.blade.php` | Component `<TopHeader />` (search bar, bell notification, dropdown friend request, menu user) | Phase 0 | A |
+| `portal/resources/views/v1/components/headers/menu.blade.php` | Component `<TopHeader />` (gồm search bar, bell notification, dropdown friend request, menu user) | Phase 0 | A |
 | `portal/resources/views/v1/components/popup/chatResponsive.blade.php` | Component `<ChatDrawer />` (mobile) | Phase 7 | A |
 | `portal/resources/views/v1/components/popup/updateHeaderPhoto.blade.php` | Modal `<CoverPhotoEditor />` | Phase 7 | A |
 | `portal/resources/views/v1/components/popup/choseFromMyPhoto.blade.php` | Modal `<PhotoPickerFromAlbums />` | Phase 7 | A |
-| `portal/resources/views/v1/components/popup/addBook.blade.php` | Modal `<AddContentDialog />` (uploader generic cho book/movie/v.v.) | Phase 4 | A |
-| `portal/resources/views/v1/partials/hellopreloader.blade.php` | Component `<RouterLoader />` (intercept transition route) | Phase 0 | A |
+| `portal/resources/views/v1/components/popup/addBook.blade.php` | Modal `<AddContentDialog />` (uploader chung cho book/movie/v.v.) | Phase 4 | A |
+| `portal/resources/views/v1/partials/hellopreloader.blade.php` | Component `<RouterLoader />` (intercept chuyển route) | Phase 0 | A |
 | `portal/resources/views/v1/partials/goToTop.blade.php` | Component `<ScrollToTopButton />` | Phase 0 | A |
 | `portal/resources/views/errors/{401,403,404,419,429,500,503}.blade.php` | `/app/error.tsx`, `/app/not-found.tsx`, `/app/global-error.tsx` | Phase 0 | A |
-| `portal/document/anh1.png` (admin group) | `/t/{tenant}/(admin)/groups/page.tsx` + detail | Phase 4 | A |
+| `portal/document/anh1.png` (admin nhóm) | `/t/{tenant}/(admin)/groups/page.tsx` + detail | Phase 4 | A |
 | `portal/document/anh2.png` (admin policy) | `/t/{tenant}/(admin)/policies/page.tsx` + detail | Phase 4 | A |
 | `portal/document/anh3.png` (modal create-group, search policy) | Modal trên page group / policy | Phase 4 | A |
 
@@ -661,7 +761,7 @@ Wrap mỗi cái trong `frontend/src/components/ui/` để centralize class tailw
 
 ```
 frontend/src/components/
-├── ui/                      ← primitive
+├── ui/                      ← primitives
 ├── layout/
 │   ├── LeftSidebar.tsx
 │   ├── RightSidebar.tsx
@@ -672,7 +772,7 @@ frontend/src/components/
 │   ├── SignInButton.tsx
 │   └── SessionGuard.tsx
 ├── media/
-│   ├── HLSPlayer.tsx        ← wrapper Vidstack
+│   ├── HLSPlayer.tsx        ← Vidstack wrapper
 │   ├── PosterCard.tsx
 │   ├── ContinueRail.tsx
 │   └── EpisodeList.tsx
@@ -689,16 +789,16 @@ frontend/src/components/
 ├── bank/
 │   ├── AccountCard.tsx
 │   ├── TransactionRow.tsx
-│   ├── MoneyDisplay.tsx     ← dùng formatMoney + locale
+│   ├── MoneyDisplay.tsx     ← uses formatMoney + locale
 │   ├── CategoryPicker.tsx
 │   ├── BudgetProgress.tsx
-│   └── NetWorthChart.tsx    ← Recharts hoặc Visx
+│   └── NetWorthChart.tsx    ← Recharts or Visx
 ├── admin/
 │   ├── PolicyEditor.tsx
 │   ├── GroupTree.tsx
 │   └── ModQueue.tsx
 └── forms/
-    ├── FormField.tsx        ← wrapper RHF + Zod
+    ├── FormField.tsx        ← RHF + Zod wrapper
     └── DateRangePicker.tsx
 ```
 
@@ -788,17 +888,17 @@ Lấy cái gì, bỏ cái gì.
 
 ### Phase 0 — Foundation
 
-- Wire root layout: provider (TanStack, NextIntl, Theme, Toast), font, global CSS.
-- **API client server-only** (`api-server.ts`) theo [D-34]; **mutation client** (`api-client.ts`) cho client component.
-- **Route refresh-and-return** `/auth/refresh-and-return/page.tsx`.
-- **Generated TS type** từ OpenAPI → `frontend/src/lib/types.gen.ts`.
-- **Flow OIDC login** — `/auth/login/page.tsx`, `/auth/callback/page.tsx`.
-- **Auth context** — đọc `users.locale`, `users.timezone`, tenant hiện tại qua RSC.
-- **Doc convention `frontend/CLAUDE.md`** ([D-32, D-33]) với ví dụ anti-pattern.
-- **Error page** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled.
-- **Khởi động component library** — `<Button />`, `<Dialog />`, `<Toast />`, `<Avatar />`, `<TopHeader />`, `<LeftSidebar />`, `<RightSidebar />`.
+- Wire root layout: provider (TanStack, NextIntl, Theme, Toast), font, global CSS — một phần: provider TanStack + theme template đã wired; NextIntl + Toaster còn pending.
+- **Mutation client** (`api-client.ts`) — ĐÃ XONG (fetch wrapper hoạt động); **API client server-only** (`api-server.ts`, [D-34]) vẫn là việc tương lai (xem banner §4).
+- **Silent session refresh** — ĐÃ XONG qua `SessionKeeper` (thay thế route refresh-and-return của [D-34]).
+- **TS type generated** từ OpenAPI → `frontend/src/lib/types.gen.ts` — pending (file chưa tồn tại; cần chạy `make openapi`).
+- **Flow login/register local** — ĐÃ XONG: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](architecture/06-local-auth-model.md) đã thay thế deliverable OIDC ban đầu).
+- **Auth context** — đọc `users.locale`, `users.timezone`, tenant hiện tại qua RSC — pending.
+- **Doc convention `frontend/CLAUDE.md`** ([D-32, D-33]) với ví dụ anti-pattern — pending (chưa tồn tại).
+- **Error page** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) đã styled — pending.
+- **Khởi động component library** — một phần: template v1 ship `Avatar`, `Icon`, `TopMenu`, sidebar; primitive cross-version `components/ui/` (`<Button />`, `<Dialog />`, `<Toast />`) còn pending.
 
-**Exit:** sign in qua Authentik, thấy page home đã authenticate với shell sidebar. Route RBAC-gated trả 403 → toast display nó.
+**Exit (đạt 2026-07-05):** sign in qua Portal `/login` (credentials local), thấy home shell đã authenticate; guest bị middleware redirect về `/login`.
 
 ### Phase 1 — URL prefix tenant
 
@@ -809,6 +909,8 @@ Lấy cái gì, bỏ cái gì.
 **Exit:** `/t/me/...` và `/t/{orgSlug}/...` đều work; switching reload context tenant.
 
 ### Phase 2-3 — Media + Movies
+
+> Đã landed một phần (2026-07-06): playback HLS Vidstack đã hoạt động end-to-end trong `UploadStudio` v1 (`/upload`); các page catalogue / detail / continue-rail bên dưới vẫn thuộc Phase 3.
 
 - Wrapper Vidstack `<HLSPlayer />`.
 - Catalogue + detail + player movie.
@@ -908,7 +1010,7 @@ Những cái này không block nhưng mỗi cái cần answer khi phase liên qu
 5. **Framework test end-to-end.** Playwright default; Cypress là alternate. Playwright recommended cho parity với integration axe-core.
 6. **Strategy bundle splitting.** Splitting per-route là default. Revisit nếu route nào vượt budget 200 KB JS.
 7. **System theme.** CSS variable + support theme native Tailwind v4. Confirm list token trước khi component library mature.
-8. **Image CDN / storage origin.** *Đã chốt:* dev = MinIO trên folder local `./data/minio`; prod = Cloudflare R2 (S3-compatible). Chuyển đổi chỉ bằng `.env` (`S3_*`), không sửa code — xem [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md). Tối ưu ảnh ở prod qua Cloudflare Image Resizing trên R2; `next/image` self-hosted là fallback.
+8. **Image CDN / storage origin.** *Đã chốt* — MinIO (`./data/minio`) ở dev, Cloudflare R2 ở prod, chuyển đổi chỉ qua `.env`: xem §9.3 để biết phát biểu canonical.
 
 ---
 

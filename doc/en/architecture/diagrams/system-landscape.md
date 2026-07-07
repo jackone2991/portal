@@ -1,6 +1,8 @@
 # v1 system landscape
 
-The sparse version of `diagrams.md` §1, scoped to what actually runs in the [v1 cut](../01-v1-scope-cut.md). Everything greyed-out in the long-horizon diagram (LiveKit, mediamtx, MinIO, observability stack) is omitted here so the picture matches what the deploy script actually starts.
+> **Status:** reflects the shipped v1 stack as of **2026-07-06** — 8 compose services (postgres, pgbouncer, dragonfly, minio + minio-setup, traefik, api, worker, frontend). Auth is local-password per [ADR-06](../06-local-auth-model.md).
+
+The sparse version of `diagrams.md` §1, scoped to what actually runs in the [v1 cut](../01-v1-scope-cut.md). Everything greyed-out in the long-horizon diagram (LiveKit, mediamtx, observability stack) is omitted here so the picture matches what the compose stack actually starts. MinIO appears because dev runs it as the S3 endpoint (prod = R2).
 
 ```mermaid
 graph TB
@@ -9,13 +11,12 @@ graph TB
     classDef frontend fill:#f3e5f5,stroke:#6a1b9a,color:#000
     classDef backend fill:#e8f5e9,stroke:#2e7d32,color:#000
     classDef datastore fill:#fce4ec,stroke:#c2185b,color:#000
-    classDef external fill:#fafafa,stroke:#616161,color:#000
 
     Browser[Web Browser]:::user
 
     subgraph EDGE[Cloudflare]
         direction TB
-        R2[Cloudflare R2<br/>single storage tier<br/>see ADR-04]:::edge
+        R2[Cloudflare R2<br/>prod object storage<br/>ADR-04, update 2026-06-06]:::edge
         CF[Cloudflare DNS + CDN<br/>free tier]:::edge
     end
 
@@ -28,7 +29,7 @@ graph TB
 
         subgraph APP[Application]
             Next[Next.js 15<br/>App Router + RSC]:::frontend
-            CmdAPI[cmd/api<br/>Chi HTTP server]:::backend
+            CmdAPI[cmd/api<br/>Chi HTTP server<br/>local password auth Argon2id — ADR-06]:::backend
             CmdWorker[cmd/worker<br/>Asynq consumer<br/>TRANSCODE_CONCURRENCY=1]:::backend
         end
 
@@ -36,42 +37,35 @@ graph TB
             direction LR
             PG[(Postgres 17<br/>+ PgBouncer)]:::datastore
             Dragonfly[(Dragonfly<br/>cache + Asynq broker)]:::datastore
-        end
-
-        subgraph IDP[OIDC IdP]
-            Authentik[Authentik<br/>server + worker<br/>see ADR-03]:::external
-            Mailpit[Mailpit<br/>dev SMTP only]:::external
+            MinIO[(MinIO<br/>dev origin — bind-mount ./data/minio<br/>+ minio-setup)]:::datastore
         end
     end
 
     Browser -->|HTTPS via CF| CF
     CF --> Traefik
-    Browser -.HLS playback.-> R2
+    Browser -.->|HLS playback<br/>GET /api/v1/assets/:id/hls/*| Traefik
 
     Traefik --> Next
     Traefik --> CmdAPI
-    Traefik --> Authentik
     Next -->|server-only fetch<br/>cookies forwarded| CmdAPI
 
     CmdAPI <--> PG
     CmdAPI <--> Dragonfly
-    CmdAPI -->|presign upload PUT| R2
+    CmdAPI -->|presign PUT + HLS proxy read<br/>object storage: MinIO dev / R2 prod| R2
     CmdAPI -->|enqueue transcode| Dragonfly
-    CmdAPI -->|OIDC| Authentik
+    CmdAPI -.->|dev S3 endpoint| MinIO
 
     CmdWorker <--> Dragonfly
     CmdWorker <--> PG
-    CmdWorker <-->|read source, write HLS| R2
-
-    Authentik --> Mailpit
-    Authentik --> PG
+    CmdWorker <-->|read source, write HLS<br/>object storage: MinIO dev / R2 prod| R2
+    CmdWorker -.->|dev S3 endpoint| MinIO
 ```
 
 ## What's missing on purpose
 
 | Greyed-out in this diagram | Why deferred | Reintroduce in |
 | --- | --- | --- |
-| MinIO origin | R2-only for v1, see [ADR-04](../04-storage-tier-budget.md) | Phase X when first sovereignty-sensitive operator appears |
+| MinIO as a **prod** origin tier | Dev already runs MinIO as the S3 endpoint; deployed envs stay R2-only per the [ADR-04](../04-storage-tier-budget.md) update (2026-06-06) | Phase X when first sovereignty-sensitive operator appears |
 | Observability stack (Loki/Prometheus/Tempo/Grafana/GlitchTip) | RAM + RAM + RAM; demo uses container logs | Phase 0.5 — recommended before any external user |
 | mediamtx (live ingest) | Live streaming is feature.md §9.25 / Phase 10 | Phase 10 |
 | LiveKit + coturn (calls) | Voice/video is feature.md §9.37 / Phase 12 | Phase 12 |
@@ -83,26 +77,29 @@ graph TB
 
 The two flows v1 must demonstrate:
 
-### Flow A — OIDC sign-in
+### Flow A — Local password sign-in
 
 ```
-Browser → Traefik → Next.js sign-in button
-       → /api/v1/auth/login → 302 Authentik
-       → Authentik prompt → 302 /api/v1/auth/callback
-       → API upserts user, issues access+refresh cookies → 302 /
+Browser → Traefik → Next.js /login page
+       → POST /api/v1/auth/login {email, password, remember}
+       → API rate-limits (Redis brute-force limit + lockout), verifies Argon2id hash (constant-time), checks disabled_at
+       → issues JWT access (5 min) + refresh token, sets portal_access / portal_refresh / portal_session cookies
        → Browser lands authenticated
 ```
+
+`POST /auth/register` returns **201 with no session** — the user goes back to `/login`. There is no `/auth/callback`, `state`, or `nonce` ([ADR-06](../06-local-auth-model.md), 2026-07-05).
 
 ### Flow B — Upload → transcode → playback
 
 ```
-Browser → POST /api/v1/uploads (multipart-or-presign-request)
-       → API signs R2 PUT URL, inserts assets row (status=pending), enqueues transcode task
-       → Browser PUTs bytes directly to R2 (bypasses VPS for data plane)
+Browser → POST /api/v1/assets
+       → API inserts assets row (status=pending), returns presigned PUT URL
+       → Browser uploads bytes (dev: API-proxied PUT /assets/{id}/source → MinIO; prod: presigned PUT direct to R2)
+       → POST /api/v1/assets/{id}/complete → API enqueues transcode task
        → Asynq delivers transcode task to cmd/worker
-       → Worker downloads source from R2, runs FFmpeg HLS ladder, uploads segments to R2
-       → Worker UPDATEs assets row (status=ready, hls_master_url, ...)
-       → Browser polls assets row OR receives via SSE (post-v1) and starts Vidstack playback from R2
+       → Worker downloads source → ffprobe → ffmpeg VOD HLS (h264/aac) → uploads manifest + segments
+       → Worker MarkAssetReady (status=ready)
+       → Browser polls GET /assets/{id} until status=ready → Vidstack plays via the public GET /assets/{id}/hls/* proxy
 ```
 
-Both flows must work end-to-end at the close of the 2-week sprint. See [ADR-05](../05-phase0-wiring-order.md) for the milestone schedule that gets there.
+> **Update (2026-07-06):** both flows are implemented and committed; [MILESTONE_CHECKS.md](../../../../MILESTONE_CHECKS.md) is the living status tracker. [ADR-05](../05-phase0-wiring-order.md) documents the milestone schedule that got there.

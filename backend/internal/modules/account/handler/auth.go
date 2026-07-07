@@ -27,9 +27,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/portal/backend/internal/modules/account/audit"
 	"github.com/portal/backend/internal/modules/account/auth"
 	"github.com/portal/backend/internal/modules/account/middleware"
+	"github.com/portal/backend/internal/platform/audit"
 )
 
 // Brute-force guard on /auth/login. A fixed(ish) window per IP and per account;
@@ -179,8 +179,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	user, err := h.Users.CreateLocalUser(ctx, CreateLocalUserInput{
-		Email:       email,
-		DisplayName: nonEmpty(strings.TrimSpace(body.DisplayName), emailLocalPart(email)),
+		Email:        email,
+		DisplayName:  nonEmpty(strings.TrimSpace(body.DisplayName), emailLocalPart(email)),
 		PasswordHash: hash,
 	})
 	if err != nil {

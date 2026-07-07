@@ -2,7 +2,9 @@
 
 Companion to [feature.md](feature.md). Where `feature.md` defines the full system, this doc focuses on the **`frontend/`** Next.js 15 app: structure, state, rendering, auth handoff, and the page inventory built from `template-main/`.
 
-Read [§16 Frontend](feature.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34], [D-7]); this doc expands them with concrete patterns and a build-out roadmap.
+Read [§16 Frontend](feature.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34] — superseded by client-side SessionKeeper, see the §4 banner — and [D-7]); this doc expands them with concrete patterns and a build-out roadmap.
+
+> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (live tracker: `MILESTONE_CHECKS.md`). Per [ADR-06](architecture/06-local-auth-model.md) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](architecture/01-v1-scope-cut.md)).
 
 ---
 
@@ -16,6 +18,7 @@ frontend/
 ├── postcss.config.mjs
 ├── tsconfig.json                     ← @/* → src/*
 └── src/
+    ├── middleware.ts                 ← auth gate: portal_session marker → redirect guests to /login (matcher: /, /login, /register, /upload, /library/*)
     ├── app/                          ← ROUTING ONLY (thin); views resolve via the registry
     │   ├── globals.css
     │   ├── layout.tsx                ← root: <html>, Providers, active-template theme import
@@ -27,6 +30,7 @@ frontend/
     │   └── (app)/                    ← authenticated shell (MasterBase)
     │       ├── layout.tsx
     │       ├── page.tsx              ← "/" home / newsfeed
+    │       ├── upload/page.tsx       ← v1 upload → transcode → HLS playback studio
     │       └── library/
     │           ├── comic/page.tsx
     │           └── novel/[id]/page.tsx
@@ -38,14 +42,20 @@ frontend/
     │       ├── index.ts              ← v1 manifest
     │       ├── theme/theme.css
     │       ├── master/{MasterBase,MasterPublic}.tsx
-    │       ├── components/{headers,menu,footers,popup}/*
-    │       ├── partials/{HelloPreloader,GoToTop}.tsx
-    │       └── views/{home,auth,library/{comic,novel}}/*
+    │       ├── components/headers/{TopMenu,NotifMenus}.tsx   ← NotifMenus = header dropdowns (static placeholder data)
+    │       ├── components/{menu,footers,popup}/*
+    │       ├── components/ui/{Avatar,Icon}.tsx
+    │       ├── partials/{HelloPreloader,GoToTop,SessionKeeper}.tsx  ← SessionKeeper = client-side silent token refresh (§4 banner)
+    │       └── views/
+    │           ├── home/HomeView.tsx
+    │           ├── auth/{LoginView,RegisterView,AuthForm,AuthLanding}.tsx
+    │           ├── upload/UploadStudio.tsx   ← Vidstack studio: presigned upload → poll status → HLS playback
+    │           └── library/{comic,novel}/*
     └── lib/
-        └── api-client.ts             ← will be replaced by generated + server-only client (D-34)
+        └── api-client.ts             ← working fetch wrapper (credentials: include, throws ApiError); gets typed via types.gen.ts once `make openapi` runs — D-34 server-client design superseded, see §4 banner
 ```
 
-Status: **Phase-0 presentation scaffold implemented** — the versioned template layer (§1.1) is in place and the routes above render. Layout shells, sidebars, partials, and views are ported from the Blade reference; popups and the SVG sprite are placeholders, and most views are skeletons (data wiring follows the roadmap in §10). Still to land: server-only API client + refresh-and-return ([D-34], §4), generated OpenAPI types, OIDC flow, i18n, Radix component library.
+Status (2026-07-06): **v1 demo loop closed** — local password login/register (ADR-06), middleware auth gate on `portal_session`, `SessionKeeper` silent refresh, and the `/upload` Vidstack studio all work end-to-end. Layout shells, sidebars, partials, and views are ported from the Blade reference; popups and the SVG sprite are placeholders, and the feed/friends/notification widgets are still static placeholders. Still to land: generated OpenAPI TS types (`types.gen.ts`), server-only API client, i18n, Radix component library.
 
 Stack already chosen: App Router + RSC, Tailwind v4, TypeScript; Vidstack for HLS ([§3 Media](feature.md)); Zustand + TanStack Query + React Hook Form for state ([D-32]); `next-intl` for i18n ([D-7]).
 
@@ -123,7 +133,7 @@ The full route tree in §2.1 (`/t/{tenant}/(app)/...`, marketing, admin, all ver
 Two reconciliations with later sections:
 
 - **Components vs. templates.** §7 describes a cross-version primitives/feature library under `src/components/` (Radix + Tailwind). That layer is for shared, version-agnostic building blocks; `src/templates/v{N}/` composes them (plus version-specific markup) into the shells and views a given design version ships. Primitives go in `components/`, version-specific composition goes in `templates/`.
-- **Register page.** §6.1 lists register as "out of scope — Authentik handles". The implemented `RegisterView` is a **visual scaffold only**: `AuthForm` keeps the email/password fields unwired and routes the real entry point through the SSO button → `/api/v1/auth/login`. There is no local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
+- **Register page.** Implemented and wired per [ADR-06](architecture/06-local-auth-model.md) local auth: `AuthForm` posts email + password (+ `remember`) to `POST /api/v1/auth/login`; `RegisterView` posts `POST /api/v1/auth/register` (201, no session, redirects to `/login`). §6.1's old "Authentik handles" entry is retired — there is ONLY local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
 
 ---
 
@@ -150,8 +160,8 @@ src/app/
 │
 ├── auth/                                     ← NOT a group; real path segment
 │   ├── login/page.tsx
-│   ├── callback/page.tsx                     ← OIDC redirect target
-│   ├── refresh-and-return/page.tsx           ← D-34 server-side refresh handler
+│   ├── ~~callback/page.tsx~~                 ← retired by ADR-06 — no OIDC callback exists
+│   ├── ~~refresh-and-return/page.tsx~~       ← superseded by SessionKeeper (templates/v1/partials/SessionKeeper.tsx)
 │   └── layout.tsx                            ← minimal "auth pages" chrome
 │
 ├── t/                                        ← tenant URL prefix (D-23)
@@ -219,11 +229,13 @@ src/app/
 └── not-found.tsx
 ```
 
+The implemented v1 auth routes are `/login` and `/register` via the `(public)` group (§1), not this `auth/` segment.
+
 **Why this shape:**
 
 - **`/t/{tenant}/...`** is real path, matching [D-23]'s tenant URL prefix decision. Personal data routes use `/t/me/...`.
 - **Route groups** `(app)`, `(admin)`, `(marketing)`, `(movies)`, etc. only organize layouts — invisible in URLs.
-- **`/auth/*`** is NOT inside `/t/{tenant}/` because OIDC callback happens before tenant context is known.
+- **`/auth/*`** is NOT inside `/t/{tenant}/` because login precedes tenant context.
 - **`/search`** is cross-tenant (`D-2` aggregator); doesn't take prefix.
 - Tenant slug `[tenant]` is resolved by middleware → injected via React context (see §4.2).
 
@@ -425,15 +437,17 @@ const { data } = useMovies(filters);
 
 ## 4. Auth handoff ([D-34])
 
+> **Superseded (2026-07-05).** OIDC is gone ([ADR-06](architecture/06-local-auth-model.md)) and the refresh-and-return route below was replaced by client-side `SessionKeeper` (`templates/v1/partials/SessionKeeper.tsx` — 4-min interval + focus refresh, `localStorage` multi-tab throttle, hard redirect to `/login` on refresh failure). §4.2–4.4 are kept as design history; the server-only API client remains future work. §4.1 is current fact.
+
 ### 4.1 Cookie scheme
 
 | Cookie | Path | Lifetime | Purpose |
 |---|---|---|---|
 | `portal_access` | `/` | 5 min | Bearer for API; HS256 JWT |
-| `portal_refresh` | `/auth` | 30 days | Mints new access via `/auth/refresh` |
-| `portal_oidc` | `/auth/callback` | 5 min | State + nonce binding during OIDC flow |
+| `portal_refresh` | `/api/v1/auth` | `REFRESH_TOKEN_TTL` (currently 24h; session cookie unless `remember=true`) | Mints new access via `/api/v1/auth/refresh` |
+| `portal_session` | `/` | matches refresh lifetime | Non-sensitive login marker read by Next.js middleware (auth gate for `/`, `/upload`, `/library/*`); not `HttpOnly`-sensitive — carries no token |
 
-All: `HttpOnly Secure SameSite=Strict`.
+All: `HttpOnly Secure SameSite=Strict` (the `portal_session` marker is readable by the edge middleware and holds no secret).
 
 **Same-site mandate** ([D-34]): Next.js host + API host MUST share a registrable domain (eTLD+1), e.g. `portal.example.com` + `api.portal.example.com`. Single-host setups route via Traefik path-based.
 
@@ -551,7 +565,7 @@ export function handleProblem(problem: Problem): void {
       return;
 
     case "https://portal/errors/auth.mfa_enrollment_required":
-      // Show modal explaining MFA is required, with deep-link to Authentik
+      // Show modal explaining MFA is required, pointing at Portal-native MFA enrollment (later phase — ADR-06)
       showModal({
         title: "MFA required for this feature",
         body: "Bank operations require multi-factor authentication.",
@@ -565,7 +579,7 @@ export function handleProblem(problem: Problem): void {
 }
 ```
 
-The "Manage MFA" button in account-security settings deep-links to Authentik's dashboard ([D-28]).
+The "Manage MFA" button in account-security settings opens Portal-native MFA enrollment (later phase — [ADR-06](architecture/06-local-auth-model.md) §"New responsibilities"). [D-28] still governs the step-up requirement, but its Authentik-dashboard deep-link is superseded — Authentik is fully removed.
 
 ---
 
@@ -665,8 +679,8 @@ Mapping every template asset to a Next.js page. Status:
 | Template asset | Next.js route | Phase | Status |
 |---|---|---|---|
 | `portal/resources/views/v1/views/home/home.blade.php` | `/t/{tenant}/(app)/page.tsx` | Phase 0 stub | A |
-| `portal/resources/views/v1/public/login.blade.php` | `/auth/login/page.tsx` | Phase 0 | A |
-| `portal/resources/views/v1/public/register.blade.php` | (out of scope — Authentik handles) | — | — |
+| `portal/resources/views/v1/public/login.blade.php` | `/login` via `app/(public)/login/page.tsx` | Phase 0 — done | A |
+| `portal/resources/views/v1/public/register.blade.php` | `/register` via `app/(public)/register/page.tsx` ([ADR-06](architecture/06-local-auth-model.md) local auth) | Phase 0 — done | A |
 | `portal/resources/views/v1/views/library/...` | `/t/{tenant}/(app)/(stories)/library/page.tsx` | Phase 4 | A |
 | `portal/resources/views/v1/components/menu/sidebarLeft.blade.php` | Component `<LeftSidebar />` | Phase 0 | A |
 | `portal/resources/views/v1/components/menu/sidebarRight.blade.php` | Component `<RightSidebar />` | Phase 0 | A |
@@ -874,17 +888,17 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 
 ### Phase 0 — Foundation
 
-- Wire root layout: providers (TanStack, NextIntl, Theme, Toast), fonts, global CSS.
-- **Server-only API client** (`api-server.ts`) per [D-34]; **mutation client** (`api-client.ts`) for client components.
-- **Refresh-and-return route** `/auth/refresh-and-return/page.tsx`.
-- **Generated TS types** from OpenAPI → `frontend/src/lib/types.gen.ts`.
-- **OIDC login flow** — `/auth/login/page.tsx`, `/auth/callback/page.tsx`.
-- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC.
-- **`frontend/CLAUDE.md` conventions doc** ([D-32, D-33]) with anti-pattern examples.
-- **Error pages** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled.
-- **Component library kickoff** — `<Button />`, `<Dialog />`, `<Toast />`, `<Avatar />`, `<TopHeader />`, `<LeftSidebar />`, `<RightSidebar />`.
+- Wire root layout: providers (TanStack, NextIntl, Theme, Toast), fonts, global CSS — partial: TanStack provider + template theme wired; NextIntl + Toaster pending.
+- **Mutation client** (`api-client.ts`) — DONE (working fetch wrapper); **server-only API client** (`api-server.ts`, [D-34]) remains future work (see §4 banner).
+- **Silent session refresh** — DONE via `SessionKeeper` (supersedes the [D-34] refresh-and-return route).
+- **Generated TS types** from OpenAPI → `frontend/src/lib/types.gen.ts` — pending (file does not exist yet; needs `make openapi`).
+- **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](architecture/06-local-auth-model.md) replaced the original OIDC deliverable).
+- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending.
+- **`frontend/CLAUDE.md` conventions doc** ([D-32, D-33]) with anti-pattern examples — pending (does not exist yet).
+- **Error pages** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled — pending.
+- **Component library kickoff** — partial: v1 template ships `Avatar`, `Icon`, `TopMenu`, sidebars; the cross-version `components/ui/` primitives (`<Button />`, `<Dialog />`, `<Toast />`) are pending.
 
-**Exit:** sign in via Authentik, see authenticated home page with sidebar shell. RBAC-gated route returns 403 → toast displays it.
+**Exit (met 2026-07-05):** sign in via Portal `/login` (local credentials), see authenticated home shell; guests redirected to `/login` by middleware.
 
 ### Phase 1 — Tenant URL prefix
 
@@ -895,6 +909,8 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 **Exit:** `/t/me/...` and `/t/{orgSlug}/...` both work; switching reloads tenant context.
 
 ### Phase 2-3 — Media + Movies
+
+> Partially landed (2026-07-06): Vidstack HLS playback already works end-to-end in the v1 `UploadStudio` (`/upload`); the catalogue / detail / continue-rail pages below remain Phase 3.
 
 - `<HLSPlayer />` Vidstack wrapper.
 - Movies catalogue + detail + player.
@@ -994,7 +1010,7 @@ These aren't blocking but each needs an answer when the relevant phase opens:
 5. **End-to-end test framework.** Playwright default; Cypress as alternate. Playwright recommended for parity with axe-core integration.
 6. **Bundle splitting strategy.** Per-route splitting is default. Revisit if any route exceeds 200 KB JS budget.
 7. **Theme system.** CSS variables + Tailwind v4 native theme support. Confirm token list before component library matures.
-8. **Image CDN / storage origin.** *Decided:* dev = MinIO on the local folder `./data/minio`; prod = Cloudflare R2 (S3-compatible). The switch is `.env`-only (`S3_*`), no code change — see [architecture/04-storage-tier-budget.md](architecture/04-storage-tier-budget.md). Image optimisation in prod via Cloudflare Image Resizing on R2; `next/image` self-hosted remains the fallback.
+8. **Image CDN / storage origin.** *Decided* — MinIO (`./data/minio`) in dev, Cloudflare R2 in prod, `.env`-only switch: see §9.3 for the canonical statement.
 
 ---
 

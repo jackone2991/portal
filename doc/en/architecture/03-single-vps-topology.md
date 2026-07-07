@@ -1,9 +1,13 @@
 # ADR-03: Single-VPS topology and compose-profile envelope for v1
 
-**Status:** Proposed
+**Status:** Accepted (see Update 2026-07-06)
 **Date:** 2026-05-24
 **Deciders:** kirito
 **Affects:** [docker-compose.yml](../../../docker-compose.yml), [Makefile](../../../Makefile), [feature.md D-8 (observability)], [feature.md D-36/D-39 (live + calls)]
+
+## Update (2026-07-06) — Authentik removed (ADR-06); service set as-built
+
+The core decision stands: single VPS (CCX23), profiles `observability`/`live`/`calls` remain off. But [ADR-06](./06-local-auth-model.md) (2026-07-05) replaced OIDC with local password auth, so `authentik-server`/`authentik-worker`/`mailpit` **never shipped** — every Authentik/Mailpit/OIDC mention below is historical. As-built compose set: `traefik`, `postgres`, `pgbouncer`, `dragonfly` (run with `--default_lua_flags=allow-undeclared-keys` for Asynq), `minio` + `minio-setup` (dev-only, per [ADR-04 update 2026-06-06](./04-storage-tier-budget.md)), `api`, `worker`, `frontend`. With Authentik gone the RAM floor is ~1 GB lower than analysed below; the CCX23 sizing is unchanged (extra headroom). Storage split as-built: no Authentik volume; dev uploads land in MinIO on the `./data/minio` bind-mount — direct-to-R2 applies to deployed environments only (ADR-04).
 
 ## Context
 
@@ -103,6 +107,8 @@ Floor ~2.4 GB idle, ~4 GB under load. Headroom on a 16 GB VPS is ample for v1 an
 
 The pivotal question is the **memory pressure from Authentik plus a transcode burst**. Without Authentik, an 8 GB VPS would do. With Authentik, 16 GB is the floor. The alternative (skipping Authentik in favour of a hand-rolled local password store) trades ~1 GB of RAM for 3 days of solo-dev time writing password storage + reset flow + email templates + lockout logic; the time is more valuable than the RAM.
 
+> **Update (2026-07-06):** [ADR-06](./06-local-auth-model.md) reversed this trade — Portal now owns credentials (Argon2id local password auth) and Authentik was removed from the stack. The memory-pressure analysis above no longer binds the VPS sizing.
+
 Cloudflare R2 saving the VPS disk is the second-largest decision. Storing assets locally on the VPS means provisioning ≥240 GB for any meaningful library, which forces CCX33 minimum and a backup strategy (R2 replication or rsync). Sending uploads directly to R2 sidesteps both — see [ADR-04](./04-storage-tier-budget.md).
 
 Disabling the observability profile for v1 is the cheapest call in this ADR. Loki + Prometheus + Tempo + Grafana + GlitchTip cost 5 services and ~1.1 GB for telemetry no one is reading in week 1. `docker compose logs api worker` covers the demo loop.
@@ -119,7 +125,7 @@ Disabling the observability profile for v1 is the cheapest call in this ADR. Lok
 
 - No observability — when the demo breaks at the customer's site, the only diagnostics are container logs. Schedule the observability profile for the Phase 0.5 sprint.
 - TRANSCODE_CONCURRENCY=1 means a slow source video can block the queue. Acceptable for v1 (single demo user); becomes a real bottleneck under multi-tenant usage. Phase 1 must add the per-tenant quota wiring [D-13].
-- Authentik adds an entire database schema and admin surface to learn. The Authentik deployment recipe lives in `docs/operations/authentik.md` (referenced in [D-28]) — write at least a stub during the v1 sprint so the next deploy isn't a treasure hunt.
+- Authentik adds an entire database schema and admin surface to learn. The Authentik deployment recipe lives in `docs/operations/authentik.md` (referenced in [D-28]) — write at least a stub during the v1 sprint so the next deploy isn't a treasure hunt. *(Moot — Authentik removed, ADR-06.)*
 
 **What we'll need to revisit:**
 
@@ -129,10 +135,10 @@ Disabling the observability profile for v1 is the cheapest call in this ADR. Lok
 
 ## Action items
 
-1. [ ] Set `dragonfly` `command: ["--logtostderr", "--cluster_mode=emulated", "--maxmemory=2GB"]` in docker-compose to cap memory before it competes with FFmpeg.
-2. [ ] Add `authentik-server`, `authentik-worker`, and `mailpit` services to `docker-compose.yml`. Use Authentik's published recipe; gate them behind no profile (they're always-on for v1).
+1. [ ] Set `dragonfly` `command: ["--logtostderr", "--cluster_mode=emulated", "--maxmemory=2GB"]` in docker-compose to cap memory before it competes with FFmpeg. **Partially superseded (2026-07-06):** shipped command is `["--logtostderr", "--default_lua_flags=allow-undeclared-keys"]` (required by Asynq); the `--maxmemory` cap is still open.
+2. [x] ~~Add `authentik-server`, `authentik-worker`, and `mailpit` services to `docker-compose.yml`. Use Authentik's published recipe; gate them behind no profile (they're always-on for v1).~~ **Obsolete per ADR-06 (2026-07-05):** Authentik dropped; Portal owns credentials.
 3. [ ] Document the disabled profiles in `docker-compose.yml` with a one-line comment: `# v1 disables --profile observability, --profile live, --profile calls — see doc/en/architecture/03-single-vps-topology.md`.
 4. [ ] Add a `Makefile` target `make deploy-v1` that runs `docker compose up -d` with NO profile flags — prevents accidental observability/live in v1.
 5. [ ] Set Postgres `shared_buffers = 4GB`, `effective_cache_size = 10GB`, `max_connections = 50` (PgBouncer pools below it). Document in `docs/operations/postgres-tuning.md` stub.
 6. [ ] In the v1 deployment doc (`docs/operations/deployment.md` — currently absent), record the VPS sizing decision and the rationale for disabled profiles. Cross-reference this ADR.
-7. [ ] Set `TRANSCODE_CONCURRENCY=1` and `MAX_CONCURRENT_TRANSCODES_PER_USER=1` in `.env.example` for v1; bump later when quotas land [D-13].
+7. [ ] Set `TRANSCODE_CONCURRENCY=1` and `MAX_CONCURRENT_TRANSCODES_PER_USER=1` in `.env.example` for v1; bump later when quotas land [D-13]. **Still open (2026-07-06):** `cmd/worker/main.go` currently hardcodes Asynq `Concurrency: 4`; no env knob yet.

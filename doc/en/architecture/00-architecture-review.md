@@ -5,6 +5,8 @@
 **Reviewers:** kirito (solo dev / sole reviewer)
 **Scope:** Whole stack — every area on the form (auth, tenant/RLS, media, domain modules, storage/CDN, jobs, DB, frontend, OpenAPI, cross-cutting).
 
+> **Update (2026-07-06):** This review's action items were all executed — ADRs 01–05 are Accepted and implemented, and the v1 demo loop is closed (see `MILESTONE_CHECKS.md`). One §2 endorsement was later reversed: [ADR-06](./06-local-auth-model.md) (2026-07-05) removed Authentik/OIDC in favour of Portal-owned local password auth (Argon2id); the refresh-token and revocation machinery is unchanged. The body below is preserved as written on 2026-05-24, with dated notes marking superseded findings.
+
 This document is the entry point for the ADR set. It captures the **findings** of the review; the individual ADRs that follow propose the corrective actions.
 
 ---
@@ -39,6 +41,8 @@ These choices should survive any v1 cut. Don't second-guess them mid-sprint:
 | **Vidstack for HLS playback** | Vidstack on Next.js is the path of least resistance; the alternative (Shaka, hls.js direct) is more wiring. |
 | **`cmd/sysjobs` separation + sysrepository BYPASSRLS lock-down** | This is one decision you should NOT defer even at solo-dev speed. RLS bypass is the kind of thing that turns into a multi-tenant data leak. The depguard rule pays for itself the first time you forget. |
 
+> **Update (2026-07-06):** the Authentik row above was superseded by [ADR-06](./06-local-auth-model.md) — Authentik was dropped and Portal now owns local password auth (Argon2id). The refresh-token and revocation machinery it endorsed is unchanged and still in use.
+
 ## 3. What's at risk
 
 These are the choices most likely to cost time or burn the budget under the stated constraints:
@@ -58,6 +62,8 @@ These are the choices most likely to cost time or burn the budget under the stat
 
 Both specs can't coexist. Code currently implements the role-hierarchy model. `archivetech.md`'s spec-wins clause is unenforceable until someone decides which spec is canonical. Decision deferred to [ADR-02](./02-rbac-model-reconciliation.md); recommendation there is to **keep role-hierarchy as the v1 grant primitive** and add policy-bundles as a Phase-2 layer **on top of** roles, not instead of them.
 
+> **Update (2026-07-06):** resolved — [ADR-02](./02-rbac-model-reconciliation.md) is Accepted; role-hierarchy is canonical for v1 and policy bundles layer on top later. `archivetech.md`'s spec-wins clause is disregarded for v1.
+
 ### 3.2 Scope vs. runway mismatch
 
 `feature.md` Phase 0 alone has 14 deliverables and would take 1 dev ~1 week if everything goes well. Phases 1–12 are years of work. The 2-week budget means **picking a single phase set** and committing. See [ADR-01](./01-v1-scope-cut.md); the recommended cut is *Phase 0 + a vertical slice of Phase 2 (one video upload happy path)* and nothing else.
@@ -68,15 +74,21 @@ If you bring up `docker-compose.yml` plus add **Authentik** (~1 GB), the **obser
 
 [ADR-03](./03-single-vps-topology.md) proposes the v1 service set and which profile flags stay off.
 
+> **Update (2026-07-06):** Authentik was removed by [ADR-06](./06-local-auth-model.md), taking its RAM footprint out of the equation; the shipped v1 stack is 8 services (postgres, pgbouncer, dragonfly, minio, traefik, api, worker, frontend).
+
 ### 3.4 Storage tier complexity
 
 `docker-compose.yml` runs MinIO inside the VPS. The diagrams imply MinIO is the *origin* and R2 is the *edge*, with continuous replication. That's two storage systems, two sets of credentials, replication monitoring, and 100–500 GB of VPS-attached disk before any user uploads.
 
 For v1 the simpler answer is **R2 only** — it's S3-compatible, costs ~$0.015/GB-month for storage and has zero egress fees inside Cloudflare's edge. MinIO becomes a Phase-2 addition if a self-hoster wants to run entirely without Cloudflare. See [ADR-04](./04-storage-tier-budget.md).
 
+> **Update (2026-07-06):** adopted with a refinement — see ADR-04's 2026-06-06 update. R2-only holds for deployed environments; local dev uses MinIO behind the same single S3 client.
+
 ### 3.5 Wiring gap is the actual blocker
 
 CLAUDE.md says it out loud: *"`cmd/api/main.go` still has a `TODO: mount OpenAPI-generated handlers` comment and does not yet call `account.New(...)` or any module's `MountHTTP`."* Every downstream feature is gated on this. [ADR-05](./05-phase0-wiring-order.md) sequences the closure.
+
+> **Update (2026-07-06):** closed — ADR-05 was executed in order; `cmd/api/main.go` now constructs the account and media modules and `/api/v1/healthz` returns 200. See `MILESTONE_CHECKS.md`.
 
 ## 4. What's quietly fine
 
@@ -110,12 +122,14 @@ These are explicitly **scope cuts** for the 2-week window. Each is a complete fe
 A few things weren't in the input docs and should be on the radar:
 
 - **No mention of database connection-pool tuning** between PgBouncer transaction-pool mode and `pgx`. Asynq, the API, and the worker share a Postgres cluster; without careful pool sizing, the worker starves the API during a transcode burst.
-- **`OIDC_GROUP_ROLE_MAP` is env-configured** [D-26]. A typo in production silently strips an admin of their privileges on next refresh. Add a startup-time validation that flags unmapped Authentik groups present in the bootstrap admin list.
+- **`OIDC_GROUP_ROLE_MAP` is env-configured** [D-26]. A typo in production silently strips an admin of their privileges on next refresh. Add a startup-time validation that flags unmapped Authentik groups present in the bootstrap admin list. *(Update 2026-07-06: obsolete — ADR-06 removed OIDC/Authentik; no group-role mapping exists.)*
 - **Refresh-token rotation chain emits a chain-revoke event on reuse**, but the corpus doesn't define what *consumes* that event. At minimum, the chain-revoke should send a security email to the user; the notification module is Phase 6, so for v1 either log loudly or send a hand-rolled email from the auth handler.
 - **`disabled_at` on users is checked in middleware**, but there's no scheduled job to revoke active refresh tokens when a user is disabled. A disabled user's existing refresh tokens still rotate until expiry. Worth a one-line `UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = ?` next to the disable handler.
 - **Frontend SameSite=Strict cookies require Next.js and the API to share a registrable domain** [D-34]. Single-domain path-based routing via Traefik works, but it's a non-obvious deployment constraint that needs to be in the operator docs from day one — easy to misconfigure in development with `localhost:3000` + `localhost:8080` (those are *different* origins for SameSite purposes).
 
 ## 7. Recommendations summary
+
+> **Update (2026-07-06):** all five recommendations were executed; the v1 demo loop (local sign-in → upload → HLS playback → revocable logout) is closed and committed. ADR-06 subsequently replaced the auth model. `MILESTONE_CHECKS.md` is the living tracker.
 
 Five concrete ADRs follow. In sprint priority order:
 

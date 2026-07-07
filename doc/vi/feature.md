@@ -1,30 +1,32 @@
 # Portal — Danh sách tính năng
 
+> **Trạng thái (2026-07-06):** vòng demo v1 đã **ĐÓNG** — đăng nhập mật khẩu local → upload → transcode → phát HLS → logout revocable ([MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) là tracker sống). Scope v1 là hard cut trong [ADR-01](architecture/01-v1-scope-cut.md): §§8–13 bên dưới và roadmap Phase 5–12 là long-horizon, deferred. Auth là local-password theo [ADR-06](architecture/06-local-auth-model.md); bất cứ gì OIDC/Authentik bên dưới đã retired và mang note superseded.
+
 Bắt nguồn từ [CLAUDE.md](../../CLAUDE.md) (kiến trúc + chia module) và [template-main/social/](../../template-main/social/) (tham chiếu UX/UI cho lớp social). Mỗi tính năng map vào backend module sở hữu nó ([backend/MODULES.md](../../backend/MODULES.md) luật áp dụng: truy cập cross-module qua `api/` only).
 
-Status legend: **✓ scaffolded** = module + một số code đã có, **○ planned** = directory/spec tồn tại nhưng trống, **△ inferred** = derive từ template, chưa phải module.
+Status legend: **✅ shipped** = đã wire, mount, test end-to-end, **✓ scaffolded** = module + một số code đã có, **○ planned** = directory/spec tồn tại nhưng trống, **△ inferred** = derive từ template, chưa phải module.
 
 ---
 
-## 1. Identity, Auth & Access — module `account` ✓
+## 1. Identity, Auth & Access — module `account` ✅
 
 Nguồn: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
 
-> **Hướng auth đã cập nhật — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Đăng nhập là **local password auth** (Portal tự giữ credential); các mục OIDC-qua-Authentik gắn [D-26]/[D-28] bên dưới đã **bị thay thế** và loại bỏ. Các mục token/refresh/RBAC/revocation/audit không đổi.
+> **Hướng auth đã cập nhật — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Đăng nhập là **local password auth** (Portal tự sở hữu credential); các mục OIDC-qua-Authentik đánh dấu [D-26]/[D-28] bên dưới đã **bị thay thế** và loại bỏ. Các mục token/refresh/RBAC/revocation/audit không đổi.
 
-- **Đăng nhập mật khẩu local** — `POST /auth/login {email, password}` xác minh `users.password_hash` (Argon2id, thời-gian-hằng-số) và phát các token bên dưới; `POST /auth/register {email, password, display_name}` tạo tài khoản. Không IdP, không `/auth/callback`, không `state`/`nonce`. Rate-limit + khóa brute-force bảo vệ endpoint. *(Thay cho luồng OIDC-qua-Authentik cũ.)*
-- **Session hai-token** — access JWT HS256 5-phút (`kid` xoay) + refresh token 256-bit 30 ngày (SHA-256 khi lưu).
-- **Mode Cookie + Bearer** — cookie `portal_access` / `portal_refresh` HttpOnly Secure cho browser, `Authorization: Bearer` cho API client.
+- **Đăng nhập mật khẩu local** — `POST /api/v1/auth/login {email, password, remember}` xác minh `users.password_hash` (Argon2id, thời-gian-hằng-số) và phát các token bên dưới; `POST /auth/register {email, password, display_name}` tạo tài khoản và trả về 201 **không kèm session** (user sau đó đăng nhập ở `/login`). Không IdP, không `/auth/callback`, không `state`/`nonce`. Rate-limit + khoá brute-force bảo vệ endpoint. *(Thay cho luồng OIDC-qua-Authentik cũ.)*
+- **Session hai-token** — access JWT HS256 5-phút (`kid` xoay) + refresh token 256-bit (SHA-256 khi lưu; TTL qua `REFRESH_TOKEN_TTL`, hiện tại 24h). Flag `remember` của login chọn cookie persistent 24h hay cookie session.
+- **Mode Cookie + Bearer** — cookie `portal_access` (Path=/) / `portal_refresh` (Path=/api/v1/auth) HttpOnly Secure cho browser, cộng thêm cookie marker `portal_session` (Path=/) được middleware auth gate của Next.js đọc; `Authorization: Bearer` cho API client.
 - **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bump `users.token_version`).
-- **Phát hiện refresh-token reuse** — trình một token đã rotate revoke toàn bộ chain và emit `auth.refresh.reuse_detected`.
+- **Phát hiện refresh-token reuse** — trình một token đã rotate sẽ revoke toàn bộ chain và emit `auth.refresh.reuse_detected`.
 - **`/auth/me`** — trả snapshot user hiện tại.
-- **RBAC engine** — grammar permission `<resource>:<action>[:<scope>]`, wildcards, parser fail-closed, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) với walk effective-permission qua recursive CTE.
-- **Gán role** — role chỉ do Portal quản (`user_roles`); effective permission walk theo phân cấp role. *(~~[D-26] sync group-OIDC→role vào `user_oidc_roles` — bị loại bởi [ADR-06](architecture/06-local-auth-model.md); không còn nhóm IdP để sync.~~)*
-- **Step-up auth** — middleware `account.RequireACR("acr:portal:recent_mfa")` trên route nhạy cảm; 403 + `step_up_required` trigger re-auth. Window mặc định 5 phút. **Dựng trong Portal** (Portal giờ tự sở hữu MFA; không round-trip IdP). [D-27]
-- **MFA enforcement** — TOTP dựng trong Portal (trước Authentik-managed theo [D-28], nay thay bởi [ADR-06](architecture/06-local-auth-model.md)). Lúc login, nếu user có permission `bank:*` nào mà chưa enroll yếu tố thứ hai, trả `mfa_enrollment_required` trỏ tới enrolment TOTP của chính Portal. [D-28]
+- **RBAC engine** — grammar permission `<resource>:<action>[:<scope>]`, wildcard, parser fail-closed, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) với walk effective-permission qua recursive CTE.
+- **Gán role** — role chỉ do Portal quản lý (`user_roles`); effective permission walk theo phân cấp role. *(~~[D-26] Sync group-OIDC→role vào `user_oidc_roles` — bị loại bởi [ADR-06](architecture/06-local-auth-model.md); không còn nhóm IdP để sync.~~)*
+- **Step-up auth** — middleware `account.RequireACR("acr:portal:recent_mfa")` trên route nhạy cảm; 403 + `step_up_required` trigger re-auth. Window mặc định 5 phút. *(planned — Portal tự xây theo ADR-06 §New responsibilities; chưa implement)* [D-27]
+- **MFA enforcement** — TOTP dựng trong Portal (trước đây Authentik-managed theo [D-28], nay bị thay thế bởi [ADR-06](architecture/06-local-auth-model.md)). Lúc login, nếu user có permission `bank:*` nào mà chưa enroll yếu tố thứ hai, trả `mfa_enrollment_required` trỏ tới enrolment TOTP của chính Portal. *(planned — Portal tự xây theo ADR-06 §New responsibilities; chưa implement)* [D-28]
 - **Permission cache** — Redis-backed, namespace theo `token_version` nên revocation = cache bust trong một bump.
 - **UI Account-settings** (△ từ template): `Account Settings`, `Change Password` (giờ là first-class — Portal tự giữ mật khẩu), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, preference `Notifications`.
-- **Audit log** — write best-effort qua `audit.Logger`; không bao giờ block request.
+- **Audit log** — ghi best-effort qua `audit.Logger`; không bao giờ block request.
 
 ---
 
@@ -39,16 +41,16 @@ Nguồn: [backend/internal/modules/tenant/](../../backend/internal/modules/tenan
 
 ---
 
-## 3. Media Pipeline — module `media` ✓
+## 3. Media Pipeline — module `media` ✅
 
 Nguồn: [backend/internal/modules/media/](../../backend/internal/modules/media/) (có `worker/transcode.go`, `worker/thumbnail.go`, `query/assets.sql`).
 
-- **Upload asset** — multipart → MinIO origin bucket, key tenant-prefix.
-- **Worker transcode** (Asynq queue `transcode`, priority 5) — HLS ladder qua FFmpeg.
-- **Worker thumbnail** (queue `thumbnail`, priority 3) — generate poster + sprite.
-- **State machine asset** — `pending → processing → ready | failed`; transition emit `media:asset_ready` cho module downstream.
-- **Signed URL** — `mediaapi.SignedURL(assetID, ttl)` cho playback time-limited.
-- **CDN edge** — Cloudflare R2 trước MinIO origin; hook invalidate cache khi replace asset.
+- **Upload asset** — `POST /assets` trả presigned PUT URL (`PUT /assets/{id}/source` là upload API-proxied trong dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` enqueue transcode. *(Không có tenant prefix trong v1.)*
+- **Worker transcode** (Asynq queue `transcode`, priority 5) — FFmpeg VOD HLS (h264/aac; multi-rung ladder planned).
+- **Worker thumbnail** (queue `thumbnail`, priority 3) — *(stub — đã register nhưng chưa implement; generate poster + sprite planned)*.
+- **State machine asset** — `pending → processing → ready | failed` ✓; event `media:asset_ready` **chưa được emit** (chưa có module consumer nào tồn tại).
+- **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` cho playback time-limited *(planned — v1 ship một HLS proxy public tại `GET /assets/{id}/hls/*` thay thế)*.
+- **Storage / CDN edge** — một S3 client duy nhất (`aws-sdk-go-v2`); MinIO dev / R2 prod theo [ADR-04](architecture/04-storage-tier-budget.md). Thiết kế hai tầng MinIO-origin + R2-edge với invalidation hook là long-horizon target.
 - **HLS playback** — frontend dùng Vidstack.
 
 ---
@@ -529,12 +531,12 @@ Nguồn: [backend/internal/platform/](../../backend/internal/platform/).
 - **Config loader** (env-based) — `internal/platform/config/`.
 - **DB pool** (pgx) + `BeginTenantScope` — `internal/platform/db/` ○.
 - **Cache** (Redis/Dragonfly) với helper key tenant-aware — `internal/platform/cache/` ○.
-- **Storage** (S3/MinIO + R2) với key tenant-prefix — `internal/platform/storage/` ○.
+- **Storage** — một S3 client duy nhất (`aws-sdk-go-v2`, `BaseEndpoint` + `UsePathStyle`), đã test (`s3_test.go`); MinIO dev / R2 prod; tenant prefix deferred — `internal/platform/storage/` ✓.
 - **Jobs** (setup client Asynq) — `internal/platform/jobs/` ○.
 - **Realtime** (SSE + WebSocket, backplane pub/sub Dragonfly) — `internal/platform/realtime/` ○. [D-3]
 - **Mail** (SMTP) — `internal/platform/mail/` ○. [D-4]
 - **Observability** (OTel SDK, Prometheus `/metrics`, init Sentry/GlitchTip) — `internal/platform/observability/` ○. [D-8]
-- **Audit** (event log cross-cutting, move ra khỏi `account`) — `internal/platform/audit/` ○. [D-25]
+- **Audit** (event log cross-cutting, move ra khỏi `account`) — `internal/platform/audit/` ○ *(table đã ship như migration `0005_platform_audit`; việc move package Go `account/audit` → `platform/audit` vẫn còn pending)*. [D-25]
 - **Middleware** — rate limit ✓ (`ratelimit.go`), request ID, logging, recovery, **resolver tenant URL-prefix** [D-23].
 - **Reverse proxy** — Traefik v3 route qua label `docker-compose.yml`.
 
@@ -542,7 +544,8 @@ Nguồn: [backend/internal/platform/](../../backend/internal/platform/).
 
 ## 15. API Contract — `shared/openapi.yaml`
 
-- OpenAPI là source of truth — mỗi endpoint flow: edit spec → `make openapi` → implement interface generate. **Spec-first non-negotiable** [D-29]; CI drift check fail mọi PR handler-không-spec.
+- OpenAPI là source of truth — mỗi endpoint flow: edit spec → `make openapi` → implement interface generate. **Spec-first là không thương lượng** [D-29]; CI hiện tại chỉ validate spec well-formed — gate handler-drift đang planned [D-9].
+- **Drift đã biết (2026-07-06):** `openapi.yaml` thiếu `/auth/register` và vẫn liệt kê `/auth/callback` đã retired (ADR-06) — fix đang pending.
 - **URL versioning** `/api/v{N}/`; hiện tại `/api/v1/`. Thay đổi additive free trong major; breaking change cần major mới + sunset 6-tháng RFC 9745 [D-31].
 - **Layout file:** một `shared/openapi.yaml` cho tới ~2000 dòng; split per-module qua `$ref` sau đó [D-29].
 - **Schema cross-module** (phải land trong Phase 0): `Problem` (RFC 7807), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem` cho `/api/v1/continue` [D-29].
@@ -554,18 +557,19 @@ Nguồn: [backend/internal/platform/](../../backend/internal/platform/).
 ## 16. Frontend — `frontend/` (Next.js 15)
 
 - App Router + RSC. **RSC-first mặc định**; opt vào `'use client'` chỉ khi thật sự cần (event handler, hook, browser API) [D-33].
-- Route group: `(movies)`, `(music)`, `(stories)`, thêm `(social)` / `(comics)` sau.
+- Route group hiện tại: `(app)` / `(public)`, kèm middleware auth gate trên cookie `portal_session` cho `/`, `/upload`, `/library/*`. Domain group `(movies)` / `(music)` / `(stories)` / `(comics)` / `(social)` đang planned.
+- **Lớp presentation versioned** — template sống dưới `frontend/src/templates/v{N}/`, chọn qua `registry.ts` + `NEXT_PUBLIC_TEMPLATE_VERSION` (hiện tại: Olympus light-theme port). Widget feed / friends / notification là static placeholder trong v1.
 - **Chiến lược render theo surface** [D-33]: catalogue/detail = server component với island interactivity client; player/reader = chủ yếu client; account/bank = server shell + interactivity client; newsfeed = client primary với page đầu server-rendered.
 - **Ranh giới state** [D-32]:
-  - TanStack Query — mọi server state (không có Zustand store giữ data API-fetched).
+  - TanStack Query — mọi server state (không có Zustand store nào được giữ data API-fetched).
   - Zustand — preference UI persistent (theme, sidebar) và state UI ephemeral (modal, toast).
   - React Hook Form — form state.
   - URL query param — filter / pagination chia sẻ được (read bởi TanStack).
-- **Auth handoff cho RSC** [D-34]: `frontend/src/lib/api-server.ts` (`import "server-only"`) wrap `fetch`, đọc `cookies()`, inject `Cookie:` lên request đi ra. 401 từ API → `redirect()` sang `/auth/refresh-and-return?return_to=...` gọi `/auth/refresh` server-side rồi redirect lại.
+- **Auth handoff cho RSC** [D-34]: `SessionKeeper` thực hiện silent refresh phía client (interval + focus, multi-tab throttled); middleware Next.js gate route trên marker `portal_session` (thay thế route refresh-and-return — xem D-34.r1). API client server-only (`frontend/src/lib/api-server.ts`, `import "server-only"`, forwarding `cookies()`) vẫn là future work — hiện tại chỉ có `api-client.ts`.
 - **Mandate domain same-site** [D-34]: host Next.js + host Portal API PHẢI chia sẻ registrable domain (vd `portal.example.com` + `api.portal.example.com`) để SameSite=Strict hoạt động. Deployment single-domain dùng một Traefik host với routing theo path.
 - **Styling**: Tailwind v4.
 - **Player**: Vidstack cho HLS.
-- **API client**: generated từ OpenAPI; cookie forward tự động bởi wrapper server-only.
+- **API client**: type generated từ OpenAPI; cookie forwarding qua wrapper server-only đang planned (xem D-34 ở trên — `api-client.ts` hiện tại dựa vào cookie same-site).
 - **Convention doc** ở `frontend/CLAUDE.md` (tạo trong Phase 0) ghi rule boundary + ví dụ anti-pattern [D-32, D-33].
 
 ---
@@ -576,10 +580,10 @@ Nguồn: [backend/internal/platform/](../../backend/internal/platform/).
 - **sqlc** — block per-module trong `backend/sqlc.yaml`; output sống trong `repository/` của mỗi module. CI fail on drift [D-9].
 - **Hot-reload dev** — `make dev` (`air` cho Go, `pnpm dev` cho Next).
 - **Tests** — `go test ./... -race -count=1` + `pnpm test`. Single test: `cd backend && go test ./internal/modules/account/rbac -run TestMatches -v`. Coverage target per module trong [D-9].
-- **Lint** — `golangci-lint` (gồm depguard enforce module-boundary rule) + `pnpm lint`. Pre-commit hook tuỳ chọn qua `lefthook` [D-9].
-- **CI/CD** — GitHub Actions: `.github/workflows/{ci,release}.yml` với lint, test, sqlc/openapi-drift, migration-roundtrip, build, security [D-9].
-- **Observability** — opt-in `--profile observability` trong `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip [D-8].
-- **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; drill restore hàng quý. Target + procedure trong `docs/operations/backups.md` [D-10].
+- **Lint** — `golangci-lint` (gồm depguard enforce rule module-boundary) + `pnpm lint`. Pre-commit hook tuỳ chọn qua `lefthook` [D-9].
+- **CI/CD** — đã xong: `.github/workflows/ci.yml` — backend go build/vet/test `-race` + sqlc-drift; frontend `next build` (typecheck + lint); check well-formedness OpenAPI. Planned theo [D-9]: `release.yml`, migration-roundtrip, security, và job openapi handler-drift.
+- **Observability** — opt-in `--profile observability` trong `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip *(planned theo [D-8]; deferred cho v1 bởi ADR-01 — chưa có trong `docker-compose.yml`)*.
+- **Backups** — `pgbackrest` (Postgres), replication MinIO → R2, Dragonfly `BGSAVE`; drill restore hàng quý. Target + procedure trong `docs/operations/backups.md` [D-10].
 - **Secrets** — `.env` ở dev, Compose/K8s secret (hoặc SOPS optional) ở prod; policy rotation per class secret trong `docs/operations/secrets.md` [D-11].
 - **GitNexus** — index code-intelligence (xem section `<!-- gitnexus:start -->` trong `CLAUDE.md`); chạy impact analysis trước khi edit symbol.
 
@@ -589,7 +593,9 @@ Nguồn: [backend/internal/platform/](../../backend/internal/platform/).
 
 Mỗi phase có **deliverable** rõ ràng và **tiêu chí exit**. Phase tuần tự vì mỗi phase land một lớp phase tiếp theo phụ thuộc; sub-phase trong phase có thể parallelize.
 
-### Phase 0 — Wiring foundation (ngay lập tức)
+### Phase 0 — Wiring nền tảng (ngay lập tức)
+
+> **Trạng thái (2026-07-06): HOÀN THÀNH** — wiring đã land (xem [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md)): migration 0001–0007 đã apply (schema v7), đã chạy `make sqlc`, repository adapter cho account + media, `cmd/api/main.go` construct và mount cả hai module dưới `/api/v1`, healthz 200. Tree migration đã apply lệch nhẹ so với plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — xem update note của D-18). Các mục OIDC bên dưới đã retired theo [ADR-06](architecture/06-local-auth-model.md); việc move package audit, shape `Problem` RFC 7807, và schema cross-module eager vẫn còn open.
 
 *Mục tiêu: biến scaffold hiện có thành flow auth chạy end-to-end.*
 
@@ -600,17 +606,17 @@ Mỗi phase có **deliverable** rõ ràng và **tiêu chí exit**. Phase tuần 
 - **Thêm `users.locale` (BCP 47, default `'en-US'`) và `users.timezone` (IANA, default `'UTC'`)** như một phần của `0002_account_users`. [D-7]
 - **Move `audit/` từ account → `platform/audit/`** — audit là cross-cutting; account trở thành consumer. Đổi tên event `auth.refresh.reuse_detected` → `account.refresh.reuse_detected` cho hợp taxonomy `<module>.<resource>.<action>` mới. [D-25]
 - **Định nghĩa registry event-type taxonomy** trong `backend/MODULES.md` §5.3 để chống collision. [D-25]
-- **Surface claim `amr`, `acr`, `auth_time`** vào auth context (`account/auth/context.go`) để middleware step-up [D-27] và enforce MFA [D-28] plug in sau mà không rewrite auth middleware.
-- **Thêm table `user_oidc_roles`** vào `0003_account_rbac` để OIDC group → role sync [D-26] có chỗ ghi lúc callback đầu.
+- ~~**Surface claim `amr`, `acr`, `auth_time`** vào auth context (`account/auth/context.go`) để middleware step-up [D-27] và enforce MFA [D-28] plug in sau mà không rewrite auth middleware.~~ → retired bởi [ADR-06](architecture/06-local-auth-model.md) (không có claim IdP-issued; Portal sẽ phát `acr`/`amr` khi xây MFA — xem D-27.r1).
+- ~~**Thêm table `user_oidc_roles`** vào `0003_account_rbac` để OIDC group → role sync [D-26] có chỗ ghi lúc callback đầu.~~ → retired bởi [ADR-06](architecture/06-local-auth-model.md) (không IdP trong login path; table bị drop bởi migration `0006` — xem D-26.r1).
 - **Adopt shape RFC 7807 `Problem`** cho mọi 4xx/5xx trong `shared/openapi.yaml`; URI `type` stable trở thành key i18n. [D-7]
 - **Reserve prefix Asynq `notify:*`** trong `backend/MODULES.md` §5.2 để module tương lai không vô tình collide. [D-1]
-- **Mở rộng spec OpenAPI** — thêm tag comics + tenant. **Schema cross-module eager** phải land trước Phase 0 close [D-29]: `Problem` (RFC 7807 với extension Portal như `required_acr`/`enrollment_url`), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem`, component response 4xx/5xx tiêu chuẩn.
+- **Mở rộng spec OpenAPI** — thêm tag comics + tenant. **Schema cross-module eager** phải land trước khi Phase 0 close [D-29]: `Problem` (RFC 7807 với extension Portal như `required_acr`/`enrollment_url`), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem`, component response 4xx/5xx tiêu chuẩn.
 - **Lock URL versioning** — mỗi route sống dưới `/api/v1/`; document policy additive-only + thủ tục deprecation RFC 9745 trong `docs/api/versioning.md`. [D-31]
-- **API client frontend server-only** — `frontend/src/lib/api-server.ts` wrap `fetch` với forwarding `cookies()`; route `/auth/refresh-and-return` xử lý 401 RSC. [D-34]
+- ~~**API client frontend server-only** — `frontend/src/lib/api-server.ts` wrap `fetch` với forwarding `cookies()`; route `/auth/refresh-and-return` xử lý 401 RSC. [D-34]~~ → superseded (xem D-34.r1): ship thay thế bằng `SessionKeeper` silent refresh phía client + middleware Next.js gate trên `portal_session`; API client server-only (`api-server.ts`) vẫn là future work — hiện tại chỉ có `api-client.ts`.
 - **Doc convention frontend** — `frontend/CLAUDE.md` document boundary state Zustand/TanStack/RHF [D-32] và decision tree render RSC-first [D-33] với ví dụ anti-pattern worked.
 - **Land CI workflows** — `.github/workflows/ci.yml` với job lint + test + sqlc-drift + openapi-drift + migration-roundtrip + build + security. Drift detection từ ngày 1. [D-9]
 
-**Exit:** developer có thể `make up && make dev`, sign in qua Authentik, hit `/auth/me`, và `RequireAuth` + `RequirePermission` reject call unauthenticated. CI fail mọi PR cho generated code drift.
+**Exit:** developer có thể `make up && make dev`, sign in qua `POST /api/v1/auth/login` (mật khẩu local, [ADR-06](architecture/06-local-auth-model.md)), hit `/auth/me`, và `RequireAuth` + `RequirePermission` reject call unauthenticated. CI fail mọi PR cho generated code drift. *(Tiêu chí exit đã đạt — 2026-07-06.)*
 
 ### Phase 1 — Tenancy + RLS
 
@@ -625,6 +631,8 @@ Mỗi phase có **deliverable** rõ ràng và **tiêu chí exit**. Phase tuần 
 **Exit:** integration test chứng minh row của tenant A invisible với request bound tenant B, trong khi `cmd/sysjobs` thấy cả hai. Grafana show latency request per-route chia theo tenant.
 
 ### Phase 2 — Media pipeline end-to-end
+
+> **Update (2026-07-06):** tiêu chí exit đã đạt bởi lát cắt v1 (single-pipeline VOD HLS h264/aac → phát Vidstack). Vẫn còn open: multi-rung ladder, quota/backpressure, poster/sprite, emit `media:asset_ready` [D-13].
 
 - Pick **video** trước (đây là test fidelity cao nhất cho pipeline đầy đủ).
 - Endpoint upload → `platform/storage` → MinIO origin → enqueue Asynq `transcode`.
@@ -666,6 +674,8 @@ Mỗi phase có **deliverable** rõ ràng và **tiêu chí exit**. Phase tuần 
 - **Middleware step-up `RequireACR`** wire vào module `account`. Implementation đọc claim `acr` + `auth_time`; pattern annotation route nhạy cảm in place; frontend recognise Problem `auth.step_up_required` và chạy round trip re-auth. [D-27]
 - **Login gate MFA-enforcement** — ở callback OIDC, nếu user có permission `bank:*` nào và `amr` thiếu `mfa`, refuse session với Problem `auth.mfa_enrollment_required` (mang URL enrollment Authentik). [D-28]
 - **Authentik configured** với stage TOTP + WebAuthn và policy ACR elevate tới `mfa` on demand. Document trong `docs/operations/authentik.md`.
+
+> **Update (2026-07-05, ADR-06):** Authentik bị loại bỏ — prerequisite này trở thành TOTP enrolment tự xây trong Portal + `RequireACR` đối chiếu claim Portal-issued; `docs/operations/authentik.md` bị retired.
 
 - **5a — Core ledger** — `bank.currencies` (seed ISO 4217 + cryptos), `accounts` (với `type` ∈ `ASSET|LIABILITY|INCOME|EXPENSE|EQUITY`) [D-15], `categories` (auto-tạo account income/expense, phân cấp), `transactions`, `ledger_entries` với `CHECK SUM(amount)=0` per-tx-per-currency [D-15]. Cột money là `numeric(20,8)`; Go dùng `shopspring/decimal` wrap trong type value `Money` currency-safe [D-14]. Op huỷ diệt (`accounts.delete`, `transactions.delete`) gate bởi `RequireACR("acr:portal:recent_mfa")` [D-27].
 - **5b — Multi-currency** — `fx_rates` snapshot hàng ngày; reporting currency trên `users`. Arithmetic cross-currency tường minh qua entry FX conversion trên transaction.
@@ -817,9 +827,9 @@ Quyết định defer. Mỗi cái ảnh hưởng ít nhất một phase sắp t�
 
 ### 16.D — Auth / RBAC ✓ tất cả resolved
 
-26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — grant hai-trục hybrid; group Authentik → role global qua `OIDC_GROUP_ROLE_MAP`; grant tenant-scoped chỉ Portal; bootstrap qua `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`.
-27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; middleware `RequireACR` trả 403 + Problem `step_up_required`; opt-in tường minh per-route; window default 5 phút.
-28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — hoàn toàn Authentik-managed; Portal enforce "MFA bắt buộc cho user permission bank" lúc login qua claim `amr`; settings deep-link sang MFA dashboard Authentik.
+26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — grant hai-trục hybrid; group Authentik → role global qua `OIDC_GROUP_ROLE_MAP`; grant tenant-scoped chỉ Portal; bootstrap qua `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **bị thay thế bởi [ADR-06](architecture/06-local-auth-model.md) (2026-07-05)**: không IdP; role chỉ do Portal quản lý (xem D-26.r1).
+27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; middleware `RequireACR` trả 403 + Problem `step_up_required`; opt-in tường minh per-route; window default 5 phút. — cơ chế được cập nhật bởi ADR-06: claim `acr`/`amr` là Portal-issued, không round trip OIDC (xem D-27.r1).
+28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — hoàn toàn Authentik-managed; Portal enforce "MFA bắt buộc cho user permission bank" lúc login qua claim `amr`; settings deep-link sang MFA dashboard Authentik. — **bị thay thế bởi ADR-06**: TOTP tự xây trong Portal; logic enforcement không đổi (xem D-28.r1).
 
 ### 16.E — API / contract ✓ tất cả resolved
 
@@ -831,7 +841,7 @@ Quyết định defer. Mỗi cái ảnh hưởng ít nhất một phase sắp t�
 
 32. ~~**Ranh giới Zustand vs TanStack.**~~ → **Resolved [D-32]** — TanStack sở hữu server state (rule cứng: không data API trong Zustand); Zustand sở hữu UI state; React Hook Form sở hữu form state; URL param cho filter chia sẻ được. Document trong `frontend/CLAUDE.md`.
 33. ~~**SSR vs CSR cho catalogue.**~~ → **Resolved [D-33]** — RSC-first cho shell catalogue/detail; island client cho interactivity; player/reader chủ yếu client; default sang server component, opt vào `'use client'` chỉ khi cần.
-34. ~~**Auth handoff cho RSC.**~~ → **Resolved [D-34]** — API client server-only wrap `fetch` với forwarding `cookies()`; route refresh-and-return xử lý 401; Next.js + API phải chia sẻ registrable domain.
+34. ~~**Auth handoff cho RSC.**~~ → **Resolved [D-34]** — API client server-only wrap `fetch` với forwarding `cookies()`; route refresh-and-return xử lý 401; Next.js + API phải chia sẻ registrable domain. — cơ chế refresh bị thay thế: `SessionKeeper` silent refresh phía client + middleware gate `portal_session` (xem D-34.r1); cookie forwarding và mandate same-site không đổi.
 
 ### 16.G — Advanced social, creator economy, safety ✓ tất cả resolved
 
@@ -1018,7 +1028,7 @@ Doc mới: `docs/operations/backups.md`. Deliverable pre-prod-launch.
 | Secret | Cadence | Notes |
 |---|---|---|
 | `JWT_SIGNING_KEYS` | Hàng quý | Set key comma-separated hỗ trợ window overlap |
-| `OIDC_CLIENT_SECRET` | Theo policy Authentik (typical annual) | |
+| ~~`OIDC_CLIENT_SECRET`~~ | — | Bị retired bởi ADR-06 (không IdP) |
 | `WEB_PUSH_VAPID_*` | **Không bao giờ** | Rotation invalidate mọi subscription push |
 | `POSTGRES_PASSWORD` | Hàng quý + on personnel change | Coordinate với reload PgBouncer |
 | `S3_*` / `R2_*` | Hàng quý | Atomic swap; app re-đọc env lần request kế tiếp |
@@ -1176,6 +1186,8 @@ Chưa có data production — split một lần cost ít hơn sống với namin
 ```
 
 FK `assets.owner_id` sang `users.id` vẫn hợp lệ vì users (`0002`) land trước assets (`0005`). Table audit log move sang `platform/audit/` trong cùng pass (xem [D-25]). Land trong Phase 0.
+
+**Update (2026-07-06):** tree đã apply là `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](architecture/06-local-auth-model.md)) / `0007_media_assets` (schema v7). Migration tenant và RLS land cùng Phase 1.
 
 ### D-19 — Split Profile vs Account: identity trên `users`, profile rich trong `social.profiles` *(resolve §16.C-19)*
 
@@ -1344,6 +1356,8 @@ BOOTSTRAP_ADMIN_GROUPS=
 
 Land trong Phase 0 (table `user_oidc_roles`) và handler callback OIDC.
 
+**D-26.r1 (2026-07-05)** — bị thay thế bởi [ADR-06](architecture/06-local-auth-model.md): không có IdP trong login path; mọi role do Portal quản lý trong `user_roles`; `user_oidc_roles` (bị drop bởi migration `0006`), `OIDC_GROUP_ROLE_MAP` và `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` bị retired. Bootstrap admin giờ là admin/CLI provisioning.
+
 ### D-27 — Step-up auth: OIDC ACR-based; op nhạy cảm annotated tường minh *(resolve §16.D-27)*
 
 Op bank + account + tenant nhạy cảm cần guarantee fresh hơn "session này tồn tại năm giờ trước". Re-prompt qua `acr_values` OIDC là practice standard (GitHub, Google, AWS đều làm equivalent).
@@ -1393,6 +1407,8 @@ Frontend recognise `type`, redirect sang `/auth/login?step_up=mfa&return_to=...`
 
 Land chung với [D-28] như prerequisite Phase 5.
 
+**D-27.r1 (2026-07-05)** — cơ chế được cập nhật bởi [ADR-06](architecture/06-local-auth-model.md): `acr`/`amr`/`auth_time` là claim Portal-issued; re-auth step-up chạy đối chiếu login/MFA của chính Portal, không phải IdP. ACR levels và bảng gated-operation vẫn giữ nguyên.
+
 ### D-28 — 2FA: hoàn toàn Authentik-managed; Portal enforce MFA lúc login cho user permission bank *(resolve §16.D-28)*
 
 Authentik đã ship TOTP, WebAuthn, SMS, push, recovery code, và UX enrollment polished. Re-implement bất kỳ cái nào trong Portal duplicate work, thêm store secret 2FA thứ hai để compromise, và split mental model user.
@@ -1414,6 +1430,8 @@ Authentik đã ship TOTP, WebAuthn, SMS, push, recovery code, và UX enrollment 
   - Group: `portal-bank-users` (hoặc tag bất kỳ) — dùng bởi policy Authentik gate flow MFA-required ở phía IDP cũng, như defence in depth.
 
 Land chung với [D-27] như prerequisite Phase 5. Step-up sang single-factor session không thêm bảo mật, nên D-27 và D-28 vô dụng nếu không có nhau.
+
+**D-28.r1 (2026-07-05)** — bị thay thế bởi [ADR-06](architecture/06-local-auth-model.md): Portal tự xây và lưu TOTP (phase sau); enforcement MFA lúc login cho user `bank:*` vẫn giữ nguyên; stage/deep-link Authentik bị retired.
 
 ### D-29 — OpenAPI: spec-first không thương lượng; monolith cho tới ~2000 dòng; schema cross-module eager trong Phase 0 *(resolve §16.E-29)*
 
@@ -1514,6 +1532,8 @@ Ba sub-problem:
 - **CSRF.** Server action Next.js origin-check bởi framework. Combine với SameSite=Strict, surface threat đóng.
 
 Land trong Phase 0 (API client server-only + route refresh-and-return).
+
+**D-34.r1 (2026-07-06)** — chiến lược refresh bị thay thế: `SessionKeeper` làm silent refresh phía client (interval + focus, multi-tab throttled); middleware Next.js gate route trên cookie marker `portal_session`; không còn route refresh-and-return. Path của `portal_refresh` là `/api/v1/auth` (không phải `/auth`). Cookie forwarding qua `api-server.ts` và mandate domain same-site không đổi.
 
 ### D-35 — Feed "For You": pipeline ba-lớp hand-tuned; "Following" chronological là default; transparency DSA-aligned *(resolve §16.G-35)*
 
@@ -1748,7 +1768,7 @@ Land trong Phase 11.
 
 ## Cách đọc tài liệu này
 
-- Status legend (✓ / ○ / △) trên mỗi section phản ánh **thực tế code**, không aspiration.
+- Status legend (✅ / ✓ / ○ / △) trên mỗi section phản ánh **thực tế code**, không aspiration.
 - Roadmap là **tuần tự** — tiêu chí exit của mỗi phase guard phase tiếp theo.
 - Open question là **gate** — item marked nên được trả lời trước khi phase phụ thuộc mở; nếu không, phase ship trên giả định sẽ cần rework.
 - **Identifier stable vs section number** — ID open-question (`16.A-1`, `16.B-8`, …, `16.G-40`) và ID decision (`D-1` … `D-40`) là **string stable**, không tham chiếu section number hiện tại. Section top-level chứa chúng (§19 Open questions, §20 Decisions log) có thể renumber khi section mới được insert, nhưng ID không bao giờ thay đổi. Luôn cite theo ID, không theo section number.

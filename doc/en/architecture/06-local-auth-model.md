@@ -1,9 +1,16 @@
 # ADR-06: Local password auth — Portal owns credentials (drop Authentik from the login path)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-05
 **Deciders:** kirito
 **Supersedes:** the OIDC-login decision in [ADR-05](./05-phase0-wiring-order.md) (Milestone 0.4) and the "No local password auth. OIDC via Authentik" statement in [CLAUDE.md](../../../CLAUDE.md) (Account module).
+
+## Update (2026-07-06) — implemented
+
+- All endpoints live: `POST /auth/login {email, password, remember}` (Redis brute-force rate-limit + lockout), `POST /auth/register` (returns 201, no session — user returns to `/login`), plus the unchanged `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/me`. Argon2id at 64 MB / t=3 / p=2, PHC format.
+- Deltas from the spec below: a `remember` flag selects persistent (24h) vs session cookies; a third cookie `portal_session` (Path=/, marker read by the Next.js middleware gate) accompanies `portal_access`/`portal_refresh`; current `.env` sets `ACCESS_TOKEN_TTL=5m` and `REFRESH_TOKEN_TTL=24h` (not 30d).
+- OIDC code, the Authentik compose services, blueprints, and `OIDC_*` env are fully deleted.
+- Remaining drift: `shared/openapi.yaml` still lists the retired `/auth/callback` and lacks `/auth/register`.
 
 ## Context
 
@@ -57,7 +64,7 @@ Compare with the OIDC flow (retired): the browser detoured through `auth.portal.
 
 ### What changes
 
-| Layer | OIDC (current, retired) | Local auth (this ADR) |
+| Layer | OIDC (retired) | Local auth (this ADR) |
 | --- | --- | --- |
 | Credential store | Authentik | `users.password_hash` (Argon2id) in Portal Postgres |
 | Login screen | Authentik flow page (`auth.portal.localhost`) | Portal `/login` form (`portal.localhost`) |
@@ -124,11 +131,11 @@ The decisive trade is **UX/ownership vs. security-surface-you-maintain**. Authen
 
 ## Action items (implementation plan — separate from this doc change)
 
-1. [ ] Migration: add `users.password_hash TEXT` (+ `password_updated_at`); drop `user_oidc_roles` (or leave dormant). Make `oidc_subject` nullable.
-2. [ ] `platform/crypto` (or `account/auth/password.go`): Argon2id hash + verify helpers.
-3. [ ] Queries/adapters: `GetUserByEmail`, `CreateUserLocal`, `SetPassword`.
-4. [ ] Handler: replace `Login`/`Callback` with `POST /auth/login {email,password}` + `POST /auth/register`; keep `refresh`/`logout`/`logout-all`/`me`.
-5. [ ] Rate-limit + lockout middleware on `/auth/login`.
-6. [ ] Frontend: real `/login` form → `POST /auth/login`; revert `middleware` to gate guests to `/login`; remove the SSO/Google buttons (or repoint Google to a future local Google-OAuth).
-7. [ ] Remove OIDC: `auth/oidc.go`, callback, `OIDC_*` config, Authentik services + blueprint from compose, Traefik alias + `SSL_CERT_FILE` override.
-8. [ ] Docs: sync CLAUDE.md Account section, `doc/*/authoration.md`, `doc/*/feature.md §1`, and the vi mirror of this ADR.
+1. [x] Migration: add `users.password_hash TEXT` (+ `password_updated_at`); drop `user_oidc_roles` (or leave dormant). Make `oidc_subject` nullable.
+2. [x] `platform/crypto` (or `account/auth/password.go`): Argon2id hash + verify helpers.
+3. [x] Queries/adapters: `GetUserByEmail`, `CreateUserLocal`, `SetPassword`.
+4. [x] Handler: replace `Login`/`Callback` with `POST /auth/login {email,password}` + `POST /auth/register`; keep `refresh`/`logout`/`logout-all`/`me`.
+5. [x] Rate-limit + lockout middleware on `/auth/login`.
+6. [x] Frontend: real `/login` form → `POST /auth/login`; revert `middleware` to gate guests to `/login`; remove the SSO/Google buttons (or repoint Google to a future local Google-OAuth).
+7. [x] Remove OIDC: `auth/oidc.go`, callback, `OIDC_*` config, Authentik services + blueprint from compose, Traefik alias + `SSL_CERT_FILE` override.
+8. [ ] Docs: sync CLAUDE.md Account section, `doc/*/authoration.md`, `doc/*/feature.md §1`, and the vi mirror of this ADR. *(2026-07-06: partially done — CLAUDE.md and the vi mirror are synced; `shared/openapi.yaml` still lists the retired `/auth/callback` and is missing `/auth/register`.)*

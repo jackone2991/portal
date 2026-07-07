@@ -1,5 +1,7 @@
 # Portal — Architecture Review & ADRs
 
+> **Status (2026-07-06):** The v1 cut defined by this ADR set has shipped — the demo loop (local password sign-in → authenticated Next.js home → mp4 upload → worker HLS transcode → Vidstack playback → revocable logout) is closed and committed. ADR-06 replaced OIDC/Authentik login with Portal-owned password auth. `MILESTONE_CHECKS.md` at repo root is the living status tracker.
+
 Living evaluation of the Portal architecture against its stated constraints. Each ADR follows the standard *context → decision → options → trade-offs → consequences → action items* shape.
 
 ## How this set was produced
@@ -9,7 +11,7 @@ These ADRs were written as an **evaluation pass** over the existing design corpu
 - [`CLAUDE.md`](../../../CLAUDE.md) — the authoritative project README and per-module conventions.
 - [`backend/MODULES.md`](../../../backend/MODULES.md) — module-boundary contract.
 - `feature.md` — the full feature spec with 40 decisions logged (`D-1` … `D-40`) across 12 phases.
-- `diagrams.md` — Mermaid system landscape, module map, request flow, OIDC sequence, asset pipeline, roadmap.
+- `diagrams.md` — Mermaid system landscape, module map, request flow, OIDC sequence, asset pipeline, roadmap *(the OIDC login sequence was subsequently retired by ADR-06)*.
 - `archivetech.md` — a competing RBAC vision (policy-bundles + file-gated permissions) that conflicts with `feature.md` and `CLAUDE.md`.
 - `docker-compose.yml`, `Makefile`, `shared/openapi.yaml`, `traefik/*` — actual infra.
 
@@ -32,12 +34,12 @@ The existing design corpus assumes none of these explicitly. Most of the 40 deci
 | ADR | Status | Subject |
 | --- | --- | --- |
 | [00-architecture-review](./00-architecture-review.md) | Accepted | Executive review — what's load-bearing, what's at risk, where the design conflicts with itself |
-| [01-v1-scope-cut](./01-v1-scope-cut.md) | Proposed | Cut feature.md's 12 phases down to a v1 that fits 2 weeks / 1 dev / $100 / 1 VPS |
-| [02-rbac-model-reconciliation](./02-rbac-model-reconciliation.md) | Proposed | Reconcile archivetech.md's policy-bundle RBAC with feature.md/CLAUDE.md's role-hierarchy RBAC |
-| [03-single-vps-topology](./03-single-vps-topology.md) | Proposed | Compose service set, resource budget, and what to disable for v1 |
-| [04-storage-tier-budget](./04-storage-tier-budget.md) | Proposed | MinIO origin + R2 edge vs R2-only vs MinIO-only under the budget ceiling |
-| [05-phase0-wiring-order](./05-phase0-wiring-order.md) | Proposed | Critical-path order for closing the existing wiring gap in `cmd/api/main.go` |
-| [06-local-auth-model](./06-local-auth-model.md) | Proposed | Switch login from OIDC/Authentik to Portal-owned local password auth (supersedes ADR-05's OIDC login) |
+| [01-v1-scope-cut](./01-v1-scope-cut.md) | Accepted | Cut feature.md's 12 phases down to a v1 that fits 2 weeks / 1 dev / $100 / 1 VPS |
+| [02-rbac-model-reconciliation](./02-rbac-model-reconciliation.md) | Accepted | Reconcile archivetech.md's policy-bundle RBAC with feature.md/CLAUDE.md's role-hierarchy RBAC |
+| [03-single-vps-topology](./03-single-vps-topology.md) | Accepted | Compose service set, resource budget, and what to disable for v1 |
+| [04-storage-tier-budget](./04-storage-tier-budget.md) | Accepted | MinIO origin + R2 edge vs R2-only vs MinIO-only under the budget ceiling (2026-06-06 update: R2-only = deployed envs; dev uses MinIO) |
+| [05-phase0-wiring-order](./05-phase0-wiring-order.md) | Accepted | Critical-path order for closing the Phase 0 wiring gap in `cmd/api/main.go` (executed; gap closed) |
+| [06-local-auth-model](./06-local-auth-model.md) | Accepted | Switch login from OIDC/Authentik to Portal-owned local password auth (supersedes ADR-05's OIDC login; executed 2026-07-05, Authentik removed) |
 
 ## Diagrams
 

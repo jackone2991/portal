@@ -10,12 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project scope & constraints (read before planning work)
 
-Everything below describes the **full, multi-year platform** — it is NOT the current scope. A recent evaluation pass ([doc/en/architecture/](doc/en/architecture/), ADRs 00–05) cut v1 down to a hard envelope: **1 developer · 2 weeks · ≤ $100/mo · single VPS.** Default to the v1 cut unless the user says otherwise — do not reach for the bank/social/marketplace modules.
+Everything below describes the **full, multi-year platform** — it is NOT the current scope. A recent evaluation pass ([doc/en/architecture/](doc/en/architecture/), ADRs 00–06) cut v1 down to a hard envelope: **1 developer · 2 weeks · ≤ $100/mo · single VPS.** Default to the v1 cut unless the user says otherwise — do not reach for the bank/social/marketplace modules.
 
-- **v1 = Phase 0 wiring + one video-upload happy path, nothing else** ([01-v1-scope-cut.md](doc/en/architecture/01-v1-scope-cut.md)). The whole demo loop: OIDC sign-in → authenticated Next.js home → upload mp4 → R2 → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout. No tenants, no domain CRUD, no bank, no social, no observability stack, no mediamtx/LiveKit.
-- **The critical path is the wiring gap, in strict order** ([05-phase0-wiring-order.md](doc/en/architecture/05-phase0-wiring-order.md)): migration-tree audit → `make sqlc` → repository adapters → construct `account.New(...)` in `cmd/api/main.go` → OIDC end-to-end → frontend RSC auth handoff. Migrations must be split/audited **before** sqlc freezes the schema — that ordering is non-negotiable.
+- **v1 = Phase 0 wiring + one video-upload happy path — and it's done.** ([01-v1-scope-cut.md](doc/en/architecture/01-v1-scope-cut.md) scoped it; `MILESTONE_CHECKS.md` at repo root tracks it live.) The demo loop is closed and committed: local password sign-in → authenticated Next.js home → upload mp4 → MinIO (dev) / R2 (prod) → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout. No tenants, no domain CRUD, no bank, no social, no observability stack, no mediamtx/LiveKit.
+- **Phase 0 wiring is closed, not a pending blocker** ([05-phase0-wiring-order.md](doc/en/architecture/05-phase0-wiring-order.md) has the original plan/sequencing — useful for the *shape* of the work but stale on status): migrations audited/split, `make sqlc` run, repository adapters written, `account.New(...)` + `media.New(...)` constructed and mounted in `cmd/api/main.go`, local auth end-to-end, frontend auth gate wired. See "Current status" below for what's actually left.
 - **Deferred outright for v1:** bank, social (+ advanced social), creator economy, marketplace, ML safety, LiveKit/mediamtx, the 5-service observability stack. Compose profiles `--profile observability`, `--profile live`, and `--calls` stay disabled.
-- **Storage for v1 is R2-only** ([04-storage-tier-budget.md](doc/en/architecture/04-storage-tier-budget.md)); the MinIO-origin + R2-edge two-tier design in the next section is the long-horizon target.
+- **Storage:** dev runs MinIO bind-mounted to `./data/minio`; prod uses R2. Same `platform/storage` S3-compatible client code either way ([ADR-04](doc/en/architecture/04-storage-tier-budget.md) — the title says "R2-only" but its 2026-06-06 update note keeps MinIO for local dev, since presigned-URL uploads need an S3-speaking origin).
 
 The decision log lives in [doc/](doc/): `feature.md` (40 numbered decisions `D-1`…`D-40` across 12 phases — cite these IDs when restating a settled decision), `diagrams.md` (Mermaid system/module/flow diagrams), `archivetech.md` (a competing RBAC vision — see the schism note in the Account section), plus `authoration.md` / `frontend.md`. Every doc exists in both `doc/en/` and `doc/vi/`; keep the pair in sync when you edit one.
 
@@ -27,8 +27,8 @@ Self-hosted media + ecosystem monorepo (movies / music / stories / comics). Reso
 - **Reverse proxy: Traefik v3** — static config in [traefik/traefik.yml](traefik/traefik.yml), middleware in [traefik/dynamic.yml](traefik/dynamic.yml), routes via `docker-compose.yml` labels.
 - **Job queue: Asynq** (not BullMQ — BullMQ is Node-only). Three priority queues: `transcode` (5), `thumbnail` (3), `default` (1).
 - **API contract: OpenAPI** at [shared/openapi.yaml](shared/openapi.yaml) is the source of truth. Go server stubs (`oapi-codegen`) and TS client types (`openapi-typescript`) are both generated from it. Hand-editing generated files is forbidden.
-- **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Route groups planned: `(movies)`, `(music)`, `(stories)`.
-- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (origin) + **Cloudflare R2** (CDN edge). *(v1 ships R2-only — see the scope section / [ADR-04](doc/en/architecture/04-storage-tier-budget.md).)*
+- **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Two route groups — `(app)` (authenticated shell: home, `/upload`, `/library/*`) and `(public)` (`/login`, `/register`) — that are version-agnostic: actual page/component code lives in a version-switched `frontend/src/templates/v{N}/` tree (ported from the `template-main/portal` Blade reference), selected via `NEXT_PUBLIC_TEMPLATE_VERSION` through `templates/registry.ts`. Read [frontend/src/templates/README.md](frontend/src/templates/README.md) before adding a page or cutting a `v2`.
+- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (dev origin, bind-mounted) + **Cloudflare R2** (prod). *(Same S3-compatible client either way — see the scope section / [ADR-04](doc/en/architecture/04-storage-tier-budget.md).)*
 
 ## Backend module boundaries (read before editing across modules)
 
@@ -41,7 +41,7 @@ Layout:
 ```
 backend/internal/
 ├── modules/             ← one bounded context per subdir
-│   ├── account/         users, OIDC/JWT auth, RBAC, sessions, audit
+│   ├── account/         users, local password/JWT auth, RBAC, sessions, audit
 │   ├── tenant/          organizations, memberships, RLS bootstrap
 │   ├── media/           assets + transcode/thumbnail workers (shared infra)
 │   ├── movie/ music/ story/ comic/   ← depend on media for assets
@@ -101,11 +101,17 @@ Never check permissions ad-hoc. Always go through `rbac.Engine.Authorize` / `rba
 ### Audit log is best-effort, never blocking
 [backend/internal/modules/account/audit/logger.go](backend/internal/modules/account/audit/logger.go) logs and swallows errors — a DB hiccup must not abort the user request. If audit reliability becomes load-bearing, route through Asynq with a dedicated queue. Don't make handlers depend on the return value.
 
-## What's NOT wired up yet
+## Current status
 
-- **`cmd/api/main.go`** still has a `TODO: mount OpenAPI-generated handlers` comment and does not yet call `account.New(...)` or any module's `MountHTTP`. The account module assembles its handler internally inside [backend/internal/modules/account/module.go](backend/internal/modules/account/module.go); the API binary just hasn't been taught to construct it. Wiring is deferred until repository adapters land.
-- **`internal/modules/*/repository/`** directories exist but are empty. The interfaces consumed by the account module (`AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`) need adapters around the sqlc-generated code once `make sqlc` runs.
-- **No unit/integration test runner beyond** [backend/internal/modules/account/rbac/permission_test.go](backend/internal/modules/account/rbac/permission_test.go).
+The v1 demo loop is **closed and committed**. `account` and `media` are the only modules actually wired end-to-end; `tenant`/`movie`/`music`/`story`/`comic` are scaffolded (`module.go` + `api/` + `README.md`) but inert — empty `repository/`, never constructed in `cmd/api/main.go`.
+
+- **`cmd/api/main.go`** constructs `account.New(...)` and `media.New(...)` and mounts both via `MountHTTP` under `/api/v1`. New domain modules attach the same way (see `backend/MODULES.md` §8).
+- **Repository adapters exist** for `account` and `media` (`internal/modules/{account,media}/repository/`, sqlc-generated + hand-written adapter). Other modules' `repository/` dirs are still empty — that's the concrete signal a module hasn't been wired yet, not its `README.md`.
+- **Tests:** `account/rbac/permission_test.go`, `account/auth/password_test.go`, `media/service_test.go` (in-memory fakes), `platform/storage/s3_test.go` (integration, gated on `S3_ENDPOINT`). `go test ./...` is green.
+
+**`MILESTONE_CHECKS.md` (repo root) is the living status tracker — trust it over a doc's "open work"/"planned" section when they disagree.** ADRs and per-module `README.md` files describe the plan as of when they were written (e.g. `account/README.md` and `media/README.md` "Open work" sections predate the wiring landing; `media/README.md` still says the FFmpeg pipeline "logs and returns nil", which is no longer true). MILESTONE_CHECKS.md is updated as work actually lands.
+
+**Known drift:** `shared/openapi.yaml` doesn't fully match the mounted routes — it's missing `/auth/register` and still lists the retired `/auth/callback` (OIDC). CI's `openapi` job only checks the spec parses, not that it matches handlers (wiring `make openapi` output into real drift-checking is on `MILESTONE_CHECKS.md`'s remaining list). Don't assume the spec is authoritative for the account module's current surface.
 
 ## Common commands
 
@@ -120,8 +126,10 @@ All from repo root via the [Makefile](Makefile):
 | `make sqlc` | Generate per-module `repository/*.sql.go` from `internal/modules/*/query/*.sql` (multi-block `sqlc.yaml`) |
 | `make openapi` | Regen Go server stubs (`oapi-codegen`) + TS client types (`openapi-typescript`) from `shared/openapi.yaml` |
 | `make dev` | Run api + worker + frontend in parallel with hot reload (needs `air`, `pnpm`) |
-| `make test` / `make test-backend` / `make test-frontend` | Test suites (`go test ./... -race -count=1` for backend) |
+| `make test` / `make test-backend` / `make test-frontend` | Test suites (`go test ./... -race -count=1` for backend, `vitest run` for frontend) |
 | `make lint` | `golangci-lint run` + `pnpm lint` |
+| `make certs` | Issue locally-trusted TLS certs for `*.portal.localhost` via `mkcert` (local HTTPS dev) |
+| `make build` | Build production images for `api`, `worker`, `frontend` |
 
 Single Go test: `cd backend && go test ./internal/modules/account/rbac -run TestMatches -v`
 
@@ -138,7 +146,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **portal** (17488 symbols, 30266 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **portal** (16900 symbols, 28327 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

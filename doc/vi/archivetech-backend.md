@@ -1,5 +1,7 @@
 # ArchiveTech — Kiến trúc Backend cho Multi-Tenancy
 
+> **Trạng thái (2026-07-06): đặc tả thiết kế hướng tương lai — chưa có gì trong này được xây dựng.** v1 ra mắt không có tenancy ([01-v1-scope-cut](architecture/01-v1-scope-cut.md)); module tenant chỉ là scaffold và chưa được construct trong `cmd/api/main.go`. Theo [ADR-02](architecture/02-rbac-model-reconciliation.md), mô hình user-group/policy mà tài liệu này xây dựng trên đó sẽ layer lên trên RBAC role-hierarchy đã ship, ở một phase sau. Ở đâu code layout tại đây xung đột với [backend/MODULES.md](../../backend/MODULES.md) (cấu trúc modules + platform, sqlc `repository/` per-module), MODULES.md thắng. Tham chiếu OIDC đã bị retire theo [ADR-06](architecture/06-local-auth-model.md) (local password auth). Số migration trích dẫn bên dưới (0003/0004/0009) đã stale — 0001–0007 đã được apply; migration tenant lấy số `000N_tenant_…` tự do kế tiếp.
+
 > Pattern engineering để chạy backend Go của Portal trong môi trường multi-tenant. **Mô hình bảo mật** ở [authoration.md](authoration.md); tài liệu này về **kiến trúc code** implement nó an toàn xuyên HTTP request, background job, storage, cache, và observability.
 >
 > Đọc sau [authoration.md](authoration.md) §3 (lớp tenant). Tài liệu này giả định bạn đã nội-hoá: PostgreSQL RLS là sàn enforce, `app.current_tenant` là DB session variable per-request, organization là ranh giới cô lập dữ liệu.
@@ -196,6 +198,8 @@ func (r *Repo) WithTx(tx pgx.Tx) *Repo {
 }
 ```
 
+> **Đã build trong thực tế:** querier được generate per module (`internal/modules/<name>/repository/`, multi-block `sqlc.yaml`; adapter đã ship cho account + media) và module không bao giờ share chung một struct `Repo` — pattern `WithTx` áp dụng bên trong repository của từng module thay vì vậy.
+
 Handler **không** gọi `WithTx` trực tiếp — tenant middleware đã đặt tx trong context. Service kéo ra:
 
 ```go
@@ -225,7 +229,7 @@ Shape này giữ contract của service sạch trong khi đảm bảo mọi DB c
 
 ### 4.3 Role system cho work cross-tenant
 
-Một `pgxpool.Pool` **riêng** connect như `portal_system` (với `BYPASSRLS`). Chỉ wire vào `cmd/sysjobs/` — binary API và worker không import nó. Enforce bằng layout package:
+Một `pgxpool.Pool` **riêng** connect như `portal_system` (với `BYPASSRLS`). Nó chỉ được wire vào `cmd/sysjobs/` — binary API và worker không import nó (kế hoạch — `cmd/sysjobs` chưa được build; xem milestone M1). Enforce bằng layout package:
 
 ```
 backend/
@@ -235,7 +239,7 @@ backend/
                           (pool BYPASSRLS — nơi duy nhất reference nó)
 ```
 
-Thêm check kiểu `go vet` (hoặc `golangci-lint forbidigo`) cấm import `internal/sysrepository` từ bất kỳ package nào ngoài `cmd/sysjobs/`.
+Thêm check kiểu `go vet` (hoặc `golangci-lint forbidigo`) cấm import `internal/sysrepository` từ bất kỳ package nào ngoài `cmd/sysjobs/` — đây đã là convention `depguard` tài liệu hoá trong CLAUDE.md.
 
 ---
 
@@ -289,7 +293,7 @@ Repository đảm bảo lookup theo ID là RLS-scoped; service dịch `ErrNoRows
 Mỗi task payload mang organization ID. Không ngoại lệ.
 
 ```go
-// internal/worker/transcode.go (cập nhật cho multi-tenant)
+// internal/modules/media/… (shape multi-tenant tương lai — payload đã ship không có OrganizationID)
 type TranscodePayload struct {
     OrganizationID uuid.UUID `json:"organization_id"`  // YÊU CẦU
     AssetID        uuid.UUID `json:"asset_id"`
@@ -444,7 +448,7 @@ Archive audit log là bucket riêng (`portal-audit-archive`) với **policy buck
 
 Luôn luôn, không ngoại lệ. Ví dụ:
 
-- `rbac:perms:<org_id>:<user_id>:v<token_version>`
+- `rbac:perms:<org_id>:<user_id>:v<token_version>` *(tiến hoá multi-tenant đề xuất; key single-tenant đã ship là `rbac:perms:<user_id>:v<token_version>`)*
 - `policy:detail:<org_id>:<policy_id>`
 - `movie:list:<org_id>:page<n>`
 - `session:<user_id>` ← global (identity user, không phải tenant)
@@ -472,7 +476,7 @@ forbidigo:
 
 ### 8.3 Cache cross-tenant
 
-Cache global hợp pháp duy nhất là identity (refresh token theo hash, metadata OIDC provider, profile user theo id). Key này tường minh bỏ `<org_id>` và đi qua checklist code-review: "Cái này thật sự độc lập tenant?"
+Cache global hợp pháp duy nhất là identity (refresh token theo hash, profile user theo id). Các key này tường minh bỏ `<org_id>` và trải qua checklist code-review: "Cái này có thật sự độc lập tenant không?"
 
 ---
 
@@ -483,7 +487,7 @@ Cache global hợp pháp duy nhất là identity (refresh token theo hash, metad
 Cột `tsvector` tenant-scoped + RLS = cô lập miễn phí. Không cần config thêm.
 
 ```sql
--- trong 0004_user_groups.up.sql hoặc nơi movies sống
+-- trong migration movie-module tương lai (số `000N_movie_…` tự do kế tiếp)
 ALTER TABLE movies
     ADD COLUMN search_tsv tsvector
     GENERATED ALWAYS AS (
@@ -708,6 +712,8 @@ Cái này bắt bug tệ nhất: một endpoint mount không có `RequireTenant`
 
 ## 14. Tổ chức code
 
+> **Bị supersede bởi [backend/MODULES.md](../../backend/MODULES.md)** — layout đã ship là `internal/modules/<name>/` + `internal/platform/`. Đọc tree này như một bản đồ trách nhiệm (`tenant/` → `internal/modules/tenant/`, `storage`/`cache`/`jobs` → `internal/platform/`, service+repository per-domain → từng module). Ở đâu xung đột, MODULES.md thắng.
+
 ```text
 backend/
 ├── cmd/
@@ -716,7 +722,7 @@ backend/
 │   └── sysjobs/main.go      ← pool BYPASSRLS — batch cross-tenant
 │
 ├── internal/
-│   ├── auth/                ← identity (JWT, OIDC, refresh, TOTP)
+│   ├── auth/                ← identity (JWT, local password auth, refresh; TOTP sau)
 │   ├── tenant/              ← tenant.Context, MustEqual, helpers
 │   ├── rbac/                ← engine, permission, role, cache
 │   ├── middleware/          ← RequireAuth, RequireTenant, RequireStepUp,
@@ -743,6 +749,8 @@ backend/
 │   └── queries/
 └── go.mod
 ```
+
+OIDC đã bị retire theo [ADR-06](architecture/06-local-auth-model.md); code identity sống trong `internal/modules/account/`.
 
 ### Quy tắc allowed-import
 
@@ -775,20 +783,20 @@ Dùng linter `depguard` của `golangci-lint` để enforce.
 
 ## 16. Milestone implementation
 
-Cái này build trên các phase trong [archivetech.md §7](archivetech.md):
+Các milestone này build trên các phase trong [archivetech.md §7](archivetech.md) — theo [ADR-02](architecture/02-rbac-model-reconciliation.md), các phase đó layer lên trên RBAC role-hierarchy đã ship ở một phase hậu-v1; không có M0–M5 nào nằm trong envelope v1:
 
-### M0 — Tenant primitive  *(block Phase 1)*
+### M0 — Tenant primitives  *(block Phase 1)*
 
-- Migration 0003 (organizations + memberships).
+- Migration `000N_tenant_organizations` số tự do kế tiếp (0008+ tính đến 2026-07-06) — organizations + memberships.
 - Package `internal/tenant/`: Context, helpers.
 - `internal/middleware/tenant.go`: `RequireTenant` với `BeginTenantScope`.
 - `internal/repository/db.go`: wrapper tx tenant-scoped.
-- Update `cmd/api/main.go` mount `RequireTenant` sau `RequireAuth`.
+- Thêm `RequireTenant` sau `RequireAuth` đã có, trong router `cmd/api/main.go` đã được wire sẵn.
 - Một test end-to-end: GET `/auth/me` trả về org của user; `POST /auth/switch-tenant` mint token mới; request kế tiếp land trong context tenant mới.
 
 ### M1 — Roll-out RLS
 
-- Migration 0009 (enable RLS trên mọi table tenant-scoped).
+- Một migration `000N_tenant_rls` tiếp theo (số gán lúc implement) — enable RLS trên mọi table tenant-scoped.
 - Skeleton `cmd/sysjobs/` với pool `BYPASSRLS`.
 - `internal/sysrepository/` (Querier chỉ system).
 - Fixture test RLS + family `TestRLS_*_Isolation` xuyên mọi table domain.

@@ -1,8 +1,15 @@
 # ADR-01: v1 scope cut — what fits in 2 weeks / 1 dev / $100/mo / 1 VPS
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-24
 **Deciders:** kirito
+
+> **Update (2026-07-06):** v1 shipped — the demo loop below is closed and committed; `MILESTONE_CHECKS.md` at repo root is the living status tracker. As-built deltas:
+> - Step 1 is superseded by [ADR-06](./06-local-auth-model.md): sign-in is Portal-owned local password auth (`POST /api/v1/auth/login`); Authentik/OIDC is removed from code and compose. The OIDC-specific deliverable rows below (`user_oidc_roles` group sync, `amr`/`acr`/`auth_time` claims) are retired with it.
+> - Step 4: dev persists to MinIO; R2 applies to deployed environments only — see ADR-04's Update (2026-06-06).
+> - The [D-34] refresh-and-return route was replaced by the `portal_session` middleware gate + `SessionKeeper` client-side silent refresh.
+> - CI landed in Phase 6 with `sqlc-drift`; an openapi handler-drift check is still open — `shared/openapi.yaml` currently drifts (missing `/auth/register`, stale `/auth/callback`).
+> - As-built routes mount under plain `/api/v1` with no `/t/{tenant}` prefix; the tenant URL contract stays deferred to Phase 1.
 
 ## Context
 
@@ -122,8 +129,8 @@ For Phase 2 the v1 cut is: one queue priority, libx264 only, no hardware encoder
 
 ## Action items
 
-1. [ ] Pin this ADR (`Accepted`) before writing any code for the 2-week sprint.
-2. [ ] Open a tracking issue/todo with the 7-step demo as the literal acceptance criterion.
+1. [x] Pin this ADR (`Accepted`) before writing any code for the 2-week sprint. *(done 2026-07-06 — status flipped; v1 was built under this cut)*
+2. [ ] Open a tracking issue/todo with the 7-step demo as the literal acceptance criterion. → acceptance tracked in `MILESTONE_CHECKS.md`
 3. [ ] Add a `v1-out-of-scope` label/section in the issue tracker for everything in §3 of the executive review — keeps the deferred work visible without inviting scope creep.
 4. [ ] Add `# v1 scope: see doc/en/architecture/01-v1-scope-cut.md` as a comment at the top of `cmd/api/main.go` so future-you doesn't reach for a non-v1 module.
 5. [ ] At sprint end, write a one-page "what we cut, what we shipped, what we learned" retrospective; promote any cut-but-needed items into the Phase 0.5 backlog.

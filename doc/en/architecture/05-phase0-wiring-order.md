@@ -1,9 +1,17 @@
 # ADR-05: Phase 0 wiring order — the critical path to a running demo
 
-**Status:** Proposed
+**Status:** Accepted (executed; Milestone 0.4 superseded by [ADR-06](./06-local-auth-model.md); Milestone 0.5 partially superseded — see Update note)
 **Date:** 2026-05-24
 **Deciders:** kirito
 **Affects:** [cmd/api/main.go](../../../backend/cmd/api/main.go), [cmd/worker/main.go](../../../backend/cmd/worker/main.go), [backend/internal/modules/account/module.go](../../../backend/internal/modules/account/module.go), [backend/sqlc.yaml](../../../backend/sqlc.yaml), [backend/db/migrations/](../../../backend/db/migrations/)
+
+## Update (2026-07-06) — executed; kept as historical record
+
+- All milestones 0.1–0.6 are complete; the v1 demo loop (login → upload → transcode → HLS playback → revocable logout) is closed and committed. Live status: [MILESTONE_CHECKS.md](../../../MILESTONE_CHECKS.md).
+- Milestone 0.4 (OIDC/Authentik) was delivered instead as **local password auth** per [ADR-06](./06-local-auth-model.md); Authentik is removed from code and compose.
+- Milestone 0.5's refresh-and-return route was replaced by the `SessionKeeper` client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates on the `portal_session` cookie.
+- Migrations landed as `0001_platform_init` … `0007_media_assets` (v7 applied) — media tables shipped in `0007`, extending the 5-file plan in Milestone 0.1.
+- CI landed fuller than planned (backend go build/vet/test `-race` + sqlc-drift; frontend `next build`), but the openapi job only validates that the spec is well-formed — no openapi-drift check yet.
 
 ## Context
 
@@ -46,7 +54,7 @@ Each `up.sql` has a matching `down.sql`. The `assets` table (was in old `0001`) 
    - `RefreshStore` — wraps `InsertRefreshToken`, `GetRefreshToken`, `RevokeRefreshTokenChain` (recursive CTE for theft detection).
    - `PermissionFetcher` — wraps `GetEffectivePermissions` (recursive role-ancestor walk).
    - `EventStore` — wraps `InsertAuditEvent`. Now in `platform/audit/`, not `account/audit/` (per Milestone 0.1 / [D-25]).
-   - `UserUpserter` — wraps `UpsertOidcUser`, `SyncOidcRoles`.
+   - `UserUpserter` — wraps `UpsertOidcUser`, `SyncOidcRoles`. *(Update 2026-07-06: OIDC upsert retired per [ADR-06](./06-local-auth-model.md); replaced by local-auth queries. Adapters landed for account and media.)*
 
 Adapters are 1:1 with sqlc-generated functions; no business logic. They live in `backend/internal/modules/account/repository/adapter.go` (one file, alphabetical).
 
@@ -100,11 +108,15 @@ func main() {
 }
 ```
 
+*(Historical sketch — as shipped, the OIDC `Deps` fields are gone per [ADR-06](./06-local-auth-model.md), and `media.New(...)` is also constructed and mounted under `/api/v1`.)*
+
 The same shape applies to `cmd/worker/main.go` with `accountMod.RegisterTasks(asynqMux)` — account has no Asynq tasks in v1, so the call is a no-op, but the wiring scaffold is in place.
 
 **Check:** `make up && go run ./cmd/api` (or `make dev`) starts. `curl http://localhost:8080/api/v1/healthz` returns 200 with `{"status":"ok","db":true,"cache":true}`.
 
 ### Milestone 0.4 — OIDC end-to-end (Day 4, ~6 hours)
+
+> **Superseded (2026-07-05) by [ADR-06](./06-local-auth-model.md)** — the auth milestone was delivered as local password auth; Authentik was removed from code and compose. Kept for history.
 
 With Authentik running in compose (per [ADR-03](./03-single-vps-topology.md)), the OIDC handshake from `diagrams.md` §5 must work:
 
@@ -118,6 +130,8 @@ With Authentik running in compose (per [ADR-03](./03-single-vps-topology.md)), t
 **Check:** above 6 steps work without manual SQL.
 
 ### Milestone 0.5 — Frontend server-only API client + RSC auth handoff (Day 5–6, ~10 hours)
+
+> **Superseded in part (2026-07-06)** — item 3 (refresh-and-return route) was replaced by the `SessionKeeper` client-side silent refresh; Next.js middleware gates on the `portal_session` cookie. Item 4's sign-in link became the real `/login` form ([ADR-06](./06-local-auth-model.md)).
 
 Per [D-34]:
 
@@ -150,6 +164,8 @@ The account module's `New(Deps)` constructor requires the adapters as inputs. St
 ### Option C — Skip Authentik in v1, hand-roll password auth  *(rejected)*
 
 Saves ~1 GB RAM and 1 day of Authentik config. Costs 3 days of password storage + reset flow + email templates + lockout logic + recovery codes. Net loss; auth surface is exactly where security regressions cost the most. Authentik in compose is the right call for v1 even though it's heavy.
+
+*(Update 2026-07-05: reversed — [ADR-06](./06-local-auth-model.md) adopts local password auth for UX/ownership reasons; the token/RBAC machinery was reused as-is.)*
 
 ### Option D — Defer the migration split; rename inside one mega-migration  *(rejected)*
 
@@ -184,8 +200,10 @@ Total budget for Phase 0: ~35 hours, ~Days 1–6 of the sprint. That leaves Days
 
 ## Action items
 
-1. [ ] Open 5 milestone issues in the tracker mirroring §1–§5 above; close each as its check passes.
-2. [ ] Day 0 (planning): write down the env vars list (`DATABASE_URL`, `REDIS_URL`, `S3_*`, `OIDC_*`, `JWT_SIGNING_KEYS`, `COOKIE_*`, `OIDC_GROUP_ROLE_MAP`, `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`) and populate `.env.example` so Day 1 doesn't stall on credentials.
-3. [ ] Day 1 morning: write down the milestone-check command for each milestone in a `MILESTONE_CHECKS.md` scratchpad; tick them off as you go. Resist the urge to push to the next milestone before the previous check passes.
-4. [ ] Day 4 (Authentik): block out a full afternoon. Authentik's first-time config is the highest-risk hour in the sprint.
-5. [ ] End of Milestone 0.5: run the full 7-step demo from [ADR-01](./01-v1-scope-cut.md) §Decision. If it works, you're on track for v1.
+1. [x] Open 5 milestone issues in the tracker mirroring §1–§5 above; close each as its check passes.
+2. [x] Day 0 (planning): write down the env vars list (`DATABASE_URL`, `REDIS_URL`, `S3_*`, `OIDC_*`, `JWT_SIGNING_KEYS`, `COOKIE_*`, `OIDC_GROUP_ROLE_MAP`, `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`) and populate `.env.example` so Day 1 doesn't stall on credentials.
+3. [x] Day 1 morning: write down the milestone-check command for each milestone in a `MILESTONE_CHECKS.md` scratchpad; tick them off as you go. Resist the urge to push to the next milestone before the previous check passes.
+4. [x] Day 4 (Authentik): block out a full afternoon. Authentik's first-time config is the highest-risk hour in the sprint.
+5. [x] End of Milestone 0.5: run the full 7-step demo from [ADR-01](./01-v1-scope-cut.md) §Decision. If it works, you're on track for v1.
+
+*(2026-07-06: all items complete — items 2 and 4's Authentik/OIDC parts were dropped per [ADR-06](./06-local-auth-model.md); live status lives in [MILESTONE_CHECKS.md](../../../MILESTONE_CHECKS.md).)*

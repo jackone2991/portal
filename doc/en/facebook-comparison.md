@@ -1,5 +1,7 @@
 # Portal vs. Facebook — Feature Comparison
 
+**Last verified:** 2026-07-06 — reflects the closed v1 demo loop (local password auth + upload→HLS→playback); see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) for the living status tracker.
+
 How Portal's social surface compares to Facebook, feature-area by feature-area.
 Companion to [missing-features.md](missing-features.md) (which compares against
 Portal's own spec); this one uses **Facebook as the yardstick** because the UI is
@@ -123,7 +125,7 @@ a port of the Facebook-like Olympus template.
 ---
 
 ## What to build to look most like Facebook, fastest
-The cheapest path to a "believable Facebook-lite" from today's shell:
+The cheapest path to a "believable Facebook-lite" from today's shell. Ordering here optimizes for Facebook-likeness; the canonical build order (which puts the Notifications module first because it unblocks password reset) is [missing-features.md — Suggested next order (P1)](missing-features.md#suggested-next-order-p1):
 
 1. **Posts + reactions + comments** — turns the flagship newsfeed real. *(P1)*
 2. **Friend graph** — requests/accept/suggestions wired to the existing dropdowns. *(P1)*

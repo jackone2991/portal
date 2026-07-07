@@ -1,5 +1,7 @@
 # Portal vs. Facebook — So sánh chức năng
 
+**Đã xác minh lần cuối:** 2026-07-06 — phản ánh vòng demo v1 đã khép lại (auth mật khẩu local + upload→transcode→phát HLS); xem [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) để theo dõi trạng thái cập nhật liên tục.
+
 Tầng social của Portal so với Facebook, theo từng nhóm tính năng. Đi kèm
 [missing-features.md](missing-features.md) (so với đặc tả của chính Portal); doc này
 lấy **Facebook làm thước đo** vì UI là bản port template Olympus (giống Facebook).
@@ -44,7 +46,7 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 
 ## 1. Tài khoản, đăng nhập & định danh
 - ◐ Đăng ký/đăng nhập email+password, remember-me, khoá brute-force, phiên qua JWT+refresh.
-- ○ **Thiếu so với FB:** đăng nhập bằng số điện thoại, **Login với Google/Apple**, **2FA**, khôi phục tài khoản, xác minh email/phone, quản lý thiết bị tin cậy, UI "đăng xuất mọi phiên", username, tick xanh.
+- ○ **Thiếu so với FB:** đăng nhập bằng số điện thoại, **Login với Google/Apple**, **xác thực hai yếu tố (2FA)**, khôi phục tài khoản, xác minh email/phone, quản lý thiết bị tin cậy, UI "đăng xuất mọi phiên", tên/username, tick xanh xác minh.
 
 ## 2. Profile & timeline
 - ○ Không có profile ngoài `display_name` + avatar chữ cái.
@@ -56,11 +58,11 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 
 ## 4. Reaction, bình luận & share
 - ○ Số like + comment/share tĩnh; không lưu tương tác.
-- ○ **Thiếu so với FB:** **6 reaction** (like/love/haha/wow/sad/angry), **bình luận phân cấp** + reaction cho comment, **share/quote-share** lên feed/group/tin nhắn, save/bookmark, mention trong comment.
+- ○ **Thiếu so với FB:** **6 reaction** (like/love/haha/wow/sad/angry), **bình luận phân cấp** + reaction cho comment, **share/quote-share** lên feed/group/tin nhắn của mình, save/bookmark, react trên bình luận, mention trong comment.
 
 ## 5. Stories & Reels
 - ○ Cả hai đều chưa có.
-- ○ **Thiếu so với FB:** **Stories** (ảnh/video 24h, người xem, trả lời, reaction, highlight), **Reels** (feed video dọc ngắn, audio, remix).
+- ○ **Thiếu so với FB:** **Stories** (ảnh/video tạm thời 24h, người xem, trả lời, reaction, highlight), **Reels** (feed video dọc ngắn, audio, remix).
 
 ## 6. Video / "Watch"  ← điểm mạnh của Portal
 - ✅ Upload trực tiếp → worker `ffmpeg` → **VOD HLS** → **phát Vidstack** ở `/upload`; metadata ffprobe.
@@ -68,10 +70,10 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 
 ## 7. Ảnh & album
 - ○ Chưa có pipeline ảnh (schema cho `image` nhưng chưa dùng).
-- ○ **Thiếu so với FB:** upload ảnh, **album/carousel**, tag ảnh, gợi ý tag, EXIF/ngày, lightbox, lịch sử ảnh bìa/đại diện.
+- ○ **Thiếu so với FB:** upload ảnh, **album/carousel**, tag ảnh, gợi ý tag kiểu nhận diện khuôn mặt, EXIF/ngày, lightbox, lịch sử ảnh bìa/đại diện.
 
 ## 8. Bạn bè & social graph
-- ◐ Dropdown **lời mời kết bạn** header, "Friend Suggestions", **nhóm bạn** panel phải (Close Friends/Family/Uncategorized) — tất cả **dữ liệu mẫu**; accept/decline chỉ đổi state cục bộ.
+- ◐ Dropdown **lời mời kết bạn** ở header, "Friend Suggestions", panel **nhóm bạn** bên phải (Close Friends/Family/Uncategorized) — tất cả **dữ liệu mẫu**; accept/decline chỉ đổi state cục bộ.
 - ○ **Thiếu so với FB:** bảng friendship + endpoint request/accept/decline/unfriend, **People You May Know** (bạn chung), **block**, danh sách bạn tùy chỉnh, xem bạn chung, phạm vi riêng tư "friends".
 
 ## 9. Follow (bất đối xứng)
@@ -84,7 +86,7 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 
 ## 11. Group / cộng đồng
 - ○ Mục menu "Friend Groups" chỉ để điều hướng; không có entity group.
-- ○ **Thiếu so với FB:** tạo/tham gia group, feed group, **vai trò (admin/mod)**, duyệt thành viên, nội quy, sự kiện group, ghim bài, thảo luận vs feed, quyền riêng tư (public/private/hidden).
+- ○ **Thiếu so với FB:** tạo/tham gia group, feed group, **vai trò (admin/moderator)**, duyệt thành viên, nội quy, sự kiện group, ghim bài, thảo luận vs feed, quyền riêng tư (public/private/hidden).
 
 ## 12. Pages
 - ○ "Pages You May Like" + "Fav Pages Feed" là mẫu.
@@ -96,33 +98,35 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 
 ## 14. Thông báo
 - ◐ Dropdown chuông + "Activity Feed" là danh sách hard-code; badge là hằng số.
-- ○ **Thiếu so với FB:** kho thông báo + `GET /me/notifications`, **giao realtime** (SSE/WS), **web push + email**, cài đặt từng loại, mark-read/all-read lưu lại, gộp/aggregate. *(Chặn bởi module Notifications — xem missing-features §5.)*
+- ○ **Thiếu so với FB:** kho thông báo + `GET /me/notifications`, **giao realtime** (SSE/WS), **web push + email**, cài đặt theo từng loại, mark-read/all-read lưu lại, gộp/aggregate. *(Bị chặn bởi module Notifications — xem missing-features §5.)*
 
 ## 15. Tìm kiếm
 - ◐ Ô header "Search here people or pages…" + "Find Friends" — không backend.
-- ○ **Thiếu so với FB:** **tìm kiếm tổng hợp** (người/bài/page/group/ảnh/video), typeahead, bộ lọc, tìm kiếm gần đây, kết quả xếp hạng.
+- ○ **Thiếu so với FB:** **tìm kiếm tổng hợp** (người/bài viết/page/group/ảnh/video), typeahead, bộ lọc, tìm kiếm gần đây, kết quả xếp hạng.
 
 ## 16. Marketplace / thương mại
-- ⛔ Đã hoãn ([ADR-01](architecture/01-v1-scope-cut.md), feature.md §11). FB có listing, danh mục, chat người bán, shop.
+- ⛔ Đã hoãn ([ADR-01](architecture/01-v1-scope-cut.md), feature.md §11). FB có listing, danh mục, chat với người bán, shop.
 
 ## 17. Riêng tư, cài đặt & quyền dữ liệu
-- ○ Không có ngoài cookie auth.
-- ○ **Thiếu so với FB:** **kiểm soát đối tượng/hiển thị** từng bài & từng trường profile, block, **activity log**, **tải dữ liệu (GDPR)**, xoá tài khoản, tùy chọn quảng cáo/thông báo, UI 2FA & phiên, "ai tìm được tôi".
+- ○ Không có gì ngoài cookie auth.
+- ○ **Thiếu so với FB:** **kiểm soát đối tượng/hiển thị** cho từng bài viết & từng trường profile, block, **activity log**, **tải dữ liệu của bạn (GDPR)**, xoá tài khoản, tùy chọn quảng cáo/thông báo, UI 2FA & quản lý phiên, "ai tìm được tôi".
 
 ## 18. Kiểm duyệt, an toàn & tin cậy
-- ○ Không có.
-- ○ **Thiếu so với FB:** **báo cáo nội dung/người dùng**, block, ẩn, tiêu chuẩn cộng đồng + thực thi, cảnh báo nội dung, phát hiện spam/abuse, luồng kháng nghị, dashboard kiểm duyệt. *(Đã có audit log ở phía auth.)*
+- ○ Chưa có gì.
+- ○ **Thiếu so với FB:** **báo cáo nội dung/người dùng**, block, ẩn, tiêu chuẩn cộng đồng + thực thi, cảnh báo nội dung, phát hiện spam/lạm dụng, luồng kháng nghị, dashboard kiểm duyệt cho admin. *(Audit log đã có ở phía auth.)*
 
 ## 19. Kiếm tiền
-- ⛔ Đã hoãn (feature.md §10). FB có quảng cáo, trả tiền creator, stars, subscription, fundraiser.
+- ⛔ Đã hoãn (feature.md §10). FB có quảng cáo, trả tiền cho creator, stars, subscription, fundraiser.
 
 ## 20. Nền tảng, độ phủ & hoàn thiện
-- ○ **Thiếu so với FB:** **app mobile** native (chỉ web; responsive một phần), **đa ngôn ngữ** (UI chỉ tiếng Anh; docs song ngữ), **dark mode** (chỉ light — Olympus có token dark nhưng không có toggle), offline/PWA, rà a11y, presence realtime, và các mảng rộng của FB (Dating, Gaming, Jobs, Fundraiser, Memories).
+- ○ **Thiếu so với FB:** **app mobile** native (chỉ web; responsive mới một phần), **đa ngôn ngữ** (UI chỉ tiếng Anh; docs song ngữ), **dark mode** (chỉ light theme — Olympus dark tồn tại dưới dạng token nhưng chưa có toggle), offline/PWA, rà soát khả năng tiếp cận (accessibility), presence realtime, và các mảng rộng hơn của FB (Dating, Gaming, Jobs, Fundraisers, Memories).
 
 ---
 
-## Nên làm gì để "giống Facebook" nhanh nhất
-Đường rẻ nhất để thành "Facebook-lite khả tín" từ vỏ hiện tại:
+## Nên xây gì để giống Facebook nhất, nhanh nhất
+Đường rẻ nhất để đi từ vỏ hiện tại đến một "Facebook-lite khả tín". Thứ tự ở đây tối
+ưu cho độ-giống-Facebook; thứ tự xây dựng chuẩn (đặt module Notifications lên đầu vì
+nó mở khoá việc đặt lại mật khẩu) nằm ở [missing-features.md — Thứ tự đề xuất tiếp theo (P1)](missing-features.md#suggested-next-order-p1):
 
 1. **Bài viết + reaction + bình luận** — biến newsfeed chủ lực thành thật. *(P1)*
 2. **Đồ thị bạn bè** — request/accept/suggestion nối vào dropdown sẵn có. *(P1)*
@@ -133,6 +137,6 @@ lấy **Facebook làm thước đo** vì UI là bản port template Olympus (gi�
 7. **Ảnh/album** + **Stories** (tái dùng media). *(P2/P3)*
 8. **Group & Pages & Events**. *(P3)*
 
-Tất cả ở trên **đã có sẵn trong UI** — việc cần làm là backend + nối dây, không phải
-màn hình mới. Marketplace, kiếm tiền, quảng cáo, app mobile, Dating/Gaming **ngoài
-scope đã tuyên bố của Portal** và không khuyến nghị cho v1.
+Tất cả ở trên **đã được thiết kế sẵn trong UI** — việc cần làm là backend + nối dây,
+không phải màn hình mới. Marketplace, kiếm tiền, quảng cáo, app mobile, và Dating/Gaming
+**nằm ngoài scope đã tuyên bố của Portal** và không khuyến nghị cho v1.

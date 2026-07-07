@@ -1,6 +1,8 @@
 # Chức năng còn thiếu — Phân tích khoảng trống / Backlog
 
-Những gì đã dựng so với đặc tả ([feature.md](feature.md)). Đây là **backlog sau khi
+**Đã xác minh lần cuối:** 2026-07-06 — snapshot chụp sau khi vòng demo v1 đã khép lại; xem [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) để theo dõi trạng thái cập nhật liên tục.
+
+Những gì đã dựng so với đặc tả ([feature.md](feature.md)) mô tả. Đây là **backlog sau khi
 khép vòng demo v1** (đăng nhập → upload → transcode → phát HLS → đăng xuất). Dùng để
 chọn việc tiếp theo.
 
@@ -23,12 +25,12 @@ chọn việc tiếp theo.
 
 ## 1. Account & Auth — module đã dựng, còn thiếu chức năng
 Lõi auth đã chắc; đây là các chức năng account xung quanh (nhiều cái đã có UI).
-- ○ **P1** Đặt lại mật khẩu (`forgot`/`reset` bằng token gửi email dùng-một-lần) — cần module notification. Hiện: chỉ admin/CLI.
+- ○ **P1** Đặt lại mật khẩu (`forgot` / `reset` bằng token gửi email dùng-một-lần) — cần module notification. Hiện: chỉ admin/CLI.
 - ○ **P1** Đổi mật khẩu (đã đăng nhập) — có mục menu "Profile Settings", chưa có endpoint.
 - ○ **P2** Trang phiên/thiết bị — `GET /me/sessions` + thu hồi phiên cụ thể (query `ListActiveRefreshTokensForUser` đã có; thiếu handler/UI).
 - ○ **P2** MFA / TOTP enrol + step-up (`/auth/totp/*`) — đã spec ([D-27]/[D-28]), chưa có code. Cần trước module bank.
 - ○ **P2** Xác minh email khi đăng ký.
-- ○ **P3** "Login with Google" (social login) — nay do Portal tự quản (ADR-06).
+- ○ **P3** "Login with Google" (social login) — nay do Portal tự quản (ADR-06), trước đây chỉ là one-liner gọi IdP.
 - ○ **P2** Profile: các trường hồ sơ thật của `users` (upload avatar, bio, sửa locale/timezone) + trang Profile. Hiện avatar chỉ là chữ cái đầu.
 - ○ **P2** Admin: UI + endpoint liệt kê/vô hiệu hoá user, gán role (`users:*`, `rbac:role:*` đã có quyền; thiếu handler/trang).
 
@@ -52,7 +54,7 @@ Mỗi mục ở đây đều **đã có màn hình với dữ liệu mẫu**; kh
 - ○ **P2** **Cộng đồng / Favourite Pages** — menu "Fav Pages Feed" + widget "Pages You May Like"; chưa có entity pages.
 - ○ **P2** **Sự kiện / sinh nhật / lịch** — menu "Calendar and Events" / "Friends Birthdays" + thẻ Birthday + widget lịch đang tĩnh.
 - ○ **P2** **Widget thời tiết** — tĩnh; nối API thời tiết (hoặc bỏ khỏi v1).
-- ○ **P3** Trang profile (about/photos/videos/friends), stories (24h), follow graph, hashtag/mention, bookmark, xếp hạng feed, moderation — đều thuộc §9, chưa làm.
+- ○ **P3** Trang profile (about/photos/videos/friends), stories (24h ephemeral), follow graph, hashtag/mention, bookmark, xếp hạng feed, moderation — đều thuộc §9, chưa làm.
 
 ## 4. Các vertical domain — mới là skeleton
 `movie` / `music` / `story` / `comic` chỉ có `module.go` + stub `api/` (không query, handler, migration, hay UI thật). `/library/comic` và `/library/novel/[id]` render view placeholder.
@@ -70,7 +72,7 @@ Mỗi mục ở đây đều **đã có màn hình với dữ liệu mẫu**; kh
 
 ## 7. Platform / Ops
 - ○ **P2** Nối IP rate-limiter sẵn có (`platform/middleware`) vào `/auth/*` ở router (đã dựng, chưa dùng).
-- ○ **P3** Stack observability (metrics/logs/traces) — cắt khỏi v1 (`--profile observability`).
+- ○ **P3** Stack observability (metrics/logs/traces) — cắt khỏi v1 (`--profile observability`), stack 5 service trong đặc tả dài hạn.
 - ○ **P3** Binary `cmd/sysjobs` (batch cross-tenant) — dự kiến, chưa có.
 - ○ **P3** Backup / retention (dump Postgres, lifecycle R2), health/readiness ngoài `/healthz`.
 
@@ -83,7 +85,7 @@ Mỗi mục ở đây đều **đã có màn hình với dữ liệu mẫu**; kh
 - ○ **P3** Test frontend (chưa có); rà a11y cho các dropdown/menu.
 
 ## 9. API contract (OpenAPI)
-- ○ **P2** `shared/openapi.yaml` có nhưng stub generated (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) **chưa generate/commit** và handler đang viết tay. Quyết định: dùng `oapi-codegen`/`openapi-typescript` (rồi bật openapi-drift đầy đủ trong CI), hoặc bỏ spec làm nguồn sự thật.
+- ○ **P2** `shared/openapi.yaml` tồn tại nhưng các stub generated (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) **chưa được generate/commit** và handler đang viết tay — hơn nữa bản thân spec cũng đã trôi (drift): vẫn còn liệt kê `/auth/callback` đã retire (đã gỡ bởi ADR-06) và thiếu `/auth/register`. Dù quyết định theo hướng nào, các path auth cũng cần cập nhật trước tiên. Quyết định: dùng `oapi-codegen`/`openapi-typescript` (rồi bật openapi-drift đầy đủ trong CI), hoặc bỏ spec làm nguồn sự thật.
 
 ## 10. Các module lớn đã hoãn (⛔ ngoài v1)
 Đã spec trong feature.md, cắt bởi [ADR-01]:

@@ -15,7 +15,7 @@ sequenceDiagram
     participant Ca as Dragonfly
     participant Au as platform/audit
 
-    U->>T: HTTPS request<br/>Cookie: portal_access
+    U->>T: HTTPS request<br/>Cookie: portal_access<br/>(portal_session marker is read by Next.js middleware only, never by the API)
     T->>Mw: RealIP + RequestID + Recoverer<br/>+ Timeout(30s) + CORS + RateLimit
 
     rect rgb(240, 248, 255)
@@ -32,7 +32,7 @@ sequenceDiagram
         Note over Mw: RequirePermission (v1)
         Mw->>Ca: GET rbac:perms:userID:v<token_version>
         alt cache miss
-            Mw->>PG: recursive CTE: user_roles ∪ user_oidc_roles → ancestors → permissions
+            Mw->>PG: recursive CTE: user_roles → role ancestors → permissions
             PG-->>Mw: effective set
             Mw->>Ca: SETEX rbac:perms:userID:v<N> TTL 5min
         end
@@ -59,7 +59,7 @@ sequenceDiagram
 
 - **The two-channel revocation works without RequireTenant.** Bumping `users.token_version` invalidates every cached permission set (key namespaced by `v<N>`) AND every issued access token (re-fetched on every request). v1 inherits both behaviours.
 - **RequireTenant lands in Phase 1.** Once it does, every protected route's chain becomes `RequireAuth → RequireTenant → RequirePermission → handler`. v1's lack of tenant is intentional (see [ADR-01](../01-v1-scope-cut.md)); existing handlers don't need to be aware of the tenant context until then.
-- **RequireACR (step-up) is reserved.** [D-27] requires bank-sensitive operations to gate on a fresh MFA. Bank is not v1, so the middleware isn't wired. Account context already surfaces `amr` / `acr` / `auth_time` claims (Milestone 0.3 task) so the middleware can land later without rewriting auth.
+- **RequireACR (step-up) is reserved.** [D-27] requires bank-sensitive operations to gate on a fresh MFA. Bank is not v1, so the middleware isn't wired. Since [ADR-06](../06-local-auth-model.md) (local password auth) the access token carries no `amr` / `acr` / `auth_time` claims; they will be introduced together with MFA/step-up, so RequireACR can land later without rewriting the middleware chain.
 - **The audit step is best-effort.** Per CLAUDE.md, `audit.Logger.Write` swallows errors and never blocks the request. A DB hiccup in audit_log must not 500 the user's request. Don't make handlers depend on the return value.
 - **RBAC cache TTL is 5 minutes.** Combined with `token_version` namespacing, the worst-case revocation latency is `min(remaining JWT TTL, 5 min)` for cached permissions and instant for new requests post-bump. Aligned with the access-token TTL of 5 minutes.
 

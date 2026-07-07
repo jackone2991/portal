@@ -1,5 +1,7 @@
 # Missing Features — Gap Analysis / Backlog
 
+**Last verified:** 2026-07-06 — snapshot taken after the v1 demo loop closed; see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) for the living status tracker.
+
 What is built today vs. what the spec ([feature.md](feature.md)) describes. This is
 the **backlog after the v1 demo loop closed** (auth → upload → transcode → HLS
 playback → logout). Use it to pick the next thing to build.
@@ -83,7 +85,7 @@ Every item here has a **screen already built with sample data**; none has a back
 - ○ **P3** Frontend tests (none yet); a11y pass on the dropdowns/menus.
 
 ## 9. API contract (OpenAPI)
-- ○ **P2** `shared/openapi.yaml` exists but the generated stubs (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) are **not generated/committed** and handlers are hand-written. Decide: adopt `oapi-codegen`/`openapi-typescript` (then wire full openapi-drift in CI), or drop the spec as the source of truth.
+- ○ **P2** `shared/openapi.yaml` exists but the generated stubs (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) are **not generated/committed** and handlers are hand-written — and the spec itself has drifted: it still lists the retired `/auth/callback` (removed by ADR-06) and is missing `/auth/register`. Whichever way the decision goes, the auth paths need updating first. Decide: adopt `oapi-codegen`/`openapi-typescript` (then wire full openapi-drift in CI), or drop the spec as the source of truth.
 
 ## 10. Deferred big modules (⛔ out of v1)
 Speced in feature.md, explicitly cut by [ADR-01]:

@@ -28,10 +28,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	accountapi "github.com/portal/backend/internal/modules/account/api"
-	"github.com/portal/backend/internal/modules/account/audit"
 	"github.com/portal/backend/internal/modules/account/auth"
 	"github.com/portal/backend/internal/modules/account/handler"
 	"github.com/portal/backend/internal/modules/account/middleware"
+	"github.com/portal/backend/internal/platform/audit"
 )
 
 // Adapter wraps *Queries. Construct with NewAdapter.

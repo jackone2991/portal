@@ -1,6 +1,11 @@
 # ArchiveTech — System Functional Specification
 
-> Canonical feature spec for the Portal ecosystem + multimedia platform.
+> **Status (updated 2026-07-06):** Deferred (post-v1) spec for the policy-bundle / user-group / file-gated-permission layer.
+> Per [ADR-02](architecture/02-rbac-model-reconciliation.md) the role-hierarchy RBAC in code is canonical for v1 — this layer stacks on top of roles later, and the "spec wins, adjust code" clause below is **suspended for v1**.
+> Auth is now local password (Argon2id) per [ADR-06](architecture/06-local-auth-model.md) — Authentik/OIDC removed; every OIDC/Authentik mention below is historical.
+> Build-status tags in §3.5/§3.8 were refreshed 2026-07-06; the living status tracker is [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md).
+
+> Deferred (post-v1) feature spec for the policy-bundle access-control layer of the Portal ecosystem + multimedia platform.
 > Derived from UI mocks in `template-main/portal/document/anh{1,2,3}.png`
 > and from architectural decisions captured in [CLAUDE.md](../../CLAUDE.md).
 >
@@ -12,6 +17,8 @@
 >
 > When the spec conflicts with current code, the **spec wins** — adjust code,
 > not the other way around. Update this doc as decisions evolve.
+>
+> **Update (2026-07-06):** clause suspended per ADR-02 — the role-hierarchy model in code is canonical for v1; this spec describes a later layer that stacks on top of roles, it does not replace them.
 
 ---
 
@@ -21,7 +28,7 @@ A self-hosted media platform with a **fine-grained, hierarchical access-control 
 
 1. **Media domains** — Movies, Music, Stories. Upload → transcode → stream pipeline.
 2. **Organizational access control** — User Groups, Users, User Roles, Policies, file-gated Permissions.
-3. **Operational integrity** — full audit trail, instant revocation, OIDC SSO, no shared secrets in code.
+3. **Operational integrity** — full audit trail, instant revocation, first-party password auth ([ADR-06](architecture/06-local-auth-model.md); optional social login later), no shared secrets in code.
 
 The mocks show ArchiveTech as a **policy-driven, group-scoped** system, not a flat-role one. The data model below reflects that.
 
@@ -66,7 +73,7 @@ Compute a user's effective set in this order, then **deduplicate**:
 2. For each group on the path, collect every **active** policy attached to it.
 3. Add every **active** policy attached directly to the user.
 4. For each policy, expand into its permissions, **filtering out file-gated permissions whose required file is missing or expired**.
-5. Apply the wildcard / scope rules from [permission.go](../../backend/internal/rbac/permission.go).
+5. Apply the wildcard / scope rules from [permission.go](../../backend/internal/modules/account/rbac/permission.go).
 
 Cached per `(user_id, token_version)` in Redis. Bumping `users.token_version` is the canonical invalidation channel.
 
@@ -225,13 +232,13 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| OIDC login (Authentik) with state + nonce | [BUILT] | [oidc.go](../../backend/internal/auth/oidc.go) |
-| Access token (HS256, rotating `kid`, 5 min) | [BUILT] | [jwt.go](../../backend/internal/auth/jwt.go) |
-| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../backend/internal/auth/refresh.go) |
-| Logout / logout-all | [BUILT] | [auth.go handler](../../backend/internal/handler/auth.go) |
+| Local password login + register (Argon2id, brute-force rate-limit/lockout) | [BUILT] | [ADR-06](architecture/06-local-auth-model.md) (2026-07-05); OIDC/Authentik removed — no callback/state/nonce. [password.go](../../backend/internal/modules/account/auth/password.go) |
+| Access token (HS256, rotating `kid`, 5 min) | [BUILT] | [jwt.go](../../backend/internal/modules/account/auth/jwt.go) |
+| Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../backend/internal/modules/account/auth/refresh.go) |
+| Logout / logout-all | [BUILT] | [auth.go handler](../../backend/internal/modules/account/handler/auth.go) |
 | Session list per user (devices + revoke) | [PARTIAL] | Query exists (`ListActiveRefreshTokensForUser`); UI [PLANNED] |
-| Wire issuer + verifier + handler in `cmd/api/main.go` | [PLANNED] | Blocked on `make sqlc` |
-| Repository adapters (UserUpserter, RefreshStore, etc.) | [PLANNED] | Wrap sqlc-generated code |
+| Wire issuer + verifier + handler in `cmd/api/main.go` | [BUILT] | `account.New(...)` constructed and mounted under `/api/v1`; see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) |
+| Repository adapters (RefreshStore, PermissionFetcher, etc.) | [BUILT] | sqlc adapters in `internal/modules/account/repository/` (OIDC `UserUpserter` path retired per ADR-06) |
 
 ### 3.6 Module: Search & Discovery *(anh3)*
 
@@ -247,22 +254,22 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Append-only audit log table | [BUILT] | Migration 0002 |
-| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/audit/logger.go) |
+| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/modules/account/audit/logger.go) |
 | Audit viewer UI (table + filters) | [PLANNED] | Restricted to `audit:read` |
 | Export audit range (CSV/JSON) | [PLANNED] | Async job — large ranges shouldn't tie up the API |
 | Retention policy & archival to cold storage | [PLANNED] | Cloudflare R2 archive bucket |
 
 ### 3.8 Module: Media domain (movies / music / stories)
 
-Out of scope for the access-control redesign but listed for completeness; functionality from the original [README.md](README.md) (now removed) carries forward.
+Out of scope for the access-control redesign but listed for completeness; the living build-status tracker is [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) (the original README this section referenced was removed).
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Asset upload (S3 multipart with presigned URLs) | [PARTIAL] | OpenAPI defined; handler [PLANNED] |
-| Transcode worker (FFmpeg → HLS) | [PARTIAL] | Stub in [transcode.go](../../backend/internal/worker/transcode.go) |
-| Thumbnail worker | [PARTIAL] | Stub in [thumbnail.go](../../backend/internal/worker/thumbnail.go) |
-| Movies / Music / Stories CRUD | [PLANNED] | Domain packages under `internal/domain/` |
-| Vidstack player integration on the frontend | [PLANNED] | |
+| Asset upload (S3 presigned URLs) | [BUILT] | Live: `POST /assets` (presigned PUT), `PUT /assets/{id}/source` (dev proxy), `POST /assets/{id}/complete`, `GET /assets[/{id}]`, `GET /assets/{id}/hls/*` |
+| Transcode worker (FFmpeg → HLS) | [BUILT] | [transcode.go](../../backend/internal/modules/media/worker/transcode.go): download → ffprobe → ffmpeg VOD HLS → upload → `MarkAssetReady` |
+| Thumbnail worker | [PARTIAL] | Stub in [thumbnail.go](../../backend/internal/modules/media/worker/thumbnail.go) |
+| Movies / Music / Stories CRUD | [PLANNED] | Scaffolds under `internal/modules/{movie,music,story}/` |
+| Vidstack player integration on the frontend | [BUILT] | `/upload` studio works end-to-end (v1 demo loop) |
 | Comments, ratings, watchlist | [PLANNED] | Permission-gated via `comments:write` / `comments:delete:*` |
 | Search across content (Postgres FTS → Meilisearch) | [PLANNED] | |
 
@@ -343,6 +350,8 @@ The four migrations needed on top of `0002_rbac`:
 | `0005_file_gated_permissions.up.sql` | `user_permission_files` + review workflow columns. |
 | `0006_effective_permissions_view.up.sql` | Materialized view (or function) computing effective perms per user with file-gating applied. Refreshed on grant/revoke or via trigger. |
 
+> **Note (2026-07-06):** numbers indicative only — `0003`–`0007` are already consumed and applied (through `0007_media_assets`). When this layer is scheduled, take the next free sequence with a module prefix per the `000N_<owning-module>_<description>` convention, e.g. `0008_account_user_groups`.
+
 The existing `roles` table is kept for **system-level coarse roles** (admin, superadmin) — it stays useful for "who can administer this whole system" decisions. The Policy model layers on top for fine-grained, group-scoped grants.
 
 ---
@@ -352,6 +361,8 @@ The existing `roles` table is kept for **system-level coarse roles** (admin, sup
 Ordered by least-blocking and most-leverage:
 
 ### Phase 0 — Wire what's built  *(no new features)*
+
+> **Update (2026-07-06):** Phase 0 complete — see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md). Exit criterion changed by [ADR-06](architecture/06-local-auth-model.md): end-to-end **local password login**, not OIDC/Authentik (removed). Repository layout is per-module (`internal/modules/*/repository/`).
 
 - `make sqlc` generates `internal/repository/`.
 - Adapters for `AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`.
@@ -391,7 +402,7 @@ Ordered by least-blocking and most-leverage:
 
 ### Phase 5 — Media domain (parallel-ready)
 
-Separate track that doesn't block 0–4. See `internal/domain/{movie,music,story}/` packages and the upload + transcode pipeline already stubbed. Permission codes already seeded for it.
+Separate track that doesn't block 0–4. The upload + transcode pipeline shipped in v1 (media module, `internal/modules/media/`); remaining Phase-5 work is movie/music/story CRUD in `internal/modules/{movie,music,story}/` (scaffold only, never constructed). Permission codes already seeded for it.
 
 ---
 
@@ -402,7 +413,7 @@ State these explicitly so future PRs don't drift:
 - **Deny rules.** Not implemented yet; the matcher is grant-only today. The precedence contract is already **deny-wins** (§2.3), so when a real compliance need appears, model explicit deny as a `policy_permissions.effect` enum — the resolution order won't change.
 - **Time-bounded grants beyond `expires_at`.** No business-hours / geo / device fences.
 - **Federated multi-tenant.** All groups live in one DB. Splitting tenants per DB is a Phase-N exercise.
-- **Self-service password reset.** Authentik owns this; Portal never sees passwords.
+- **Self-service password reset.** Still deferred — but Portal now owns credentials per [ADR-06](architecture/06-local-auth-model.md); reset is admin/CLI-only until the notification module lands.
 - **Mobile native app.** PWA via Next.js only.
 
 ---

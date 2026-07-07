@@ -6,9 +6,20 @@
 > **Companion docs:**
 > - [archivetech.md](archivetech.md) — full functional roadmap (UI, modules, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
+> - [ADR-02](architecture/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
+> - [ADR-06](architecture/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
 >
-> When this document conflicts with code, this doc wins. Update the doc as
-> part of the same change-set, never afterwards.
+> For built (v1) surfaces, code + ADRs are canonical (ADR-02 explicitly
+> disregards spec-wins clauses for v1); for the post-v1 layers specced here,
+> this doc is the design of record. Update the doc in the same change-set as
+> any behavior change.
+
+> **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
+> channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
+> (see `MILESTONE_CHECKS.md`, [ADR-06](architecture/06-local-auth-model.md)). Everything
+> tenant/policy-shaped — §1 L2 tenant layer, §2.4 TOTP, §3 tenancy+RLS, §4 policy-bundle
+> authorization, §5.4 notifications, §6 steps 8–9, §9 migrations beyond 0007 — is **POST-V1 DESIGN**,
+> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](architecture/02-rbac-model-reconciliation.md).
 
 ---
 
@@ -29,7 +40,7 @@ The settled answers to the open questions raised in `archivetech.md §9`:
 
 ## 1. Three-layer security architecture
 
-Every request traverses three independently-enforced layers. Each layer answers exactly one question; they do not overlap.
+Every request traverses three independently-enforced layers. Each layer answers exactly one question; they do not overlap. *(Target architecture — the shipped v1 wires L1 + role-hierarchy L3 only; the L2 tenant layer and RLS are post-v1. See the status banner above.)*
 
 ```text
                 ┌──────────────────────────────────────┐
@@ -72,9 +83,9 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 Portal is the identity provider. Credentials live in `users.password_hash` (Argon2id). Flow:
 
-1. `POST /auth/login {email, password}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), and checks `disabled_at`.
+1. `POST /auth/login {email, password, remember}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), and checks `disabled_at`. `remember=true` → persistent refresh cookie (`Max-Age` = refresh TTL); `false` → session cookie.
 2. On success, server issues access + refresh tokens, sets cookies, returns `200`. On failure it returns a generic `401` (no user-enumeration) and increments the brute-force counter.
-3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash), assigns the default `user` role, then issues tokens exactly as login does. Registration may be admin-gated depending on deployment.
+3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash), assigns the default `user` role, and returns `201` **without** issuing a session; the user is redirected back to `/login` to sign in (product decision). Registration may be admin-gated depending on deployment.
 4. There is **no** `/auth/callback`, `state`, or `nonce` — the browser never leaves the Portal domain.
 
 New security responsibilities Portal now owns (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, and password reset (emailed token once the notification module lands; admin/CLI until then). MFA/step-up (§2.4) and "Login with Google" are now built in Portal, not configured in an IdP.
@@ -86,10 +97,10 @@ Key implementation: [password.go](../../backend/internal/modules/account/auth/pa
 | Token | Lifetime | Storage | Algorithm | Purpose |
 |-------|----------|---------|-----------|---------|
 | Access | 5 min | `portal_access` cookie OR `Authorization: Bearer` | HS256 with rotating `kid` keys | Per-request authn |
-| Refresh | 30 days | `portal_refresh` cookie (`Path=/api/v1/auth`) OR JSON body | 256-bit random, SHA-256 hashed at rest | Mint new access token |
+| Refresh | 24 h in the current deployment (`REFRESH_TOKEN_TTL`; design allows up to 30 d) | `portal_refresh` cookie (`Path=/api/v1/auth`) OR JSON body | 256-bit random, SHA-256 hashed at rest | Mint new access token |
 | Step-up (TOTP) | 5 min | session-bound; not a separate cookie | n/a — flag on the session record | Authorize destructive ops |
 
-Cookies always: `HttpOnly; Secure; SameSite=Strict`. Implementation in [jwt.go](../../backend/internal/auth/jwt.go) and [refresh.go](../../backend/internal/auth/refresh.go).
+Cookies always: `HttpOnly; Secure; SameSite=Strict`. A third cookie exists: `portal_session` — a non-sensitive marker cookie (`Path=/`), read by the Next.js middleware for the route-level auth gate; its value encodes persistent (`p`) vs session (`s`). Implementation in [jwt.go](../../backend/internal/modules/account/auth/jwt.go) and [refresh.go](../../backend/internal/modules/account/auth/refresh.go).
 
 ### 2.3 Two revocation channels  *([BUILT])*
 
@@ -220,7 +231,7 @@ Every tenant-scoped table carries `organization_id` and a corresponding RLS poli
 | `refresh_tokens` | NO — bound to user, not tenant | n/a |
 | `organizations`, `organization_memberships` | n/a | special policies |
 
-**Why `users` is global**: a person is a person across orgs. Their email and OIDC subject identify them once. Their access in a given org is mediated by `organization_memberships`. Denormalising `organization_id` onto users would force unique users per org — wrong shape.
+**Why `users` is global**: a person is a person across orgs. Their email identifies them once. Their access in a given org is mediated by `organization_memberships`. Denormalising `organization_id` onto users would force unique users per org — wrong shape.
 
 ### 3.4 PostgreSQL RLS — the enforcement mechanism
 
@@ -300,9 +311,9 @@ For each `(user_id, organization_id)`, compute the set in this order, **per requ
 4. Collect every **active** policy attached to any group on the path (`group_policy_attachments` JOIN `policies` on `is_active = true`).
 5. Add every **active** policy attached directly to the user (`user_policy_attachments` scoped to the same org).
 6. Expand each policy → permissions (`policy_permissions`). For permissions with `requires_file = true`, drop them unless the user has a corresponding `user_permission_files` row with `status = 'approved'` and `expires_at > now()`.
-7. Apply wildcard / scope rules from [permission.go](../../backend/internal/rbac/permission.go).
+7. Apply wildcard / scope rules from [permission.go](../../backend/internal/modules/account/rbac/permission.go).
 
-Cached in Redis under key `rbac:perms:<userID>:<orgID>:v<token_version>`. TTL 5 min. **Bumping `token_version` is the only canonical invalidation channel.**
+Cached in Redis under key `rbac:perms:<userID>:<orgID>:v<token_version>`. TTL 5 min. **Bumping `token_version` is the only canonical invalidation channel.** Note: the built v1 cache key is `rbac:perms:<userID>:v<token_version>` ([cache.go](../../backend/internal/modules/account/rbac/cache.go)) — the `<orgID>` segment is added when multi-tenancy lands.
 
 ### 4.3 Policy versioning + user notification
 
@@ -364,7 +375,7 @@ This same pattern (`requireStepUp`) wraps every other destructive op:
 
 ### 5.1 Audit  *([BUILT] core; UI [PLANNED])*
 
-Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
+Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/modules/account/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
 
 Add for multi-tenancy: every audit row carries `organization_id` (NULL for system events). Migration delta:
 
@@ -374,15 +385,15 @@ ALTER TABLE audit_log
 CREATE INDEX audit_log_org_idx ON audit_log(organization_id, occurred_at DESC);
 ```
 
-### 5.2 Rate limiting  *([BUILT] in-memory; Redis-backed [PLANNED])*
+### 5.2 Rate limiting  *([BUILT] — see breakdown)*
 
-Token bucket per IP for `/auth/*`. Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures). Implementation in [ratelimit.go](../../backend/internal/middleware/ratelimit.go); for production, swap the in-memory store for `redis_rate.Limiter`.
+The `/auth/login` brute-force counter + lockout is **[BUILT], Redis-backed** ([handler/auth.go](../../backend/internal/modules/account/handler/auth.go)). The generic per-IP token bucket is **[BUILT], in-memory** at [ratelimit.go](../../backend/internal/platform/middleware/ratelimit.go). Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures) and a Redis-backed generic bucket (`redis_rate.Limiter`) are still [PLANNED].
 
 ### 5.3 Secrets handling
 
 - JWT signing keys: `JWT_SIGNING_KEYS` env, rotating list. Active key signs new tokens; older keys remain valid for verification during the rotation window.
 - TOTP encryption key: separate `TOTP_KMS_KEY` env. Different blast radius from JWT.
-- OIDC client secret: `OIDC_CLIENT_SECRET` — never logged.
+- ~~OIDC client secret: `OIDC_CLIENT_SECRET` — never logged.~~ *(retired — Authentik/OIDC removed per ADR-06)*
 - In production: Doppler manages all of the above; deployment never reads `.env` from disk.
 
 ### 5.4 Notifications channel
@@ -432,12 +443,14 @@ In order — applied to every authenticated route:
 5. CORS              ← origin allowlist from config
 6. RateLimit         ← per-IP token bucket; stricter on /auth/*
 7. RequireAuth       ← JWT + DB snapshot; sets auth.Identity in ctx
-8. RequireTenant     ← reads org_id from JWT; sets app.current_tenant on the DB conn; sets tenant.Context in ctx
-9. RequireStepUp     ← (optional, per-route) — verifies fresh TOTP for destructive ops
+8. RequireTenant     ← [PLANNED] reads org_id from JWT; sets app.current_tenant on the DB conn; sets tenant.Context in ctx
+9. RequireStepUp     ← [PLANNED] (optional, per-route) — verifies fresh TOTP for destructive ops
 10. RequirePermission ← rbac.Engine.Authorize, returns 403 on deny
 11. Handler
 12. AuditMiddleware  ← (deferred) writes audit event for mutating ops
 ```
+
+The v1 pipeline in production is steps 1–7 + 10 (`RequirePermission`); the tenant and step-up middleware (8–9) land with the tenancy/TOTP phases.
 
 Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-scoped but public-readable" routes use `OptionalAuth` + `RequireTenant`.
 
@@ -446,31 +459,31 @@ Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-
 ## 7. API surface (auth + tenant)
 
 ```text
-# Authentication
+# Authentication  [BUILT]
 POST   /auth/login                     verify email+password; mint tokens
-POST   /auth/register                  create account (Argon2id); mint tokens
+POST   /auth/register                  create account (Argon2id); returns 201, no session — user signs in via /auth/login
 POST   /auth/refresh                   rotate refresh; mint access
 POST   /auth/logout                    revoke current refresh; bump token_version
 POST   /auth/logout-all                revoke all refresh; bump token_version  [step-up]
 
-# 2FA (TOTP)
+# 2FA (TOTP)  [PLANNED]
 POST   /auth/totp/enroll               start enrolment; returns secret + QR URI
 POST   /auth/totp/verify               verify code; activate enrolment OR perform step-up
 POST   /auth/totp/recovery-codes/regen regenerate recovery codes  [step-up]
 DELETE /auth/totp                      disenrol  [step-up + recovery-code]
 
-# Tenant
+# Tenant  [PLANNED]
 GET    /me/organizations               list orgs the user belongs to
 POST   /auth/switch-tenant             switch active org; mints new tokens  [step-up if elevated]
 
-# Identity
+# Identity  [BUILT]
 GET    /auth/me                        current user + roles + org context
 
-# Sessions
+# Sessions  [PLANNED]
 GET    /me/sessions                    list active refresh tokens (devices)
 DELETE /me/sessions/{id}               revoke a specific session  [step-up]
 
-# Notifications
+# Notifications  [PLANNED]
 GET    /me/notifications               list (paginated, unread filter)
 POST   /me/notifications/read          mark IDs read
 GET    /me/notifications/stream        SSE channel for live updates
@@ -478,7 +491,7 @@ POST   /me/web-push/subscribe          register browser push subscription
 DELETE /me/web-push/{id}               unsubscribe
 ```
 
-OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`.
+OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. Known drift (2026-07-06): `shared/openapi.yaml` is missing `/auth/register` and still lists the retired `/auth/callback`; the `x-required-permission` / `x-step-up` annotations are the target convention, not yet uniformly present.
 
 ---
 
@@ -513,22 +526,27 @@ What we do **NOT** defend against (out of scope for v1):
 
 ## 9. Migration roadmap
 
-Numbered to fit the existing migration sequence in `backend/db/migrations/`.
+Numbered to fit the existing migration sequence in `backend/db/migrations/` (single numeric sequence, `000N_<owning-module>_<description>` naming). Migrations 0001–0007 are applied (schema v7, 2026-07-06); tenancy/policy migrations start at 0008.
 
 | # | File | Purpose |
 |---|------|---------|
-| 0001 | `init.up.sql` | [BUILT] users + assets foundational tables |
-| 0002 | `rbac.up.sql` | [BUILT] roles + permissions + refresh_tokens + audit_log |
-| 0003 | `organizations.up.sql` | [PLANNED] organizations + organization_memberships; RLS scaffolding |
-| 0004 | `user_groups.up.sql` | [PLANNED] user_groups + user_group_members (org-scoped) |
-| 0005 | `policies.up.sql` | [PLANNED] policies + policy_permissions + group_policy_attachments + user_policy_attachments |
-| 0006 | `file_gated_permissions.up.sql` | [PLANNED] user_permission_files + review workflow |
-| 0007 | `totp.up.sql` | [PLANNED] users.totp_*, totp_recovery_codes |
-| 0008 | `notifications.up.sql` | [PLANNED] notifications + web_push_subscriptions |
-| 0009 | `rls_enable.up.sql` | [PLANNED] enable RLS + policies on every tenant-scoped table |
-| 0010 | `audit_log_org.up.sql` | [PLANNED] add organization_id to audit_log |
+| 0001 | `0001_platform_init` | [BUILT/APPLIED] database extensions + shared helpers |
+| 0002 | `0002_account_users` | [BUILT/APPLIED] users table (identity core, token_version, disabled_at) |
+| 0003 | `0003_account_rbac` | [BUILT/APPLIED] roles (hierarchy) + permissions + role_permissions + user_roles |
+| 0004 | `0004_account_sessions` | [BUILT/APPLIED] refresh_tokens with rotation-chain theft detection |
+| 0005 | `0005_platform_audit` | [BUILT/APPLIED] append-only audit_log |
+| 0006 | `0006_account_local_auth` | [BUILT/APPLIED] users.password_hash (ADR-06); drops user_oidc_roles |
+| 0007 | `0007_media_assets` | [BUILT/APPLIED] media assets table (upload/transcode lifecycle) |
+| 0008 | `0008_tenant_organizations` | [PLANNED] organizations + organization_memberships; RLS scaffolding |
+| 0009 | `0009_account_user_groups` | [PLANNED] user_groups + user_group_members (org-scoped) |
+| 0010 | `0010_account_policies` | [PLANNED] policies + policy_permissions + group_policy_attachments + user_policy_attachments |
+| 0011 | `0011_account_file_gated_permissions` | [PLANNED] user_permission_files + review workflow |
+| 0012 | `0012_account_totp` | [PLANNED] users.totp_*, totp_recovery_codes |
+| 0013 | `0013_notification_core` | [PLANNED] notifications + web_push_subscriptions |
+| 0014 | `0014_tenant_rls_enable` | [PLANNED] enable RLS + policies on every tenant-scoped table |
+| 0015 | `0015_platform_audit_org` | [PLANNED] add organization_id to audit_log |
 
-RLS is intentionally enabled in **a separate, late migration** so that earlier development can proceed without RLS hassle. Production deployment must include 0009 before going live; CI gate verifies it.
+RLS is intentionally enabled in **a separate, late migration** so that earlier development can proceed without RLS hassle. Production deployment must include `0014_tenant_rls_enable` before the tenancy phase goes live; CI gate verifies it.
 
 ---
 
@@ -537,7 +555,7 @@ RLS is intentionally enabled in **a separate, late migration** so that earlier d
 ### 10.1 Tenant middleware skeleton  *([PLANNED])*
 
 ```go
-// internal/middleware/tenant.go
+// internal/modules/tenant/middleware/tenant.go  (module layout per backend/MODULES.md)
 //
 // RequireTenant resolves the active organization for the request, validates
 // the user's membership, and binds app.current_tenant on the DB connection
@@ -573,7 +591,7 @@ func RequireTenant(memberships MembershipFetcher, db DB) func(http.Handler) http
 ### 10.2 Step-up middleware skeleton  *([PLANNED])*
 
 ```go
-// internal/middleware/stepup.go
+// internal/modules/account/middleware/stepup.go  (module layout per backend/MODULES.md)
 func RequireStepUp(verifier *auth.TOTPVerifier, store StepUpStore, ttl time.Duration) func(http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -607,7 +625,7 @@ Every PR that adds a tenant-scoped table must include an integration test that:
 2. Switches to `app.current_tenant = B` — `SELECT *` returns 0 rows; `INSERT ... organization_id = A` is rejected.
 3. Connects as `portal_system` (`BYPASSRLS`) — sees both tenants.
 
-Place under `backend/internal/repository/rls_test.go`. Do not let CI green without these.
+Place under the owning module's repository package (e.g. `backend/internal/modules/tenant/repository/rls_test.go` — repositories are per-module; there is no shared `internal/repository/`). Do not let CI green without these.
 
 ---
 

@@ -236,7 +236,31 @@ Example: when transcode finishes, media emits `media:asset_ready { asset_id, hls
 
 - **`notify:*`** — reserved for the **notification** module's task types (e.g. `notify:email`, `notify:web_push`, `notify:in_app`): the delivery fan-out that other modules enqueue into rather than sending mail/push themselves. The account module already stubs `RegisterTasks` for it (password-reset, refresh-reuse alerts, …). Do not repurpose the `notify:` prefix for a different owning module.
 
-### 5.3 No shared transactions across modules
+### 5.3 Audit event-type taxonomy
+
+Security-sensitive actions are recorded in the shared `audit_log` table via `internal/platform/audit` (cross-cutting infra; every module is a consumer — see [D-25]). Each row's `event_type` follows one grammar:
+
+```
+<module>.<resource>.<action>
+```
+
+Period-separated, all lowercase. This is **distinct from** the Asynq task naming in §5.2 (`<emitting-module>:<event>`, colon-separated): task types drive queues, audit event types drive the security log.
+
+Rules:
+
+- The `<module>` segment is the **owning module** — the same name as its `internal/modules/<name>/` directory. Never emit another module's namespace.
+- Each module documents its own event types in its `README.md`; the table below is the aggregated registry that prevents collisions. Add a row when you introduce a new event type.
+- Event types are a stable contract (dashboards, alerts, and searches key off them). Rename only through a migration-style deprecation, not silently.
+
+| Module | Event types |
+| --- | --- |
+| `account` | `account.user.registered` · `account.user.disabled` · `account.user.enabled` · `account.user.deleted` · `account.session.login` · `account.session.logout` · `account.session.disabled_attempt` · `account.refresh.rotated` · `account.refresh.reuse_detected` (HIGH — theft alert) · `account.role.{created,updated,deleted,granted,revoked}` · `account.permission.{granted,revoked}` |
+| `tenant` *(planned)* | `tenant.organization.created` · `tenant.member.invited` · … |
+| `bank` *(planned)* | `bank.account.created` · `bank.transaction.created` · `bank.debt.settle_pending` · … |
+
+> The `account.*` set was renamed from the legacy `auth.*` / `rbac.*` / `user.*` codes to fit this taxonomy when the audit package moved `account/audit` → `platform/audit` ([D-25]). Constants live in [internal/platform/audit/logger.go](internal/platform/audit/logger.go).
+
+### 5.4 No shared transactions across modules
 
 If module X starts a tx, it does not call into module Y's service inside that tx. Y's writes belong in its own tx. If you genuinely need atomicity across modules, that's a design smell — promote the operation to an event, or fold the entities into one module.
 

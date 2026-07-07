@@ -1,10 +1,14 @@
 # ADR-02: Reconcile RBAC — role hierarchy (built) vs policy bundles (specced)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-24
 **Deciders:** kirito
 **Supersedes:** N/A (first decision in this area)
 **Affects:** [feature.md D-26], [archivetech.md §2, §3.3]
+
+> **Update (2026-07-06):** Accepted and shipped — v1 runs on the role-hierarchy model exactly as decided here; the policy-bundle/user-group layer and file-gating remain deferred.
+> - [ADR-06](./06-local-auth-model.md) (2026-07-05) removed Authentik: the `user_oidc_roles` (synced from Authentik groups) input in Spec A and the `user_roles ∪ user_oidc_roles` term in step 1 of the composition rule are retired (the table was dropped by migration `0006`); effective permissions come from `user_roles` + role ancestors only. All other Spec A mechanics (grammar, two-channel revocation, `rbac:perms:<userID>:v<N>` cache key) are unchanged.
+> - `rbac.Matches` has since been fixed so a wildcard-action grant like `movies:*` covers every scope including `:own` — consistent with, not contradicting, this ADR.
 
 ## Context
 
@@ -137,7 +141,7 @@ Steps 1, 3, and 5 (without deny) are what currently exists. Steps 2 and 4 are th
 
 ## Action items
 
-1. [ ] Add a 5-line note to the top of `archivetech.md` referencing this ADR and stating that its RBAC model is the *deferred Phase 1.5+ layer*, not the v1 model. **No** silent contradiction.
+1. [x] Add a 5-line note to the top of `archivetech.md` referencing this ADR and stating that its RBAC model is the *deferred Phase 1.5+ layer*, not the v1 model. **No** silent contradiction. *(done 2026-07-06 — banner added to archivetech.md)*
 2. [ ] Add the composition rule (the 6-line pseudocode above) to `backend/internal/modules/account/README.md` (or a stub if the README doesn't exist) so the relationship is visible from the code.
 3. [ ] Reserve the depguard rule for `internal/modules/policy/` and `internal/modules/usergroup/` so when those modules land, depguard already knows they exist (avoids "module not in allowlist" churn).
 4. [ ] Open a tracking issue "RBAC Phase 1.5: policy bundles + user groups (ADR-02 layered model)" so the deferred work is visible without being scheduled.
