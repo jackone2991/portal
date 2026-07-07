@@ -620,6 +620,8 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 1 — Tenancy + RLS
 
+> **Design: [ADR-07 — Multi-tenancy & RLS model](architecture/07-tenancy-rls-model.md)** (Proposed, deferred). The bullets below are the *deliverables*; ADR-07 is the *how* — per-request `SET LOCAL app.current_tenant` GUC under PgBouncer transaction pooling, `org`/`household`/`personal` tenants + synthetic `me`, `FORCE` RLS on a non-owner app role, and a `BYPASSRLS` `sysjobs` path. (ADR-07 standardises the GUC name to `app.current_tenant`; the `app.tenant_id` below is superseded.)
+
 - `tenant.organizations` schema includes a **`kind` column (`'org' | 'household'`)** from day one so adding household support in Phase 5i doesn't require migrating a populated table. [D-24]
 - `tenant.memberships` schema + queries; role granularity differs per kind (orgs: full hierarchy; households: owner + member only, soft cap 6).
 - `0010_rls_enable.up.sql` — enable RLS on every tenant-scoped table; `USING (tenant_id = current_setting('app.tenant_id')::uuid)`.
