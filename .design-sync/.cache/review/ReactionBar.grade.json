@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "Liked": { "verdict": "good", "note": "Accent-tinted heart with 128, three overlapping ring-bordered liker avatars, 'Marina and 127 more liked this' label, and right-aligned comment (24) + share (7) counts with sprite icons. Reads as the real post footer on a DS surface." },
+    "Default": { "verdict": "good", "note": "Muted (non-liked) heart with 3, single AR liker avatar, 'Anselm and 2 more liked this', comment 1 / share 0. Correct default-state styling and token colours." }
+  }
+}

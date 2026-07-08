@@ -1,0 +1,12 @@
+{
+  "cells": {
+    "Collaborators": {
+      "verdict": "good",
+      "note": "Bordered chip field under an uppercase COLLABORATORS label with two removable pills (Mathilda Brinker ×, Nicholas Grissom ×) and a trailing input. Tokens applied. Styled, complete, plausible."
+    },
+    "Genres": {
+      "verdict": "good",
+      "note": "Second variant: three genre chips (Ambient, Synthwave, Lo-Fi) each with a delete X. Real, distinct data from the first cell. Styled, complete, plausible."
+    }
+  }
+}

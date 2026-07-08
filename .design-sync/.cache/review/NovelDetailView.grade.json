@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Detail": {
+      "verdict": "good",
+      "note": "Novel detail renders whole: 'Novel #42' heading over a two-column layout — 3:4 cover placeholder beside a muted 'Synopsis and chapter list go here' column. v1 has no novel API, so the placeholder synopsis is the real component. Heading font + muted/border tokens applied. Styled, complete, plausible."
+    }
+  }
+}

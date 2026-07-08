@@ -40,3 +40,6 @@ logs/
 
 # GitNexus index — keep config, ignore the binary index
 .gitnexus/lbug
+
+# Local MCP server config — machine-specific absolute paths, not portable
+.mcp.json

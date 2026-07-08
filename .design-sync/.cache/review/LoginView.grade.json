@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Login": {
+      "verdict": "good",
+      "note": "Route wrapper renders AuthLanding with the sign-in tab active: welcome column + login card, ambient background, accent Login button. Tokens/fonts applied. Styled, complete, plausible."
+    }
+  }
+}

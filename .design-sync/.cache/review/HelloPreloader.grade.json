@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Overlay": { "verdict": "good", "note": "Preloader overlay held visible inside a contained box: centered pulsing 'Loading …' label on the themed backdrop. Two authoring workarounds were needed since the component takes no props: a transform wrapper contains its fixed inset-0 overlay to the card, and a 120ms keyed-remount loop defeats its own 300ms self-dismiss timer (which otherwise returns null and captures blank). Renders the real component markup, just held open." }
+  }
+}

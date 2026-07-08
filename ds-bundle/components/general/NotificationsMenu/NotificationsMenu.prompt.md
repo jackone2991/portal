@@ -1,0 +1,33 @@
+NotificationsMenu from portal-frontend. Use via `window.PortalUI.NotificationsMenu` (bundle loaded from the root `_ds_bundle.js`). Wrap the tree in `<DSProvider>` (full provider chain in README.md — components read theme/i18n from that context).
+
+## Props
+
+```ts
+interface NotificationsMenuProps {
+open: boolean; onToggle: () => void;
+}
+```
+
+## Examples
+
+### Open
+
+```jsx
+() => (
+  <div
+    style={{
+      position: "relative",
+      width: 380,
+      minHeight: 420,
+      display: "flex",
+      justifyContent: "flex-end",
+      alignItems: "flex-start",
+      padding: 16,
+      borderRadius: 12,
+      background: "var(--tpl-header, #3f4257)",
+    }}
+  >
+    <NotificationsMenu open onToggle={() => {}} />
+  </div>
+)
+```

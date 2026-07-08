@@ -1,16 +1,21 @@
+type Status = "online" | "away" | "work" | "offline" | "invisible";
+
 /**
  * Deterministic initials avatar — a gradient disc with the name's initials.
  * Self-contained (no image assets); the colour is derived from the name so the
- * same person is always the same hue.
+ * same person is always the same hue. Pass `status` to overlay an Olympus-style
+ * presence dot (top-left, white-ringed, coloured by `--tpl-status-*`).
  */
 export function Avatar({
   name,
   size = 40,
   className = "",
+  status,
 }: {
   name: string;
   size?: number;
   className?: string;
+  status?: Status;
 }) {
   const initials = name
     .trim()
@@ -20,9 +25,10 @@ export function Avatar({
     .join("")
     .toUpperCase();
   const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  const dot = Math.max(8, Math.round(size * 0.26));
   return (
     <span
-      className={`inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ${className}`}
+      className={`relative inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ${className}`}
       style={{
         width: size,
         height: size,
@@ -32,6 +38,20 @@ export function Avatar({
       aria-hidden
     >
       {initials}
+      {status && (
+        <span
+          className="absolute rounded-full"
+          title={status}
+          style={{
+            top: 0,
+            left: 0,
+            width: dot,
+            height: dot,
+            background: `var(--tpl-status-${status})`,
+            boxShadow: "0 0 0 2px #fff",
+          }}
+        />
+      )}
     </span>
   );
 }

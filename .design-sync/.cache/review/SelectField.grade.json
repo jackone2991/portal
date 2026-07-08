@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Select": {
+      "verdict": "good",
+      "note": "Two floating-label selects: Band Type/Pop Band and Primary Genre/Synthwave, each with the dropdown-arrow glyph and floated accent-capable label. Both string and {value,label} option forms exercised. Styled, complete, plausible."
+    }
+  }
+}

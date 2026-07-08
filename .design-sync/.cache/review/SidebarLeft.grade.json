@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "Expanded": { "verdict": "good", "note": "Full left nav: Collapse Menu, Newsfeed active (accent orange), 10 icon+label rows with real Olympus sprite glyphs, and the Profile Completion 76% footer with gradient bar. Renders as a self-contained 272px tall panel." },
+    "Collapsed": { "verdict": "good", "note": "Icon-only rail at --tpl-rail-w (68px); every row's sprite icon renders, active newsfeed in accent. Footer correctly hidden in collapsed mode." }
+  }
+}

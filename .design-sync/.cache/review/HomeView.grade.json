@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Newsfeed": {
+      "verdict": "good",
+      "note": "Full three-rail newsfeed renders whole: composer with Status/Multimedia/Blog tabs, feed posts with colored-initial avatars, sprite icons, an embedded video/link media card, and the like/comment/share row. DS accent (orange) and fonts applied; not browser-default. Styled, complete, plausible."
+    }
+  }
+}

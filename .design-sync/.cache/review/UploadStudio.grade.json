@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Studio": {
+      "verdict": "good",
+      "note": "Idle state renders whole: 'Upload a video' card with description and a dashed dropzone showing the sprite camera icon + 'Choose a video file'. No API in static preview, so the library list no-ops (correct honest idle state). Surface/border/muted tokens + fonts applied. Styled, complete, plausible."
+    }
+  }
+}

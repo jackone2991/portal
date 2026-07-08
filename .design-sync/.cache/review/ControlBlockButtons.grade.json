@@ -1,0 +1,12 @@
+{
+  "cells": {
+    "Actions": {
+      "verdict": "good",
+      "note": "Row of three circular action discs: blue add-friend (happy face), accent-red message (speech balloon), muted-grey settings (three dots). Icons centered/clamped within each disc. Styled, complete, plausible."
+    },
+    "Large": {
+      "verdict": "good",
+      "note": "Same three actions at size=56 — icons scale and the wide three-dots glyph stays clamped inside its disc, confirming the aspect-fit logic. Styled, complete, plausible."
+    }
+  }
+}

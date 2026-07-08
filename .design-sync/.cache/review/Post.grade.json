@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "TextPost": { "verdict": "good", "note": "Full post card: MV avatar, 'Marina Valentine shared a thought · 18 minutes ago' header with three-dots options, body text, and the ReactionBar footer (accent heart 128, stacked liker avatars, 'Diego and 127 more liked this', 24 comments, 7 shares). FAB column (award/like-active/comment/share) floats half-outside the right edge. On-theme tokens throughout." },
+    "VideoPost": { "verdict": "good", "note": "Post with a video media card — gradient thumbnail + accent play button, title 'Behind the Lens: Shooting the Rooftop Chase', description, and 'PORTAL STUDIO · 12:04' source. ReactionBar reads 342 / 58 / 19 with stacked avatars; FAB column renders. Clean, complete, recognizably DS." }
+  }
+}

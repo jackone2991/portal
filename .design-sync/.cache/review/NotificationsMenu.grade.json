@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Open": { "verdict": "good", "note": "Open notifications dropdown fully in-card: NOTIFICATIONS header + Mark as read/Settings, 4 rows (avatar, bold actor + accent-highlighted action link, relative time, right-aligned type icon comment/like/follow/share), blue 'Check all your Notifications' footer. Thunder trigger visible top-right with badge 4." }
+  }
+}

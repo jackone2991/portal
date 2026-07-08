@@ -1,0 +1,12 @@
+{
+  "cells": {
+    "SignIn": {
+      "verdict": "good",
+      "note": "Sign-in tab active: Sign in/Register segmented tabs, Login-to-your-account heading, email + password fields, Remember me checkbox, accent Login button, Register-now link. Tokens/fonts applied. Styled, complete, plausible."
+    },
+    "Register": {
+      "verdict": "good",
+      "note": "Register tab active: Create-your-account heading, display-name/email/password fields, Terms & Conditions checkbox, accent Complete-registration button, Sign-in link. Real variant of the same card. Styled, complete, plausible."
+    }
+  }
+}

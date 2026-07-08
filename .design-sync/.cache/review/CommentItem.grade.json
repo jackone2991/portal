@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "Single": { "verdict": "good", "note": "Single comment: PA avatar, 'Priya Anand · 37 minutes ago', three-dots options, body text, heart like count 8 and an accent Reply link. Clean, complete, on-theme." },
+    "WithReply": { "verdict": "good", "note": "Diego Morales comment with a correctly indented single nested reply (Marina Valentine, 4 likes). Demonstrates the one-level ul.children nesting; avatars and tokens render as expected." }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Dialog": { "verdict": "good", "note": "Add Book form: Title/Author 2-col, Category select, Description, cover upload, Cancel + accent Add Book; dimmed backdrop." }
+  }
+}

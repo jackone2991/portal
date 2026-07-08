@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "App": { "verdict": "good", "note": "Complete three-column authenticated shell: dark header + left nav (with Profile Completion footer) + centered newsfeed content (heading, feed cards) + right friends panel with Olympus Chat bar. All chrome renders and aligns; fits the 900px capture. Forced-layout overrides documented in learnings/shells.md; a wider viewport override would render it at natural proportions." }
+  }
+}

@@ -1,0 +1,502 @@
+{
+  "global": "PortalUI",
+  "pkg": "portal-frontend",
+  "pkgDir": "/Users/kirito/data/git/ops/repo/portal/frontend/node_modules/portal-frontend",
+  "extraEntries": [
+    "./.ds-shims/ds-provider.tsx"
+  ],
+  "exported": [
+    "ActivityFeed",
+    "AddBook",
+    "AudioPlayer",
+    "AuthForm",
+    "AuthLanding",
+    "Avatar",
+    "BadgeCard",
+    "BirthdayCard",
+    "BlogCard",
+    "CalendarWidget",
+    "ChatResponsive",
+    "ChoseFromMyPhoto",
+    "ComicIndexView",
+    "CommentForm",
+    "CommentItem",
+    "CommentThread",
+    "Composer",
+    "ControlBlockButtons",
+    "DSProvider",
+    "EventItem",
+    "FormField",
+    "FriendCard",
+    "FriendRequestItem",
+    "FriendRequestsMenu",
+    "FriendSuggestions",
+    "GoToTop",
+    "HelloPreloader",
+    "HomeView",
+    "Icon",
+    "LoginView",
+    "MasterBase",
+    "MasterPublic",
+    "MessagesMenu",
+    "NotificationsMenu",
+    "NovelDetailView",
+    "PagesWidget",
+    "PersonalInfoWidget",
+    "PlaylistWidget",
+    "Post",
+    "PostControlButtons",
+    "ProfileHeader",
+    "ReactionBar",
+    "RegisterView",
+    "SelectField",
+    "SidebarCenter",
+    "SidebarLeft",
+    "SidebarRight",
+    "TagSelect",
+    "ToggleRow",
+    "TopMenu",
+    "TrackItem",
+    "UpdateHeaderPhoto",
+    "UploadStudio",
+    "WeatherWidget",
+    "WidgetCard"
+  ],
+  "storybookStatic": null,
+  "keyRecipe": 7,
+  "cfgSliceGlobal": "916c262b56b52973e7b58fa7d11b59be38192a40ed5034322deee368143dcb34",
+  "components": [
+    {
+      "name": "ActivityFeed",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AddBook",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "3b109b20aa54a9d7",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AudioPlayer",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AuthForm",
+      "group": "auth",
+      "srcSha": null,
+      "sourceKey": "e198f6eca9816869",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AuthLanding",
+      "group": "auth",
+      "srcSha": null,
+      "sourceKey": "5583a58df9fe3683",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Avatar",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "2a24a385105680e9",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "BadgeCard",
+      "group": "social",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "BirthdayCard",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "BlogCard",
+      "group": "blog",
+      "srcSha": null,
+      "sourceKey": "8ea95efbf50a7dfa",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CalendarWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ChatResponsive",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "3dc8c5148bbbbb5e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ChoseFromMyPhoto",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "3559b62b0af53fb1",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ComicIndexView",
+      "group": "comic",
+      "srcSha": null,
+      "sourceKey": "582b840c438cec6e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CommentForm",
+      "group": "comment",
+      "srcSha": null,
+      "sourceKey": "068c3eed3d175f3f",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CommentItem",
+      "group": "comment",
+      "srcSha": null,
+      "sourceKey": "25cfc75b117ba5f6",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CommentThread",
+      "group": "comment",
+      "srcSha": null,
+      "sourceKey": "e5a6ac74a4ad9cb6",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Composer",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "845c482f70f94d85",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ControlBlockButtons",
+      "group": "profile",
+      "srcSha": null,
+      "sourceKey": "c11d186c27fbdeb0",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "EventItem",
+      "group": "social",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FormField",
+      "group": "form",
+      "srcSha": null,
+      "sourceKey": "6f65dac3c906e3e9",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FriendCard",
+      "group": "social",
+      "srcSha": null,
+      "sourceKey": "b1645bdba0a892da",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FriendRequestItem",
+      "group": "social",
+      "srcSha": null,
+      "sourceKey": "6864d08ee502810a",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FriendRequestsMenu",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "ba9babda36cf23b3",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FriendSuggestions",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "GoToTop",
+      "group": "partials",
+      "srcSha": null,
+      "sourceKey": "70f173fc84fed854",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "HelloPreloader",
+      "group": "partials",
+      "srcSha": null,
+      "sourceKey": "c0b3a693ed7674c1",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "HomeView",
+      "group": "home",
+      "srcSha": null,
+      "sourceKey": "a6448a077a0ba3f0",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Icon",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "c02005d3424f60f5",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "LoginView",
+      "group": "auth",
+      "srcSha": null,
+      "sourceKey": "4c1e3651f0de3598",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MasterBase",
+      "group": "master",
+      "srcSha": null,
+      "sourceKey": "b789cc5dedb3825e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MasterPublic",
+      "group": "master",
+      "srcSha": null,
+      "sourceKey": "cc27d9c41afe4ea6",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MessagesMenu",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "6f8f98cb5aa98274",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "NotificationsMenu",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "e291dc2fe9bb52cc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "NovelDetailView",
+      "group": "novel",
+      "srcSha": null,
+      "sourceKey": "67b58ab6ee1bffff",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PagesWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PersonalInfoWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PlaylistWidget",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "Post",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "f5a790917bc3f18f",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PostControlButtons",
+      "group": "post",
+      "srcSha": null,
+      "sourceKey": "ce29bc6ef9426ac9",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ProfileHeader",
+      "group": "profile",
+      "srcSha": null,
+      "sourceKey": "15321ff54d366d01",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ReactionBar",
+      "group": "post",
+      "srcSha": null,
+      "sourceKey": "4c2954bd4dc5c22e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "RegisterView",
+      "group": "auth",
+      "srcSha": null,
+      "sourceKey": "d7c724df44c01035",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "SelectField",
+      "group": "form",
+      "srcSha": null,
+      "sourceKey": "a33502ac87eea49c",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "SidebarCenter",
+      "group": "menu",
+      "srcSha": null,
+      "sourceKey": "c2c19b1355b76a64",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "SidebarLeft",
+      "group": "menu",
+      "srcSha": null,
+      "sourceKey": "b05e293c86ae954b",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "SidebarRight",
+      "group": "menu",
+      "srcSha": null,
+      "sourceKey": "1cc139bac81bac29",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "TagSelect",
+      "group": "form",
+      "srcSha": null,
+      "sourceKey": "aea71b9223960cc5",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ToggleRow",
+      "group": "form",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "TopMenu",
+      "group": "headers",
+      "srcSha": null,
+      "sourceKey": "69c72bb93581fe08",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "TrackItem",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "78c6fcabc6e27e44",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "UpdateHeaderPhoto",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "89833872b4c5ee39",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "UploadStudio",
+      "group": "upload",
+      "srcSha": null,
+      "sourceKey": "1f42ab0a69fce8e5",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "WeatherWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "WidgetCard",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    }
+  ]
+}

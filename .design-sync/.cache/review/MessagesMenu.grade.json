@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Open": { "verdict": "good", "note": "Open message dropdown contained on a header-tinted card: MESSAGES header + Mark as read/Settings actions, 2 unread rows (avatar with blue unread dot, sender name, truncated preview, timestamp, subtle unread tint), blue 'View All Messages' footer. Trigger visible top-right with unread badge 2." }
+  }
+}

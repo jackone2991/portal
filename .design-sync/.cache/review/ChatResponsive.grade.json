@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Chat": { "verdict": "good", "note": "Floating chat: dark presence header, incoming(white)/outgoing(accent) bubbles + timestamps + avatars, attach/emoji composer." }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "AddComment": { "verdict": "good", "note": "Comment composer: MV avatar, bordered 'Add a comment...' textarea with an inline camera (photo) sprite button top-right, then the accent-gradient 'Post Comment' submit and a Cancel button. Fully styled and recognizably DS." }
+  }
+}

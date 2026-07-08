@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "AuthCard": { "verdict": "good", "note": "Public/guest shell given a realistic payload: a centered sign-in card (accent-gradient logo, Welcome back heading, email/password fields, gradient Sign in button, Create an account link) on the page background. MasterPublic renders blank without children; this exercises its children slot fully." }
+  }
+}

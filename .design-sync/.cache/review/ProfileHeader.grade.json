@@ -1,0 +1,12 @@
+{
+  "cells": {
+    "Timeline": {
+      "verdict": "good",
+      "note": "Full profile header: teal→blue gradient cover with an Update Cover pill (camera icon), overlapping JS avatar, James Spiegel + San Francisco, CA (pin), the three control discs, and the tab menu with Timeline active (accent underline). Styled, complete, plausible."
+    },
+    "Photos": {
+      "verdict": "good",
+      "note": "Same header with Photos tab active — the accent underline moves to Photos, confirming controlled activeTab. Real variant. Styled, complete, plausible."
+    }
+  }
+}

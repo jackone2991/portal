@@ -24,6 +24,7 @@ single VPS** (ADR-01).
 | [07](07-*.md) | Multi-tenancy / RLS (design only) | accepted (deferred design) | |
 | [08](08-life-os-pivot.md) | Life-OS pivot + finance ledger scope | **proposed** | Portal is a life OS; ledger in scope; "real bank" stays deferred |
 | [09](09-docs-architecture.md) | Documentation architecture | **proposed** | Diátaxis-informed `docs/` tree; English canonical |
+| [10](10-openapi-contract-direction.md) | OpenAPI contract direction | **proposed** | Spec-first, enforced: generate Go stubs + TS client; CI drift gate |
 
 > Note: rows 02–05 and 07 keep their existing filenames from the migration; fill in
 > their exact titles when running the move (they are unchanged in content).

@@ -1,0 +1,12 @@
+{
+  "cells": {
+    "Fields": {
+      "verdict": "good",
+      "note": "Three stacked floating-label inputs: First Name/Marina, Your Email/marina@spiegel.io with an info icon at the right edge, Birthday date input (12/04/1993) with native calendar glyph — all labels correctly floated + scaled. Tokens/typography applied. Styled, complete, plausible."
+    },
+    "States": {
+      "verdict": "good",
+      "note": "Contrast states: uncontrolled empty Display Name shows the label resting inside the field; disabled Account ID (usr_1f9c) reads dimmed. Demonstrates the resting-vs-floated + disabled behaviour. Styled, complete, plausible."
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Playlist": { "verdict": "good", "note": "Three rows in an ol: index, gradient thumbs, title/artist, duration, three-dots menu. Row 1 (ChillGroves / Iron Maid) is in accent orange with its persistent play affordance shown for playing=true; rows 2-3 in heading color. All icons render. Reads well on a white card." }
+  }
+}

@@ -385,9 +385,10 @@ function PostCard({ post, onToggleLike }: { post: Post; onToggleLike: () => void
   return (
     <Card as="article" className="relative p-5">
       <div className="absolute right-0 top-6 hidden translate-x-1/2 flex-col gap-2 sm:flex">
+        <QuickFab label="Award" icon="trophy-icon" />
         <QuickFab active={post.liked} onClick={onToggleLike} label="Like" icon="like-post-icon" />
         <QuickFab label="Comment" icon="comments-post-icon" />
-        <QuickFab label="Share" icon="share-post-icon" />
+        <QuickFab label="Share" icon="share-icon" />
       </div>
 
       <header className="flex items-center gap-3">
@@ -404,7 +405,7 @@ function PostCard({ post, onToggleLike }: { post: Post; onToggleLike: () => void
           </time>
         </div>
         <button type="button" className="ml-auto pr-8 text-[var(--tpl-muted)]" aria-label="Post options">
-          <Icon name="three-dots-icon" size={18} />
+          <Icon name="three-dots-icon" size={12} />
         </button>
       </header>
 
@@ -492,7 +493,7 @@ function BirthdayCard() {
         <div className="flex items-start justify-between">
           <Icon name="cupcake-icon" size={22} />
           <button type="button" aria-label="Options">
-            <Icon name="three-dots-icon" size={18} />
+            <Icon name="three-dots-icon" size={12} />
           </button>
         </div>
 
@@ -615,7 +616,7 @@ function WidgetCard({
           </h3>
           {more && (
             <span style={{ color: "var(--tpl-muted)" }}>
-              <Icon name="three-dots-icon" size={18} />
+              <Icon name="three-dots-icon" size={12} />
             </span>
           )}
         </div>
@@ -675,10 +676,10 @@ function QuickFab({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="grid h-8 w-8 place-items-center rounded-full border bg-white shadow-sm transition hover:text-[var(--tpl-accent)]"
-      style={{ borderColor: "var(--tpl-border)", color: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
+      className="grid h-[34px] w-[34px] place-items-center rounded-full text-white shadow-sm transition hover:opacity-90"
+      style={{ background: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
     >
-      <Icon name={icon} size={15} />
+      <Icon name={icon} size={16} />
     </button>
   );
 }

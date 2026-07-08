@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "People": { "verdict": "good", "note": "5 names, each a distinct deterministic hue, initials + labels; DS font applied." },
+    "Sizes": { "verdict": "good", "note": "28/40/56/72 ramp, initials scale correctly." }
+  }
+}

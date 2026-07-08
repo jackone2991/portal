@@ -43,7 +43,7 @@ export function SidebarLeft({
       }}
     >
       <div className="flex-1 overflow-y-auto py-3">
-        <Row collapsed={collapsed} onClick={onToggle} label="Collapse Menu" icon="close-icon" />
+        <Row collapsed={collapsed} onClick={onToggle} label="Collapse Menu" icon="menu-icon" />
         <div className="my-2 h-px" style={{ background: "var(--tpl-border)" }} />
         {ITEMS.map((it) => (
           <Row

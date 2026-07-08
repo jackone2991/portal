@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "Gallery": { "verdict": "good", "note": "12 real Olympus sprite icons render crisply via the provider; labelled grid." },
+    "Sizes": { "verdict": "good", "note": "heart at 16/24/32/48 in accent orange; currentColor + viewBox aspect correct." }
+  }
+}

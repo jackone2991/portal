@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "CreatePost": { "verdict": "good", "note": "Tabbed create-post box: Status tab active with accent underline, Multimedia and Blog Post tabs with sprite icons, MV avatar + 'Share what you are thinking here...' textarea, footer photo/tag/location icon buttons, Preview button and the accent-gradient 'Post Status' submit. Fully styled and complete." }
+  }
+}

@@ -10,14 +10,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project scope & constraints (read before planning work)
 
-Everything below describes the **full, multi-year platform** — it is NOT the current scope. A recent evaluation pass ([doc/en/architecture/](doc/en/architecture/), ADRs 00–06) cut v1 down to a hard envelope: **1 developer · 2 weeks · ≤ $100/mo · single VPS.** Default to the v1 cut unless the user says otherwise — do not reach for the bank/social/marketplace modules.
+Everything below describes the **full, multi-year platform** — it is NOT the current scope. A recent evaluation pass ([docs/adr/](docs/adr/), ADRs 00–09) cut v1 down to a hard envelope: **1 developer · 2 weeks · ≤ $100/mo · single VPS.** Default to the v1 cut unless the user says otherwise — do not reach for the bank/social/marketplace modules.
 
-- **v1 = Phase 0 wiring + one video-upload happy path — and it's done.** ([01-v1-scope-cut.md](doc/en/architecture/01-v1-scope-cut.md) scoped it; `MILESTONE_CHECKS.md` at repo root tracks it live.) The demo loop is closed and committed: local password sign-in → authenticated Next.js home → upload mp4 → MinIO (dev) / R2 (prod) → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout. No tenants, no domain CRUD, no bank, no social, no observability stack, no mediamtx/LiveKit.
-- **Phase 0 wiring is closed, not a pending blocker** ([05-phase0-wiring-order.md](doc/en/architecture/05-phase0-wiring-order.md) has the original plan/sequencing — useful for the *shape* of the work but stale on status): migrations audited/split, `make sqlc` run, repository adapters written, `account.New(...)` + `media.New(...)` constructed and mounted in `cmd/api/main.go`, local auth end-to-end, frontend auth gate wired. See "Current status" below for what's actually left.
+- **v1 = Phase 0 wiring + one video-upload happy path — and it's done.** ([01-v1-scope-cut.md](docs/adr/01-v1-scope-cut.md) scoped it; `MILESTONE_CHECKS.md` at repo root tracks it live.) The demo loop is closed and committed: local password sign-in → authenticated Next.js home → upload mp4 → MinIO (dev) / R2 (prod) → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout. No tenants, no domain CRUD, no bank, no social, no observability stack, no mediamtx/LiveKit.
+- **Phase 0 wiring is closed, not a pending blocker** ([05-phase0-wiring-order.md](docs/adr/05-phase0-wiring-order.md) has the original plan/sequencing — useful for the *shape* of the work but stale on status): migrations audited/split, `make sqlc` run, repository adapters written, `account.New(...)` + `media.New(...)` constructed and mounted in `cmd/api/main.go`, local auth end-to-end, frontend auth gate wired. See "Current status" below for what's actually left.
 - **Deferred outright for v1:** bank, social (+ advanced social), creator economy, marketplace, ML safety, LiveKit/mediamtx, the 5-service observability stack. Compose profiles `--profile observability`, `--profile live`, and `--calls` stay disabled.
-- **Storage:** dev runs MinIO bind-mounted to `./data/minio`; prod uses R2. Same `platform/storage` S3-compatible client code either way ([ADR-04](doc/en/architecture/04-storage-tier-budget.md) — the title says "R2-only" but its 2026-06-06 update note keeps MinIO for local dev, since presigned-URL uploads need an S3-speaking origin).
+- **Storage:** dev runs MinIO bind-mounted to `./data/minio`; prod uses R2. Same `platform/storage` S3-compatible client code either way ([ADR-04](docs/adr/04-storage-tier-budget.md) — the title says "R2-only" but its 2026-06-06 update note keeps MinIO for local dev, since presigned-URL uploads need an S3-speaking origin).
 
-The decision log lives in [doc/](doc/): `feature.md` (40 numbered decisions `D-1`…`D-40` across 12 phases — cite these IDs when restating a settled decision), `diagrams.md` (Mermaid system/module/flow diagrams), `archivetech.md` (a competing RBAC vision — see the schism note in the Account section), plus `authoration.md` / `frontend.md`. Every doc exists in both `doc/en/` and `doc/vi/`; keep the pair in sync when you edit one.
+**Docs live in [docs/](docs/)** — restructured 2026-07-07 into a Diátaxis-style tree ([ADR-09](docs/adr/09-docs-architecture.md)); the old flat `doc/en` + `doc/vi` mirror is retired. **English-only now** — the frozen Vietnamese mirror is read-only in `docs/archive/vi-2026-07/`; never update it. Map:
+
+- **[docs/adr/](docs/adr/)** — decision records 00–09 (`NN-*.md`). [ADR-08](docs/adr/08-life-os-pivot.md) repositioned Portal from Facebook-parity to a *life OS* (finance/time/etc.); [docs/product/vision.md](docs/product/vision.md) is the current yardstick.
+- **[docs/product/](docs/product/)** — `feature-inventory.md` (40 decisions `D-1`…`D-40` — cite these IDs), `backlog.md` (gap analysis), `checklist.md`, `vision.md`, `specs/` (implementation-ready SPEC-01…04), `analysis/` (point-in-time audits, e.g. the 2026-07 code-verified gap audit).
+- **[docs/architecture/](docs/architecture/)** — `diagrams.md` (Mermaid), `security.md` (auth/RBAC design, was `authoration.md`), `frontend.md`, and `deferred/access-policies.md` (the competing RBAC vision — see the schism note in the Account section).
+- **[docs/guides/](docs/guides/)** dev setup · **[docs/reference/](docs/reference/)** Asynq event/task registry.
 
 ## Stack & decisions
 
@@ -28,7 +33,7 @@ Self-hosted media + ecosystem monorepo (movies / music / stories / comics). Reso
 - **Job queue: Asynq** (not BullMQ — BullMQ is Node-only). Three priority queues: `transcode` (5), `thumbnail` (3), `default` (1).
 - **API contract: OpenAPI** at [shared/openapi.yaml](shared/openapi.yaml) is the source of truth. Go server stubs (`oapi-codegen`) and TS client types (`openapi-typescript`) are both generated from it. Hand-editing generated files is forbidden.
 - **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Two route groups — `(app)` (authenticated shell: home, `/upload`, `/library/*`) and `(public)` (`/login`, `/register`) — that are version-agnostic: actual page/component code lives in a version-switched `frontend/src/templates/v{N}/` tree (ported from the `template-main/portal` Blade reference), selected via `NEXT_PUBLIC_TEMPLATE_VERSION` through `templates/registry.ts`. Read [frontend/src/templates/README.md](frontend/src/templates/README.md) before adding a page or cutting a `v2`.
-- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (dev origin, bind-mounted) + **Cloudflare R2** (prod). *(Same S3-compatible client either way — see the scope section / [ADR-04](doc/en/architecture/04-storage-tier-budget.md).)*
+- **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (dev origin, bind-mounted) + **Cloudflare R2** (prod). *(Same S3-compatible client either way — see the scope section / [ADR-04](docs/adr/04-storage-tier-budget.md).)*
 
 ## Backend module boundaries (read before editing across modules)
 
@@ -54,6 +59,7 @@ Inside each module: `module.go` (the `New(Deps) *Module` constructor + `MountHTT
 - One documented exception to "api-only": `cmd/api` may grab `account.Module.Engine()` to build module-specific `RequirePermission` middleware. Other modules MUST NOT import `account/rbac` directly.
 - Cross-module async coupling is via Asynq events named `<emitting-module>:<event>` (e.g. `media:asset_ready`). No shared transactions across modules.
 - Schema ownership is per-module; reading another module's tables goes through its `api/` or via events, never a raw JOIN.
+- **These boundaries are CI-enforced.** [backend/.golangci.yml](backend/.golangci.yml) (depguard) + the `lint` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) fail the build on: importing `internal/sysrepository` outside `cmd/sysjobs`, `platform/` importing any module, non-`account` code importing `account/rbac`, and cross-module internal imports. There's a per-real-module isolation rule (account, media); a new module adds its own block (template comment is in the file).
 
 Adding a new module: follow the checklist in `backend/MODULES.md` §8 (create the subtree, add an `sqlc.yaml` block, write the migration with `000N_<name>_…` prefix, wire into both `cmd/api/main.go` and `cmd/worker/main.go`).
 
@@ -61,15 +67,15 @@ Adding a new module: follow the checklist in `backend/MODULES.md` §8 (create th
 
 The account module ([backend/internal/modules/account/](backend/internal/modules/account/)) is intentionally strict; behavior diverges from textbook RBAC in subtle ways.
 
-> **RBAC schism — know this before touching auth.** Two access-control specs conflict: the **role-hierarchy** model documented here (built, in code) vs the **policy-bundle / file-gated-permission** model in `doc/*/archivetech.md` (specced, no code). [ADR-02](doc/en/architecture/02-rbac-model-reconciliation.md) resolves it: **role-hierarchy is canonical for v1**; policy bundles + user groups layer *on top of* roles in a later phase — they don't replace them. Disregard `archivetech.md`'s "spec wins, adjust code" clause for v1.
+> **RBAC schism — know this before touching auth.** Two access-control specs conflict: the **role-hierarchy** model documented here (built, in code) vs the **policy-bundle / file-gated-permission** model in `docs/architecture/deferred/access-policies.md` (specced, no code). [ADR-02](docs/adr/02-rbac-model-reconciliation.md) resolves it: **role-hierarchy is canonical for v1**; policy bundles + user groups layer *on top of* roles in a later phase — they don't replace them. Disregard `access-policies.md`'s "spec wins, adjust code" clause for v1.
 
-> **Direction change (2026-07-05) — local password auth.** [ADR-06](doc/en/architecture/06-local-auth-model.md) supersedes the OIDC-login decision: **Portal owns credentials (`users.password_hash`, Argon2id) and Authentik is dropped from the login path.** The token / refresh / RBAC / revocation / audit machinery below is **unchanged and reused** — only the identity-proof step (`/auth/login` + account creation) changed. Anything below that still says "OIDC / Authentik / callback / nonce" is retired; the Identity flow now reads as follows.
+> **Direction change (2026-07-05) — local password auth.** [ADR-06](docs/adr/06-local-auth-model.md) supersedes the OIDC-login decision: **Portal owns credentials (`users.password_hash`, Argon2id) and Authentik is dropped from the login path.** The token / refresh / RBAC / revocation / audit machinery below is **unchanged and reused** — only the identity-proof step (`/auth/login` + account creation) changed. Anything below that still says "OIDC / Authentik / callback / nonce" is retired; the Identity flow now reads as follows.
 
 ### Identity flow
 1. **Local password auth.** No IdP in the login path. `POST /api/v1/auth/login {email, password}` looks the user up by email, verifies the password against `users.password_hash` (Argon2id, constant-time), checks `disabled_at`, and on success issues the tokens below and sets the cookies. `POST /api/v1/auth/register {email, password, display_name}` creates the account (or admin-provisioned). There is **no** `/auth/callback`, `state`, or `nonce` anymore.
 2. **Two tokens:** short-lived JWT access token (5min, HS256, rotating `kid` keys) + long-lived random refresh token (256-bit, SHA-256-hashed at rest, 30d). *(Unchanged from the OIDC design.)*
 3. **Cookies:** `portal_access` (Path=/, SameSite=Strict) and `portal_refresh` (Path=/api/v1/auth, SameSite=Strict) — both `HttpOnly Secure`. API clients use `Authorization: Bearer` headers instead.
-4. **New responsibilities Portal now owns** (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, password reset (needs the notification module; admin/CLI until then), and — later — MFA/step-up and "Login with Google". See ADR-06 §"New responsibilities".
+4. **New responsibilities Portal now owns** (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, password reset (needs the notification module — specced in [SPEC-04](docs/product/specs/SPEC-04-notification-module.md); admin/CLI until then), and — later — MFA/step-up and "Login with Google". See ADR-06 §"New responsibilities".
 
 ### Two revocation channels — both are needed
 - **`users.token_version`** — bump it and every existing access token fails its DB snapshot check inside `RequireAuth` middleware. The "instant logout-all" channel. Middleware verifies the JWT *and then* re-reads `users.token_version` + `disabled_at` on every request — a still-valid signature is not sufficient.
@@ -111,7 +117,7 @@ The v1 demo loop is **closed and committed**. `account` and `media` are the only
 
 **`MILESTONE_CHECKS.md` (repo root) is the living status tracker — trust it over a doc's "open work"/"planned" section when they disagree.** ADRs and per-module `README.md` files describe the plan as of when they were written (e.g. `account/README.md` and `media/README.md` "Open work" sections predate the wiring landing; `media/README.md` still says the FFmpeg pipeline "logs and returns nil", which is no longer true). MILESTONE_CHECKS.md is updated as work actually lands.
 
-**Known drift:** `shared/openapi.yaml` doesn't fully match the mounted routes — it's missing `/auth/register` and still lists the retired `/auth/callback` (OIDC). CI's `openapi` job only checks the spec parses, not that it matches handlers (wiring `make openapi` output into real drift-checking is on `MILESTONE_CHECKS.md`'s remaining list). Don't assume the spec is authoritative for the account module's current surface.
+**Known drift:** handlers are **hand-written**, not generated from `shared/openapi.yaml` (`make openapi` output isn't committed). The spec's auth paths were reconciled in 2026-07 (`/auth/register` added, retired `/auth/callback` removed), but CI's `openapi` job still only checks the spec **parses**, not that it matches handlers — so spec↔handler drift can still slip through. Don't assume the spec is authoritative for a module's current surface; verify against the code. (Wiring real drift-checking is on `MILESTONE_CHECKS.md`'s remaining list.)
 
 ## Common commands
 
@@ -141,7 +147,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 - **Never reach back to add a column to another module's table** — the owning module ships the migration after coordination.
 - **System roles are protected.** Migration `0002_account_rbac` marks the seven default roles `is_system = true`; the `UpdateRole` / `DeleteRole` queries refuse to touch them. Don't override that flag without thinking about disaster recovery.
 - **Cookie flags are environment-sensitive.** `COOKIE_SECURE=true` is the default; only flip to `false` for plain-`http://localhost` development. Do not commit a `.env` with `COOKIE_SECURE=false`.
-- **`internal/sysrepository` (BYPASSRLS) is restricted to `cmd/sysjobs`.** Anything else importing it is a depguard violation — bypassing RLS in the API path would be catastrophic.
+- **`internal/sysrepository` (BYPASSRLS) is restricted to `cmd/sysjobs`** — enforced by depguard ([backend/.golangci.yml](backend/.golangci.yml) + CI `lint` job). Bypassing RLS in the API path would be catastrophic. (The package doesn't exist yet; the rule is a standing guardrail for when it lands.)
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence

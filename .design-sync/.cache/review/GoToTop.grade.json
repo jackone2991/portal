@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Button": { "verdict": "good", "note": "Scroll-to-top FAB revealed and contained inside a framed faux-page card: orange-gradient circular button with up-chevron at bottom-right over placeholder content lines. Required a scoped style to override the component's default opacity-0/pointer-events-none (scrolled state) plus a transform wrapper to contain its position:fixed; both applied in the preview, not the source." }
+  }
+}

@@ -1,0 +1,18 @@
+/* source(none) disables auto content-detection — it would follow the
+   node_modules/portal-frontend self-link into an infinite loop. Scan only the
+   template tree explicitly. */
+@import "tailwindcss" source(none);
+@source "./src/templates/v1/**/*.tsx";
+
+/* Olympus v1 design tokens (inlined below by .ds-compile-css.mjs) + app base */
+:root {
+  --background: #f5f6fa;
+  --foreground: #515365;
+}
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}

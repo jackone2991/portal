@@ -1,0 +1,15 @@
+{
+  "gradeKey": "a40cb3e494ba0f70",
+  "sourceKey": "f5a790917bc3f18f",
+  "keyRecipe": 7,
+  "cells": [
+    "TextPost",
+    "VideoPost"
+  ],
+  "pendingGrade": false,
+  "shots": [
+    "TextPost",
+    "VideoPost"
+  ],
+  "pageErrs": []
+}

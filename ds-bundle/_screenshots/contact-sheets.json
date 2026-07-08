@@ -1,0 +1,76 @@
+[
+  {
+    "sheet": 1,
+    "components": [
+      "ActivityFeed",
+      "AddBook",
+      "AudioPlayer",
+      "AuthForm",
+      "AuthLanding",
+      "Avatar",
+      "BadgeCard",
+      "BirthdayCard",
+      "BlogCard",
+      "CalendarWidget",
+      "ChatResponsive",
+      "ChoseFromMyPhoto",
+      "ComicIndexView",
+      "CommentForm",
+      "CommentItem",
+      "CommentThread"
+    ]
+  },
+  {
+    "sheet": 2,
+    "components": [
+      "Composer",
+      "ControlBlockButtons",
+      "EventItem",
+      "FormField",
+      "FriendCard",
+      "FriendRequestItem",
+      "FriendRequestsMenu",
+      "FriendSuggestions",
+      "GoToTop",
+      "HelloPreloader",
+      "HomeView",
+      "Icon",
+      "LoginView",
+      "MasterBase",
+      "MasterPublic",
+      "MessagesMenu"
+    ]
+  },
+  {
+    "sheet": 3,
+    "components": [
+      "NotificationsMenu",
+      "NovelDetailView",
+      "PagesWidget",
+      "PersonalInfoWidget",
+      "PlaylistWidget",
+      "Post",
+      "PostControlButtons",
+      "ProfileHeader",
+      "ReactionBar",
+      "RegisterView",
+      "SelectField",
+      "SidebarCenter",
+      "SidebarLeft",
+      "SidebarRight",
+      "TagSelect",
+      "ToggleRow"
+    ]
+  },
+  {
+    "sheet": 4,
+    "components": [
+      "TopMenu",
+      "TrackItem",
+      "UpdateHeaderPhoto",
+      "UploadStudio",
+      "WeatherWidget",
+      "WidgetCard"
+    ]
+  }
+]

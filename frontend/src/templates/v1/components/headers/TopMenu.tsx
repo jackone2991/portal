@@ -169,7 +169,7 @@ function ProfileMenu({
           <span className="block truncate text-sm font-semibold text-white">{name}</span>
           <span className="block truncate text-[10px] uppercase tracking-wide text-white/50">{subtitle}</span>
         </span>
-        <Avatar name={name} size={36} />
+        <Avatar name={name} size={36} status={status === "disconnected" ? "offline" : (status as "online" | "away" | "invisible")} />
         <span className={`hidden text-white/50 transition-transform sm:block ${open ? "rotate-180" : ""}`}>
           <Icon name="dropdown-arrow-icon" size={12} />
         </span>

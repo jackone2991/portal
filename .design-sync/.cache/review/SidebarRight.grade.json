@@ -1,0 +1,6 @@
+{
+  "cells": {
+    "Friends": { "verdict": "good", "note": "Grouped friend panel: Close Friends / My Family / Uncategorized with deterministic avatars, presence dots + status labels, per-group Settings links, Search Friends input, and the purple Olympus Chat launcher. Complete and on-theme." },
+    "Rail": { "verdict": "good", "note": "Collapsed avatar rail at --tpl-rail-w: every friend's avatar with a coloured presence dot, plus the expand-arrow footer. Clean vertical stack." }
+  }
+}

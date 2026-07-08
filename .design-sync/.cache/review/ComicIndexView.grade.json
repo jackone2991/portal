@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Index": {
+      "verdict": "good",
+      "note": "Comics index renders whole: heading + accent 'Add book' button over a responsive 5-up grid of 3:4 bordered cover skeletons. v1 has no comics API, so placeholder covers are the real component — authored honestly. Heading font + accent + surface/border tokens applied. Styled, complete, plausible."
+    }
+  }
+}

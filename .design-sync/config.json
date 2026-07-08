@@ -1,0 +1,34 @@
+{
+  "pkg": "portal-frontend",
+  "globalName": "PortalUI",
+  "projectId": "37fd7f83-cbf7-42fd-8c68-6085871e701f",
+  "shape": "package",
+  "srcDir": "src/templates/v1",
+  "tsconfig": "tsconfig.ds.json",
+  "cssEntry": ".ds-compiled.css",
+  "buildCmd": "node .ds-compile-css.mjs",
+  "extraEntries": ["./.ds-shims/ds-provider.tsx"],
+  "provider": { "component": "DSProvider" },
+  "componentSrcMap": {
+    "SessionKeeper": null,
+    "SvgSprite": null,
+    "Modal": null,
+    "Field": null,
+    "BtnPrimary": null,
+    "BtnSecondary": null,
+    "Card": null
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "dtsPropsFor": {
+    "Avatar": "name: string; size?: number; className?: string;",
+    "Icon": "name: string; size?: number; className?: string; style?: React.CSSProperties;",
+    "AuthForm": "defaultTab?: \"login\" | \"register\";",
+    "MasterBase": "children: React.ReactNode;",
+    "MasterPublic": "children: React.ReactNode;",
+    "FriendRequestsMenu": "open: boolean; onToggle: () => void;",
+    "MessagesMenu": "open: boolean; onToggle: () => void;",
+    "NotificationsMenu": "open: boolean; onToggle: () => void;",
+    "SidebarLeft": "collapsed: boolean; onToggle: () => void;",
+    "SidebarRight": "collapsed: boolean; onToggle: () => void;"
+  }
+}

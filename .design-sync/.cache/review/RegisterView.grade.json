@@ -1,0 +1,8 @@
+{
+  "cells": {
+    "Register": {
+      "verdict": "good",
+      "note": "Route wrapper renders AuthLanding with the register tab active: 'Join the biggest social network' copy + create-account card with display name/email/password + Terms checkbox. Tokens/fonts applied. Styled, complete, plausible."
+    }
+  }
+}

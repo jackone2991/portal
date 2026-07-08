@@ -1,0 +1,5 @@
+{
+  "cells": {
+    "Open": { "verdict": "good", "note": "Forced open on a header-tinted relative container: white dropdown panel fully in-card with FRIEND REQUESTS header + Settings/Find Friends actions, 4 rows (distinct-hue initials avatars, name + mutual-friends sub, blue accept + grey decline buttons; last row is the 'just became friends / write on her wall' info variant), blue 'Check all your Events' footer. Trigger visible top-right with badge 4." }
+  }
+}
