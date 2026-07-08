@@ -85,7 +85,7 @@ Every item here has a **screen already built with sample data**; none has a back
 - ○ **P3** Frontend tests (none yet); a11y pass on the dropdowns/menus.
 
 ## 9. API contract (OpenAPI)
-- ○ **P2** `shared/openapi.yaml` exists but the generated stubs (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) are **not generated/committed** and handlers are hand-written — and the spec itself has drifted: it still lists the retired `/auth/callback` (removed by ADR-06) and is missing `/auth/register`. Whichever way the decision goes, the auth paths need updating first. Decide: adopt `oapi-codegen`/`openapi-typescript` (then wire full openapi-drift in CI), or drop the spec as the source of truth.
+- ○ **P2** `shared/openapi.yaml` exists but handlers are **hand-written** and the generated stubs (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) are **not generated/committed**. The spec's auth paths have since been reconciled (`/auth/register` added, retired `/auth/callback` removed), so the remaining gap is that CI's `openapi` job only checks the spec **parses**, not that it matches the handlers — real spec↔handler drift can still slip through. Decide: adopt `oapi-codegen`/`openapi-typescript` (then wire full openapi-drift in CI), or drop the spec as the source of truth.
 
 ## 10. Deferred big modules (⛔ out of v1)
 Speced in feature.md, explicitly cut by [ADR-01]:
@@ -103,3 +103,19 @@ Speced in feature.md, explicitly cut by [ADR-01]:
 4. **Search** — people/pages, header input + results.
 5. **First domain vertical (Movies)** — proves the media→domain pattern end-to-end.
 6. **Media**: thumbnail worker + delete + library page.
+
+
+Tôi phân tích toàn bộ gaps để tránh tạo spec thừa/trùng:
+
+Gap trong audit	Cần spec mới?
+Notification (ưu tiên #2)	✅ SPEC-04 (chưa có, backbone)
+Hoàn thiện media (thumbnail, DELETE, asset_ready) — ưu tiên #3	❌ Đã nằm trong SPEC-01 (P0.2 / P0.3 / P1.2)
+CI drift-check OpenAPI	❌ Việc CI, không phải product spec
+Social backend (feed/friends/chat)	◐ Rất lớn → cần nhiều spec, và phụ thuộc backbone; để sau
+Time domain / Learning	◐ Life-OS pillar, xa hơn; mới ở mức brief
+Bước tiếp (nếu bạn muốn)
+Các spec mà audit ngụ ý cho tương lai — tôi có thể viết tiếp khi bạn cần:
+
+SPEC-05: Social feed (posts/reactions/comments) — nền của tầng social.
+SPEC-06: Friend graph (request/accept/suggestions/groups).
+SPEC-07: Time domain (calendar/tasks/reminders — tiêu thụ notification).

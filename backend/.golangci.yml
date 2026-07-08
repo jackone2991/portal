@@ -1,0 +1,88 @@
+# golangci-lint (v2) — ENFORCES MODULE BOUNDARIES from backend/MODULES.md + CLAUDE.md.
+#
+# Intentionally minimal: only `depguard` is enabled. The point of this file is to make
+# the architecture's boundary rules machine-checked in CI, NOT to run a broad lint sweep.
+# To add general linters later, extend `linters.enable` (e.g. govet, ineffassign, misspell).
+#
+# Boundary rules encoded below (all verified to pass on current code):
+#   1. internal/sysrepository (BYPASSRLS) — only cmd/sysjobs may import it.
+#   2. internal/platform — infra only, must not import a business module.
+#   3. account/rbac — private engine; only account/* + the cmd/ wiring layer may use it.
+#   4. cross-module isolation — a module reaches another ONLY through its api/ package.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - depguard
+  settings:
+    depguard:
+      rules:
+        # 1) BYPASSRLS repository is catastrophic outside the batch binary.
+        #    (internal/sysrepository does not exist yet — guardrail for when it lands.)
+        sysrepository-bypassrls:
+          list-mode: lax
+          files:
+            - "!**/cmd/sysjobs/**"
+          deny:
+            - pkg: github.com/portal/backend/internal/sysrepository
+              desc: "BYPASSRLS sysrepository is restricted to cmd/sysjobs (CLAUDE.md)."
+
+        # 2) platform/ is cross-cutting infra and holds no business logic —
+        #    it must never import a domain module.
+        platform-no-modules:
+          list-mode: lax
+          files:
+            - "**/internal/platform/**"
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "platform/ is infra-only and must not import business modules (CLAUDE.md)."
+
+        # 3) account/rbac is the private RBAC engine. Only account/* and the cmd/ wiring
+        #    layer may touch it; other modules go through account/api.
+        rbac-engine-private:
+          list-mode: lax
+          files:
+            - "**/internal/modules/**"
+            - "!**/internal/modules/account/**"
+          deny:
+            - pkg: github.com/portal/backend/internal/modules/account/rbac
+              desc: "Other modules must not import account/rbac directly; use account/api (CLAUDE.md)."
+
+        # 4) Cross-module isolation: a module talks to another ONLY through its api/ package,
+        #    never its service/handler/repository/query/etc. (backend/MODULES.md).
+        #    One rule per REAL module; cmd/* (the composition root) is intentionally exempt.
+        #
+        #    NEW MODULE <N>: copy a block below, scope `files` to internal/modules/<N>/**,
+        #    and `allow` <N> (own) + every OTHER module's /api package.
+        module-account-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/account/**"
+          allow:
+            - github.com/portal/backend/internal/modules/account
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-media-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/media/**"
+          allow:
+            - github.com/portal/backend/internal/modules/media
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."

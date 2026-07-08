@@ -11,6 +11,7 @@ Why Portal exists, what it is, and what gets built in what order.
 | [backlog.md](backlog.md) | living analysis | Gap analysis / backlog (was `missing-features.md`); ordering now defers to briefs + specs |
 | [checklist.md](checklist.md) | living checklist | Phase 0–12 deliverables tied to `D-N` IDs |
 | [analysis/facebook-comparison.md](analysis/facebook-comparison.md) | historical | The old parity yardstick — superseded by vision.md ([ADR-08](../adr/08-life-os-pivot.md)) |
+| [analysis/gap-audit-2026-07.md](analysis/gap-audit-2026-07.md) | analysis snapshot | Code-verified gap review (2026-07-08); corrects stale doc claims. Live ordering stays in backlog.md |
 | [briefs/](briefs/) | briefs | Brainstorm-level "what & why" per feature (00–04, from 2026-07-07) |
 | [specs/](specs/README.md) | specs/PRDs | Implementation-ready: SPEC-01 media images · SPEC-02 comic · SPEC-03 finance ledger |
 

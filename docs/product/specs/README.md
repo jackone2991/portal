@@ -15,6 +15,7 @@ to build, how to know it's done, and what to decide before starting*.
 | [SPEC-01](SPEC-01-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — |
 | [SPEC-02](SPEC-02-comic-vertical.md) | Comic vertical, end-to-end | `comic` | SPEC-01 |
 | [SPEC-03](SPEC-03-finance-ledger.md) | Finance ledger (Money-Lover-class) | `bank` | ADR-08; SPEC-01 (P1 receipts only) |
+| [SPEC-04](SPEC-04-notification-module.md) | Notification module (life-stream backbone) | `notify` (new) | — (consumes `media:asset_ready`; unblocks account password reset) |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs; they
 remain in `feature/00-life-os-pivot.md` (→ ADR-08) and `feature/04-deferred.md`.
@@ -43,3 +44,9 @@ remain in `feature/00-life-os-pivot.md` (→ ADR-08) and `feature/04-deferred.md
 SPEC-01 → SPEC-02 → SPEC-03, matching the dependency arrows. SPEC-03 has no hard
 dependency on the other two and can be parallelized if desired; only its P1 receipt
 attachment needs SPEC-01.
+
+**SPEC-04 (notification)** has no hard dependency and can land any time, but its payoff
+compounds: it unblocks account password reset immediately and becomes the consumer for
+every producer the other specs add (`media:asset_ready`, later finance reminders). Per the
+[gap audit](../analysis/gap-audit-2026-07.md) it is priority #2 — slot it right after
+SPEC-01 so `media:asset_ready` has a consumer as soon as it's emitted.
