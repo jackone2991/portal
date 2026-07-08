@@ -7,7 +7,8 @@ holds the design documents themselves.
 
 | Document | Role |
 |---|---|
-| [diagrams.md](diagrams.md) | Mermaid map: system landscape, module boundaries, request/login flows, media pipeline, roadmap |
+| [overview.md](overview.md) | **Start here** — narrative architecture of record: principles, SHIPPED/NEXT/DEFERRED tiers, cross-cutting views, risks |
+| [diagrams.md](diagrams.md) | Mermaid views: landscape, module map, boundary rules, request/login flows, media pipeline (video+image), life-stream events, ADR-08 roadmap |
 | [security.md](security.md) | Security spec: authentication, tokens, revocation, authorization (RBAC/RLS), threat model *(was `authoration.md`)* |
 | [frontend.md](frontend.md) | Next.js 15 frontend: versioned templates, routing, state, auth handoff, page inventory, budgets |
 | [deferred/access-policies.md](deferred/access-policies.md) | Post-v1: policy-bundle / user-group / file-gated access control *(was `archivetech.md`)* |
