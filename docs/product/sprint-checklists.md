@@ -120,6 +120,7 @@
 - [x] restore drill `make restore-drill` (docker-first script) + runbook `docs/guides/backup-restore.md` — **passes live** against a real dump [P0.4 AC]
 - [x] `GET /ops/status` (`ops:read` admin) + OpenAPI (22 paths); `state` precedence failed→stale(never-ran→null)→ok (pure fn, unit-tested); verified live (403/401/200, `state:"ok"`) [F077][F075]
 - [x] `/healthz` untouched
+- [x] **P1.6 queue console** — `hibiken/asynqmon` mounted at `/admin/queues` in `cmd/api`, gated `RequireAuth` + `RequirePermission("queues:read")` (admin); **live-verified** (2026-07-12): 401 unauth / 403 non-admin / 200 admin, SPA + JS assets load (correct content-type), asynqmon API returns live queue data, no CSP in the stack
 - [ ] takeout (P1.7) — deferred [F032]
 - *🐛 caught live: backup streamed a non-seekable pipe into S3 `Put` → fixed to spool to temp file (like `media.UploadSource`)*
 

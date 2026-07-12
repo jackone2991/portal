@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"github.com/hibiken/asynqmon"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -391,6 +392,20 @@ func run() error {
 		bankMod.MountHTTP(r)
 		comicMod.MountHTTP(r)
 		peopleMod.MountHTTP(r)
+	})
+
+	// Queue console (SPEC-09 P1.6): the asynqmon SPA at /admin/queues, admin-gated
+	// (queues:read, seeded to admin in 0012). It is NOT under /api/v1 and NOT
+	// OpenAPI. RootPath must equal the mount path so the SPA's asset/API URLs
+	// resolve; r.Handle (unlike r.Mount) leaves the path unstripped, which is what
+	// asynqmon's internal router expects. Same-origin, so the portal_access cookie
+	// authenticates the browser's XHRs. Two handles cover the exact root + assets.
+	queueMon := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: asynqRedis})
+	r.Group(func(r chi.Router) {
+		r.Use(accountmw.RequireAuth(verifier, adapter))
+		r.Use(accountmw.RequirePermission(engine, "queues:read"))
+		r.Handle("/admin/queues", queueMon)
+		r.Handle("/admin/queues/*", queueMon)
 	})
 
 	srv := &http.Server{
