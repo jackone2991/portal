@@ -4,7 +4,7 @@ Guidance for Claude Code (and humans) working in `frontend/`. Read the repo-root
 [CLAUDE.md](../CLAUDE.md) first for the overall architecture; this file is the
 **frontend conventions contract** — the state-ownership boundary ([D-32]) and the
 RSC rendering decision tree ([D-33]). The prose spec is
-[doc/en/frontend.md](../doc/en/frontend.md).
+[docs/architecture/frontend.md](../docs/architecture/frontend.md).
 
 ## Stack
 

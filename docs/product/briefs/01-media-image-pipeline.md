@@ -21,7 +21,7 @@ items scattered in the backlog (avatar upload, photos).
 ## Non-goals
 
 - Multi-rendition HLS ladder, playback access control, presigned direct upload —
-  all remain separate backlog items (missing-features §2), untouched here.
+  all remain separate backlog items ([backlog.md](../backlog.md) §2 — was `missing-features.md`), untouched here.
 - Audio kind (P2 here, see Requirements).
 - Any image *editing* (crop/rotate) — consumers do client-side crop before upload if needed.
 

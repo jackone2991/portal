@@ -42,6 +42,51 @@ sql:
         emit_exact_table_names: false
         emit_pointers_for_null_types: true
 
+  # notify — notifications / preferences / web-push tables (0009). SPEC-04.
+  - engine: "postgresql"
+    queries: "internal/modules/notify/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "notifyrepo"
+        out:     "internal/modules/notify/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  # journal — journal_entries table (0011). SPEC-05 (life-stream write path).
+  - engine: "postgresql"
+    queries: "internal/modules/journal/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "journalrepo"
+        out:     "internal/modules/journal/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  # ops — ops_backup_runs ledger (0012). SPEC-09 P0 (backups + freshness sentinel).
+  - engine: "postgresql"
+    queries: "internal/modules/ops/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "opsrepo"
+        out:     "internal/modules/ops/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
   # ── Re-enable per module when it has query files ──────────────────
   # - engine: "postgresql"
   #   queries: "internal/modules/tenant/query"

@@ -62,6 +62,9 @@ linters:
           allow:
             - github.com/portal/backend/internal/modules/account
             - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/ops/api
             - github.com/portal/backend/internal/modules/tenant/api
             - github.com/portal/backend/internal/modules/movie/api
             - github.com/portal/backend/internal/modules/music/api
@@ -78,6 +81,66 @@ linters:
           allow:
             - github.com/portal/backend/internal/modules/media
             - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/ops/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-notify-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/notify/**"
+          allow:
+            - github.com/portal/backend/internal/modules/notify
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/ops/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-journal-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/journal/**"
+          allow:
+            - github.com/portal/backend/internal/modules/journal
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/ops/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-ops-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/ops/**"
+          allow:
+            - github.com/portal/backend/internal/modules/ops
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/journal/api
             - github.com/portal/backend/internal/modules/tenant/api
             - github.com/portal/backend/internal/modules/movie/api
             - github.com/portal/backend/internal/modules/music/api

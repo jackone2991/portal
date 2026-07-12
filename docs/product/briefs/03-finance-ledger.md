@@ -1,9 +1,9 @@
 # 03 — Finance Ledger (module `bank`, ledger scope)
 
 **Module:** `bank` (name reserved in diagrams/MODULES; no code yet).
-**Ref:** [feature.md §8](../feature.md) — this spec implements a **subset** (§8.1–8.2 core).
+**Ref:** [feature-inventory.md §8](../feature-inventory.md) (was `feature.md`) — this spec implements a **subset** (§8.1–8.2 core). **Spec:** [SPEC-03](../specs/SPEC-03-finance-ledger.md).
 **Depends on:** nothing hard; receipt attachments reuse spec 01.
-**Requires:** ADR-08 (spec 00) — amends ADR-01, which currently defers "bank" wholesale.
+**Requires:** ADR-08 (spec 00) — **landed** as [ADR-08](../../adr/08-life-os-pivot.md), amending ADR-01's wholesale "bank" deferral.
 
 ## Problem statement
 

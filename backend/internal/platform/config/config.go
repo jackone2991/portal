@@ -21,14 +21,21 @@ type Config struct {
 	RedisURL      string `env:"REDIS_URL,required"`
 	AsynqRedisURL string `env:"ASYNQ_REDIS_URL,required"`
 
+	// BackupDatabaseURL is the DSN the nightly ops:backup_database task runs
+	// pg_dump against (SPEC-09 P0.2). It MUST connect to Postgres DIRECTLY
+	// (postgres:5432), NOT through PgBouncer — a transaction pooler breaks the
+	// session semantics pg_dump needs. Empty ⇒ the backup task self-reports a
+	// failed run (visible on /ops/status) rather than crashing the worker.
+	BackupDatabaseURL string `env:"BACKUP_DATABASE_URL"`
+
 	// JWT signing keys: comma-separated kid:base64-secret pairs. The first
 	// is the active signer; remaining keys remain valid for verification.
 	// Example: "v2:NEW_BASE64,v1:OLD_BASE64"
-	JWTKeys        string        `env:"JWT_SIGNING_KEYS,required"`
-	JWTIssuer      string        `env:"JWT_ISSUER"     envDefault:"portal"`
-	JWTAudience    string        `env:"JWT_AUDIENCE"   envDefault:"portal-api"`
-	AccessTokenTTL time.Duration `env:"ACCESS_TOKEN_TTL"   envDefault:"5m"`
-	RefreshTTL     time.Duration `env:"REFRESH_TOKEN_TTL"  envDefault:"24h"` // 1 day (remember-me window)
+	JWTKeys            string        `env:"JWT_SIGNING_KEYS,required"`
+	JWTIssuer          string        `env:"JWT_ISSUER"     envDefault:"portal"`
+	JWTAudience        string        `env:"JWT_AUDIENCE"   envDefault:"portal-api"`
+	AccessTokenTTL     time.Duration `env:"ACCESS_TOKEN_TTL"   envDefault:"5m"`
+	RefreshTTL         time.Duration `env:"REFRESH_TOKEN_TTL"  envDefault:"24h"` // 1 day (remember-me window)
 	PermissionCacheTTL time.Duration `env:"PERMISSION_CACHE_TTL" envDefault:"5m"`
 
 	S3Endpoint     string `env:"S3_ENDPOINT,required"`
@@ -40,9 +47,21 @@ type Config struct {
 
 	// Login is local password auth (ADR-06); no external IdP config.
 
-	CookieDomain    string `env:"COOKIE_DOMAIN"   envDefault:""`
-	CookieSecure    bool   `env:"COOKIE_SECURE"   envDefault:"true"`
-	PostLoginURL    string `env:"POST_LOGIN_URL"  envDefault:"/"`
+	CookieDomain string `env:"COOKIE_DOMAIN"   envDefault:""`
+	CookieSecure bool   `env:"COOKIE_SECURE"   envDefault:"true"`
+	PostLoginURL string `env:"POST_LOGIN_URL"  envDefault:"/"`
+
+	// Password reset (SPEC-04 P0.3). PasswordResetURL is the reset-link base the
+	// email points at; the raw token is appended as ?token=.
+	PasswordResetURL string        `env:"PASSWORD_RESET_URL" envDefault:"https://portal.localhost/reset-password"`
+	PasswordResetTTL time.Duration `env:"PASSWORD_RESET_TTL" envDefault:"1h"`
+
+	// Notification email channel (SPEC-04 P0.3). Dev = Mailpit (no auth). An
+	// empty SMTPHost makes the worker fall back to a log-sink sender.
+	SMTPHost             string `env:"SMTP_HOST" envDefault:""`
+	SMTPPort             int    `env:"SMTP_PORT" envDefault:"1025"`
+	SMTPFrom             string `env:"SMTP_FROM" envDefault:"Portal <no-reply@portal.localhost>"`
+	NotifyEmailHourlyCap int    `env:"NOTIFY_EMAIL_HOURLY_CAP" envDefault:"200"` // global send ceiling (budget insurance); 0 = uncapped
 
 	// Browser origins allowed to make credentialed (cookie-bearing) calls to the
 	// API. The frontend login form POSTs cross-subdomain, so the exact origin

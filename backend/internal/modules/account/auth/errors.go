@@ -11,11 +11,12 @@ import "errors"
 // Sentinel errors returned by Verify and refresh exchange. Handlers translate
 // these to HTTP 401/403; *do not* leak the underlying reason to the client.
 var (
-	ErrTokenInvalid     = errors.New("auth: token invalid")
-	ErrTokenExpired     = errors.New("auth: token expired")
-	ErrTokenRevoked     = errors.New("auth: token revoked")
-	ErrUserDisabled     = errors.New("auth: user disabled")
-	ErrTokenReused      = errors.New("auth: refresh token reuse detected")
-	ErrUnknownKey       = errors.New("auth: unknown signing key id")
-	ErrUnsupportedAlg   = errors.New("auth: unsupported signing algorithm")
+	ErrTokenInvalid   = errors.New("auth: token invalid")
+	ErrTokenExpired   = errors.New("auth: token expired")
+	ErrTokenRevoked   = errors.New("auth: token revoked")
+	ErrUserDisabled   = errors.New("auth: user disabled")
+	ErrTokenReused    = errors.New("auth: refresh token reuse detected")
+	ErrResetTokenUsed = errors.New("auth: password reset token already used")
+	ErrUnknownKey     = errors.New("auth: unknown signing key id")
+	ErrUnsupportedAlg = errors.New("auth: unsupported signing algorithm")
 )

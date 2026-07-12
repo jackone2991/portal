@@ -26,10 +26,10 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
-# Generated code (re-generate via `make sqlc` / `make openapi`)
+# Generated code. sqlc output is regenerated on build (not committed); the
+# OpenAPI codegen IS committed and CI gates its drift against shared/openapi.yaml
+# (ADR-10 — spec-first, enforced).
 backend/internal/modules/*/repository/*.sql.go
-backend/internal/handler/api.gen.go
-frontend/src/lib/types.gen.ts
 
 # Docker volumes (when running locally with bind mounts)
 data/
@@ -41,5 +41,14 @@ logs/
 # GitNexus index — keep config, ignore the binary index
 .gitnexus/lbug
 
-# Local MCP server config — machine-specific absolute paths, not portable
+# design-sync (converter scratch + build output)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+frontend/.ds-compiled.css
+
+# design-sync npm-install byproduct (repo uses pnpm, no lockfile by design)
+frontend/package-lock.json
 .mcp.json

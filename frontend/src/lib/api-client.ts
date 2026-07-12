@@ -2,7 +2,10 @@
 // Once `make openapi` runs, types from src/lib/types.gen.ts can be used to
 // strongly-type request/response bodies for each endpoint.
 
-const baseURL =
+// Exported so callers that need a direct URL (e.g. an <img>/<a href> straight
+// to a media variant, rather than a JSON round-trip through `api()`) can build
+// on the same base without redeclaring the env fallback.
+export const baseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export class ApiError extends Error {

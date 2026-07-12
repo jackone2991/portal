@@ -32,6 +32,8 @@ tags:
   - name: health
   - name: auth
   - name: assets
+  - name: notifications
+  - name: ops
   - name: movies
   - name: music
   - name: stories
@@ -200,6 +202,177 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Request a password-reset email (SPEC-04 P0.3)
+      description: |
+        Enumeration-safe: always returns **202** whether or not the email is
+        registered, and responds before the lookup/mint/enqueue so timing does
+        not leak account existence. On success (registered, enabled, not
+        throttled) a single-use reset token is minted and a `notify:dispatch`
+        (`account.password_reset`, email channel) is enqueued. Per-email
+        (≥60s gap, ≤3/h) and per-IP throttles apply; the per-IP limit answers
+        429 (revealing nothing about any email). Account-owned; unblocked by SPEC-04.
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "202":
+          description: Accepted (always, regardless of whether the email exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [accepted] }
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Consume a reset token and set a new password (SPEC-04 P0.3)
+      description: |
+        Verifies the one-time reset token (SHA-256 hash lookup, constant-time),
+        sets the new Argon2id password, bumps `token_version` and revokes all
+        refresh tokens (every session is revoked, ADR-06), then consumes the
+        token. Expired / used / unknown tokens — and tokens for a since-disabled
+        user — return **400** `account/invalid-reset-token`; a too-short password
+        returns **400** `account/password-policy`.
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password updated (all sessions revoked)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [password_updated] }
+        "400":
+          description: Invalid/expired/used reset token, or weak password
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /me/notifications:
+    get:
+      tags: [notifications]
+      summary: List the caller's notifications (SPEC-04 P0.1)
+      description: |
+        Newest first (`created_at DESC, id DESC`), cursor-paginated.
+        `status=unread` restricts to unread rows; default (`all`) returns
+        read+unread. Always includes `unread_count` for the bell badge.
+        Requires `notifications:read:own`.
+      operationId: listNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [all, unread], default: all }
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque keyset cursor from a prior page's `next_cursor`.
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: Notifications page + unread badge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /me/notifications/{id}/read:
+    post:
+      tags: [notifications]
+      summary: Mark one notification read (idempotent)
+      description: |
+        Idempotent, owner-scoped. Requires `notifications:write:own`. A notification
+        id belonging to another user (or missing) returns 404 — it never leaks
+        existence.
+      operationId: markNotificationRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Marked read; returns the fresh unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No such notification for this user (`notify/notification-not-found`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /me/notifications/read-all:
+    post:
+      tags: [notifications]
+      summary: Mark all notifications read, optionally up to a watermark
+      description: |
+        Marks unread rows at/older than the `before` watermark read (absent =
+        all). The watermark is the `(created_at, id)` cursor of the newest
+        rendered item, so rows that arrived after the dropdown rendered stay
+        unread. Idempotent. Requires `notifications:write:own`.
+      operationId: markAllNotificationsRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: before
+          in: query
+          required: false
+          description: Keyset watermark cursor; absent marks all unread read.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Returns the fresh unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /assets:
     get:
       tags: [assets]
@@ -207,9 +380,29 @@ paths:
       operationId: listAssets
       security:
         - bearerAuth: []
+      parameters:
+        - name: kind
+          in: query
+          required: false
+          description: Filter by asset kind.
+          schema: { type: string, enum: [video, image, audio] }
+        - name: status
+          in: query
+          required: false
+          description: Filter by status; `processing` includes still-`uploading` sessions.
+          schema: { type: string, enum: [ready, processing, failed] }
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque keyset cursor from a prior page's `next_cursor`.
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
       responses:
         "200":
-          description: The caller's assets
+          description: The caller's assets (cursor-paginated, newest first)
           content:
             application/json:
               schema:
@@ -220,6 +413,10 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Asset"
+                  next_cursor:
+                    type: string
+                    nullable: true
+                    description: Keyset cursor for the next page; absent/null on the last page.
         "401":
           $ref: "#/components/responses/Unauthorized"
     post:
@@ -267,6 +464,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [assets]
+      summary: Delete an asset (owner, or `assets:delete:any`)
+      description: |
+        Soft-deletes (`status='deleting'`, hidden from listings) then purges the
+        asset's storage objects (original, HLS, variants) and rows. Enforced via
+        `RequireOwnerOrPermission`. Idempotent — an already-gone asset returns 404.
+      operationId: deleteAsset
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "204": { description: Deleted }
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -343,6 +560,74 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "413":
+          description: File exceeds the 50 MB limit — object deleted, asset `failed`
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: Unsupported format (e.g. HEIC) — object deleted, asset `failed`
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /assets/{id}/original:
+    get:
+      tags: [assets]
+      summary: Download the original file (owner-only)
+      description: |
+        Streams the source object as an attachment with the sniffed content type.
+        Owner-authenticated only — the original retains full EXIF/GPS (unlike the
+        metadata-stripped variants), so it is never served through the public-ish
+        variant/HLS scheme.
+      operationId: downloadAssetOriginal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: The original bytes (attachment)
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Asset still uploading — source may be partial
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /assets/{id}/variants/{variant}:
+    get:
+      tags: [assets]
+      summary: Stream a derived variant (public-ish)
+      description: |
+        Serves a metadata-stripped WebP variant (`thumb`/`medium`/`poster`). Same
+        public stance as the HLS proxy — variants carry no EXIF, so they are safe
+        to be semi-public; the private original is behind `/assets/{id}/original`.
+      operationId: getAssetVariant
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+        - name: variant
+          in: path
+          required: true
+          schema: { type: string, enum: [thumb, medium, poster] }
+      responses:
+        "200":
+          description: The variant image
+          content:
+            image/webp: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /assets/{id}/hls/{path}:
     get:
@@ -368,6 +653,169 @@ paths:
             video/mp2t: {}
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /journal/entries:
+    post:
+      tags: [journal]
+      summary: Create a journal entry
+      operationId: createJournalEntry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalEntryWrite"
+      responses:
+        "201":
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    get:
+      tags: [journal]
+      summary: List the caller's journal entries (newest occurred_at first)
+      operationId: listJournalEntries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque keyset cursor from a prior page's next_cursor.
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: A cursor page of entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/JournalEntry"
+                  next_cursor:
+                    type: string
+                    nullable: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /journal/entries/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [journal]
+      summary: Fetch one journal entry
+      operationId: getJournalEntry
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not found (missing or owned by another user)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    patch:
+      tags: [journal]
+      summary: Partially update a journal entry
+      operationId: patchJournalEntry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalEntryWrite"
+      responses:
+        "200":
+          description: The updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: Validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    delete:
+      tags: [journal]
+      summary: Delete a journal entry (idempotent)
+      operationId: deleteJournalEntry
+      security:
+        - bearerAuth: []
+      responses:
+        "204": { description: Deleted }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /ops/status:
+    get:
+      tags: [ops]
+      summary: Backup freshness sentinel (admin)
+      description: |
+        Reports whether the nightly Postgres backup is healthy (SPEC-09 P0.5).
+        `state` precedence, first match wins: `failed` (most recent completed run
+        failed) → `stale` (no success within 26 h, including never-ran, where
+        `last_success_at` and `hours_since_success` are null) → `ok`. A `running`
+        run is not completed and never changes `state`.
+      operationId: getOpsStatus
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Backup freshness status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpsStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
 components:
   securitySchemes:
@@ -428,6 +876,74 @@ components:
             $ref: "#/components/schemas/Problem"
 
   schemas:
+    JournalEntry:
+      type: object
+      required: [id, body_md, asset_ids, occurred_at, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        body_md: { type: string }
+        mood: { type: string, nullable: true }
+        asset_ids:
+          type: array
+          items: { type: string, format: uuid }
+        occurred_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    JournalEntryWrite:
+      type: object
+      description: |
+        Create requires body_md; PATCH accepts any subset of the fields. `asset_ids`
+        is rejected with 422 `journal/invalid-asset` until photo attachments (P1.5).
+      properties:
+        body_md: { type: string, minLength: 1, maxLength: 20000 }
+        mood: { type: string, nullable: true, minLength: 1, maxLength: 80 }
+        occurred_at:
+          type: string
+          format: date-time
+          description: Optional; defaults to now. Backdating and future-dating are allowed.
+
+    # ── Ops (SPEC-09) ───────────────────────────────────────────────────────
+    OpsBackupRun:
+      type: object
+      description: One row of the backup-run ledger (`ops_backup_runs`).
+      required: [id, status, started_at]
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [running, ok, failed]
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time, nullable: true }
+        size_bytes: { type: integer, format: int64, nullable: true }
+        storage_key: { type: string, nullable: true }
+        error: { type: string, nullable: true }
+    OpsStatus:
+      type: object
+      description: |
+        Freshness sentinel for the nightly Postgres backup (P0.5). `last_success_at`
+        and `hours_since_success` are both null when a backup has never succeeded.
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [ok, stale, failed]
+          description: |
+            `failed` (most recent completed run failed) → `stale` (no success within
+            26 h, incl. never-ran) → `ok`. A running run never changes state.
+        last_success_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Completion time of the most recent successful run; null if none.
+        hours_since_success:
+          type: number
+          nullable: true
+          description: Hours since the last success; null if none.
+        last_run:
+          allOf:
+            - $ref: "#/components/schemas/OpsBackupRun"
+          nullable: true
+          description: The most recently started run of any status; null if none.
     Health:
       type: object
       required: [status]
@@ -511,6 +1027,19 @@ components:
         display_name:
           type: string
           description: Optional; defaults to the email local-part.
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, new_password]
+      properties:
+        token:        { type: string, description: The one-time reset token from the email link. }
+        new_password: { type: string, format: password, minLength: 8 }
 
     AccessToken:
       type: object
@@ -642,6 +1171,57 @@ components:
             headers:
               type: object
               additionalProperties: { type: string }
+
+    # ── Notifications (SPEC-04) ─────────────────────────────────────────────
+    Notification:
+      type: object
+      required: [id, type, title, data, read_at, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          description: Open type registry (e.g. `media.asset_ready`). See notify/README.md.
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+          description: Target ids / links — e.g. `href` for the bell's click-through.
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the notification was marked read; null while unread.
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationList:
+      type: object
+      required: [items, unread_count]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unread_count:
+          type: integer
+          description: Unread badge count for the bell.
+        next_cursor:
+          type: string
+          nullable: true
+          description: Keyset cursor for the next page; absent/null on the last page.
+
+    UnreadCount:
+      type: object
+      required: [unread_count]
+      properties:
+        unread_count:
+          type: integer
 
     # ── Cross-module schemas (eager, per D-29) ──────────────────────────────
     # Defined ahead of the modules that need them so the contract is stable when

@@ -11,20 +11,23 @@ import (
 )
 
 type Asset struct {
-	ID           pgtype.UUID        `json:"id"`
-	OwnerID      pgtype.UUID        `json:"owner_id"`
-	Kind         string             `json:"kind"`
-	Status       string             `json:"status"`
-	SourceKey    string             `json:"source_key"`
-	OutputPrefix *string            `json:"output_prefix"`
-	MimeType     string             `json:"mime_type"`
-	SizeBytes    int64              `json:"size_bytes"`
-	DurationMs   *int32             `json:"duration_ms"`
-	Width        *int32             `json:"width"`
-	Height       *int32             `json:"height"`
-	ErrorMessage *string            `json:"error_message"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID               pgtype.UUID        `json:"id"`
+	OwnerID          pgtype.UUID        `json:"owner_id"`
+	Kind             string             `json:"kind"`
+	Status           string             `json:"status"`
+	SourceKey        string             `json:"source_key"`
+	OutputPrefix     *string            `json:"output_prefix"`
+	MimeType         string             `json:"mime_type"`
+	SizeBytes        int64              `json:"size_bytes"`
+	DurationMs       *int32             `json:"duration_ms"`
+	Width            *int32             `json:"width"`
+	Height           *int32             `json:"height"`
+	ErrorMessage     *string            `json:"error_message"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	Title            *string            `json:"title"`
+	OriginalFilename *string            `json:"original_filename"`
+	Origin           string             `json:"origin"`
 }
 
 type AuditLog struct {
@@ -38,6 +41,68 @@ type AuditLog struct {
 	Metadata   []byte             `json:"metadata"`
 	Ip         *netip.Addr        `json:"ip"`
 	UserAgent  *string            `json:"user_agent"`
+}
+
+type JournalEntry struct {
+	ID         pgtype.UUID        `json:"id"`
+	UserID     pgtype.UUID        `json:"user_id"`
+	BodyMd     string             `json:"body_md"`
+	Mood       *string            `json:"mood"`
+	AssetIds   []pgtype.UUID      `json:"asset_ids"`
+	OccurredAt pgtype.Timestamptz `json:"occurred_at"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MediaAssetVariant struct {
+	ID         pgtype.UUID        `json:"id"`
+	AssetID    pgtype.UUID        `json:"asset_id"`
+	Variant    string             `json:"variant"`
+	StorageKey string             `json:"storage_key"`
+	Width      int32              `json:"width"`
+	Height     int32              `json:"height"`
+	SizeBytes  int64              `json:"size_bytes"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type Notification struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Type      string             `json:"type"`
+	Title     string             `json:"title"`
+	Body      *string            `json:"body"`
+	Data      []byte             `json:"data"`
+	DedupKey  *string            `json:"dedup_key"`
+	ReadAt    pgtype.Timestamptz `json:"read_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type NotificationPreference struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Type   string      `json:"type"`
+	InApp  bool        `json:"in_app"`
+	Email  bool        `json:"email"`
+	Push   bool        `json:"push"`
+	Muted  bool        `json:"muted"`
+}
+
+type OpsBackupRun struct {
+	ID         pgtype.UUID        `json:"id"`
+	StartedAt  pgtype.Timestamptz `json:"started_at"`
+	FinishedAt pgtype.Timestamptz `json:"finished_at"`
+	Status     string             `json:"status"`
+	SizeBytes  *int64             `json:"size_bytes"`
+	StorageKey *string            `json:"storage_key"`
+	Error      *string            `json:"error"`
+}
+
+type PasswordResetToken struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	TokenHash []byte             `json:"token_hash"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	UsedAt    pgtype.Timestamptz `json:"used_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type Permission struct {
@@ -102,4 +167,15 @@ type UserRole struct {
 	GrantedAt pgtype.Timestamptz `json:"granted_at"`
 	GrantedBy pgtype.UUID        `json:"granted_by"`
 	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+}
+
+type WebPushSubscription struct {
+	ID         pgtype.UUID        `json:"id"`
+	UserID     pgtype.UUID        `json:"user_id"`
+	Endpoint   string             `json:"endpoint"`
+	P256dh     string             `json:"p256dh"`
+	Auth       string             `json:"auth"`
+	UserAgent  *string            `json:"user_agent"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	LastUsedAt pgtype.Timestamptz `json:"last_used_at"`
 }

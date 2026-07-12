@@ -33,6 +33,10 @@ const (
 	ActionAuthRefreshReuse    = "account.refresh.reuse_detected" // SECURITY ALERT
 	ActionAuthDisabledAttempt = "account.session.disabled_attempt"
 
+	// password reset (SPEC-04 P0.3)
+	ActionPasswordResetRequested = "account.password.reset_requested"
+	ActionPasswordResetCompleted = "account.password.reset_completed"
+
 	// rbac
 	ActionRBACRoleCreated = "account.role.created"
 	ActionRBACRoleUpdated = "account.role.updated"

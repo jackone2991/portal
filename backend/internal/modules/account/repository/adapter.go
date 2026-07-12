@@ -181,6 +181,63 @@ func (a *Adapter) RevokeAllForUser(ctx context.Context, userID uuid.UUID, reason
 	return a.q.RevokeAllRefreshTokensForUser(ctx, RevokeAllRefreshTokensForUserParams{UserID: pgUUID(userID), RevokeReason: &reason})
 }
 
+// PurgeExpiredRefreshTokens deletes rows whose expiry has passed. Called by the
+// shared periodic scheduler (cmd/worker), not on the request path.
+func (a *Adapter) PurgeExpiredRefreshTokens(ctx context.Context) error {
+	return a.q.PurgeExpiredRefreshTokens(ctx)
+}
+
+// ── auth.ResetStore (password-reset tokens, SPEC-04 P0.3) ───────────
+
+func (a *Adapter) CreatePasswordResetToken(ctx context.Context, in auth.CreatePasswordResetTokenInput) (auth.PasswordResetTokenRow, error) {
+	row, err := a.q.CreatePasswordResetToken(ctx, CreatePasswordResetTokenParams{
+		UserID:    pgUUID(in.UserID),
+		TokenHash: in.TokenHash,
+		ExpiresAt: pgTime(in.ExpiresAt),
+	})
+	if err != nil {
+		return auth.PasswordResetTokenRow{}, err
+	}
+	return toResetRow(row), nil
+}
+
+func (a *Adapter) GetPasswordResetTokenByHash(ctx context.Context, hash []byte) (auth.PasswordResetTokenRow, error) {
+	row, err := a.q.GetPasswordResetTokenByHash(ctx, hash)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return auth.PasswordResetTokenRow{}, auth.ErrNoRow
+		}
+		return auth.PasswordResetTokenRow{}, err
+	}
+	return toResetRow(row), nil
+}
+
+func (a *Adapter) MarkPasswordResetTokenUsed(ctx context.Context, id uuid.UUID) error {
+	return a.q.MarkPasswordResetTokenUsed(ctx, pgUUID(id))
+}
+
+// PurgeExpiredPasswordResetTokens hard-deletes tokens well past expiry (periodic).
+func (a *Adapter) PurgeExpiredPasswordResetTokens(ctx context.Context) error {
+	return a.q.PurgeExpiredPasswordResetTokens(ctx)
+}
+
+// SetPassword replaces a user's Argon2id hash (password reset, P0.3). Pair with
+// BumpUserTokenVersion to revoke every existing session.
+func (a *Adapter) SetPassword(ctx context.Context, userID uuid.UUID, hash string) error {
+	return a.q.SetUserPassword(ctx, SetUserPasswordParams{ID: pgUUID(userID), PasswordHash: strPtrOrNil(hash)})
+}
+
+func toResetRow(r PasswordResetToken) auth.PasswordResetTokenRow {
+	return auth.PasswordResetTokenRow{
+		ID:        uuidFrom(r.ID),
+		UserID:    uuidFrom(r.UserID),
+		TokenHash: r.TokenHash,
+		ExpiresAt: r.ExpiresAt.Time,
+		UsedAt:    sql.NullTime{Time: r.UsedAt.Time, Valid: r.UsedAt.Valid},
+		CreatedAt: r.CreatedAt.Time,
+	}
+}
+
 // ── audit.EventStore ────────────────────────────────────────────────
 
 func (a *Adapter) WriteAuditEvent(ctx context.Context, in audit.WriteEventInput) error {

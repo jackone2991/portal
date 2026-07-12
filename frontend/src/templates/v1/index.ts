@@ -6,6 +6,7 @@ import { LoginView } from "./views/auth/LoginView";
 import { RegisterView } from "./views/auth/RegisterView";
 import { ComicIndexView } from "./views/library/comic/ComicIndexView";
 import { NovelDetailView } from "./views/library/novel/NovelDetailView";
+import { MediaIndexView } from "./views/library/media/MediaIndexView";
 
 /**
  * Template "v1" — React/Next.js port of the Crumina "Olympus" social theme at
@@ -24,5 +25,6 @@ export const v1: TemplateManifest = {
     register: RegisterView,
     libraryComic: ComicIndexView,
     libraryNovelDetail: NovelDetailView,
+    libraryMedia: MediaIndexView,
   },
 };

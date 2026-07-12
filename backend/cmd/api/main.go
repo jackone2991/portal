@@ -28,9 +28,17 @@ import (
 	"github.com/portal/backend/internal/modules/account/auth"
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
+	"github.com/portal/backend/internal/modules/journal"
+	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
+	"github.com/portal/backend/internal/modules/notify"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
+	notifyrepo "github.com/portal/backend/internal/modules/notify/repository"
+	"github.com/portal/backend/internal/modules/ops"
+	opsrepo "github.com/portal/backend/internal/modules/ops/repository"
 	"github.com/portal/backend/internal/platform/config"
+	"github.com/portal/backend/internal/platform/events"
 	"github.com/portal/backend/internal/platform/storage"
 )
 
@@ -69,6 +77,22 @@ func run() error {
 	rdb := redis.NewClient(redisOpt)
 	defer func() { _ = rdb.Close() }()
 
+	// Asynq client — shared by the notify:dispatch enqueuer (account password
+	// reset) and the media module. Created up front so the dispatch closure below
+	// can capture it before account.New.
+	asynqRedis, err := asynq.ParseRedisURI(cfg.AsynqRedisURL)
+	if err != nil {
+		return fmt.Errorf("asynq redis: %w", err)
+	}
+	asynqClient := asynq.NewClient(asynqRedis)
+	defer func() { _ = asynqClient.Close() }()
+
+	// dispatchNotify is the ONLY way a producer reaches the notification fan-out
+	// (notify/api). Passed to account for password-reset emails.
+	dispatchNotify := func(ctx context.Context, intent notifyapi.NotificationIntent) error {
+		return notifyapi.Enqueue(ctx, asynqClient, intent)
+	}
+
 	// ── Account module ──────────────────────────────────────────────
 	keys, err := signingKeys(cfg)
 	if err != nil {
@@ -90,6 +114,11 @@ func run() error {
 		return err
 	}
 
+	resetMgr, err := auth.NewResetManager(adapter, cfg.PasswordResetTTL)
+	if err != nil {
+		return fmt.Errorf("reset manager: %w", err)
+	}
+
 	accountMod, err := account.New(account.Deps{
 		Redis:           rdb,
 		Issuer:          issuer,
@@ -106,6 +135,10 @@ func run() error {
 		CookieDomain:    cfg.CookieDomain,
 		CookieSecure:    cfg.CookieSecure,
 		PostLoginURL:    cfg.PostLoginURL,
+
+		ResetTokens:      resetMgr,
+		Dispatch:         dispatchNotify,
+		PasswordResetURL: cfg.PasswordResetURL,
 	})
 	if err != nil {
 		return fmt.Errorf("account module: %w", err)
@@ -124,18 +157,31 @@ func run() error {
 		return fmt.Errorf("storage: %w", err)
 	}
 
-	asynqRedis, err := asynq.ParseRedisURI(cfg.AsynqRedisURL)
-	if err != nil {
-		return fmt.Errorf("asynq redis: %w", err)
-	}
-	asynqClient := asynq.NewClient(asynqRedis)
-	defer func() { _ = asynqClient.Close() }()
+	// media events publisher. No API-side subscriptions for SPEC-01 (media emits
+	// media:asset_ready / media:asset_deleted; consumers land in later specs) —
+	// publishing with no subscribers is a deliberate no-op.
+	mediaEvents := events.NewPublisher(asynqClient)
 
-	mediaMod, err := media.New(media.Deps{
-		Store:       store,
-		Repo:        mediarepo.NewAdapter(pool),
-		Enqueuer:    asynqClient,
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+	// DELETE /assets/{id} is gated by "owner OR assets:delete:any" — the extractor
+	// resolves the asset's owner via the media module (built below; the closure
+	// captures the var so it is set by the time a request arrives).
+	var mediaMod *media.Module
+	extractAssetOwner := func(r *http.Request) (uuid.UUID, error) {
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return uuid.Nil, err
+		}
+		return mediaMod.AssetOwner(r.Context(), id)
+	}
+	deleteMW := accountmw.RequireOwnerOrPermission(accountMod.Engine(), "assets:delete:any", extractAssetOwner)
+
+	mediaMod, err = media.New(media.Deps{
+		Store:            store,
+		Repo:             mediarepo.NewAdapter(pool),
+		Enqueuer:         asynqClient,
+		Events:           mediaEvents,
+		RequireAuth:      accountmw.RequireAuth(verifier, adapter),
+		DeleteMiddleware: deleteMW,
 		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
 			id, ok := auth.FromContext(ctx)
 			if !ok || id.IsAnonymous() {
@@ -148,6 +194,61 @@ func run() error {
 	})
 	if err != nil {
 		return fmt.Errorf("media module: %w", err)
+	}
+
+	// ── Notify module (store read API: /me/notifications) ────────────
+	// The API server serves the bell's read/mark-read routes; the delivery
+	// fan-out (dispatch/email/consumer) runs in cmd/worker.
+	notifyMod, err := notify.New(notify.Deps{
+		Repo:        notifyrepo.NewAdapter(pool),
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(accountMod.Engine(), code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("notify module: %w", err)
+	}
+
+	// ── Journal module (life-stream write path: /journal/entries) ────
+	journalMod, err := journal.New(journal.Deps{
+		Repo:        journalrepo.NewAdapter(pool),
+		Events:      mediaEvents, // shared fan-out publisher; journal:entry_created is emit-only
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(accountMod.Engine(), code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("journal module: %w", err)
+	}
+
+	// ── Ops module (freshness sentinel: /ops/status) ────────────────
+	// The API server serves only the read side; the nightly backup task runs in
+	// cmd/worker. ops:read is admin-tier (seeded + granted to admin in 0012).
+	opsMod, err := ops.New(ops.Deps{
+		Repo:        opsrepo.NewAdapter(pool),
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(accountMod.Engine(), code)
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("ops module: %w", err)
 	}
 
 	// ── HTTP ────────────────────────────────────────────────────────
@@ -169,6 +270,9 @@ func run() error {
 		r.Get("/healthz", healthz(pool, rdb))
 		accountMod.MountHTTP(r)
 		mediaMod.MountHTTP(r)
+		notifyMod.MountHTTP(r)
+		journalMod.MountHTTP(r)
+		opsMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{

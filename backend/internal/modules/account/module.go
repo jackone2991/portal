@@ -7,11 +7,12 @@
 // Wiring contract:
 //
 //	m, err := account.New(deps)
-//	m.MountHTTP(apiRouter)        // wires /auth/*, /me/sessions
-//	m.RegisterTasks(asynqMux)     // wires notify:* tasks
+//	m.MountHTTP(apiRouter)        // wires /auth/*
 //
-// The module is constructed once per binary; routes/tasks are registered by
-// the cmd/api and cmd/worker entry points respectively.
+// The module is constructed once per binary; routes are registered by the
+// cmd/api entry point. account owns no Asynq tasks — password-reset and
+// security-alert delivery are enqueued through notify/api (SPEC-04); the notify
+// module owns the notify:* prefix.
 package account
 
 import (
@@ -21,7 +22,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
 	accountapi "github.com/portal/backend/internal/modules/account/api"
@@ -29,6 +29,7 @@ import (
 	"github.com/portal/backend/internal/modules/account/handler"
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	"github.com/portal/backend/internal/modules/account/rbac"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	"github.com/portal/backend/internal/platform/audit"
 )
 
@@ -58,6 +59,12 @@ type Deps struct {
 	CookieDomain string
 	CookieSecure bool
 	PostLoginURL string
+
+	// Password reset (SPEC-04 P0.3). ResetTokens nil disables the forgot/reset
+	// routes; Dispatch enqueues notify:dispatch via notify/api (set by cmd/api).
+	ResetTokens      *auth.ResetManager
+	Dispatch         func(ctx context.Context, intent notifyapi.NotificationIntent) error
+	PasswordResetURL string
 }
 
 // Module is the runtime handle for the account domain.
@@ -95,6 +102,10 @@ func New(d Deps) (*Module, error) {
 		CookieDomain: d.CookieDomain,
 		CookieSecure: d.CookieSecure,
 		PostLoginURL: d.PostLoginURL,
+
+		ResetTokens:      d.ResetTokens,
+		Dispatch:         d.Dispatch,
+		PasswordResetURL: d.PasswordResetURL,
 	}
 
 	return &Module{
@@ -114,6 +125,12 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.Post("/register", m.handler.Register)
 		r.Post("/refresh", m.handler.HandleRefresh)
 
+		// Password reset (SPEC-04 P0.3) — public, mounted only when wired.
+		if m.handler.ResetTokens != nil {
+			r.Post("/forgot-password", m.handler.ForgotPassword)
+			r.Post("/reset-password", m.handler.ResetPassword)
+		}
+
 		// Authenticated routes
 		r.Group(func(r chi.Router) {
 			r.Use(accountmw.RequireAuth(m.deps.Verifier, m.deps.SnapshotFetcher))
@@ -123,11 +140,6 @@ func (m *Module) MountHTTP(r chi.Router) {
 		})
 	})
 }
-
-// RegisterTasks attaches the module's Asynq handlers (notifications,
-// account.refresh.reuse_detected alerting, etc.). Placeholder — wired when the
-// notifications subpackage lands.
-func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
 
 // API exposes the account module's public surface to other modules.
 func (m *Module) API() accountapi.API { return m.publicAPI }

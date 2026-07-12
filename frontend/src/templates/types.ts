@@ -40,5 +40,7 @@ export interface TemplateManifest {
     libraryComic: ComponentType;
     /** `views/library/novel/detail.blade.php` */
     libraryNovelDetail: ComponentType<{ id: string }>;
+    /** SPEC-01 P0.4 ([F006]) — no Blade equivalent; media library grid. */
+    libraryMedia: ComponentType;
   };
 }

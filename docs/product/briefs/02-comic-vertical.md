@@ -1,7 +1,7 @@
 # 02 — Comic Vertical (end-to-end)
 
 **Module:** `comic` (skeleton: `module.go` + `api/` stub) · **Depends on:** spec 01 (image kind).
-**Ref:** [feature.md §7](../feature.md). Replaces the placeholder `/library/comic` views.
+**Ref:** [feature-inventory.md §7](../feature-inventory.md) (was `feature.md`). Replaces the placeholder `/library/comic` views. **Spec:** [SPEC-02](../specs/SPEC-02-comic-vertical.md).
 
 ## Problem statement
 

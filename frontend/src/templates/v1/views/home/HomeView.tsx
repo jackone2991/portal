@@ -1,105 +1,296 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { Avatar } from "../../components/ui/Avatar";
 import { Icon } from "../../components/ui/Icon";
+import { Composer } from "../../components/composer/Composer";
+import { EntryCard } from "../../components/journal/EntryCard";
+import { Modal, BtnSecondary } from "../../components/popup/Modal";
+import { ApiError } from "@/lib/api-client";
+import { problemDisplayMessage } from "@/lib/problems";
+import {
+  createEntry,
+  deleteEntry,
+  listEntries,
+  patchEntry,
+  type CreateEntryInput,
+  type JournalEntry,
+  type ListEntriesPage,
+  type PatchEntryInput,
+} from "@/lib/journal";
 
 /**
- * Home / newsfeed — React + Tailwind port of the Olympus "Newsfeed"
- * (template-main/social/social/Newsfeed.html), light theme, authentic sprite icons.
+ * Home / life-stream — SPEC-05 P0.4. The centre column is the real journal
+ * write path: the ported {@link Composer} posts to `POST /journal/entries` via
+ * a TanStack mutation with optimistic insert (D-32), and the feed slot renders
+ * an interim journal-only list (`useInfiniteQuery` over `GET /journal/entries`,
+ * newest `occurred_at` first). SPEC-06 later swaps this list query for
+ * `GET /stream` without moving the composer.
  *
- * Left rail: weather · calendar · pages. Centre: composer + post feed.
- * Right rail: story card · friend suggestions · activity feed.
- *
- * Feed content mirrors the Olympus sample; there is no social/posts backend in
- * v1, so posting from the composer optimistically prepends to the local list.
+ * The old hard-coded `INITIAL_FEED` fixtures, the fake local-state composer and
+ * the social `PostCard` are gone — every rendered entry is a DB row. The
+ * left/right rails (weather/calendar/pages, birthday/friends/activity) remain
+ * static Olympus chrome; they are out of SPEC-05's scope.
  */
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
 
-type Media = { title: string; desc: string; source: string };
-
-type Post = {
-  id: string;
-  author: string;
-  action: ReactNode;
-  time: string;
-  text: ReactNode;
-  media?: Media;
-  likes: number;
-  likedByLabel: ReactNode;
-  comments: number;
-  shares: number;
-  liked?: boolean;
-};
-
-const INITIAL_FEED: Post[] = [
-  {
-    id: "p1",
-    author: "Marina Valentine",
-    action: (
-      <>
-        shared a <A>link</A>
-      </>
-    ),
-    time: "March 4 at 2:05pm",
-    text: (
-      <>
-        Hey <A>Cindi</A>, you should really check out this new song by Iron Maid. The next time they
-        come to the city we should totally go!
-      </>
-    ),
-    media: {
-      title: "Iron Maid - ChillGroves",
-      desc: "Lorem ipsum dolor sit amet, consectetur ipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
-      source: "YOUTUBE.COM",
-    },
-    likes: 18,
-    likedByLabel: (
-      <>
-        <b>Jenny</b>, <b>Robert</b> and <b>18 more</b> liked this
-      </>
-    ),
-    comments: 0,
-    shares: 16,
-  },
-  {
-    id: "p2",
-    author: "Elaine Dreyfuss",
-    action: "",
-    time: "9 hours ago",
-    text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempo incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris consequat.",
-    likes: 24,
-    likedByLabel: (
-      <>
-        <b>You</b>, <b>Elaine</b> and <b>22 more</b> liked this
-      </>
-    ),
-    comments: 17,
-    shares: 24,
-  },
-  {
-    id: "p3",
-    author: "James Spiegel",
-    action: "",
-    time: "38 mins ago",
-    text: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium der doloremque laudantium, totam rem aperiam.",
-    likes: 12,
-    likedByLabel: (
-      <>
-        <b>Nicholas</b>, <b>Diana</b> and <b>10 more</b> liked this
-      </>
-    ),
-    comments: 3,
-    shares: 5,
-  },
-];
+/** Query key for the journal list cache (single infinite-query entry). */
+const JOURNAL_KEY = ["journal", "entries"] as const;
 
 export function HomeView() {
-  const [displayName, setDisplayName] = useState("You");
-  const [posts, setPosts] = useState<Post[]>(INITIAL_FEED);
+  const displayName = useDisplayName();
+  const queryClient = useQueryClient();
 
+  // Composer draft (form state via local useState; the composer is controlled +
+  // presentational so the mutation can clear/restore it).
+  const [bodyMd, setBodyMd] = useState("");
+  const [mood, setMood] = useState("");
+  const [occurredAt, setOccurredAt] = useState(() => toDatetimeLocal(new Date()));
+  const [composerError, setComposerError] = useState<string | null>(null);
+
+  const [editing, setEditing] = useState<JournalEntry | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<JournalEntry | null>(null);
+  const [rowError, setRowError] = useState<string | null>(null);
+
+  const query = useInfiniteQuery({
+    queryKey: JOURNAL_KEY,
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      listEntries({ cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+  });
+
+  const entries = useMemo(
+    () => query.data?.pages.flatMap((page) => page.items) ?? [],
+    [query.data],
+  );
+
+  const createMutation = useMutation({
+    mutationFn: (input: CreateEntryInput) => createEntry(input),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: JOURNAL_KEY });
+      const previous = queryClient.getQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY);
+      const tempId = makeTempId();
+      const now = new Date().toISOString();
+      const optimistic: JournalEntry = {
+        id: tempId,
+        body_md: input.body_md,
+        mood: input.mood ?? null,
+        asset_ids: [],
+        occurred_at: input.occurred_at ?? now,
+        created_at: now,
+        updated_at: now,
+      };
+      queryClient.setQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY, (data) =>
+        insertEntry(data, optimistic),
+      );
+      return { previous, tempId };
+    },
+    onError: (err, input, context) => {
+      if (context?.previous) queryClient.setQueryData(JOURNAL_KEY, context.previous);
+      // Restore the composer draft so nothing is lost (P0.4 acceptance).
+      setBodyMd(input.body_md);
+      setMood(input.mood ?? "");
+      if (input.occurred_at) setOccurredAt(toDatetimeLocal(new Date(input.occurred_at)));
+      setComposerError(errorMessage(err));
+    },
+    onSuccess: (saved, _input, context) => {
+      // Swap the temp row for the server's canonical entry (id, timestamps) and
+      // re-sort — no full refetch (P0.4 acceptance).
+      queryClient.setQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY, (data) =>
+        replaceEntry(data, context?.tempId ?? saved.id, () => saved),
+      );
+      setComposerError(null);
+      setOccurredAt(toDatetimeLocal(new Date()));
+    },
+  });
+
+  const patchMutation = useMutation({
+    mutationFn: ({ id, fields }: { id: string; fields: PatchEntryInput }) =>
+      patchEntry(id, fields),
+    onMutate: async ({ id, fields }) => {
+      await queryClient.cancelQueries({ queryKey: JOURNAL_KEY });
+      const previous = queryClient.getQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY);
+      const now = new Date().toISOString();
+      queryClient.setQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY, (data) =>
+        replaceEntry(data, id, (entry) => ({
+          ...entry,
+          ...(fields.body_md !== undefined ? { body_md: fields.body_md } : {}),
+          ...(fields.mood !== undefined ? { mood: fields.mood || null } : {}),
+          ...(fields.occurred_at !== undefined ? { occurred_at: fields.occurred_at } : {}),
+          updated_at: now,
+        })),
+      );
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(JOURNAL_KEY, context.previous);
+      setRowError(errorMessage(err));
+    },
+    onSuccess: (saved) => {
+      queryClient.setQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY, (data) =>
+        replaceEntry(data, saved.id, () => saved),
+      );
+      setEditing(null);
+      setRowError(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (entry: JournalEntry) => deleteEntry(entry.id),
+    onMutate: async (entry) => {
+      await queryClient.cancelQueries({ queryKey: JOURNAL_KEY });
+      const previous = queryClient.getQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY);
+      queryClient.setQueryData<InfiniteData<ListEntriesPage>>(JOURNAL_KEY, (data) =>
+        removeEntry(data, entry.id),
+      );
+      return { previous };
+    },
+    onError: (err, _entry, context) => {
+      if (context?.previous) queryClient.setQueryData(JOURNAL_KEY, context.previous);
+      setRowError(errorMessage(err));
+    },
+    onSuccess: () => {
+      setPendingDelete(null);
+      setRowError(null);
+    },
+  });
+
+  function handleCreate() {
+    const body = bodyMd.trim();
+    if (!body || createMutation.isPending) return;
+    setComposerError(null);
+    const input: CreateEntryInput = {
+      body_md: body,
+      occurred_at: fromDatetimeLocal(occurredAt),
+    };
+    const trimmedMood = mood.trim();
+    if (trimmedMood) input.mood = trimmedMood;
+    // Optimistically clear the draft; onError restores it from the variables.
+    setBodyMd("");
+    setMood("");
+    createMutation.mutate(input);
+  }
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <div className="hidden space-y-5 lg:block">
+        <WeatherWidget />
+        <CalendarWidget />
+        <PagesWidget />
+      </div>
+
+      <div className="min-w-0 space-y-5">
+        <Composer
+          displayName={displayName}
+          bodyMd={bodyMd}
+          mood={mood}
+          occurredAt={occurredAt}
+          onBodyMdChange={setBodyMd}
+          onMoodChange={setMood}
+          onOccurredAtChange={setOccurredAt}
+          onSubmit={handleCreate}
+          submitting={createMutation.isPending}
+          error={composerError}
+        />
+
+        {rowError && <ErrorBanner>{rowError}</ErrorBanner>}
+
+        {query.isPending ? (
+          <FeedSkeleton />
+        ) : query.isError ? (
+          <FeedError onRetry={() => query.refetch()} />
+        ) : entries.length === 0 ? (
+          <FeedEmpty />
+        ) : (
+          <>
+            {entries.map((entry) => (
+              <EntryCard
+                key={entry.id}
+                displayName={displayName}
+                entry={entry}
+                onRequestEdit={() => {
+                  setRowError(null);
+                  setEditing(entry);
+                }}
+                onRequestDelete={() => {
+                  setRowError(null);
+                  setPendingDelete(entry);
+                }}
+              />
+            ))}
+
+            {query.hasNextPage && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => query.fetchNextPage()}
+                  disabled={query.isFetchingNextPage}
+                  className="rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50"
+                  style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+                >
+                  {query.isFetchingNextPage ? "Loading…" : "Load more"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <aside className="hidden space-y-5 2xl:block">
+        <BirthdayCard />
+        <FriendSuggestions />
+        <ActivityFeed />
+      </aside>
+
+      {editing && (
+        <EditEntryDialog
+          entry={editing}
+          saving={patchMutation.isPending}
+          onCancel={() => setEditing(null)}
+          onSave={(fields) => patchMutation.mutate({ id: editing.id, fields })}
+        />
+      )}
+
+      {pendingDelete && (
+        <Modal open onClose={() => setPendingDelete(null)} title="Delete entry?" width={420}>
+          <div className="space-y-4 p-6">
+            <p className="text-sm" style={{ color: "var(--tpl-text)" }}>
+              This journal entry will be permanently deleted. This can&apos;t be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <BtnSecondary onClick={() => setPendingDelete(null)}>Cancel</BtnSecondary>
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate(pendingDelete)}
+                disabled={deleteMutation.isPending}
+                className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                style={{ background: "#ef4444" }}
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ── current user (display name) ──────────────────────────────────── */
+
+/** Owner display name for composer/entry avatars. Kept as a light fetch (as it
+ * was before) — it's chrome, not the P0.4 server-state surface. */
+function useDisplayName(): string {
+  const [displayName, setDisplayName] = useState("You");
   useEffect(() => {
     let alive = true;
     fetch(`${API_BASE}/api/v1/auth/me`, { credentials: "include" })
@@ -112,58 +303,236 @@ export function HomeView() {
       alive = false;
     };
   }, []);
+  return displayName;
+}
 
-  function handlePost(text: string) {
-    setPosts((prev) => [
-      {
-        id: `me-${prev.length}-${text.length}`,
-        author: displayName,
-        action: "",
-        time: "Just now",
-        text,
-        likes: 0,
-        likedByLabel: <span style={{ color: "var(--tpl-muted)" }}>Be the first to like this</span>,
-        comments: 0,
-        shares: 0,
-      },
-      ...prev,
-    ]);
+/* ── edit dialog ──────────────────────────────────────────────────── */
+
+function EditEntryDialog({
+  entry,
+  saving,
+  onCancel,
+  onSave,
+}: {
+  entry: JournalEntry;
+  saving: boolean;
+  onCancel: () => void;
+  onSave: (fields: PatchEntryInput) => void;
+}) {
+  const [body, setBody] = useState(entry.body_md);
+  const [mood, setMood] = useState(entry.mood ?? "");
+  const [occurredAt, setOccurredAt] = useState(() =>
+    toDatetimeLocal(new Date(entry.occurred_at)),
+  );
+
+  function save() {
+    const trimmedBody = body.trim();
+    if (!trimmedBody || saving) return;
+    const fields: PatchEntryInput = {
+      body_md: trimmedBody,
+      mood: mood.trim(),
+      occurred_at: fromDatetimeLocal(occurredAt),
+    };
+    onSave(fields);
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]">
-      <div className="hidden space-y-5 lg:block">
-        <WeatherWidget />
-        <CalendarWidget />
-        <PagesWidget />
-      </div>
-
-      <div className="min-w-0 space-y-5">
-        <Composer displayName={displayName} onPost={handlePost} />
-        {posts.map((p) => (
-          <PostCard
-            key={p.id}
-            post={p}
-            onToggleLike={() =>
-              setPosts((prev) =>
-                prev.map((x) =>
-                  x.id === p.id
-                    ? { ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) }
-                    : x,
-                ),
-              )
-            }
+    <Modal open onClose={onCancel} title="Edit entry" width={520}>
+      <div className="space-y-4 p-6">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tpl-muted)" }}>
+            Entry
+          </span>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={4}
+            className="w-full resize-y rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]"
+            style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
           />
-        ))}
-      </div>
+        </label>
 
-      <aside className="hidden space-y-5 2xl:block">
-        <BirthdayCard />
-        <FriendSuggestions />
-        <ActivityFeed />
-      </aside>
+        <div className="flex flex-wrap gap-4">
+          <label className="min-w-0 flex-1 basis-40">
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tpl-muted)" }}>
+              Mood
+            </span>
+            <input
+              type="text"
+              value={mood}
+              onChange={(e) => setMood(e.target.value)}
+              maxLength={80}
+              placeholder="Optional"
+              className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]"
+              style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
+            />
+          </label>
+          <label className="min-w-0 flex-1 basis-52">
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tpl-muted)" }}>
+              Happened at
+            </span>
+            <input
+              type="datetime-local"
+              value={occurredAt}
+              onChange={(e) => setOccurredAt(e.target.value)}
+              className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]"
+              style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
+            />
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <BtnSecondary onClick={onCancel}>Cancel</BtnSecondary>
+          <button
+            type="button"
+            onClick={save}
+            disabled={!body.trim() || saving}
+            className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
+          >
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── feed states ──────────────────────────────────────────────────── */
+
+function FeedSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-32 animate-pulse rounded-xl"
+          style={{ background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }}
+        />
+      ))}
+    </>
+  );
+}
+
+function FeedEmpty() {
+  return (
+    <div
+      className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-16 text-center"
+      style={{ borderColor: "var(--tpl-border)" }}
+    >
+      <Icon name="status-icon" size={28} style={{ color: "var(--tpl-muted)" }} />
+      <p className="text-sm" style={{ color: "var(--tpl-muted)" }}>
+        No journal entries yet — write your first one above.
+      </p>
     </div>
   );
+}
+
+function FeedError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="rounded-xl border py-12 text-center" style={{ borderColor: "var(--tpl-border)" }}>
+      <p className="text-sm" style={{ color: "var(--tpl-muted)" }}>
+        Couldn&apos;t load your journal.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+        style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
+function ErrorBanner({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="rounded-lg border px-3 py-2 text-sm"
+      style={{ borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+/* ── journal cache + date helpers ─────────────────────────────────── */
+
+function errorMessage(err: unknown): string {
+  return err instanceof ApiError
+    ? problemDisplayMessage(err.body)
+    : "Something went wrong. Please try again.";
+}
+
+/** `occurred_at DESC, id DESC` — the timeline order (SPEC-05 §5 P0.2). */
+function compareEntries(a: JournalEntry, b: JournalEntry): number {
+  if (a.occurred_at !== b.occurred_at) return a.occurred_at < b.occurred_at ? 1 : -1;
+  return a.id < b.id ? 1 : -1;
+}
+
+function insertEntry(
+  data: InfiniteData<ListEntriesPage> | undefined,
+  entry: JournalEntry,
+): InfiniteData<ListEntriesPage> {
+  const first = data?.pages[0];
+  if (!data || !first) {
+    return { pageParams: [undefined], pages: [{ items: [entry], next_cursor: null }] };
+  }
+  const items = [entry, ...first.items].sort(compareEntries);
+  return { ...data, pages: [{ ...first, items }, ...data.pages.slice(1)] };
+}
+
+function replaceEntry(
+  data: InfiniteData<ListEntriesPage> | undefined,
+  id: string,
+  update: (entry: JournalEntry) => JournalEntry,
+): InfiniteData<ListEntriesPage> | undefined {
+  if (!data) return data;
+  const sizes = data.pages.map((p) => p.items.length);
+  const cursors = data.pages.map((p) => p.next_cursor ?? null);
+  const all = data.pages
+    .flatMap((p) => p.items)
+    .map((e) => (e.id === id ? update(e) : e))
+    .sort(compareEntries);
+  let idx = 0;
+  const pages = sizes.map((size, i) => {
+    const slice = all.slice(idx, idx + size);
+    idx += size;
+    return { items: slice, next_cursor: cursors[i] };
+  });
+  return { ...data, pages };
+}
+
+function removeEntry(
+  data: InfiniteData<ListEntriesPage> | undefined,
+  id: string,
+): InfiniteData<ListEntriesPage> | undefined {
+  if (!data) return data;
+  return {
+    ...data,
+    pages: data.pages.map((p) => ({ ...p, items: p.items.filter((e) => e.id !== id) })),
+  };
+}
+
+function makeTempId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+/** `Date` → `datetime-local` input value (`YYYY-MM-DDTHH:mm`), local tz. */
+function toDatetimeLocal(d: Date): string {
+  if (Number.isNaN(d.getTime())) return toDatetimeLocal(new Date());
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
+}
+
+/** `datetime-local` value → ISO string (interpreted in local tz). */
+function fromDatetimeLocal(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }
 
 /* ── Left rail widgets ────────────────────────────────────────────── */
@@ -291,186 +660,6 @@ function PagesWidget() {
   );
 }
 
-/* ── Composer ─────────────────────────────────────────────────────── */
-
-const TABS = [
-  { key: "status", label: "Status", icon: "status-icon" },
-  { key: "media", label: "Multimedia", icon: "multimedia-icon" },
-  { key: "blog", label: "Blog Post", icon: "blog-icon" },
-];
-
-function Composer({
-  displayName,
-  onPost,
-}: {
-  displayName: string;
-  onPost: (text: string) => void;
-}) {
-  const [tab, setTab] = useState("status");
-  const [text, setText] = useState("");
-
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    const t = text.trim();
-    if (!t) return;
-    onPost(t);
-    setText("");
-  }
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="flex border-b" style={{ borderColor: "var(--tpl-border)" }}>
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className="flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition"
-            style={
-              tab === t.key
-                ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" }
-                : { color: "var(--tpl-muted)" }
-            }
-          >
-            <Icon name={t.icon} size={16} />
-            <span className="hidden sm:inline">{t.label}</span>
-          </button>
-        ))}
-      </div>
-
-      <form onSubmit={submit} className="p-4">
-        <div className="flex gap-3">
-          <Avatar name={displayName} size={40} />
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={2}
-            placeholder="Share what you are thinking here..."
-            className="min-h-[3rem] w-full resize-none border-0 bg-transparent pt-2 text-sm outline-none placeholder:text-[var(--tpl-muted)]"
-            style={{ color: "var(--tpl-text)" }}
-          />
-        </div>
-
-        <div className="mt-2 flex items-center gap-1 border-t pt-3" style={{ borderColor: "var(--tpl-border)" }}>
-          <IconBtn label="Add photos" icon="camera-icon" />
-          <IconBtn label="Tag friends" icon="computer-icon" />
-          <IconBtn label="Add location" icon="small-pin-icon" />
-
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              className="rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
-              style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
-            >
-              Preview
-            </button>
-            <button
-              type="submit"
-              disabled={!text.trim()}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
-            >
-              Post Status
-            </button>
-          </div>
-        </div>
-      </form>
-    </Card>
-  );
-}
-
-/* ── Post card ────────────────────────────────────────────────────── */
-
-function PostCard({ post, onToggleLike }: { post: Post; onToggleLike: () => void }) {
-  return (
-    <Card as="article" className="relative p-5">
-      <div className="absolute right-0 top-6 hidden translate-x-1/2 flex-col gap-2 sm:flex">
-        <QuickFab label="Award" icon="trophy-icon" />
-        <QuickFab active={post.liked} onClick={onToggleLike} label="Like" icon="like-post-icon" />
-        <QuickFab label="Comment" icon="comments-post-icon" />
-        <QuickFab label="Share" icon="share-icon" />
-      </div>
-
-      <header className="flex items-center gap-3">
-        <Avatar name={post.author} size={40} />
-        <div className="min-w-0">
-          <p className="truncate text-sm">
-            <span className="font-semibold" style={{ color: "var(--tpl-heading)" }}>
-              {post.author}
-            </span>{" "}
-            {post.action && <span style={{ color: "var(--tpl-muted)" }}>{post.action}</span>}
-          </p>
-          <time className="text-xs" style={{ color: "var(--tpl-muted)" }}>
-            {post.time}
-          </time>
-        </div>
-        <button type="button" className="ml-auto pr-8 text-[var(--tpl-muted)]" aria-label="Post options">
-          <Icon name="three-dots-icon" size={12} />
-        </button>
-      </header>
-
-      <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--tpl-text)" }}>
-        {post.text}
-      </p>
-
-      {post.media && <VideoCard media={post.media} />}
-
-      <footer className="mt-4 flex items-center gap-3 text-sm">
-        <span
-          className="inline-flex items-center gap-2"
-          style={{ color: post.liked ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
-        >
-          <Icon name="heart-icon" size={16} />
-          <span>{post.likes}</span>
-        </span>
-        <StackedAvatars names={["Jenny R", "Robert K", "Amy L", "Leo M"]} />
-        <span className="truncate text-xs" style={{ color: "var(--tpl-muted)" }}>
-          {post.likedByLabel}
-        </span>
-        <span className="ml-auto inline-flex items-center gap-4" style={{ color: "var(--tpl-muted)" }}>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="speech-balloon-icon" size={16} />
-            <span className="text-xs">{post.comments}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="share-icon" size={16} />
-            <span className="text-xs">{post.shares}</span>
-          </span>
-        </span>
-      </footer>
-    </Card>
-  );
-}
-
-function VideoCard({ media }: { media: Media }) {
-  return (
-    <div className="mt-3 flex gap-4 overflow-hidden rounded-lg border" style={{ borderColor: "var(--tpl-border)" }}>
-      <div
-        className="relative grid h-40 w-44 shrink-0 place-items-center"
-        style={{ background: "linear-gradient(135deg,#c78a5b,#7c5240)" }}
-      >
-        <span
-          className="grid h-14 w-14 place-items-center rounded-full text-white shadow"
-          style={{ background: "var(--tpl-accent)" }}
-        >
-          <Icon name="play-icon" size={20} />
-        </span>
-      </div>
-      <div className="min-w-0 py-4 pr-4">
-        <p className="text-base font-semibold" style={{ color: "var(--tpl-heading)" }}>
-          {media.title}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--tpl-muted)" }}>
-          {media.desc}
-        </p>
-        <p className="mt-3 text-[11px] font-semibold tracking-wide" style={{ color: "var(--tpl-muted)" }}>
-          {media.source}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 /* ── Right rail widgets ───────────────────────────────────────────── */
 
 function BirthdayCard() {
@@ -582,19 +771,17 @@ function ActivityFeed() {
 function Card({
   children,
   className = "",
-  as: Tag = "div",
 }: {
   children: ReactNode;
   className?: string;
-  as?: "div" | "article";
 }) {
   return (
-    <Tag
+    <div
       className={`rounded-xl shadow-sm ${className}`}
       style={{ background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }}
     >
       {children}
-    </Tag>
+    </div>
   );
 }
 
@@ -631,55 +818,5 @@ function A({ children }: { children: ReactNode }) {
     <a href="#" className="font-medium hover:underline" style={{ color: "var(--tpl-accent)" }}>
       {children}
     </a>
-  );
-}
-
-function StackedAvatars({ names }: { names: string[] }) {
-  return (
-    <span className="flex">
-      {names.map((n, i) => (
-        <span key={n} className="rounded-full ring-2 ring-white" style={{ marginLeft: i ? -8 : 0 }}>
-          <Avatar name={n} size={22} />
-        </span>
-      ))}
-    </span>
-  );
-}
-
-function IconBtn({ label, icon }: { label: string; icon: string }) {
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-[var(--tpl-surface-2)]"
-      style={{ color: "var(--tpl-muted)" }}
-    >
-      <Icon name={icon} size={18} />
-    </button>
-  );
-}
-
-function QuickFab({
-  onClick,
-  active,
-  label,
-  icon,
-}: {
-  onClick?: () => void;
-  active?: boolean;
-  label: string;
-  icon: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="grid h-[34px] w-[34px] place-items-center rounded-full text-white shadow-sm transition hover:opacity-90"
-      style={{ background: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
-    >
-      <Icon name={icon} size={16} />
-    </button>
   );
 }

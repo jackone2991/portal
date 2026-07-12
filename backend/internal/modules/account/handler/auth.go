@@ -29,6 +29,7 @@ import (
 
 	"github.com/portal/backend/internal/modules/account/auth"
 	"github.com/portal/backend/internal/modules/account/middleware"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	"github.com/portal/backend/internal/platform/audit"
 )
 
@@ -61,6 +62,12 @@ type AuthHandler struct {
 	CookieDomain string
 	CookieSecure bool   // false in dev (http://localhost), true everywhere else
 	PostLoginURL string // where the frontend sends the browser after login
+
+	// Password reset (SPEC-04 P0.3). All three must be set for the
+	// forgot/reset-password routes to be mounted; nil ResetTokens disables them.
+	ResetTokens      *auth.ResetManager
+	Dispatch         func(ctx context.Context, intent notifyapi.NotificationIntent) error // enqueues notify:dispatch
+	PasswordResetURL string                                                               // reset-link base, e.g. https://portal.localhost/reset-password
 }
 
 // UserStore is the subset of the user repository the auth handler needs.
@@ -71,6 +78,8 @@ type UserStore interface {
 	GetUserAuthSnapshot(ctx context.Context, id uuid.UUID) (middleware.UserAuthSnapshot, error)
 	BumpUserTokenVersion(ctx context.Context, id uuid.UUID) (int, error)
 	ListUserRoleCodes(ctx context.Context, id uuid.UUID) ([]string, error)
+	// SetPassword replaces the Argon2id hash (password reset, SPEC-04 P0.3).
+	SetPassword(ctx context.Context, userID uuid.UUID, hash string) error
 }
 
 // LocalUser is the projection needed to authenticate and mint a session.

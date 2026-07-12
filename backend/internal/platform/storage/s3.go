@@ -93,9 +93,48 @@ func (s *S3) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	return out.Body, nil
 }
 
+func (s *S3) GetRange(ctx context.Context, key string, n int64) (io.ReadCloser, error) {
+	rng := fmt.Sprintf("bytes=0-%d", n-1)
+	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{Bucket: &s.bucket, Key: &key, Range: &rng})
+	if err != nil {
+		if isNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("storage: get range %q: %w", key, err)
+	}
+	return out.Body, nil
+}
+
+func (s *S3) Size(ctx context.Context, key string) (int64, error) {
+	out, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &s.bucket, Key: &key})
+	if err != nil {
+		if isNotFound(err) {
+			return 0, ErrNotFound
+		}
+		return 0, fmt.Errorf("storage: head %q: %w", key, err)
+	}
+	return aws.ToInt64(out.ContentLength), nil
+}
+
 func (s *S3) Delete(ctx context.Context, key string) error {
 	if _, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: &s.bucket, Key: &key}); err != nil {
 		return fmt.Errorf("storage: delete %q: %w", key, err)
+	}
+	return nil
+}
+
+func (s *S3) DeletePrefix(ctx context.Context, prefix string) error {
+	p := s3.NewListObjectsV2Paginator(s.client, &s3.ListObjectsV2Input{Bucket: &s.bucket, Prefix: &prefix})
+	for p.HasMorePages() {
+		page, err := p.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("storage: list %q: %w", prefix, err)
+		}
+		for _, obj := range page.Contents {
+			if _, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: &s.bucket, Key: obj.Key}); err != nil {
+				return fmt.Errorf("storage: delete %q: %w", aws.ToString(obj.Key), err)
+			}
+		}
 	}
 	return nil
 }

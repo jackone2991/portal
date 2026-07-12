@@ -63,11 +63,11 @@ jobs:
         run: golangci-lint run ./...
 
   openapi:
-    name: OpenAPI spec valid
+    name: OpenAPI contract (parse + codegen drift gate)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate shared/openapi.yaml
+      - name: Validate shared/openapi.yaml parses
         run: |
           python3 -m pip install --quiet pyyaml
           python3 - <<'PY'
@@ -78,6 +78,33 @@ jobs:
               assert key in doc, f"missing top-level key: {key}"
           print("openapi.yaml OK —", doc["openapi"], "·", len(doc["paths"]), "paths")
           PY
+      # ADR-10: the committed codegen (Go server stubs + TS client types) must
+      # match the spec. Regenerate and fail on any diff, mirroring the sqlc gate.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install codegen tools
+        run: |
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.7.2
+          cd frontend && pnpm install --frozen-lockfile
+      - name: Regenerate from spec
+        run: |
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          make openapi
+      - name: Fail on drift
+        run: |
+          git diff --exit-code -- \
+            backend/internal/handler/api.gen.go \
+            frontend/src/lib/types.gen.ts \
+          || { echo "::error::OpenAPI codegen is stale — run 'make openapi' and commit the result."; exit 1; }
 
   frontend:
     name: Frontend (build · typecheck · lint)

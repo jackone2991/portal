@@ -55,8 +55,18 @@ type Storage interface {
 	Put(ctx context.Context, key string, body io.Reader, contentType string) error
 	// Get streams an object back. The caller MUST close the returned reader.
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
+	// GetRange streams the first n bytes of an object (a ranged GET). Used by the
+	// upload-complete magic-byte sniff so the API never pulls a whole 50 MB body
+	// just to read a 12-byte header. The caller MUST close the returned reader.
+	GetRange(ctx context.Context, key string, n int64) (io.ReadCloser, error)
+	// Size returns an object's byte length (a HEAD). ErrNotFound if absent.
+	Size(ctx context.Context, key string) (int64, error)
 	// Delete removes an object. Deleting a missing key is not an error.
 	Delete(ctx context.Context, key string) error
+	// DeletePrefix removes every object whose key starts with prefix (list +
+	// delete). Used by the asset-purge path to clear an HLS output subtree in one
+	// call. An empty result set is not an error.
+	DeletePrefix(ctx context.Context, prefix string) error
 	// Exists reports whether an object is present.
 	Exists(ctx context.Context, key string) (bool, error)
 }

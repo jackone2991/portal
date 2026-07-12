@@ -19,6 +19,10 @@ type Querier interface {
 	BumpUserTokenVersion(ctx context.Context, id pgtype.UUID) (int32, error)
 	// Registration. password_hash is an Argon2id PHC string; oidc_subject stays NULL.
 	CreateLocalUser(ctx context.Context, arg CreateLocalUserParams) (User, error)
+	// Password-reset tokens (SPEC-04 P0.3). Account-owned; mirrors the refresh-token
+	// construction (ADR-06): ≥256-bit CSPRNG raw token, SHA-256 hash at rest, looked
+	// up by hash in constant time, single-use, short TTL.
+	CreatePasswordResetToken(ctx context.Context, arg CreatePasswordResetTokenParams) (PasswordResetToken, error)
 	CreatePermission(ctx context.Context, arg CreatePermissionParams) (Permission, error)
 	// ── Refresh tokens ────────────────────────────────────────────────
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
@@ -29,6 +33,7 @@ type Querier interface {
 	// Returns the union of permissions granted (directly or via ancestor roles)
 	// for ALL roles assigned to a user. Skips expired role assignments.
 	GetEffectivePermissions(ctx context.Context, userID pgtype.UUID) ([]string, error)
+	GetPasswordResetTokenByHash(ctx context.Context, tokenHash []byte) (PasswordResetToken, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash []byte) (RefreshToken, error)
 	// ── Hierarchy resolution ──────────────────────────────────────────
 	// Walks parent chain. Returns the role itself plus all ancestors, in depth order.
@@ -51,7 +56,11 @@ type Querier interface {
 	ListRoles(ctx context.Context) ([]Role, error)
 	ListUserRoles(ctx context.Context, userID pgtype.UUID) ([]Role, error)
 	ListUsersByRole(ctx context.Context, arg ListUsersByRoleParams) ([]User, error)
+	// Idempotent consume: COALESCE keeps the first used_at stamp.
+	MarkPasswordResetTokenUsed(ctx context.Context, id pgtype.UUID) error
 	MarkRefreshTokenReplaced(ctx context.Context, arg MarkRefreshTokenReplacedParams) error
+	// Periodic hygiene: drop tokens well past expiry.
+	PurgeExpiredPasswordResetTokens(ctx context.Context) error
 	// Run from a periodic job. Anything past expiry + grace can be hard-deleted.
 	PurgeExpiredRefreshTokens(ctx context.Context) error
 	RevokeAllRefreshTokensForUser(ctx context.Context, arg RevokeAllRefreshTokensForUserParams) error

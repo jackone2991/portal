@@ -1,19 +1,36 @@
 package media
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/portal/backend/internal/modules/media/worker"
 	"github.com/portal/backend/internal/platform/storage"
+)
+
+// EventAssetDeleted is emitted once an asset row is gone (see events.md).
+const EventAssetDeleted = "media:asset_deleted"
+
+// Ingest guardrails (SPEC-01 P0.1).
+const (
+	maxUploadBytes   = 50 << 20 // 50 MiB image cap
+	sniffBytes       = 512      // header bytes read for magic-byte detection
+	defaultListLimit = 50
+	maxListLimit     = 100
+	purgeStuckAfter  = 5 // consecutive failed purges before an error-level log
 )
 
 // Service holds the media business logic. Construct via the module.
@@ -21,8 +38,12 @@ type Service struct {
 	store     storage.Storage
 	repo      Repository
 	enqueue   Enqueuer
-	baseURL   string // public API base, e.g. https://api.portal.localhost
+	events    EventPublisher // optional: media:asset_deleted
+	baseURL   string         // public API base, e.g. https://api.portal.localhost
 	uploadTTL time.Duration
+
+	mu         sync.Mutex        // guards purgeFails
+	purgeFails map[uuid.UUID]int // per-asset consecutive purge-failure counter
 }
 
 // UploadSession is what the client needs to PUT the original directly to storage.
@@ -33,6 +54,20 @@ type UploadSession struct {
 	Headers map[string]string
 }
 
+// ListOptions are the library query filters (P0.4).
+type ListOptions struct {
+	Kind   string // "" / "all" = any
+	Status string // "" / "all" = any; "processing" also matches "uploading"
+	Cursor string // opaque base64 keyset cursor
+	Limit  int
+}
+
+// ListResult is a keyset page plus the cursor for the next one ("" = last page).
+type ListResult struct {
+	Assets     []Asset
+	NextCursor string
+}
+
 // CreateUploadSession registers an asset (status=uploading) and returns a
 // presigned PUT the browser uses to send the original straight to the bucket.
 func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, filename, contentType string, size int64) (*UploadSession, error) {
@@ -40,13 +75,21 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	ext := pickExt(filename, contentType)
 	sourceKey := fmt.Sprintf("uploads/%s/original%s", id, ext)
 
+	kind := "video"
+	if strings.HasPrefix(contentType, "image/") {
+		kind = "image"
+	}
+
 	asset, err := s.repo.CreateAsset(ctx, CreateAssetInput{
-		ID:        id,
-		OwnerID:   ownerID,
-		Kind:      "video",
-		SourceKey: sourceKey,
-		MimeType:  contentType,
-		SizeBytes: size,
+		ID:               id,
+		OwnerID:          ownerID,
+		Kind:             kind,
+		SourceKey:        sourceKey,
+		MimeType:         contentType,
+		SizeBytes:        size,
+		Title:            filename,
+		OriginalFilename: filename,
+		Origin:           "upload",
 	})
 	if err != nil {
 		return nil, err
@@ -91,26 +134,78 @@ func (s *Service) UploadSource(ctx context.Context, ownerID, assetID uuid.UUID, 
 	return s.store.Put(ctx, asset.SourceKey, tmp, contentType)
 }
 
-// CompleteUpload confirms the original landed and enqueues transcoding.
+// CompleteUpload confirms the original landed and dispatches processing. For
+// images it sniffs magic bytes (never the extension/declared type) + re-checks
+// size, rejecting HEIC/HEIF and oversized/unknown bodies by deleting the object
+// and marking the asset failed (SPEC-01 P0.1). Videos keep the transcode path.
 func (s *Service) CompleteUpload(ctx context.Context, ownerID, assetID uuid.UUID) error {
 	asset, err := s.owned(ctx, ownerID, assetID)
 	if err != nil {
 		return err
 	}
 
-	if ok, err := s.store.Exists(ctx, asset.SourceKey); err != nil {
-		return err
-	} else if !ok {
-		return fmt.Errorf("%w: upload not found", ErrNotReady)
-	}
-
-	if err := s.repo.MarkProcessing(ctx, assetID); err != nil {
+	size, err := s.store.Size(ctx, asset.SourceKey)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return fmt.Errorf("%w: upload not found", ErrNotReady)
+		}
 		return err
 	}
 
-	outputKey := fmt.Sprintf("hls/%s", assetID)
+	if asset.Kind == "image" {
+		return s.completeImage(ctx, asset, size)
+	}
+	return s.completeVideo(ctx, asset)
+}
+
+func (s *Service) completeImage(ctx context.Context, asset Asset, size int64) error {
+	// Belt-and-braces size cap (HEAD re-check): the presign policy should already
+	// bound this, but a bypassed/unsupported policy is caught here.
+	if size > maxUploadBytes {
+		_ = s.store.Delete(ctx, asset.SourceKey)
+		_ = s.repo.MarkFailed(ctx, asset.ID, "file too large: exceeds the 50 MB limit")
+		return ErrFileTooLarge
+	}
+
+	head, err := s.readHead(ctx, asset.SourceKey, sniffBytes)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return fmt.Errorf("%w: upload not found", ErrNotReady)
+		}
+		return err
+	}
+	if _, ok := sniffImageType(head); !ok {
+		heic := isHEIC(head)
+		detail := "unsupported image format — only JPEG, PNG and WebP are accepted"
+		if heic {
+			detail = "HEIC/HEIF images are not supported — export or convert the photo to JPEG on your device and upload again"
+		}
+		_ = s.store.Delete(ctx, asset.SourceKey)
+		_ = s.repo.MarkFailed(ctx, asset.ID, detail)
+		return &UnsupportedFormatError{Detail: detail, HEIC: heic}
+	}
+
+	if err := s.repo.MarkProcessing(ctx, asset.ID); err != nil {
+		return err
+	}
+	task, err := worker.NewProcessImageTask(worker.ProcessImagePayload{
+		AssetID:   asset.ID.String(),
+		SourceKey: asset.SourceKey,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = s.enqueue.Enqueue(task)
+	return err
+}
+
+func (s *Service) completeVideo(ctx context.Context, asset Asset) error {
+	if err := s.repo.MarkProcessing(ctx, asset.ID); err != nil {
+		return err
+	}
+	outputKey := fmt.Sprintf("hls/%s", asset.ID)
 	task, err := worker.NewTranscodeTask(worker.TranscodePayload{
-		AssetID:   assetID.String(),
+		AssetID:   asset.ID.String(),
 		SourceKey: asset.SourceKey,
 		OutputKey: outputKey,
 	})
@@ -130,8 +225,165 @@ func (s *Service) Get(ctx context.Context, ownerID, assetID uuid.UUID) (Asset, s
 	return asset, s.hlsURL(asset), nil
 }
 
-func (s *Service) List(ctx context.Context, ownerID uuid.UUID) ([]Asset, error) {
-	return s.repo.ListByOwner(ctx, ownerID, 50, 0)
+// List returns a keyset page of the caller's assets (P0.4).
+func (s *Service) List(ctx context.Context, ownerID uuid.UUID, opts ListOptions) (ListResult, error) {
+	limit := opts.Limit
+	if limit <= 0 || limit > maxListLimit {
+		limit = defaultListLimit
+	}
+
+	kind := opts.Kind
+	if kind == "all" {
+		kind = ""
+	}
+
+	in := ListCursorInput{
+		OwnerID:  ownerID,
+		Kind:     kind,
+		Statuses: expandStatuses(opts.Status),
+		Limit:    limit + 1, // fetch one extra to detect a following page
+	}
+	if opts.Cursor != "" {
+		at, cid, err := decodeCursor(opts.Cursor)
+		if err != nil {
+			return ListResult{}, ErrBadCursor
+		}
+		in.CursorAt, in.CursorID = at, cid
+	}
+
+	rows, err := s.repo.ListByOwnerCursor(ctx, in)
+	if err != nil {
+		return ListResult{}, err
+	}
+
+	var res ListResult
+	if len(rows) > limit {
+		res.NextCursor = encodeCursor(rows[limit-1])
+		rows = rows[:limit]
+	}
+	res.Assets = rows
+	return res, nil
+}
+
+// DeleteAsset soft-deletes then purges an asset (P0.3). Authorization is the
+// caller's responsibility (RequireOwnerOrPermission at the route). Idempotent:
+// a missing asset returns ErrNotFound (never 500).
+func (s *Service) DeleteAsset(ctx context.Context, id uuid.UUID) error {
+	asset, err := s.repo.GetAsset(ctx, id)
+	if err != nil {
+		return err // ErrNotFound → idempotent 404
+	}
+	if asset.Status != StatusDeleting {
+		if err := s.repo.SetStatusDeleting(ctx, id); err != nil {
+			return err
+		}
+	}
+	return s.purgeAsset(ctx, asset)
+}
+
+// DownloadOriginal streams the byte-identical uploaded original for the owner
+// (P0.5). Returns the reader, its content type and the download filename.
+func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error) {
+	asset, err := s.owned(ctx, ownerID, id)
+	if err != nil {
+		return nil, "", "", err
+	}
+	if asset.Status == StatusDeleting {
+		return nil, "", "", ErrNotFound
+	}
+	if asset.Status == StatusUploading {
+		return nil, "", "", ErrNotReady // source object may be partial
+	}
+
+	rc, err := s.store.Get(ctx, asset.SourceKey)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, "", "", ErrNotFound
+		}
+		return nil, "", "", err
+	}
+
+	filename := asset.OriginalFilename
+	if filename == "" {
+		ext := path.Ext(asset.SourceKey)
+		if ext == "" {
+			if exts, _ := mime.ExtensionsByType(asset.MimeType); len(exts) > 0 {
+				ext = exts[0]
+			}
+		}
+		filename = asset.ID.String() + ext
+	}
+	ct := asset.MimeType
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	return rc, ct, filename, nil
+}
+
+// ServeVariant streams a derived variant object (WebP). Public/unauthenticated,
+// like /hls/* — variants carry no EXIF/GPS (all metadata stripped). Missing or
+// deleting assets, and unknown variant names, resolve to ErrNotFound.
+func (s *Service) ServeVariant(ctx context.Context, id uuid.UUID, variant string) (io.ReadCloser, string, error) {
+	switch variant {
+	case "thumb", "medium", "poster":
+	default:
+		return nil, "", ErrNotFound
+	}
+
+	asset, err := s.repo.GetAsset(ctx, id)
+	if err != nil {
+		return nil, "", err
+	}
+	if asset.Status == StatusDeleting {
+		return nil, "", ErrNotFound
+	}
+
+	v, err := s.repo.GetVariant(ctx, id, variant)
+	if err != nil {
+		return nil, "", err // ErrNotFound if absent
+	}
+	rc, err := s.store.Get(ctx, v.StorageKey)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, "", ErrNotFound
+		}
+		return nil, "", err
+	}
+	return rc, "image/webp", nil
+}
+
+// PurgeOrphans is the hourly janitor body (P0.3): re-purge tombstoned assets past
+// the 15-min grace window, and mark abandoned (>24h) upload sessions failed.
+// Idempotent per asset.
+func (s *Service) PurgeOrphans(ctx context.Context) error {
+	deleting, err := s.repo.ListForPurge(ctx)
+	if err != nil {
+		return err
+	}
+	for _, a := range deleting {
+		err := s.purgeAsset(ctx, a)
+		s.recordPurge(a.ID, err)
+		if err != nil {
+			log.Warn().Err(err).Str("asset", a.ID.String()).Msg("purge_orphans: asset purge failed")
+		}
+	}
+
+	abandoned, err := s.repo.ListAbandonedUploads(ctx)
+	if err != nil {
+		return err
+	}
+	for _, a := range abandoned {
+		if err := s.repo.MarkFailed(ctx, a.ID, "upload abandoned"); err != nil {
+			log.Warn().Err(err).Str("asset", a.ID.String()).Msg("purge_orphans: mark abandoned failed")
+		}
+	}
+	return nil
+}
+
+// AssetOwner returns an asset's owner id — the RequireOwnerOrPermission extractor
+// (P0.3). ErrNotFound when the asset does not exist.
+func (s *Service) AssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	return s.repo.GetAssetOwner(ctx, id)
 }
 
 // HLSObject streams a file (manifest or segment) from an asset's HLS output.
@@ -156,6 +408,72 @@ func (s *Service) HLSObject(ctx context.Context, assetID uuid.UUID, sub string) 
 	return rc, contentTypeFor(sub), nil
 }
 
+// ── purge internals ─────────────────────────────────────────────────
+
+// purgeAsset removes every storage object for the asset, then its variant + asset
+// rows, then emits media:asset_deleted (best-effort).
+func (s *Service) purgeAsset(ctx context.Context, asset Asset) error {
+	if err := s.purgeObjects(ctx, asset); err != nil {
+		return err
+	}
+	if err := s.repo.DeleteVariants(ctx, asset.ID); err != nil {
+		return err
+	}
+	if err := s.repo.DeleteAsset(ctx, asset.ID); err != nil {
+		return err
+	}
+	s.emitDeleted(ctx, asset.ID, asset.OwnerID)
+	return nil
+}
+
+// purgeObjects deletes the three per-asset storage subtrees: the uploaded
+// original, the HLS output, and the derived variants. DeletePrefix on an empty
+// subtree is a no-op, so this is idempotent and covers stragglers (partial
+// uploads, orphaned poster objects).
+func (s *Service) purgeObjects(ctx context.Context, asset Asset) error {
+	if err := s.store.DeletePrefix(ctx, fmt.Sprintf("uploads/%s/", asset.ID)); err != nil {
+		return err
+	}
+	if asset.OutputPrefix != "" {
+		if err := s.store.DeletePrefix(ctx, strings.TrimRight(asset.OutputPrefix, "/")+"/"); err != nil {
+			return err
+		}
+	}
+	if err := s.store.DeletePrefix(ctx, fmt.Sprintf("variants/%s/", asset.ID)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) recordPurge(id uuid.UUID, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.purgeFails == nil {
+		s.purgeFails = make(map[uuid.UUID]int)
+	}
+	if err == nil {
+		delete(s.purgeFails, id)
+		return
+	}
+	s.purgeFails[id]++
+	if s.purgeFails[id] >= purgeStuckAfter {
+		log.Error().Err(err).Str("asset", id.String()).Int("attempts", s.purgeFails[id]).
+			Msg("purge_orphans: asset purge is stuck")
+	}
+}
+
+func (s *Service) emitDeleted(ctx context.Context, assetID, ownerID uuid.UUID) {
+	if s.events == nil {
+		return
+	}
+	if err := s.events.Publish(ctx, EventAssetDeleted, map[string]any{
+		"asset_id":      assetID.String(),
+		"owner_user_id": ownerID.String(),
+	}); err != nil {
+		log.Warn().Err(err).Str("asset", assetID.String()).Msg("asset_deleted: publish failed")
+	}
+}
+
 // ── helpers ─────────────────────────────────────────────────────────
 
 func (s *Service) owned(ctx context.Context, ownerID, assetID uuid.UUID) (Asset, error) {
@@ -170,10 +488,97 @@ func (s *Service) owned(ctx context.Context, ownerID, assetID uuid.UUID) (Asset,
 }
 
 func (s *Service) hlsURL(a Asset) string {
-	if a.Status != StatusReady {
+	if a.Kind != "video" || a.Status != StatusReady || a.OutputPrefix == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/api/v1/assets/%s/hls/index.m3u8", strings.TrimRight(s.baseURL, "/"), a.ID)
+}
+
+func (s *Service) readHead(ctx context.Context, key string, n int64) ([]byte, error) {
+	rc, err := s.store.GetRange(ctx, key, n)
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+	return io.ReadAll(io.LimitReader(rc, n))
+}
+
+// expandStatuses maps a library status filter to a DB status set. "processing"
+// also matches still-'uploading' sessions so a freshly created asset is never
+// invisible under every filter (rev 3). "" / "all" → nil (no filter).
+func expandStatuses(status string) []string {
+	switch status {
+	case "", "all":
+		return nil
+	case "processing":
+		return []string{"processing", "uploading"}
+	default:
+		return []string{status}
+	}
+}
+
+// encodeCursor / decodeCursor form the opaque keyset cursor "<created_at>|<id>".
+func encodeCursor(a Asset) string {
+	raw := a.CreatedAt.UTC().Format(time.RFC3339Nano) + "|" + a.ID.String()
+	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+}
+
+func decodeCursor(s string) (time.Time, uuid.UUID, error) {
+	b, err := base64.RawURLEncoding.DecodeString(s)
+	if err != nil {
+		return time.Time{}, uuid.Nil, err
+	}
+	parts := strings.SplitN(string(b), "|", 2)
+	if len(parts) != 2 {
+		return time.Time{}, uuid.Nil, errors.New("media: malformed cursor")
+	}
+	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	if err != nil {
+		return time.Time{}, uuid.Nil, err
+	}
+	id, err := uuid.Parse(parts[1])
+	if err != nil {
+		return time.Time{}, uuid.Nil, err
+	}
+	return at, id, nil
+}
+
+// sniffImageType decides the content type from magic bytes alone. ok=false for
+// any unrecognised body (including HEIC/HEIF — use isHEIC for the helpful hint).
+func sniffImageType(b []byte) (string, bool) {
+	switch {
+	case len(b) >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF:
+		return "image/jpeg", true
+	case len(b) >= 8 && bytes.Equal(b[:8], []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}):
+		return "image/png", true
+	case len(b) >= 12 && bytes.Equal(b[:4], []byte("RIFF")) && bytes.Equal(b[8:12], []byte("WEBP")):
+		return "image/webp", true
+	}
+	return "", false
+}
+
+// isHEIC recognises the ISO-BMFF ftyp box of HEIC/HEIF containers, checking both
+// the major brand and the compatible-brands list (major "mif1" + compatible
+// "heic" is common). Lets CompleteUpload return the convert-to-JPEG hint.
+func isHEIC(b []byte) bool {
+	if len(b) < 12 || !bytes.Equal(b[4:8], []byte("ftyp")) {
+		return false
+	}
+	heicBrands := map[string]bool{
+		"heic": true, "heix": true, "heif": true, "heim": true, "heis": true,
+		"hevc": true, "hevx": true, "hevm": true, "hevs": true,
+		"mif1": true, "msf1": true,
+	}
+	if heicBrands[string(b[8:12])] {
+		return true
+	}
+	// compatible brands follow the major brand + minor version, from offset 16
+	for i := 16; i+4 <= len(b); i += 4 {
+		if heicBrands[string(b[i:i+4])] {
+			return true
+		}
+	}
+	return false
 }
 
 func pickExt(filename, contentType string) string {

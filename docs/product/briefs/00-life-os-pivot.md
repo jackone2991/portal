@@ -1,12 +1,12 @@
 # 00 — Life-OS Pivot (positioning)
 
-**Status:** agreed in brainstorm 2026-07-07 · needs **ADR-08** to become binding.
+**Status:** agreed in brainstorm 2026-07-07 · **ratified as [ADR-08](../../adr/08-life-os-pivot.md)** (landed 2026-07; binding — [vision.md](../vision.md) is the current yardstick).
 **Owner:** product (solo dev).
 
 ## Problem statement
 
-Portal's gap analyses ([missing-features.md](../missing-features.md),
-[facebook-comparison.md](../facebook-comparison.md)) measure the product against
+Portal's gap analyses ([backlog.md](../backlog.md) — was `missing-features.md`,
+[facebook-comparison.md](../analysis/facebook-comparison.md)) measure the product against
 Facebook. Facebook's value rests on network effects; Portal is self-hosted, single-VPS,
 starting from **one user**. Chasing friend graph / messenger / people-search first is
 the feature-parity trap: high effort, near-zero value at n=1 users.
@@ -35,7 +35,9 @@ First two axes: **money** (spec 03) and **entertainment** (specs 01–02).
 ## Non-goals
 
 - Building the notifications module *now* (it is the life-stream backbone and comes
-  right after specs 01–03; see [04-deferred.md](04-deferred.md)).
+  right after specs 01–03; see [04-deferred.md](04-deferred.md)). *(2026-07-10: it
+  has since been specced as [SPEC-04](../specs/SPEC-04-notification-module.md),
+  slotted right after SPEC-01.)*
 - Any multi-user social feature as a priority driver (friend graph, messenger,
   people search all demoted — they return when real second users exist).
 - Renaming the Olympus UI shell or reworking screens; the shell is reused, only the
@@ -55,11 +57,14 @@ First two axes: **money** (spec 03) and **entertainment** (specs 01–02).
 
 ## Action items
 
-- [ ] Write **ADR-08** (context → decision → options → trade-offs → consequences →
-      action items), amending [ADR-01](architecture/01-v1-scope-cut.md): life-OS
-      positioning; finance ledger into scope; "real bank" stays deferred.
-- [ ] Update `missing-features.md` "Suggested next order" to point at this folder.
-- [ ] Keep `doc/vi/` mirrors in sync for every file touched.
+- [x] Write **ADR-08** — done: [ADR-08](../../adr/08-life-os-pivot.md), amending
+      [ADR-01](../../adr/01-v1-scope-cut.md): life-OS positioning; finance ledger
+      into scope; "real bank" stays deferred.
+- [x] Update the next-order pointer — `missing-features.md` was retired into
+      [backlog.md](../backlog.md) by the ADR-09 restructure.
+- ~~Keep `doc/vi/` mirrors in sync~~ — retired by
+  [ADR-09](../../adr/09-docs-architecture.md): docs are English-only; the vi mirror
+  is a frozen archive.
 
 ## Open questions
 

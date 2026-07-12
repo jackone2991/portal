@@ -32,7 +32,7 @@ Self-hosted media + ecosystem monorepo (movies / music / stories / comics). Reso
 - **Reverse proxy: Traefik v3** — static config in [traefik/traefik.yml](traefik/traefik.yml), middleware in [traefik/dynamic.yml](traefik/dynamic.yml), routes via `docker-compose.yml` labels.
 - **Job queue: Asynq** (not BullMQ — BullMQ is Node-only). Three priority queues: `transcode` (5), `thumbnail` (3), `default` (1).
 - **API contract: OpenAPI** at [shared/openapi.yaml](shared/openapi.yaml) is the source of truth. Go server stubs (`oapi-codegen`) and TS client types (`openapi-typescript`) are both generated from it. Hand-editing generated files is forbidden.
-- **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Two route groups — `(app)` (authenticated shell: home, `/upload`, `/library/*`) and `(public)` (`/login`, `/register`) — that are version-agnostic: actual page/component code lives in a version-switched `frontend/src/templates/v{N}/` tree (ported from the `template-main/portal` Blade reference), selected via `NEXT_PUBLIC_TEMPLATE_VERSION` through `templates/registry.ts`. Read [frontend/src/templates/README.md](frontend/src/templates/README.md) before adding a page or cutting a `v2`.
+- **Frontend: Next.js 15** (App Router, RSC), Tailwind v4, Zustand + TanStack Query, Vidstack for HLS playback. Two route groups — `(app)` (authenticated shell: home, `/upload`, `/library/*`) and `(public)` (`/login`, `/register`) — that are version-agnostic: actual page/component code lives in a version-switched `frontend/src/templates/v{N}/` tree (ported from the `template-main/portal` Blade reference), selected via `NEXT_PUBLIC_TEMPLATE_VERSION` through `templates/registry.ts`. Read [frontend/src/templates/README.md](frontend/src/templates/README.md) before adding a page or cutting a `v2`. **[frontend/CLAUDE.md](frontend/CLAUDE.md) is the frontend conventions contract** — state-ownership boundary (`D-32`: server state → TanStack Query, never Zustand), the RSC-first rendering decision tree (`D-33`), and the `SessionKeeper` auth handoff (`D-34`). Read it before touching frontend code.
 - **Data: Postgres 17 + PgBouncer**, **DragonflyDB** (Redis-compatible cache + Asynq broker), **MinIO** (dev origin, bind-mounted) + **Cloudflare R2** (prod). *(Same S3-compatible client either way — see the scope section / [ADR-04](docs/adr/04-storage-tier-budget.md).)*
 
 ## Backend module boundaries (read before editing across modules)
@@ -152,7 +152,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **portal** (16900 symbols, 28327 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **portal** (17578 symbols, 29294 relationships, 296 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

@@ -76,6 +76,11 @@ openapi-go:
 openapi-ts:
 	cd frontend && pnpm openapi-typescript ../shared/openapi.yaml -o src/lib/types.gen.ts
 
+# ── Backups / DR (SPEC-09) ──────────────────────────────────────
+.PHONY: restore-drill
+restore-drill: ## Restore drill: fetch LATEST.json, verify sha256, pg_restore into a scratch DB, sanity-check (SPEC-09 P0.4)
+	bash backend/scripts/restore-drill.sh
+
 # ── Quality ─────────────────────────────────────────────────────
 .PHONY: test test-backend test-frontend lint
 test: test-backend test-frontend ## Run all tests

@@ -1,7 +1,9 @@
 # ADR-10 — OpenAPI Contract Direction (spec-first, enforced)
 
-**Status:** proposed (drafted 2026-07-08, from the 2026-07-08 gap audit)
+**Status:** **accepted** 2026-07-11 (drafted 2026-07-08, from the 2026-07-08 gap audit)
 **Relates to:** [backlog §9](../product/backlog.md) · specs/README "API contract" convention · [ADR-09](09-docs-architecture.md) canonical-source rule · `backend/MODULES.md` ("OpenAPI is contract")
+
+> **Update 2026-07-11 (Sprint 1 foundation gate).** Accepted and execution started: the generated code is committed (`backend/internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) and CI now gates codegen drift (the `openapi` job runs `make openapi` then `git diff --exit-code`, mirroring the sqlc gate). Retrofitting the hand-written handlers onto the generated `ServerInterface` proceeds per module as each is touched (see [delivery-plan.md](../product/delivery-plan.md) Sprint 1 §A); the drift gate makes the direction non-optional from here.
 
 ## Context
 

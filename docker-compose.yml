@@ -164,6 +164,21 @@ services:
     restart: "no"
     networks: [internal]
 
+  # ── Mail (dev): Mailpit captures notify:email sends (SPEC-04 P0.3) ──
+  # SMTP on :1025 (api/worker send here via SMTP_HOST=mailpit), web UI on :8025.
+  # Prod points SMTP_* at a real relay/provider and drops this service.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mailpit.rule=Host(`mail.${APP_DOMAIN}`)
+      - traefik.http.routers.mailpit.entrypoints=websecure
+      - traefik.http.routers.mailpit.tls=true
+      - traefik.http.routers.mailpit.tls.certresolver=${TRAEFIK_CERTRESOLVER-letsencrypt}
+      - traefik.http.services.mailpit.loadbalancer.server.port=8025
+    networks: [edge, internal]
+
   # ── Application services ────────────────────────────────────────
   api:
     build:

@@ -31,30 +31,86 @@ type TranscodePayload struct {
 	Variants  []string `json:"variants,omitempty"`
 }
 
+// NewTranscodeTask enqueues onto the "heavy" queue so a second, low-concurrency
+// asynq.Server serializes the expensive decode alongside media:process_image
+// (SPEC-01 P0.1 OOM guard — queue weights alone cannot cap parallelism).
 func NewTranscodeTask(p TranscodePayload) (*asynq.Task, error) {
 	body, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}
-	return asynq.NewTask(TaskTypeTranscode, body, asynq.Queue("transcode")), nil
+	return asynq.NewTask(TaskTypeTranscode, body, asynq.Queue("heavy")), nil
 }
 
-// Repo is the minimal persistence surface the transcoder needs. The media
+// AssetMeta is the minimal projection a worker needs to build a media:asset_ready
+// event payload. Primitive fields keep this package free of a media import.
+type AssetMeta struct {
+	OwnerID uuid.UUID
+	Kind    string
+	Title   string
+	Origin  string
+}
+
+// Repo is the minimal persistence surface the media workers need. The media
 // repository adapter satisfies it (primitive signatures keep this package free
 // of a media-package import → no cycle).
 type Repo interface {
 	MarkReady(ctx context.Context, id uuid.UUID, outputPrefix string, durationMs, width, height *int) error
 	MarkFailed(ctx context.Context, id uuid.UUID, msg string) error
+	// MarkImageReady sets status=ready + dimensions with no HLS output_prefix.
+	MarkImageReady(ctx context.Context, id uuid.UUID, width, height int) error
+	// InsertVariant upserts a derived variant row (thumb/medium/poster).
+	InsertVariant(ctx context.Context, assetID uuid.UUID, variant, storageKey string, width, height int, sizeBytes int64) error
+	// LoadAssetMeta fetches the fields the media:asset_ready payload carries.
+	LoadAssetMeta(ctx context.Context, id uuid.UUID) (AssetMeta, error)
+}
+
+// Enqueuer schedules a follow-up task (e.g. poster generation). *asynq.Client
+// satisfies it. Kept minimal so the worker package never imports the media one.
+type Enqueuer interface {
+	Enqueue(task *asynq.Task, opts ...asynq.Option) (*asynq.TaskInfo, error)
+}
+
+// Publisher fans a domain event out to its subscribers (platform/events).
+type Publisher interface {
+	Publish(ctx context.Context, name string, payload any) error
+}
+
+// EventAssetReady is emitted whenever any asset reaches ready (SPEC-01 P1.2).
+const EventAssetReady = "media:asset_ready"
+
+// emitAssetReady publishes media:asset_ready best-effort (nil publisher / a
+// publish error is logged, never fatal — there is no consumer required for v1).
+func emitAssetReady(ctx context.Context, pub Publisher, repo Repo, id uuid.UUID) {
+	if pub == nil {
+		return
+	}
+	meta, err := repo.LoadAssetMeta(ctx, id)
+	if err != nil {
+		log.Warn().Err(err).Str("asset", id.String()).Msg("asset_ready: load meta failed")
+		return
+	}
+	if err := pub.Publish(ctx, EventAssetReady, map[string]any{
+		"asset_id":      id.String(),
+		"kind":          meta.Kind,
+		"owner_user_id": meta.OwnerID.String(),
+		"title":         meta.Title, // consumers fall back to original_filename via mediaapi
+		"origin":        meta.Origin,
+	}); err != nil {
+		log.Warn().Err(err).Str("asset", id.String()).Msg("asset_ready: publish failed")
+	}
 }
 
 // Transcoder runs the FFmpeg HLS pipeline. Construct with NewTranscoder.
 type Transcoder struct {
-	store storage.Storage
-	repo  Repo
+	store   storage.Storage
+	repo    Repo
+	enqueue Enqueuer  // optional: enqueues the poster task after ready
+	pub     Publisher // optional: emits media:asset_ready
 }
 
-func NewTranscoder(store storage.Storage, repo Repo) *Transcoder {
-	return &Transcoder{store: store, repo: repo}
+func NewTranscoder(store storage.Storage, repo Repo, enqueue Enqueuer, pub Publisher) *Transcoder {
+	return &Transcoder{store: store, repo: repo, enqueue: enqueue, pub: pub}
 }
 
 // Handle is the Asynq handler. On failure it marks the asset failed and returns
@@ -129,7 +185,24 @@ func (t *Transcoder) run(ctx context.Context, id uuid.UUID, p TranscodePayload) 
 	}
 
 	// 5. mark ready
-	return t.repo.MarkReady(ctx, id, p.OutputKey, durMs, width, height)
+	if err := t.repo.MarkReady(ctx, id, p.OutputKey, durMs, width, height); err != nil {
+		return err
+	}
+
+	// 6. poster: a light follow-up task (SPEC-01 P0.2) so poster generation runs
+	// on the weighted server, never hogging the heavy queue. Best-effort — a
+	// missing poster never fails the (already-ready) video.
+	if t.enqueue != nil {
+		if task, err := NewThumbnailTask(ThumbnailPayload{AssetID: id.String(), SourceKey: p.SourceKey}); err != nil {
+			log.Warn().Err(err).Str("asset", p.AssetID).Msg("transcode: build poster task failed")
+		} else if _, err := t.enqueue.Enqueue(task); err != nil {
+			log.Warn().Err(err).Str("asset", p.AssetID).Msg("transcode: enqueue poster failed")
+		}
+	}
+
+	// 7. announce readiness (SPEC-01 P1.2). No consumer is required for v1.
+	emitAssetReady(ctx, t.pub, t.repo, id)
+	return nil
 }
 
 func (t *Transcoder) download(ctx context.Context, key, dst string) error {

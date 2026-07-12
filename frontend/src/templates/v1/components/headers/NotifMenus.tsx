@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
+import {
+  listNotifications,
+  markAllRead,
+  markRead,
+  watermarkCursor,
+  type ListNotificationsPage,
+  type NotificationItem,
+} from "@/lib/notifications";
 
 /**
  * Header notification dropdowns — port of the Olympus header menus:
@@ -275,20 +286,110 @@ export function MessagesMenu({ open, onToggle }: { open: boolean; onToggle: () =
 }
 
 /* ── Notifications ─────────────────────────────────────────────── */
+/* SPEC-04 P0.5 — real data via TanStack Query (D-32). `FriendRequestsMenu` /
+ * `MessagesMenu` above keep their fixtures on purpose (§3 non-goals); this is
+ * the only menu whose backend exists. */
 
-type Notif = { id: number; who: string; action: ReactNode; time: string; icon: string; read?: boolean };
+/** Query key for the bell's `{items, unread_count}` cache entry. */
+const NOTIFICATIONS_KEY = ["notifications"] as const;
 
-const NOTIFS: Notif[] = [
-  { id: 1, who: "Mathilda Brinker", action: <>commented on your <InlineLink>photo</InlineLink>.</>, time: "2 mins ago", icon: "comments-post-icon" },
-  { id: 2, who: "Nicholas Grissom", action: <>liked your <InlineLink>status update</InlineLink>.</>, time: "5 mins ago", icon: "like-post-icon" },
-  { id: 3, who: "Sarah Hetfield", action: <>started following you.</>, time: "12 mins ago", icon: "happy-face-icon" },
-  { id: 4, who: "Jake Parker", action: <>shared your <InlineLink>post</InlineLink>.</>, time: "1 hour ago", icon: "share-post-icon" },
-];
+/** Coarse "N mins/hours/days ago" — no locale/date layer exists yet in this template. */
+function timeAgo(iso: string): string {
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 export function NotificationsMenu({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const [items, setItems] = useState(NOTIFS);
-  const unread = items.filter((n) => !n.read).length;
-  const markAll = () => setItems((x) => x.map((n) => ({ ...n, read: true })));
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: NOTIFICATIONS_KEY,
+    queryFn: () => listNotifications(),
+    staleTime: 0, // personal counter — always refetch-worthy (SPEC-04 P0.5)
+    refetchInterval: 60_000, // P0 delivery is polling, not SessionKeeper (D-34)
+    refetchOnWindowFocus: true,
+  });
+
+  const items = query.data?.items ?? [];
+  const unread = query.data?.unread_count ?? 0;
+
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => markRead(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+      const previous = queryClient.getQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY);
+      queryClient.setQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY, (data) => {
+        if (!data) return data;
+        const target = data.items.find((n) => n.id === id);
+        if (!target || target.read_at) return data; // already read — idempotent no-op
+        return {
+          ...data,
+          items: data.items.map((n) =>
+            n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
+          ),
+          unread_count: Math.max(0, data.unread_count - 1),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(NOTIFICATIONS_KEY, context.previous);
+    },
+    onSuccess: (result) => {
+      // Reconcile from the mutation's own `200 {unread_count}` — no extra GET,
+      // and this must win over any in-flight fetch that started before the
+      // mutation settled (the anti-flicker rule: never render a pre-settle count).
+      queryClient.setQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY, (data) =>
+        data ? { ...data, unread_count: result.unread_count } : data,
+      );
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: (before?: string) => markAllRead(before),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+      const previous = queryClient.getQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY);
+      queryClient.setQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY, (data) =>
+        data
+          ? {
+              ...data,
+              items: data.items.map((n) =>
+                n.read_at ? n : { ...n, read_at: new Date().toISOString() },
+              ),
+              unread_count: 0,
+            }
+          : data,
+      );
+      return { previous };
+    },
+    onError: (_err, _before, context) => {
+      if (context?.previous) queryClient.setQueryData(NOTIFICATIONS_KEY, context.previous);
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData<ListNotificationsPage>(NOTIFICATIONS_KEY, (data) =>
+        data ? { ...data, unread_count: result.unread_count } : data,
+      );
+    },
+  });
+
+  function markAll() {
+    // `before` = the newest rendered item's (created_at, id) cursor, so a
+    // notification the store writes after this render stays unread.
+    const newest = items[0];
+    markAllReadMutation.mutate(newest ? watermarkCursor(newest) : undefined);
+  }
+
+  function openItem(n: NotificationItem) {
+    if (!n.read_at) markReadMutation.mutate(n.id);
+    if (n.data.href) router.push(n.data.href as Route);
+  }
 
   return (
     <div className="relative">
@@ -304,26 +405,42 @@ export function NotificationsMenu({ open, onToggle }: { open: boolean; onToggle:
           }
           footer="Check all your Notifications"
         >
-          {items.map((n) => (
-            <li
-              key={n.id}
-              className="flex items-start gap-3 border-b px-4 py-3"
-              style={{ ...rowBorder, background: n.read ? undefined : "rgba(255,94,58,0.05)" }}
-            >
-              <Avatar name={n.who} size={38} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm leading-snug" style={{ color: "var(--tpl-text)" }}>
-                  <b style={{ color: "var(--tpl-heading)" }}>{n.who}</b> {n.action}
-                </p>
-                <p className="mt-0.5 text-[11px]" style={{ color: "var(--tpl-muted)" }}>
-                  {n.time}
-                </p>
-              </div>
-              <span className="mt-1 shrink-0" style={{ color: "var(--tpl-muted)" }}>
-                <Icon name={n.icon} size={16} />
-              </span>
-            </li>
-          ))}
+          {query.isPending ? (
+            <Empty>Loading…</Empty>
+          ) : query.isError ? (
+            <Empty>Couldn&apos;t load notifications.</Empty>
+          ) : items.length === 0 ? (
+            <Empty>No notifications yet</Empty>
+          ) : (
+            items.map((n) => (
+              <li
+                key={n.id}
+                onClick={() => openItem(n)}
+                className="flex cursor-pointer items-start gap-3 border-b px-4 py-3 transition hover:bg-[var(--tpl-surface-2)]"
+                style={{ ...rowBorder, background: n.read_at ? undefined : "rgba(255,94,58,0.05)" }}
+              >
+                <span
+                  className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full"
+                  style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" }}
+                >
+                  <Icon name="thunder-icon" size={16} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold" style={{ color: "var(--tpl-heading)" }}>
+                    {n.title}
+                  </p>
+                  {n.body && (
+                    <p className="truncate text-xs" style={{ color: "var(--tpl-muted)" }}>
+                      {n.body}
+                    </p>
+                  )}
+                  <p className="mt-0.5 text-[11px]" style={{ color: "var(--tpl-muted)" }}>
+                    {timeAgo(n.created_at)}
+                  </p>
+                </div>
+              </li>
+            ))
+          )}
         </DropdownCard>
       )}
     </div>
