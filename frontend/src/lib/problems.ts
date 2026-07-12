@@ -42,7 +42,8 @@ export type ProblemType =
   | "people/person-not-found"
   | "people/invalid-birthday"
   | "people/validation"
-  | "people/invalid-cursor";
+  | "people/invalid-cursor"
+  | "stream/invalid-cursor";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -80,6 +81,7 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "people/invalid-birthday": "Enter a real date — day and month together, year optional.",
   "people/validation": "Please check the form and try again.",
   "people/invalid-cursor": "Couldn't load the next page — please refresh.",
+  "stream/invalid-cursor": "Couldn't load more of your stream — please refresh.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
