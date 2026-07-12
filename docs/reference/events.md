@@ -26,7 +26,7 @@ the naming *rules*, this file owns the *inventory*.
 | `bank:transaction_deleted` | same as created | bank | live — emitter only (SPEC-03 P0.7); no consumer yet | stream — remove item (SPEC-06 P0.1) |
 | `bank:budget_exceeded` | `{user_id, category_id, month}` | bank | planned (SPEC-03 P1.12) | notify later |
 | `journal:entry_created` | `{entry_id, user_id, occurred_at}` | journal | planned (SPEC-05 P0.3) | — emit-only for future external consumers. The stream projection is maintained **transactionally in-module** (SPEC-06 P0.1), not via this event; no updated/deleted events for the same reason (SPEC-05 P0.3) |
-| `people:birthday_upcoming` | `{notice_id, person_id, user_id, display_name, days_until}` | people | planned (SPEC-08 P0.4) | stream — `ref_id = notice_id`, so recurring years/thresholds never collide (SPEC-06 P0.1); notify (SPEC-04) as they land |
+| `people:birthday_upcoming` | `{notice_id, person_id, user_id, display_name, days_until}` | people | live — emitter only (SPEC-08 P0.4); no consumer yet | stream — `ref_id = notice_id`, so recurring years/thresholds never collide (SPEC-06 P0.1); notify (SPEC-04) as they land |
 | `ops:backup_completed` | `{run_id, size_bytes}` | ops | live — emitter only (SPEC-09 P0.2); no consumer yet | — (audit + `/ops/status` today; notify later) |
 | `ops:backup_failed` | `{run_id, error}` | ops | live — emitter only (SPEC-09 P0.2); no consumer yet | — (same) |
 | `ops:export_ready` | `{export_id, user_id}` | ops | planned (SPEC-09 P1.7) | notify later |
@@ -47,7 +47,7 @@ the naming *rules*, this file owns the *inventory*.
 | `notify:on_asset_ready` | `{asset_id, kind, owner_user_id, title, origin}` (consumer; subscribes to `media:asset_ready`) | notify | live (SPEC-04 P0.4) |
 | `notify:purge_old` | — (janitor sweep) | notify | planned (SPEC-04 P2; handler is a registered stub, unscheduled) |
 | `journal:backfill_stream` | — (one-shot stream seed, via `mediaapi`) | journal | planned (SPEC-06 P1.6) |
-| `people:scan_birthdays` | — (daily scan, per-user TZ) | people | planned (SPEC-08 P0.4) |
+| `people:scan_birthdays` | — (daily scan, instance-TZ) | people | live (SPEC-08 P0.4; daily 06:00 UTC on the shared scheduler; "default" queue) |
 | `ops:backup_database` | — (nightly pg_dump → storage) | ops | live (SPEC-09 P0.2; nightly 03:00 UTC on the shared scheduler; "default" queue) |
 | `ops:takeout` | `{export_id, user_id}` | ops | planned (SPEC-09 P1.7) |
 | `ops:purge_exports` | — (nightly janitor: expire takeout archives > 7 d) | ops | planned (SPEC-09 P1.7) |

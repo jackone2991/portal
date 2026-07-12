@@ -959,6 +959,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's people (cursor, ordered by name) */
+        get: operations["listPeople"];
+        put?: never;
+        /** Add a person */
+        post: operations["createPerson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/people/upcoming-birthdays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Upcoming birthdays in the owner's timezone (soonest first) */
+        get: operations["upcomingBirthdays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/people/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Fetch one person (404 for others' rows) */
+        get: operations["getPerson"];
+        put?: never;
+        post?: never;
+        /** Delete a person (idempotent) */
+        delete: operations["deletePerson"];
+        options?: never;
+        head?: never;
+        /** Update a person (birthday null clears; resets current/future notices) */
+        patch: operations["updatePerson"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1318,6 +1374,53 @@ export interface components {
         };
         ReorderRequest: {
             order: string[];
+        };
+        Birthday: {
+            month: number;
+            day: number;
+            /** @description Optional — many people won't share a year. */
+            year?: number | null;
+            /**
+             * @default solar
+             * @enum {string}
+             */
+            calendar: "solar" | "lunar";
+        };
+        Person: {
+            /** Format: uuid */
+            id: string;
+            display_name: string;
+            relationship?: string | null;
+            birthday?: components["schemas"]["Birthday"] | null;
+            contact?: {
+                [key: string]: unknown;
+            };
+            note_md?: string | null;
+            /** Format: uuid */
+            avatar_asset_id?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @description POST requires display_name; PATCH accepts any subset. A birthday of null clears it. */
+        PersonWrite: {
+            display_name?: string;
+            relationship?: string | null;
+            birthday?: components["schemas"]["Birthday"] | null;
+            contact?: {
+                [key: string]: unknown;
+            };
+            note_md?: string | null;
+        };
+        UpcomingBirthday: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            /** Format: date */
+            next_occurrence: string;
+            days_until: number;
+            age_turning?: number | null;
         };
         /**
          * @description RFC 7807 problem detail, served as `application/problem+json`. `type` is a
@@ -3431,6 +3534,159 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    listPeople: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of people */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        people: components["schemas"]["Person"][];
+                        next_cursor?: string | null;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    upcomingBirthdays: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Upcoming birthdays */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        upcoming: components["schemas"]["UpcomingBirthday"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The person */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deletePerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updatePerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonWrite"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
 }

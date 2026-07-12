@@ -1492,6 +1492,94 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  # ── People registry (SPEC-08) ────────────────────────────────────────────
+  /people:
+    get:
+      tags: [people]
+      summary: List the caller's people (cursor, ordered by name)
+      operationId: listPeople
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        "200":
+          description: A cursor page of people
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [people]
+                properties:
+                  people: { type: array, items: { $ref: "#/components/schemas/Person" } }
+                  next_cursor: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [people]
+      summary: Add a person
+      operationId: createPerson
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PersonWrite" } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Person" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /people/upcoming-birthdays:
+    get:
+      tags: [people]
+      summary: Upcoming birthdays in the owner's timezone (soonest first)
+      operationId: upcomingBirthdays
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: days, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 366, default: 14 } }
+      responses:
+        "200":
+          description: Upcoming birthdays
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [upcoming]
+                properties:
+                  upcoming: { type: array, items: { $ref: "#/components/schemas/UpcomingBirthday" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /people/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [people]
+      summary: Fetch one person (404 for others' rows)
+      operationId: getPerson
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: The person, content: { application/json: { schema: { $ref: "#/components/schemas/Person" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [people]
+      summary: Update a person (birthday null clears; resets current/future notices)
+      operationId: updatePerson
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PersonWrite" } } }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Person" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [people]
+      summary: Delete a person (idempotent)
+      operationId: deletePerson
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1883,6 +1971,51 @@ components:
         order:
           type: array
           items: { type: string, format: uuid }
+
+    # ── People registry (SPEC-08) ───────────────────────────────────────────
+    Birthday:
+      type: object
+      required: [month, day]
+      properties:
+        month: { type: integer, minimum: 1, maximum: 12 }
+        day: { type: integer, minimum: 1, maximum: 31 }
+        year: { type: integer, nullable: true, description: Optional — many people won't share a year. }
+        calendar: { type: string, enum: [solar, lunar], default: solar }
+    Person:
+      type: object
+      required: [id, display_name, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        relationship: { type: string, nullable: true }
+        birthday:
+          allOf: [{ $ref: "#/components/schemas/Birthday" }]
+          nullable: true
+        contact: { type: object, additionalProperties: true }
+        note_md: { type: string, nullable: true }
+        avatar_asset_id: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    PersonWrite:
+      type: object
+      description: "POST requires display_name; PATCH accepts any subset. A birthday of null clears it."
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 120 }
+        relationship: { type: string, nullable: true }
+        birthday:
+          allOf: [{ $ref: "#/components/schemas/Birthday" }]
+          nullable: true
+        contact: { type: object, additionalProperties: true }
+        note_md: { type: string, nullable: true }
+    UpcomingBirthday:
+      type: object
+      required: [person_id, display_name, next_occurrence, days_until]
+      properties:
+        person_id: { type: string, format: uuid }
+        display_name: { type: string }
+        next_occurrence: { type: string, format: date }
+        days_until: { type: integer }
+        age_turning: { type: integer, nullable: true }
 
     # ── RFC 7807 error contract (D-7 / D-29) ────────────────────────────────
     Problem:
