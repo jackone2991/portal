@@ -16,7 +16,7 @@
 | 6 | Finance ledger (biggest) | SPEC-03 | ~8.5 | 🔵 **code-complete** — backend (14 tests) + OpenAPI + 4 frontend pages; `go build/vet/test` + `tsc` green (`66c036f`…`ff92b4b`); **live dogfood pending** |
 | 7 | Comic vertical | SPEC-02 | ~4.5 | 🔵 **code-complete** — backend (6 tests) + OpenAPI + frontend (library/detail/reader); `go build/vet/test` + `tsc` green (`2c4301a`…`f7414b2`); live dogfood pending |
 | 8 | People registry | SPEC-08 | ~4.5 | 🔵 **code-complete** — backend (6 tests) + OpenAPI + frontend (list/detail + wired BirthdayCard); green (`cbe3ce8`…`f55b4f2`); live dogfood pending |
-| 9 | Life-stream home (last) | SPEC-06 | ~5 | ⬜ |
+| 9 | Life-stream home (last) | SPEC-06 | ~5 | 🔵 **code-complete** — projection + 8 consumers + `/stream` (5 tests) + home stream island + wired rail; `go build/vet/test` + `tsc` green (`1fbf95a`,`a3c7527`); live dogfood pending |
 
 > Update the Status cell (⬜ → 🔵 in progress → ✅ done) as you go.
 
@@ -214,14 +214,29 @@
 **Goal:** the real `/` — merged stream + widgets consuming everything above.
 **Prereq:** SPEC-05 (hard); every other producer as available (widgets degrade to empty state).
 
-- [ ] `stream_items` projection table + consumers + idempotency tests
-- [ ] transfer render normalization (either leg → identical card) [F004]; `bank:transaction_updated` upsert [F063]
-- [ ] `GET /stream` merged read (limit default 30 / max 50 [F064]) + OpenAPI + mapping/fallback ACs [F065]
-- [ ] home replacement (stream island + composer integration) + fixture removal
-- [ ] widget rail wiring (finance / birthday / continue / notifications) + empty states
-- [ ] P1 (defer): memories + backfill — P1.6 excludes `origin='import'` assets [F025]
+> **Status: 🔵 code-complete + build/test green** (`1fbf95a` backend, `a3c7527`
+> frontend). Journal transactional projection + 8 system-event consumers + `/stream`
+> + home stream island + wired rail. `go build/vet/test` (12 pkgs) + `tsc` green.
+> **Live browser dogfood pending** — needs `make up` + a week of real cross-module use.
 
-**Dogfood gate:** open `/` after a week of real cross-module use — it should read like *your* day.
+- [x] `stream_items` projection table + consumers + idempotency tests — migration `0017`, 8 consumer tasks, 5 tests
+- [x] transfer render normalization (either leg → identical card) [F004]; `bank:transaction_updated` upsert [F063]
+- [x] `GET /stream` merged read (limit default 30 / max 50 [F064]) + OpenAPI + mapping/fallback ACs [F065]
+- [x] home replacement (stream island + composer integration) + fixture removal
+- [x] widget rail wiring (finance / birthday / continue) + empty states — notifications widget deferred (SPEC-04 activity feed)
+- [ ] P1 (defer): memories + backfill — P1.5/P1.6 **deferred**
+
+**Dogfood gate:** open `/` after a week of real cross-module use — it should read like *your* day. *(pending live run)*
+
+---
+
+## 🎉 All P0 sprints code-complete
+
+Sprints 1–9 (SPEC-01…09) are landed end-to-end — backend (unit-tested) + OpenAPI
+(codegen drift-gated) + frontend (`tsc` green) for each. The remaining work across
+the program is **live browser dogfooding** (`make up`) per sprint and the P1 tails
+each spec explicitly defers (zip import, receipts, interactions, avatars, memories,
+web-push, restore-drill automation, …).
 
 ---
 
