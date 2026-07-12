@@ -18,6 +18,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
+	"github.com/portal/backend/internal/modules/bank"
+	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
 	"github.com/portal/backend/internal/modules/journal"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
@@ -153,6 +155,14 @@ func run() error {
 		return fmt.Errorf("journal module: %w", err)
 	}
 
+	// ── Bank module (worker side) ───────────────────────────────────
+	// No P0 tasks — the wiring exists so SPEC-06's stream consumer of
+	// bank:transaction_* attaches here without touching cmd/worker's shape.
+	bankMod, err := bank.New(bank.Deps{Repo: bankrepo.NewAdapter(pool)})
+	if err != nil {
+		return fmt.Errorf("bank module: %w", err)
+	}
+
 	// ── Ops module (worker side: nightly Postgres backup) ───────────
 	// The account module isn't constructed here, so audit records route through
 	// its repository adapter (a plain audit_log INSERT). BackupDatabaseURL MUST
@@ -200,6 +210,7 @@ func run() error {
 	// :on_asset_ready — all light, IO-bound, weight-1 "default" queue.
 	notifyMod.RegisterTasks(lightMux)
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
+	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)
 	lightMux.HandleFunc(notifyapi.TaskPurgeOld, func(ctx context.Context, _ *asynq.Task) error {
 		return notifyMod.PurgeOld(ctx)

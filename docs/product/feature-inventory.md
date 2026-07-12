@@ -1766,6 +1766,17 @@ PAYOUT_HOLD_DAYS=7                    # delay after balance change to allow char
 
 Lands in Phase 11.
 
+### D-41 — Bank v1 ledger money model: integer minor units (`bigint`), a scoped divergence from D-14/D-15 *(SPEC-03 §7)*
+
+SPEC-03's personal ledger (module `bank`, ledger scope) represents money as **integer minor units** end-to-end — `bigint` columns in storage and JSON-integer minor units on the wire — with the exponent map owned by the shared Money helper (VND exponent 0: 1 unit = 1 đồng, never floats anywhere). This **knowingly diverges** from two earlier money decisions, and the divergence is **scoped to the v1 personal ledger only**:
+
+- **vs [D-14] (wire + storage)** — D-14 resolves money as `numeric(20,8)` + `shopspring/decimal` + decimal *strings* on the wire ("never JSON numbers"). For an exponent-0 currency (VND) an integer is exact and avoids the string-parsing layer the Money helper exists to remove. D-14 still governs any **multi-currency** or fractional-unit money.
+- **vs [D-15] (bookkeeping model)** — D-15 resolves hybrid double-entry internals (`ledger_entries` + a per-transaction balance CHECK). SPEC-03 is deliberately **single-row** (+ paired debit/credit legs for transfers, sharing a `transfer_id`) — Money-Lover-class, not accounting-grade. D-15's double-entry returns with the **creator-economy** scope that actually needs it (payouts, [D-40]).
+
+**Scope guard:** D-41 governs only the v1 self-hosted personal ledger (single owner, per-account currency, no cross-currency totals). The moment money crosses currencies, accrues creator-economy balances, or needs audit-grade double-entry, [D-14]/[D-15] are the governing decisions — D-41 does not repeal them.
+
+Lands with SPEC-03 (Sprint 6).
+
 ---
 
 ## How to read this document
@@ -1773,6 +1784,6 @@ Lands in Phase 11.
 - The status legend (✅ / ✓ / ○ / △) on every section reflects the **code reality**, not aspiration.
 - The roadmap is **sequential** — each phase's exit criterion guards the next.
 - Open questions are **gates** — the marked items should be answered before the phase that depends on them opens; if not, the phase ships on assumptions that will need rework.
-- **Stable identifiers vs section numbers** — the open-question IDs (`16.A-1`, `16.B-8`, …, `16.G-40`) and the decision IDs (`D-1` … `D-40`) are **stable strings**, not references to a current section number. The top-level sections holding them (§19 Open questions, §20 Decisions log) may renumber as new sections are inserted, but the IDs never change. Always cite by ID, not section number.
+- **Stable identifiers vs section numbers** — the open-question IDs (`16.A-1`, `16.B-8`, …, `16.G-40`) and the decision IDs (`D-1` … `D-41`) are **stable strings**, not references to a current section number. The top-level sections holding them (§19 Open questions, §20 Decisions log) may renumber as new sections are inserted, but the IDs never change. Always cite by ID, not section number.
 - Resolved questions get struck through with a `→ Resolved [D-N]` pointer. Never renumbered.
 - Decisions are also stable; overturning one appends a revision (`D-N.r1`), never edits in place. The audit trail matters when the rationale stops applying.

@@ -21,9 +21,9 @@ the naming *rules*, this file owns the *inventory*.
 | `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — emitter only (SPEC-01 P0.3); no consumer yet | comic — drop dangling pages / null covers (SPEC-02 P0.6); stream — remove **all** media-sourced items with this ref (SPEC-06 P0.1); journal — strip attachment ids (SPEC-05 P1.5); people — null avatars (SPEC-08 P1.7); movie/music/story later |
 | `media:playback_completed` | `{asset_id, user_id, title}` | media | live — emitter only (SPEC-07 P1.5); no consumer yet | stream (SPEC-06); notify (SPEC-04 open type registry) |
 | `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | planned (SPEC-02 P1.9) | stream (SPEC-06 P0.1); notify later |
-| `bank:transaction_created` | `{transaction_id, user_id, account_id, amount, direction, category_id, occurred_at, is_transfer, transfer_id, counterparty_account_id}` | bank | planned (SPEC-03 P0.7) | stream (SPEC-06 P0.1) |
-| `bank:transaction_updated` | same as created | bank | planned (SPEC-03 P0.7) | stream — refresh the matching item's payload/occurred_at (SPEC-06 P0.1) |
-| `bank:transaction_deleted` | same as created | bank | planned (SPEC-03 P0.7) | stream — remove item (SPEC-06 P0.1) |
+| `bank:transaction_created` | `{transaction_id, user_id, account_id, amount, direction, category_id, occurred_at, is_transfer, transfer_id, counterparty_account_id}` | bank | live — emitter only (SPEC-03 P0.7); no consumer yet | stream (SPEC-06 P0.1) |
+| `bank:transaction_updated` | same as created | bank | live — emitter only (SPEC-03 P0.7); no consumer yet | stream — refresh the matching item's payload/occurred_at (SPEC-06 P0.1) |
+| `bank:transaction_deleted` | same as created | bank | live — emitter only (SPEC-03 P0.7); no consumer yet | stream — remove item (SPEC-06 P0.1) |
 | `bank:budget_exceeded` | `{user_id, category_id, month}` | bank | planned (SPEC-03 P1.12) | notify later |
 | `journal:entry_created` | `{entry_id, user_id, occurred_at}` | journal | planned (SPEC-05 P0.3) | — emit-only for future external consumers. The stream projection is maintained **transactionally in-module** (SPEC-06 P0.1), not via this event; no updated/deleted events for the same reason (SPEC-05 P0.3) |
 | `people:birthday_upcoming` | `{notice_id, person_id, user_id, display_name, days_until}` | people | planned (SPEC-08 P0.4) | stream — `ref_id = notice_id`, so recurring years/thresholds never collide (SPEC-06 P0.1); notify (SPEC-04) as they land |

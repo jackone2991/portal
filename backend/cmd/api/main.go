@@ -30,6 +30,8 @@ import (
 	"github.com/portal/backend/internal/modules/account/auth"
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
+	"github.com/portal/backend/internal/modules/bank"
+	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
 	"github.com/portal/backend/internal/modules/journal"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
@@ -254,6 +256,26 @@ func run() error {
 		return fmt.Errorf("ops module: %w", err)
 	}
 
+	// ── Bank module (personal ledger: /bank/*) ──────────────────────
+	bankMod, err := bank.New(bank.Deps{
+		Repo:        bankrepo.NewAdapter(pool),
+		Events:      mediaEvents, // shared fan-out publisher; bank:transaction_* is emit-only
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(accountMod.Engine(), code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("bank module: %w", err)
+	}
+
 	// ── HTTP ────────────────────────────────────────────────────────
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
@@ -280,6 +302,7 @@ func run() error {
 		notifyMod.MountHTTP(r)
 		journalMod.MountHTTP(r)
 		opsMod.MountHTTP(r)
+		bankMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{

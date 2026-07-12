@@ -70,6 +70,7 @@ linters:
             - github.com/portal/backend/internal/modules/music/api
             - github.com/portal/backend/internal/modules/story/api
             - github.com/portal/backend/internal/modules/comic/api
+            - github.com/portal/backend/internal/modules/bank/api
           deny:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
@@ -89,6 +90,7 @@ linters:
             - github.com/portal/backend/internal/modules/music/api
             - github.com/portal/backend/internal/modules/story/api
             - github.com/portal/backend/internal/modules/comic/api
+            - github.com/portal/backend/internal/modules/bank/api
           deny:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
@@ -108,6 +110,7 @@ linters:
             - github.com/portal/backend/internal/modules/music/api
             - github.com/portal/backend/internal/modules/story/api
             - github.com/portal/backend/internal/modules/comic/api
+            - github.com/portal/backend/internal/modules/bank/api
           deny:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
@@ -127,6 +130,7 @@ linters:
             - github.com/portal/backend/internal/modules/music/api
             - github.com/portal/backend/internal/modules/story/api
             - github.com/portal/backend/internal/modules/comic/api
+            - github.com/portal/backend/internal/modules/bank/api
           deny:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
@@ -141,6 +145,27 @@ linters:
             - github.com/portal/backend/internal/modules/media/api
             - github.com/portal/backend/internal/modules/notify/api
             - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+            - github.com/portal/backend/internal/modules/comic/api
+            - github.com/portal/backend/internal/modules/bank/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-bank-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/bank/**"
+          allow:
+            - github.com/portal/backend/internal/modules/bank
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/ops/api
             - github.com/portal/backend/internal/modules/tenant/api
             - github.com/portal/backend/internal/modules/movie/api
             - github.com/portal/backend/internal/modules/music/api

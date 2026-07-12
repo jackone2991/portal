@@ -43,6 +43,59 @@ type AuditLog struct {
 	UserAgent  *string            `json:"user_agent"`
 }
 
+type BankAccount struct {
+	ID             pgtype.UUID        `json:"id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	Name           string             `json:"name"`
+	Type           string             `json:"type"`
+	Currency       string             `json:"currency"`
+	OpeningBalance int64              `json:"opening_balance"`
+	Archived       bool               `json:"archived"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type BankBudget struct {
+	ID         pgtype.UUID `json:"id"`
+	UserID     pgtype.UUID `json:"user_id"`
+	CategoryID pgtype.UUID `json:"category_id"`
+	Month      pgtype.Date `json:"month"`
+	Amount     int64       `json:"amount"`
+}
+
+type BankCategory struct {
+	ID       pgtype.UUID `json:"id"`
+	UserID   pgtype.UUID `json:"user_id"`
+	ParentID pgtype.UUID `json:"parent_id"`
+	Name     string      `json:"name"`
+	Kind     string      `json:"kind"`
+}
+
+type BankImportBatch struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Source    string             `json:"source"`
+	FileName  *string            `json:"file_name"`
+	Status    string             `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type BankTransaction struct {
+	ID             pgtype.UUID        `json:"id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	AccountID      pgtype.UUID        `json:"account_id"`
+	CategoryID     pgtype.UUID        `json:"category_id"`
+	Amount         int64              `json:"amount"`
+	Direction      string             `json:"direction"`
+	TransferID     pgtype.UUID        `json:"transfer_id"`
+	OccurredAt     pgtype.Date        `json:"occurred_at"`
+	Note           *string            `json:"note"`
+	DescriptionRaw *string            `json:"description_raw"`
+	ImportBatchID  pgtype.UUID        `json:"import_batch_id"`
+	DedupHash      *string            `json:"dedup_hash"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
 type JournalEntry struct {
 	ID         pgtype.UUID        `json:"id"`
 	UserID     pgtype.UUID        `json:"user_id"`
