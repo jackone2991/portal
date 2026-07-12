@@ -102,6 +102,156 @@ func (e AssetUploadSessionUploadMethod) Valid() bool {
 	}
 }
 
+// Defines values for BankAccountType.
+const (
+	BankAccountTypeCash       BankAccountType = "cash"
+	BankAccountTypeChecking   BankAccountType = "checking"
+	BankAccountTypeCreditCard BankAccountType = "credit_card"
+	BankAccountTypeEwallet    BankAccountType = "ewallet"
+	BankAccountTypeOther      BankAccountType = "other"
+	BankAccountTypeSavings    BankAccountType = "savings"
+)
+
+// Valid indicates whether the value is a known member of the BankAccountType enum.
+func (e BankAccountType) Valid() bool {
+	switch e {
+	case BankAccountTypeCash:
+		return true
+	case BankAccountTypeChecking:
+		return true
+	case BankAccountTypeCreditCard:
+		return true
+	case BankAccountTypeEwallet:
+		return true
+	case BankAccountTypeOther:
+		return true
+	case BankAccountTypeSavings:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankAccountCreateType.
+const (
+	BankAccountCreateTypeCash       BankAccountCreateType = "cash"
+	BankAccountCreateTypeChecking   BankAccountCreateType = "checking"
+	BankAccountCreateTypeCreditCard BankAccountCreateType = "credit_card"
+	BankAccountCreateTypeEwallet    BankAccountCreateType = "ewallet"
+	BankAccountCreateTypeOther      BankAccountCreateType = "other"
+	BankAccountCreateTypeSavings    BankAccountCreateType = "savings"
+)
+
+// Valid indicates whether the value is a known member of the BankAccountCreateType enum.
+func (e BankAccountCreateType) Valid() bool {
+	switch e {
+	case BankAccountCreateTypeCash:
+		return true
+	case BankAccountCreateTypeChecking:
+		return true
+	case BankAccountCreateTypeCreditCard:
+		return true
+	case BankAccountCreateTypeEwallet:
+		return true
+	case BankAccountCreateTypeOther:
+		return true
+	case BankAccountCreateTypeSavings:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankCategoryKind.
+const (
+	BankCategoryKindExpense BankCategoryKind = "expense"
+	BankCategoryKindIncome  BankCategoryKind = "income"
+)
+
+// Valid indicates whether the value is a known member of the BankCategoryKind enum.
+func (e BankCategoryKind) Valid() bool {
+	switch e {
+	case BankCategoryKindExpense:
+		return true
+	case BankCategoryKindIncome:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankCategoryCreateKind.
+const (
+	BankCategoryCreateKindExpense BankCategoryCreateKind = "expense"
+	BankCategoryCreateKindIncome  BankCategoryCreateKind = "income"
+)
+
+// Valid indicates whether the value is a known member of the BankCategoryCreateKind enum.
+func (e BankCategoryCreateKind) Valid() bool {
+	switch e {
+	case BankCategoryCreateKindExpense:
+		return true
+	case BankCategoryCreateKindIncome:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankTransactionDirection.
+const (
+	BankTransactionDirectionCredit BankTransactionDirection = "credit"
+	BankTransactionDirectionDebit  BankTransactionDirection = "debit"
+)
+
+// Valid indicates whether the value is a known member of the BankTransactionDirection enum.
+func (e BankTransactionDirection) Valid() bool {
+	switch e {
+	case BankTransactionDirectionCredit:
+		return true
+	case BankTransactionDirectionDebit:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankTransactionCreateDirection.
+const (
+	BankTransactionCreateDirectionCredit BankTransactionCreateDirection = "credit"
+	BankTransactionCreateDirectionDebit  BankTransactionCreateDirection = "debit"
+)
+
+// Valid indicates whether the value is a known member of the BankTransactionCreateDirection enum.
+func (e BankTransactionCreateDirection) Valid() bool {
+	switch e {
+	case BankTransactionCreateDirectionCredit:
+		return true
+	case BankTransactionCreateDirectionDebit:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BankTransactionPatchDirection.
+const (
+	Credit BankTransactionPatchDirection = "credit"
+	Debit  BankTransactionPatchDirection = "debit"
+)
+
+// Valid indicates whether the value is a known member of the BankTransactionPatchDirection enum.
+func (e BankTransactionPatchDirection) Valid() bool {
+	switch e {
+	case Credit:
+		return true
+	case Debit:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ContinueItemModule.
 const (
 	Comic ContinueItemModule = "comic"
@@ -415,6 +565,189 @@ type AssetUploadSession struct {
 // AssetUploadSessionUploadMethod defines model for AssetUploadSession.Upload.Method.
 type AssetUploadSessionUploadMethod string
 
+// BankAccount defines model for BankAccount.
+type BankAccount struct {
+	Archived bool `json:"archived"`
+
+	// Balance Derived (opening + Σcredits − Σdebits); always current.
+	Balance   int64     `json:"balance"`
+	CreatedAt time.Time `json:"created_at"`
+
+	// Currency ISO-4217
+	Currency       string             `json:"currency"`
+	Id             openapi_types.UUID `json:"id"`
+	Name           string             `json:"name"`
+	OpeningBalance int64              `json:"opening_balance"`
+	Type           BankAccountType    `json:"type"`
+}
+
+// BankAccountType defines model for BankAccount.Type.
+type BankAccountType string
+
+// BankAccountCreate defines model for BankAccountCreate.
+type BankAccountCreate struct {
+	Currency       *string               `json:"currency,omitempty"`
+	Name           string                `json:"name"`
+	OpeningBalance *int64                `json:"opening_balance,omitempty"`
+	Type           BankAccountCreateType `json:"type"`
+}
+
+// BankAccountCreateType defines model for BankAccountCreate.Type.
+type BankAccountCreateType string
+
+// BankAccountPatch defines model for BankAccountPatch.
+type BankAccountPatch struct {
+	Archived *bool `json:"archived,omitempty"`
+
+	// Currency Only mutable while the account is empty.
+	Currency *string `json:"currency,omitempty"`
+	Name     *string `json:"name,omitempty"`
+}
+
+// BankBudgetLine defines model for BankBudgetLine.
+type BankBudgetLine struct {
+	Amount     int64               `json:"amount"`
+	CategoryId openapi_types.UUID  `json:"category_id"`
+	Name       string              `json:"name"`
+	ParentId   *openapi_types.UUID `json:"parent_id,omitempty"`
+	ParentName *string             `json:"parent_name,omitempty"`
+
+	// Spent Σ expense debits this month incl. children
+	Spent int64 `json:"spent"`
+}
+
+// BankBudgetWrite defines model for BankBudgetWrite.
+type BankBudgetWrite struct {
+	// Amount 0 or null deletes the budget.
+	Amount *int64 `json:"amount,omitempty"`
+
+	// CategoryId Must be expense-kind.
+	CategoryId openapi_types.UUID `json:"category_id"`
+
+	// Month YYYY-MM
+	Month string `json:"month"`
+}
+
+// BankCategory defines model for BankCategory.
+type BankCategory struct {
+	Id       openapi_types.UUID  `json:"id"`
+	Kind     BankCategoryKind    `json:"kind"`
+	Name     string              `json:"name"`
+	ParentId *openapi_types.UUID `json:"parent_id,omitempty"`
+
+	// Seed A user_id-NULL default (visible to all
+	Seed bool `json:"seed"`
+}
+
+// BankCategoryKind defines model for BankCategory.Kind.
+type BankCategoryKind string
+
+// BankCategoryCreate defines model for BankCategoryCreate.
+type BankCategoryCreate struct {
+	Kind BankCategoryCreateKind `json:"kind"`
+	Name string                 `json:"name"`
+
+	// ParentId Must be a top-level category of the same kind.
+	ParentId *openapi_types.UUID `json:"parent_id,omitempty"`
+}
+
+// BankCategoryCreateKind defines model for BankCategoryCreate.Kind.
+type BankCategoryCreateKind string
+
+// BankCategoryPatch kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it.
+type BankCategoryPatch struct {
+	Name     *string             `json:"name,omitempty"`
+	ParentId *openapi_types.UUID `json:"parent_id,omitempty"`
+}
+
+// BankDashboard defines model for BankDashboard.
+type BankDashboard struct {
+	Accounts []BankAccount     `json:"accounts"`
+	Budgets  []BankBudgetLine  `json:"budgets"`
+	Expense  int64             `json:"expense"`
+	Income   int64             `json:"income"`
+	Month    string            `json:"month"`
+	Recent   []BankTransaction `json:"recent"`
+}
+
+// BankTransaction defines model for BankTransaction.
+type BankTransaction struct {
+	AccountId openapi_types.UUID `json:"account_id"`
+
+	// Amount Strictly positive minor units.
+	Amount     int64                    `json:"amount"`
+	CategoryId *openapi_types.UUID      `json:"category_id,omitempty"`
+	CreatedAt  time.Time                `json:"created_at"`
+	Direction  BankTransactionDirection `json:"direction"`
+	Id         openapi_types.UUID       `json:"id"`
+
+	// IsTransfer True for a transfer leg (transfer_id set AND category_id null).
+	IsTransfer bool    `json:"is_transfer"`
+	Note       *string `json:"note,omitempty"`
+
+	// OccurredAt YYYY-MM-DD
+	OccurredAt openapi_types.Date  `json:"occurred_at"`
+	TransferId *openapi_types.UUID `json:"transfer_id,omitempty"`
+	UpdatedAt  time.Time           `json:"updated_at"`
+}
+
+// BankTransactionDirection defines model for BankTransaction.Direction.
+type BankTransactionDirection string
+
+// BankTransactionCreate defines model for BankTransactionCreate.
+type BankTransactionCreate struct {
+	AccountId openapi_types.UUID `json:"account_id"`
+	Amount    int64              `json:"amount"`
+
+	// CategoryId Own or seed; kind must match direction.
+	CategoryId openapi_types.UUID             `json:"category_id"`
+	Direction  BankTransactionCreateDirection `json:"direction"`
+	Note       *string                        `json:"note,omitempty"`
+
+	// OccurredAt Defaults to today.
+	OccurredAt *openapi_types.Date `json:"occurred_at,omitempty"`
+}
+
+// BankTransactionCreateDirection defines model for BankTransactionCreate.Direction.
+type BankTransactionCreateDirection string
+
+// BankTransactionPatch defines model for BankTransactionPatch.
+type BankTransactionPatch struct {
+	AccountId  *openapi_types.UUID            `json:"account_id,omitempty"`
+	Amount     *int64                         `json:"amount,omitempty"`
+	CategoryId *openapi_types.UUID            `json:"category_id,omitempty"`
+	Direction  *BankTransactionPatchDirection `json:"direction,omitempty"`
+	Note       *string                        `json:"note,omitempty"`
+	OccurredAt *openapi_types.Date            `json:"occurred_at,omitempty"`
+}
+
+// BankTransactionPatchDirection defines model for BankTransactionPatch.Direction.
+type BankTransactionPatchDirection string
+
+// BankTransfer defines model for BankTransfer.
+type BankTransfer struct {
+	Legs       []BankTransaction   `json:"legs"`
+	TransferId *openapi_types.UUID `json:"transfer_id,omitempty"`
+}
+
+// BankTransferCreate defines model for BankTransferCreate.
+type BankTransferCreate struct {
+	Amount      int64               `json:"amount"`
+	FromAccount openapi_types.UUID  `json:"from_account"`
+	Note        *string             `json:"note,omitempty"`
+	OccurredAt  *openapi_types.Date `json:"occurred_at,omitempty"`
+	ToAccount   openapi_types.UUID  `json:"to_account"`
+}
+
+// BankTransferPatch defines model for BankTransferPatch.
+type BankTransferPatch struct {
+	Amount      *int64              `json:"amount,omitempty"`
+	FromAccount *openapi_types.UUID `json:"from_account,omitempty"`
+	Note        *string             `json:"note,omitempty"`
+	OccurredAt  *openapi_types.Date `json:"occurred_at,omitempty"`
+	ToAccount   *openapi_types.UUID `json:"to_account,omitempty"`
+}
+
 // ContinueItem One "continue watching / reading / listening" entry for the cross-domain
 // `/continue` rail [D-20]. Aggregated from each vertical's progress table.
 type ContinueItem struct {
@@ -693,6 +1026,10 @@ type TenantSlug = string
 // stable URI (also the i18n key); Portal adds the extensions below.
 type BadRequest = Problem
 
+// Conflict RFC 7807 problem detail, served as `application/problem+json`. `type` is a
+// stable URI (also the i18n key); Portal adds the extensions below.
+type Conflict = Problem
+
 // Forbidden RFC 7807 problem detail, served as `application/problem+json`. `type` is a
 // stable URI (also the i18n key); Portal adds the extensions below.
 type Forbidden = Problem
@@ -708,6 +1045,10 @@ type TooManyRequests = Problem
 // Unauthorized RFC 7807 problem detail, served as `application/problem+json`. `type` is a
 // stable URI (also the i18n key); Portal adds the extensions below.
 type Unauthorized = Problem
+
+// UnprocessableEntity RFC 7807 problem detail, served as `application/problem+json`. `type` is a
+// stable URI (also the i18n key); Portal adds the extensions below.
+type UnprocessableEntity = Problem
 
 // bearerAuthContextKey is the context key for bearerAuth security scheme
 type bearerAuthContextKey string
@@ -755,6 +1096,35 @@ type Register201JSONResponseBodyStatus string
 
 // ResetPassword200JSONResponseBodyStatus defines parameters for ResetPassword.
 type ResetPassword200JSONResponseBodyStatus string
+
+// ListBankBudgetsParams defines parameters for ListBankBudgets.
+type ListBankBudgetsParams struct {
+	// Month YYYY-MM (default current month)
+	Month *string `form:"month,omitempty" json:"month,omitempty"`
+}
+
+// DeleteBankCategoryParams defines parameters for DeleteBankCategory.
+type DeleteBankCategoryParams struct {
+	// ReassignTo Move this category's transactions to the target (own or seed, same kind) before deleting.
+	ReassignTo *openapi_types.UUID `form:"reassign_to,omitempty" json:"reassign_to,omitempty"`
+}
+
+// GetBankDashboardParams defines parameters for GetBankDashboard.
+type GetBankDashboardParams struct {
+	// Month YYYY-MM (default current month)
+	Month *string `form:"month,omitempty" json:"month,omitempty"`
+}
+
+// ListBankTransactionsParams defines parameters for ListBankTransactions.
+type ListBankTransactionsParams struct {
+	Account  *openapi_types.UUID `form:"account,omitempty" json:"account,omitempty"`
+	Category *openapi_types.UUID `form:"category,omitempty" json:"category,omitempty"`
+
+	// Month YYYY-MM
+	Month  *string `form:"month,omitempty" json:"month,omitempty"`
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // GetContinueItemsParams defines parameters for GetContinueItems.
 type GetContinueItemsParams struct {
@@ -806,6 +1176,33 @@ type RegisterJSONRequestBody = RegisterRequest
 
 // ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
 type ResetPasswordJSONRequestBody = ResetPasswordRequest
+
+// CreateBankAccountJSONRequestBody defines body for CreateBankAccount for application/json ContentType.
+type CreateBankAccountJSONRequestBody = BankAccountCreate
+
+// UpdateBankAccountJSONRequestBody defines body for UpdateBankAccount for application/json ContentType.
+type UpdateBankAccountJSONRequestBody = BankAccountPatch
+
+// SetBankBudgetJSONRequestBody defines body for SetBankBudget for application/json ContentType.
+type SetBankBudgetJSONRequestBody = BankBudgetWrite
+
+// CreateBankCategoryJSONRequestBody defines body for CreateBankCategory for application/json ContentType.
+type CreateBankCategoryJSONRequestBody = BankCategoryCreate
+
+// UpdateBankCategoryJSONRequestBody defines body for UpdateBankCategory for application/json ContentType.
+type UpdateBankCategoryJSONRequestBody = BankCategoryPatch
+
+// CreateBankTransactionJSONRequestBody defines body for CreateBankTransaction for application/json ContentType.
+type CreateBankTransactionJSONRequestBody = BankTransactionCreate
+
+// UpdateBankTransactionJSONRequestBody defines body for UpdateBankTransaction for application/json ContentType.
+type UpdateBankTransactionJSONRequestBody = BankTransactionPatch
+
+// CreateBankTransferJSONRequestBody defines body for CreateBankTransfer for application/json ContentType.
+type CreateBankTransferJSONRequestBody = BankTransferCreate
+
+// UpdateBankTransferJSONRequestBody defines body for UpdateBankTransfer for application/json ContentType.
+type UpdateBankTransferJSONRequestBody = BankTransferPatch
 
 // CreateJournalEntryJSONRequestBody defines body for CreateJournalEntry for application/json ContentType.
 type CreateJournalEntryJSONRequestBody = JournalEntryWrite
@@ -1039,6 +1436,60 @@ type ServerInterface interface {
 	// Consume a reset token and set a new password (SPEC-04 P0.3)
 	// (POST /auth/reset-password)
 	ResetPassword(w http.ResponseWriter, r *http.Request)
+	// List the caller's accounts with derived balances
+	// (GET /bank/accounts)
+	ListBankAccounts(w http.ResponseWriter, r *http.Request)
+	// Create an account
+	// (POST /bank/accounts)
+	CreateBankAccount(w http.ResponseWriter, r *http.Request)
+	// Delete an empty account
+	// (DELETE /bank/accounts/{id})
+	DeleteBankAccount(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Update an account (name / archived / currency)
+	// (PATCH /bank/accounts/{id})
+	UpdateBankAccount(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// List monthly budgets with spent (tree, incl. children)
+	// (GET /bank/budgets)
+	ListBankBudgets(w http.ResponseWriter, r *http.Request, params ListBankBudgetsParams)
+	// Upsert a monthly budget (amount 0 or null deletes it)
+	// (PUT /bank/budgets)
+	SetBankBudget(w http.ResponseWriter, r *http.Request)
+	// List the caller's own + seed categories
+	// (GET /bank/categories)
+	ListBankCategories(w http.ResponseWriter, r *http.Request)
+	// Create a category
+	// (POST /bank/categories)
+	CreateBankCategory(w http.ResponseWriter, r *http.Request)
+	// Delete a category (optionally reassigning its transactions)
+	// (DELETE /bank/categories/{id})
+	DeleteBankCategory(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params DeleteBankCategoryParams)
+	// Update a category (name / parent)
+	// (PATCH /bank/categories/{id})
+	UpdateBankCategory(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Ledger dashboard (balances, month flow, budgets, recent)
+	// (GET /bank/dashboard)
+	GetBankDashboard(w http.ResponseWriter, r *http.Request, params GetBankDashboardParams)
+	// List transactions (cursor paged, newest first)
+	// (GET /bank/transactions)
+	ListBankTransactions(w http.ResponseWriter, r *http.Request, params ListBankTransactionsParams)
+	// Create a manual transaction
+	// (POST /bank/transactions)
+	CreateBankTransaction(w http.ResponseWriter, r *http.Request)
+	// Delete a transaction
+	// (DELETE /bank/transactions/{id})
+	DeleteBankTransaction(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Update a transaction
+	// (PATCH /bank/transactions/{id})
+	UpdateBankTransaction(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Create an inter-account transfer (paired debit + credit)
+	// (POST /bank/transfers)
+	CreateBankTransfer(w http.ResponseWriter, r *http.Request)
+	// Delete a transfer (both legs) atomically
+	// (DELETE /bank/transfers/{transfer_id})
+	DeleteBankTransfer(w http.ResponseWriter, r *http.Request, transferId openapi_types.UUID)
+	// Update both legs of a transfer atomically
+	// (PATCH /bank/transfers/{transfer_id})
+	UpdateBankTransfer(w http.ResponseWriter, r *http.Request, transferId openapi_types.UUID)
 	// List active progress items across modules (SPEC-07)
 	// (GET /continue)
 	GetContinueItems(w http.ResponseWriter, r *http.Request, params GetContinueItemsParams)
@@ -1189,6 +1640,114 @@ func (_ Unimplemented) Register(w http.ResponseWriter, r *http.Request) {
 // Consume a reset token and set a new password (SPEC-04 P0.3)
 // (POST /auth/reset-password)
 func (_ Unimplemented) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List the caller's accounts with derived balances
+// (GET /bank/accounts)
+func (_ Unimplemented) ListBankAccounts(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create an account
+// (POST /bank/accounts)
+func (_ Unimplemented) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete an empty account
+// (DELETE /bank/accounts/{id})
+func (_ Unimplemented) DeleteBankAccount(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update an account (name / archived / currency)
+// (PATCH /bank/accounts/{id})
+func (_ Unimplemented) UpdateBankAccount(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List monthly budgets with spent (tree, incl. children)
+// (GET /bank/budgets)
+func (_ Unimplemented) ListBankBudgets(w http.ResponseWriter, r *http.Request, params ListBankBudgetsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Upsert a monthly budget (amount 0 or null deletes it)
+// (PUT /bank/budgets)
+func (_ Unimplemented) SetBankBudget(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List the caller's own + seed categories
+// (GET /bank/categories)
+func (_ Unimplemented) ListBankCategories(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create a category
+// (POST /bank/categories)
+func (_ Unimplemented) CreateBankCategory(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a category (optionally reassigning its transactions)
+// (DELETE /bank/categories/{id})
+func (_ Unimplemented) DeleteBankCategory(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params DeleteBankCategoryParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a category (name / parent)
+// (PATCH /bank/categories/{id})
+func (_ Unimplemented) UpdateBankCategory(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Ledger dashboard (balances, month flow, budgets, recent)
+// (GET /bank/dashboard)
+func (_ Unimplemented) GetBankDashboard(w http.ResponseWriter, r *http.Request, params GetBankDashboardParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List transactions (cursor paged, newest first)
+// (GET /bank/transactions)
+func (_ Unimplemented) ListBankTransactions(w http.ResponseWriter, r *http.Request, params ListBankTransactionsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create a manual transaction
+// (POST /bank/transactions)
+func (_ Unimplemented) CreateBankTransaction(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a transaction
+// (DELETE /bank/transactions/{id})
+func (_ Unimplemented) DeleteBankTransaction(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a transaction
+// (PATCH /bank/transactions/{id})
+func (_ Unimplemented) UpdateBankTransaction(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create an inter-account transfer (paired debit + credit)
+// (POST /bank/transfers)
+func (_ Unimplemented) CreateBankTransfer(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a transfer (both legs) atomically
+// (DELETE /bank/transfers/{transfer_id})
+func (_ Unimplemented) DeleteBankTransfer(w http.ResponseWriter, r *http.Request, transferId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update both legs of a transfer atomically
+// (PATCH /bank/transfers/{transfer_id})
+func (_ Unimplemented) UpdateBankTransfer(w http.ResponseWriter, r *http.Request, transferId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1789,6 +2348,587 @@ func (siw *ServerInterfaceWrapper) ResetPassword(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListBankAccounts operation middleware
+func (siw *ServerInterfaceWrapper) ListBankAccounts(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBankAccounts(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBankAccount operation middleware
+func (siw *ServerInterfaceWrapper) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBankAccount(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBankAccount operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBankAccount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBankAccount(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateBankAccount operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBankAccount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateBankAccount(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBankBudgets operation middleware
+func (siw *ServerInterfaceWrapper) ListBankBudgets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListBankBudgetsParams
+
+	// ------------- Optional query parameter "month" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "month", r.URL.Query(), &params.Month, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "month"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBankBudgets(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetBankBudget operation middleware
+func (siw *ServerInterfaceWrapper) SetBankBudget(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetBankBudget(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBankCategories operation middleware
+func (siw *ServerInterfaceWrapper) ListBankCategories(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBankCategories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBankCategory operation middleware
+func (siw *ServerInterfaceWrapper) CreateBankCategory(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBankCategory(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBankCategory operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBankCategory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteBankCategoryParams
+
+	// ------------- Optional query parameter "reassign_to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "reassign_to", r.URL.Query(), &params.ReassignTo, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "reassign_to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "reassign_to", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBankCategory(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateBankCategory operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBankCategory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateBankCategory(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetBankDashboard operation middleware
+func (siw *ServerInterfaceWrapper) GetBankDashboard(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetBankDashboardParams
+
+	// ------------- Optional query parameter "month" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "month", r.URL.Query(), &params.Month, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "month"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBankDashboard(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBankTransactions operation middleware
+func (siw *ServerInterfaceWrapper) ListBankTransactions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListBankTransactionsParams
+
+	// ------------- Optional query parameter "account" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "account", r.URL.Query(), &params.Account, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "account"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "account", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "category" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "category", r.URL.Query(), &params.Category, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "category"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "category", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "month" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "month", r.URL.Query(), &params.Month, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "month"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBankTransactions(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBankTransaction operation middleware
+func (siw *ServerInterfaceWrapper) CreateBankTransaction(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBankTransaction(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBankTransaction operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBankTransaction(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBankTransaction(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateBankTransaction operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBankTransaction(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateBankTransaction(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBankTransfer operation middleware
+func (siw *ServerInterfaceWrapper) CreateBankTransfer(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBankTransfer(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBankTransfer operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBankTransfer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "transfer_id" -------------
+	var transferId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "transfer_id", chi.URLParam(r, "transfer_id"), &transferId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "transfer_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBankTransfer(w, r, transferId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateBankTransfer operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBankTransfer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "transfer_id" -------------
+	var transferId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "transfer_id", chi.URLParam(r, "transfer_id"), &transferId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "transfer_id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateBankTransfer(w, r, transferId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetContinueItems operation middleware
 func (siw *ServerInterfaceWrapper) GetContinueItems(w http.ResponseWriter, r *http.Request) {
 
@@ -2337,6 +3477,60 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/auth/reset-password", wrapper.ResetPassword)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bank/accounts", wrapper.ListBankAccounts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/bank/accounts", wrapper.CreateBankAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/bank/accounts/{id}", wrapper.DeleteBankAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/bank/accounts/{id}", wrapper.UpdateBankAccount)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bank/budgets", wrapper.ListBankBudgets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/bank/budgets", wrapper.SetBankBudget)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bank/categories", wrapper.ListBankCategories)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/bank/categories", wrapper.CreateBankCategory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/bank/categories/{id}", wrapper.DeleteBankCategory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/bank/categories/{id}", wrapper.UpdateBankCategory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bank/dashboard", wrapper.GetBankDashboard)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bank/transactions", wrapper.ListBankTransactions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/bank/transactions", wrapper.CreateBankTransaction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/bank/transactions/{id}", wrapper.DeleteBankTransaction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/bank/transactions/{id}", wrapper.UpdateBankTransaction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/bank/transfers", wrapper.CreateBankTransfer)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/bank/transfers/{transfer_id}", wrapper.DeleteBankTransfer)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/bank/transfers/{transfer_id}", wrapper.UpdateBankTransfer)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/continue", wrapper.GetContinueItems)
 	})
 	r.Group(func(r chi.Router) {
@@ -2378,147 +3572,184 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"hYtvrL8pNY/rX2gjXQzk7Yf/FwAA//8=",
+	"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",
+	"rn6hjT+t+/7j/w8AAP//",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

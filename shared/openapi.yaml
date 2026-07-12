@@ -900,6 +900,349 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  # ── Bank / personal ledger (SPEC-03) ─────────────────────────────────────
+  # Money fields are integer minor units end-to-end (D-41). Every route is
+  # owner-scoped: a foreign id resolves to 404 (existence never leaks).
+  /bank/accounts:
+    get:
+      tags: [bank]
+      summary: List the caller's accounts with derived balances
+      operationId: listBankAccounts
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The caller's accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accounts]
+                properties:
+                  accounts:
+                    type: array
+                    items: { $ref: "#/components/schemas/BankAccount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [bank]
+      summary: Create an account
+      operationId: createBankAccount
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankAccountCreate" }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankAccount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /bank/accounts/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [bank]
+      summary: Update an account (name / archived / currency)
+      description: currency is immutable once the account has transactions (`bank/account-not-mutable`).
+      operationId: updateBankAccount
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankAccountPatch" }
+      responses:
+        "200":
+          description: The updated account
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankAccount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [bank]
+      summary: Delete an empty account
+      description: Accounts with transactions cannot be deleted, only archived (`bank/account-not-empty`).
+      operationId: deleteBankAccount
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /bank/categories:
+    get:
+      tags: [bank]
+      summary: List the caller's own + seed categories
+      operationId: listBankCategories
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Own + seed categories
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [categories]
+                properties:
+                  categories:
+                    type: array
+                    items: { $ref: "#/components/schemas/BankCategory" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [bank]
+      summary: Create a category
+      operationId: createBankCategory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankCategoryCreate" }
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankCategory" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /bank/categories/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [bank]
+      summary: Update a category (name / parent)
+      description: kind is immutable; re-parenting re-runs the top-level + same-kind checks (`bank/invalid-category-parent`). Seeds are not mutable (404).
+      operationId: updateBankCategory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankCategoryPatch" }
+      responses:
+        "200":
+          description: The updated category
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankCategory" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [bank]
+      summary: Delete a category (optionally reassigning its transactions)
+      description: Without `reassign_to`, a category with transactions returns 409 `bank/category-in-use`. Seeds are undeletable (404). Children promote to top level; budgets cascade.
+      operationId: deleteBankCategory
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reassign_to
+          in: query
+          required: false
+          description: Move this category's transactions to the target (own or seed, same kind) before deleting.
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /bank/transactions:
+    get:
+      tags: [bank]
+      summary: List transactions (cursor paged, newest first)
+      operationId: listBankTransactions
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: account, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: category, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: month, in: query, required: false, description: "YYYY-MM", schema: { type: string } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        "200":
+          description: A cursor page of transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transactions]
+                properties:
+                  transactions:
+                    type: array
+                    items: { $ref: "#/components/schemas/BankTransaction" }
+                  next_cursor: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [bank]
+      summary: Create a manual transaction
+      operationId: createBankTransaction
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankTransactionCreate" }
+      responses:
+        "201":
+          description: Transaction created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankTransaction" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /bank/transactions/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [bank]
+      summary: Update a transaction
+      description: A transfer leg cannot be edited here (409 `bank/is-transfer-leg`) — use /bank/transfers/{transfer_id}.
+      operationId: updateBankTransaction
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankTransactionPatch" }
+      responses:
+        "200":
+          description: The updated transaction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankTransaction" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [bank]
+      summary: Delete a transaction
+      description: A transfer leg cannot be deleted here (409 `bank/is-transfer-leg`).
+      operationId: deleteBankTransaction
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /bank/transfers:
+    post:
+      tags: [bank]
+      summary: Create an inter-account transfer (paired debit + credit)
+      operationId: createBankTransfer
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankTransferCreate" }
+      responses:
+        "201":
+          description: Transfer created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankTransfer" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /bank/transfers/{transfer_id}:
+    parameters:
+      - { name: transfer_id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [bank]
+      summary: Update both legs of a transfer atomically
+      operationId: updateBankTransfer
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankTransferPatch" }
+      responses:
+        "200":
+          description: The updated transfer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankTransfer" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [bank]
+      summary: Delete a transfer (both legs) atomically
+      operationId: deleteBankTransfer
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /bank/budgets:
+    get:
+      tags: [bank]
+      summary: List monthly budgets with spent (tree, incl. children)
+      operationId: listBankBudgets
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: month, in: query, required: false, description: "YYYY-MM (default current month)", schema: { type: string } }
+      responses:
+        "200":
+          description: Budget lines for the month
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [month, budgets]
+                properties:
+                  month: { type: string }
+                  budgets:
+                    type: array
+                    items: { $ref: "#/components/schemas/BankBudgetLine" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [bank]
+      summary: Upsert a monthly budget (amount 0 or null deletes it)
+      operationId: setBankBudget
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BankBudgetWrite" }
+      responses:
+        "204": { description: Upserted or deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /bank/dashboard:
+    get:
+      tags: [bank]
+      summary: Ledger dashboard (balances, month flow, budgets, recent)
+      operationId: getBankDashboard
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: month, in: query, required: false, description: "YYYY-MM (default current month)", schema: { type: string } }
+      responses:
+        "200":
+          description: The dashboard aggregate
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankDashboard" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -953,6 +1296,18 @@ components:
             $ref: "#/components/schemas/Problem"
     TooManyRequests:
       description: Rate limit / lockout tripped
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Conflict:
+      description: Conflicts with the resource's current state
       content:
         application/problem+json:
           schema:
@@ -1038,6 +1393,149 @@ components:
           type: boolean
         cache:
           type: boolean
+
+    # ── Bank / personal ledger (SPEC-03) ────────────────────────────────────
+    # All money fields are integer minor units (VND exponent 0, D-41).
+    BankAccount:
+      type: object
+      required: [id, name, type, currency, opening_balance, balance, archived, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string, enum: [cash, checking, savings, credit_card, ewallet, other] }
+        currency: { type: string, description: ISO-4217, example: VND }
+        opening_balance: { type: integer, format: int64 }
+        balance: { type: integer, format: int64, description: Derived (opening + Σcredits − Σdebits); always current. }
+        archived: { type: boolean }
+        created_at: { type: string, format: date-time }
+    BankAccountCreate:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        type: { type: string, enum: [cash, checking, savings, credit_card, ewallet, other] }
+        currency: { type: string, default: VND }
+        opening_balance: { type: integer, format: int64, default: 0 }
+    BankAccountPatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        archived: { type: boolean }
+        currency: { type: string, description: Only mutable while the account is empty. }
+    BankCategory:
+      type: object
+      required: [id, name, kind, seed]
+      properties:
+        id: { type: string, format: uuid }
+        parent_id: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        kind: { type: string, enum: [income, expense] }
+        seed: { type: boolean, description: A user_id-NULL default (visible to all, mutable by none). }
+    BankCategoryCreate:
+      type: object
+      required: [name, kind]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        kind: { type: string, enum: [income, expense] }
+        parent_id: { type: string, format: uuid, nullable: true, description: Must be a top-level category of the same kind. }
+    BankCategoryPatch:
+      type: object
+      description: kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it.
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        parent_id: { type: string, format: uuid, nullable: true }
+    BankTransaction:
+      type: object
+      required: [id, account_id, amount, direction, is_transfer, occurred_at, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        category_id: { type: string, format: uuid, nullable: true }
+        amount: { type: integer, format: int64, description: Strictly positive minor units. }
+        direction: { type: string, enum: [debit, credit] }
+        transfer_id: { type: string, format: uuid, nullable: true }
+        is_transfer: { type: boolean, description: True for a transfer leg (transfer_id set AND category_id null). }
+        occurred_at: { type: string, format: date, description: "YYYY-MM-DD" }
+        note: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    BankTransactionCreate:
+      type: object
+      required: [account_id, category_id, amount, direction]
+      properties:
+        account_id: { type: string, format: uuid }
+        category_id: { type: string, format: uuid, description: Own or seed; kind must match direction. }
+        amount: { type: integer, format: int64, minimum: 1 }
+        direction: { type: string, enum: [debit, credit] }
+        occurred_at: { type: string, format: date, description: Defaults to today. }
+        note: { type: string, nullable: true }
+    BankTransactionPatch:
+      type: object
+      properties:
+        account_id: { type: string, format: uuid }
+        category_id: { type: string, format: uuid }
+        amount: { type: integer, format: int64, minimum: 1 }
+        direction: { type: string, enum: [debit, credit] }
+        occurred_at: { type: string, format: date }
+        note: { type: string, nullable: true }
+    BankTransferCreate:
+      type: object
+      required: [from_account, to_account, amount]
+      properties:
+        from_account: { type: string, format: uuid }
+        to_account: { type: string, format: uuid }
+        amount: { type: integer, format: int64, minimum: 1 }
+        occurred_at: { type: string, format: date }
+        note: { type: string, nullable: true }
+    BankTransferPatch:
+      type: object
+      properties:
+        from_account: { type: string, format: uuid }
+        to_account: { type: string, format: uuid }
+        amount: { type: integer, format: int64, minimum: 1 }
+        occurred_at: { type: string, format: date }
+        note: { type: string, nullable: true }
+    BankTransfer:
+      type: object
+      required: [legs]
+      properties:
+        transfer_id: { type: string, format: uuid, nullable: true }
+        legs:
+          type: array
+          items: { $ref: "#/components/schemas/BankTransaction" }
+    BankBudgetLine:
+      type: object
+      required: [category_id, name, amount, spent]
+      properties:
+        category_id: { type: string, format: uuid }
+        parent_id: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        parent_name: { type: string, nullable: true }
+        amount: { type: integer, format: int64 }
+        spent: { type: integer, format: int64, description: Σ expense debits this month incl. children, excl. transfer legs. }
+    BankBudgetWrite:
+      type: object
+      required: [category_id, month]
+      properties:
+        category_id: { type: string, format: uuid, description: Must be expense-kind. }
+        month: { type: string, description: "YYYY-MM" }
+        amount: { type: integer, format: int64, nullable: true, description: 0 or null deletes the budget. }
+    BankDashboard:
+      type: object
+      required: [month, accounts, income, expense, budgets, recent]
+      properties:
+        month: { type: string }
+        accounts:
+          type: array
+          items: { $ref: "#/components/schemas/BankAccount" }
+        income: { type: integer, format: int64 }
+        expense: { type: integer, format: int64 }
+        budgets:
+          type: array
+          items: { $ref: "#/components/schemas/BankBudgetLine" }
+        recent:
+          type: array
+          items: { $ref: "#/components/schemas/BankTransaction" }
 
     # ── RFC 7807 error contract (D-7 / D-29) ────────────────────────────────
     Problem:

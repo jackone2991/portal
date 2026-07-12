@@ -526,6 +526,210 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bank/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's accounts with derived balances */
+        get: operations["listBankAccounts"];
+        put?: never;
+        /** Create an account */
+        post: operations["createBankAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete an empty account
+         * @description Accounts with transactions cannot be deleted, only archived (`bank/account-not-empty`).
+         */
+        delete: operations["deleteBankAccount"];
+        options?: never;
+        head?: never;
+        /**
+         * Update an account (name / archived / currency)
+         * @description currency is immutable once the account has transactions (`bank/account-not-mutable`).
+         */
+        patch: operations["updateBankAccount"];
+        trace?: never;
+    };
+    "/bank/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own + seed categories */
+        get: operations["listBankCategories"];
+        put?: never;
+        /** Create a category */
+        post: operations["createBankCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a category (optionally reassigning its transactions)
+         * @description Without `reassign_to`, a category with transactions returns 409 `bank/category-in-use`. Seeds are undeletable (404). Children promote to top level; budgets cascade.
+         */
+        delete: operations["deleteBankCategory"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a category (name / parent)
+         * @description kind is immutable; re-parenting re-runs the top-level + same-kind checks (`bank/invalid-category-parent`). Seeds are not mutable (404).
+         */
+        patch: operations["updateBankCategory"];
+        trace?: never;
+    };
+    "/bank/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List transactions (cursor paged, newest first) */
+        get: operations["listBankTransactions"];
+        put?: never;
+        /** Create a manual transaction */
+        post: operations["createBankTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/transactions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a transaction
+         * @description A transfer leg cannot be deleted here (409 `bank/is-transfer-leg`).
+         */
+        delete: operations["deleteBankTransaction"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a transaction
+         * @description A transfer leg cannot be edited here (409 `bank/is-transfer-leg`) — use /bank/transfers/{transfer_id}.
+         */
+        patch: operations["updateBankTransaction"];
+        trace?: never;
+    };
+    "/bank/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an inter-account transfer (paired debit + credit) */
+        post: operations["createBankTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/transfers/{transfer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transfer_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a transfer (both legs) atomically */
+        delete: operations["deleteBankTransfer"];
+        options?: never;
+        head?: never;
+        /** Update both legs of a transfer atomically */
+        patch: operations["updateBankTransfer"];
+        trace?: never;
+    };
+    "/bank/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List monthly budgets with spent (tree, incl. children) */
+        get: operations["listBankBudgets"];
+        /** Upsert a monthly budget (amount 0 or null deletes it) */
+        put: operations["setBankBudget"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ledger dashboard (balances, month flow, budgets, recent) */
+        get: operations["getBankDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -597,6 +801,200 @@ export interface components {
             status: "ok" | "degraded";
             db?: boolean;
             cache?: boolean;
+        };
+        BankAccount: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "cash" | "checking" | "savings" | "credit_card" | "ewallet" | "other";
+            /**
+             * @description ISO-4217
+             * @example VND
+             */
+            currency: string;
+            /** Format: int64 */
+            opening_balance: number;
+            /**
+             * Format: int64
+             * @description Derived (opening + Σcredits − Σdebits); always current.
+             */
+            balance: number;
+            archived: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BankAccountCreate: {
+            name: string;
+            /** @enum {string} */
+            type: "cash" | "checking" | "savings" | "credit_card" | "ewallet" | "other";
+            /** @default VND */
+            currency: string;
+            /**
+             * Format: int64
+             * @default 0
+             */
+            opening_balance: number;
+        };
+        BankAccountPatch: {
+            name?: string;
+            archived?: boolean;
+            /** @description Only mutable while the account is empty. */
+            currency?: string;
+        };
+        BankCategory: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parent_id?: string | null;
+            name: string;
+            /** @enum {string} */
+            kind: "income" | "expense";
+            /** @description A user_id-NULL default (visible to all */
+            seed: boolean;
+        };
+        BankCategoryCreate: {
+            name: string;
+            /** @enum {string} */
+            kind: "income" | "expense";
+            /**
+             * Format: uuid
+             * @description Must be a top-level category of the same kind.
+             */
+            parent_id?: string | null;
+        };
+        /** @description kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it. */
+        BankCategoryPatch: {
+            name?: string;
+            /** Format: uuid */
+            parent_id?: string | null;
+        };
+        BankTransaction: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            account_id: string;
+            /** Format: uuid */
+            category_id?: string | null;
+            /**
+             * Format: int64
+             * @description Strictly positive minor units.
+             */
+            amount: number;
+            /** @enum {string} */
+            direction: "debit" | "credit";
+            /** Format: uuid */
+            transfer_id?: string | null;
+            /** @description True for a transfer leg (transfer_id set AND category_id null). */
+            is_transfer: boolean;
+            /**
+             * Format: date
+             * @description YYYY-MM-DD
+             */
+            occurred_at: string;
+            note?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        BankTransactionCreate: {
+            /** Format: uuid */
+            account_id: string;
+            /**
+             * Format: uuid
+             * @description Own or seed; kind must match direction.
+             */
+            category_id: string;
+            /** Format: int64 */
+            amount: number;
+            /** @enum {string} */
+            direction: "debit" | "credit";
+            /**
+             * Format: date
+             * @description Defaults to today.
+             */
+            occurred_at?: string;
+            note?: string | null;
+        };
+        BankTransactionPatch: {
+            /** Format: uuid */
+            account_id?: string;
+            /** Format: uuid */
+            category_id?: string;
+            /** Format: int64 */
+            amount?: number;
+            /** @enum {string} */
+            direction?: "debit" | "credit";
+            /** Format: date */
+            occurred_at?: string;
+            note?: string | null;
+        };
+        BankTransferCreate: {
+            /** Format: uuid */
+            from_account: string;
+            /** Format: uuid */
+            to_account: string;
+            /** Format: int64 */
+            amount: number;
+            /** Format: date */
+            occurred_at?: string;
+            note?: string | null;
+        };
+        BankTransferPatch: {
+            /** Format: uuid */
+            from_account?: string;
+            /** Format: uuid */
+            to_account?: string;
+            /** Format: int64 */
+            amount?: number;
+            /** Format: date */
+            occurred_at?: string;
+            note?: string | null;
+        };
+        BankTransfer: {
+            /** Format: uuid */
+            transfer_id?: string | null;
+            legs: components["schemas"]["BankTransaction"][];
+        };
+        BankBudgetLine: {
+            /** Format: uuid */
+            category_id: string;
+            /** Format: uuid */
+            parent_id?: string | null;
+            name: string;
+            parent_name?: string | null;
+            /** Format: int64 */
+            amount: number;
+            /**
+             * Format: int64
+             * @description Σ expense debits this month incl. children
+             */
+            spent: number;
+        };
+        BankBudgetWrite: {
+            /**
+             * Format: uuid
+             * @description Must be expense-kind.
+             */
+            category_id: string;
+            /** @description YYYY-MM */
+            month: string;
+            /**
+             * Format: int64
+             * @description 0 or null deletes the budget.
+             */
+            amount?: number | null;
+        };
+        BankDashboard: {
+            month: string;
+            accounts: components["schemas"]["BankAccount"][];
+            /** Format: int64 */
+            income: number;
+            /** Format: int64 */
+            expense: number;
+            budgets: components["schemas"]["BankBudgetLine"][];
+            recent: components["schemas"]["BankTransaction"][];
         };
         /**
          * @description RFC 7807 problem detail, served as `application/problem+json`. `type` is a
@@ -867,6 +1265,24 @@ export interface components {
         };
         /** @description Rate limit / lockout tripped */
         TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Validation failed */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Conflicts with the resource's current state */
+        Conflict: {
             headers: {
                 [name: string]: unknown;
             };
@@ -1764,6 +2180,479 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    listBankAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        accounts: components["schemas"]["BankAccount"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createBankAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankAccountCreate"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    deleteBankAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    updateBankAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankAccountPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listBankCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own + seed categories */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        categories: components["schemas"]["BankCategory"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createBankCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankCategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Category created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankCategory"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    deleteBankCategory: {
+        parameters: {
+            query?: {
+                /** @description Move this category's transactions to the target (own or seed, same kind) before deleting. */
+                reassign_to?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    updateBankCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankCategoryPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated category */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankCategory"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listBankTransactions: {
+        parameters: {
+            query?: {
+                account?: string;
+                category?: string;
+                /** @description YYYY-MM */
+                month?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of transactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        transactions: components["schemas"]["BankTransaction"][];
+                        next_cursor?: string | null;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createBankTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankTransactionCreate"];
+            };
+        };
+        responses: {
+            /** @description Transaction created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankTransaction"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    deleteBankTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    updateBankTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankTransactionPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated transaction */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankTransaction"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    createBankTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankTransferCreate"];
+            };
+        };
+        responses: {
+            /** @description Transfer created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankTransfer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    deleteBankTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transfer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateBankTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transfer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankTransferPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated transfer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankTransfer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listBankBudgets: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM (default current month) */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget lines for the month */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        month: string;
+                        budgets: components["schemas"]["BankBudgetLine"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    setBankBudget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankBudgetWrite"];
+            };
+        };
+        responses: {
+            /** @description Upserted or deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    getBankDashboard: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM (default current month) */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The dashboard aggregate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankDashboard"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
 }
