@@ -14,8 +14,8 @@
 | 4 | ⚠ Backups before money | SPEC-09 P0 | ~4 | ✅ **done + dogfooded** — real pg_dump→MinIO, `make restore-drill` passes live, `/ops/status`=ok; found+fixed a seekable-stream bug live |
 | 5 | Continue rail | SPEC-07 | ~3 | 🔵 **code-complete** — build/vet/test green (9 pkgs) + `tsc` green, openapi drift regenerated; committed `89cc2b5`. **Live dogfood pending** (`make up` + resume a real video across two sessions) |
 | 6 | Finance ledger (biggest) | SPEC-03 | ~8.5 | 🔵 **code-complete** — backend (14 tests) + OpenAPI + 4 frontend pages; `go build/vet/test` + `tsc` green (`66c036f`…`ff92b4b`); **live dogfood pending** |
-| 7 | Comic vertical | SPEC-02 | ~4.5 | ⬜ |
-| 8 | People registry | SPEC-08 | ~4.5 | ⬜ |
+| 7 | Comic vertical | SPEC-02 | ~4.5 | 🔵 **code-complete** — backend (6 tests) + OpenAPI + frontend (library/detail/reader); `go build/vet/test` + `tsc` green (`2c4301a`…`f7414b2`); live dogfood pending |
+| 8 | People registry | SPEC-08 | ~4.5 | 🔵 **code-complete** — backend (6 tests) + OpenAPI + frontend (list/detail + wired BirthdayCard); green (`cbe3ce8`…`f55b4f2`); live dogfood pending |
 | 9 | Life-stream home (last) | SPEC-06 | ~5 | ⬜ |
 
 > Update the Status cell (⬜ → 🔵 in progress → ✅ done) as you go.
@@ -176,14 +176,19 @@
 **Goal:** comic reader/library + the `media → domain vertical` template for movie/music/story.
 **Prereq:** Sprint 1 (image kind).
 
-- [ ] migration + queries + repository + service scaffolding + identity-anchor `users(id)` FKs [F017]
-- [ ] CRUD + publish + RBAC: **owner-or-elevated** `RequireOwnerOrPermission`; seed `comics:write:any`/`delete:any`/`publish:any` [F001] + OpenAPI
-- [ ] reader + vertical progress (`comic_reading_progress`) + page DELETE endpoint [F018]
-- [ ] library/detail pages replacing placeholders (cursor paging [F044]) + template registry [F006]
-- [ ] `comic:chapter_deleted`/`_published` emit + events.md [F042]
-- [ ] P1: zip import (presigned-PUT path, entry-scaled poll timeout [F015][F016]) + reader modes/bookmarks
+> **Status: 🔵 code-complete + build/test green** (`2c4301a` backend, `8017329`
+> OpenAPI, `f7414b2` frontend). Also landed the media enablement `mediaapi.GetAsset`
+> (was a stub) so verticals can validate asset references. **Live dogfood pending.**
 
-**Dogfood gate:** import one real chapter zip, read it on a mobile viewport.
+- [x] migration + queries + repository + service scaffolding + identity-anchor `users(id)` FKs [F017] — `0015_comic_core`
+- [x] CRUD + publish + RBAC: **owner-or-elevated** `RequireOwnerOrPermission`; seed `comics:write:any`/`delete:any`/`publish:any` [F001] + OpenAPI
+- [x] reader + vertical progress (`comic_reading_progress`) + page DELETE endpoint [F018] — page_id-keyed, membership-validated
+- [x] library/detail pages replacing placeholders (cursor paging [F044]) + template registry [F006]
+- [x] P0.6 asset-deletion coupling: consumes `media:asset_deleted` → reaps pages / NULLs covers (soft cascade)
+- [~] `comic:chapter_deleted`/`_published` emit + events.md [F042] — **P1.9, deferred** (no consumer required to ship)
+- [ ] P1: zip import (presigned-PUT path, entry-scaled poll timeout [F015][F016]) + reader modes/bookmarks — **deferred**
+
+**Dogfood gate:** import one real chapter zip, read it on a mobile viewport. *(pending live run; zip import is P1.7)*
 
 ---
 
@@ -191,13 +196,17 @@
 **Goal:** "mom's birthday in 3 days" becomes possible.
 **Prereq:** none hard (avatars P1 need SPEC-01).
 
-- [ ] Scaffold + migration + `sqlc` + CRUD + RBAC + OpenAPI; `birthday:null` clears consistent with `NOT NULL` calendar [F030]
-- [ ] `nextOccurrence` (TZ + Feb-29 + no-year cases, table-driven tests) + upcoming-birthdays endpoint
-- [ ] `people:scan_birthdays` task on scheduler + dedup (notice `id`/UNIQUE) [F071] + `people:birthday_upcoming` emit
-- [ ] frontend list/detail + `BirthdayCard` wiring + `/people/:path*` matcher [F005] + template registry [F006]
-- [ ] P1 (defer): interactions log, avatar upload (creator-tier `assets:write:own`) [F003]
+> **Status: 🔵 code-complete + build/test green** (`cbe3ce8` backend, `683408b`
+> OpenAPI, `f55b4f2` frontend). **Live dogfood pending** (enter real birthdays,
+> confirm the daily scan emits via `make up`).
 
-**Dogfood gate:** enter real family birthdays; confirm upcoming list + emitted notice.
+- [x] Scaffold + migration + `sqlc` + CRUD + RBAC + OpenAPI; `birthday:null` clears consistent with the calendar default [F030] — `0016_people_persons`
+- [x] `nextOccurrence` (TZ + Feb-29 + no-year cases, table-driven tests) + upcoming-birthdays endpoint
+- [x] `people:scan_birthdays` task on scheduler + dedup (notice `id`/UNIQUE) [F071] + `people:birthday_upcoming` emit — outbox/at-least-once
+- [x] frontend list/detail + `BirthdayCard` wiring + `/people/:path*` matcher [F005] + template registry [F006]
+- [ ] P1 (defer): interactions log, avatar upload (creator-tier `assets:write:own`) [F003] — **deferred**
+
+**Dogfood gate:** enter real family birthdays; confirm upcoming list + emitted notice. *(pending live run)*
 
 ---
 
