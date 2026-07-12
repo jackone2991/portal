@@ -13,7 +13,7 @@
 | 3 | Journal write path | SPEC-05 | ~4.5 | ✅ **done** — journal module CRUD dogfooded live (create/list/patch/delete/validation/emit-only); composer+home wired, build green |
 | 4 | ⚠ Backups before money | SPEC-09 P0 | ~4 | ✅ **done + dogfooded** — real pg_dump→MinIO, `make restore-drill` passes live, `/ops/status`=ok; found+fixed a seekable-stream bug live |
 | 5 | Continue rail | SPEC-07 | ~3 | 🔵 **code-complete** — build/vet/test green (9 pkgs) + `tsc` green, openapi drift regenerated; committed `89cc2b5`. **Live dogfood pending** (`make up` + resume a real video across two sessions) |
-| 6 | Finance ledger (biggest) | SPEC-03 | ~8.5 | ⬜ |
+| 6 | Finance ledger (biggest) | SPEC-03 | ~8.5 | 🔵 **backend done** — module + migration + 14 unit tests green (`66c036f`); **OpenAPI spec for /bank/\* + frontend remaining** |
 | 7 | Comic vertical | SPEC-02 | ~4.5 | ⬜ |
 | 8 | People registry | SPEC-08 | ~4.5 | ⬜ |
 | 9 | Life-stream home (last) | SPEC-06 | ~5 | ⬜ |
@@ -153,17 +153,22 @@
 **Goal:** Money-Lover-class ledger. **Do not start any P1 until first reconciliation succeeds.**
 **Prereq:** ⚠ Sprint 4 (backups) done first.
 
-- [ ] record **D-41** decision entry (money-model divergence: integer minor units vs D-14)
-- [ ] migration + seeds + `sqlc` (accounts, transactions, categories, budgets, transfers; integer minor units)
-- [ ] Accounts + transactions CRUD + attachment validation + derived balances + RBAC + OpenAPI
-- [ ] Categories: CRUD, hierarchy invariants incl. `parent_id` mutability [F019], delete/reassign matrix
-- [ ] Transfers: paired legs + `counterparty_account_id` in payload + fee-convention tests [F004]
-- [ ] Budgets: expense-kind 422 [F046] + immutable `month` `EXTRACT(day)=1` CHECK [F050] + dashboard roll-up
+> **Status: 🔵 backend done + build/test green** (`66c036f`, 14 unit tests). CRUD,
+> balances, transfers, categories, budgets, dashboard, events all implemented and
+> owner-scoped. **Remaining: OpenAPI spec for /bank/\* (+ regenerated codegen) and
+> the whole frontend.** Live dogfood needs `make up` + the frontend.
+
+- [x] record **D-41** decision entry (money-model divergence: integer minor units vs D-14) — feature-inventory.md
+- [x] migration + seeds + `sqlc` (accounts, transactions, categories, budgets, transfers; integer minor units) — `0014_bank_core`
+- [~] Accounts + transactions CRUD + attachment validation + derived balances + RBAC + OpenAPI — CRUD/derived balances/RBAC done; **OpenAPI spec still pending**; receipt attachments = P1.10 (deferred)
+- [x] Categories: CRUD, hierarchy invariants incl. `parent_id` mutability [F019], delete/reassign matrix
+- [x] Transfers: paired legs + `counterparty_account_id` in payload [F004] — fee-convention is P1.13 (deferred, per spec)
+- [x] Budgets: expense-kind 422 [F046] + immutable `month` `EXTRACT(day)=1` CHECK [F050] + dashboard roll-up
 - [ ] Frontend: quick-add, transactions list (**cursor** paging [F020]), dashboard, accounts, budgets tree
 - [ ] `/bank/:path*` added to `middleware.ts` matcher [F005]; `/bank` views via template registry [F006]
-- [ ] events: `bank:transaction_*` (+ `counterparty_account_id`), `budget_exceeded` → events.md
+- [x] events: `bank:transaction_*` (+ `counterparty_account_id`) → events.md — `budget_exceeded` is P1.12 (deferred)
 
-**Dogfood gate:** log real transactions 20 of 30 days; month-end reconcile within rounding. **Gate before any P1.**
+**Dogfood gate:** log real transactions 20 of 30 days; month-end reconcile within rounding. **Gate before any P1.** *(pending frontend + live run)*
 
 ---
 
