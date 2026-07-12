@@ -9,14 +9,17 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
+	comicapi "github.com/portal/backend/internal/modules/comic/api"
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 )
 
 // Service holds the comic business logic. Construct via the module.
 type Service struct {
-	repo  Repository
-	media MediaAPI
+	repo   Repository
+	media  MediaAPI
+	events EventPublisher // optional: comic:chapter_published on publish (P1.9)
 }
 
 // ReaderPage is one page in the reader payload (P0.3): id + asset + dims (from
@@ -133,7 +136,39 @@ func (s *Service) Publish(ctx context.Context, id uuid.UUID) (Comic, error) {
 	if n == 0 || len(empties) > 0 {
 		return Comic{}, &NotPublishableError{Chapters: empties}
 	}
-	return s.repo.SetStatus(ctx, id, StatusPublished)
+	c, err := s.repo.SetStatus(ctx, id, StatusPublished)
+	if err != nil {
+		return Comic{}, err
+	}
+	s.emitChaptersPublished(ctx, c)
+	return c, nil
+}
+
+// emitChaptersPublished fires comic:chapter_published once per chapter after a
+// publish (SPEC-02 P1.9 — life-stream producer #2; the journal stream projection
+// keys on chapter_id). Emit-only and best-effort: a nil publisher or a publish
+// error never fails the already-committed publish. Redelivery/re-publish is
+// idempotent downstream via the stream's (source, event, ref_id) unique.
+func (s *Service) emitChaptersPublished(ctx context.Context, c Comic) {
+	if s.events == nil {
+		return
+	}
+	chapters, err := s.repo.ListChapters(ctx, c.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("comic", c.ID.String()).Msg("comic: list chapters for publish event failed")
+		return
+	}
+	for _, ch := range chapters {
+		ev := comicapi.ChapterPublishedEvent{
+			ComicID:     c.ID.String(),
+			ChapterID:   ch.ID.String(),
+			OwnerUserID: c.OwnerID.String(),
+			Title:       ch.Title,
+		}
+		if err := s.events.Publish(ctx, comicapi.EventChapterPublished, ev); err != nil {
+			log.Warn().Err(err).Str("chapter", ch.ID.String()).Msg("comic: chapter_published publish failed")
+		}
+	}
 }
 
 func (s *Service) Unpublish(ctx context.Context, id uuid.UUID) (Comic, error) {

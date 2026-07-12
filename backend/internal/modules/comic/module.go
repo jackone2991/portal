@@ -47,7 +47,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("comic: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, media: d.Media}
+	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
