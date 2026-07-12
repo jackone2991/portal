@@ -19,6 +19,7 @@ const (
 	probFileTooLarge      = "media/file-too-large"
 	probAssetNotFound     = "media/asset-not-found"
 	probAssetNotReady     = "media/asset-not-ready"
+	probAssetNotPlayable  = "media/asset-not-playable"
 )
 
 // Handler is the media HTTP surface. currentUser reads the authenticated user
@@ -178,6 +179,66 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GET /assets/{id}/progress — fetch playback progress.
+func (h *Handler) GetProgress(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.currentUser(r.Context())
+	if !ok {
+		writeErr(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		return
+	}
+	pos, pct, completedAt, updatedAt, err := h.svc.GetProgress(r.Context(), uid, id)
+	if err != nil {
+		writeProgressProblem(w, err)
+		return
+	}
+	resp := map[string]any{
+		"position_ms":  pos,
+		"progress_pct": pct, // null when duration_ms unknown (P0.1)
+		"updated_at":   updatedAt.Format(time.RFC3339),
+	}
+	if completedAt != nil {
+		resp["completed_at"] = completedAt.Format(time.RFC3339)
+	} else {
+		resp["completed_at"] = nil
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// PUT /assets/{id}/progress — save playback progress.
+func (h *Handler) PutProgress(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.currentUser(r.Context())
+	if !ok {
+		writeErr(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		return
+	}
+	var body struct {
+		PositionMs int64 `json:"position_ms"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&body); err != nil {
+		writeErr(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
+		return
+	}
+	// Clamp negative to 0 (spec: never 400 for position_ms < 0).
+	if body.PositionMs < 0 {
+		body.PositionMs = 0
+	}
+	if err := h.svc.PutProgress(r.Context(), uid, id, body.PositionMs); err != nil {
+		writeProgressProblem(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // GET /assets/{id}/original — owner-authenticated download of the original (P0.5).
 func (h *Handler) DownloadOriginal(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
@@ -290,10 +351,26 @@ func writeMediaProblem(w http.ResponseWriter, err error) {
 		writeProblem(w, http.StatusConflict, probAssetNotReady, "Asset not ready", "the asset upload is not complete")
 	case errors.Is(err, ErrForbidden):
 		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+	case errors.Is(err, ErrNotPlayable):
+		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
 	case errors.Is(err, ErrNotFound):
 		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 	default:
 		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "unexpected error")
+	}
+}
+
+// writeProgressProblem maps progress service errors to RFC 7807 problem+json.
+func writeProgressProblem(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, ErrNotPlayable):
+		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
+	case errors.Is(err, ErrForbidden):
+		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+	case errors.Is(err, ErrNotFound):
+		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+	default:
+		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not process progress")
 	}
 }
 

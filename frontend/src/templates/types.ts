@@ -42,5 +42,7 @@ export interface TemplateManifest {
     libraryNovelDetail: ComponentType<{ id: string }>;
     /** SPEC-01 P0.4 ([F006]) — no Blade equivalent; media library grid. */
     libraryMedia: ComponentType;
+    /** SPEC-07 P0.4 — media player with resume. */
+    libraryMediaDetail: ComponentType<{ id: string }>;
   };
 }

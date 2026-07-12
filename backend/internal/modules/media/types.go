@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
 )
 
@@ -16,6 +17,7 @@ var (
 	ErrNotFound     = errors.New("media: asset not found")
 	ErrForbidden    = errors.New("media: not the asset owner")
 	ErrNotReady     = errors.New("media: asset not ready")
+	ErrNotPlayable  = errors.New("media: asset not playable")
 	ErrFileTooLarge = errors.New("media: file too large")
 	ErrBadCursor    = errors.New("media: invalid cursor")
 )
@@ -113,6 +115,9 @@ type Repository interface {
 	ListVariants(ctx context.Context, assetID uuid.UUID) ([]Variant, error)
 	GetVariant(ctx context.Context, assetID uuid.UUID, variant string) (Variant, error)
 	DeleteVariants(ctx context.Context, assetID uuid.UUID) error
+	UpsertPlaybackProgress(ctx context.Context, ownerID, assetID uuid.UUID, positionMs int64, completedAt *time.Time) error
+	GetPlaybackProgress(ctx context.Context, ownerID, assetID uuid.UUID) (positionMs int64, completedAt *time.Time, updatedAt time.Time, err error)
+	GetContinueItems(ctx context.Context, userID uuid.UUID, limit int) ([]mediaapi.ContinueItem, error)
 	worker.Repo
 }
 

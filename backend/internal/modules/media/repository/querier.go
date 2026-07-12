@@ -23,6 +23,8 @@ type Querier interface {
 	GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error)
 	// Cheap owner lookup for the RequireOwnerOrPermission extractor (P0.3).
 	GetAssetOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	GetContinueItems(ctx context.Context, arg GetContinueItemsParams) ([]GetContinueItemsRow, error)
+	GetPlaybackProgress(ctx context.Context, arg GetPlaybackProgressParams) (GetPlaybackProgressRow, error)
 	GetVariant(ctx context.Context, arg GetVariantParams) (MediaAssetVariant, error)
 	// Derived, metadata-stripped variants (thumb/medium for images, poster for
 	// video). The uploaded original is NEVER re-encoded — it stays as the asset's
@@ -48,6 +50,7 @@ type Querier interface {
 	MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) error
 	// P0.3 soft-delete tombstone: excluded from listings until the purge removes it.
 	SetAssetStatusDeleting(ctx context.Context, id pgtype.UUID) error
+	UpsertPlaybackProgress(ctx context.Context, arg UpsertPlaybackProgressParams) error
 }
 
 var _ Querier = (*Queries)(nil)

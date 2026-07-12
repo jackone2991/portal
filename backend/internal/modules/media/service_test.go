@@ -13,20 +13,34 @@ import (
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
 	"github.com/portal/backend/internal/platform/storage"
 )
 
 // ── fakes ───────────────────────────────────────────────────────────
 
+type progressRow struct {
+	positionMs  int64
+	completedAt *time.Time
+	updatedAt   time.Time
+}
+
 type fakeRepo struct {
 	m        map[uuid.UUID]Asset
 	variants map[uuid.UUID]map[string]Variant
+	progress map[string]progressRow // key: "<user>|<asset>"
 }
 
 func newFakeRepo() *fakeRepo {
-	return &fakeRepo{m: map[uuid.UUID]Asset{}, variants: map[uuid.UUID]map[string]Variant{}}
+	return &fakeRepo{
+		m:        map[uuid.UUID]Asset{},
+		variants: map[uuid.UUID]map[string]Variant{},
+		progress: map[string]progressRow{},
+	}
 }
+
+func progressKey(user, asset uuid.UUID) string { return user.String() + "|" + asset.String() }
 
 func (r *fakeRepo) CreateAsset(_ context.Context, in CreateAssetInput) (Asset, error) {
 	a := Asset{
@@ -179,6 +193,62 @@ func (r *fakeRepo) GetVariant(_ context.Context, assetID uuid.UUID, variant stri
 func (r *fakeRepo) DeleteVariants(_ context.Context, assetID uuid.UUID) error {
 	delete(r.variants, assetID)
 	return nil
+}
+
+func (r *fakeRepo) UpsertPlaybackProgress(_ context.Context, ownerID, assetID uuid.UUID, positionMs int64, completedAt *time.Time) error {
+	key := progressKey(ownerID, assetID)
+	// completed_at latch: mirror the SQL COALESCE(existing, new) — once set, never cleared.
+	ca := r.progress[key].completedAt
+	if ca == nil {
+		ca = completedAt
+	}
+	r.progress[key] = progressRow{positionMs: positionMs, completedAt: ca, updatedAt: time.Now()}
+	return nil
+}
+
+func (r *fakeRepo) GetPlaybackProgress(_ context.Context, ownerID, assetID uuid.UUID) (int64, *time.Time, time.Time, error) {
+	p, ok := r.progress[progressKey(ownerID, assetID)]
+	if !ok {
+		return 0, nil, time.Time{}, ErrNotFound
+	}
+	return p.positionMs, p.completedAt, p.updatedAt, nil
+}
+
+// GetContinueItems mirrors query/media_progress.sql's inclusion predicate
+// (≥30s, <95%, non-NULL duration) so service-level tests can assert it.
+func (r *fakeRepo) GetContinueItems(_ context.Context, userID uuid.UUID, limit int) ([]mediaapi.ContinueItem, error) {
+	var out []mediaapi.ContinueItem
+	for key, p := range r.progress {
+		parts := strings.SplitN(key, "|", 2)
+		if parts[0] != userID.String() {
+			continue
+		}
+		assetID, err := uuid.Parse(parts[1])
+		if err != nil {
+			continue
+		}
+		a, ok := r.m[assetID]
+		if !ok || a.DurationMs == nil || *a.DurationMs == 0 {
+			continue
+		}
+		pct := int(float64(p.positionMs) / float64(*a.DurationMs) * 100.0)
+		if p.positionMs < 30000 || pct >= 95 {
+			continue
+		}
+		out = append(out, mediaapi.ContinueItem{
+			Module:      "media",
+			RefID:       assetID,
+			Title:       a.Title,
+			ProgressPct: pct,
+			Href:        "/library/media/" + assetID.String(),
+			UpdatedAt:   p.updatedAt,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].UpdatedAt.After(out[j].UpdatedAt) })
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
 }
 
 func containsStr(ss []string, want string) bool {
@@ -689,5 +759,153 @@ func TestGetOwnerScoped(t *testing.T) {
 	}
 	if _, _, err := svc.Get(ctx, uuid.New(), a.ID); !errors.Is(err, ErrForbidden) {
 		t.Fatalf("Get(other) = %v, want ErrForbidden", err)
+	}
+}
+
+func countStr(ss []string, want string) int {
+	n := 0
+	for _, s := range ss {
+		if s == want {
+			n++
+		}
+	}
+	return n
+}
+
+// TestPutProgressGuards covers SPEC-07 P0.2: owner/kind/deleting 404s and the
+// clamp-to-duration behaviour (a position past the end is clamped, never a 500).
+func TestPutProgressGuards(t *testing.T) {
+	svc, repo, _, _, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+
+	dur := 60000
+	vid := uuid.New()
+	repo.m[vid] = Asset{ID: vid, OwnerID: owner, Kind: "video", Status: StatusReady, DurationMs: &dur}
+
+	// non-owner → forbidden (no permission-based bypass — P0.2 AC)
+	if err := svc.PutProgress(ctx, uuid.New(), vid, 1000); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("non-owner = %v, want ErrForbidden", err)
+	}
+	// non-video → not playable
+	img := uuid.New()
+	repo.m[img] = Asset{ID: img, OwnerID: owner, Kind: "image", Status: StatusReady}
+	if err := svc.PutProgress(ctx, owner, img, 1000); !errors.Is(err, ErrNotPlayable) {
+		t.Fatalf("image = %v, want ErrNotPlayable", err)
+	}
+	// deleting → not found
+	del := uuid.New()
+	repo.m[del] = Asset{ID: del, OwnerID: owner, Kind: "video", Status: StatusDeleting, DurationMs: &dur}
+	if err := svc.PutProgress(ctx, owner, del, 1000); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("deleting = %v, want ErrNotFound", err)
+	}
+	// position beyond duration → clamped to duration, no error
+	if err := svc.PutProgress(ctx, owner, vid, 999999); err != nil {
+		t.Fatalf("clamp put: %v", err)
+	}
+	pos, pct, _, _, err := svc.GetProgress(ctx, owner, vid)
+	if err != nil {
+		t.Fatalf("get progress: %v", err)
+	}
+	if pos != int64(dur) {
+		t.Fatalf("position = %d, want clamped to %d", pos, dur)
+	}
+	if pct == nil || *pct != 100 {
+		t.Fatalf("pct = %v, want 100", pct)
+	}
+}
+
+// TestPutProgressCompletionLatch covers P1.5: the completion event fires exactly
+// once, on the first NULL→set crossing of ≥95%, never again.
+func TestPutProgressCompletionLatch(t *testing.T) {
+	svc, repo, _, _, pub := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+	dur := 100000
+	vid := uuid.New()
+	repo.m[vid] = Asset{ID: vid, OwnerID: owner, Kind: "video", Status: StatusReady, DurationMs: &dur, Title: "Clip"}
+
+	// below 95% → no completion event
+	if err := svc.PutProgress(ctx, owner, vid, 50000); err != nil {
+		t.Fatal(err)
+	}
+	if n := countStr(pub.events, "media:playback_completed"); n != 0 {
+		t.Fatalf("premature completion events = %d, want 0", n)
+	}
+	// cross 95% → exactly one event, completed_at latched
+	if err := svc.PutProgress(ctx, owner, vid, 96000); err != nil {
+		t.Fatal(err)
+	}
+	if n := countStr(pub.events, "media:playback_completed"); n != 1 {
+		t.Fatalf("completion events = %d, want 1", n)
+	}
+	if _, completedAt, _, err := repo.GetPlaybackProgress(ctx, owner, vid); err != nil || completedAt == nil {
+		t.Fatalf("completed_at not latched: %v (err %v)", completedAt, err)
+	}
+	// re-cross 95% → no second emit
+	if err := svc.PutProgress(ctx, owner, vid, 99000); err != nil {
+		t.Fatal(err)
+	}
+	if n := countStr(pub.events, "media:playback_completed"); n != 1 {
+		t.Fatalf("re-crossing emitted again: events = %d, want 1", n)
+	}
+}
+
+// TestGetProgressNoRow: GetProgress on a video with no saved row is ErrNotFound
+// (the read path the player treats as "start at 0").
+func TestGetProgressNoRow(t *testing.T) {
+	svc, repo, _, _, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+	dur := 100000
+	vid := uuid.New()
+	repo.m[vid] = Asset{ID: vid, OwnerID: owner, Kind: "video", Status: StatusReady, DurationMs: &dur}
+
+	if _, _, _, _, err := svc.GetProgress(ctx, owner, vid); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("no row = %v, want ErrNotFound", err)
+	}
+}
+
+// TestContinueItemsPredicate covers P0.3: only items with ≥30s watched and <95%
+// complete appear; too-early, near-complete and NULL-duration items are excluded.
+func TestContinueItemsPredicate(t *testing.T) {
+	svc, repo, _, _, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+	dur := 100000
+
+	mk := func(nullDur bool) uuid.UUID {
+		id := uuid.New()
+		a := Asset{ID: id, OwnerID: owner, Kind: "video", Status: StatusReady, Title: "T"}
+		if !nullDur {
+			a.DurationMs = &dur
+		}
+		repo.m[id] = a
+		return id
+	}
+
+	inProgress := mk(false) // 50% → included
+	tooEarly := mk(false)   // 20s (<30s) → excluded
+	almostDone := mk(false) // 97% → excluded
+	nullDur := mk(true)     // no duration → excluded
+
+	_ = svc.PutProgress(ctx, owner, inProgress, 50000)
+	_ = svc.PutProgress(ctx, owner, tooEarly, 20000)
+	_ = svc.PutProgress(ctx, owner, almostDone, 97000)
+	_ = svc.PutProgress(ctx, owner, nullDur, 60000)
+
+	items, err := svc.ContinueItems(ctx, owner, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 1 || items[0].RefID != inProgress {
+		t.Fatalf("continue items = %+v, want only the in-progress one", items)
+	}
+	if items[0].ProgressPct != 50 || items[0].Href != "/library/media/"+inProgress.String() {
+		t.Fatalf("item shape = %+v", items[0])
+	}
+	// limit ≤ 0 defaults rather than returning an empty page
+	if got, _ := svc.ContinueItems(ctx, owner, 0); len(got) != 1 {
+		t.Fatalf("limit=0 should default, got %d items", len(got))
 	}
 }

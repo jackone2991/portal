@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
 	"github.com/portal/backend/internal/platform/storage"
 )
@@ -472,6 +473,89 @@ func (s *Service) emitDeleted(ctx context.Context, assetID, ownerID uuid.UUID) {
 	}); err != nil {
 		log.Warn().Err(err).Str("asset", assetID.String()).Msg("asset_deleted: publish failed")
 	}
+}
+
+// ContinueItems fetches active media progress items for the caller (P0.3).
+func (s *Service) ContinueItems(ctx context.Context, userID uuid.UUID, limit int) ([]mediaapi.ContinueItem, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	return s.repo.GetContinueItems(ctx, userID, limit)
+}
+
+// PutProgress saves the playback progress for a video asset (P0.2).
+// It clamps position_ms to duration_ms if duration exists.
+func (s *Service) PutProgress(ctx context.Context, ownerID, assetID uuid.UUID, positionMs int64) error {
+	asset, err := s.owned(ctx, ownerID, assetID)
+	if err != nil {
+		return err
+	}
+	if asset.Kind != "video" {
+		return ErrNotPlayable
+	}
+	if asset.Status == StatusDeleting {
+		return ErrNotFound
+	}
+	if asset.DurationMs != nil {
+		dur := int64(*asset.DurationMs)
+		if positionMs > dur {
+			positionMs = dur
+		}
+	} else if positionMs < 0 {
+		positionMs = 0
+	}
+
+	var completedAt *time.Time
+	if asset.DurationMs != nil && *asset.DurationMs > 0 {
+		pct := (float64(positionMs) / float64(*asset.DurationMs)) * 100.0
+		if pct >= 95.0 {
+			_, prevCompletedAt, _, err := s.repo.GetPlaybackProgress(ctx, ownerID, assetID)
+			if err != nil && !errors.Is(err, ErrNotFound) {
+				return err
+			}
+			if prevCompletedAt == nil {
+				now := time.Now()
+				completedAt = &now
+				title := asset.Title
+				if title == "" {
+					title = asset.OriginalFilename
+				}
+				if s.events != nil {
+					_ = s.events.Publish(ctx, "media:playback_completed", map[string]any{
+						"asset_id": assetID.String(),
+						"user_id":  ownerID.String(),
+						"title":    title,
+					})
+				}
+			}
+		}
+	}
+
+	return s.repo.UpsertPlaybackProgress(ctx, ownerID, assetID, positionMs, completedAt)
+}
+
+// GetProgress fetches the playback progress for a video asset (P0.2).
+func (s *Service) GetProgress(ctx context.Context, ownerID, assetID uuid.UUID) (int64, *int, *time.Time, time.Time, error) {
+	asset, err := s.owned(ctx, ownerID, assetID)
+	if err != nil {
+		return 0, nil, nil, time.Time{}, err
+	}
+	if asset.Kind != "video" || asset.Status == StatusDeleting {
+		return 0, nil, nil, time.Time{}, ErrNotPlayable
+	}
+	pos, completedAt, updatedAt, err := s.repo.GetPlaybackProgress(ctx, ownerID, assetID)
+	if err != nil {
+		return 0, nil, nil, time.Time{}, err
+	}
+	var pct *int
+	if asset.DurationMs != nil && *asset.DurationMs > 0 {
+		p := int((float64(pos) / float64(*asset.DurationMs)) * 100.0)
+		pct = &p
+	}
+	return pos, pct, completedAt, updatedAt, nil
 }
 
 // ── helpers ─────────────────────────────────────────────────────────

@@ -65,6 +65,14 @@ type MediaAssetVariant struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type MediaPlaybackProgress struct {
+	UserID      pgtype.UUID        `json:"user_id"`
+	AssetID     pgtype.UUID        `json:"asset_id"`
+	PositionMs  int64              `json:"position_ms"`
+	CompletedAt pgtype.Timestamptz `json:"completed_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Notification struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`

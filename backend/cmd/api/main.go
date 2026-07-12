@@ -6,11 +6,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -31,6 +33,7 @@ import (
 	"github.com/portal/backend/internal/modules/journal"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
 	"github.com/portal/backend/internal/modules/notify"
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
@@ -268,6 +271,10 @@ func run() error {
 	r.Get("/healthz", healthz(pool, rdb))
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/healthz", healthz(pool, rdb))
+
+		// Aggregator routes
+		r.With(accountmw.RequireAuth(verifier, adapter)).Get("/continue", handleContinue(mediaMod))
+
 		accountMod.MountHTTP(r)
 		mediaMod.MountHTTP(r)
 		notifyMod.MountHTTP(r)
@@ -324,5 +331,45 @@ func healthz(pool *pgxpool.Pool, rdb *redis.Client) http.HandlerFunc {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 		_, _ = fmt.Fprintf(w, `{"status":"ok","db":%t,"cache":%t}`, dbOK, cacheOK)
+	}
+}
+
+func handleContinue(mediaMod *media.Module) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		uid, ok := auth.FromContext(r.Context())
+		if !ok || uid.IsAnonymous() {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"code":"unauthorized","message":"authentication required"}`))
+			return
+		}
+
+		limit := 10
+		if n := r.URL.Query().Get("limit"); n != "" {
+			if v, err := strconv.Atoi(n); err == nil && v > 0 {
+				limit = v
+			}
+		}
+		if limit > 50 {
+			limit = 50
+		}
+
+		// Phase 1: Only media items. Future specs will append story/comic/music items here.
+		items, err := mediaMod.API().Continue(r.Context(), uid.UserID, limit)
+		if err != nil {
+			log.Error().Err(err).Msg("continue aggregator: media module error")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"code":"internal","message":"could not fetch continue items"}`))
+			return
+		}
+
+		if items == nil {
+			items = []mediaapi.ContinueItem{}
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		b, _ := json.Marshal(map[string]any{"items": items})
+		w.Write(b)
 	}
 }

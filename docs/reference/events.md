@@ -19,7 +19,7 @@ the naming *rules*, this file owns the *inventory*.
 |---|---|---|---|---|
 | `media:asset_ready` | `{asset_id, kind, owner_user_id, title, origin: 'upload'\|'import'}` | media | live — emitter only (SPEC-01 P1.2); no consumer yet | notify — in-app notification, skips `origin='import'` (SPEC-04 P0.4); stream projection, skips `origin='import'` (SPEC-06 P0.1). `origin` exists so a SPEC-02 zip import (≤300 assets) can't flood the bell/stream — the meaningful signal there is `comic:chapter_published` |
 | `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — emitter only (SPEC-01 P0.3); no consumer yet | comic — drop dangling pages / null covers (SPEC-02 P0.6); stream — remove **all** media-sourced items with this ref (SPEC-06 P0.1); journal — strip attachment ids (SPEC-05 P1.5); people — null avatars (SPEC-08 P1.7); movie/music/story later |
-| `media:playback_completed` | `{asset_id, user_id}` | media | planned (SPEC-07 P1.5) | stream (SPEC-06); notify (SPEC-04 open type registry) |
+| `media:playback_completed` | `{asset_id, user_id, title}` | media | live — emitter only (SPEC-07 P1.5); no consumer yet | stream (SPEC-06); notify (SPEC-04 open type registry) |
 | `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | planned (SPEC-02 P1.9) | stream (SPEC-06 P0.1); notify later |
 | `bank:transaction_created` | `{transaction_id, user_id, account_id, amount, direction, category_id, occurred_at, is_transfer, transfer_id, counterparty_account_id}` | bank | planned (SPEC-03 P0.7) | stream (SPEC-06 P0.1) |
 | `bank:transaction_updated` | same as created | bank | planned (SPEC-03 P0.7) | stream — refresh the matching item's payload/occurred_at (SPEC-06 P0.1) |

@@ -106,3 +106,43 @@ export function assetVariantURL(id: string, variant: AssetVariant): string {
 export function assetOriginalURL(id: string): string {
   return `${baseURL}/api/v1/assets/${id}/original`;
 }
+
+export async function getAsset(id: string): Promise<MediaAsset> {
+  return api<MediaAsset>(`/api/v1/assets/${id}`);
+}
+
+export interface PlaybackProgress {
+  position_ms: number;
+  progress_pct?: number;
+  completed_at?: string | null;
+  updated_at: string;
+}
+
+export async function getPlaybackProgress(id: string): Promise<PlaybackProgress> {
+  return api<PlaybackProgress>(`/api/v1/assets/${id}/progress`);
+}
+
+export async function putPlaybackProgress(id: string, positionMs: number): Promise<void> {
+  await api<void>(`/api/v1/assets/${id}/progress`, {
+    method: "PUT",
+    body: JSON.stringify({ position_ms: positionMs }),
+  });
+}
+
+export interface ContinueItem {
+  module: "media" | "movie" | "music" | "story" | "comic";
+  ref_id: string;
+  title: string;
+  progress_pct: number;
+  href: string;
+  poster_url?: string | null;
+  updated_at: string;
+}
+
+export interface ContinueResponse {
+  items: ContinueItem[];
+}
+
+export async function getContinueItems(limit: number = 10): Promise<ContinueResponse> {
+  return api<ContinueResponse>(`/api/v1/continue?limit=${limit}`);
+}

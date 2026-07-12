@@ -425,6 +425,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/assets/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch playback progress */
+        get: operations["getAssetProgress"];
+        /** Save playback progress */
+        put: operations["putAssetProgress"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/continue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active progress items across modules (SPEC-07)
+         * @description Returns the unified "Continue Watching/Reading" rail for the current user.
+         */
+        get: operations["getContinueItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/journal/entries": {
         parameters: {
             query?: never;
@@ -762,27 +800,32 @@ export interface components {
             /** @enum {string} */
             kind?: "org" | "household";
         };
+        PlaybackProgress: {
+            /** Format: int64 */
+            position_ms: number;
+            /** @description Fractional completion 0..100. Absent if duration is unknown. */
+            progress_pct?: number;
+            /** Format: date-time */
+            completed_at?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
         /**
          * @description One "continue watching / reading / listening" entry for the cross-domain
          *     `/continue` rail [D-20]. Aggregated from each vertical's progress table.
          */
-        ContinuingItem: {
+        ContinueItem: {
             /** @enum {string} */
-            module: "movie" | "music" | "story" | "comic";
+            module: "media" | "movie" | "music" | "story" | "comic";
             /** Format: uuid */
-            id: string;
+            ref_id: string;
             title: string;
-            /**
-             * Format: float
-             * @description Fractional completion 0..1.
-             */
-            progress: number;
-            /** Format: uri */
-            resourceUrl?: string;
-            /** Format: uri */
-            thumbnailUrl?: string | null;
+            /** @description Fractional completion 0..100. */
+            progress_pct: number;
+            href: string;
+            poster_url?: string | null;
             /** Format: date-time */
-            updatedAt: string;
+            updated_at: string;
         };
     };
     responses: {
@@ -1459,6 +1502,84 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+        };
+    };
+    getAssetProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Progress details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybackProgress"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    putAssetProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    position_ms: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Progress saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getContinueItems: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The continue items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ContinueItem"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listJournalEntries: {

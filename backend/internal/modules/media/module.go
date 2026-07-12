@@ -70,7 +70,7 @@ func New(d Deps) (*Module, error) {
 		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events),
 		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events),
 		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo),
-		publicAPI:      mediaapi.NewImpl(),
+		publicAPI:      mediaapi.NewImpl(svc.ContinueItems),
 	}, nil
 }
 
@@ -100,6 +100,8 @@ func (m *Module) MountHTTP(r chi.Router) {
 			r.Get("/{id}/original", m.handler.DownloadOriginal)
 			r.Put("/{id}/source", m.handler.UploadSource) // dev: API-proxied upload
 			r.Post("/{id}/complete", m.handler.Complete)
+			r.Get("/{id}/progress", m.handler.GetProgress)
+			r.Put("/{id}/progress", m.handler.PutProgress)
 			if m.deps.DeleteMiddleware != nil {
 				r.With(m.deps.DeleteMiddleware).Delete("/{id}", m.handler.Delete)
 			}

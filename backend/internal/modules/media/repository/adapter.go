@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/portal/backend/internal/modules/media"
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
 )
 
@@ -210,6 +211,68 @@ func (a *Adapter) GetVariant(ctx context.Context, assetID uuid.UUID, variant str
 
 func (a *Adapter) DeleteVariants(ctx context.Context, assetID uuid.UUID) error {
 	return a.q.DeleteVariantsByAsset(ctx, pgUUID(assetID))
+}
+
+func (a *Adapter) UpsertPlaybackProgress(ctx context.Context, ownerID, assetID uuid.UUID, positionMs int64, completedAt *time.Time) error {
+	var cat pgtype.Timestamptz
+	if completedAt != nil {
+		cat = pgtype.Timestamptz{Time: *completedAt, Valid: true}
+	}
+	return a.q.UpsertPlaybackProgress(ctx, UpsertPlaybackProgressParams{
+		UserID:      pgUUID(ownerID),
+		AssetID:     pgUUID(assetID),
+		PositionMs:  positionMs,
+		CompletedAt: cat,
+	})
+}
+
+func (a *Adapter) GetPlaybackProgress(ctx context.Context, ownerID, assetID uuid.UUID) (int64, *time.Time, time.Time, error) {
+	row, err := a.q.GetPlaybackProgress(ctx, GetPlaybackProgressParams{
+		UserID:  pgUUID(ownerID),
+		AssetID: pgUUID(assetID),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, nil, time.Time{}, media.ErrNotFound
+		}
+		return 0, nil, time.Time{}, err
+	}
+	var completedAt *time.Time
+	if row.CompletedAt.Valid {
+		completedAt = &row.CompletedAt.Time
+	}
+	return row.PositionMs, completedAt, row.UpdatedAt.Time, nil
+}
+
+func (a *Adapter) GetContinueItems(ctx context.Context, userID uuid.UUID, limit int) ([]mediaapi.ContinueItem, error) {
+	rows, err := a.q.GetContinueItems(ctx, GetContinueItemsParams{
+		UserID: pgUUID(userID),
+		Limit:  int32(limit),
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]mediaapi.ContinueItem, 0, len(rows))
+	for _, r := range rows {
+		var poster string
+		if s, ok := r.PosterUrl.(string); ok {
+			poster = s
+		}
+		var href string
+		if s, ok := r.Href.(string); ok {
+			href = s
+		}
+		out = append(out, mediaapi.ContinueItem{
+			Module:      r.Module,
+			RefID:       uuidFrom(r.RefID),
+			Title:       r.Title,
+			PosterURL:   poster,
+			ProgressPct: int(r.ProgressPct),
+			Href:        href,
+			UpdatedAt:   timeFrom(r.UpdatedAt),
+		})
+	}
+	return out, nil
 }
 
 // ── mapping helpers ─────────────────────────────────────────────────

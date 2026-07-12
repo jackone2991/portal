@@ -40,8 +40,19 @@ type Asset struct {
 	DurationMs *int
 	Width      *int
 	Height     *int
-	HLSMaster  *string   // nil unless status=ready and kind=video/audio
+	HLSMaster  *string // nil unless status=ready and kind=video/audio
 	CreatedAt  time.Time
+}
+
+// ContinueItem is a cross-module progress item returned by the aggregator.
+type ContinueItem struct {
+	Module      string    `json:"module"`
+	RefID       uuid.UUID `json:"ref_id"`
+	Title       string    `json:"title"`
+	PosterURL   string    `json:"poster_url"`
+	ProgressPct int       `json:"progress_pct"` // rounded percentage
+	Href        string    `json:"href"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type API interface {
@@ -52,11 +63,18 @@ type API interface {
 	// players use this). Honours tenant boundary; the URL is for the active
 	// tenant only.
 	SignedURL(ctx context.Context, id uuid.UUID, expires time.Duration) (string, error)
+
+	// Continue returns the active media progress items for the caller.
+	Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
 }
 
-type Impl struct{}
+type Impl struct {
+	continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
+}
 
-func NewImpl() *Impl { return &Impl{} }
+func NewImpl(continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)) *Impl {
+	return &Impl{continueFn: continueFn}
+}
 
 func (a *Impl) GetAsset(_ context.Context, _ uuid.UUID) (*Asset, error) {
 	return nil, nil // placeholder until repository adapter lands
@@ -64,4 +82,11 @@ func (a *Impl) GetAsset(_ context.Context, _ uuid.UUID) (*Asset, error) {
 
 func (a *Impl) SignedURL(_ context.Context, _ uuid.UUID, _ time.Duration) (string, error) {
 	return "", nil
+}
+
+func (a *Impl) Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error) {
+	if a.continueFn != nil {
+		return a.continueFn(ctx, userID, limit)
+	}
+	return nil, nil
 }
