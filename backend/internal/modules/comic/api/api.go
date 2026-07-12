@@ -36,3 +36,12 @@ type ChapterPublishedEvent struct {
 	OwnerUserID string `json:"owner_user_id"`
 	Title       string `json:"title"`
 }
+
+// ChapterDeletedEvent is the comic:chapter_deleted body (P1.9), emitted per
+// chapter on chapter/comic delete so the stream drops the published card
+// (consumer keys on chapter_id).
+type ChapterDeletedEvent struct {
+	ComicID     string `json:"comic_id"`
+	ChapterID   string `json:"chapter_id"`
+	OwnerUserID string `json:"owner_user_id"`
+}

@@ -185,7 +185,7 @@
 - [x] reader + vertical progress (`comic_reading_progress`) + page DELETE endpoint [F018] — page_id-keyed, membership-validated
 - [x] library/detail pages replacing placeholders (cursor paging [F044]) + template registry [F006]
 - [x] P0.6 asset-deletion coupling: consumes `media:asset_deleted` → reaps pages / NULLs covers (soft cascade)
-- [x] `comic:chapter_published` emit (per chapter on publish) + events.md [F042] — **live + dogfooded** (2026-07-12): publish → stream card "\<title\> published"; `comic:chapter_deleted` stream-removal consumer still deferred (published href is generic `/library/comic`, no 404)
+- [x] `comic:chapter_{published,deleted}` emit + stream consumers + events.md [F042] — **live + dogfooded** (2026-07-12): publish → stream card "\<title\> published"; delete chapter/comic → `journal:stream_comic_deleted` removes the card (verified: comic delete → 0 comic stream rows)
 - [ ] P1: zip import (presigned-PUT path, entry-scaled poll timeout [F015][F016]) + reader modes/bookmarks — **deferred**
 
 **Dogfood gate:** import one real chapter zip, read it on a mobile viewport. *(pending live run; zip import is P1.7)*

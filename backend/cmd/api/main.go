@@ -188,6 +188,8 @@ func run() error {
 	mediaEvents.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
 	// comic:chapter_published → life-stream projection.
 	mediaEvents.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
+	// comic:chapter_deleted → remove the published-chapter stream card (per chapter on chapter/comic delete).
+	mediaEvents.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
 
 	// DELETE /assets/{id} is gated by "owner OR assets:delete:any" — the extractor
 	// resolves the asset's owner via the media module (built below; the closure

@@ -240,6 +240,24 @@ func (s *Service) OnComicPublished(ctx context.Context, payload []byte) error {
 	return s.insertSystem(ctx, payload, p.OwnerUserID, "comic", "comic:chapter_published", p.ChapterID, time.Now())
 }
 
+// OnComicDeleted removes the published-chapter card when a chapter (or a whole
+// comic, one event per chapter) is deleted — SPEC-02 P1.9 / SPEC-06 P0.1. Keyed
+// on chapter_id, the same ref the published card used. Idempotent: a delete for
+// a chapter that was never published (or already removed) is a no-op.
+func (s *Service) OnComicDeleted(ctx context.Context, payload []byte) error {
+	var p struct {
+		ChapterID string `json:"chapter_id"`
+	}
+	if err := json.Unmarshal(payload, &p); err != nil {
+		return nil
+	}
+	chID, err := uuid.Parse(p.ChapterID)
+	if err != nil {
+		return nil
+	}
+	return s.repo.DeleteStreamItem(ctx, "comic", "comic:chapter_published", chID)
+}
+
 // bankUpsert projects a bank:transaction_* create/update. Transfers collapse to
 // one item keyed by transfer_id (P0.1). occurred_at from the payload's date.
 func (s *Service) bankUpsert(ctx context.Context, payload []byte, update bool) error {

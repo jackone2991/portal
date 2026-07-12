@@ -176,7 +176,22 @@ func (s *Service) Unpublish(ctx context.Context, id uuid.UUID) (Comic, error) {
 }
 
 func (s *Service) DeleteComic(ctx context.Context, id uuid.UUID) error {
-	return s.repo.DeleteComic(ctx, id)
+	// Capture chapters + owner before the cascade delete so the stream-removal
+	// events can be emitted (P1.9). Only published chapters have a stream card;
+	// emitting for the rest is a harmless no-op downstream (idempotent).
+	var chapters []Chapter
+	var owner uuid.UUID
+	if s.events != nil {
+		chapters, _ = s.repo.ListChapters(ctx, id)
+		owner, _ = s.repo.OwnerByComic(ctx, id)
+	}
+	if err := s.repo.DeleteComic(ctx, id); err != nil {
+		return err
+	}
+	for _, ch := range chapters {
+		s.emitChapterDeleted(ctx, id, ch.ID, owner)
+	}
+	return nil
 }
 
 // ══ Chapters ════════════════════════════════════════════════════════════
@@ -205,7 +220,31 @@ func (s *Service) UpdateChapter(ctx context.Context, id uuid.UUID, title *string
 }
 
 func (s *Service) DeleteChapter(ctx context.Context, id uuid.UUID) error {
-	return s.repo.DeleteChapter(ctx, id)
+	var owner, comicID uuid.UUID
+	if s.events != nil {
+		owner, comicID, _ = s.repo.OwnerAndComicByChapter(ctx, id)
+	}
+	if err := s.repo.DeleteChapter(ctx, id); err != nil {
+		return err
+	}
+	s.emitChapterDeleted(ctx, comicID, id, owner)
+	return nil
+}
+
+// emitChapterDeleted fires comic:chapter_deleted so the stream drops the
+// published-chapter card (P1.9). Emit-only, best-effort, idempotent downstream.
+func (s *Service) emitChapterDeleted(ctx context.Context, comicID, chapterID, owner uuid.UUID) {
+	if s.events == nil {
+		return
+	}
+	ev := comicapi.ChapterDeletedEvent{
+		ComicID:     comicID.String(),
+		ChapterID:   chapterID.String(),
+		OwnerUserID: owner.String(),
+	}
+	if err := s.events.Publish(ctx, comicapi.EventChapterDeleted, ev); err != nil {
+		log.Warn().Err(err).Str("chapter", chapterID.String()).Msg("comic: chapter_deleted publish failed")
+	}
 }
 
 func (s *Service) ReorderChapters(ctx context.Context, comicID uuid.UUID, orderedIDs []uuid.UUID) error {

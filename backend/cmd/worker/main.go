@@ -218,6 +218,7 @@ func run() error {
 	publisher.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
 	publisher.Subscribe(peopleapi.EventBirthdayUpcoming, journalapi.TaskStreamBirthday, asynq.Queue("default"))
 	publisher.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
+	publisher.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
 
 	// ── Heavy server: serialize the expensive decodes (P0.1 OOM guard) ──
 	// Its own low-concurrency pool consumes ONLY the "heavy" queue — queue
