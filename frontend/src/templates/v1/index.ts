@@ -8,6 +8,10 @@ import { ComicIndexView } from "./views/library/comic/ComicIndexView";
 import { NovelDetailView } from "./views/library/novel/NovelDetailView";
 import { MediaIndexView } from "./views/library/media/MediaIndexView";
 import { MediaDetailView } from "./views/library/media/MediaDetailView";
+import { DashboardView as BankDashboardView } from "./views/bank/DashboardView";
+import { TransactionsView as BankTransactionsView } from "./views/bank/TransactionsView";
+import { AccountsView as BankAccountsView } from "./views/bank/AccountsView";
+import { BudgetsView as BankBudgetsView } from "./views/bank/BudgetsView";
 
 /**
  * Template "v1" — React/Next.js port of the Crumina "Olympus" social theme at
@@ -28,5 +32,9 @@ export const v1: TemplateManifest = {
     libraryNovelDetail: NovelDetailView,
     libraryMedia: MediaIndexView,
     libraryMediaDetail: MediaDetailView,
+    bankDashboard: BankDashboardView,
+    bankTransactions: BankTransactionsView,
+    bankAccounts: BankAccountsView,
+    bankBudgets: BankBudgetsView,
   },
 };

@@ -44,5 +44,10 @@ export interface TemplateManifest {
     libraryMedia: ComponentType;
     /** SPEC-07 P0.4 — media player with resume. */
     libraryMediaDetail: ComponentType<{ id: string }>;
+    /** SPEC-03 §8 — personal ledger (bank): dashboard, transactions, accounts, budgets. */
+    bankDashboard: ComponentType;
+    bankTransactions: ComponentType;
+    bankAccounts: ComponentType;
+    bankBudgets: ComponentType;
   };
 }

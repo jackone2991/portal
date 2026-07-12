@@ -17,7 +17,21 @@ export type ProblemType =
   | "journal/entry-not-found"
   | "journal/invalid-body"
   | "journal/invalid-mood"
-  | "journal/invalid-asset";
+  | "journal/invalid-asset"
+  | "bank/not-found"
+  | "bank/account-not-empty"
+  | "bank/account-not-mutable"
+  | "bank/is-transfer-leg"
+  | "bank/category-in-use"
+  | "bank/category-kind-mismatch"
+  | "bank/category-immutable"
+  | "bank/invalid-category-parent"
+  | "bank/same-account-transfer"
+  | "bank/currency-mismatch"
+  | "bank/direction-kind-mismatch"
+  | "bank/invalid-amount"
+  | "bank/validation"
+  | "bank/invalid-cursor";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -30,6 +44,20 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "journal/invalid-body": "Entries need 1-20,000 characters of text.",
   "journal/invalid-mood": "Mood can't be blank — leave it empty or add a word.",
   "journal/invalid-asset": "Photo attachments aren't supported yet.",
+  "bank/not-found": "This item doesn't exist or was already removed.",
+  "bank/account-not-empty": "This account has transactions — archive it instead of deleting.",
+  "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
+  "bank/is-transfer-leg": "This is part of a transfer — edit or delete it from the transfer instead.",
+  "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
+  "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
+  "bank/category-immutable": "A category's kind can't be changed after it's created.",
+  "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
+  "bank/same-account-transfer": "Pick two different accounts for a transfer.",
+  "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
+  "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
+  "bank/invalid-amount": "Enter an amount greater than zero.",
+  "bank/validation": "Please check the form and try again.",
+  "bank/invalid-cursor": "Couldn't load the next page — please refresh.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
