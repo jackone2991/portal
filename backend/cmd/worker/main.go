@@ -34,6 +34,9 @@ import (
 	"github.com/portal/backend/internal/modules/ops"
 	opsapi "github.com/portal/backend/internal/modules/ops/api"
 	opsrepo "github.com/portal/backend/internal/modules/ops/repository"
+	"github.com/portal/backend/internal/modules/people"
+	peopleapi "github.com/portal/backend/internal/modules/people/api"
+	peoplerepo "github.com/portal/backend/internal/modules/people/repository"
 	"github.com/portal/backend/internal/platform/audit"
 	"github.com/portal/backend/internal/platform/config"
 	"github.com/portal/backend/internal/platform/events"
@@ -172,6 +175,12 @@ func run() error {
 		return fmt.Errorf("comic module: %w", err)
 	}
 
+	// ── People module (worker side: daily birthday scan, P0.4) ──────
+	peopleMod, err := people.New(people.Deps{Repo: peoplerepo.NewAdapter(pool), Events: publisher})
+	if err != nil {
+		return fmt.Errorf("people module: %w", err)
+	}
+
 	// ── Ops module (worker side: nightly Postgres backup) ───────────
 	// The account module isn't constructed here, so audit records route through
 	// its repository adapter (a plain audit_log INSERT). BackupDatabaseURL MUST
@@ -224,6 +233,7 @@ func run() error {
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
 	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
 	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
+	peopleMod.RegisterTasks(lightMux)  // people:scan_birthdays (daily birthday scan, P0.4)
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)
 	lightMux.HandleFunc(notifyapi.TaskPurgeOld, func(ctx context.Context, _ *asynq.Task) error {
 		return notifyMod.PurgeOld(ctx)
@@ -257,6 +267,11 @@ func run() error {
 	if _, err := scheduler.Register("0 3 * * *",
 		asynq.NewTask(opsapi.TaskBackupDatabase, nil), asynq.Queue("default")); err != nil {
 		return fmt.Errorf("register ops backup schedule: %w", err)
+	}
+	// Daily birthday scan at 06:00 UTC (SPEC-08 P0.4) — emits people:birthday_upcoming.
+	if _, err := scheduler.Register("0 6 * * *",
+		asynq.NewTask(peopleapi.TaskScanBirthdays, nil), asynq.Queue("default")); err != nil {
+		return fmt.Errorf("register birthday-scan schedule: %w", err)
 	}
 
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

@@ -44,6 +44,8 @@ import (
 	notifyrepo "github.com/portal/backend/internal/modules/notify/repository"
 	"github.com/portal/backend/internal/modules/ops"
 	opsrepo "github.com/portal/backend/internal/modules/ops/repository"
+	"github.com/portal/backend/internal/modules/people"
+	peoplerepo "github.com/portal/backend/internal/modules/people/repository"
 	"github.com/portal/backend/internal/platform/config"
 	"github.com/portal/backend/internal/platform/events"
 	"github.com/portal/backend/internal/platform/storage"
@@ -320,6 +322,26 @@ func run() error {
 		return fmt.Errorf("comic module: %w", err)
 	}
 
+	// ── People module (SPEC-08: /people, contacts + birthdays) ──────
+	peopleMod, err := people.New(people.Deps{
+		Repo:        peoplerepo.NewAdapter(pool),
+		Events:      mediaEvents,
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("people module: %w", err)
+	}
+
 	// ── HTTP ────────────────────────────────────────────────────────
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
@@ -348,6 +370,7 @@ func run() error {
 		opsMod.MountHTTP(r)
 		bankMod.MountHTTP(r)
 		comicMod.MountHTTP(r)
+		peopleMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{

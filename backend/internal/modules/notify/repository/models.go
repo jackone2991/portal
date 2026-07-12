@@ -200,6 +200,30 @@ type PasswordResetToken struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type PeopleBirthdayNotice struct {
+	ID        pgtype.UUID        `json:"id"`
+	PersonID  pgtype.UUID        `json:"person_id"`
+	Year      int32              `json:"year"`
+	Threshold int32              `json:"threshold"`
+	EmittedAt pgtype.Timestamptz `json:"emitted_at"`
+}
+
+type PeoplePerson struct {
+	ID            pgtype.UUID        `json:"id"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	DisplayName   string             `json:"display_name"`
+	Relationship  *string            `json:"relationship"`
+	BirthMonth    *int32             `json:"birth_month"`
+	BirthDay      *int32             `json:"birth_day"`
+	BirthYear     *int32             `json:"birth_year"`
+	BirthCalendar string             `json:"birth_calendar"`
+	Contact       []byte             `json:"contact"`
+	NoteMd        *string            `json:"note_md"`
+	AvatarAssetID pgtype.UUID        `json:"avatar_asset_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Permission struct {
 	ID          pgtype.UUID        `json:"id"`
 	Code        string             `json:"code"`
