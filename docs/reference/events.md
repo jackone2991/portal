@@ -18,7 +18,7 @@ the naming *rules*, this file owns the *inventory*.
 | Name | Payload (sketch) | Emitter | Status | Consumers |
 |---|---|---|---|---|
 | `media:asset_ready` | `{asset_id, kind, owner_user_id, title, origin: 'upload'\|'import'}` | media | live — emitter only (SPEC-01 P1.2); no consumer yet | notify — in-app notification, skips `origin='import'` (SPEC-04 P0.4); stream projection, skips `origin='import'` (SPEC-06 P0.1). `origin` exists so a SPEC-02 zip import (≤300 assets) can't flood the bell/stream — the meaningful signal there is `comic:chapter_published` |
-| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — emitter only (SPEC-01 P0.3); no consumer yet | comic — drop dangling pages / null covers (SPEC-02 P0.6); stream — remove **all** media-sourced items with this ref (SPEC-06 P0.1); journal — strip attachment ids (SPEC-05 P1.5); people — null avatars (SPEC-08 P1.7); movie/music/story later |
+| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — 1 consumer (comic P0.6) | **comic — drop dangling pages / null covers (SPEC-02 P0.6, live)**; stream — remove **all** media-sourced items with this ref (SPEC-06 P0.1); journal — strip attachment ids (SPEC-05 P1.5); people — null avatars (SPEC-08 P1.7); movie/music/story later |
 | `media:playback_completed` | `{asset_id, user_id, title}` | media | live — emitter only (SPEC-07 P1.5); no consumer yet | stream (SPEC-06); notify (SPEC-04 open type registry) |
 | `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | planned (SPEC-02 P1.9) | stream (SPEC-06 P0.1); notify later |
 | `bank:transaction_created` | `{transaction_id, user_id, account_id, amount, direction, category_id, occurred_at, is_transfer, transfer_id, counterparty_account_id}` | bank | live — emitter only (SPEC-03 P0.7); no consumer yet | stream (SPEC-06 P0.1) |
@@ -40,6 +40,7 @@ the naming *rules*, this file owns the *inventory*.
 | `media:thumbnail` | `{asset_id, source_key}` | media | live (SPEC-01 P0.2; video → poster variant; "thumbnail" queue) |
 | `media:purge_orphans` | — (janitor sweep) | media | live (SPEC-01 P0.3; hourly on the shared scheduler) |
 | `comic:import_zip` | `{chapter_id, upload_ref}` | comic | planned (SPEC-02 P1.7) |
+| `comic:on_asset_deleted` | `{asset_id, owner_user_id}` (consumer; subscribes to `media:asset_deleted`) | comic | live (SPEC-02 P0.6; reaps dangling pages + NULL covers) |
 | `notify:dispatch` | `{user_id, type, title, body, data, channels?, dedup_key?}` | notify | live (SPEC-04 P0.2; "default" queue) |
 | `notify:email` | `{user_id, type, title, data}` (template rendered in handler) | notify | live (SPEC-04 P0.3; "default" queue) |
 | `notify:web_push` | `{user_id, type, data}` | notify | planned (SPEC-04 P1.1; handler is a registered stub) |

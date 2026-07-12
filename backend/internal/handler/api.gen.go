@@ -252,27 +252,63 @@ func (e BankTransactionPatchDirection) Valid() bool {
 	}
 }
 
+// Defines values for ComicStatus.
+const (
+	ComicStatusDraft     ComicStatus = "draft"
+	ComicStatusPublished ComicStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the ComicStatus enum.
+func (e ComicStatus) Valid() bool {
+	switch e {
+	case ComicStatusDraft:
+		return true
+	case ComicStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ComicDetailStatus.
+const (
+	ComicDetailStatusDraft     ComicDetailStatus = "draft"
+	ComicDetailStatusPublished ComicDetailStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the ComicDetailStatus enum.
+func (e ComicDetailStatus) Valid() bool {
+	switch e {
+	case ComicDetailStatusDraft:
+		return true
+	case ComicDetailStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ContinueItemModule.
 const (
-	Comic ContinueItemModule = "comic"
-	Media ContinueItemModule = "media"
-	Movie ContinueItemModule = "movie"
-	Music ContinueItemModule = "music"
-	Story ContinueItemModule = "story"
+	ContinueItemModuleComic ContinueItemModule = "comic"
+	ContinueItemModuleMedia ContinueItemModule = "media"
+	ContinueItemModuleMovie ContinueItemModule = "movie"
+	ContinueItemModuleMusic ContinueItemModule = "music"
+	ContinueItemModuleStory ContinueItemModule = "story"
 )
 
 // Valid indicates whether the value is a known member of the ContinueItemModule enum.
 func (e ContinueItemModule) Valid() bool {
 	switch e {
-	case Comic:
+	case ContinueItemModuleComic:
 		return true
-	case Media:
+	case ContinueItemModuleMedia:
 		return true
-	case Movie:
+	case ContinueItemModuleMovie:
 		return true
-	case Music:
+	case ContinueItemModuleMusic:
 		return true
-	case Story:
+	case ContinueItemModuleStory:
 		return true
 	default:
 		return false
@@ -748,6 +784,77 @@ type BankTransferPatch struct {
 	ToAccount   *openapi_types.UUID `json:"to_account,omitempty"`
 }
 
+// Chapter defines model for Chapter.
+type Chapter struct {
+	ComicId   openapi_types.UUID `json:"comic_id"`
+	CreatedAt time.Time          `json:"created_at"`
+	Id        openapi_types.UUID `json:"id"`
+	SortOrder int                `json:"sort_order"`
+	Title     string             `json:"title"`
+}
+
+// ChapterCreate defines model for ChapterCreate.
+type ChapterCreate struct {
+	SortOrder int    `json:"sort_order"`
+	Title     string `json:"title"`
+}
+
+// Comic defines model for Comic.
+type Comic struct {
+	ChapterCount *int                `json:"chapter_count,omitempty"`
+	CoverAssetId *openapi_types.UUID `json:"cover_asset_id,omitempty"`
+	CreatedAt    time.Time           `json:"created_at"`
+	Description  *string             `json:"description,omitempty"`
+	Id           openapi_types.UUID  `json:"id"`
+	OwnerId      openapi_types.UUID  `json:"owner_id"`
+	Status       ComicStatus         `json:"status"`
+	Title        string              `json:"title"`
+	UpdatedAt    time.Time           `json:"updated_at"`
+}
+
+// ComicStatus defines model for Comic.Status.
+type ComicStatus string
+
+// ComicCreate defines model for ComicCreate.
+type ComicCreate struct {
+	// CoverAssetId A ready image asset you own.
+	CoverAssetId *openapi_types.UUID `json:"cover_asset_id,omitempty"`
+	Description  *string             `json:"description,omitempty"`
+	Title        string              `json:"title"`
+}
+
+// ComicDetail defines model for ComicDetail.
+type ComicDetail struct {
+	ChapterCount *int                `json:"chapter_count,omitempty"`
+	Chapters     *[]Chapter          `json:"chapters,omitempty"`
+	CoverAssetId *openapi_types.UUID `json:"cover_asset_id,omitempty"`
+	CreatedAt    time.Time           `json:"created_at"`
+	Description  *string             `json:"description,omitempty"`
+	Id           openapi_types.UUID  `json:"id"`
+	OwnerId      openapi_types.UUID  `json:"owner_id"`
+	Progress     *ComicProgress      `json:"progress,omitempty"`
+	Status       ComicDetailStatus   `json:"status"`
+	Title        string              `json:"title"`
+	UpdatedAt    time.Time           `json:"updated_at"`
+}
+
+// ComicDetailStatus defines model for ComicDetail.Status.
+type ComicDetailStatus string
+
+// ComicPatch defines model for ComicPatch.
+type ComicPatch struct {
+	CoverAssetId *openapi_types.UUID `json:"cover_asset_id,omitempty"`
+	Description  *string             `json:"description,omitempty"`
+	Title        *string             `json:"title,omitempty"`
+}
+
+// ComicProgress defines model for ComicProgress.
+type ComicProgress struct {
+	ChapterId openapi_types.UUID  `json:"chapter_id"`
+	PageId    *openapi_types.UUID `json:"page_id,omitempty"`
+	UpdatedAt time.Time           `json:"updated_at"`
+}
+
 // ContinueItem One "continue watching / reading / listening" entry for the cross-domain
 // `/continue` rail [D-20]. Aggregated from each vertical's progress table.
 type ContinueItem struct {
@@ -924,6 +1031,22 @@ type OpsStatus struct {
 // 26 h, incl. never-ran) → `ok`. A running run never changes state.
 type OpsStatusState string
 
+// Page defines model for Page.
+type Page struct {
+	AssetId   openapi_types.UUID `json:"asset_id"`
+	ChapterId openapi_types.UUID `json:"chapter_id"`
+	Id        openapi_types.UUID `json:"id"`
+	SortOrder int                `json:"sort_order"`
+}
+
+// PagesCreate defines model for PagesCreate.
+type PagesCreate struct {
+	Pages []struct {
+		AssetId   openapi_types.UUID `json:"asset_id"`
+		SortOrder int                `json:"sort_order"`
+	} `json:"pages"`
+}
+
 // PaginatedResult Cursor-paginated envelope. Concrete endpoints override `items` with their
 // element type (OpenAPI has no generics — compose with `allOf` + an `items`
 // override, or document the element type in the operation).
@@ -976,12 +1099,32 @@ type Problem struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// ProgressWrite defines model for ProgressWrite.
+type ProgressWrite struct {
+	ChapterId openapi_types.UUID  `json:"chapter_id"`
+	PageId    *openapi_types.UUID `json:"page_id,omitempty"`
+}
+
+// ReaderPage defines model for ReaderPage.
+type ReaderPage struct {
+	// AssetId Render the medium variant (GET /assets/ID/variants/medium).
+	AssetId openapi_types.UUID `json:"asset_id"`
+	Height  *int               `json:"height,omitempty"`
+	PageId  openapi_types.UUID `json:"page_id"`
+	Width   *int               `json:"width,omitempty"`
+}
+
 // RegisterRequest defines model for RegisterRequest.
 type RegisterRequest struct {
 	// DisplayName Optional; defaults to the email local-part.
 	DisplayName *string             `json:"display_name,omitempty"`
 	Email       openapi_types.Email `json:"email"`
 	Password    string              `json:"password"`
+}
+
+// ReorderRequest defines model for ReorderRequest.
+type ReorderRequest struct {
+	Order []openapi_types.UUID `json:"order"`
 }
 
 // ResetPasswordRequest defines model for ResetPasswordRequest.
@@ -1126,6 +1269,22 @@ type ListBankTransactionsParams struct {
 	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// UpdateChapterJSONBody defines parameters for UpdateChapter.
+type UpdateChapterJSONBody struct {
+	Title *string `json:"title,omitempty"`
+}
+
+// ListComicsParams defines parameters for ListComics.
+type ListComicsParams struct {
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListMyComicsParams defines parameters for ListMyComics.
+type ListMyComicsParams struct {
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+}
+
 // GetContinueItemsParams defines parameters for GetContinueItems.
 type GetContinueItemsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
@@ -1203,6 +1362,30 @@ type CreateBankTransferJSONRequestBody = BankTransferCreate
 
 // UpdateBankTransferJSONRequestBody defines body for UpdateBankTransfer for application/json ContentType.
 type UpdateBankTransferJSONRequestBody = BankTransferPatch
+
+// UpdateChapterJSONRequestBody defines body for UpdateChapter for application/json ContentType.
+type UpdateChapterJSONRequestBody UpdateChapterJSONBody
+
+// CreatePagesJSONRequestBody defines body for CreatePages for application/json ContentType.
+type CreatePagesJSONRequestBody = PagesCreate
+
+// ReorderPagesJSONRequestBody defines body for ReorderPages for application/json ContentType.
+type ReorderPagesJSONRequestBody = ReorderRequest
+
+// CreateComicJSONRequestBody defines body for CreateComic for application/json ContentType.
+type CreateComicJSONRequestBody = ComicCreate
+
+// UpdateComicJSONRequestBody defines body for UpdateComic for application/json ContentType.
+type UpdateComicJSONRequestBody = ComicPatch
+
+// CreateChapterJSONRequestBody defines body for CreateChapter for application/json ContentType.
+type CreateChapterJSONRequestBody = ChapterCreate
+
+// ReorderChaptersJSONRequestBody defines body for ReorderChapters for application/json ContentType.
+type ReorderChaptersJSONRequestBody = ReorderRequest
+
+// SaveComicProgressJSONRequestBody defines body for SaveComicProgress for application/json ContentType.
+type SaveComicProgressJSONRequestBody = ProgressWrite
 
 // CreateJournalEntryJSONRequestBody defines body for CreateJournalEntry for application/json ContentType.
 type CreateJournalEntryJSONRequestBody = JournalEntryWrite
@@ -1490,6 +1673,54 @@ type ServerInterface interface {
 	// Update both legs of a transfer atomically
 	// (PATCH /bank/transfers/{transfer_id})
 	UpdateBankTransfer(w http.ResponseWriter, r *http.Request, transferId openapi_types.UUID)
+	// Delete a chapter (pages cascade; assets untouched)
+	// (DELETE /chapters/{id})
+	DeleteChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Update a chapter
+	// (PATCH /chapters/{id})
+	UpdateChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Reader payload for a chapter (draft is 404 to non-owners)
+	// (GET /chapters/{id}/pages)
+	GetChapterPages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Add pages (batch); each asset must be a ready image owned by the creator
+	// (POST /chapters/{id}/pages)
+	CreatePages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Reorder pages (full ordered id list)
+	// (PUT /chapters/{id}/pages:order)
+	ReorderPages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// List published comics (cursor)
+	// (GET /comics)
+	ListComics(w http.ResponseWriter, r *http.Request, params ListComicsParams)
+	// Create a comic
+	// (POST /comics)
+	CreateComic(w http.ResponseWriter, r *http.Request)
+	// List the caller's own comics (incl. drafts)
+	// (GET /comics/mine)
+	ListMyComics(w http.ResponseWriter, r *http.Request, params ListMyComicsParams)
+	// Delete a comic (owner or comics:delete:any)
+	// (DELETE /comics/{id})
+	DeleteComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Comic detail (chapters + progress); draft is 404 to non-owners
+	// (GET /comics/{id})
+	GetComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Update a comic (owner or comics:write:any)
+	// (PATCH /comics/{id})
+	UpdateComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Add a chapter
+	// (POST /comics/{id}/chapters)
+	CreateChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Reorder chapters (full ordered id list)
+	// (PUT /comics/{id}/chapters:order)
+	ReorderChapters(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Save reading progress (keyed by page_id)
+	// (PUT /comics/{id}/progress)
+	SaveComicProgress(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Publish (≥1 chapter, every chapter ≥1 page)
+	// (POST /comics/{id}/publish)
+	PublishComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// Unpublish (back to draft)
+	// (POST /comics/{id}/unpublish)
+	UnpublishComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// List active progress items across modules (SPEC-07)
 	// (GET /continue)
 	GetContinueItems(w http.ResponseWriter, r *http.Request, params GetContinueItemsParams)
@@ -1523,6 +1754,9 @@ type ServerInterface interface {
 	// Backup freshness sentinel (admin)
 	// (GET /ops/status)
 	GetOpsStatus(w http.ResponseWriter, r *http.Request)
+	// Delete a page (row only; the media asset is untouched)
+	// (DELETE /pages/{id})
+	DeletePage(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -1751,6 +1985,102 @@ func (_ Unimplemented) UpdateBankTransfer(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Delete a chapter (pages cascade; assets untouched)
+// (DELETE /chapters/{id})
+func (_ Unimplemented) DeleteChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a chapter
+// (PATCH /chapters/{id})
+func (_ Unimplemented) UpdateChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Reader payload for a chapter (draft is 404 to non-owners)
+// (GET /chapters/{id}/pages)
+func (_ Unimplemented) GetChapterPages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Add pages (batch); each asset must be a ready image owned by the creator
+// (POST /chapters/{id}/pages)
+func (_ Unimplemented) CreatePages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Reorder pages (full ordered id list)
+// (PUT /chapters/{id}/pages:order)
+func (_ Unimplemented) ReorderPages(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List published comics (cursor)
+// (GET /comics)
+func (_ Unimplemented) ListComics(w http.ResponseWriter, r *http.Request, params ListComicsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create a comic
+// (POST /comics)
+func (_ Unimplemented) CreateComic(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List the caller's own comics (incl. drafts)
+// (GET /comics/mine)
+func (_ Unimplemented) ListMyComics(w http.ResponseWriter, r *http.Request, params ListMyComicsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a comic (owner or comics:delete:any)
+// (DELETE /comics/{id})
+func (_ Unimplemented) DeleteComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Comic detail (chapters + progress); draft is 404 to non-owners
+// (GET /comics/{id})
+func (_ Unimplemented) GetComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a comic (owner or comics:write:any)
+// (PATCH /comics/{id})
+func (_ Unimplemented) UpdateComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Add a chapter
+// (POST /comics/{id}/chapters)
+func (_ Unimplemented) CreateChapter(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Reorder chapters (full ordered id list)
+// (PUT /comics/{id}/chapters:order)
+func (_ Unimplemented) ReorderChapters(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Save reading progress (keyed by page_id)
+// (PUT /comics/{id}/progress)
+func (_ Unimplemented) SaveComicProgress(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Publish (≥1 chapter, every chapter ≥1 page)
+// (POST /comics/{id}/publish)
+func (_ Unimplemented) PublishComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Unpublish (back to draft)
+// (POST /comics/{id}/unpublish)
+func (_ Unimplemented) UnpublishComic(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // List active progress items across modules (SPEC-07)
 // (GET /continue)
 func (_ Unimplemented) GetContinueItems(w http.ResponseWriter, r *http.Request, params GetContinueItemsParams) {
@@ -1814,6 +2144,12 @@ func (_ Unimplemented) MarkNotificationRead(w http.ResponseWriter, r *http.Reque
 // Backup freshness sentinel (admin)
 // (GET /ops/status)
 func (_ Unimplemented) GetOpsStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a page (row only; the media asset is untouched)
+// (DELETE /pages/{id})
+func (_ Unimplemented) DeletePage(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2929,6 +3265,533 @@ func (siw *ServerInterfaceWrapper) UpdateBankTransfer(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// DeleteChapter operation middleware
+func (siw *ServerInterfaceWrapper) DeleteChapter(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteChapter(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateChapter operation middleware
+func (siw *ServerInterfaceWrapper) UpdateChapter(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateChapter(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetChapterPages operation middleware
+func (siw *ServerInterfaceWrapper) GetChapterPages(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChapterPages(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePages operation middleware
+func (siw *ServerInterfaceWrapper) CreatePages(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePages(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReorderPages operation middleware
+func (siw *ServerInterfaceWrapper) ReorderPages(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReorderPages(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListComics operation middleware
+func (siw *ServerInterfaceWrapper) ListComics(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListComicsParams
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListComics(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateComic operation middleware
+func (siw *ServerInterfaceWrapper) CreateComic(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateComic(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMyComics operation middleware
+func (siw *ServerInterfaceWrapper) ListMyComics(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListMyComicsParams
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyComics(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteComic operation middleware
+func (siw *ServerInterfaceWrapper) DeleteComic(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteComic(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetComic operation middleware
+func (siw *ServerInterfaceWrapper) GetComic(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetComic(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateComic operation middleware
+func (siw *ServerInterfaceWrapper) UpdateComic(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateComic(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateChapter operation middleware
+func (siw *ServerInterfaceWrapper) CreateChapter(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateChapter(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReorderChapters operation middleware
+func (siw *ServerInterfaceWrapper) ReorderChapters(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReorderChapters(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SaveComicProgress operation middleware
+func (siw *ServerInterfaceWrapper) SaveComicProgress(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SaveComicProgress(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PublishComic operation middleware
+func (siw *ServerInterfaceWrapper) PublishComic(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PublishComic(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UnpublishComic operation middleware
+func (siw *ServerInterfaceWrapper) UnpublishComic(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UnpublishComic(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetContinueItems operation middleware
 func (siw *ServerInterfaceWrapper) GetContinueItems(w http.ResponseWriter, r *http.Request) {
 
@@ -3306,6 +4169,38 @@ func (siw *ServerInterfaceWrapper) GetOpsStatus(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// DeletePage operation middleware
+func (siw *ServerInterfaceWrapper) DeletePage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeletePage(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -3531,6 +4426,54 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Patch(options.BaseURL+"/bank/transfers/{transfer_id}", wrapper.UpdateBankTransfer)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/chapters/{id}", wrapper.DeleteChapter)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/chapters/{id}", wrapper.UpdateChapter)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/chapters/{id}/pages", wrapper.GetChapterPages)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/chapters/{id}/pages", wrapper.CreatePages)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/chapters/{id}/pages:order", wrapper.ReorderPages)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/comics", wrapper.ListComics)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/comics", wrapper.CreateComic)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/comics/mine", wrapper.ListMyComics)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/comics/{id}", wrapper.DeleteComic)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/comics/{id}", wrapper.GetComic)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/comics/{id}", wrapper.UpdateComic)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/comics/{id}/chapters", wrapper.CreateChapter)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/comics/{id}/chapters:order", wrapper.ReorderChapters)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/comics/{id}/progress", wrapper.SaveComicProgress)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/comics/{id}/publish", wrapper.PublishComic)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/comics/{id}/unpublish", wrapper.UnpublishComic)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/continue", wrapper.GetContinueItems)
 	})
 	r.Group(func(r chi.Router) {
@@ -3563,6 +4506,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/ops/status", wrapper.GetOpsStatus)
 	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/pages/{id}", wrapper.DeletePage)
+	})
 
 	return r
 }
@@ -3572,184 +4518,203 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"rn6hjT+t+/7j/w8AAP//",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

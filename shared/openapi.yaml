@@ -1243,6 +1243,255 @@ paths:
               schema: { $ref: "#/components/schemas/BankDashboard" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  # ── Comic vertical (SPEC-02) ─────────────────────────────────────────────
+  # Published-or-owner reads (a draft is 404 to others); owner-or-elevated
+  # mutations (RequireOwnerOrPermission). Page/cover assets are ready images.
+  /comics:
+    get:
+      tags: [comic]
+      summary: List published comics (cursor)
+      operationId: listComics
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
+      responses:
+        "200":
+          description: A cursor page of published comics
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comics]
+                properties:
+                  comics: { type: array, items: { $ref: "#/components/schemas/Comic" } }
+                  next_cursor: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [comic]
+      summary: Create a comic
+      operationId: createComic
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ComicCreate" } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Comic" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /comics/mine:
+    get:
+      tags: [comic]
+      summary: List the caller's own comics (incl. drafts)
+      operationId: listMyComics
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+      responses:
+        "200":
+          description: The caller's comics
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comics]
+                properties:
+                  comics: { type: array, items: { $ref: "#/components/schemas/Comic" } }
+                  next_cursor: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /comics/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [comic]
+      summary: Comic detail (chapters + progress); draft is 404 to non-owners
+      operationId: getComic
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: The comic, content: { application/json: { schema: { $ref: "#/components/schemas/ComicDetail" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [comic]
+      summary: Update a comic (owner or comics:write:any)
+      operationId: updateComic
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ComicPatch" } } }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Comic" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [comic]
+      summary: Delete a comic (owner or comics:delete:any)
+      operationId: deleteComic
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /comics/{id}/publish:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [comic]
+      summary: Publish (≥1 chapter, every chapter ≥1 page)
+      operationId: publishComic
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Published, content: { application/json: { schema: { $ref: "#/components/schemas/Comic" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Not publishable (`comic/not-publishable`) — lists offending chapters
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  /comics/{id}/unpublish:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [comic]
+      summary: Unpublish (back to draft)
+      operationId: unpublishComic
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Unpublished, content: { application/json: { schema: { $ref: "#/components/schemas/Comic" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /comics/{id}/chapters:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [comic]
+      summary: Add a chapter
+      operationId: createChapter
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ChapterCreate" } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Chapter" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /comics/{id}/chapters:order:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    put:
+      tags: [comic]
+      summary: Reorder chapters (full ordered id list)
+      operationId: reorderChapters
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ReorderRequest" } } }
+      responses:
+        "204": { description: Reordered }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /comics/{id}/progress:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    put:
+      tags: [comic]
+      summary: Save reading progress (keyed by page_id)
+      operationId: saveComicProgress
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ProgressWrite" } } }
+      responses:
+        "204": { description: Saved }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /chapters/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    patch:
+      tags: [comic]
+      summary: Update a chapter
+      operationId: updateChapter
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { title: { type: string } } } } }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Chapter" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [comic]
+      summary: Delete a chapter (pages cascade; assets untouched)
+      operationId: deleteChapter
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /chapters/{id}/pages:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [comic]
+      summary: Reader payload for a chapter (draft is 404 to non-owners)
+      operationId: getChapterPages
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Ordered reader pages
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [pages]
+                properties:
+                  pages: { type: array, items: { $ref: "#/components/schemas/ReaderPage" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [comic]
+      summary: Add pages (batch); each asset must be a ready image owned by the creator
+      operationId: createPages
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PagesCreate" } } }
+      responses:
+        "201":
+          description: Pages created
+          content:
+            application/json:
+              schema: { type: object, required: [pages], properties: { pages: { type: array, items: { $ref: "#/components/schemas/Page" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /chapters/{id}/pages:order:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    put:
+      tags: [comic]
+      summary: Reorder pages (full ordered id list)
+      operationId: reorderPages
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ReorderRequest" } } }
+      responses:
+        "204": { description: Reordered }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /pages/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [comic]
+      summary: Delete a page (row only; the media asset is untouched)
+      operationId: deletePage
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1536,6 +1785,104 @@ components:
         recent:
           type: array
           items: { $ref: "#/components/schemas/BankTransaction" }
+
+    # ── Comic vertical (SPEC-02) ────────────────────────────────────────────
+    Comic:
+      type: object
+      required: [id, owner_id, title, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+        status: { type: string, enum: [draft, published] }
+        chapter_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ComicDetail:
+      allOf:
+        - $ref: "#/components/schemas/Comic"
+        - type: object
+          properties:
+            chapters: { type: array, items: { $ref: "#/components/schemas/Chapter" } }
+            progress: { $ref: "#/components/schemas/ComicProgress" }
+    ComicCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true, description: A ready image asset you own. }
+    ComicPatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+    Chapter:
+      type: object
+      required: [id, comic_id, title, sort_order, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        comic_id: { type: string, format: uuid }
+        title: { type: string }
+        sort_order: { type: integer }
+        created_at: { type: string, format: date-time }
+    ChapterCreate:
+      type: object
+      required: [title, sort_order]
+      properties:
+        title: { type: string }
+        sort_order: { type: integer }
+    Page:
+      type: object
+      required: [id, chapter_id, asset_id, sort_order]
+      properties:
+        id: { type: string, format: uuid }
+        chapter_id: { type: string, format: uuid }
+        asset_id: { type: string, format: uuid }
+        sort_order: { type: integer }
+    PagesCreate:
+      type: object
+      required: [pages]
+      properties:
+        pages:
+          type: array
+          items:
+            type: object
+            required: [asset_id, sort_order]
+            properties:
+              asset_id: { type: string, format: uuid }
+              sort_order: { type: integer }
+    ReaderPage:
+      type: object
+      required: [page_id, asset_id]
+      properties:
+        page_id: { type: string, format: uuid }
+        asset_id: { type: string, format: uuid, description: "Render the medium variant (GET /assets/ID/variants/medium)." }
+        width: { type: integer, nullable: true }
+        height: { type: integer, nullable: true }
+    ComicProgress:
+      type: object
+      required: [chapter_id, updated_at]
+      properties:
+        chapter_id: { type: string, format: uuid }
+        page_id: { type: string, format: uuid, nullable: true }
+        updated_at: { type: string, format: date-time }
+    ProgressWrite:
+      type: object
+      required: [chapter_id]
+      properties:
+        chapter_id: { type: string, format: uuid }
+        page_id: { type: string, format: uuid, nullable: true }
+    ReorderRequest:
+      type: object
+      required: [order]
+      properties:
+        order:
+          type: array
+          items: { type: string, format: uuid }
 
     # ── RFC 7807 error contract (D-7 / D-29) ────────────────────────────────
     Problem:
