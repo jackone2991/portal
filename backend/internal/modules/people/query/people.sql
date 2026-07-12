@@ -9,7 +9,7 @@ INSERT INTO people_persons (
     user_id, display_name, relationship, birth_month, birth_day, birth_year, birth_calendar, contact, note_md
 ) VALUES (
     $1, $2, sqlc.narg('relationship'), sqlc.narg('birth_month'), sqlc.narg('birth_day'),
-    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact'), '{}'), sqlc.narg('note_md')
+    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::jsonb, '{}'::jsonb), sqlc.narg('note_md')
 )
 RETURNING *;
 

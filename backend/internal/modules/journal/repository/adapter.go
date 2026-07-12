@@ -199,7 +199,10 @@ func (a *Adapter) ListStream(ctx context.Context, in journal.StreamListInput) ([
 	return out, nil
 }
 
-func payloadOr(p json.RawMessage) interface{} {
+// payloadOr returns nil for an empty payload so pgx sends SQL NULL — the query's
+// COALESCE(...::jsonb, '{}'::jsonb) then substitutes an empty object. sqlc types
+// the param as []byte now that the query casts it explicitly.
+func payloadOr(p json.RawMessage) []byte {
 	if len(p) == 0 {
 		return nil
 	}

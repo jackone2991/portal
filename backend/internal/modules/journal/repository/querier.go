@@ -33,7 +33,9 @@ type Querier interface {
 	// journal life-stream projection queries (SPEC-06). Idempotency is structural via
 	// the (source_module, event_type, ref_id) unique. Journal rows are written in the
 	// entry's own transaction (P0.1a); system rows arrive via the event consumers.
-	// Idempotent insert — redelivery is a no-op (P0.1).
+	// Idempotent insert — redelivery is a no-op (P0.1). Both COALESCE branches are
+	// cast to jsonb: a nil payload param is an untyped NULL, so without the casts the
+	// result type resolves to text ('{}') and the jsonb column insert fails.
 	InsertStreamItem(ctx context.Context, arg InsertStreamItemParams) error
 	// Keyset page for the owner, newest first. A NULL @cursor_occurred_at starts at
 	// the top; the (occurred_at, id) keyset is backed by journal_entries_user_cursor_idx.

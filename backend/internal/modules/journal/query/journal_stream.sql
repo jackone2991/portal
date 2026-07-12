@@ -3,15 +3,17 @@
 -- entry's own transaction (P0.1a); system rows arrive via the event consumers.
 
 -- name: InsertStreamItem :exec
--- Idempotent insert — redelivery is a no-op (P0.1).
+-- Idempotent insert — redelivery is a no-op (P0.1). Both COALESCE branches are
+-- cast to jsonb: a nil payload param is an untyped NULL, so without the casts the
+-- result type resolves to text ('{}') and the jsonb column insert fails.
 INSERT INTO stream_items (user_id, source_module, event_type, ref_id, payload, occurred_at)
-VALUES ($1, $2, $3, $4, COALESCE(sqlc.narg('payload'), '{}'), $5)
+VALUES ($1, $2, $3, $4, COALESCE(sqlc.narg('payload')::jsonb, '{}'::jsonb), $5)
 ON CONFLICT (source_module, event_type, ref_id) DO NOTHING;
 
 -- name: UpsertStreamItem :exec
 -- Insert-or-refresh — a corrected payload/occurred_at must win (bank updated, P0.1).
 INSERT INTO stream_items (user_id, source_module, event_type, ref_id, payload, occurred_at)
-VALUES ($1, $2, $3, $4, COALESCE(sqlc.narg('payload'), '{}'), $5)
+VALUES ($1, $2, $3, $4, COALESCE(sqlc.narg('payload')::jsonb, '{}'::jsonb), $5)
 ON CONFLICT (source_module, event_type, ref_id)
 DO UPDATE SET payload = EXCLUDED.payload, occurred_at = EXCLUDED.occurred_at;
 

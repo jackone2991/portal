@@ -31,10 +31,13 @@ import (
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
 	"github.com/portal/backend/internal/modules/bank"
+	bankapi "github.com/portal/backend/internal/modules/bank/api"
 	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
 	"github.com/portal/backend/internal/modules/comic"
+	comicapi "github.com/portal/backend/internal/modules/comic/api"
 	comicrepo "github.com/portal/backend/internal/modules/comic/repository"
 	"github.com/portal/backend/internal/modules/journal"
+	journalapi "github.com/portal/backend/internal/modules/journal/api"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
@@ -166,10 +169,25 @@ func run() error {
 		return fmt.Errorf("storage: %w", err)
 	}
 
-	// media events publisher. No API-side subscriptions for SPEC-01 (media emits
-	// media:asset_ready / media:asset_deleted; consumers land in later specs) —
-	// publishing with no subscribers is a deliberate no-op.
+	// Event fan-out publisher. The wiring contract (platform/events doc) requires
+	// EVERY binary that EMITS an event to register that event's consumer edges on
+	// its OWN publisher — Publish looks up subscribers on the local table, so an
+	// unregistered edge here silently enqueues nothing. cmd/worker registers the
+	// same set; Subscribe is idempotent and no event is emitted by both binaries,
+	// so double-wiring can't duplicate delivery. Only edges for API-emitted events
+	// belong here (media:asset_ready + people:birthday_upcoming are worker-emitted).
 	mediaEvents := events.NewPublisher(asynqClient)
+	// media:asset_deleted (DELETE /assets/{id}) → comic reap + stream removal (2 consumers).
+	mediaEvents.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	mediaEvents.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
+	// media:playback_completed (progress→100%) → stream projection.
+	mediaEvents.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
+	// bank:transaction_* → life-stream projection (SPEC-06 P0.1b).
+	mediaEvents.Subscribe(bankapi.EventTransactionCreated, journalapi.TaskStreamBankCreated, asynq.Queue("default"))
+	mediaEvents.Subscribe(bankapi.EventTransactionUpdated, journalapi.TaskStreamBankUpdated, asynq.Queue("default"))
+	mediaEvents.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
+	// comic:chapter_published → life-stream projection.
+	mediaEvents.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
 
 	// DELETE /assets/{id} is gated by "owner OR assets:delete:any" — the extractor
 	// resolves the asset's owner via the media module (built below; the closure
