@@ -486,6 +486,32 @@ func (s *Service) ContinueItems(ctx context.Context, userID uuid.UUID, limit int
 	return s.repo.GetContinueItems(ctx, userID, limit)
 }
 
+// LookupAsset returns the cross-module projection of an asset by id (NOT
+// owner-scoped — the caller enforces ownership). (nil, nil) when the asset does
+// not exist, so a domain vertical validating a page/cover reference (SPEC-02
+// P0.1) gets a clean not-found rather than an error.
+func (s *Service) LookupAsset(ctx context.Context, id uuid.UUID) (*mediaapi.Asset, error) {
+	a, err := s.repo.GetAsset(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &mediaapi.Asset{
+		ID:         a.ID,
+		OwnerID:    a.OwnerID,
+		Kind:       mediaapi.AssetKind(a.Kind),
+		Status:     mediaapi.AssetStatus(a.Status),
+		MimeType:   a.MimeType,
+		SizeBytes:  a.SizeBytes,
+		DurationMs: a.DurationMs,
+		Width:      a.Width,
+		Height:     a.Height,
+		CreatedAt:  a.CreatedAt,
+	}, nil
+}
+
 // PutProgress saves the playback progress for a video asset (P0.2).
 // It clamps position_ms to duration_ms if duration exists.
 func (s *Service) PutProgress(ctx context.Context, ownerID, assetID uuid.UUID, positionMs int64) error {

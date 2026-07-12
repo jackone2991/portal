@@ -32,6 +32,8 @@ import (
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
 	"github.com/portal/backend/internal/modules/bank"
 	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
+	"github.com/portal/backend/internal/modules/comic"
+	comicrepo "github.com/portal/backend/internal/modules/comic/repository"
 	"github.com/portal/backend/internal/modules/journal"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
@@ -276,6 +278,48 @@ func run() error {
 		return fmt.Errorf("bank module: %w", err)
 	}
 
+	// ── Comic module (SPEC-02 reference vertical: /comics, /chapters, /pages) ──
+	// Owner-or-elevated mutations: the middlewares resolve the comic owner from
+	// the URL id via the module's extractors (comic must not import account/rbac).
+	engine := accountMod.Engine()
+	var comicMod *comic.Module
+	comicOwnerExtractor := func(resolve func(context.Context, uuid.UUID) (uuid.UUID, error)) func(*http.Request) (uuid.UUID, error) {
+		return func(r *http.Request) (uuid.UUID, error) {
+			id, err := uuid.Parse(chi.URLParam(r, "id"))
+			if err != nil {
+				return uuid.Nil, err
+			}
+			return resolve(r.Context(), id)
+		}
+	}
+	byComic := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByComic(ctx, id) })
+	byChapter := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByChapter(ctx, id) })
+	byPage := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByPage(ctx, id) })
+	comicMod, err = comic.New(comic.Deps{
+		Repo:        comicrepo.NewAdapter(pool),
+		Media:       mediaMod.API(),
+		Events:      mediaEvents,
+		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+		WriteComicMW:   accountmw.RequireOwnerOrPermission(engine, "comics:write:any", byComic),
+		WriteChapterMW: accountmw.RequireOwnerOrPermission(engine, "comics:write:any", byChapter),
+		DeleteComicMW:  accountmw.RequireOwnerOrPermission(engine, "comics:delete:any", byComic),
+		DeletePageMW:   accountmw.RequireOwnerOrPermission(engine, "comics:delete:any", byPage),
+		PublishMW:      accountmw.RequireOwnerOrPermission(engine, "comics:publish:any", byComic),
+	})
+	if err != nil {
+		return fmt.Errorf("comic module: %w", err)
+	}
+
 	// ── HTTP ────────────────────────────────────────────────────────
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
@@ -303,6 +347,7 @@ func run() error {
 		journalMod.MountHTTP(r)
 		opsMod.MountHTTP(r)
 		bankMod.MountHTTP(r)
+		comicMod.MountHTTP(r)
 	})
 
 	srv := &http.Server{

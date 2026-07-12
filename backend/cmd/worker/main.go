@@ -20,6 +20,9 @@ import (
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
 	"github.com/portal/backend/internal/modules/bank"
 	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
+	"github.com/portal/backend/internal/modules/comic"
+	comicapi "github.com/portal/backend/internal/modules/comic/api"
+	comicrepo "github.com/portal/backend/internal/modules/comic/repository"
 	"github.com/portal/backend/internal/modules/journal"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
@@ -163,6 +166,12 @@ func run() error {
 		return fmt.Errorf("bank module: %w", err)
 	}
 
+	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
+	comicMod, err := comic.New(comic.Deps{Repo: comicrepo.NewAdapter(pool)})
+	if err != nil {
+		return fmt.Errorf("comic module: %w", err)
+	}
+
 	// ── Ops module (worker side: nightly Postgres backup) ───────────
 	// The account module isn't constructed here, so audit records route through
 	// its repository adapter (a plain audit_log INSERT). BackupDatabaseURL MUST
@@ -183,6 +192,9 @@ func run() error {
 	// so the transcode's ready-transition actually reaches notify. The consumer
 	// task lands on the weight-1 "default" queue served by the light server below.
 	publisher.Subscribe(mediaworker.EventAssetReady, notifyapi.TaskOnAssetReady, asynq.Queue("default"))
+	// media:asset_deleted → comic:on_asset_deleted (SPEC-02 P0.6): reap dangling
+	// page/cover references when an asset is hard-deleted media-side.
+	publisher.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
 
 	// ── Heavy server: serialize the expensive decodes (P0.1 OOM guard) ──
 	// Its own low-concurrency pool consumes ONLY the "heavy" queue — queue
@@ -211,6 +223,7 @@ func run() error {
 	notifyMod.RegisterTasks(lightMux)
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
 	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
+	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)
 	lightMux.HandleFunc(notifyapi.TaskPurgeOld, func(ctx context.Context, _ *asynq.Task) error {
 		return notifyMod.PurgeOld(ctx)

@@ -174,3 +174,23 @@ linters:
           deny:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
+        module-comic-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/comic/**"
+          allow:
+            - github.com/portal/backend/internal/modules/comic
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/media/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/journal/api
+            - github.com/portal/backend/internal/modules/ops/api
+            - github.com/portal/backend/internal/modules/bank/api
+            - github.com/portal/backend/internal/modules/tenant/api
+            - github.com/portal/backend/internal/modules/movie/api
+            - github.com/portal/backend/internal/modules/music/api
+            - github.com/portal/backend/internal/modules/story/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."

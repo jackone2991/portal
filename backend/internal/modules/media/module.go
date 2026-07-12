@@ -70,7 +70,7 @@ func New(d Deps) (*Module, error) {
 		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events),
 		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events),
 		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo),
-		publicAPI:      mediaapi.NewImpl(svc.ContinueItems),
+		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset),
 	}, nil
 }
 

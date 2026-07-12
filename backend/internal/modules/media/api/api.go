@@ -70,14 +70,24 @@ type API interface {
 
 type Impl struct {
 	continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
+	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error)
 }
 
-func NewImpl(continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)) *Impl {
-	return &Impl{continueFn: continueFn}
+func NewImpl(
+	continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error),
+	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error),
+) *Impl {
+	return &Impl{continueFn: continueFn, getAssetFn: getAssetFn}
 }
 
-func (a *Impl) GetAsset(_ context.Context, _ uuid.UUID) (*Asset, error) {
-	return nil, nil // placeholder until repository adapter lands
+// GetAsset returns the safe cross-module projection of an asset, or (nil, nil)
+// if it does not exist — domain verticals (comic/movie/...) validate page/cover
+// references through this (kind image, status ready, owner match).
+func (a *Impl) GetAsset(ctx context.Context, id uuid.UUID) (*Asset, error) {
+	if a.getAssetFn != nil {
+		return a.getAssetFn(ctx, id)
+	}
+	return nil, nil
 }
 
 func (a *Impl) SignedURL(_ context.Context, _ uuid.UUID, _ time.Duration) (string, error) {

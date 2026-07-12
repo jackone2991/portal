@@ -96,6 +96,40 @@ type BankTransaction struct {
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Comic struct {
+	ID           pgtype.UUID        `json:"id"`
+	OwnerUserID  pgtype.UUID        `json:"owner_user_id"`
+	Title        string             `json:"title"`
+	Description  *string            `json:"description"`
+	CoverAssetID pgtype.UUID        `json:"cover_asset_id"`
+	Status       string             `json:"status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ComicChapter struct {
+	ID        pgtype.UUID        `json:"id"`
+	ComicID   pgtype.UUID        `json:"comic_id"`
+	Title     string             `json:"title"`
+	SortOrder int32              `json:"sort_order"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ComicPage struct {
+	ID        pgtype.UUID `json:"id"`
+	ChapterID pgtype.UUID `json:"chapter_id"`
+	AssetID   pgtype.UUID `json:"asset_id"`
+	SortOrder int32       `json:"sort_order"`
+}
+
+type ComicReadingProgress struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	ComicID   pgtype.UUID        `json:"comic_id"`
+	ChapterID pgtype.UUID        `json:"chapter_id"`
+	PageID    pgtype.UUID        `json:"page_id"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type JournalEntry struct {
 	ID         pgtype.UUID        `json:"id"`
 	UserID     pgtype.UUID        `json:"user_id"`
