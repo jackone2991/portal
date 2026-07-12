@@ -157,6 +157,44 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GET /stream?cursor=&limit= — the merged life-stream timeline (SPEC-06 P0.2).
+func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.currentUser(r.Context())
+	if !ok {
+		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		return
+	}
+	res, err := h.svc.Stream(r.Context(), uid, r.URL.Query().Get("cursor"), atoiSafe(r.URL.Query().Get("limit")))
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	items := make([]any, 0, len(res.Items))
+	for _, c := range res.Items {
+		m := map[string]any{
+			"id":            c.ID,
+			"source_module": c.SourceModule,
+			"event_type":    c.EventType,
+			"occurred_at":   c.OccurredAt.Format(time.RFC3339),
+		}
+		if c.SourceModule == "journal" {
+			m["body_md"] = c.BodyMd
+			m["mood"] = c.Mood
+		} else {
+			m["title"] = c.Title
+			if c.Href != "" {
+				m["href"] = c.Href
+			}
+		}
+		items = append(items, m)
+	}
+	out := map[string]any{"items": items}
+	if res.NextCursor != "" {
+		out["next_cursor"] = res.NextCursor
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
 // ── helpers ─────────────────────────────────────────────────────────
 
 func entryJSON(e Entry) map[string]any {

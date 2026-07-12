@@ -12,6 +12,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+
+	journalapi "github.com/portal/backend/internal/modules/journal/api"
 )
 
 // Deps are the journal module's dependencies. cmd/api fills the HTTP side (Repo,
@@ -65,11 +67,30 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.perm("journal:write:own")).Patch("/{id}", m.handler.Patch)
 		r.With(m.perm("journal:delete:own")).Delete("/{id}", m.handler.Delete)
 	})
+	// Life-stream merged read (SPEC-06 P0.2). Mounted at /stream, not /journal.
+	r.Route("/stream", func(r chi.Router) {
+		if m.deps.RequireAuth != nil {
+			r.Use(m.deps.RequireAuth)
+		}
+		r.With(m.perm("stream:read:own")).Get("/", m.handler.Stream)
+	})
 }
 
-// RegisterTasks registers no worker tasks at P0. The wiring exists so SPEC-06's
-// stream consumers can attach here without touching cmd/worker's shape.
-func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
+// RegisterTasks registers the life-stream consumers (SPEC-06 P0.1b). cmd/worker
+// subscribes each source event to the matching task on the shared publisher.
+func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
+	reg := func(task string, fn func(context.Context, []byte) error) {
+		mux.HandleFunc(task, func(ctx context.Context, t *asynq.Task) error { return fn(ctx, t.Payload()) })
+	}
+	reg(journalapi.TaskStreamAssetReady, m.svc.OnAssetReady)
+	reg(journalapi.TaskStreamPlaybackCompleted, m.svc.OnPlaybackCompleted)
+	reg(journalapi.TaskStreamAssetDeleted, m.svc.OnAssetDeleted)
+	reg(journalapi.TaskStreamBankCreated, m.svc.OnBankCreated)
+	reg(journalapi.TaskStreamBankUpdated, m.svc.OnBankUpdated)
+	reg(journalapi.TaskStreamBankDeleted, m.svc.OnBankDeleted)
+	reg(journalapi.TaskStreamBirthday, m.svc.OnBirthdayUpcoming)
+	reg(journalapi.TaskStreamComicPublished, m.svc.OnComicPublished)
+}
 
 func (m *Module) perm(code string) func(http.Handler) http.Handler {
 	if m.deps.RequirePermission == nil {

@@ -47,6 +47,7 @@ the naming *rules*, this file owns the *inventory*.
 | `notify:on_asset_ready` | `{asset_id, kind, owner_user_id, title, origin}` (consumer; subscribes to `media:asset_ready`) | notify | live (SPEC-04 P0.4) |
 | `notify:purge_old` | — (janitor sweep) | notify | planned (SPEC-04 P2; handler is a registered stub, unscheduled) |
 | `journal:backfill_stream` | — (one-shot stream seed, via `mediaapi`) | journal | planned (SPEC-06 P1.6) |
+| `journal:stream_*` | consumer tasks (asset_ready/playback_completed/asset_deleted, bank transaction_{created,updated,deleted}, birthday, comic_published) | journal | live (SPEC-06 P0.1b; journal owns `stream_items` and projects every producer event — `media:asset_deleted` now fans out to BOTH comic reap + stream removal) |
 | `people:scan_birthdays` | — (daily scan, instance-TZ) | people | live (SPEC-08 P0.4; daily 06:00 UTC on the shared scheduler; "default" queue) |
 | `ops:backup_database` | — (nightly pg_dump → storage) | ops | live (SPEC-09 P0.2; nightly 03:00 UTC on the shared scheduler; "default" queue) |
 | `ops:takeout` | `{export_id, user_id}` | ops | planned (SPEC-09 P1.7) |

@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -79,6 +80,37 @@ type Repository interface {
 	PatchEntry(ctx context.Context, in PatchEntryInput) (Entry, error)
 	// DeleteEntry is owner-scoped + idempotent; ErrEntryNotFound when nothing matched.
 	DeleteEntry(ctx context.Context, userID, id uuid.UUID) error
+
+	// ── life-stream projection (SPEC-06) ─────────────────────────────
+	// InsertStreamItem is idempotent (ON CONFLICT DO NOTHING); UpsertStreamItem
+	// refreshes payload+occurred_at (bank updated). DeleteStreamByRef removes all
+	// event_types for a ref (media:asset_deleted).
+	InsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error
+	UpsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error
+	DeleteStreamItem(ctx context.Context, sourceModule, eventType string, refID uuid.UUID) error
+	DeleteStreamByRef(ctx context.Context, sourceModule string, refID uuid.UUID) error
+	ListStream(ctx context.Context, in StreamListInput) ([]StreamItem, error)
+}
+
+// StreamItem is one row of the merged life-stream (SPEC-06). BodyMd/Mood are set
+// only for journal items (joined from journal_entries); nil for system items.
+type StreamItem struct {
+	ID           uuid.UUID
+	SourceModule string
+	EventType    string
+	RefID        uuid.UUID
+	Payload      json.RawMessage
+	OccurredAt   time.Time
+	BodyMd       *string
+	Mood         *string
+}
+
+// StreamListInput is the merged keyset read (P0.2). Zero CursorAt = first page.
+type StreamListInput struct {
+	UserID   uuid.UUID
+	CursorAt time.Time
+	CursorID uuid.UUID
+	Limit    int
 }
 
 // EventPublisher fans a domain event out to its subscribers (platform/events).

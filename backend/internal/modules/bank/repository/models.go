@@ -263,6 +263,16 @@ type RolePermission struct {
 	GrantedBy    pgtype.UUID        `json:"granted_by"`
 }
 
+type StreamItem struct {
+	ID           pgtype.UUID        `json:"id"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	SourceModule string             `json:"source_module"`
+	EventType    string             `json:"event_type"`
+	RefID        pgtype.UUID        `json:"ref_id"`
+	Payload      []byte             `json:"payload"`
+	OccurredAt   pgtype.Timestamptz `json:"occurred_at"`
+}
+
 type User struct {
 	ID                pgtype.UUID        `json:"id"`
 	OidcSubject       *string            `json:"oidc_subject"`

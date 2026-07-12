@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -12,13 +13,78 @@ import (
 	journalapi "github.com/portal/backend/internal/modules/journal/api"
 )
 
+type streamKey struct {
+	src, evt string
+	ref      uuid.UUID
+}
+type streamRow struct {
+	id         uuid.UUID
+	user       uuid.UUID
+	payload    json.RawMessage
+	occurredAt time.Time
+}
+
 // fakeRepo is an in-memory Repository for service tests.
 type fakeRepo struct {
 	rows      map[uuid.UUID]Entry
+	stream    map[streamKey]*streamRow
 	createErr error
 }
 
-func newFakeRepo() *fakeRepo { return &fakeRepo{rows: map[uuid.UUID]Entry{}} }
+func newFakeRepo() *fakeRepo {
+	return &fakeRepo{rows: map[uuid.UUID]Entry{}, stream: map[streamKey]*streamRow{}}
+}
+
+func (f *fakeRepo) InsertStreamItem(_ context.Context, user uuid.UUID, src, evt string, ref uuid.UUID, payload json.RawMessage, occ time.Time) error {
+	k := streamKey{src, evt, ref}
+	if _, ok := f.stream[k]; ok {
+		return nil // ON CONFLICT DO NOTHING
+	}
+	f.stream[k] = &streamRow{id: uuid.New(), user: user, payload: payload, occurredAt: occ}
+	return nil
+}
+func (f *fakeRepo) UpsertStreamItem(_ context.Context, user uuid.UUID, src, evt string, ref uuid.UUID, payload json.RawMessage, occ time.Time) error {
+	k := streamKey{src, evt, ref}
+	if r, ok := f.stream[k]; ok {
+		r.payload, r.occurredAt = payload, occ
+		return nil
+	}
+	f.stream[k] = &streamRow{id: uuid.New(), user: user, payload: payload, occurredAt: occ}
+	return nil
+}
+func (f *fakeRepo) DeleteStreamItem(_ context.Context, src, evt string, ref uuid.UUID) error {
+	delete(f.stream, streamKey{src, evt, ref})
+	return nil
+}
+func (f *fakeRepo) DeleteStreamByRef(_ context.Context, src string, ref uuid.UUID) error {
+	for k := range f.stream {
+		if k.src == src && k.ref == ref {
+			delete(f.stream, k)
+		}
+	}
+	return nil
+}
+func (f *fakeRepo) ListStream(_ context.Context, in StreamListInput) ([]StreamItem, error) {
+	var out []StreamItem
+	for k, r := range f.stream {
+		if r.user != in.UserID {
+			continue
+		}
+		out = append(out, StreamItem{ID: r.id, SourceModule: k.src, EventType: k.evt, RefID: k.ref, Payload: r.payload, OccurredAt: r.occurredAt})
+	}
+	for i := 0; i < len(out); i++ {
+		for j := i + 1; j < len(out); j++ {
+			if out[j].OccurredAt.After(out[i].OccurredAt) {
+				out[i], out[j] = out[j], out[i]
+			}
+		}
+	}
+	if in.Limit > 0 && len(out) > in.Limit {
+		out = out[:in.Limit]
+	}
+	return out, nil
+}
+func (f *fakeRepo) streamCount() int { return len(f.stream) }
 
 func (f *fakeRepo) CreateEntry(_ context.Context, in CreateEntryInput) (Entry, error) {
 	if f.createErr != nil {
@@ -201,3 +267,81 @@ func TestListCursorPaginates(t *testing.T) {
 }
 
 func ptr(s string) *string { return &s }
+
+// ── life-stream projection tests (SPEC-06) ────────────────────────────
+
+func newStreamSvc() (*Service, *fakeRepo) {
+	f := newFakeRepo()
+	return &Service{repo: f}, f
+}
+
+func TestStreamIdempotency(t *testing.T) {
+	svc, f := newStreamSvc()
+	ctx := context.Background()
+	payload := []byte(`{"asset_id":"` + uuid.NewString() + `","owner_user_id":"` + uuid.NewString() + `","title":"clip"}`)
+	_ = svc.OnAssetReady(ctx, payload)
+	_ = svc.OnAssetReady(ctx, payload) // Asynq redelivery
+	if f.streamCount() != 1 {
+		t.Fatalf("stream items = %d, want 1 (idempotent)", f.streamCount())
+	}
+}
+
+func TestStreamImportSkipped(t *testing.T) {
+	svc, f := newStreamSvc()
+	payload := []byte(`{"asset_id":"` + uuid.NewString() + `","owner_user_id":"` + uuid.NewString() + `","origin":"import"}`)
+	_ = svc.OnAssetReady(context.Background(), payload)
+	if f.streamCount() != 0 {
+		t.Fatalf("import asset produced %d items, want 0 (flood guard)", f.streamCount())
+	}
+}
+
+func TestStreamTransferCollapse(t *testing.T) {
+	svc, f := newStreamSvc()
+	ctx := context.Background()
+	user := uuid.NewString()
+	transfer := uuid.NewString()
+	leg := func() []byte {
+		return []byte(`{"transaction_id":"` + uuid.NewString() + `","user_id":"` + user + `","transfer_id":"` + transfer + `","is_transfer":true,"amount":5000000,"occurred_at":"2026-06-10"}`)
+	}
+	_ = svc.OnBankCreated(ctx, leg())
+	_ = svc.OnBankCreated(ctx, leg()) // the other leg, same transfer_id
+	if f.streamCount() != 1 {
+		t.Fatalf("two transfer legs → %d items, want 1 (collapsed on transfer_id)", f.streamCount())
+	}
+}
+
+func TestStreamAssetDeletedRemoves(t *testing.T) {
+	svc, f := newStreamSvc()
+	ctx := context.Background()
+	asset := uuid.NewString()
+	owner := uuid.NewString()
+	_ = svc.OnAssetReady(ctx, []byte(`{"asset_id":"`+asset+`","owner_user_id":"`+owner+`","title":"clip"}`))
+	_ = svc.OnPlaybackCompleted(ctx, []byte(`{"asset_id":"`+asset+`","user_id":"`+owner+`","title":"clip"}`))
+	if f.streamCount() != 2 {
+		t.Fatalf("setup = %d items, want 2", f.streamCount())
+	}
+	_ = svc.OnAssetDeleted(ctx, []byte(`{"asset_id":"`+asset+`","owner_user_id":"`+owner+`"}`))
+	if f.streamCount() != 0 {
+		t.Fatalf("after asset delete = %d items, want 0 (all event_types for the ref)", f.streamCount())
+	}
+}
+
+func TestStreamReadMapping(t *testing.T) {
+	svc, _ := newStreamSvc()
+	ctx := context.Background()
+	user := uuid.New()
+	person := uuid.NewString()
+	_ = svc.OnBirthdayUpcoming(ctx, []byte(`{"notice_id":"`+uuid.NewString()+`","person_id":"`+person+`","user_id":"`+user.String()+`","display_name":"Mẹ","days_until":3}`))
+
+	res, err := svc.Stream(ctx, user, "", 30)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Items) != 1 {
+		t.Fatalf("stream items = %d, want 1", len(res.Items))
+	}
+	c := res.Items[0]
+	if c.SourceModule != "people" || c.Title == "" || c.Href != "/people/"+person {
+		t.Fatalf("mapped card = %+v, want people title + /people/%s href", c, person)
+	}
+}

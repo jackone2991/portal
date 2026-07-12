@@ -23,19 +23,34 @@ type Querier interface {
 	// Owner-scoped delete. RETURNING id yields no row when the id is missing or owned
 	// by another user → the handler answers an idempotent 404; a matched row → 204.
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) (pgtype.UUID, error)
+	// Delete every row for a ref regardless of event_type (media:asset_deleted, P0.1).
+	DeleteStreamByRef(ctx context.Context, arg DeleteStreamByRefParams) error
+	DeleteStreamItem(ctx context.Context, arg DeleteStreamItemParams) error
 	// Owner-scoped fetch. A row owned by another user (or a missing id) returns no
 	// row → the adapter maps pgx.ErrNoRows to ErrEntryNotFound so the handler answers
 	// 404 (existence never leaks).
 	GetEntry(ctx context.Context, arg GetEntryParams) (JournalEntry, error)
+	// journal life-stream projection queries (SPEC-06). Idempotency is structural via
+	// the (source_module, event_type, ref_id) unique. Journal rows are written in the
+	// entry's own transaction (P0.1a); system rows arrive via the event consumers.
+	// Idempotent insert — redelivery is a no-op (P0.1).
+	InsertStreamItem(ctx context.Context, arg InsertStreamItemParams) error
 	// Keyset page for the owner, newest first. A NULL @cursor_occurred_at starts at
 	// the top; the (occurred_at, id) keyset is backed by journal_entries_user_cursor_idx.
 	ListEntriesByUserCursor(ctx context.Context, arg ListEntriesByUserCursorParams) ([]JournalEntry, error)
+	// Merged timeline. Journal items carry their entry body/mood (LEFT JOIN); system
+	// items leave those NULL and render compact from payload (P0.2).
+	ListStreamCursor(ctx context.Context, arg ListStreamCursorParams) ([]ListStreamCursorRow, error)
 	// Partial update of any subset of {body_md, mood, occurred_at}. A NULL arg leaves
 	// the column unchanged (COALESCE), so nil pointers from the service mean "keep".
 	// updated_at always advances; occurred_at is only moved when the caller edits it,
 	// so an entry keeps its timeline position unless occurred_at itself changed.
 	// Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
 	PatchEntry(ctx context.Context, arg PatchEntryParams) (JournalEntry, error)
+	// A journal edit moves its stream row to the edited position (P0.1a).
+	UpdateStreamOccurredAt(ctx context.Context, arg UpdateStreamOccurredAtParams) error
+	// Insert-or-refresh — a corrected payload/occurred_at must win (bank updated, P0.1).
+	UpsertStreamItem(ctx context.Context, arg UpsertStreamItemParams) error
 }
 
 var _ Querier = (*Queries)(nil)

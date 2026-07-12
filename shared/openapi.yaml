@@ -1580,6 +1580,29 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  # ── Life-stream home (SPEC-06) ───────────────────────────────────────────
+  /stream:
+    get:
+      tags: [stream]
+      summary: The merged life-stream timeline (journal + system events)
+      operationId: getStream
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
+      responses:
+        "200":
+          description: A cursor page of stream items
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/StreamItem" } }
+                  next_cursor: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2016,6 +2039,21 @@ components:
         next_occurrence: { type: string, format: date }
         days_until: { type: integer }
         age_turning: { type: integer, nullable: true }
+
+    # ── Life-stream home (SPEC-06) ──────────────────────────────────────────
+    StreamItem:
+      type: object
+      description: "One merged-timeline card. Journal items carry body_md/mood; system items a synthesized title/href."
+      required: [id, source_module, event_type, occurred_at]
+      properties:
+        id: { type: string, format: uuid }
+        source_module: { type: string, description: "journal | media | bank | comic | people" }
+        event_type: { type: string }
+        occurred_at: { type: string, format: date-time }
+        body_md: { type: string, nullable: true }
+        mood: { type: string, nullable: true }
+        title: { type: string, nullable: true }
+        href: { type: string, nullable: true }
 
     # ── RFC 7807 error contract (D-7 / D-29) ────────────────────────────────
     Problem:

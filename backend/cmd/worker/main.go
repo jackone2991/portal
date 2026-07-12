@@ -19,11 +19,13 @@ import (
 
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
 	"github.com/portal/backend/internal/modules/bank"
+	bankapi "github.com/portal/backend/internal/modules/bank/api"
 	bankrepo "github.com/portal/backend/internal/modules/bank/repository"
 	"github.com/portal/backend/internal/modules/comic"
 	comicapi "github.com/portal/backend/internal/modules/comic/api"
 	comicrepo "github.com/portal/backend/internal/modules/comic/repository"
 	"github.com/portal/backend/internal/modules/journal"
+	journalapi "github.com/portal/backend/internal/modules/journal/api"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
 	"github.com/portal/backend/internal/modules/media"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
@@ -204,6 +206,18 @@ func run() error {
 	// media:asset_deleted → comic:on_asset_deleted (SPEC-02 P0.6): reap dangling
 	// page/cover references when an asset is hard-deleted media-side.
 	publisher.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+
+	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
+	// and subscribes to every producer. media:asset_deleted now fans out to TWO
+	// consumers (comic reap + stream removal): the platform/events multi-consumer path.
+	publisher.Subscribe(mediaworker.EventAssetReady, journalapi.TaskStreamAssetReady, asynq.Queue("default"))
+	publisher.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
+	publisher.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
+	publisher.Subscribe(bankapi.EventTransactionCreated, journalapi.TaskStreamBankCreated, asynq.Queue("default"))
+	publisher.Subscribe(bankapi.EventTransactionUpdated, journalapi.TaskStreamBankUpdated, asynq.Queue("default"))
+	publisher.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
+	publisher.Subscribe(peopleapi.EventBirthdayUpcoming, journalapi.TaskStreamBirthday, asynq.Queue("default"))
+	publisher.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
 
 	// ── Heavy server: serialize the expensive decodes (P0.1 OOM guard) ──
 	// Its own low-concurrency pool consumes ONLY the "heavy" queue — queue

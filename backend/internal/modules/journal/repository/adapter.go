@@ -6,32 +6,60 @@ package journalrepo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/portal/backend/internal/modules/journal"
 )
 
-// Adapter wraps *Queries. Construct with NewAdapter.
+// journal projection identifiers (SPEC-06 P0.1a) — journal entry rows carry
+// these uniform source/event names even without bus delivery.
+const (
+	streamSourceJournal = "journal"
+	streamEventEntry    = "journal:entry_created"
+)
+
+// Adapter wraps *Queries and holds the pool for the transactional journal
+// projection (entry + stream row in one tx). Construct with NewAdapter.
 type Adapter struct {
-	q *Queries
+	pool *pgxpool.Pool
+	q    *Queries
 }
 
-// NewAdapter builds the adapter over any pgx-compatible handle (pool or tx).
-func NewAdapter(db DBTX) *Adapter { return &Adapter{q: New(db)} }
+// NewAdapter builds the adapter over the pool.
+func NewAdapter(pool *pgxpool.Pool) *Adapter { return &Adapter{pool: pool, q: New(pool)} }
 
+// CreateEntry inserts the entry AND its stream projection row in one transaction
+// (SPEC-06 P0.1a — kills the post-create refetch race; no bus, no redelivery).
 func (a *Adapter) CreateEntry(ctx context.Context, in journal.CreateEntryInput) (journal.Entry, error) {
-	row, err := a.q.CreateEntry(ctx, CreateEntryParams{
+	tx, err := a.pool.Begin(ctx)
+	if err != nil {
+		return journal.Entry{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	q := New(tx)
+	row, err := q.CreateEntry(ctx, CreateEntryParams{
 		UserID:     pgUUID(in.UserID),
 		BodyMd:     in.BodyMd,
 		OccurredAt: pgTime(in.OccurredAt),
 		Mood:       in.Mood,
 	})
 	if err != nil {
+		return journal.Entry{}, err
+	}
+	if err := q.InsertStreamItem(ctx, InsertStreamItemParams{
+		UserID: row.UserID, SourceModule: streamSourceJournal, EventType: streamEventEntry,
+		RefID: row.ID, OccurredAt: row.OccurredAt,
+	}); err != nil {
+		return journal.Entry{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return journal.Entry{}, err
 	}
 	return toEntry(row), nil
@@ -68,7 +96,15 @@ func (a *Adapter) ListByUserCursor(ctx context.Context, in journal.ListInput) ([
 	return out, nil
 }
 
+// PatchEntry updates the entry and moves its stream row to the edited
+// occurred_at (P0.1a — else a backdated edit leaves the item at a stale position).
 func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (journal.Entry, error) {
+	tx, err := a.pool.Begin(ctx)
+	if err != nil {
+		return journal.Entry{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	q := New(tx)
 	p := PatchEntryParams{
 		BodyMd: in.BodyMd,
 		Mood:   in.Mood,
@@ -78,25 +114,96 @@ func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (j
 	if in.OccurredAt != nil {
 		p.OccurredAt = pgTime(*in.OccurredAt)
 	}
-	row, err := a.q.PatchEntry(ctx, p)
+	row, err := q.PatchEntry(ctx, p)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return journal.Entry{}, journal.ErrEntryNotFound
 		}
 		return journal.Entry{}, err
 	}
+	if err := q.UpdateStreamOccurredAt(ctx, UpdateStreamOccurredAtParams{
+		SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: row.ID, OccurredAt: row.OccurredAt,
+	}); err != nil {
+		return journal.Entry{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return journal.Entry{}, err
+	}
 	return toEntry(row), nil
 }
 
+// DeleteEntry removes the entry and its stream row in one tx (P0.1a).
 func (a *Adapter) DeleteEntry(ctx context.Context, userID, id uuid.UUID) error {
-	_, err := a.q.DeleteEntry(ctx, DeleteEntryParams{ID: pgUUID(id), UserID: pgUUID(userID)})
+	tx, err := a.pool.Begin(ctx)
 	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	q := New(tx)
+	if _, err := q.DeleteEntry(ctx, DeleteEntryParams{ID: pgUUID(id), UserID: pgUUID(userID)}); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return journal.ErrEntryNotFound // idempotent: nothing matched → 404
 		}
 		return err
 	}
-	return nil
+	if err := q.DeleteStreamItem(ctx, DeleteStreamItemParams{
+		SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: pgUUID(id),
+	}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// ── stream projection (SPEC-06 P0.1b + P0.2) ─────────────────────────
+
+func (a *Adapter) InsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error {
+	return a.q.InsertStreamItem(ctx, InsertStreamItemParams{
+		UserID: pgUUID(userID), SourceModule: sourceModule, EventType: eventType,
+		RefID: pgUUID(refID), OccurredAt: pgTime(occurredAt), Payload: payloadOr(payload),
+	})
+}
+
+func (a *Adapter) UpsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error {
+	return a.q.UpsertStreamItem(ctx, UpsertStreamItemParams{
+		UserID: pgUUID(userID), SourceModule: sourceModule, EventType: eventType,
+		RefID: pgUUID(refID), OccurredAt: pgTime(occurredAt), Payload: payloadOr(payload),
+	})
+}
+
+func (a *Adapter) DeleteStreamItem(ctx context.Context, sourceModule, eventType string, refID uuid.UUID) error {
+	return a.q.DeleteStreamItem(ctx, DeleteStreamItemParams{SourceModule: sourceModule, EventType: eventType, RefID: pgUUID(refID)})
+}
+
+func (a *Adapter) DeleteStreamByRef(ctx context.Context, sourceModule string, refID uuid.UUID) error {
+	return a.q.DeleteStreamByRef(ctx, DeleteStreamByRefParams{SourceModule: sourceModule, RefID: pgUUID(refID)})
+}
+
+func (a *Adapter) ListStream(ctx context.Context, in journal.StreamListInput) ([]journal.StreamItem, error) {
+	p := ListStreamCursorParams{UserID: pgUUID(in.UserID), Lim: int32(in.Limit)}
+	if !in.CursorAt.IsZero() {
+		p.CursorOccurredAt = pgTime(in.CursorAt)
+		p.CursorID = pgUUID(in.CursorID)
+	}
+	rows, err := a.q.ListStreamCursor(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]journal.StreamItem, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, journal.StreamItem{
+			ID: uuidFrom(r.ID), SourceModule: r.SourceModule, EventType: r.EventType,
+			RefID: uuidFrom(r.RefID), Payload: json.RawMessage(r.Payload), OccurredAt: r.OccurredAt.Time,
+			BodyMd: r.BodyMd, Mood: r.Mood,
+		})
+	}
+	return out, nil
+}
+
+func payloadOr(p json.RawMessage) interface{} {
+	if len(p) == 0 {
+		return nil
+	}
+	return []byte(p)
 }
 
 // ── mapping helpers ─────────────────────────────────────────────────

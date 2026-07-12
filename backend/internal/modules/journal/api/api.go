@@ -22,6 +22,20 @@ import (
 // transaction commits. Payload: EntryCreatedEvent.
 const EventEntryCreated = "journal:entry_created"
 
+// Life-stream consumer task types (SPEC-06 P0.1b). journal (owner of stream_items)
+// subscribes one task per source event via the platform/events fan-out — a
+// distinct task per event since the payload carries no event discriminator.
+const (
+	TaskStreamAssetReady        = "journal:stream_asset_ready"
+	TaskStreamPlaybackCompleted = "journal:stream_playback_completed"
+	TaskStreamAssetDeleted      = "journal:stream_asset_deleted"
+	TaskStreamBankCreated       = "journal:stream_bank_created"
+	TaskStreamBankUpdated       = "journal:stream_bank_updated"
+	TaskStreamBankDeleted       = "journal:stream_bank_deleted"
+	TaskStreamBirthday          = "journal:stream_birthday"
+	TaskStreamComicPublished    = "journal:stream_comic_published"
+)
+
 // EntryCreatedEvent is the journal:entry_created payload (events.md): ids +
 // occurred_at only. A consumer fetches any further detail through journal's api/
 // once it grows a synchronous surface — payloads are not documents.

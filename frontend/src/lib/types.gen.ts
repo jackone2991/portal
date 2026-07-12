@@ -1015,6 +1015,23 @@ export interface paths {
         patch: operations["updatePerson"];
         trace?: never;
     };
+    "/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The merged life-stream timeline (journal + system events) */
+        get: operations["getStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1421,6 +1438,20 @@ export interface components {
             next_occurrence: string;
             days_until: number;
             age_turning?: number | null;
+        };
+        /** @description One merged-timeline card. Journal items carry body_md/mood; system items a synthesized title/href. */
+        StreamItem: {
+            /** Format: uuid */
+            id: string;
+            /** @description journal | media | bank | comic | people */
+            source_module: string;
+            event_type: string;
+            /** Format: date-time */
+            occurred_at: string;
+            body_md?: string | null;
+            mood?: string | null;
+            title?: string | null;
+            href?: string | null;
         };
         /**
          * @description RFC 7807 problem detail, served as `application/problem+json`. `type` is a
@@ -3687,6 +3718,33 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    getStream: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of stream items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["StreamItem"][];
+                        next_cursor?: string | null;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
 }
