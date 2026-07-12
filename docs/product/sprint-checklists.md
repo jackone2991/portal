@@ -12,7 +12,7 @@
 | 2 | Notifications + password reset | SPEC-04 | ~6 | ✅ **done + dogfooded live** — reset email via Mailpit → new-pass login, old-pass 401, token single-use; bell fan-out works (2026-07-12) |
 | 3 | Journal write path | SPEC-05 | ~4.5 | ✅ **done** — journal module CRUD dogfooded live (create/list/patch/delete/validation/emit-only); composer+home wired, build green |
 | 4 | ⚠ Backups before money | SPEC-09 P0 | ~4 | ✅ **done + dogfooded** — real pg_dump→MinIO, `make restore-drill` passes live, `/ops/status`=ok; found+fixed a seekable-stream bug live |
-| 5 | Continue rail | SPEC-07 | ~3 | ⬜ |
+| 5 | Continue rail | SPEC-07 | ~3 | 🔵 **code-complete** — build/vet/test green (9 pkgs) + `tsc` green, openapi drift regenerated; committed `89cc2b5`. **Live dogfood pending** (`make up` + resume a real video across two sessions) |
 | 6 | Finance ledger (biggest) | SPEC-03 | ~8.5 | ⬜ |
 | 7 | Comic vertical | SPEC-02 | ~4.5 | ⬜ |
 | 8 | People registry | SPEC-08 | ~4.5 | ⬜ |
@@ -131,16 +131,21 @@
 **Goal:** resume-where-you-left-off for video (the nightly retention surface).
 **Prereq:** none hard; comic leg joins after Sprint 7.
 
-- [ ] migration + queries + `mediaapi.Continue`
-- [ ] **`GET` progress read endpoint** — the resume read-path (was missing) [F029]
-- [ ] beacon endpoint + Vidstack throttle/pagehide wiring (Blob content-type, keepalive) + resume UX [F069]
-- [ ] NULL-duration resume: skip the 95% completion gate [F027][F068]
-- [ ] named `/library/media/[id]` playback route + href target [F028]
-- [ ] `cmd/api` aggregator + OpenAPI + contract test
-- [ ] beacon AC: no permission-based bypass [F070]
-- [ ] P1.5 completion latch + event *(defer optional)*
+> **Status: 🔵 code-complete** (committed `89cc2b5`). Backend `go build`/`vet`/`test`
+> green (9 pkgs); frontend `tsc --noEmit` green; api.gen.go + types.gen.ts
+> regenerated so the openapi drift gate stays green. **Live browser dogfood
+> (resume across two sessions via `make up`) still pending.**
 
-**Dogfood gate:** resume a real video across two sessions.
+- [x] migration + queries + `mediaapi.Continue` — `0013_media_playback_progress`, `query/media_progress.sql`, `mediaapi.Continue`/`ContinueItem`
+- [x] **`GET` progress read endpoint** — the resume read-path [F029] (`GET /assets/{id}/progress`)
+- [x] beacon endpoint + Vidstack throttle/pagehide wiring (Blob content-type, keepalive) + resume UX [F069] — `sendBeacon(Blob{application/json})` + keepalive fallback, `visibilitychange`/`pagehide`, ~10 s throttle
+- [x] NULL-duration resume: skip the 95% completion gate [F027][F068] — `shouldResume` resumes any ≥30 s position when `progress_pct` is null
+- [x] named `/library/media/[id]` playback route + href target [F028] — resolves `libraryMediaDetail` via the template registry
+- [~] `cmd/api` aggregator + OpenAPI + contract test — aggregator + OpenAPI done; predicate covered by service unit tests, **HTTP-level `/continue` schema contract test still TODO**
+- [x] beacon AC: no permission-based bypass [F070] — `PutProgress` is owner-scoped by construction; unit-tested (non-owner → 404/ErrForbidden)
+- [x] P1.5 completion latch + event *(defer optional)* — `completed_at` NULL→set latch, `media:playback_completed` emitted once; unit-tested
+
+**Dogfood gate:** resume a real video across two sessions. *(pending live run)*
 
 ---
 
