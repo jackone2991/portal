@@ -12,6 +12,7 @@ import { Icon } from "../../components/ui/Icon";
 import { Composer } from "../../components/composer/Composer";
 import { EntryCard } from "../../components/journal/EntryCard";
 import { Modal, BtnSecondary } from "../../components/popup/Modal";
+import { BirthdayCard } from "../../components/widget/BirthdayCard";
 import { ApiError } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
 import {
@@ -661,44 +662,9 @@ function PagesWidget() {
 }
 
 /* ── Right rail widgets ───────────────────────────────────────────── */
-
-function BirthdayCard() {
-  return (
-    <div
-      className="relative overflow-hidden rounded-xl p-5 text-white shadow-sm"
-      style={{ background: "linear-gradient(150deg, #8a63d2, #6d4bb8)" }}
-    >
-      {/* decorative blobs (≈ Olympus birthday widget) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-20"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 85% 15%, rgba(255,255,255,0.5), transparent 60%)," +
-            "radial-gradient(50% 50% at 20% 90%, rgba(255,255,255,0.25), transparent 60%)",
-        }}
-      />
-      <div className="relative">
-        <div className="flex items-start justify-between">
-          <Icon name="cupcake-icon" size={22} />
-          <button type="button" aria-label="Options">
-            <Icon name="three-dots-icon" size={12} />
-          </button>
-        </div>
-
-        <div className="mt-4">
-          <Avatar name="Marina Valentine" size={44} className="ring-2 ring-white/40" />
-        </div>
-
-        <p className="mt-3 text-sm text-white/80">Today is</p>
-        <h3 className="text-2xl font-bold leading-tight">Marina Valentine&apos;s Birthday!</h3>
-        <p className="mt-3 text-sm leading-relaxed text-white/80">
-          Leave her a message with your best wishes on her profile page!
-        </p>
-      </div>
-    </div>
-  );
-}
+/* BirthdayCard is the wired widget (SPEC-08 P0.5), imported from
+   components/widget/BirthdayCard — it queries /people/upcoming-birthdays and
+   renders nothing when there are none (empty-state degrade). */
 
 function FriendSuggestions() {
   const people = [

@@ -36,5 +36,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   // App entry + the auth pages. Next excludes _next/* assets automatically.
-  matcher: ["/", "/login", "/register", "/upload", "/library/:path*", "/bank/:path*"],
+  matcher: ["/", "/login", "/register", "/upload", "/library/:path*", "/bank/:path*", "/people/:path*"],
 };

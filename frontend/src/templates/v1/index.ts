@@ -14,6 +14,8 @@ import { DashboardView as BankDashboardView } from "./views/bank/DashboardView";
 import { TransactionsView as BankTransactionsView } from "./views/bank/TransactionsView";
 import { AccountsView as BankAccountsView } from "./views/bank/AccountsView";
 import { BudgetsView as BankBudgetsView } from "./views/bank/BudgetsView";
+import { PeopleIndexView } from "./views/people/PeopleIndexView";
+import { PersonDetailView } from "./views/people/PersonDetailView";
 
 /**
  * Template "v1" — React/Next.js port of the Crumina "Olympus" social theme at
@@ -40,5 +42,7 @@ export const v1: TemplateManifest = {
     bankTransactions: BankTransactionsView,
     bankAccounts: BankAccountsView,
     bankBudgets: BankBudgetsView,
+    peopleList: PeopleIndexView,
+    peopleDetail: PersonDetailView,
   },
 };

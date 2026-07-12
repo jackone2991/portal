@@ -38,7 +38,11 @@ export type ProblemType =
   | "comic/invalid-progress-target"
   | "comic/not-publishable"
   | "comic/validation"
-  | "comic/invalid-cursor";
+  | "comic/invalid-cursor"
+  | "people/person-not-found"
+  | "people/invalid-birthday"
+  | "people/validation"
+  | "people/invalid-cursor";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -72,6 +76,10 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "comic/not-publishable": "Every chapter needs at least one page before publishing.",
   "comic/validation": "Please check the form and try again.",
   "comic/invalid-cursor": "Couldn't load the next page — please refresh.",
+  "people/person-not-found": "This person doesn't exist or was already removed.",
+  "people/invalid-birthday": "Enter a real date — day and month together, year optional.",
+  "people/validation": "Please check the form and try again.",
+  "people/invalid-cursor": "Couldn't load the next page — please refresh.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
