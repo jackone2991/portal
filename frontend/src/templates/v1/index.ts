@@ -5,6 +5,8 @@ import { HomeView } from "./views/home/HomeView";
 import { LoginView } from "./views/auth/LoginView";
 import { RegisterView } from "./views/auth/RegisterView";
 import { ComicIndexView } from "./views/library/comic/ComicIndexView";
+import { ComicDetailView } from "./views/library/comic/ComicDetailView";
+import { ComicReaderView } from "./views/library/comic/ComicReaderView";
 import { NovelDetailView } from "./views/library/novel/NovelDetailView";
 import { MediaIndexView } from "./views/library/media/MediaIndexView";
 import { MediaDetailView } from "./views/library/media/MediaDetailView";
@@ -29,6 +31,8 @@ export const v1: TemplateManifest = {
     login: LoginView,
     register: RegisterView,
     libraryComic: ComicIndexView,
+    libraryComicDetail: ComicDetailView,
+    libraryComicReader: ComicReaderView,
     libraryNovelDetail: NovelDetailView,
     libraryMedia: MediaIndexView,
     libraryMediaDetail: MediaDetailView,

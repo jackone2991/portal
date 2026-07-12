@@ -38,6 +38,10 @@ export interface TemplateManifest {
     register: ComponentType;
     /** `views/library/commic/index.blade.php` (typo "commic" fixed) */
     libraryComic: ComponentType;
+    /** SPEC-02 P0.5 — comic detail (chapters, continue, creator controls). */
+    libraryComicDetail: ComponentType<{ id: string }>;
+    /** SPEC-02 P0.3 — comic reader (vertical scroll + resume). */
+    libraryComicReader: ComponentType<{ id: string; chapterId: string }>;
     /** `views/library/novel/detail.blade.php` */
     libraryNovelDetail: ComponentType<{ id: string }>;
     /** SPEC-01 P0.4 ([F006]) — no Blade equivalent; media library grid. */

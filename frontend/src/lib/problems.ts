@@ -31,7 +31,14 @@ export type ProblemType =
   | "bank/direction-kind-mismatch"
   | "bank/invalid-amount"
   | "bank/validation"
-  | "bank/invalid-cursor";
+  | "bank/invalid-cursor"
+  | "comic/not-found"
+  | "comic/invalid-cover-asset"
+  | "comic/invalid-page-asset"
+  | "comic/invalid-progress-target"
+  | "comic/not-publishable"
+  | "comic/validation"
+  | "comic/invalid-cursor";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -58,6 +65,13 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "bank/invalid-amount": "Enter an amount greater than zero.",
   "bank/validation": "Please check the form and try again.",
   "bank/invalid-cursor": "Couldn't load the next page — please refresh.",
+  "comic/not-found": "This comic doesn't exist or was already removed.",
+  "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
+  "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
+  "comic/invalid-progress-target": "Couldn't save your place on this comic.",
+  "comic/not-publishable": "Every chapter needs at least one page before publishing.",
+  "comic/validation": "Please check the form and try again.",
+  "comic/invalid-cursor": "Couldn't load the next page — please refresh.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
