@@ -1,7 +1,9 @@
 package comicrepo
 
-// Adapter bridges the sqlc-generated Queries to comic.Repository. It holds the
-// pool so reorder operations (DEFERRABLE sort_order uniques) run in one pgx tx.
+// Adapter bridges the sqlc-generated Queries to comic.Repository. Reorder
+// operations (DEFERRABLE sort_order uniques) run through an injected RunInTx so
+// they execute on the request's tenant-scoped tx when one is open (else a fresh
+// pool tx).
 
 import (
 	"context"
@@ -11,17 +13,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/portal/backend/internal/modules/comic"
 )
 
 type Adapter struct {
-	pool *pgxpool.Pool
-	q    *Queries
+	q       *Queries
+	runInTx func(context.Context, func(pgx.Tx) error) error
 }
 
-func NewAdapter(pool *pgxpool.Pool) *Adapter { return &Adapter{pool: pool, q: New(pool)} }
+// NewAdapter builds the adapter over a DBTX (the context-aware platform/db.Conn)
+// plus a RunInTx that opens/reuses the request transaction for reorder methods.
+func NewAdapter(db DBTX, runInTx func(context.Context, func(pgx.Tx) error) error) *Adapter {
+	return &Adapter{q: New(db), runInTx: runInTx}
+}
 
 var _ comic.Repository = (*Adapter)(nil)
 
@@ -183,20 +188,17 @@ func (a *Adapter) DeleteChapter(ctx context.Context, id uuid.UUID) error {
 }
 
 func (a *Adapter) ReorderChapters(ctx context.Context, comicID uuid.UUID, orderedIDs []uuid.UUID) error {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-	for i, id := range orderedIDs {
-		if err := q.UpdateChapterOrder(ctx, UpdateChapterOrderParams{
-			ID: pgUUID(id), SortOrder: int32((i + 1) * 10), ComicID: pgUUID(comicID),
-		}); err != nil {
-			return err
+	return a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		for i, id := range orderedIDs {
+			if err := q.UpdateChapterOrder(ctx, UpdateChapterOrderParams{
+				ID: pgUUID(id), SortOrder: int32((i + 1) * 10), ComicID: pgUUID(comicID),
+			}); err != nil {
+				return err
+			}
 		}
-	}
-	return tx.Commit(ctx)
+		return nil
+	})
 }
 
 func (a *Adapter) OwnerAndComicByChapter(ctx context.Context, chapterID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
@@ -242,20 +244,17 @@ func (a *Adapter) DeletePage(ctx context.Context, id uuid.UUID) error {
 }
 
 func (a *Adapter) ReorderPages(ctx context.Context, chapterID uuid.UUID, orderedIDs []uuid.UUID) error {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-	for i, id := range orderedIDs {
-		if err := q.UpdatePageOrder(ctx, UpdatePageOrderParams{
-			ID: pgUUID(id), SortOrder: int32((i + 1) * 10), ChapterID: pgUUID(chapterID),
-		}); err != nil {
-			return err
+	return a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		for i, id := range orderedIDs {
+			if err := q.UpdatePageOrder(ctx, UpdatePageOrderParams{
+				ID: pgUUID(id), SortOrder: int32((i + 1) * 10), ChapterID: pgUUID(chapterID),
+			}); err != nil {
+				return err
+			}
 		}
-	}
-	return tx.Commit(ctx)
+		return nil
+	})
 }
 
 func (a *Adapter) OwnerByPage(ctx context.Context, pageID uuid.UUID) (uuid.UUID, uuid.UUID, error) {

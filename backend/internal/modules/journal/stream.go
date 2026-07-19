@@ -265,10 +265,23 @@ func (s *Service) bankUpsert(ctx context.Context, payload []byte, update bool) e
 	if !ok {
 		return nil
 	}
-	if update {
-		return s.repo.UpsertStreamItem(ctx, userID, "bank", "bank:transaction_created", refID, payload, occurredAt)
+	return s.runScoped(ctx, userID, func(ctx context.Context) error {
+		if update {
+			return s.repo.UpsertStreamItem(ctx, userID, "bank", "bank:transaction_created", refID, payload, occurredAt)
+		}
+		return s.repo.InsertStreamItem(ctx, userID, "bank", "bank:transaction_created", refID, payload, occurredAt)
+	})
+}
+
+// runScoped runs a worker-side stream INSERT inside the target user's tenant
+// scope (ADR-07 Increment 1b) so stream_items.tenant_id's DEFAULT current_setting
+// is populated. A nil runInUserTenant (API side — already in a request tenant tx —
+// or tests) runs fn directly.
+func (s *Service) runScoped(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+	if s.runInUserTenant == nil {
+		return fn(ctx)
 	}
-	return s.repo.InsertStreamItem(ctx, userID, "bank", "bank:transaction_created", refID, payload, occurredAt)
+	return s.runInUserTenant(ctx, userID, fn)
 }
 
 // bankRef pulls (user, ref_id, occurred_at) from a bank event payload. ref_id is
@@ -312,5 +325,7 @@ func (s *Service) insertSystem(ctx context.Context, payload []byte, userStr, mod
 	if err != nil {
 		return nil
 	}
-	return s.repo.InsertStreamItem(ctx, user, module, eventType, ref, payload, occurredAt)
+	return s.runScoped(ctx, user, func(ctx context.Context) error {
+		return s.repo.InsertStreamItem(ctx, user, module, eventType, ref, payload, occurredAt)
+	})
 }

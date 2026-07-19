@@ -24,6 +24,11 @@ const (
 type Service struct {
 	repo   Repository
 	events EventPublisher // optional: journal:entry_created (emit-only)
+	// runInUserTenant scopes a worker-side stream INSERT to the target user's
+	// personal org (ADR-07 Increment 1b): resolve the org, open BeginTenantScope so
+	// stream_items.tenant_id's DEFAULT current_setting is populated. nil on the API
+	// side (already inside a request tenant tx) and in tests → the fn runs directly.
+	runInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
 }
 
 // CreateParams is the service-level create request. HasAssetIDs records whether

@@ -32,6 +32,10 @@ type Deps struct {
 	// P0.3). 0 = uncapped.
 	EmailHourlyCap int
 
+	// RunInUserTenant (worker only) scopes the in-app INSERT to the recipient's
+	// personal org (ADR-07 1b). nil on the API read side.
+	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
 	// HTTP side (api).
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -52,12 +56,13 @@ func New(d Deps) (*Module, error) {
 		return nil, errors.New("notify: Repo is required")
 	}
 	svc := &Service{
-		repo:           d.Repo,
-		enqueue:        d.Enqueuer,
-		email:          d.Email,
-		users:          d.Users,
-		redis:          d.Redis,
-		emailHourlyCap: d.EmailHourlyCap,
+		repo:            d.Repo,
+		enqueue:         d.Enqueuer,
+		email:           d.Email,
+		users:           d.Users,
+		redis:           d.Redis,
+		emailHourlyCap:  d.EmailHourlyCap,
+		runInUserTenant: d.RunInUserTenant,
 	}
 	return &Module{
 		deps:    d,

@@ -132,10 +132,62 @@ sql:
         emit_exact_table_names: false
         emit_pointers_for_null_types: true
 
-  # ── Re-enable per module when it has query files ──────────────────
-  # - engine: "postgresql"
-  #   queries: "internal/modules/tenant/query"
-  #   schema:  "db/migrations"
-  #   gen: { go: { package: "tenantrepo", out: "internal/modules/tenant/repository", sql_package: "pgx/v5", emit_json_tags: true, emit_interface: true, emit_pointers_for_null_types: true } }
-  #
-  # - movie / music / story / comic: same shape as above.
+  # tenant — organizations + memberships (0018). ADR-07 Phase 1 (tenancy control plane).
+  - engine: "postgresql"
+    queries: "internal/modules/tenant/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "tenantrepo"
+        out:     "internal/modules/tenant/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  # movie — movies table (0021). First domain vertical over media video assets.
+  - engine: "postgresql"
+    queries: "internal/modules/movie/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "movierepo"
+        out:     "internal/modules/movie/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  # music — music_tracks table (0022). Tracks over media audio assets.
+  - engine: "postgresql"
+    queries: "internal/modules/music/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "musicrepo"
+        out:     "internal/modules/music/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true
+
+  # story — stories + story_chapters (0023). Text-chapter vertical.
+  - engine: "postgresql"
+    queries: "internal/modules/story/query"
+    schema:  "db/migrations"
+    gen:
+      go:
+        package: "storyrepo"
+        out:     "internal/modules/story/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_pointers_for_null_types: true

@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -30,6 +29,12 @@ import (
 	"github.com/portal/backend/internal/modules/media"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
 	mediaworker "github.com/portal/backend/internal/modules/media/worker"
+	"github.com/portal/backend/internal/modules/movie"
+	movieapi "github.com/portal/backend/internal/modules/movie/api"
+	movierepo "github.com/portal/backend/internal/modules/movie/repository"
+	"github.com/portal/backend/internal/modules/music"
+	musicapi "github.com/portal/backend/internal/modules/music/api"
+	musicrepo "github.com/portal/backend/internal/modules/music/repository"
 	"github.com/portal/backend/internal/modules/notify"
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	notifyrepo "github.com/portal/backend/internal/modules/notify/repository"
@@ -39,8 +44,13 @@ import (
 	"github.com/portal/backend/internal/modules/people"
 	peopleapi "github.com/portal/backend/internal/modules/people/api"
 	peoplerepo "github.com/portal/backend/internal/modules/people/repository"
+	"github.com/portal/backend/internal/modules/story"
+	storyapi "github.com/portal/backend/internal/modules/story/api"
+	storyrepo "github.com/portal/backend/internal/modules/story/repository"
+	tenantrepo "github.com/portal/backend/internal/modules/tenant/repository"
 	"github.com/portal/backend/internal/platform/audit"
 	"github.com/portal/backend/internal/platform/config"
+	platformdb "github.com/portal/backend/internal/platform/db"
 	"github.com/portal/backend/internal/platform/events"
 	"github.com/portal/backend/internal/platform/storage"
 )
@@ -88,11 +98,42 @@ func run() error {
 	ctx := context.Background()
 
 	// ── Infrastructure the pipeline needs ───────────────────────────
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	pool, err := platformdb.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("db pool: %w", err)
 	}
 	defer pool.Close()
+	// tdb wraps the pool with tenant-scoping helpers; conn is the context-aware
+	// DBTX handed to every repository. The worker's periodic sweeps run without a
+	// tenant tx today (cross-tenant) — that moves to cmd/sysjobs in a later increment.
+	tdb := platformdb.New(pool)
+	conn := tdb.Conn()
+
+	// runInUserTenant scopes a worker INSERT into a tenant-scoped table to the
+	// target user's personal org (ADR-07 Increment 1b): resolve the org, open
+	// BeginTenantScope so tenant_id's DEFAULT current_setting is populated. Wired
+	// into the journal stream consumers below; the notify/media/people worker
+	// inserts + scan_birthdays adopt the same closure when their 1b lands.
+	tenantStore := tenantrepo.NewAdapter(conn)
+	runInUserTenant := func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+		org, err := tenantStore.PersonalOrg(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if org == nil {
+			return fmt.Errorf("worker: no personal org for user %s", userID)
+		}
+		tx, err := tdb.BeginTenantScope(ctx, org.ID)
+		if err != nil {
+			return err
+		}
+		ctx = platformdb.WithTx(ctx, tx)
+		if err := fn(ctx); err != nil {
+			_ = tx.Rollback(ctx)
+			return err
+		}
+		return tx.Commit(ctx)
+	}
 
 	store, err := storage.NewS3(storage.Config{
 		Endpoint:     cfg.S3Endpoint,
@@ -120,14 +161,14 @@ func run() error {
 
 	mediaMod, err := media.New(media.Deps{
 		Store:    store,
-		Repo:     mediarepo.NewAdapter(pool),
+		Repo:     mediarepo.NewAdapter(conn),
 		Enqueuer: asynqClient,
 		Events:   publisher,
 	})
 	if err != nil {
 		return fmt.Errorf("media module: %w", err)
 	}
-	acctRepo := accountrepo.NewAdapter(pool)
+	acctRepo := accountrepo.NewAdapter(conn)
 
 	// ── Notify module (delivery side) ───────────────────────────────
 	// Cache/queue client for the global email send-ceiling counter.
@@ -145,12 +186,13 @@ func run() error {
 	}
 
 	notifyMod, err := notify.New(notify.Deps{
-		Repo:           notifyrepo.NewAdapter(pool),
-		Enqueuer:       asynqClient,
-		Email:          emailSender,
-		Users:          recipientResolver{repo: acctRepo},
-		Redis:          rdb,
-		EmailHourlyCap: cfg.NotifyEmailHourlyCap,
+		Repo:            notifyrepo.NewAdapter(conn),
+		Enqueuer:        asynqClient,
+		Email:           emailSender,
+		Users:           recipientResolver{repo: acctRepo},
+		Redis:           rdb,
+		EmailHourlyCap:  cfg.NotifyEmailHourlyCap,
+		RunInUserTenant: runInUserTenant,
 	})
 	if err != nil {
 		return fmt.Errorf("notify module: %w", err)
@@ -158,7 +200,7 @@ func run() error {
 
 	// ── Journal module (worker side) ────────────────────────────────
 	// No P0 tasks — the wiring exists so SPEC-06's stream consumers attach here.
-	journalMod, err := journal.New(journal.Deps{Repo: journalrepo.NewAdapter(pool)})
+	journalMod, err := journal.New(journal.Deps{Repo: journalrepo.NewAdapter(conn, tdb.RunInTx), RunInUserTenant: runInUserTenant})
 	if err != nil {
 		return fmt.Errorf("journal module: %w", err)
 	}
@@ -166,19 +208,37 @@ func run() error {
 	// ── Bank module (worker side) ───────────────────────────────────
 	// No P0 tasks — the wiring exists so SPEC-06's stream consumer of
 	// bank:transaction_* attaches here without touching cmd/worker's shape.
-	bankMod, err := bank.New(bank.Deps{Repo: bankrepo.NewAdapter(pool)})
+	bankMod, err := bank.New(bank.Deps{Repo: bankrepo.NewAdapter(conn, tdb.RunInTx)})
 	if err != nil {
 		return fmt.Errorf("bank module: %w", err)
 	}
 
 	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
-	comicMod, err := comic.New(comic.Deps{Repo: comicrepo.NewAdapter(pool)})
+	comicMod, err := comic.New(comic.Deps{Repo: comicrepo.NewAdapter(conn, tdb.RunInTx)})
 	if err != nil {
 		return fmt.Errorf("comic module: %w", err)
 	}
 
+	// ── Movie module (worker side: media:asset_deleted consumer) ────
+	movieMod, err := movie.New(movie.Deps{Repo: movierepo.NewAdapter(conn)})
+	if err != nil {
+		return fmt.Errorf("movie module: %w", err)
+	}
+
+	musicMod, err := music.New(music.Deps{Repo: musicrepo.NewAdapter(conn)})
+	if err != nil {
+		return fmt.Errorf("music module: %w", err)
+	}
+
+	// ── Story module (worker side: media:asset_deleted consumer) ────
+	// Chapters reorder in a tx (tdb.RunInTx), like comic.
+	storyMod, err := story.New(story.Deps{Repo: storyrepo.NewAdapter(conn, tdb.RunInTx)})
+	if err != nil {
+		return fmt.Errorf("story module: %w", err)
+	}
+
 	// ── People module (worker side: daily birthday scan, P0.4) ──────
-	peopleMod, err := people.New(people.Deps{Repo: peoplerepo.NewAdapter(pool), Events: publisher})
+	peopleMod, err := people.New(people.Deps{Repo: peoplerepo.NewAdapter(conn), Events: publisher, RunInUserTenant: runInUserTenant})
 	if err != nil {
 		return fmt.Errorf("people module: %w", err)
 	}
@@ -188,7 +248,7 @@ func run() error {
 	// its repository adapter (a plain audit_log INSERT). BackupDatabaseURL MUST
 	// point at Postgres directly (5432), not PgBouncer (SPEC-09 P0.2).
 	opsMod, err := ops.New(ops.Deps{
-		Repo:              opsrepo.NewAdapter(pool),
+		Repo:              opsrepo.NewAdapter(conn),
 		Store:             store,
 		Events:            publisher,
 		Audit:             audit.New(acctRepo),
@@ -206,6 +266,9 @@ func run() error {
 	// media:asset_deleted → comic:on_asset_deleted (SPEC-02 P0.6): reap dangling
 	// page/cover references when an asset is hard-deleted media-side.
 	publisher.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	publisher.Subscribe(media.EventAssetDeleted, movieapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	publisher.Subscribe(media.EventAssetDeleted, musicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	publisher.Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted, asynq.Queue("default"))
 
 	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
 	// and subscribes to every producer. media:asset_deleted now fans out to TWO
@@ -248,6 +311,9 @@ func run() error {
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
 	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
 	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
+	movieMod.RegisterTasks(lightMux)   // movie:on_asset_deleted (media:asset_deleted consumer)
+	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted (media:asset_deleted consumer)
+	storyMod.RegisterTasks(lightMux)   // story:on_asset_deleted (media:asset_deleted consumer)
 	peopleMod.RegisterTasks(lightMux)  // people:scan_birthdays (daily birthday scan, P0.4)
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)
 	lightMux.HandleFunc(notifyapi.TaskPurgeOld, func(ctx context.Context, _ *asynq.Task) error {

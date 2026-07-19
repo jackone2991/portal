@@ -1,4 +1,5 @@
-// Package api is the public surface of the tenant module.
+// Package api is the public surface of the tenant module (ADR-07 Phase 1).
+// Other modules import ONLY this package to interact with the tenant domain.
 package api
 
 import (
@@ -9,33 +10,62 @@ import (
 
 // Organization is a small projection safe to share across modules.
 type Organization struct {
-	ID     uuid.UUID
-	Code   string
-	Name   string
-	Tier   string
-	Active bool
+	ID      uuid.UUID
+	Kind    string // 'org' | 'household' | 'personal'
+	Slug    string
+	Name    string
+	OwnerID uuid.UUID
+}
+
+// Store is the persistence the tenant API needs. The repository adapter
+// (tenantrepo) implements it; wiring injects one concrete value. It is defined
+// here (not in the module package) so api.Impl can depend on it without an
+// import cycle.
+type Store interface {
+	GetByID(ctx context.Context, id uuid.UUID) (*Organization, error)
+	GetBySlug(ctx context.Context, slug string) (*Organization, error)
+	PersonalOrg(ctx context.Context, userID uuid.UUID) (*Organization, error)
+	GetOrCreatePersonalOrg(ctx context.Context, userID uuid.UUID, name string) (*Organization, error)
+	ListForUser(ctx context.Context, userID uuid.UUID) ([]Organization, error)
+	IsMember(ctx context.Context, userID, orgID uuid.UUID) (bool, error)
 }
 
 // API is what other modules import to interact with the tenant domain.
 type API interface {
-	// GetOrganization returns (nil, nil) if the org does not exist or is
-	// suspended. Callers MUST handle the nil case explicitly.
+	// GetOrganization returns (nil, nil) if the org does not exist.
 	GetOrganization(ctx context.Context, id uuid.UUID) (*Organization, error)
-
-	// IsMember reports whether the user belongs to the org. Returns
-	// false on any error (fail-closed).
+	// IsMember reports whether the user belongs to the org (fail-closed).
 	IsMember(ctx context.Context, userID, orgID uuid.UUID) (bool, error)
+	// PersonalOrg returns the user's personal org, or (nil, nil) if absent.
+	PersonalOrg(ctx context.Context, userID uuid.UUID) (*Organization, error)
+	// GetOrCreatePersonalOrg returns the user's personal org, creating it (+ an
+	// owner membership) if absent. Used at first tenant resolution for a user
+	// that registered after the 0018 backfill.
+	GetOrCreatePersonalOrg(ctx context.Context, userID uuid.UUID, name string) (*Organization, error)
 }
 
-// Impl is the concrete implementation. NewImpl is internal to wiring.
-type Impl struct{}
+// Impl implements API over a Store.
+type Impl struct{ store Store }
 
-func NewImpl() *Impl { return &Impl{} }
+// NewImpl constructs the API implementation over a Store.
+func NewImpl(store Store) *Impl { return &Impl{store: store} }
 
-func (a *Impl) GetOrganization(_ context.Context, _ uuid.UUID) (*Organization, error) {
-	return nil, nil // placeholder until 0004_tenant_organizations migration lands
+func (a *Impl) GetOrganization(ctx context.Context, id uuid.UUID) (*Organization, error) {
+	return a.store.GetByID(ctx, id)
 }
 
-func (a *Impl) IsMember(_ context.Context, _, _ uuid.UUID) (bool, error) {
-	return false, nil
+func (a *Impl) IsMember(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	ok, err := a.store.IsMember(ctx, userID, orgID)
+	if err != nil {
+		return false, nil // fail-closed
+	}
+	return ok, nil
+}
+
+func (a *Impl) PersonalOrg(ctx context.Context, userID uuid.UUID) (*Organization, error) {
+	return a.store.PersonalOrg(ctx, userID)
+}
+
+func (a *Impl) GetOrCreatePersonalOrg(ctx context.Context, userID uuid.UUID, name string) (*Organization, error) {
+	return a.store.GetOrCreatePersonalOrg(ctx, userID, name)
 }

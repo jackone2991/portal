@@ -22,6 +22,18 @@ type Service struct {
 	repo   Repository
 	events EventPublisher
 	loc    *time.Location
+	// runInUserTenant scopes the worker notice INSERT to the person's owner org
+	// (ADR-07 1b) so people_birthday_notices.tenant_id's DEFAULT is set. nil → direct.
+	runInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+}
+
+// runScoped runs fn in the target user's tenant scope (ADR-07 1b) on the worker;
+// a nil runInUserTenant (API side / tests) runs fn directly.
+func (s *Service) runScoped(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+	if s.runInUserTenant == nil {
+		return fn(ctx)
+	}
+	return s.runInUserTenant(ctx, userID, fn)
 }
 
 type ListResult struct {
@@ -149,7 +161,9 @@ func (s *Service) ScanBirthdays(ctx context.Context, now time.Time) error {
 		occ, daysUntil := nextOccurrence(now, r.Month, r.Day, s.loc)
 		for _, T := range birthdayThresholds {
 			if daysUntil >= 0 && daysUntil <= T {
-				if err := s.repo.InsertNotice(ctx, r.PersonID, occ.Year(), T); err != nil {
+				if err := s.runScoped(ctx, r.UserID, func(ctx context.Context) error {
+					return s.repo.InsertNotice(ctx, r.PersonID, occ.Year(), T)
+				}); err != nil {
 					log.Warn().Err(err).Str("person", r.PersonID.String()).Msg("people: insert notice failed")
 				}
 			}

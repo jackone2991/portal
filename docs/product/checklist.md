@@ -51,7 +51,7 @@ Updated: 2026-07-07 · HEAD `c4e7fa2` · DB schema **v7** (`0007_media_assets`) 
 - [x] Fix OpenAPI drift: `/auth/login` → POST local-password, removed `/auth/callback`, added `/auth/register`; aligned the assets surface (presigned PUT, `/source`, `/complete`, list, public HLS) to the handlers (ADR-06).
 - [x] Doc `docs/api/versioning.md` (additive-only + RFC 9745/8594 deprecation) [D-31].
 - [x] Conventions doc `frontend/CLAUDE.md` (state boundary D-32 + RSC decision tree D-33).
-- [~] Extend CI per [D-9]: `release.yml` (GHCR image build/push on tag), migration-roundtrip (up·down·up), security (`govulncheck` enforced + `pnpm audit` advisory) — **done**; openapi handler-drift still blocked on wiring codegen (`internal/handler/api.gen.go` not generated yet).
+- [~] Extend CI per [D-9]: the OpenAPI **codegen drift gate** landed in `ci.yml` ([ADR-10](../adr/10-openapi-contract-direction.md)). **Still deferred to Phase 0.5** ([ADR-01](../adr/01-v1-scope-cut.md), [ADR-05](../adr/05-phase0-wiring-order.md)): `release.yml` (GHCR image build/push on tag), migration-roundtrip (up·down·up), `govulncheck` + `pnpm audit`, and multi-arch build — **none are in `ci.yml` today**. Codegen-vs-hand-written-handler decision still open (backlog §9).
 - ~~Surface `amr`/`acr`/`auth_time` claims from the IdP~~ → retired by ADR-06 (D-27.r1).
 - ~~`user_oidc_roles` table + OIDC group→role sync~~ → retired by ADR-06, dropped by `0006` (D-26.r1).
 - ~~Server-only API client `api-server.ts` + `/auth/refresh-and-return` route~~ → replaced by `SessionKeeper` client-side refresh + `portal_session` middleware gate (D-34.r1). *(`api-server.ts` remains future work)*

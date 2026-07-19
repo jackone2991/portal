@@ -24,6 +24,11 @@ type Deps struct {
 	Repo   Repository
 	Events EventPublisher // optional: journal:entry_created emit (nil → no-op)
 
+	// RunInUserTenant (worker only) scopes stream-projection INSERTs to the target
+	// user's personal org (ADR-07 1b). nil on the API side — those requests already
+	// run inside a tenant tx (RequireTenant).
+	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
 	CurrentUser       func(context.Context) (uuid.UUID, bool)
@@ -41,7 +46,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("journal: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, events: d.Events}
+	svc := &Service{repo: d.Repo, events: d.Events, runInUserTenant: d.RunInUserTenant}
 	return &Module{
 		deps:    d,
 		svc:     svc,

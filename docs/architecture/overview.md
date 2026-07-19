@@ -133,12 +133,19 @@ i18n keys (D-7).
 
 ## 5. Risks & watch items
 
-- **Boundary enforcement is convention, not CI.** depguard/golangci-lint is
-  planned but absent; until then the module rules hold only by discipline.
-  Mitigation candidate: add depguard when the third module lands (comic).
-- **OpenAPI drift.** The contract file already lags the code (stale
-  `/auth/callback`, missing `/auth/register`); every spec requires fixing drift in
-  the same PR, but the codegen-vs-handwritten decision (backlog §9) is still open.
+- **Boundary enforcement is CI-enforced** (was: convention only). A depguard
+  ruleset ([backend/.golangci.yml](../../backend/.golangci.yml)) runs in the
+  `lint` job of [ci.yml](../../.github/workflows/ci.yml): cross-module internal
+  imports, `platform/` importing a module, and non-`account` code importing
+  `account/rbac` all fail the build. Rules depguard can't express still bind by
+  discipline.
+- **OpenAPI drift.** The auth-path drift is fixed — the spec now carries
+  `/auth/register` and no `/auth/callback` (reconciled per
+  [ADR-10](../adr/10-openapi-contract-direction.md)), and ci.yml adds a codegen
+  drift gate. Residual risk: handlers are still **hand-written**, so one can
+  diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-02
+  documents `PATCH {status}`); the codegen-vs-handwritten decision (backlog §9)
+  is still open.
 - **Public-ish HLS + finance data on one box.** Acceptable at n=1; both flip with
   the first real second user (playback ACL; revisit admin wildcard reach into
   `bank:*` — flagged in SPEC-03 and ADR-08).

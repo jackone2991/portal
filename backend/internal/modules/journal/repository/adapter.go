@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/portal/backend/internal/modules/journal"
 )
@@ -25,44 +24,47 @@ const (
 	streamEventEntry    = "journal:entry_created"
 )
 
-// Adapter wraps *Queries and holds the pool for the transactional journal
+// Adapter wraps *Queries plus an injected RunInTx for the transactional journal
 // projection (entry + stream row in one tx). Construct with NewAdapter.
 type Adapter struct {
-	pool *pgxpool.Pool
-	q    *Queries
+	q       *Queries
+	runInTx func(context.Context, func(pgx.Tx) error) error
 }
 
-// NewAdapter builds the adapter over the pool.
-func NewAdapter(pool *pgxpool.Pool) *Adapter { return &Adapter{pool: pool, q: New(pool)} }
+// NewAdapter builds the adapter over a DBTX (the context-aware platform/db.Conn)
+// plus a RunInTx that opens/reuses the request transaction.
+func NewAdapter(db DBTX, runInTx func(context.Context, func(pgx.Tx) error) error) *Adapter {
+	return &Adapter{q: New(db), runInTx: runInTx}
+}
 
 // CreateEntry inserts the entry AND its stream projection row in one transaction
 // (SPEC-06 P0.1a — kills the post-create refetch race; no bus, no redelivery).
 func (a *Adapter) CreateEntry(ctx context.Context, in journal.CreateEntryInput) (journal.Entry, error) {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return journal.Entry{}, err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-	row, err := q.CreateEntry(ctx, CreateEntryParams{
-		UserID:     pgUUID(in.UserID),
-		BodyMd:     in.BodyMd,
-		OccurredAt: pgTime(in.OccurredAt),
-		Mood:       in.Mood,
+	var entry journal.Entry
+	err := a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		row, err := q.CreateEntry(ctx, CreateEntryParams{
+			UserID:     pgUUID(in.UserID),
+			BodyMd:     in.BodyMd,
+			OccurredAt: pgTime(in.OccurredAt),
+			Mood:       in.Mood,
+		})
+		if err != nil {
+			return err
+		}
+		if err := q.InsertStreamItem(ctx, InsertStreamItemParams{
+			UserID: row.UserID, SourceModule: streamSourceJournal, EventType: streamEventEntry,
+			RefID: row.ID, OccurredAt: row.OccurredAt,
+		}); err != nil {
+			return err
+		}
+		entry = toEntry(row)
+		return nil
 	})
 	if err != nil {
 		return journal.Entry{}, err
 	}
-	if err := q.InsertStreamItem(ctx, InsertStreamItemParams{
-		UserID: row.UserID, SourceModule: streamSourceJournal, EventType: streamEventEntry,
-		RefID: row.ID, OccurredAt: row.OccurredAt,
-	}); err != nil {
-		return journal.Entry{}, err
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return journal.Entry{}, err
-	}
-	return toEntry(row), nil
+	return entry, nil
 }
 
 func (a *Adapter) GetEntry(ctx context.Context, userID, id uuid.UUID) (journal.Entry, error) {
@@ -99,59 +101,56 @@ func (a *Adapter) ListByUserCursor(ctx context.Context, in journal.ListInput) ([
 // PatchEntry updates the entry and moves its stream row to the edited
 // occurred_at (P0.1a — else a backdated edit leaves the item at a stale position).
 func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (journal.Entry, error) {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return journal.Entry{}, err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-	p := PatchEntryParams{
-		BodyMd: in.BodyMd,
-		Mood:   in.Mood,
-		ID:     pgUUID(in.ID),
-		UserID: pgUUID(in.UserID),
-	}
-	if in.OccurredAt != nil {
-		p.OccurredAt = pgTime(*in.OccurredAt)
-	}
-	row, err := q.PatchEntry(ctx, p)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return journal.Entry{}, journal.ErrEntryNotFound
+	var entry journal.Entry
+	err := a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		p := PatchEntryParams{
+			BodyMd: in.BodyMd,
+			Mood:   in.Mood,
+			ID:     pgUUID(in.ID),
+			UserID: pgUUID(in.UserID),
 		}
+		if in.OccurredAt != nil {
+			p.OccurredAt = pgTime(*in.OccurredAt)
+		}
+		row, err := q.PatchEntry(ctx, p)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return journal.ErrEntryNotFound
+			}
+			return err
+		}
+		if err := q.UpdateStreamOccurredAt(ctx, UpdateStreamOccurredAtParams{
+			SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: row.ID, OccurredAt: row.OccurredAt,
+		}); err != nil {
+			return err
+		}
+		entry = toEntry(row)
+		return nil
+	})
+	if err != nil {
 		return journal.Entry{}, err
 	}
-	if err := q.UpdateStreamOccurredAt(ctx, UpdateStreamOccurredAtParams{
-		SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: row.ID, OccurredAt: row.OccurredAt,
-	}); err != nil {
-		return journal.Entry{}, err
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return journal.Entry{}, err
-	}
-	return toEntry(row), nil
+	return entry, nil
 }
 
 // DeleteEntry removes the entry and its stream row in one tx (P0.1a).
 func (a *Adapter) DeleteEntry(ctx context.Context, userID, id uuid.UUID) error {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-	if _, err := q.DeleteEntry(ctx, DeleteEntryParams{ID: pgUUID(id), UserID: pgUUID(userID)}); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return journal.ErrEntryNotFound // idempotent: nothing matched → 404
+	return a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		if _, err := q.DeleteEntry(ctx, DeleteEntryParams{ID: pgUUID(id), UserID: pgUUID(userID)}); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return journal.ErrEntryNotFound // idempotent: nothing matched → 404
+			}
+			return err
 		}
-		return err
-	}
-	if err := q.DeleteStreamItem(ctx, DeleteStreamItemParams{
-		SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: pgUUID(id),
-	}); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+		if err := q.DeleteStreamItem(ctx, DeleteStreamItemParams{
+			SourceModule: streamSourceJournal, EventType: streamEventEntry, RefID: pgUUID(id),
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // ── stream projection (SPEC-06 P0.1b + P0.2) ─────────────────────────

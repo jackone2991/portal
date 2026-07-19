@@ -1,9 +1,10 @@
 package bankrepo
 
-// Adapter bridges the sqlc-generated Queries to bank.Repository. It holds the
-// pool so transactional operations (transfers, category delete-with-reassign)
-// run in a pgx tx. All pgtype ↔ domain juggling lives here so the module code
-// stays sqlc-agnostic. cmd/api and cmd/worker construct it with NewAdapter(pool).
+// Adapter bridges the sqlc-generated Queries to bank.Repository. Multi-statement
+// operations (transfers, category delete-with-reassign) run through an injected
+// RunInTx so they execute on the request's tenant-scoped tx when one is open
+// (else a fresh pool tx). All pgtype ↔ domain juggling lives here so the module
+// code stays sqlc-agnostic.
 
 import (
 	"context"
@@ -13,17 +14,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/portal/backend/internal/modules/bank"
 )
 
 type Adapter struct {
-	pool *pgxpool.Pool
-	q    *Queries
+	q       *Queries
+	runInTx func(context.Context, func(pgx.Tx) error) error
 }
 
-func NewAdapter(pool *pgxpool.Pool) *Adapter { return &Adapter{pool: pool, q: New(pool)} }
+// NewAdapter builds the adapter over a DBTX (the context-aware platform/db.Conn)
+// plus a RunInTx that opens/reuses the request transaction for multi-statement
+// methods. cmd/api and cmd/worker construct it once each.
+func NewAdapter(db DBTX, runInTx func(context.Context, func(pgx.Tx) error) error) *Adapter {
+	return &Adapter{q: New(db), runInTx: runInTx}
+}
 
 var _ bank.Repository = (*Adapter)(nil)
 
@@ -173,29 +178,25 @@ func (a *Adapter) CountCategoryChildren(ctx context.Context, id uuid.UUID) (int6
 }
 
 func (a *Adapter) DeleteCategory(ctx context.Context, userID, id uuid.UUID, reassignTo *uuid.UUID) error {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-
-	if reassignTo != nil {
-		if err := q.ReassignCategoryTransactions(ctx, ReassignCategoryTransactionsParams{
-			TargetID: pgUUID(*reassignTo),
-			FromID:   pgUUID(id),
-			UserID:   pgUUID(userID),
-		}); err != nil {
+	return a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		if reassignTo != nil {
+			if err := q.ReassignCategoryTransactions(ctx, ReassignCategoryTransactionsParams{
+				TargetID: pgUUID(*reassignTo),
+				FromID:   pgUUID(id),
+				UserID:   pgUUID(userID),
+			}); err != nil {
+				return err
+			}
+		}
+		if _, err := q.DeleteCategory(ctx, DeleteCategoryParams{ID: pgUUID(id), UserID: pgUUID(userID)}); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return bank.ErrCategoryNotFound
+			}
 			return err
 		}
-	}
-	if _, err := q.DeleteCategory(ctx, DeleteCategoryParams{ID: pgUUID(id), UserID: pgUUID(userID)}); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return bank.ErrCategoryNotFound
-		}
-		return err
-	}
-	return tx.Commit(ctx)
+		return nil
+	})
 }
 
 // ── transactions ─────────────────────────────────────────────────────
@@ -280,32 +281,31 @@ func (a *Adapter) RecentTransactions(ctx context.Context, userID uuid.UUID, limi
 // ── transfers (transactional) ────────────────────────────────────────
 
 func (a *Adapter) CreateTransfer(ctx context.Context, in bank.TransferInput) ([]bank.Transaction, error) {
-	tx, err := a.pool.Begin(ctx)
+	var out []bank.Transaction
+	err := a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		tid := in.TransferID
+		debit, err := q.CreateTransaction(ctx, createTxParams(bank.CreateTransactionInput{
+			UserID: in.UserID, AccountID: in.FromAccount, Amount: in.Amount,
+			Direction: bank.DirDebit, TransferID: &tid, OccurredAt: in.OccurredAt, Note: in.Note,
+		}))
+		if err != nil {
+			return err
+		}
+		credit, err := q.CreateTransaction(ctx, createTxParams(bank.CreateTransactionInput{
+			UserID: in.UserID, AccountID: in.ToAccount, Amount: in.Amount,
+			Direction: bank.DirCredit, TransferID: &tid, OccurredAt: in.OccurredAt, Note: in.Note,
+		}))
+		if err != nil {
+			return err
+		}
+		out = []bank.Transaction{toTransaction(debit), toTransaction(credit)}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-
-	tid := in.TransferID
-	debit, err := q.CreateTransaction(ctx, createTxParams(bank.CreateTransactionInput{
-		UserID: in.UserID, AccountID: in.FromAccount, Amount: in.Amount,
-		Direction: bank.DirDebit, TransferID: &tid, OccurredAt: in.OccurredAt, Note: in.Note,
-	}))
-	if err != nil {
-		return nil, err
-	}
-	credit, err := q.CreateTransaction(ctx, createTxParams(bank.CreateTransactionInput{
-		UserID: in.UserID, AccountID: in.ToAccount, Amount: in.Amount,
-		Direction: bank.DirCredit, TransferID: &tid, OccurredAt: in.OccurredAt, Note: in.Note,
-	}))
-	if err != nil {
-		return nil, err
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return nil, err
-	}
-	return []bank.Transaction{toTransaction(debit), toTransaction(credit)}, nil
+	return out, nil
 }
 
 func (a *Adapter) ListTransferLegs(ctx context.Context, userID, transferID uuid.UUID) ([]bank.Transaction, error) {
@@ -317,41 +317,39 @@ func (a *Adapter) ListTransferLegs(ctx context.Context, userID, transferID uuid.
 }
 
 func (a *Adapter) UpdateTransfer(ctx context.Context, in bank.UpdateTransferInput) ([]bank.Transaction, error) {
-	tx, err := a.pool.Begin(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	q := New(tx)
-
-	legs, err := q.ListTransferLegs(ctx, ListTransferLegsParams{TransferID: pgUUID(in.TransferID), UserID: pgUUID(in.UserID)})
-	if err != nil {
-		return nil, err
-	}
-	if len(legs) == 0 {
-		return nil, bank.ErrTransactionNotFound
-	}
-	amt := in.Amount
-	out := make([]bank.Transaction, 0, len(legs))
-	for _, leg := range legs {
-		acct := in.FromAccount
-		if leg.Direction == bank.DirCredit {
-			acct = in.ToAccount
-		}
-		updated, err := q.UpdateTransaction(ctx, UpdateTransactionParams{
-			AccountID:  pgUUID(acct),
-			Amount:     &amt,
-			OccurredAt: pgDate(in.OccurredAt),
-			Note:       in.Note,
-			ID:         leg.ID,
-			UserID:     pgUUID(in.UserID),
-		})
+	var out []bank.Transaction
+	err := a.runInTx(ctx, func(tx pgx.Tx) error {
+		q := New(tx)
+		legs, err := q.ListTransferLegs(ctx, ListTransferLegsParams{TransferID: pgUUID(in.TransferID), UserID: pgUUID(in.UserID)})
 		if err != nil {
-			return nil, err
+			return err
 		}
-		out = append(out, toTransaction(updated))
-	}
-	if err := tx.Commit(ctx); err != nil {
+		if len(legs) == 0 {
+			return bank.ErrTransactionNotFound
+		}
+		amt := in.Amount
+		out = make([]bank.Transaction, 0, len(legs))
+		for _, leg := range legs {
+			acct := in.FromAccount
+			if leg.Direction == bank.DirCredit {
+				acct = in.ToAccount
+			}
+			updated, err := q.UpdateTransaction(ctx, UpdateTransactionParams{
+				AccountID:  pgUUID(acct),
+				Amount:     &amt,
+				OccurredAt: pgDate(in.OccurredAt),
+				Note:       in.Note,
+				ID:         leg.ID,
+				UserID:     pgUUID(in.UserID),
+			})
+			if err != nil {
+				return err
+			}
+			out = append(out, toTransaction(updated))
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 	return out, nil

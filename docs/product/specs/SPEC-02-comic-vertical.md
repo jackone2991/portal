@@ -371,15 +371,17 @@ if and when its roadmap needs them.
 | GET | `/api/v1/comics/mine?cursor=` | `comics:write:own` | incl. drafts, status badges; cursor paging |
 | POST | `/api/v1/comics` | `comics:write:own` | |
 | GET | `/api/v1/comics/{id}` | published: `comics:read`; own draft: owner | |
-| PATCH | `/api/v1/comics/{id}` | owner, or `comics:write:any` (`RequireOwnerOrPermission`) | a `{status}` publish/unpublish change additionally requires owner+`comics:publish:own` or `comics:publish:any` |
+| PATCH | `/api/v1/comics/{id}` | owner, or `comics:write:any` (`RequireOwnerOrPermission`) | update title/description/cover only (`ComicPatch`) — **status is NOT changed here** |
+| POST | `/api/v1/comics/{id}/publish` | owner+`comics:publish:own`, or `comics:publish:any` | **dedicated endpoint** (not a `PATCH {status}`); 200 `Comic`, or 422 `comic/not-publishable` listing offending chapters |
+| POST | `/api/v1/comics/{id}/unpublish` | owner+`comics:publish:own`, or `comics:publish:any` | back to `draft`; 200 `Comic` |
 | DELETE | `/api/v1/comics/{id}` | owner, or `comics:delete:any` | |
 | POST | `/api/v1/comics/{id}/chapters` | owner, or `comics:write:any` | |
 | PATCH/DELETE | `/api/v1/chapters/{id}` | owner, or `comics:write:any` | |
 | PUT | `/api/v1/comics/{id}/chapters:order` | owner, or `comics:write:any` | `[chapter_id…]` — the §6 reorder pattern's "chapter equivalent", previously missing here |
-| POST | `/api/v1/chapters/{id}/pages` | owner, or `comics:write:any` | `[{asset_id, sort_order}]` |
+| POST | `/api/v1/chapters/{id}/pages` | owner, or `comics:write:any` | body `{pages: [{asset_id, sort_order}]}` (`PagesCreate`) — **wrapped object, not a bare array** |
 | PUT | `/api/v1/chapters/{id}/pages:order` | owner, or `comics:write:any` | `[page_id…]` |
 | DELETE | `/api/v1/pages/{id}` | owner, or `comics:delete:any` (moderation) | removes the page row only; the media asset is untouched (P0.1) |
-| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `[{page_id, url(medium), width, height}]` — draft invisibility applies here too (404, not 403) |
+| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `{pages: [{page_id, url(medium), width, height}]}` — draft invisibility applies here too (404, not 403) |
 | PUT | `/api/v1/comics/{id}/progress` | authenticated | `{chapter_id, page_id}`; membership-validated (P0.4) |
 | POST | `/api/v1/chapters/{id}/pages:import-zip` | owner, or `comics:write:any` | P1.7; body `{upload_ref: <storage key>}` (the zip is pre-uploaded via a dedicated presigned PUT — P1.7) |
 

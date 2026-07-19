@@ -265,14 +265,18 @@ func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		AccountID  string  `json:"account_id"`
-		CategoryID string  `json:"category_id"`
-		Amount     int64   `json:"amount"`
-		Direction  string  `json:"direction"`
-		OccurredAt string  `json:"occurred_at"`
-		Note       *string `json:"note"`
+		AccountID  string      `json:"account_id"`
+		CategoryID string      `json:"category_id"`
+		Amount     json.Number `json:"amount"`
+		Direction  string      `json:"direction"`
+		OccurredAt string      `json:"occurred_at"`
+		Note       *string     `json:"note"`
 	}
 	if !decode(w, r, &body) {
+		return
+	}
+	amount, ok := parseAmount(w, body.Amount)
+	if !ok {
 		return
 	}
 	accountID, err := uuid.Parse(body.AccountID)
@@ -296,7 +300,7 @@ func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	tx, err := h.svc.CreateTransaction(r.Context(), CreateTransactionInput{
 		UserID: uid, AccountID: accountID, CategoryID: categoryID,
-		Amount: body.Amount, Direction: body.Direction, OccurredAt: occurred, Note: body.Note,
+		Amount: amount, Direction: body.Direction, OccurredAt: occurred, Note: body.Note,
 	})
 	if err != nil {
 		writeBankErr(w, err)
@@ -315,17 +319,21 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		AccountID  *string `json:"account_id"`
-		CategoryID *string `json:"category_id"`
-		Amount     *int64  `json:"amount"`
-		Direction  *string `json:"direction"`
-		OccurredAt *string `json:"occurred_at"`
-		Note       *string `json:"note"`
+		AccountID  *string      `json:"account_id"`
+		CategoryID *string      `json:"category_id"`
+		Amount     *json.Number `json:"amount"`
+		Direction  *string      `json:"direction"`
+		OccurredAt *string      `json:"occurred_at"`
+		Note       *string      `json:"note"`
 	}
 	if !decode(w, r, &body) {
 		return
 	}
-	in := UpdateTransactionInput{UserID: uid, ID: id, Amount: body.Amount, Direction: body.Direction, Note: body.Note}
+	amount, ok := parseOptAmount(w, body.Amount)
+	if !ok {
+		return
+	}
+	in := UpdateTransactionInput{UserID: uid, ID: id, Amount: amount, Direction: body.Direction, Note: body.Note}
 	if body.AccountID != nil {
 		aid, err := uuid.Parse(*body.AccountID)
 		if err != nil {
@@ -382,13 +390,17 @@ func (h *Handler) CreateTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		FromAccount string  `json:"from_account"`
-		ToAccount   string  `json:"to_account"`
-		Amount      int64   `json:"amount"`
-		OccurredAt  string  `json:"occurred_at"`
-		Note        *string `json:"note"`
+		FromAccount string      `json:"from_account"`
+		ToAccount   string      `json:"to_account"`
+		Amount      json.Number `json:"amount"`
+		OccurredAt  string      `json:"occurred_at"`
+		Note        *string     `json:"note"`
 	}
 	if !decode(w, r, &body) {
+		return
+	}
+	amount, ok := parseAmount(w, body.Amount)
+	if !ok {
 		return
 	}
 	from, err := uuid.Parse(body.FromAccount)
@@ -407,7 +419,7 @@ func (h *Handler) CreateTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	legs, err := h.svc.CreateTransfer(r.Context(), TransferParams{
-		UserID: uid, FromAccount: from, ToAccount: to, Amount: body.Amount, OccurredAt: occurred, Note: body.Note,
+		UserID: uid, FromAccount: from, ToAccount: to, Amount: amount, OccurredAt: occurred, Note: body.Note,
 	})
 	if err != nil {
 		writeBankErr(w, err)
@@ -426,16 +438,20 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		FromAccount *string `json:"from_account"`
-		ToAccount   *string `json:"to_account"`
-		Amount      *int64  `json:"amount"`
-		OccurredAt  *string `json:"occurred_at"`
-		Note        *string `json:"note"`
+		FromAccount *string      `json:"from_account"`
+		ToAccount   *string      `json:"to_account"`
+		Amount      *json.Number `json:"amount"`
+		OccurredAt  *string      `json:"occurred_at"`
+		Note        *string      `json:"note"`
 	}
 	if !decode(w, r, &body) {
 		return
 	}
-	p := UpdateTransferParams{UserID: uid, TransferID: tid, Amount: body.Amount, Note: body.Note}
+	amount, ok := parseOptAmount(w, body.Amount)
+	if !ok {
+		return
+	}
+	p := UpdateTransferParams{UserID: uid, TransferID: tid, Amount: amount, Note: body.Note}
 	if body.FromAccount != nil {
 		id, err := uuid.Parse(*body.FromAccount)
 		if err != nil {
@@ -514,11 +530,15 @@ func (h *Handler) SetBudget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		CategoryID string `json:"category_id"`
-		Month      string `json:"month"`
-		Amount     *int64 `json:"amount"` // 0 or null deletes
+		CategoryID string       `json:"category_id"`
+		Month      string       `json:"month"`
+		Amount     *json.Number `json:"amount"` // 0 or null deletes
 	}
 	if !decode(w, r, &body) {
+		return
+	}
+	amountPtr, ok := parseOptAmount(w, body.Amount)
+	if !ok {
 		return
 	}
 	categoryID, err := uuid.Parse(body.CategoryID)
@@ -532,8 +552,8 @@ func (h *Handler) SetBudget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var amount int64
-	if body.Amount != nil {
-		amount = *body.Amount
+	if amountPtr != nil {
+		amount = *amountPtr
 	}
 	if err := h.svc.SetBudget(r.Context(), uid, categoryID, month, amount); err != nil {
 		writeBankErr(w, err)
@@ -684,6 +704,32 @@ func decode(w http.ResponseWriter, r *http.Request, v any) bool {
 		return false
 	}
 	return true
+}
+
+// parseAmount converts a required JSON amount (integer minor units — SPEC-03) to
+// int64. A fractional/out-of-range value is rejected as 422 bank/invalid-amount
+// and returns ok=false (the handler has already written the response — return).
+func parseAmount(w http.ResponseWriter, n json.Number) (int64, bool) {
+	v, err := n.Int64()
+	if err != nil {
+		writeBankErr(w, ErrInvalidAmount)
+		return 0, false
+	}
+	return v, true
+}
+
+// parseOptAmount is parseAmount for an optional field: nil (absent/null) stays nil
+// with ok=true; a present non-integer value is rejected as 422 bank/invalid-amount.
+func parseOptAmount(w http.ResponseWriter, n *json.Number) (*int64, bool) {
+	if n == nil {
+		return nil, true
+	}
+	v, err := n.Int64()
+	if err != nil {
+		writeBankErr(w, ErrInvalidAmount)
+		return nil, false
+	}
+	return &v, true
 }
 
 // parseOptUUID interprets an optional JSON field: nil raw = absent (present=false);

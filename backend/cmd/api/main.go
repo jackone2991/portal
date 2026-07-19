@@ -43,6 +43,12 @@ import (
 	"github.com/portal/backend/internal/modules/media"
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
+	"github.com/portal/backend/internal/modules/movie"
+	movieapi "github.com/portal/backend/internal/modules/movie/api"
+	movierepo "github.com/portal/backend/internal/modules/movie/repository"
+	"github.com/portal/backend/internal/modules/music"
+	musicapi "github.com/portal/backend/internal/modules/music/api"
+	musicrepo "github.com/portal/backend/internal/modules/music/repository"
 	"github.com/portal/backend/internal/modules/notify"
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	notifyrepo "github.com/portal/backend/internal/modules/notify/repository"
@@ -50,7 +56,13 @@ import (
 	opsrepo "github.com/portal/backend/internal/modules/ops/repository"
 	"github.com/portal/backend/internal/modules/people"
 	peoplerepo "github.com/portal/backend/internal/modules/people/repository"
+	"github.com/portal/backend/internal/modules/story"
+	storyapi "github.com/portal/backend/internal/modules/story/api"
+	storyrepo "github.com/portal/backend/internal/modules/story/repository"
+	"github.com/portal/backend/internal/modules/tenant"
+	tenantrepo "github.com/portal/backend/internal/modules/tenant/repository"
 	"github.com/portal/backend/internal/platform/config"
+	platformdb "github.com/portal/backend/internal/platform/db"
 	"github.com/portal/backend/internal/platform/events"
 	"github.com/portal/backend/internal/platform/storage"
 )
@@ -74,7 +86,7 @@ func run() error {
 	ctx := context.Background()
 
 	// ── Infrastructure ──────────────────────────────────────────────
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	pool, err := platformdb.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("db pool: %w", err)
 	}
@@ -82,6 +94,11 @@ func run() error {
 	if err := pool.Ping(ctx); err != nil {
 		return fmt.Errorf("db ping: %w", err)
 	}
+	// tdb wraps the pool with tenant-scoping helpers; conn is the context-aware
+	// DBTX handed to every repository (runs on the request tenant tx when one is
+	// open via RequireTenant, else the pool — identical behavior when no tx set).
+	tdb := platformdb.New(pool)
+	conn := tdb.Conn()
 
 	redisOpt, err := redis.ParseURL(cfg.RedisURL)
 	if err != nil {
@@ -120,7 +137,7 @@ func run() error {
 		return err
 	}
 
-	adapter := accountrepo.NewAdapter(pool)
+	adapter := accountrepo.NewAdapter(conn)
 
 	refresh, err := auth.NewRefreshManager(adapter, cfg.RefreshTTL)
 	if err != nil {
@@ -157,6 +174,34 @@ func run() error {
 		return fmt.Errorf("account module: %w", err)
 	}
 
+	// ── Tenant module + tenant-scoping middleware (ADR-07 Phase 1) ──
+	// requireAuth is the base auth middleware; authTenant composes it with
+	// RequireTenant so every DOMAIN request resolves the caller's personal org and
+	// runs inside a tenant-scoped tx (Increment 2). Account + queue-console routes
+	// (global data only) keep plain requireAuth — they touch no tenant-scoped table.
+	requireAuth := accountmw.RequireAuth(verifier, adapter)
+	tenantCurrentUser := func(ctx context.Context) (uuid.UUID, string, bool) {
+		id, ok := auth.FromContext(ctx)
+		if !ok || id.IsAnonymous() {
+			return uuid.Nil, "", false
+		}
+		return id.UserID, id.DisplayName, true
+	}
+	tenantMod, err := tenant.New(tenant.Deps{
+		DB:          tdb,
+		Store:       tenantrepo.NewAdapter(conn),
+		RequireAuth: requireAuth,
+		CurrentUser: tenantCurrentUser,
+	})
+	if err != nil {
+		return fmt.Errorf("tenant module: %w", err)
+	}
+	// authTenant = auth (sets identity) → RequireTenant (opens personal-org tx).
+	// Domain modules receive this in their RequireAuth slot — no module changes.
+	authTenant := func(next http.Handler) http.Handler {
+		return requireAuth(tenantMod.RequireTenant()(next))
+	}
+
 	// ── Media module ────────────────────────────────────────────────
 	store, err := storage.NewS3(storage.Config{
 		Endpoint:     cfg.S3Endpoint,
@@ -180,6 +225,9 @@ func run() error {
 	mediaEvents := events.NewPublisher(asynqClient)
 	// media:asset_deleted (DELETE /assets/{id}) → comic reap + stream removal (2 consumers).
 	mediaEvents.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	mediaEvents.Subscribe(media.EventAssetDeleted, movieapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	mediaEvents.Subscribe(media.EventAssetDeleted, musicapi.TaskOnAssetDeleted, asynq.Queue("default"))
+	mediaEvents.Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	mediaEvents.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
 	// media:playback_completed (progress→100%) → stream projection.
 	mediaEvents.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
@@ -207,10 +255,10 @@ func run() error {
 
 	mediaMod, err = media.New(media.Deps{
 		Store:            store,
-		Repo:             mediarepo.NewAdapter(pool),
+		Repo:             mediarepo.NewAdapter(conn),
 		Enqueuer:         asynqClient,
 		Events:           mediaEvents,
-		RequireAuth:      accountmw.RequireAuth(verifier, adapter),
+		RequireAuth:      authTenant,
 		DeleteMiddleware: deleteMW,
 		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
 			id, ok := auth.FromContext(ctx)
@@ -230,8 +278,8 @@ func run() error {
 	// The API server serves the bell's read/mark-read routes; the delivery
 	// fan-out (dispatch/email/consumer) runs in cmd/worker.
 	notifyMod, err := notify.New(notify.Deps{
-		Repo:        notifyrepo.NewAdapter(pool),
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		Repo:        notifyrepo.NewAdapter(conn),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(accountMod.Engine(), code)
 		},
@@ -249,9 +297,9 @@ func run() error {
 
 	// ── Journal module (life-stream write path: /journal/entries) ────
 	journalMod, err := journal.New(journal.Deps{
-		Repo:        journalrepo.NewAdapter(pool),
+		Repo:        journalrepo.NewAdapter(conn, tdb.RunInTx),
 		Events:      mediaEvents, // shared fan-out publisher; journal:entry_created is emit-only
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(accountMod.Engine(), code)
 		},
@@ -271,8 +319,8 @@ func run() error {
 	// The API server serves only the read side; the nightly backup task runs in
 	// cmd/worker. ops:read is admin-tier (seeded + granted to admin in 0012).
 	opsMod, err := ops.New(ops.Deps{
-		Repo:        opsrepo.NewAdapter(pool),
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		Repo:        opsrepo.NewAdapter(conn),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(accountMod.Engine(), code)
 		},
@@ -283,9 +331,9 @@ func run() error {
 
 	// ── Bank module (personal ledger: /bank/*) ──────────────────────
 	bankMod, err := bank.New(bank.Deps{
-		Repo:        bankrepo.NewAdapter(pool),
+		Repo:        bankrepo.NewAdapter(conn, tdb.RunInTx),
 		Events:      mediaEvents, // shared fan-out publisher; bank:transaction_* is emit-only
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(accountMod.Engine(), code)
 		},
@@ -319,10 +367,10 @@ func run() error {
 	byChapter := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByChapter(ctx, id) })
 	byPage := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByPage(ctx, id) })
 	comicMod, err = comic.New(comic.Deps{
-		Repo:        comicrepo.NewAdapter(pool),
+		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
 		Media:       mediaMod.API(),
 		Events:      mediaEvents,
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
 		},
@@ -345,9 +393,9 @@ func run() error {
 
 	// ── People module (SPEC-08: /people, contacts + birthdays) ──────
 	peopleMod, err := people.New(people.Deps{
-		Repo:        peoplerepo.NewAdapter(pool),
+		Repo:        peoplerepo.NewAdapter(conn),
 		Events:      mediaEvents,
-		RequireAuth: accountmw.RequireAuth(verifier, adapter),
+		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
 		},
@@ -361,6 +409,103 @@ func run() error {
 	})
 	if err != nil {
 		return fmt.Errorf("people module: %w", err)
+	}
+
+	// ── Movie module (first domain vertical: /movies) ───────────────
+	// Owner-or-elevated mutations resolve the movie owner from the URL id via the
+	// module's extractor (movie must not import account/rbac). Tenant-wrapped via
+	// authTenant like the other domain modules.
+	var movieMod *movie.Module
+	byMovie := func(r *http.Request) (uuid.UUID, error) {
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return uuid.Nil, err
+		}
+		return movieMod.OwnerByMovie(r.Context(), id)
+	}
+	movieMod, err = movie.New(movie.Deps{
+		Repo:        movierepo.NewAdapter(conn),
+		Media:       mediaMod.API(),
+		Events:      mediaEvents,
+		RequireAuth: authTenant,
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+		WriteMovieMW:  accountmw.RequireOwnerOrPermission(engine, "movies:write:any", byMovie),
+		DeleteMovieMW: accountmw.RequireOwnerOrPermission(engine, "movies:delete:any", byMovie),
+		PublishMW:     accountmw.RequireOwnerOrPermission(engine, "movies:publish:any", byMovie),
+	})
+	if err != nil {
+		return fmt.Errorf("movie module: %w", err)
+	}
+
+	// ── Music module (tracks over media audio: /tracks) ─────────────
+	var musicMod *music.Module
+	byTrack := func(r *http.Request) (uuid.UUID, error) {
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return uuid.Nil, err
+		}
+		return musicMod.OwnerByTrack(r.Context(), id)
+	}
+	musicMod, err = music.New(music.Deps{
+		Repo:        musicrepo.NewAdapter(conn),
+		Media:       mediaMod.API(),
+		Events:      mediaEvents,
+		RequireAuth: authTenant,
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+		WriteTrackMW:  accountmw.RequireOwnerOrPermission(engine, "music:write:any", byTrack),
+		DeleteTrackMW: accountmw.RequireOwnerOrPermission(engine, "music:delete:any", byTrack),
+		PublishMW:     accountmw.RequireOwnerOrPermission(engine, "music:publish:any", byTrack),
+	})
+	if err != nil {
+		return fmt.Errorf("music module: %w", err)
+	}
+
+	// ── Story module (long-form text over media covers: /stories) ───
+	// Chapters reorder in a tenant tx (tdb.RunInTx), like comic. Two owner
+	// extractors resolve story vs. chapter ids for the owner-or-elevated guards.
+	var storyMod *story.Module
+	byStory := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByStory(ctx, id) })
+	byStoryChapter := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByChapter(ctx, id) })
+	storyMod, err = story.New(story.Deps{
+		Repo:        storyrepo.NewAdapter(conn, tdb.RunInTx),
+		Media:       mediaMod.API(),
+		Events:      mediaEvents,
+		RequireAuth: authTenant,
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+		WriteStoryMW:   accountmw.RequireOwnerOrPermission(engine, "stories:write:any", byStory),
+		WriteChapterMW: accountmw.RequireOwnerOrPermission(engine, "stories:write:any", byStoryChapter),
+		DeleteStoryMW:  accountmw.RequireOwnerOrPermission(engine, "stories:delete:any", byStory),
+		PublishMW:      accountmw.RequireOwnerOrPermission(engine, "stories:publish:any", byStory),
+	})
+	if err != nil {
+		return fmt.Errorf("story module: %w", err)
 	}
 
 	// ── HTTP ────────────────────────────────────────────────────────
@@ -382,9 +527,10 @@ func run() error {
 		r.Get("/healthz", healthz(pool, rdb))
 
 		// Aggregator routes
-		r.With(accountmw.RequireAuth(verifier, adapter)).Get("/continue", handleContinue(mediaMod))
+		r.With(authTenant).Get("/continue", handleContinue(mediaMod))
 
 		accountMod.MountHTTP(r)
+		tenantMod.MountHTTP(r)
 		mediaMod.MountHTTP(r)
 		notifyMod.MountHTTP(r)
 		journalMod.MountHTTP(r)
@@ -392,6 +538,9 @@ func run() error {
 		bankMod.MountHTTP(r)
 		comicMod.MountHTTP(r)
 		peopleMod.MountHTTP(r)
+		movieMod.MountHTTP(r)
+		musicMod.MountHTTP(r)
+		storyMod.MountHTTP(r)
 	})
 
 	// Queue console (SPEC-09 P1.6): the asynqmon SPA at /admin/queues, admin-gated

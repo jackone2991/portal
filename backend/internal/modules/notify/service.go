@@ -33,6 +33,19 @@ type Service struct {
 	redis   *redis.Client // global email send-ceiling counter (nil disables it)
 
 	emailHourlyCap int // 0 = uncapped
+	// runInUserTenant scopes the worker in-app INSERT to the recipient's personal
+	// org (ADR-07 1b) so notifications.tenant_id's DEFAULT current_setting is set.
+	// nil (API read side / tests) → fn runs directly.
+	runInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+}
+
+// runScoped runs fn in the target user's tenant scope (ADR-07 1b) on the worker;
+// a nil runInUserTenant (API side / tests) runs fn directly.
+func (s *Service) runScoped(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+	if s.runInUserTenant == nil {
+		return fn(ctx)
+	}
+	return s.runInUserTenant(ctx, userID, fn)
 }
 
 // ── P0.2 dispatch fan-out ───────────────────────────────────────────
@@ -79,15 +92,19 @@ func (s *Service) dispatchIntent(ctx context.Context, intent notifyapi.Notificat
 	// A dedup_key collision (redelivered dispatch) makes the whole fan-out a
 	// no-op: the store row is the single idempotency gate.
 	if channels.inApp && persistsInApp(intent.Type) {
-		inserted, _, err := s.repo.InsertNotification(ctx, InsertNotificationInput{
-			UserID:   intent.UserID,
-			Type:     intent.Type,
-			Title:    intent.Title,
-			Body:     intent.Body,
-			Data:     intent.Data,
-			DedupKey: intent.DedupKey,
-		})
-		if err != nil {
+		var inserted bool
+		if err := s.runScoped(ctx, intent.UserID, func(ctx context.Context) error {
+			ins, _, err := s.repo.InsertNotification(ctx, InsertNotificationInput{
+				UserID:   intent.UserID,
+				Type:     intent.Type,
+				Title:    intent.Title,
+				Body:     intent.Body,
+				Data:     intent.Data,
+				DedupKey: intent.DedupKey,
+			})
+			inserted = ins
+			return err
+		}); err != nil {
 			return fmt.Errorf("notify:dispatch: insert: %w", err)
 		}
 		if !inserted {

@@ -491,7 +491,7 @@ POST   /me/web-push/subscribe          register browser push subscription
 DELETE /me/web-push/{id}               unsubscribe
 ```
 
-OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. Known drift (2026-07-06): `shared/openapi.yaml` is missing `/auth/register` and still lists the retired `/auth/callback`; the `x-required-permission` / `x-step-up` annotations are the target convention, not yet uniformly present.
+OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. (2026-07: the earlier `/auth/register` / `/auth/callback` drift is **reconciled** — the spec now documents `/auth/register` and no longer lists the retired `/auth/callback`. The `x-required-permission` / `x-step-up` annotations remain the target convention, not yet uniformly present.)
 
 ---
 

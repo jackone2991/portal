@@ -28,6 +28,7 @@ type Asset struct {
 	Title            *string            `json:"title"`
 	OriginalFilename *string            `json:"original_filename"`
 	Origin           string             `json:"origin"`
+	TenantID         pgtype.UUID        `json:"tenant_id"`
 }
 
 type AuditLog struct {
@@ -52,6 +53,7 @@ type BankAccount struct {
 	OpeningBalance int64              `json:"opening_balance"`
 	Archived       bool               `json:"archived"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	TenantID       pgtype.UUID        `json:"tenant_id"`
 }
 
 type BankBudget struct {
@@ -60,6 +62,7 @@ type BankBudget struct {
 	CategoryID pgtype.UUID `json:"category_id"`
 	Month      pgtype.Date `json:"month"`
 	Amount     int64       `json:"amount"`
+	TenantID   pgtype.UUID `json:"tenant_id"`
 }
 
 type BankCategory struct {
@@ -68,6 +71,7 @@ type BankCategory struct {
 	ParentID pgtype.UUID `json:"parent_id"`
 	Name     string      `json:"name"`
 	Kind     string      `json:"kind"`
+	TenantID pgtype.UUID `json:"tenant_id"`
 }
 
 type BankImportBatch struct {
@@ -77,6 +81,7 @@ type BankImportBatch struct {
 	FileName  *string            `json:"file_name"`
 	Status    string             `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
 type BankTransaction struct {
@@ -94,6 +99,7 @@ type BankTransaction struct {
 	DedupHash      *string            `json:"dedup_hash"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	TenantID       pgtype.UUID        `json:"tenant_id"`
 }
 
 type Comic struct {
@@ -105,6 +111,7 @@ type Comic struct {
 	Status       string             `json:"status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
 }
 
 type ComicChapter struct {
@@ -113,6 +120,7 @@ type ComicChapter struct {
 	Title     string             `json:"title"`
 	SortOrder int32              `json:"sort_order"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
 type ComicPage struct {
@@ -120,6 +128,7 @@ type ComicPage struct {
 	ChapterID pgtype.UUID `json:"chapter_id"`
 	AssetID   pgtype.UUID `json:"asset_id"`
 	SortOrder int32       `json:"sort_order"`
+	TenantID  pgtype.UUID `json:"tenant_id"`
 }
 
 type ComicReadingProgress struct {
@@ -128,6 +137,7 @@ type ComicReadingProgress struct {
 	ChapterID pgtype.UUID        `json:"chapter_id"`
 	PageID    pgtype.UUID        `json:"page_id"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
 type JournalEntry struct {
@@ -139,6 +149,7 @@ type JournalEntry struct {
 	OccurredAt pgtype.Timestamptz `json:"occurred_at"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	TenantID   pgtype.UUID        `json:"tenant_id"`
 }
 
 type MediaAssetVariant struct {
@@ -150,6 +161,7 @@ type MediaAssetVariant struct {
 	Height     int32              `json:"height"`
 	SizeBytes  int64              `json:"size_bytes"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	TenantID   pgtype.UUID        `json:"tenant_id"`
 }
 
 type MediaPlaybackProgress struct {
@@ -158,6 +170,36 @@ type MediaPlaybackProgress struct {
 	PositionMs  int64              `json:"position_ms"`
 	CompletedAt pgtype.Timestamptz `json:"completed_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	TenantID    pgtype.UUID        `json:"tenant_id"`
+}
+
+type Movie struct {
+	ID            pgtype.UUID        `json:"id"`
+	OwnerUserID   pgtype.UUID        `json:"owner_user_id"`
+	TenantID      pgtype.UUID        `json:"tenant_id"`
+	Title         string             `json:"title"`
+	Description   *string            `json:"description"`
+	VideoAssetID  pgtype.UUID        `json:"video_asset_id"`
+	PosterAssetID pgtype.UUID        `json:"poster_asset_id"`
+	ReleaseYear   *int32             `json:"release_year"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MusicTrack struct {
+	ID           pgtype.UUID        `json:"id"`
+	OwnerUserID  pgtype.UUID        `json:"owner_user_id"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
+	Title        string             `json:"title"`
+	Artist       *string            `json:"artist"`
+	Album        *string            `json:"album"`
+	Description  *string            `json:"description"`
+	AudioAssetID pgtype.UUID        `json:"audio_asset_id"`
+	CoverAssetID pgtype.UUID        `json:"cover_asset_id"`
+	Status       string             `json:"status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Notification struct {
@@ -170,6 +212,7 @@ type Notification struct {
 	DedupKey  *string            `json:"dedup_key"`
 	ReadAt    pgtype.Timestamptz `json:"read_at"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
 type NotificationPreference struct {
@@ -191,6 +234,23 @@ type OpsBackupRun struct {
 	Error      *string            `json:"error"`
 }
 
+type Organization struct {
+	ID        pgtype.UUID        `json:"id"`
+	Kind      string             `json:"kind"`
+	Slug      string             `json:"slug"`
+	Name      string             `json:"name"`
+	OwnerID   pgtype.UUID        `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type OrganizationMembership struct {
+	OrgID     pgtype.UUID        `json:"org_id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Role      string             `json:"role"`
+	GrantedAt pgtype.Timestamptz `json:"granted_at"`
+}
+
 type PasswordResetToken struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`
@@ -206,6 +266,7 @@ type PeopleBirthdayNotice struct {
 	Year      int32              `json:"year"`
 	Threshold int32              `json:"threshold"`
 	EmittedAt pgtype.Timestamptz `json:"emitted_at"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
 type PeoplePerson struct {
@@ -222,6 +283,7 @@ type PeoplePerson struct {
 	AvatarAssetID pgtype.UUID        `json:"avatar_asset_id"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	TenantID      pgtype.UUID        `json:"tenant_id"`
 }
 
 type Permission struct {
@@ -263,6 +325,29 @@ type RolePermission struct {
 	GrantedBy    pgtype.UUID        `json:"granted_by"`
 }
 
+type Story struct {
+	ID           pgtype.UUID        `json:"id"`
+	OwnerUserID  pgtype.UUID        `json:"owner_user_id"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
+	Title        string             `json:"title"`
+	Description  *string            `json:"description"`
+	CoverAssetID pgtype.UUID        `json:"cover_asset_id"`
+	Status       string             `json:"status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type StoryChapter struct {
+	ID        pgtype.UUID        `json:"id"`
+	StoryID   pgtype.UUID        `json:"story_id"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
+	Title     string             `json:"title"`
+	BodyMd    string             `json:"body_md"`
+	SortOrder int32              `json:"sort_order"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type StreamItem struct {
 	ID           pgtype.UUID        `json:"id"`
 	UserID       pgtype.UUID        `json:"user_id"`
@@ -271,6 +356,7 @@ type StreamItem struct {
 	RefID        pgtype.UUID        `json:"ref_id"`
 	Payload      []byte             `json:"payload"`
 	OccurredAt   pgtype.Timestamptz `json:"occurred_at"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
 }
 
 type User struct {

@@ -25,6 +25,10 @@ type Deps struct {
 	Events   EventPublisher
 	Timezone string
 
+	// RunInUserTenant (worker only) scopes the birthday-notice INSERT to the
+	// person's owner org (ADR-07 1b). nil on the API side.
+	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
 	CurrentUser       func(context.Context) (uuid.UUID, bool)
@@ -49,7 +53,7 @@ func New(d Deps) (*Module, error) {
 		log.Warn().Str("tz", tz).Msg("people: timezone load failed, using UTC")
 		loc = time.UTC
 	}
-	svc := &Service{repo: d.Repo, events: d.Events, loc: loc}
+	svc := &Service{repo: d.Repo, events: d.Events, loc: loc, runInUserTenant: d.RunInUserTenant}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 

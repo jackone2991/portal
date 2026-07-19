@@ -10,14 +10,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/portal/backend/internal/modules/people"
 )
 
 type Adapter struct{ q *Queries }
 
-func NewAdapter(db *pgxpool.Pool) *Adapter { return &Adapter{q: New(db)} }
+// NewAdapter builds the adapter over any pgx-compatible handle (pool or the
+// context-aware platform/db.Conn) — see account/repository for the DBTX contract.
+func NewAdapter(db DBTX) *Adapter { return &Adapter{q: New(db)} }
 
 var _ people.Repository = (*Adapter)(nil)
 
