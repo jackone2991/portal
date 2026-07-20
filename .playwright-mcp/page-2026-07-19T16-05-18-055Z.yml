@@ -1,0 +1,278 @@
+- generic [ref=f17e1]:
+  - generic [ref=f17e2]:
+    - banner [ref=f17e5]:
+      - generic [ref=f17e6]:
+        - link "Portal — Newsfeed" [ref=f17e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f17e11]: Portal
+        - generic [ref=f17e12]:
+          - generic [ref=f17e13]: Newsfeed
+          - searchbox [ref=f17e15]
+          - link "Find Friends" [ref=f17e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f17e17]:
+            - button "Friend requests" [ref=f17e19]:
+              - generic [ref=f17e22]: "4"
+            - button "Messages" [ref=f17e24]:
+              - generic [ref=f17e27]: "2"
+            - button "Notifications" [ref=f17e29]
+            - button "admin user" [ref=f17e382]:
+              - generic [ref=f17e34]:
+                - generic [ref=f17e35]: admin
+                - generic [ref=f17e36]: user
+              - generic [ref=f17e37]: A
+    - complementary [ref=f17e42]:
+      - generic [ref=f17e43]:
+        - button "Collapse Menu" [ref=f17e44]
+        - link "Newsfeed" [ref=f17e50] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f17e55] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f17e60] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f17e65] [cursor=pointer]:
+          - /url: /people
+        - link "Fav Pages Feed" [ref=f17e70] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f17e75]
+        - link "Music & Playlists" [ref=f17e80] [cursor=pointer]:
+          - /url: /library/novel/1
+        - button "Weather App" [ref=f17e85]
+        - link "Calendar and Events" [ref=f17e90] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f17e95]
+        - button "Friends Birthdays" [ref=f17e100]
+        - button "Account Stats" [ref=f17e105]
+        - button "Manage Widgets" [ref=f17e110]
+      - generic [ref=f17e115]:
+        - generic [ref=f17e116]:
+          - generic [ref=f17e117]: Profile Completion
+          - generic [ref=f17e118]: 76%
+        - paragraph [ref=f17e121]:
+          - text: Complete
+          - link "your profile" [ref=f17e122] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f17e123]:
+      - generic [ref=f17e124]:
+        - generic [ref=f17e125]:
+          - generic [ref=f17e126]:
+            - generic [ref=f17e127]: Close Friends
+            - button "Settings" [ref=f17e128]
+          - list [ref=f17e129]:
+            - listitem [ref=f17e130]:
+              - generic [ref=f17e131]: CS
+              - generic [ref=f17e134]:
+                - paragraph [ref=f17e135]: Carol Summers
+                - paragraph [ref=f17e136]: Online
+              - button "Friend options" [ref=f17e137]
+            - listitem [ref=f17e140]:
+              - generic [ref=f17e141]: MB
+              - generic [ref=f17e144]:
+                - paragraph [ref=f17e145]: Mathilda Brinker
+                - paragraph [ref=f17e146]: At work!
+              - button "Friend options" [ref=f17e147]
+            - listitem [ref=f17e150]:
+              - generic [ref=f17e151]: MM
+              - generic [ref=f17e154]:
+                - paragraph [ref=f17e155]: Michael Maximoff
+                - paragraph [ref=f17e156]: Away
+              - button "Friend options" [ref=f17e157]
+            - listitem [ref=f17e160]:
+              - generic [ref=f17e161]: RH
+              - generic [ref=f17e164]:
+                - paragraph [ref=f17e165]: Rachel Howlett
+                - paragraph [ref=f17e166]: Offline
+              - button "Friend options" [ref=f17e167]
+            - listitem [ref=f17e170]:
+              - generic [ref=f17e171]: NK
+              - generic [ref=f17e174]:
+                - paragraph [ref=f17e175]: Nina Kraviz
+                - paragraph [ref=f17e176]: Online
+              - button "Friend options" [ref=f17e177]
+        - generic [ref=f17e180]:
+          - generic [ref=f17e181]:
+            - generic [ref=f17e182]: My Family
+            - button "Settings" [ref=f17e183]
+          - list [ref=f17e184]:
+            - listitem [ref=f17e185]:
+              - generic [ref=f17e186]: SH
+              - generic [ref=f17e189]:
+                - paragraph [ref=f17e190]: Sarah Hetfield
+                - paragraph [ref=f17e191]: Online
+              - button "Friend options" [ref=f17e192]
+        - generic [ref=f17e195]:
+          - generic [ref=f17e196]:
+            - generic [ref=f17e197]: Uncategorized
+            - button "Settings" [ref=f17e198]
+          - list [ref=f17e199]:
+            - listitem [ref=f17e200]:
+              - generic [ref=f17e201]: BP
+              - generic [ref=f17e204]:
+                - paragraph [ref=f17e205]: Bruce Peterson
+                - paragraph [ref=f17e206]: Online
+              - button "Friend options" [ref=f17e207]
+            - listitem [ref=f17e210]:
+              - generic [ref=f17e211]: CG
+              - generic [ref=f17e214]:
+                - paragraph [ref=f17e215]: Chris Greyson
+                - paragraph [ref=f17e216]: Away
+              - button "Friend options" [ref=f17e217]
+            - listitem [ref=f17e220]:
+              - generic [ref=f17e221]: NG
+              - generic [ref=f17e224]:
+                - paragraph [ref=f17e225]: Nicholas Grisom
+                - paragraph [ref=f17e226]: Invisible
+              - button "Friend options" [ref=f17e227]
+            - listitem [ref=f17e230]:
+              - generic [ref=f17e231]: JS
+              - generic [ref=f17e234]:
+                - paragraph [ref=f17e235]: James Spiegel
+                - paragraph [ref=f17e236]: Away
+              - button "Friend options" [ref=f17e237]
+            - listitem [ref=f17e240]:
+              - generic [ref=f17e241]: DJ
+              - generic [ref=f17e244]:
+                - paragraph [ref=f17e245]: Diana Jones
+                - paragraph [ref=f17e246]: Online
+              - button "Friend options" [ref=f17e247]
+      - generic [ref=f17e250]:
+        - textbox "Search Friends..." [ref=f17e251]
+        - button "Friend settings" [ref=f17e252]
+        - button "Collapse friends panel" [ref=f17e255]
+      - button "Olympus Chat" [ref=f17e258]
+    - main [ref=f17e262]:
+      - generic [ref=f17e266]:
+        - generic [ref=f17e267]:
+          - generic [ref=f17e268]:
+            - generic [ref=f17e269]:
+              - heading "Tháng 7, 2026" [level=1] [ref=f17e270]
+              - paragraph [ref=f17e271]: Âm lịch · năm Bính Ngọ
+            - generic [ref=f17e272]:
+              - button "Tháng trước" [ref=f17e273]: ‹
+              - button "Hôm nay" [ref=f17e274]
+              - button "Tháng sau" [ref=f17e275]: ›
+          - generic [ref=f17e276]:
+            - generic [ref=f17e277]: T2
+            - generic [ref=f17e278]: T3
+            - generic [ref=f17e279]: T4
+            - generic [ref=f17e280]: T5
+            - generic [ref=f17e281]: T6
+            - generic [ref=f17e282]: T7
+            - generic [ref=f17e283]: CN
+          - generic [ref=f17e284]:
+            - button "1 17" [ref=f17e287]:
+              - generic [ref=f17e288]: "1"
+              - generic [ref=f17e289]: "17"
+            - button "2 18" [ref=f17e290]:
+              - generic [ref=f17e291]: "2"
+              - generic [ref=f17e292]: "18"
+            - button "3 19" [ref=f17e293]:
+              - generic [ref=f17e294]: "3"
+              - generic [ref=f17e295]: "19"
+            - button "4 20" [ref=f17e296]:
+              - generic [ref=f17e297]: "4"
+              - generic [ref=f17e298]: "20"
+            - button "5 21" [ref=f17e299]:
+              - generic [ref=f17e300]: "5"
+              - generic [ref=f17e301]: "21"
+            - button "6 22" [ref=f17e302]:
+              - generic [ref=f17e303]: "6"
+              - generic [ref=f17e304]: "22"
+            - button "7 23" [ref=f17e305]:
+              - generic [ref=f17e306]: "7"
+              - generic [ref=f17e307]: "23"
+            - button "8 24" [ref=f17e308]:
+              - generic [ref=f17e309]: "8"
+              - generic [ref=f17e310]: "24"
+            - button "9 25" [ref=f17e311]:
+              - generic [ref=f17e312]: "9"
+              - generic [ref=f17e313]: "25"
+            - button "10 26" [ref=f17e314]:
+              - generic [ref=f17e315]: "10"
+              - generic [ref=f17e316]: "26"
+            - button "11 27" [ref=f17e317]:
+              - generic [ref=f17e318]: "11"
+              - generic [ref=f17e319]: "27"
+            - button "12 28" [ref=f17e320]:
+              - generic [ref=f17e321]: "12"
+              - generic [ref=f17e322]: "28"
+            - button "13 29" [ref=f17e323]:
+              - generic [ref=f17e324]: "13"
+              - generic [ref=f17e325]: "29"
+            - button "14 1/6" [ref=f17e326]:
+              - generic [ref=f17e327]: "14"
+              - generic [ref=f17e328]: 1/6
+            - button "15 2" [ref=f17e329]:
+              - generic [ref=f17e330]: "15"
+              - generic [ref=f17e331]: "2"
+            - button "16 3" [ref=f17e332]:
+              - generic [ref=f17e333]: "16"
+              - generic [ref=f17e334]: "3"
+            - button "17 4" [ref=f17e335]:
+              - generic [ref=f17e336]: "17"
+              - generic [ref=f17e337]: "4"
+            - button "18 5" [ref=f17e338]:
+              - generic [ref=f17e339]: "18"
+              - generic [ref=f17e340]: "5"
+            - button "19 6" [active] [ref=f17e341]:
+              - generic [ref=f17e342]: "19"
+              - generic [ref=f17e343]: "6"
+            - button "20 7" [ref=f17e344]:
+              - generic [ref=f17e345]: "20"
+              - generic [ref=f17e346]: "7"
+            - button "21 8" [ref=f17e347]:
+              - generic [ref=f17e348]: "21"
+              - generic [ref=f17e349]: "8"
+            - button "22 9" [ref=f17e350]:
+              - generic [ref=f17e351]: "22"
+              - generic [ref=f17e352]: "9"
+            - button "23 10" [ref=f17e353]:
+              - generic [ref=f17e354]: "23"
+              - generic [ref=f17e355]: "10"
+            - button "24 11" [ref=f17e356]:
+              - generic [ref=f17e357]: "24"
+              - generic [ref=f17e358]: "11"
+            - button "25 12" [ref=f17e359]:
+              - generic [ref=f17e360]: "25"
+              - generic [ref=f17e361]: "12"
+            - button "26 13" [ref=f17e362]:
+              - generic [ref=f17e363]: "26"
+              - generic [ref=f17e364]: "13"
+            - button "27 14" [ref=f17e365]:
+              - generic [ref=f17e366]: "27"
+              - generic [ref=f17e367]: "14"
+            - button "28 15" [ref=f17e368]:
+              - generic [ref=f17e369]: "28"
+              - generic [ref=f17e370]: "15"
+            - button "29 16" [ref=f17e371]:
+              - generic [ref=f17e372]: "29"
+              - generic [ref=f17e373]: "16"
+            - button "30 17" [ref=f17e374]:
+              - generic [ref=f17e375]: "30"
+              - generic [ref=f17e376]: "17"
+            - button "31 18" [ref=f17e377]:
+              - generic [ref=f17e378]: "31"
+              - generic [ref=f17e379]: "18"
+        - complementary [ref=f17e380]:
+          - generic [ref=f17e383]:
+            - paragraph [ref=f17e384]: Chủ Nhật
+            - paragraph [ref=f17e385]: 19 tháng 7, 2026
+            - paragraph [ref=f17e386]:
+              - text: "Âm lịch:"
+              - generic [ref=f17e387]: 6/6
+              - text: · năm Bính Ngọ
+            - paragraph [ref=f17e388]: Ngày Giáp Ngọ
+          - generic [ref=f17e389]:
+            - generic [ref=f17e390]: Ghi chú mới
+            - textbox "Hôm nay có gì đáng nhớ?" [ref=f17e391]
+            - generic [ref=f17e392]:
+              - generic "Giờ" [ref=f17e393]:
+                - generic [ref=f17e394]: 🕑
+                - textbox "Giờ" [ref=f17e395]: 12:00
+              - textbox "Tâm trạng" [ref=f17e396]:
+                - /placeholder: Tâm trạng (tuỳ chọn)
+            - button "Lưu ghi chú" [disabled] [ref=f17e398]
+          - paragraph [ref=f17e399]: Chưa có ghi chú cho ngày này.
+    - button "Go to top"
+  - alert [ref=f17e265]

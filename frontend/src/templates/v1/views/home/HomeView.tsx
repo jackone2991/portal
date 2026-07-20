@@ -7,6 +7,11 @@ import { StreamItemCard } from "../../components/stream/StreamItemCard";
 import { BirthdayCard } from "../../components/widget/BirthdayCard";
 import { FinanceWidget } from "../../components/widget/FinanceWidget";
 import { ContinueWidget } from "../../components/widget/ContinueWidget";
+import { WeatherWidget } from "../../components/widget/WeatherWidget";
+import { CalendarWidget } from "../../components/widget/CalendarWidget";
+import { PagesWidget } from "../../components/widget/PagesWidget";
+import { FriendSuggestions } from "../../components/widget/FriendSuggestions";
+import { ActivityFeed } from "../../components/widget/ActivityFeed";
 import { ApiError, baseURL } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
 import { createEntry, type CreateEntryInput } from "@/lib/journal";
@@ -27,8 +32,6 @@ export function HomeView() {
   const qc = useQueryClient();
 
   const [bodyMd, setBodyMd] = useState("");
-  const [mood, setMood] = useState("");
-  const [occurredAt, setOccurredAt] = useState(() => toDatetimeLocal(new Date()));
   const [composerError, setComposerError] = useState<string | null>(null);
 
   const query = useInfiniteQuery({
@@ -51,7 +54,7 @@ export function HomeView() {
         event_type: "journal:entry_created",
         occurred_at: input.occurred_at ?? new Date().toISOString(),
         body_md: input.body_md,
-        mood: input.mood ?? null,
+        mood: null,
       };
       qc.setQueryData<InfiniteData<StreamPage>>(STREAM_KEY, (data) => prepend(data, optimistic));
       return { previous };
@@ -59,12 +62,10 @@ export function HomeView() {
     onError: (err, input, ctx) => {
       if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
       setBodyMd(input.body_md);
-      setMood(input.mood ?? "");
       setComposerError(err instanceof ApiError ? problemDisplayMessage(err.body) : "Could not post");
     },
     onSuccess: () => {
       setComposerError(null);
-      setOccurredAt(toDatetimeLocal(new Date()));
       qc.invalidateQueries({ queryKey: STREAM_KEY }); // pull the canonical projection row
     },
   });
@@ -73,12 +74,8 @@ export function HomeView() {
     const body = bodyMd.trim();
     if (!body || create.isPending) return;
     setComposerError(null);
-    const input: CreateEntryInput = { body_md: body, occurred_at: fromDatetimeLocal(occurredAt) };
-    const m = mood.trim();
-    if (m) input.mood = m;
     setBodyMd("");
-    setMood("");
-    create.mutate(input);
+    create.mutate({ body_md: body });
   }
 
   return (
@@ -86,18 +83,16 @@ export function HomeView() {
       <div className="hidden space-y-5 lg:block">
         <FinanceWidget />
         <ContinueWidget />
-        <BirthdayCard />
+        <WeatherWidget />
+        <CalendarWidget />
+        <PagesWidget />
       </div>
 
       <div className="min-w-0 space-y-5">
         <Composer
           displayName={displayName}
           bodyMd={bodyMd}
-          mood={mood}
-          occurredAt={occurredAt}
           onBodyMdChange={setBodyMd}
-          onMoodChange={setMood}
-          onOccurredAtChange={setOccurredAt}
           onSubmit={handleCreate}
           submitting={create.isPending}
           error={composerError}
@@ -136,6 +131,8 @@ export function HomeView() {
 
       <aside className="hidden space-y-5 2xl:block">
         <BirthdayCard />
+        <FriendSuggestions />
+        <ActivityFeed />
       </aside>
     </div>
   );
@@ -172,11 +169,4 @@ let tempSeq = 0;
 function makeTempId(): string {
   tempSeq += 1;
   return `temp-${tempSeq}`;
-}
-
-function toDatetimeLocal(d: Date): string {
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
-function fromDatetimeLocal(s: string): string {
-  return new Date(s).toISOString();
 }

@@ -1,97 +1,60 @@
+"use client";
+
+import Link from "next/link";
+import type { Route } from "next";
 import { Icon } from "../ui/Icon";
+import { Card } from "./WidgetCard";
+import { useGeoWeather } from "@/lib/weather";
 
 /**
- * Weather rail card — extracted from the inline `WeatherWidget` in
- * `views/home/HomeView.tsx` (Olympus "Weather Widget"). A gradient card showing
- * the current temperature + condition, a 7-day icon strip, and location/date.
- * All props are optional and default to the original Olympus sample data.
+ * Weather rail — current conditions + 7-day from Open-Meteo (lib/weather) for the
+ * browser's geolocation; links to the full /weather page. Falls back to a compact
+ * prompt when location is unavailable — never fake weather.
  */
+export function WeatherWidget() {
+  const { status, data } = useGeoWeather();
 
-export type WeatherDay = {
-  /** Short day label, e.g. "SUN". */
-  day: string;
-  /** Olympus sprite icon name for the day's condition. */
-  icon: string;
-  /** Temperature (degrees), rendered with a trailing `°`. */
-  temp: number;
-};
-
-const DEFAULT_WEEK: WeatherDay[] = [
-  { day: "SUN", icon: "weather-sunny-icon", temp: 60 },
-  { day: "MON", icon: "weather-sunny-icon", temp: 58 },
-  { day: "TUE", icon: "weather-cloudy-icon", temp: 67 },
-  { day: "WED", icon: "weather-rain-icon", temp: 70 },
-  { day: "THU", icon: "weather-rain-icon", temp: 58 },
-  { day: "FRI", icon: "weather-rain-icon", temp: 68 },
-  { day: "SAT", icon: "weather-partly-sunny-icon", temp: 65 },
-];
-
-export function WeatherWidget({
-  temp = 64,
-  low = 58,
-  high = 76,
-  condition = "Partly Sunny",
-  realFeel = 67,
-  chanceOfRain = 49,
-  icon = "weather-partly-sunny-icon",
-  week = DEFAULT_WEEK,
-  date = "Saturday, March 26th",
-  location = "San Francisco, CA",
-}: {
-  temp?: number;
-  low?: number;
-  high?: number;
-  condition?: string;
-  realFeel?: number;
-  chanceOfRain?: number;
-  icon?: string;
-  week?: WeatherDay[];
-  date?: string;
-  location?: string;
-} = {}) {
-  return (
-    <div
-      className="overflow-hidden rounded-xl text-white shadow-sm"
-      style={{ background: "linear-gradient(160deg, var(--tpl-weather-1), var(--tpl-weather-2))" }}
-    >
-      <div className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-1">
-            <span className="text-5xl font-light leading-none">{temp}°</span>
-            <span className="mt-1 text-xs leading-tight text-white/80">
-              {low}°
-              <br />
-              {high}°
-            </span>
+  if (status !== "ok" || !data) {
+    return (
+      <Card className="p-4">
+        <div className="flex items-center gap-3">
+          <span style={{ color: "var(--tpl-muted)" }}><Icon name="weather-partly-sunny-icon" size={22} /></span>
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--tpl-heading)" }}>Thời tiết</p>
+            <p className="text-xs" style={{ color: "var(--tpl-muted)" }}>
+              {status === "loading" ? "Đang định vị…" : "Bật định vị để xem thời tiết"}
+            </p>
           </div>
-          <Icon name={icon} size={40} />
         </div>
-        <p className="mt-3 text-lg font-semibold">{condition}</p>
-        <p className="text-xs text-white/80">
-          Real Feel: {realFeel}°&nbsp;&nbsp;&nbsp;Chance of Rain: {chanceOfRain}%
-        </p>
-      </div>
+      </Card>
+    );
+  }
 
-      <div
-        className="grid grid-cols-7 gap-1 px-3 py-4"
-        style={{ background: "rgba(255,255,255,0.08)" }}
-      >
-        {week.map((d) => (
-          <div
-            key={d.day}
-            className="flex flex-col items-center gap-1.5 text-[10px] text-white/85"
-          >
-            <span className="font-semibold">{d.day}</span>
-            <Icon name={d.icon} size={18} />
-            <span>{d.temp}°</span>
+  const { now, daily } = data;
+  return (
+    <Link href={"/weather" as Route} className="block transition hover:opacity-90" title="Mở trang thời tiết">
+      <Card className="overflow-hidden">
+        <div className="p-4" style={{ background: "linear-gradient(150deg, var(--tpl-accent), var(--tpl-blue))", color: "#fff" }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-3xl font-bold leading-none">{now.temp}°</div>
+              <div className="mt-1 text-xs text-white/80">{now.high}° / {now.low}°</div>
+            </div>
+            <Icon name={now.icon} size={40} />
           </div>
-        ))}
-      </div>
-
-      <div className="px-5 py-3 text-center text-xs">
-        <p className="font-semibold">{date}</p>
-        <p className="text-white/75">{location}</p>
-      </div>
-    </div>
+          <p className="mt-2 text-sm font-semibold">{now.label}</p>
+          <p className="text-xs text-white/80">Cảm giác {now.feels}° · Mưa {now.rain}%</p>
+        </div>
+        <div className="grid grid-cols-7 gap-1 px-2 py-3">
+          {daily.map((d, i) => (
+            <div key={i} className="flex flex-col items-center gap-1">
+              <span className="text-[10px] font-semibold" style={{ color: "var(--tpl-muted)" }}>{i === 0 ? "Nay" : d.dow}</span>
+              <span style={{ color: "var(--tpl-heading)" }}><Icon name={d.icon} size={16} /></span>
+              <span className="text-[11px]" style={{ color: "var(--tpl-heading)" }}>{d.high}°</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </Link>
   );
 }

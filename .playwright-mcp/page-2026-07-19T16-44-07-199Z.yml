@@ -1,0 +1,336 @@
+- generic [active] [ref=f20e1]:
+  - generic [ref=f20e2]:
+    - banner [ref=f20e5]:
+      - generic [ref=f20e6]:
+        - link "Portal — Newsfeed" [ref=f20e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f20e11]: Portal
+        - generic [ref=f20e12]:
+          - generic [ref=f20e13]: Newsfeed
+          - searchbox [ref=f20e15]
+          - link "Find Friends" [ref=f20e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f20e17]:
+            - button "Friend requests" [ref=f20e19]:
+              - generic [ref=f20e22]: "4"
+            - button "Messages" [ref=f20e24]:
+              - generic [ref=f20e27]: "2"
+            - button "Notifications" [ref=f20e29]
+            - button "admin user" [ref=f20e321]:
+              - generic [ref=f20e34]:
+                - generic [ref=f20e35]: admin
+                - generic [ref=f20e36]: user
+              - generic [ref=f20e37]: A
+    - complementary [ref=f20e42]:
+      - generic [ref=f20e43]:
+        - button "Collapse Menu" [ref=f20e44]
+        - link "Newsfeed" [ref=f20e50] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f20e55] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f20e60] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f20e65] [cursor=pointer]:
+          - /url: /people
+        - link "Fav Pages Feed" [ref=f20e70] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f20e75]
+        - link "Music & Playlists" [ref=f20e80] [cursor=pointer]:
+          - /url: /library/novel/1
+        - link "Weather App" [ref=f20e85] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f20e90] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f20e95]
+        - button "Friends Birthdays" [ref=f20e100]
+        - button "Account Stats" [ref=f20e105]
+        - button "Manage Widgets" [ref=f20e110]
+      - generic [ref=f20e115]:
+        - generic [ref=f20e116]:
+          - generic [ref=f20e117]: Profile Completion
+          - generic [ref=f20e118]: 76%
+        - paragraph [ref=f20e121]:
+          - text: Complete
+          - link "your profile" [ref=f20e122] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f20e123]:
+      - generic [ref=f20e124]:
+        - generic [ref=f20e125]:
+          - generic [ref=f20e126]:
+            - generic [ref=f20e127]: Close Friends
+            - button "Settings" [ref=f20e128]
+          - list [ref=f20e129]:
+            - listitem [ref=f20e130]:
+              - generic [ref=f20e131]: CS
+              - generic [ref=f20e134]:
+                - paragraph [ref=f20e135]: Carol Summers
+                - paragraph [ref=f20e136]: Online
+              - button "Friend options" [ref=f20e137]
+            - listitem [ref=f20e140]:
+              - generic [ref=f20e141]: MB
+              - generic [ref=f20e144]:
+                - paragraph [ref=f20e145]: Mathilda Brinker
+                - paragraph [ref=f20e146]: At work!
+              - button "Friend options" [ref=f20e147]
+            - listitem [ref=f20e150]:
+              - generic [ref=f20e151]: MM
+              - generic [ref=f20e154]:
+                - paragraph [ref=f20e155]: Michael Maximoff
+                - paragraph [ref=f20e156]: Away
+              - button "Friend options" [ref=f20e157]
+            - listitem [ref=f20e160]:
+              - generic [ref=f20e161]: RH
+              - generic [ref=f20e164]:
+                - paragraph [ref=f20e165]: Rachel Howlett
+                - paragraph [ref=f20e166]: Offline
+              - button "Friend options" [ref=f20e167]
+            - listitem [ref=f20e170]:
+              - generic [ref=f20e171]: NK
+              - generic [ref=f20e174]:
+                - paragraph [ref=f20e175]: Nina Kraviz
+                - paragraph [ref=f20e176]: Online
+              - button "Friend options" [ref=f20e177]
+        - generic [ref=f20e180]:
+          - generic [ref=f20e181]:
+            - generic [ref=f20e182]: My Family
+            - button "Settings" [ref=f20e183]
+          - list [ref=f20e184]:
+            - listitem [ref=f20e185]:
+              - generic [ref=f20e186]: SH
+              - generic [ref=f20e189]:
+                - paragraph [ref=f20e190]: Sarah Hetfield
+                - paragraph [ref=f20e191]: Online
+              - button "Friend options" [ref=f20e192]
+        - generic [ref=f20e195]:
+          - generic [ref=f20e196]:
+            - generic [ref=f20e197]: Uncategorized
+            - button "Settings" [ref=f20e198]
+          - list [ref=f20e199]:
+            - listitem [ref=f20e200]:
+              - generic [ref=f20e201]: BP
+              - generic [ref=f20e204]:
+                - paragraph [ref=f20e205]: Bruce Peterson
+                - paragraph [ref=f20e206]: Online
+              - button "Friend options" [ref=f20e207]
+            - listitem [ref=f20e210]:
+              - generic [ref=f20e211]: CG
+              - generic [ref=f20e214]:
+                - paragraph [ref=f20e215]: Chris Greyson
+                - paragraph [ref=f20e216]: Away
+              - button "Friend options" [ref=f20e217]
+            - listitem [ref=f20e220]:
+              - generic [ref=f20e221]: NG
+              - generic [ref=f20e224]:
+                - paragraph [ref=f20e225]: Nicholas Grisom
+                - paragraph [ref=f20e226]: Invisible
+              - button "Friend options" [ref=f20e227]
+            - listitem [ref=f20e230]:
+              - generic [ref=f20e231]: JS
+              - generic [ref=f20e234]:
+                - paragraph [ref=f20e235]: James Spiegel
+                - paragraph [ref=f20e236]: Away
+              - button "Friend options" [ref=f20e237]
+            - listitem [ref=f20e240]:
+              - generic [ref=f20e241]: DJ
+              - generic [ref=f20e244]:
+                - paragraph [ref=f20e245]: Diana Jones
+                - paragraph [ref=f20e246]: Online
+              - button "Friend options" [ref=f20e247]
+      - generic [ref=f20e250]:
+        - textbox "Search Friends..." [ref=f20e251]
+        - button "Friend settings" [ref=f20e252]
+        - button "Collapse friends panel" [ref=f20e255]
+      - button "Olympus Chat" [ref=f20e258]
+    - main [ref=f20e262]:
+      - generic [ref=f20e264]:
+        - generic [ref=f20e265]:
+          - generic [ref=f20e322]:
+            - generic [ref=f20e323]:
+              - heading "This month" [level=3] [ref=f20e324]
+              - link "Ledger" [ref=f20e325] [cursor=pointer]:
+                - /url: /bank
+            - generic [ref=f20e326]:
+              - generic [ref=f20e327]:
+                - generic [ref=f20e328]: Income
+                - text: "0"
+              - generic [ref=f20e329]:
+                - generic [ref=f20e330]: Expense
+                - text: "0"
+          - link "34° 40° / 32° Trời quang Cảm giác 42° · Mưa 0% Nay 40° T2 40° T3 40° T4 39° T5 40° T6 41° T7 41°" [ref=f20e331] [cursor=pointer]:
+            - /url: /weather
+            - generic [ref=f20e332]:
+              - generic [ref=f20e333]:
+                - generic [ref=f20e335]:
+                  - generic [ref=f20e336]: 34°
+                  - generic [ref=f20e337]: 40° / 32°
+                - paragraph [ref=f20e340]: Trời quang
+                - paragraph [ref=f20e341]: Cảm giác 42° · Mưa 0%
+              - generic [ref=f20e342]:
+                - generic [ref=f20e343]:
+                  - generic [ref=f20e344]: Nay
+                  - generic [ref=f20e348]: 40°
+                - generic [ref=f20e349]:
+                  - generic [ref=f20e350]: T2
+                  - generic [ref=f20e354]: 40°
+                - generic [ref=f20e355]:
+                  - generic [ref=f20e356]: T3
+                  - generic [ref=f20e360]: 40°
+                - generic [ref=f20e361]:
+                  - generic [ref=f20e362]: T4
+                  - generic [ref=f20e366]: 39°
+                - generic [ref=f20e367]:
+                  - generic [ref=f20e368]: T5
+                  - generic [ref=f20e372]: 40°
+                - generic [ref=f20e373]:
+                  - generic [ref=f20e374]: T6
+                  - generic [ref=f20e378]: 41°
+                - generic [ref=f20e379]:
+                  - generic [ref=f20e380]: T7
+                  - generic [ref=f20e384]: 41°
+          - link "Tháng 7, 2026 T2 T3 T4 T5 T6 T7 CN 1 17 2 18 3 19 4 20 5 21 6 22 7 23 8 24 9 25 10 26 11 27 12 28 13 29 14 1/6 15 2 16 3 17 4 18 5 19 6 20 7 21 8 22 9 23 10 24 11 25 12 26 13 27 14 28 15 29 16 30 17 31 18" [ref=f20e385] [cursor=pointer]:
+            - /url: /calendar
+            - generic [ref=f20e386]:
+              - heading "Tháng 7, 2026" [level=3] [ref=f20e388]
+              - generic [ref=f20e389]:
+                - generic [ref=f20e390]: T2
+                - generic [ref=f20e391]: T3
+                - generic [ref=f20e392]: T4
+                - generic [ref=f20e393]: T5
+                - generic [ref=f20e394]: T6
+                - generic [ref=f20e395]: T7
+                - generic [ref=f20e396]: CN
+                - generic [ref=f20e399]:
+                  - generic [ref=f20e400]: "1"
+                  - generic [ref=f20e401]: "17"
+                - generic [ref=f20e402]:
+                  - generic [ref=f20e403]: "2"
+                  - generic [ref=f20e404]: "18"
+                - generic [ref=f20e405]:
+                  - generic [ref=f20e406]: "3"
+                  - generic [ref=f20e407]: "19"
+                - generic [ref=f20e408]:
+                  - generic [ref=f20e409]: "4"
+                  - generic [ref=f20e410]: "20"
+                - generic [ref=f20e411]:
+                  - generic [ref=f20e412]: "5"
+                  - generic [ref=f20e413]: "21"
+                - generic [ref=f20e414]:
+                  - generic [ref=f20e415]: "6"
+                  - generic [ref=f20e416]: "22"
+                - generic [ref=f20e417]:
+                  - generic [ref=f20e418]: "7"
+                  - generic [ref=f20e419]: "23"
+                - generic [ref=f20e420]:
+                  - generic [ref=f20e421]: "8"
+                  - generic [ref=f20e422]: "24"
+                - generic [ref=f20e423]:
+                  - generic [ref=f20e424]: "9"
+                  - generic [ref=f20e425]: "25"
+                - generic [ref=f20e426]:
+                  - generic [ref=f20e427]: "10"
+                  - generic [ref=f20e428]: "26"
+                - generic [ref=f20e429]:
+                  - generic [ref=f20e430]: "11"
+                  - generic [ref=f20e431]: "27"
+                - generic [ref=f20e432]:
+                  - generic [ref=f20e433]: "12"
+                  - generic [ref=f20e434]: "28"
+                - generic [ref=f20e435]:
+                  - generic [ref=f20e436]: "13"
+                  - generic [ref=f20e437]: "29"
+                - generic [ref=f20e438]:
+                  - generic [ref=f20e439]: "14"
+                  - generic [ref=f20e440]: 1/6
+                - generic [ref=f20e441]:
+                  - generic [ref=f20e442]: "15"
+                  - generic [ref=f20e443]: "2"
+                - generic [ref=f20e444]:
+                  - generic [ref=f20e445]: "16"
+                  - generic [ref=f20e446]: "3"
+                - generic [ref=f20e447]:
+                  - generic [ref=f20e448]: "17"
+                  - generic [ref=f20e449]: "4"
+                - generic [ref=f20e450]:
+                  - generic [ref=f20e451]: "18"
+                  - generic [ref=f20e452]: "5"
+                - generic [ref=f20e453]:
+                  - generic [ref=f20e454]: "19"
+                  - generic [ref=f20e455]: "6"
+                - generic [ref=f20e456]:
+                  - generic [ref=f20e457]: "20"
+                  - generic [ref=f20e458]: "7"
+                - generic [ref=f20e459]:
+                  - generic [ref=f20e460]: "21"
+                  - generic [ref=f20e461]: "8"
+                - generic [ref=f20e462]:
+                  - generic [ref=f20e463]: "22"
+                  - generic [ref=f20e464]: "9"
+                - generic [ref=f20e465]:
+                  - generic [ref=f20e466]: "23"
+                  - generic [ref=f20e467]: "10"
+                - generic [ref=f20e468]:
+                  - generic [ref=f20e469]: "24"
+                  - generic [ref=f20e470]: "11"
+                - generic [ref=f20e471]:
+                  - generic [ref=f20e472]: "25"
+                  - generic [ref=f20e473]: "12"
+                - generic [ref=f20e474]:
+                  - generic [ref=f20e475]: "26"
+                  - generic [ref=f20e476]: "13"
+                - generic [ref=f20e477]:
+                  - generic [ref=f20e478]: "27"
+                  - generic [ref=f20e479]: "14"
+                - generic [ref=f20e480]:
+                  - generic [ref=f20e481]: "28"
+                  - generic [ref=f20e482]: "15"
+                - generic [ref=f20e483]:
+                  - generic [ref=f20e484]: "29"
+                  - generic [ref=f20e485]: "16"
+                - generic [ref=f20e486]:
+                  - generic [ref=f20e487]: "30"
+                  - generic [ref=f20e488]: "17"
+                - generic [ref=f20e489]:
+                  - generic [ref=f20e490]: "31"
+                  - generic [ref=f20e491]: "18"
+          - generic [ref=f20e274]:
+            - heading "Discover" [level=3] [ref=f20e276]
+            - link "Nothing published yet — browse the library." [ref=f20e277] [cursor=pointer]:
+              - /url: /library/comic
+        - generic [ref=f20e278]:
+          - generic [ref=f20e279]:
+            - generic [ref=f20e280]:
+              - button "Status" [ref=f20e281]
+              - button "Multimedia" [ref=f20e285]
+              - button "Blog Post" [ref=f20e289]
+            - generic [ref=f20e293]:
+              - generic [ref=f20e294]:
+                - generic [ref=f20e295]: A
+                - generic [ref=f20e497]: Chưa có nội dung để xem trước.
+              - generic [ref=f20e297]:
+                - button "Add photos (coming soon)" [disabled] [ref=f20e298]
+                - button "Tag friends (coming soon)" [disabled] [ref=f20e301]
+                - button "Add location (coming soon)" [disabled] [ref=f20e304]
+                - generic [ref=f20e307]:
+                  - button "Post Status" [disabled] [ref=f20e308]
+                  - button "Edit" [ref=f20e498]
+          - article [ref=f20e492]:
+            - generic [ref=f20e493]:
+              - generic [ref=f20e494]: admin
+              - generic [ref=f20e495]: 16 Nov · buồn
+            - paragraph [ref=f20e496]: Xin chao bao
+          - article [ref=f20e499]:
+            - generic [ref=f20e500]:
+              - generic [ref=f20e501]: admin
+              - generic [ref=f20e502]: 19 Jul
+            - paragraph [ref=f20e503]: Xin chào, đây là bài đăng thử nghiệm form mới
+        - complementary [ref=f20e311]:
+          - generic [ref=f20e312]:
+            - heading "People" [level=3] [ref=f20e314]
+            - link "No people yet — add someone to your registry." [ref=f20e315] [cursor=pointer]:
+              - /url: /people
+          - generic [ref=f20e316]:
+            - heading "Recent activity" [level=3] [ref=f20e318]
+            - paragraph [ref=f20e319]: You're all caught up.
+    - button "Go to top"
+  - alert [ref=f20e320]

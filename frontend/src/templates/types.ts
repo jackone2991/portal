@@ -56,5 +56,9 @@ export interface TemplateManifest {
     /** SPEC-08 P0.5 — people registry (contacts + birthdays). */
     peopleList: ComponentType;
     peopleDetail: ComponentType<{ id: string }>;
+    /** Calendar & Events — month view of journal notes; add a note to any day. */
+    calendar: ComponentType;
+    /** Weather — current + hourly + 7-day (Open-Meteo, geolocation). */
+    weather: ComponentType;
   };
 }

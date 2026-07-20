@@ -525,6 +525,7 @@ func run() error {
 	r.Get("/healthz", healthz(pool, rdb))
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/healthz", healthz(pool, rdb))
+		r.Get("/time", handleServerTime(cfg.AppTimezone)) // app clock + display tz — one config for all dates
 
 		// Aggregator routes
 		r.With(authTenant).Get("/continue", handleContinue(mediaMod))
@@ -606,6 +607,21 @@ func healthz(pool *pgxpool.Pool, rdb *redis.Client) http.HandlerFunc {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 		_, _ = fmt.Fprintf(w, `{"status":"ok","db":%t,"cache":%t}`, dbOK, cacheOK)
+	}
+}
+
+// handleServerTime serves the app clock + display timezone (APP_TIMEZONE) so the
+// frontend can render every date from one config (frontend lib/time.ts). Public —
+// neither the clock nor the tz is sensitive. Timestamps are UTC; tz is a display
+// hint the browser applies via Intl.
+func handleServerTime(tz string) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"now":      time.Now().UTC().Format(time.RFC3339),
+			"timezone": tz,
+		})
 	}
 }
 

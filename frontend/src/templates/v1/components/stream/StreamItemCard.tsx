@@ -4,24 +4,29 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { StreamItem } from "@/lib/stream";
 import { Icon } from "../ui/Icon";
+import { Post } from "../post/Post";
+import { formatDate, useTimeConfig } from "@/lib/time";
 
-// One life-stream card (SPEC-06 P0.2). Journal items render their text; system
-// items render the synthesized title as a compact, optionally-linked card.
+// One life-stream card (SPEC-06 P0.2). A journal item renders as a full Olympus
+// post card (Post: avatar header + text + reaction bar + Like/Comment/Share FABs);
+// system items (media/bank/comic/people) render as a compact, optionally-linked
+// event card. Reaction counts are 0 — the app has no social layer yet, so the bar
+// is the design's chrome, not fake engagement.
 export function StreamItemCard({ item, displayName }: { item: StreamItem; displayName?: string }) {
-  const when = new Date(item.occurred_at).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const { data: tc } = useTimeConfig();
+  const when = formatDate(item.occurred_at, tc?.timezone ?? "UTC");
 
   if (item.source_module === "journal") {
     return (
-      <article
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }}
-      >
-        <div className="mb-1 flex items-center justify-between text-xs" style={{ color: "var(--tpl-muted)" }}>
-          <span className="font-medium" style={{ color: "var(--tpl-heading)" }}>{displayName ?? "You"}</span>
-          <span>{when}{item.mood ? ` · ${item.mood}` : ""}</span>
-        </div>
-        <p className="whitespace-pre-wrap text-sm" style={{ color: "var(--tpl-heading)" }}>{item.body_md}</p>
-      </article>
+      <Post
+        author={displayName ?? "You"}
+        time={item.mood ? `${when} · ${item.mood}` : when}
+        text={<span className="whitespace-pre-wrap">{item.body_md}</span>}
+        likes={0}
+        likedBy={[]}
+        comments={0}
+        shares={0}
+      />
     );
   }
 

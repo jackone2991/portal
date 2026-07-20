@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - link "S Sky Feeling · Social Network" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: S
+        - text: Sky Feeling · Social Network
+      - heading "Welcome to the biggest social network" [level=1] [ref=e8]
+      - paragraph [ref=e9]: Share your thoughts, write posts, stream your favourite music, earn badges and much more.
+      - link "Register now" [ref=e10] [cursor=pointer]:
+        - /url: /register
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - button "Sign in" [ref=e14]
+        - button "Register" [ref=e18]
+      - generic [ref=e22]:
+        - heading "Login to your account" [level=2] [ref=e23]
+        - generic [ref=e24]:
+          - generic [ref=e25]: Your Email
+          - textbox "Your Email" [ref=e26]:
+            - /placeholder: you@example.com
+        - generic [ref=e27]:
+          - generic [ref=e28]: Your Password
+          - textbox "Your Password" [ref=e29]:
+            - /placeholder: ••••••••
+        - generic [ref=e30]:
+          - generic [ref=e31] [cursor=pointer]:
+            - checkbox "Remember me" [checked] [ref=e32]
+            - text: Remember me
+          - generic [ref=e33]: Forgot password? (coming soon)
+        - button "Login" [ref=e34]
+        - paragraph [ref=e35]:
+          - text: Don't have an account?
+          - button "Register now" [ref=e36]
+  - alert [ref=e37]

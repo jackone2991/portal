@@ -1,0 +1,29 @@
+# Keep the Docker build context minimal + reproducible. The image installs its
+# own node_modules in the `deps` stage (COPY --from=deps), so the host's pnpm
+# symlink tree must NEVER enter the context — otherwise `COPY . .` collides with
+# it (e.g. @eslint/config-array: symlink here vs directory in the image → build
+# fails with "cannot copy to non-directory").
+node_modules
+.next
+out
+
+# VCS + editor
+.git
+.gitignore
+.vscode
+.idea
+
+# Local env / secrets (NEXT_PUBLIC_* come from build args, not these)
+.env*.local
+
+# Test / build artifacts + logs
+coverage
+.turbo
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker + docs (not needed inside the image)
+Dockerfile
+.dockerignore
+README.md

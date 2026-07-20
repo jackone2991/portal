@@ -1,0 +1,107 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - link "Portal — Newsfeed" [ref=f2e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f2e11]:
+          - generic [ref=f2e12]: Newsfeed
+          - searchbox [ref=f2e14]
+          - link "Find Friends" [ref=f2e15] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f2e16]:
+            - button "Friend requests" [ref=f2e18]:
+              - generic [ref=f2e21]: "4"
+            - button "Messages" [ref=f2e23]:
+              - generic [ref=f2e26]: "2"
+            - button "Notifications" [ref=f2e28]
+            - button "Dogfood Tester creator" [ref=f2e87]:
+              - generic [ref=f2e33]:
+                - generic [ref=f2e34]: Dogfood Tester
+                - generic [ref=f2e35]: creator
+              - generic [ref=f2e36]: DT
+    - main [ref=f2e41]:
+      - generic [ref=f2e43]:
+        - generic [ref=f2e88]:
+          - generic [ref=f2e89]:
+            - heading "This month" [level=3] [ref=f2e90]
+            - link "Ledger" [ref=f2e91] [cursor=pointer]:
+              - /url: /bank
+          - generic [ref=f2e92]:
+            - generic [ref=f2e93]:
+              - generic [ref=f2e94]: Income
+              - text: 20.000.000
+            - generic [ref=f2e95]:
+              - generic [ref=f2e96]: Expense
+              - text: "131.000"
+        - generic [ref=f2e45]:
+          - generic [ref=f2e46]:
+            - generic [ref=f2e47]:
+              - button "Status" [ref=f2e48]
+              - button "Multimedia" [ref=f2e52]
+              - button "Blog Post" [ref=f2e56]
+            - generic [ref=f2e60]:
+              - generic [ref=f2e61]:
+                - generic [ref=f2e62]: DT
+                - textbox "What happened? (markdown supported)" [ref=f2e63]
+              - generic [ref=f2e64]:
+                - textbox "Mood" [ref=f2e68]:
+                  - /placeholder: Mood (optional)
+                - textbox "Happened at" [ref=f2e72]: 2026-07-19T18:08
+              - generic [ref=f2e73]:
+                - button "Add photos (coming soon)" [disabled] [ref=f2e74]
+                - button "Tag friends (coming soon)" [disabled] [ref=f2e77]
+                - button "Add location (coming soon)" [disabled] [ref=f2e80]
+                - button "Save entry" [disabled] [ref=f2e84]
+          - article [ref=f2e157]:
+            - generic [ref=f2e158]:
+              - generic [ref=f2e159]: Dogfood Tester
+              - generic [ref=f2e160]: Jul 19 · shipping
+            - paragraph [ref=f2e161]: Newsfeed wired end-to-end ✅ (verified via Playwright)
+          - article [ref=f2e97]:
+            - generic [ref=f2e98]:
+              - generic [ref=f2e99]: Dogfood Tester
+              - generic [ref=f2e100]: Jul 12
+            - paragraph [ref=f2e101]: stream projection probe
+          - article [ref=f2e102]:
+            - generic [ref=f2e103]:
+              - generic [ref=f2e104]: Dogfood Tester
+              - generic [ref=f2e105]: Jul 12 · caffeinated
+            - paragraph [ref=f2e106]: "Second note: bought coffee this morning ☕"
+          - article [ref=f2e107]:
+            - generic [ref=f2e108]:
+              - generic [ref=f2e109]: Dogfood Tester
+              - generic [ref=f2e110]: Jul 12 · stoked
+            - paragraph [ref=f2e111]: First dogfood note — the stack is live 🎉
+          - link [ref=f2e112] [cursor=pointer]:
+            - /url: /bank/transactions
+            - generic [ref=f2e117]:
+              - paragraph [ref=f2e118]: Spent 50.000
+              - paragraph [ref=f2e119]: Jul 12
+          - link [ref=f2e120] [cursor=pointer]:
+            - /url: /bank/transactions
+            - generic [ref=f2e125]:
+              - paragraph [ref=f2e126]: Spent 1.000
+              - paragraph [ref=f2e127]: Jul 12
+          - link [ref=f2e128] [cursor=pointer]:
+            - /url: /bank/transactions
+            - generic [ref=f2e133]:
+              - paragraph [ref=f2e134]: Income 5.000.000
+              - paragraph [ref=f2e135]: Jul 12
+          - link [ref=f2e136] [cursor=pointer]:
+            - /url: /bank/transactions
+            - generic [ref=f2e141]:
+              - paragraph [ref=f2e142]: Spent 35.000
+              - paragraph [ref=f2e143]: Jul 12
+          - link [ref=f2e144] [cursor=pointer]:
+            - /url: /bank/transactions
+            - generic [ref=f2e149]:
+              - paragraph [ref=f2e150]: Moved 200.000
+              - paragraph [ref=f2e151]: Jul 12
+          - article [ref=f2e152]:
+            - generic [ref=f2e153]:
+              - generic [ref=f2e154]: Dogfood Tester
+              - generic [ref=f2e155]: Jan 1
+            - paragraph [ref=f2e156]: backdated
+    - button "Go to top"
+  - alert [ref=f2e86]

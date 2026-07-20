@@ -1,0 +1,46 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - generic [ref=f2e3]: Loading …
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - link "Portal — Newsfeed" [ref=f2e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f2e11]:
+          - generic [ref=f2e12]: Newsfeed
+          - searchbox [ref=f2e14]
+          - link "Find Friends" [ref=f2e15] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f2e16]:
+            - button "Friend requests" [ref=f2e18]:
+              - generic [ref=f2e21]: "4"
+            - button "Messages" [ref=f2e23]:
+              - generic [ref=f2e26]: "2"
+            - button "Notifications" [ref=f2e28]
+            - button "Dogfood Tester Member" [ref=f2e32]:
+              - generic [ref=f2e33]:
+                - generic [ref=f2e34]: Dogfood Tester
+                - generic [ref=f2e35]: Member
+              - generic [ref=f2e36]: DT
+    - main [ref=f2e41]:
+      - generic [ref=f2e45]:
+        - generic [ref=f2e46]:
+          - generic [ref=f2e47]:
+            - button "Status" [ref=f2e48]
+            - button "Multimedia" [ref=f2e52]
+            - button "Blog Post" [ref=f2e56]
+          - generic [ref=f2e60]:
+            - generic [ref=f2e61]:
+              - generic [ref=f2e62]: "Y"
+              - textbox "What happened? (markdown supported)" [ref=f2e63]
+            - generic [ref=f2e64]:
+              - textbox "Mood" [ref=f2e68]:
+                - /placeholder: Mood (optional)
+              - textbox "Happened at" [ref=f2e72]: 2026-07-19T18:07
+            - generic [ref=f2e73]:
+              - button "Add photos (coming soon)" [disabled] [ref=f2e74]
+              - button "Tag friends (coming soon)" [disabled] [ref=f2e77]
+              - button "Add location (coming soon)" [disabled] [ref=f2e80]
+              - button "Save entry" [disabled] [ref=f2e84]
+        - paragraph [ref=f2e85]: Loading your stream…
+    - button "Go to top"
+  - alert [ref=f2e86]

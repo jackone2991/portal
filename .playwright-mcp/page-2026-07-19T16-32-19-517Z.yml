@@ -1,0 +1,149 @@
+- generic [ref=f19e1]:
+  - generic [ref=f19e2]:
+    - generic [ref=f19e3]: Loading …
+    - banner [ref=f19e5]:
+      - generic [ref=f19e6]:
+        - link "Portal — Newsfeed" [ref=f19e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f19e11]: Portal
+        - generic [ref=f19e12]:
+          - generic [ref=f19e13]: Newsfeed
+          - searchbox [ref=f19e15]
+          - link "Find Friends" [ref=f19e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f19e17]:
+            - button "Friend requests" [ref=f19e19]:
+              - generic [ref=f19e22]: "4"
+            - button "Messages" [ref=f19e24]:
+              - generic [ref=f19e27]: "2"
+            - button "Notifications" [ref=f19e29]
+            - button "Guest Member" [ref=f19e33]:
+              - generic [ref=f19e34]:
+                - generic [ref=f19e35]: Guest
+                - generic [ref=f19e36]: Member
+              - generic [ref=f19e37]: G
+    - complementary [ref=f19e42]:
+      - generic [ref=f19e43]:
+        - button "Collapse Menu" [ref=f19e44]
+        - link "Newsfeed" [ref=f19e50] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f19e55] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f19e60] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f19e65] [cursor=pointer]:
+          - /url: /people
+        - link "Fav Pages Feed" [ref=f19e70] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f19e75]
+        - link "Music & Playlists" [ref=f19e80] [cursor=pointer]:
+          - /url: /library/novel/1
+        - link "Weather App" [ref=f19e85] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f19e90] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f19e95]
+        - button "Friends Birthdays" [ref=f19e100]
+        - button "Account Stats" [ref=f19e105]
+        - button "Manage Widgets" [ref=f19e110]
+      - generic [ref=f19e115]:
+        - generic [ref=f19e116]:
+          - generic [ref=f19e117]: Profile Completion
+          - generic [ref=f19e118]: 76%
+        - paragraph [ref=f19e121]:
+          - text: Complete
+          - link "your profile" [ref=f19e122] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f19e123]:
+      - generic [ref=f19e124]:
+        - generic [ref=f19e125]:
+          - generic [ref=f19e126]:
+            - generic [ref=f19e127]: Close Friends
+            - button "Settings" [ref=f19e128]
+          - list [ref=f19e129]:
+            - listitem [ref=f19e130]:
+              - generic [ref=f19e131]: CS
+              - generic [ref=f19e134]:
+                - paragraph [ref=f19e135]: Carol Summers
+                - paragraph [ref=f19e136]: Online
+              - button "Friend options" [ref=f19e137]
+            - listitem [ref=f19e140]:
+              - generic [ref=f19e141]: MB
+              - generic [ref=f19e144]:
+                - paragraph [ref=f19e145]: Mathilda Brinker
+                - paragraph [ref=f19e146]: At work!
+              - button "Friend options" [ref=f19e147]
+            - listitem [ref=f19e150]:
+              - generic [ref=f19e151]: MM
+              - generic [ref=f19e154]:
+                - paragraph [ref=f19e155]: Michael Maximoff
+                - paragraph [ref=f19e156]: Away
+              - button "Friend options" [ref=f19e157]
+            - listitem [ref=f19e160]:
+              - generic [ref=f19e161]: RH
+              - generic [ref=f19e164]:
+                - paragraph [ref=f19e165]: Rachel Howlett
+                - paragraph [ref=f19e166]: Offline
+              - button "Friend options" [ref=f19e167]
+            - listitem [ref=f19e170]:
+              - generic [ref=f19e171]: NK
+              - generic [ref=f19e174]:
+                - paragraph [ref=f19e175]: Nina Kraviz
+                - paragraph [ref=f19e176]: Online
+              - button "Friend options" [ref=f19e177]
+        - generic [ref=f19e180]:
+          - generic [ref=f19e181]:
+            - generic [ref=f19e182]: My Family
+            - button "Settings" [ref=f19e183]
+          - list [ref=f19e184]:
+            - listitem [ref=f19e185]:
+              - generic [ref=f19e186]: SH
+              - generic [ref=f19e189]:
+                - paragraph [ref=f19e190]: Sarah Hetfield
+                - paragraph [ref=f19e191]: Online
+              - button "Friend options" [ref=f19e192]
+        - generic [ref=f19e195]:
+          - generic [ref=f19e196]:
+            - generic [ref=f19e197]: Uncategorized
+            - button "Settings" [ref=f19e198]
+          - list [ref=f19e199]:
+            - listitem [ref=f19e200]:
+              - generic [ref=f19e201]: BP
+              - generic [ref=f19e204]:
+                - paragraph [ref=f19e205]: Bruce Peterson
+                - paragraph [ref=f19e206]: Online
+              - button "Friend options" [ref=f19e207]
+            - listitem [ref=f19e210]:
+              - generic [ref=f19e211]: CG
+              - generic [ref=f19e214]:
+                - paragraph [ref=f19e215]: Chris Greyson
+                - paragraph [ref=f19e216]: Away
+              - button "Friend options" [ref=f19e217]
+            - listitem [ref=f19e220]:
+              - generic [ref=f19e221]: NG
+              - generic [ref=f19e224]:
+                - paragraph [ref=f19e225]: Nicholas Grisom
+                - paragraph [ref=f19e226]: Invisible
+              - button "Friend options" [ref=f19e227]
+            - listitem [ref=f19e230]:
+              - generic [ref=f19e231]: JS
+              - generic [ref=f19e234]:
+                - paragraph [ref=f19e235]: James Spiegel
+                - paragraph [ref=f19e236]: Away
+              - button "Friend options" [ref=f19e237]
+            - listitem [ref=f19e240]:
+              - generic [ref=f19e241]: DJ
+              - generic [ref=f19e244]:
+                - paragraph [ref=f19e245]: Diana Jones
+                - paragraph [ref=f19e246]: Online
+              - button "Friend options" [ref=f19e247]
+      - generic [ref=f19e250]:
+        - textbox "Search Friends..." [ref=f19e251]
+        - button "Friend settings" [ref=f19e252]
+        - button "Collapse friends panel" [ref=f19e255]
+      - button "Olympus Chat" [ref=f19e258]
+    - main [ref=f19e262]:
+      - paragraph [ref=f19e264]: Đang lấy thời tiết…
+    - button "Go to top"
+  - alert [ref=f19e265]

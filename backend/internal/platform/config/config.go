@@ -67,6 +67,13 @@ type Config struct {
 	// API. The frontend login form POSTs cross-subdomain, so the exact origin
 	// must be allowlisted — a wildcard is invalid with credentials.
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"https://portal.localhost"`
+
+	// AppTimezone is the SINGLE display-timezone knob for the whole product (IANA
+	// name, e.g. "UTC" or "Asia/Ho_Chi_Minh"). The API stores timestamps in UTC;
+	// this only drives how the FRONTEND renders every date (served via
+	// GET /api/v1/time → frontend lib/time.ts). Change it in one place to shift the
+	// whole UI's date/time reckoning.
+	AppTimezone string `env:"APP_TIMEZONE" envDefault:"UTC"`
 }
 
 // SigningKey is the parsed form of one entry in JWTKeys.
