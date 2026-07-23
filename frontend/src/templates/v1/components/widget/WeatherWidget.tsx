@@ -35,6 +35,7 @@ export function WeatherWidget() {
     <Link href={"/weather" as Route} className="block transition hover:opacity-90" title="Mở trang thời tiết">
       <Card className="overflow-hidden">
         <div className="p-4" style={{ background: "linear-gradient(150deg, var(--tpl-accent), var(--tpl-blue))", color: "#fff" }}>
+          <p className="mb-1 truncate text-[11px] font-medium text-white/85">{data.place ?? "Vị trí của bạn"}</p>
           <div className="flex items-start justify-between">
             <div>
               <div className="text-3xl font-bold leading-none">{now.temp}°</div>

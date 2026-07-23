@@ -28,14 +28,14 @@ export function WeatherView() {
     );
   }
 
-  const { now, hourly, daily } = data;
+  const { now, hourly, daily, place } = data;
 
   return (
     <div className="max-w-3xl space-y-5">
       {/* Hiện tại */}
       <div className="overflow-hidden rounded-2xl border shadow-sm" style={{ borderColor: "var(--tpl-border)" }}>
         <div className="p-6 text-white" style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-blue))" }}>
-          <p className="text-xs text-white/80">Thời tiết tại vị trí của bạn</p>
+          <p className="text-xs text-white/80">{place ? `Thời tiết · ${place}` : "Thời tiết tại vị trí của bạn"}</p>
           <div className="mt-1 flex items-start justify-between">
             <div>
               <div className="text-5xl font-bold leading-none">{now.temp}°</div>

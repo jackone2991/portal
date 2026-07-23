@@ -231,6 +231,11 @@ services:
         # frontend/src/templates/registry.ts).
         NEXT_PUBLIC_TEMPLATE_VERSION: ${NEXT_PUBLIC_TEMPLATE_VERSION:-v1}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.${APP_DOMAIN}}
+        # Weather widget default location (see .env). If unset, weather falls back
+        # to the browser geolocation prompt.
+        NEXT_PUBLIC_WEATHER_LAT: ${NEXT_PUBLIC_WEATHER_LAT:-}
+        NEXT_PUBLIC_WEATHER_LON: ${NEXT_PUBLIC_WEATHER_LON:-}
+        NEXT_PUBLIC_WEATHER_PLACE: ${NEXT_PUBLIC_WEATHER_PLACE:-}
     restart: unless-stopped
     env_file: .env
     depends_on:

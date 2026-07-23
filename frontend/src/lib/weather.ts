@@ -33,7 +33,7 @@ export interface WeatherNow {
 }
 export interface WeatherHour { time: string; temp: number; icon: string }
 export interface WeatherDay { dow: string; icon: string; label: string; low: number; high: number; rain: number }
-export interface WeatherData { now: WeatherNow; hourly: WeatherHour[]; daily: WeatherDay[] }
+export interface WeatherData { now: WeatherNow; hourly: WeatherHour[]; daily: WeatherDay[]; place: string | null }
 
 const DOW_VI = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
@@ -57,8 +57,9 @@ type OM = {
   };
 };
 
-/** Fetch current + 24h hourly + 7-day weather for a coordinate (metric, °C). */
-export async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
+/** Fetch current + 24h hourly + 7-day weather for a coordinate (metric, °C).
+ *  `place` is an optional human label for the location (from config). */
+export async function fetchWeather(lat: number, lon: number, place: string | null = null): Promise<WeatherData> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}` +
     `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m` +
@@ -111,21 +112,50 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherDat
     };
   });
 
-  return { now, hourly, daily };
+  return { now, hourly, daily, place };
 }
 
 export type WeatherState = { status: "loading" | "ok" | "unavailable"; data: WeatherData | null };
 
-/** Geolocation → Open-Meteo. Shared client hook; degrades to "unavailable" when
- *  location is denied/unsupported or the fetch fails (never fabricates weather). */
+/**
+ * A fixed location from build-time config (`NEXT_PUBLIC_WEATHER_LAT` / `_LON` /
+ * `_PLACE`), or `null` if not configured. When set, weather uses it directly
+ * instead of prompting the browser for geolocation — reliable on desktop and when
+ * the geolocation permission is denied. An empty/unset env yields `0` → treated as
+ * not configured.
+ */
+export function configuredLocation(): { lat: number; lon: number; place: string | null } | null {
+  const lat = Number(process.env.NEXT_PUBLIC_WEATHER_LAT);
+  const lon = Number(process.env.NEXT_PUBLIC_WEATHER_LON);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || (lat === 0 && lon === 0)) return null;
+  const place = (process.env.NEXT_PUBLIC_WEATHER_PLACE ?? "").trim();
+  return { lat, lon, place: place || null };
+}
+
+/**
+ * Weather source for the UI. Prefers the configured location (above); if none is
+ * configured, falls back to the browser's geolocation. Degrades to "unavailable"
+ * when neither is available or the fetch fails (never fabricates weather).
+ */
 export function useGeoWeather(): WeatherState {
   const [state, setState] = useState<WeatherState>({ status: "loading", data: null });
   useEffect(() => {
+    let alive = true;
+
+    // 1) Configured location wins — no geolocation prompt needed.
+    const cfg = configuredLocation();
+    if (cfg) {
+      fetchWeather(cfg.lat, cfg.lon, cfg.place)
+        .then((data) => { if (alive) setState({ status: "ok", data }); })
+        .catch(() => { if (alive) setState({ status: "unavailable", data: null }); });
+      return () => { alive = false; };
+    }
+
+    // 2) Otherwise fall back to the browser's geolocation.
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState({ status: "unavailable", data: null });
       return;
     }
-    let alive = true;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
