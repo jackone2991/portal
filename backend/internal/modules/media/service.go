@@ -103,6 +103,24 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	return &UploadSession{Asset: asset, URL: pre.URL, Method: pre.Method, Headers: pre.Headers}, nil
 }
 
+// IngestImage ingests raw image bytes as a media asset, running the same pipeline
+// as a browser upload (create → store → complete, which enqueues process_image).
+// Returns the new asset id. Callers (e.g. the comic zip-import worker) run this
+// inside a tenant-scoped ctx so the asset + its variants land in the right tenant.
+func (s *Service) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+	sess, err := s.CreateUploadSession(ctx, ownerID, filename, contentType, int64(len(data)))
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if err := s.UploadSource(ctx, ownerID, sess.Asset.ID, bytes.NewReader(data), contentType); err != nil {
+		return uuid.Nil, err
+	}
+	if err := s.CompleteUpload(ctx, ownerID, sess.Asset.ID); err != nil {
+		return uuid.Nil, err
+	}
+	return sess.Asset.ID, nil
+}
+
 // UploadSource streams the original through the API to storage. This is the
 // dev-friendly path (the browser only talks to the API, not the bucket directly);
 // the presigned-PUT session is the direct browser→bucket path for prod/R2.
@@ -114,6 +132,18 @@ func (s *Service) UploadSource(ctx context.Context, ownerID, assetID uuid.UUID, 
 	}
 	if asset.Status != StatusUploading {
 		return fmt.Errorf("%w: asset already submitted", ErrNotReady)
+	}
+
+	if contentType == "" {
+		contentType = asset.MimeType
+	}
+	// Already seekable (e.g. the zip-import's bytes.Reader) → the S3 SDK can length
+	// + hash it in place; skip the temp-file spool (avoids per-image disk churn).
+	if rs, ok := body.(io.ReadSeeker); ok {
+		if _, err := rs.Seek(0, io.SeekStart); err != nil {
+			return err
+		}
+		return s.store.Put(ctx, asset.SourceKey, rs, contentType)
 	}
 
 	tmp, err := os.CreateTemp("", "upload-*")
@@ -128,9 +158,6 @@ func (s *Service) UploadSource(ctx context.Context, ownerID, assetID uuid.UUID, 
 	}
 	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
 		return err
-	}
-	if contentType == "" {
-		contentType = asset.MimeType
 	}
 	return s.store.Put(ctx, asset.SourceKey, tmp, contentType)
 }
@@ -510,6 +537,22 @@ func (s *Service) LookupAsset(ctx context.Context, id uuid.UUID) (*mediaapi.Asse
 		Height:     a.Height,
 		CreatedAt:  a.CreatedAt,
 	}, nil
+}
+
+// AssetStatuses returns id→status for the given assets in one query. The comic
+// zip-import worker polls thousands of assets to ready; this collapses a
+// per-asset round-trip into a single query per poll round. Run inside a
+// tenant-scoped ctx (same as LookupAsset).
+func (s *Service) AssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]mediaapi.AssetStatus, error) {
+	raw, err := s.repo.GetAssetStatuses(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[uuid.UUID]mediaapi.AssetStatus, len(raw))
+	for id, st := range raw {
+		out[id] = mediaapi.AssetStatus(st)
+	}
+	return out, nil
 }
 
 // PutProgress saves the playback progress for a video asset (P0.2).

@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,6 +60,11 @@ type API interface {
 	// GetAsset returns (nil, nil) if the asset is missing or in another tenant.
 	GetAsset(ctx context.Context, id uuid.UUID) (*Asset, error)
 
+	// AssetStatuses returns id→status for many assets in a single query. The
+	// comic zip-import worker polls thousands of assets to ready; use this
+	// instead of a GetAsset per asset per poll round. Run inside a tenant ctx.
+	AssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error)
+
 	// SignedURL returns a short-lived URL for direct delivery (movies/music
 	// players use this). Honours tenant boundary; the URL is for the active
 	// tenant only.
@@ -66,18 +72,36 @@ type API interface {
 
 	// Continue returns the active media progress items for the caller.
 	Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
+
+	// IngestImage ingests raw image bytes as a media asset (same pipeline as a
+	// browser upload) and returns the new asset id. Used by the comic zip-import
+	// worker; run it inside a tenant-scoped ctx (SPEC-02 P1.7).
+	IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
 }
 
 type Impl struct {
 	continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
 	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error)
+	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error)
+	ingestFn   func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
 }
 
 func NewImpl(
 	continueFn func(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error),
 	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error),
+	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error),
+	ingestFn func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error),
 ) *Impl {
-	return &Impl{continueFn: continueFn, getAssetFn: getAssetFn}
+	return &Impl{continueFn: continueFn, getAssetFn: getAssetFn, statusesFn: statusesFn, ingestFn: ingestFn}
+}
+
+// IngestImage delegates to the media service (nil-safe: returns an error if the
+// module was built without an ingest function).
+func (a *Impl) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+	if a.ingestFn == nil {
+		return uuid.Nil, errors.New("media: ingest not available")
+	}
+	return a.ingestFn(ctx, ownerID, filename, contentType, data)
 }
 
 // GetAsset returns the safe cross-module projection of an asset, or (nil, nil)
@@ -88,6 +112,15 @@ func (a *Impl) GetAsset(ctx context.Context, id uuid.UUID) (*Asset, error) {
 		return a.getAssetFn(ctx, id)
 	}
 	return nil, nil
+}
+
+// AssetStatuses returns id→status for many assets at once (empty map if the
+// module was built without a statuses function).
+func (a *Impl) AssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error) {
+	if a.statusesFn != nil {
+		return a.statusesFn(ctx, ids)
+	}
+	return map[uuid.UUID]AssetStatus{}, nil
 }
 
 func (a *Impl) SignedURL(_ context.Context, _ uuid.UUID, _ time.Duration) (string, error) {

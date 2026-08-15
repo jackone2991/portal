@@ -129,7 +129,11 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
-      - ./data/minio:/data          # ← your local storage folder (gitignored)
+      # Object-storage data dir. Default ./data/minio (repo-local, gitignored).
+      # Override MINIO_DATA_DIR in .env to relocate — e.g. to a faster disk
+      # (a dev box with MinIO on an HDD is ~5x slower than on an NVMe; the whole
+      # media/transcode pipeline is bound by this write speed).
+      - ${MINIO_DATA_DIR:-./data/minio}:/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
       interval: 30s

@@ -7,6 +7,7 @@ package comicrepo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -19,13 +20,14 @@ import (
 
 type Adapter struct {
 	q       *Queries
+	db      DBTX // raw handle for the jsonb writes (pass json as text, not []byte)
 	runInTx func(context.Context, func(pgx.Tx) error) error
 }
 
 // NewAdapter builds the adapter over a DBTX (the context-aware platform/db.Conn)
 // plus a RunInTx that opens/reuses the request transaction for reorder methods.
 func NewAdapter(db DBTX, runInTx func(context.Context, func(pgx.Tx) error) error) *Adapter {
-	return &Adapter{q: New(db), runInTx: runInTx}
+	return &Adapter{q: New(db), db: db, runInTx: runInTx}
 }
 
 var _ comic.Repository = (*Adapter)(nil)
@@ -67,7 +69,8 @@ func (a *Adapter) ListPublished(ctx context.Context, in comic.ListInput) ([]comi
 		out = append(out, comic.Comic{
 			ID: uuidFrom(r.ID), OwnerID: uuidFrom(r.OwnerUserID), Title: r.Title,
 			Description: r.Description, CoverAssetID: uuidPtr(r.CoverAssetID), Status: r.Status,
-			CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time, ChapterCount: int(r.ChapterCount),
+			ReadingDirection: r.ReadingDirection,
+			CreatedAt:        r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time, ChapterCount: int(r.ChapterCount),
 		})
 	}
 	return out, nil
@@ -88,7 +91,8 @@ func (a *Adapter) ListOwn(ctx context.Context, in comic.ListInput) ([]comic.Comi
 		out = append(out, comic.Comic{
 			ID: uuidFrom(r.ID), OwnerID: uuidFrom(r.OwnerUserID), Title: r.Title,
 			Description: r.Description, CoverAssetID: uuidPtr(r.CoverAssetID), Status: r.Status,
-			CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time, ChapterCount: int(r.ChapterCount),
+			ReadingDirection: r.ReadingDirection,
+			CreatedAt:        r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time, ChapterCount: int(r.ChapterCount),
 		})
 	}
 	return out, nil
@@ -96,11 +100,12 @@ func (a *Adapter) ListOwn(ctx context.Context, in comic.ListInput) ([]comic.Comi
 
 func (a *Adapter) UpdateComic(ctx context.Context, in comic.UpdateComicInput) (comic.Comic, error) {
 	row, err := a.q.UpdateComic(ctx, UpdateComicParams{
-		Title:        in.Title,
-		Description:  in.Description,
-		SetCover:     in.SetCover,
-		CoverAssetID: optUUID(in.CoverAssetID),
-		ID:           pgUUID(in.ID),
+		Title:            in.Title,
+		Description:      in.Description,
+		ReadingDirection: in.ReadingDirection,
+		SetCover:         in.SetCover,
+		CoverAssetID:     optUUID(in.CoverAssetID),
+		ID:               pgUUID(in.ID),
 	})
 	if err != nil {
 		return comic.Comic{}, mapNotFound(err)
@@ -307,6 +312,72 @@ func (a *Adapter) NullCoverByAsset(ctx context.Context, assetID uuid.UUID) error
 	return a.q.NullCoverByAsset(ctx, pgUUID(assetID))
 }
 
+// ── import jobs (P1.7) ────────────────────────────────────────────────
+
+func (a *Adapter) CreateImport(ctx context.Context, comicID, chapterID, ownerID uuid.UUID) (comic.ImportJob, error) {
+	row, err := a.q.CreateImport(ctx, CreateImportParams{ComicID: pgUUID(comicID), ChapterID: pgUUID(chapterID), OwnerUserID: pgUUID(ownerID)})
+	if err != nil {
+		return comic.ImportJob{}, err
+	}
+	return toImport(row), nil
+}
+
+func (a *Adapter) CreateComicImport(ctx context.Context, comicID, ownerID uuid.UUID) (comic.ImportJob, error) {
+	row, err := a.q.CreateComicImport(ctx, CreateComicImportParams{ComicID: pgUUID(comicID), OwnerUserID: pgUUID(ownerID)})
+	if err != nil {
+		return comic.ImportJob{}, err
+	}
+	return toImport(row), nil
+}
+
+func (a *Adapter) GetImport(ctx context.Context, id uuid.UUID) (comic.ImportJob, error) {
+	row, err := a.q.GetImport(ctx, pgUUID(id))
+	if err != nil {
+		return comic.ImportJob{}, mapNotFound(err)
+	}
+	return toImport(row), nil
+}
+
+func (a *Adapter) SetImportUpload(ctx context.Context, id uuid.UUID, uploadRef string) (comic.ImportJob, error) {
+	row, err := a.q.SetImportUpload(ctx, SetImportUploadParams{ID: pgUUID(id), UploadRef: &uploadRef})
+	if err != nil {
+		return comic.ImportJob{}, mapNotFound(err)
+	}
+	return toImport(row), nil
+}
+
+func (a *Adapter) StartImport(ctx context.Context, id uuid.UUID, total int) error {
+	return a.q.StartImport(ctx, StartImportParams{ID: pgUUID(id), Total: int32(total)})
+}
+
+// UpdateImportProgress / FinishImport pass the report json as TEXT (not []byte):
+// under QueryExecModeExec pgx encodes []byte as bytea, which a jsonb column rejects.
+func (a *Adapter) UpdateImportProgress(ctx context.Context, id uuid.UUID, succeeded, failed int, report []comic.ImportFileResult) error {
+	b, _ := json.Marshal(report)
+	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET succeeded=$2, failed=$3, report=$4::jsonb, updated_at=now() WHERE id=$1`,
+		pgUUID(id), int32(succeeded), int32(failed), string(b))
+	return err
+}
+
+func (a *Adapter) FinishImport(ctx context.Context, id uuid.UUID, status string, succeeded, failed int, report []comic.ImportFileResult, errMsg *string) error {
+	b, _ := json.Marshal(report)
+	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET status=$2, succeeded=$3, failed=$4, report=$5::jsonb, error=$6, updated_at=now() WHERE id=$1`,
+		pgUUID(id), status, int32(succeeded), int32(failed), string(b), errMsg)
+	return err
+}
+
+func toImport(r ComicImport) comic.ImportJob {
+	var report []comic.ImportFileResult
+	if len(r.Report) > 0 {
+		_ = json.Unmarshal(r.Report, &report)
+	}
+	return comic.ImportJob{
+		ID: uuidFrom(r.ID), ComicID: uuidFrom(r.ComicID), ChapterID: uuidPtr(r.ChapterID), OwnerUserID: uuidFrom(r.OwnerUserID),
+		Status: r.Status, UploadRef: r.UploadRef, Total: int(r.Total), Succeeded: int(r.Succeeded), Failed: int(r.Failed),
+		Report: report, Error: r.Error, CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time,
+	}
+}
+
 // ── mapping helpers ───────────────────────────────────────────────────
 
 func mapNotFound(err error) error {
@@ -320,7 +391,8 @@ func toComic(r Comic) comic.Comic {
 	return comic.Comic{
 		ID: uuidFrom(r.ID), OwnerID: uuidFrom(r.OwnerUserID), Title: r.Title,
 		Description: r.Description, CoverAssetID: uuidPtr(r.CoverAssetID), Status: r.Status,
-		CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time,
+		ReadingDirection: r.ReadingDirection,
+		CreatedAt:        r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time,
 	}
 }
 

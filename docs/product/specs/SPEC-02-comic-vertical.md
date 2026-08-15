@@ -1,6 +1,14 @@
 # SPEC-02 — Comic Vertical (end-to-end)
 
-**Status:** ready to build, rev 3 · **Drafted:** 2026-07-05 · **Last-verified:** 2026-07-10
+**Status:** ready to build, rev 12 · **Drafted:** 2026-07-05 · **Last-verified:** 2026-08-15
+**rev 12 (2026-08-15):** **P1.7 import performance optimized + hardened.** (1) `media:process_image` moved off the concurrency-1 `heavy` queue onto a new **`image` queue** with its own pool (`IMAGE_CONCURRENCY`, default 3) — variants transcode in parallel while video stays serial (SPEC-01 P0.1 OOM guard preserved: image decodes are dimension-capped). (2) **Parallel ingest** (`IMPORT_INGEST_CONCURRENCY`, default 4): `RunImport` now (A) creates all chapters, (B) reads the zip serially but fans the DB+storage ingest out to a bounded pool (I/O-bound: MinIO PUT + tenant tx per image) — measured ingest **5.8 → ~22 img/s**, no longer starving the transcode pool; then (C) drains, paging **each chapter the moment its images are ready** so pages commit incrementally (crash-resilient) and `succeeded` climbs live. (3) New `mediaapi.AssetStatuses(ids)` → **one** `WHERE id = ANY(...)` query per poll round instead of a `GetAsset` (one tenant tx) per asset. (4) `media.UploadSource` skips the temp-file spool for `io.ReadSeeker` bodies. **Fixes found in load-testing the 1.68 GB / 9129-image archive:** (a) the import task is enqueued *outside* the request pg tx, so the worker could dequeue before `SetImportUpload` committed → `RunImport` now waits briefly for `upload_ref` instead of failing (`no upload`); (b) the API's global 30 s request timeout cancelled the multi-GB API-proxied upload's S3 PutObject → raised to a generous per-request window (`cmd/api/main.go`, `ReadHeaderTimeout` still guards headers). Transcode throughput is I/O-bound on dev's bind-mounted MinIO (~6 img/s, few cores used); it scales further on prod storage. *(Tradeoff: `succeeded` stays 0 during the up-front parallel ingest, then climbs during the drain.)*
+**rev 4 (2026-08-07):** reader-experience redesign added as phased R1–R4 (end of §5). Reader prefs reframed as client-side (D-32), superseding P1.6's server pref.
+**rev 5 (2026-08-07):** R2–R4 implemented — page slider + chapter menu + prev/next chapter, double-page + RTL (migration `0024_comic_reading_direction`), preloader + seamless webtoon, zoom. `reading_direction` is live end-to-end.
+**rev 6 (2026-08-07):** R5 implemented — full-screen immersive reader (breaks out of the app shell into a fixed overlay; webtoon scrolls inside it), `prefers-reduced-motion`, and a `?` keyboard-shortcut help.
+**rev 7 (2026-08-07):** `/library/comic` list redesigned (renamed sidebar "Truyện tranh", dropped the toolbar strip, "new comic" is now a grid tile + dialog); migration `0025_comic_user_write_grant` lets every `user` create & publish their own comics (see P0.2).
+**rev 8 (2026-08-07):** owner CRUD manager implemented on `/library/comic/[id]` — edit metadata + cover, publish/unpublish, delete, chapter add/rename/reorder/delete, and page upload/reorder/delete. Page & cover images go through the SPEC-01 pipeline via `lib/media-upload.ts` (verified: upload → ffmpeg WebP variant → thumbnail renders). Backend CRUD was already complete; this closes the frontend gap.
+**rev 11 (2026-08-08):** import task now enqueued with `asynq.Timeout(12h)` + `MaxRetry(0)` — a long whole-comic import used to exceed asynq's ~30-min lease, get its context cancelled, and re-run → duplicate chapters. **rev 10 (2026-08-07):** P1.7 extended to **whole-comic (multi-chapter) zip import** — migration `0027_comic_import_comic_level` (nullable `chapter_id`), endpoint `POST /comics/{id}/imports`, worker groups images by top-level folder → one chapter per folder (natural-sorted, handles a wrapper folder); limits raised to 3 GB / 20000 entries. Frontend "Nhập bộ từ ZIP" on the comic manager (comic-level) alongside per-chapter "Nhập ZIP". Verified on a real 1.68 GB / ~9100-image / ~100-chapter archive.
+**rev 9 (2026-08-07):** **P1.7 zip chapter import implemented (full server-side).** Migration `0026_comic_imports` (persisted job + per-file report, tenant_id+RLS). Endpoints `POST /chapters/{id}/imports`, `PUT /imports/{id}/zip` (API-proxied — dev MinIO presign isn't browser-reachable; 500 MB cap), `GET /imports/{id}` (poll). Worker task `comic:import_zip` (default queue) spools the zip → unpacks (guards: 300 entries, image-only, no traversal, zip-bomb ratio) → natural-sort → `mediaapi.IngestImage` per image in a committed tenant tx → poll assets ready → create pages. Frontend `lib/comic-import.ts` (create→upload→poll) with "Nhập chương từ ZIP" (new chapter) + per-chapter "Nhập ZIP". Verified: 4-image zip `002,10,1,003` → done, natural order `1,002,003,10`, variants render. *(Note: found+fixed a latent pgx bug — under `QueryExecModeExec`, a jsonb param passed as `[]byte` is sent as bytea and rejected; pass the json as a string. The audit logger has the same latent bug.)*
 **Module:** `comic` (skeleton: `module.go` + `api/` stub) · **Depends on:** SPEC-01 (image kind)
 **Upstream:** [briefs/02-comic-vertical.md](../briefs/02-comic-vertical.md) · **Refs:** feature-inventory.md §7, frontend.md Phase 4
 **Role:** reference implementation of the *media → domain vertical* pattern
@@ -90,6 +98,11 @@ and own-listing (`GET /comics/mine`) keep plain `RequirePermission` on
 `comics:write:own`. Destructive/elevated variants: `DELETE /comics/{id}` uses
 `comics:delete:any` as the elevated code; a `{status}` publish/unpublish change
 uses a new elevated `comics:publish:any` (owner still needs `comics:publish:own`).
+**Who can create (rev 7, 2026-08-07):** migration `0025_comic_user_write_grant`
+widened `comics:write:own` + `comics:publish:own` from `creator` to the base `user`
+role — every authenticated user creates & publishes **their own** comics (life-OS
+direction). `:any` moderation + delete stay creator+/admin. So the "Thêm truyện"
+tile on `/library/comic` works for all users.
 *(2026-07-10 reconciliation: codes follow the 0003 catalog shape — `read|write|
 delete` plus the sparing verb `publish`, scope `own|any` only. The earlier
 `comics:read:published` used a content state as a scope token: it parses, but the
@@ -245,12 +258,13 @@ the reference pattern for movie/music/story, which hold the same media reference
 
 ### P1 — nice to have
 
-- **P1.6 Reader modes**: single-page and double-page modes with keyboard/tap
-  navigation; mode persisted per user — server-side pref, for cross-device
-  continuity. Needs a store + endpoint — a `reader_mode` column on
-  `comic_reading_progress` (or a dedicated prefs row) and `GET/PUT
-  /api/v1/comics/reader-prefs`; **schema + endpoints to be added to §6/§7 when
-  scheduled.**
+- **P1.6 Reader modes** — *reframed as the R1–R4 reader redesign (end of §5,
+  2026-08-07); single/double-page + keyboard/tap navigation land there.*
+  **Correction:** reading mode, fit, brightness and quality are **client-side** UI
+  prefs (Zustand `persist`, frontend/CLAUDE.md D-32) — the `reader_mode` column +
+  `GET/PUT /api/v1/comics/reader-prefs` originally sketched here is **dropped** (no
+  cross-device sync in v1; accepted trade-off). The only server-side reader field is
+  `comics.reading_direction`, a property of the *work* (R3), not a per-user pref.
 - **P1.7 Zip chapter upload**: the .zip is uploaded via a **dedicated presigned
   PUT** — a separate `import/` prefix, a **500 MB content-length-range**, and **no
   `assets` row** (it is not a media asset, so SPEC-01's 50 MB asset-upload path does
@@ -275,6 +289,13 @@ the reference pattern for movie/music/story, which hold the same media reference
   magic bytes, reject nested directories and path traversal (`../`), reject
   compression ratio > 100:1 (zip-bomb). Failures (including poll timeouts)
   produce a per-file report; the chapter gets the pages that succeeded.
+  **Update (rev 12, 2026-08-15):** `media:process_image` now runs on its **own
+  `image` queue** (`IMAGE_CONCURRENCY`, default 3), not `heavy` — so the
+  self-deadlock the "must NOT run on the heavy queue" rule guarded against is
+  gone (import on `default`, transcode on `image`, video on `heavy`, all
+  distinct pools). Poll timeout is now `max(2 min, entry_count × 5 s)` capped at
+  11 h (under the 12 h task lease); the worker ingests all images up front and
+  bulk-polls (`AssetStatuses`) one query per round. See rev 12 in the header.
 - **P1.8 Bookmarks**: per user, per page; list on the detail page. Needs a
   `comic_bookmarks(user_id, page_id fk ON DELETE CASCADE, created_at,
   PRIMARY KEY (user_id, page_id))` table and `PUT/DELETE
@@ -293,8 +314,68 @@ the reference pattern for movie/music/story, which hold the same media reference
 ### P2 — future considerations
 
 - Review/approval publish workflow (mirror story module when it lands).
-- RTL reading direction; double-page spread pairing metadata.
+- RTL reading direction + double-page spread pairing — **scheduled as R3** of the
+  reader redesign below; adds the `comics.reading_direction` column.
 - Per-comic visibility (unlisted/link-only) once the privacy layer exists.
+
+### Reader experience — phased redesign (R1–R4)  *(rev 4, 2026-08-07)*
+
+P0.3 shipped a single-mode vertical-scroll reader. This redesign turns it into a
+real comic/manga reader **without reopening the backend for prefs**: one new column
+(R3), the rest is frontend. An interactive prototype of the target UX exists (design
+artifact — three modes, auto-hiding chrome, manga RTL, settings sheet).
+
+**Ownership decision — reader prefs are client state, not a server pref**
+(supersedes P1.6). Reading mode / fit / brightness / image-quality are UI
+preferences → **Zustand `persist`** (D-32), keyed per device. No migration, no
+endpoint, no cross-device sync in v1 (a synced pref can layer on later without
+touching the reader). The only server-side reader concept is
+`comics.reading_direction` — a property of the *work* (manga = `rtl`), owner-set.
+
+**The one DB addition (R3).** `comics.reading_direction text NOT NULL DEFAULT
+'vertical' CHECK (reading_direction IN ('ltr','rtl','vertical'))` — migration
+`0024_comic_reading_direction`, surfaced on the comic payloads (§7). This is the
+"RTL flag" long noted in `comic/README.md`.
+
+**Component architecture (frontend).** Split `ComicReaderView` (client-primary,
+D-33) into a container + mode renderers:
+- `ComicReaderView` — data (`getComic` + `getChapterPages`), keyboard, progress wiring
+- `ReaderChrome` — top/bottom bars, auto-hide + immersive toggle
+- `StripReader` — the P0.3 vertical scroll (kept), + seamless next-chapter load (R3)
+- `PagedReader` — single/double page, LTR/RTL, tap-zones, swipe (R2/R3)
+- `ReaderSettings` — sheet: mode · fit · brightness · quality
+- hooks: `useReaderSettings` (Zustand persist), `useReaderProgress` (extract the P0.4
+  furthest-page + throttle + `sendBeacon`), `usePagePreloader` (R3)
+
+**Image quality → variant.** Data-saver = `thumb`, Standard = `medium` (current
+default), High = `poster`/large — via the existing `variantURL(assetId, variant)`.
+
+**Phases** (each a standalone, shippable PR):
+- **R1 — reading frame.** Split container/renderers; **single-page mode** + kept
+  webtoon; **auto-hide chrome + immersive** (tap-center / `F`); **settings sheet**
+  persisted (Zustand). Single-page usable via tap-zones + arrow keys + page counter.
+  *Status: implemented 2026-08-07.*
+- **R2 — navigation.** Bottom page slider + `N/total`; chapter menu in-reader;
+  prev/next chapter; swipe gestures. *Status: implemented 2026-08-07.*
+- **R3 — manga & smoothness.** `reading_direction` (DB+API — migration
+  `0024_comic_reading_direction`, on `Comic`/`ComicPatch`); double-page + RTL
+  pairing; `usePagePreloader` (next 4 pages + next-chapter prefetch); seamless
+  next-chapter continuity (webtoon auto-append). *Status: implemented 2026-08-07.*
+- **R4 — polish.** Double-tap / pinch / wheel / keyboard zoom + drag-pan; brightness
+  + quality wired to variants; keyboard + ARIA; per-page error tile (P0.3) kept —
+  now via React state (a DOM-replace on the paged `key` change crashed React).
+  *Status: implemented 2026-08-07.*
+- **R5 — full-screen & finish.** Reader breaks out of the `(app)` shell into a fixed
+  full-viewport overlay (webtoon scrolls inside the overlay, not the window; body
+  scroll locked); `prefers-reduced-motion` drops chrome-slide + zoom transitions; a
+  `?` key / button opens a keyboard-shortcut help. *Status: implemented 2026-08-07.*
+
+**R1 acceptance.**
+- Mode toggle (Webtoon ↔ Single) persists across reload (same device).
+- Single-page: `←`/`→` and left/right tap flip pages; center tap / `F` toggles chrome;
+  in paged mode chrome auto-hides ~2.5 s after interaction.
+- Webtoon behavior (P0.3) and progress resume (P0.4) are unchanged in both modes.
+- Brightness dims the page; quality selects the image variant; both persist.
 
 ## 6. Data model — migration `000N_comic_core`
 

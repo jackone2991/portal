@@ -20,6 +20,12 @@ type Service struct {
 	repo   Repository
 	media  MediaAPI
 	events EventPublisher // optional: comic:chapter_published on publish (P1.9)
+
+	// zip-import (P1.7) — nil on the API side except store/enqueue; the worker
+	// side fills store + media.IngestImage + runInTenant.
+	store       ObjectStore
+	enqueue     Enqueuer
+	runInTenant RunInTenant
 }
 
 // ReaderPage is one page in the reader payload (P0.3): id + asset + dims (from

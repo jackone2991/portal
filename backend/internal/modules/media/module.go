@@ -70,7 +70,7 @@ func New(d Deps) (*Module, error) {
 		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events),
 		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events),
 		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo),
-		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset),
+		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.IngestImage),
 	}, nil
 }
 
@@ -113,6 +113,12 @@ func (m *Module) MountHTTP(r chi.Router) {
 // process_image) to the low-concurrency "heavy" server's mux (SPEC-01 P0.1).
 func (m *Module) RegisterHeavyTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(worker.TaskTypeTranscode, m.transcoder.Handle)
+}
+
+// RegisterImageTasks attaches the image WebP-variant processor to the "image"
+// server (its own IMAGE_CONCURRENCY pool), so image variants transcode in parallel
+// while video stays serialized on "heavy".
+func (m *Module) RegisterImageTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(worker.TaskTypeProcessImage, m.imageProcessor.Handle)
 }
 

@@ -46,14 +46,16 @@ type ProcessImagePayload struct {
 	SourceKey string `json:"source_key"`
 }
 
-// NewProcessImageTask enqueues onto the "heavy" queue (low-concurrency server)
-// so large image decodes are serialized (SPEC-01 P0.1 OOM guard).
+// NewProcessImageTask enqueues onto the "image" queue, served by its own pool
+// whose concurrency is IMAGE_CONCURRENCY (default 3) — separate from the video
+// "heavy" queue (concurrency 1). Image decodes are dimension-capped (imageMaxDimension),
+// so a few in parallel stay within the OOM budget while cutting batch-import time.
 func NewProcessImageTask(p ProcessImagePayload) (*asynq.Task, error) {
 	body, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}
-	return asynq.NewTask(TaskTypeProcessImage, body, asynq.Queue("heavy")), nil
+	return asynq.NewTask(TaskTypeProcessImage, body, asynq.Queue("image")), nil
 }
 
 // ImageProcessor runs the FFmpeg WebP variant pipeline. Construct with

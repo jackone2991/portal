@@ -26,6 +26,12 @@ type Deps struct {
 	Media  MediaAPI
 	Events EventPublisher
 
+	// P1.7 zip import. API side sets Storage + Enqueuer; worker side additionally
+	// sets RunInTenant (+ a Media whose IngestImage is wired).
+	Storage     ObjectStore
+	Enqueuer    Enqueuer
+	RunInTenant RunInTenant
+
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
 	CurrentUser       func(context.Context) (uuid.UUID, bool)
@@ -47,7 +53,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("comic: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events}
+	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -66,6 +72,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/unpublish", m.handler.Unpublish)
 		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/chapters", m.handler.CreateChapter)
 		r.With(m.guard(m.deps.WriteComicMW)).Put("/{id}/chapters:order", m.handler.ReorderChapters)
+		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/imports", m.handler.CreateComicImport) // P1.7: whole-comic (multi-chapter) zip import
 		r.Put("/{id}/progress", m.handler.SaveProgress) // authenticated; service validates readability
 	})
 	r.Route("/chapters", func(r chi.Router) {
@@ -77,6 +84,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.WriteChapterMW)).Delete("/{id}", m.handler.DeleteChapter)
 		r.With(m.guard(m.deps.WriteChapterMW)).Post("/{id}/pages", m.handler.CreatePages)
 		r.With(m.guard(m.deps.WriteChapterMW)).Put("/{id}/pages:order", m.handler.ReorderPages)
+		r.With(m.guard(m.deps.WriteChapterMW)).Post("/{id}/imports", m.handler.CreateImport) // P1.7: create a zip-import job
 	})
 	r.Route("/pages", func(r chi.Router) {
 		if m.deps.RequireAuth != nil {
@@ -84,12 +92,33 @@ func (m *Module) MountHTTP(r chi.Router) {
 		}
 		r.With(m.guard(m.deps.DeletePageMW)).Delete("/{id}", m.handler.DeletePage)
 	})
+	r.Route("/imports", func(r chi.Router) { // P1.7: zip upload + status poll (owner-checked in handler)
+		if m.deps.RequireAuth != nil {
+			r.Use(m.deps.RequireAuth)
+		}
+		r.Put("/{id}/zip", m.handler.UploadImportZip)
+		r.Get("/{id}", m.handler.GetImport)
+	})
 }
 
 // RegisterTasks registers the media:asset_deleted consumer (P0.6). cmd/worker
 // subscribes media:asset_deleted → comic:on_asset_deleted on the shared publisher.
 func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(comicapi.TaskOnAssetDeleted, m.handleAssetDeleted)
+	mux.HandleFunc(comicapi.TaskImportZip, m.handleImportZip)
+}
+
+// handleImportZip is the comic:import_zip worker task (P1.7).
+func (m *Module) handleImportZip(ctx context.Context, t *asynq.Task) error {
+	var p comicapi.ImportZipPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		return nil // malformed → skip, don't retry
+	}
+	importID, err := uuid.Parse(p.ImportID)
+	if err != nil {
+		return nil
+	}
+	return m.svc.RunImport(ctx, importID)
 }
 
 func (m *Module) handleAssetDeleted(ctx context.Context, t *asynq.Task) error {

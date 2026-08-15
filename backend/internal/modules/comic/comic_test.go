@@ -18,6 +18,18 @@ type fakeMedia struct{ assets map[uuid.UUID]*mediaapi.Asset }
 func (m *fakeMedia) GetAsset(_ context.Context, id uuid.UUID) (*mediaapi.Asset, error) {
 	return m.assets[id], nil
 }
+func (m *fakeMedia) AssetStatuses(_ context.Context, ids []uuid.UUID) (map[uuid.UUID]mediaapi.AssetStatus, error) {
+	out := make(map[uuid.UUID]mediaapi.AssetStatus, len(ids))
+	for _, id := range ids {
+		if a := m.assets[id]; a != nil {
+			out[id] = a.Status
+		}
+	}
+	return out, nil
+}
+func (m *fakeMedia) IngestImage(_ context.Context, owner uuid.UUID, _, _ string, _ []byte) (uuid.UUID, error) {
+	return m.put(owner, mediaapi.KindImage, mediaapi.StatusReady), nil
+}
 func (m *fakeMedia) put(owner uuid.UUID, kind mediaapi.AssetKind, status mediaapi.AssetStatus) uuid.UUID {
 	id := uuid.New()
 	m.assets[id] = &mediaapi.Asset{ID: id, OwnerID: owner, Kind: kind, Status: status}
@@ -264,6 +276,25 @@ func (r *fakeRepo) NullCoverByAsset(_ context.Context, assetID uuid.UUID) error 
 			c.CoverAssetID = nil
 		}
 	}
+	return nil
+}
+func (r *fakeRepo) CreateImport(_ context.Context, comicID, chapterID, ownerID uuid.UUID) (ImportJob, error) {
+	return ImportJob{ID: uuid.New(), ComicID: comicID, ChapterID: &chapterID, OwnerUserID: ownerID, Status: ImportPending}, nil
+}
+func (r *fakeRepo) CreateComicImport(_ context.Context, comicID, ownerID uuid.UUID) (ImportJob, error) {
+	return ImportJob{ID: uuid.New(), ComicID: comicID, OwnerUserID: ownerID, Status: ImportPending}, nil
+}
+func (r *fakeRepo) GetImport(_ context.Context, id uuid.UUID) (ImportJob, error) {
+	return ImportJob{ID: id}, nil
+}
+func (r *fakeRepo) SetImportUpload(_ context.Context, id uuid.UUID, ref string) (ImportJob, error) {
+	return ImportJob{ID: id, UploadRef: &ref, Status: ImportUploaded}, nil
+}
+func (r *fakeRepo) StartImport(_ context.Context, _ uuid.UUID, _ int) error { return nil }
+func (r *fakeRepo) UpdateImportProgress(_ context.Context, _ uuid.UUID, _, _ int, _ []ImportFileResult) error {
+	return nil
+}
+func (r *fakeRepo) FinishImport(_ context.Context, _ uuid.UUID, _ string, _, _ int, _ []ImportFileResult, _ *string) error {
 	return nil
 }
 

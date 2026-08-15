@@ -59,6 +59,15 @@ func (r *fakeRepo) GetAsset(_ context.Context, id uuid.UUID) (Asset, error) {
 	}
 	return a, nil
 }
+func (r *fakeRepo) GetAssetStatuses(_ context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error) {
+	out := make(map[uuid.UUID]string, len(ids))
+	for _, id := range ids {
+		if a, ok := r.m[id]; ok {
+			out[id] = string(a.Status)
+		}
+	}
+	return out, nil
+}
 func (r *fakeRepo) GetAssetOwner(_ context.Context, id uuid.UUID) (uuid.UUID, error) {
 	a, ok := r.m[id]
 	if !ok {

@@ -19,10 +19,11 @@ import (
 )
 
 type Adapter struct {
-	q *Queries
+	q  *Queries
+	db DBTX // raw handle for the bulk status poll (comic import)
 }
 
-func NewAdapter(db DBTX) *Adapter { return &Adapter{q: New(db)} }
+func NewAdapter(db DBTX) *Adapter { return &Adapter{q: New(db), db: db} }
 
 // Compile-time proof the adapter satisfies the media persistence surface.
 var _ media.Repository = (*Adapter)(nil)
@@ -54,6 +55,34 @@ func (a *Adapter) GetAsset(ctx context.Context, id uuid.UUID) (media.Asset, erro
 		return media.Asset{}, err
 	}
 	return toAsset(row), nil
+}
+
+// GetAssetStatuses returns id→status for the given asset ids in a single query
+// (comic import polls thousands of assets — one round-trip, not one per asset).
+// ids are passed as a text[] cast to uuid[] so it encodes under QueryExecModeExec.
+func (a *Adapter) GetAssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error) {
+	out := make(map[uuid.UUID]string, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	strs := make([]string, len(ids))
+	for i, id := range ids {
+		strs[i] = id.String()
+	}
+	rows, err := a.db.Query(ctx, `SELECT id, status FROM assets WHERE id = ANY($1::uuid[])`, strs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id pgtype.UUID
+		var status string
+		if err := rows.Scan(&id, &status); err != nil {
+			return nil, err
+		}
+		out[uuidFrom(id)] = status
+	}
+	return out, rows.Err()
 }
 
 func (a *Adapter) GetAssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {

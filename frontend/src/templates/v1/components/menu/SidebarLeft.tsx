@@ -17,7 +17,7 @@ const ITEMS: { icon: string; label: string; href?: Route; active?: boolean }[] =
   { icon: "multimedia-icon", label: "Upload Video", href: "/upload" },
   { icon: "stats-icon", label: "Ledger", href: "/bank" as Route },
   { icon: "happy-faces-icon", label: "People", href: "/people" as Route },
-  { icon: "star-icon", label: "Fav Pages Feed", href: "/library/comic" },
+  { icon: "albums-icon", label: "Commic", href: "/library/comic" },
   { icon: "happy-faces-icon", label: "Friend Groups" },
   { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" as Route },
   { icon: "weather-icon", label: "Weather App", href: "/weather" as Route },

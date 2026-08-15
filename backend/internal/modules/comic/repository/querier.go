@@ -22,6 +22,10 @@ type Querier interface {
 	// mediaapi (no cross-module FK) and reaped via the media:asset_deleted consumer.
 	// ══ Comics ══════════════════════════════════════════════════════════════
 	CreateComic(ctx context.Context, arg CreateComicParams) (Comic, error)
+	// Comic-level (multi-chapter) job: chapter_id NULL — the worker creates chapters.
+	CreateComicImport(ctx context.Context, arg CreateComicImportParams) (ComicImport, error)
+	// comic import-job queries (SPEC-02 P1.7). sqlc input only.
+	CreateImport(ctx context.Context, arg CreateImportParams) (ComicImport, error)
 	// ══ Pages ═══════════════════════════════════════════════════════════════
 	CreatePage(ctx context.Context, arg CreatePageParams) (ComicPage, error)
 	DeleteChapter(ctx context.Context, id pgtype.UUID) error
@@ -29,11 +33,13 @@ type Querier interface {
 	DeletePage(ctx context.Context, id pgtype.UUID) error
 	// ══ media:asset_deleted consumer (P0.6) ═════════════════════════════════
 	DeletePagesByAsset(ctx context.Context, assetID pgtype.UUID) error
+	FinishImport(ctx context.Context, arg FinishImportParams) error
 	GetChapter(ctx context.Context, id pgtype.UUID) (ComicChapter, error)
 	GetComic(ctx context.Context, id pgtype.UUID) (Comic, error)
 	GetComicOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetComicOwnerByChapter(ctx context.Context, id pgtype.UUID) (GetComicOwnerByChapterRow, error)
 	GetComicOwnerByPage(ctx context.Context, id pgtype.UUID) (GetComicOwnerByPageRow, error)
+	GetImport(ctx context.Context, id pgtype.UUID) (ComicImport, error)
 	GetPage(ctx context.Context, id pgtype.UUID) (ComicPage, error)
 	GetProgress(ctx context.Context, arg GetProgressParams) (ComicReadingProgress, error)
 	ListChaptersByComic(ctx context.Context, comicID pgtype.UUID) ([]ComicChapter, error)
@@ -44,10 +50,15 @@ type Querier interface {
 	// Membership validation for a progress write (P0.4): resolve a page's chapter +
 	// comic so the service can reject a page/chapter that doesn't belong to the comic.
 	PageChapterAndComic(ctx context.Context, id pgtype.UUID) (PageChapterAndComicRow, error)
+	SetImportUpload(ctx context.Context, arg SetImportUploadParams) (ComicImport, error)
+	StartImport(ctx context.Context, arg StartImportParams) error
 	UpdateChapter(ctx context.Context, arg UpdateChapterParams) (ComicChapter, error)
 	UpdateChapterOrder(ctx context.Context, arg UpdateChapterOrderParams) error
 	UpdateComic(ctx context.Context, arg UpdateComicParams) (Comic, error)
 	UpdateComicStatus(ctx context.Context, arg UpdateComicStatusParams) (Comic, error)
+	// report is cast ::jsonb — under QueryExecModeExec pgx sends []byte untyped, so the
+	// explicit cast is what makes Postgres parse it as json (same as the journal stream).
+	UpdateImportProgress(ctx context.Context, arg UpdateImportProgressParams) error
 	UpdatePageOrder(ctx context.Context, arg UpdatePageOrderParams) error
 	// ══ Reading progress (P0.4) ═════════════════════════════════════════════
 	UpsertProgress(ctx context.Context, arg UpsertProgressParams) error

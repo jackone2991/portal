@@ -104,6 +104,7 @@ type ListCursorInput struct {
 type Repository interface {
 	CreateAsset(ctx context.Context, in CreateAssetInput) (Asset, error)
 	GetAsset(ctx context.Context, id uuid.UUID) (Asset, error)
+	GetAssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error)
 	GetAssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Asset, error)
 	ListByOwnerCursor(ctx context.Context, in ListCursorInput) ([]Asset, error)

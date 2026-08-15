@@ -67,6 +67,13 @@ import (
 	"github.com/portal/backend/internal/platform/storage"
 )
 
+// requestWindow bounds any single request. It is deliberately generous because
+// large API-proxied uploads (import zips up to 3 GB) stream + S3-Put on the request
+// context; a tight cap cancels a valid upload. ReadHeaderTimeout (5s) still guards
+// the header phase and Traefik enforces edge timeouts, so this only removes the
+// pathological "runaway handler" ceiling — acceptable for a single-tenant deploy.
+const requestWindow = 15 * time.Minute
+
 func main() {
 	if err := run(); err != nil {
 		log.Fatal().Err(err).Msg("api shutdown with error")
@@ -370,6 +377,8 @@ func run() error {
 		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
 		Media:       mediaMod.API(),
 		Events:      mediaEvents,
+		Storage:     store,        // P1.7: store the uploaded chapter zip (import/ prefix)
+		Enqueuer:    asynqClient,  // P1.7: enqueue comic:import_zip
 		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
@@ -513,7 +522,13 @@ func run() error {
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
 	r.Use(chimw.Recoverer)
-	r.Use(chimw.Timeout(30 * time.Second))
+	// Generous per-request window: API-proxied uploads (comic import zips up to 3 GB,
+	// media sources) legitimately run well past a tight 30s cap — the S3 PutObject
+	// runs on the request context, so a short handler timeout cancels a valid upload
+	// (worse against slow dev MinIO). ReadHeaderTimeout still guards the slowloris
+	// header phase and IdleTimeout bounds idle keep-alives; this is a personal,
+	// single-tenant deployment behind Traefik, which enforces its own edge timeouts.
+	r.Use(chimw.Timeout(requestWindow))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.CORSAllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -562,8 +577,8 @@ func run() error {
 		Addr:              fmt.Sprintf(":%d", cfg.APIPort),
 		Handler:           r,
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      30 * time.Second,
+		ReadTimeout:       requestWindow, // large uploads: read the multi-GB body
+		WriteTimeout:      requestWindow, // covers body-read + S3 Put + response
 		IdleTimeout:       120 * time.Second,
 	}
 

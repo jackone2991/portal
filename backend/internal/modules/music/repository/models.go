@@ -103,15 +103,16 @@ type BankTransaction struct {
 }
 
 type Comic struct {
-	ID           pgtype.UUID        `json:"id"`
-	OwnerUserID  pgtype.UUID        `json:"owner_user_id"`
-	Title        string             `json:"title"`
-	Description  *string            `json:"description"`
-	CoverAssetID pgtype.UUID        `json:"cover_asset_id"`
-	Status       string             `json:"status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	TenantID     pgtype.UUID        `json:"tenant_id"`
+	ID               pgtype.UUID        `json:"id"`
+	OwnerUserID      pgtype.UUID        `json:"owner_user_id"`
+	Title            string             `json:"title"`
+	Description      *string            `json:"description"`
+	CoverAssetID     pgtype.UUID        `json:"cover_asset_id"`
+	Status           string             `json:"status"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	TenantID         pgtype.UUID        `json:"tenant_id"`
+	ReadingDirection string             `json:"reading_direction"`
 }
 
 type ComicChapter struct {
@@ -121,6 +122,23 @@ type ComicChapter struct {
 	SortOrder int32              `json:"sort_order"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	TenantID  pgtype.UUID        `json:"tenant_id"`
+}
+
+type ComicImport struct {
+	ID          pgtype.UUID        `json:"id"`
+	ComicID     pgtype.UUID        `json:"comic_id"`
+	ChapterID   pgtype.UUID        `json:"chapter_id"`
+	OwnerUserID pgtype.UUID        `json:"owner_user_id"`
+	Status      string             `json:"status"`
+	UploadRef   *string            `json:"upload_ref"`
+	Total       int32              `json:"total"`
+	Succeeded   int32              `json:"succeeded"`
+	Failed      int32              `json:"failed"`
+	Report      []byte             `json:"report"`
+	Error       *string            `json:"error"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	TenantID    pgtype.UUID        `json:"tenant_id"`
 }
 
 type ComicPage struct {

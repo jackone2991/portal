@@ -37,10 +37,11 @@ LIMIT @lim::int;
 
 -- name: UpdateComic :one
 UPDATE comics
-SET title         = COALESCE(sqlc.narg('title'), title),
-    description    = COALESCE(sqlc.narg('description'), description),
-    cover_asset_id = CASE WHEN @set_cover::boolean THEN sqlc.narg('cover_asset_id') ELSE cover_asset_id END,
-    updated_at     = now()
+SET title             = COALESCE(sqlc.narg('title'), title),
+    description        = COALESCE(sqlc.narg('description'), description),
+    reading_direction = COALESCE(sqlc.narg('reading_direction'), reading_direction),
+    cover_asset_id    = CASE WHEN @set_cover::boolean THEN sqlc.narg('cover_asset_id') ELSE cover_asset_id END,
+    updated_at        = now()
 WHERE id = @id
 RETURNING *;
 

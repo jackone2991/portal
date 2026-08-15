@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"os/signal"
 	"syscall"
 	"time"
@@ -62,6 +63,16 @@ const taskPurgeRefreshTokens = "account:purge_refresh_tokens"
 // processing) so N large images + a transcode can't decode simultaneously and
 // OOM a small VPS (SPEC-01 P0.1). Bump to 2 only on a box with ≥ 4 GB RAM.
 const heavyConcurrency = 1
+
+// envInt reads a positive int from an env var, falling back to def.
+func envInt(key string, def int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return def
+}
 
 // recipientResolver adapts the account repository's cross-module projection to
 // notify.UserResolver (recipient email for the email channel). The worker does
@@ -214,7 +225,13 @@ func run() error {
 	}
 
 	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
-	comicMod, err := comic.New(comic.Deps{Repo: comicrepo.NewAdapter(conn, tdb.RunInTx)})
+	comicMod, err := comic.New(comic.Deps{
+		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
+		Media:       mediaMod.API(),   // P1.7: IngestImage + GetAsset for the zip import
+		Storage:     store,            // P1.7: read/delete the uploaded zip
+		Enqueuer:    asynqClient,      // (unused on the worker side, but harmless)
+		RunInTenant: runInUserTenant,  // P1.7: per-image committed tenant tx
+	})
 	if err != nil {
 		return fmt.Errorf("comic module: %w", err)
 	}
@@ -292,7 +309,19 @@ func run() error {
 		Queues:      map[string]int{"heavy": 1},
 	})
 	heavyMux := asynq.NewServeMux()
-	mediaMod.RegisterHeavyTasks(heavyMux) // media:transcode + media:process_image
+	mediaMod.RegisterHeavyTasks(heavyMux) // media:transcode (video, serialized)
+
+	// ── Image server: WebP-variant processing, parallelized (IMAGE_CONCURRENCY,
+	// default 3). Separate pool from "heavy" so batch comic imports transcode
+	// images concurrently while video transcode stays serial (SPEC-01 P0.1). Image
+	// decodes are dimension-capped, so a few in parallel stay within the OOM budget.
+	imageConcurrency := envInt("IMAGE_CONCURRENCY", 3)
+	imageSrv := asynq.NewServer(redisOpt, asynq.Config{
+		Concurrency: imageConcurrency,
+		Queues:      map[string]int{"image": imageConcurrency},
+	})
+	imageMux := asynq.NewServeMux()
+	mediaMod.RegisterImageTasks(imageMux) // media:process_image
 
 	// ── Light server: cheap tasks (poster, janitor, account purge) ──────
 	// Weighted so nothing here can starve, and it never touches the heavy queue.
@@ -362,6 +391,13 @@ func run() error {
 		log.Info().Str("env", cfg.AppEnv).Int("heavy_concurrency", heavyConcurrency).Msg("worker started")
 		if err := heavySrv.Run(heavyMux); err != nil {
 			log.Error().Err(err).Msg("heavy worker error")
+			stop()
+		}
+	}()
+	go func() {
+		log.Info().Int("image_concurrency", imageConcurrency).Msg("image worker started")
+		if err := imageSrv.Run(imageMux); err != nil {
+			log.Error().Err(err).Msg("image worker error")
 			stop()
 		}
 	}()

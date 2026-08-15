@@ -13,6 +13,11 @@ const (
 	// event (P0.6). cmd/worker subscribes media:asset_deleted → this task.
 	TaskOnAssetDeleted = "comic:on_asset_deleted"
 
+	// TaskImportZip unpacks an uploaded chapter zip → media assets → pages
+	// (SPEC-02 P1.7). Enqueued on the "default" queue (NOT heavy — it polls asset
+	// status and must not occupy a heavy slot its own process_image tasks need).
+	TaskImportZip = "comic:import_zip"
+
 	// P1.9 life-stream events. chapter_published is emitted per chapter on a
 	// comic publish (consumed by the journal stream projection, keyed on
 	// chapter_id). chapter_deleted's stream-removal consumer is deferred; the
@@ -26,6 +31,11 @@ const (
 type AssetDeletedPayload struct {
 	AssetID     string `json:"asset_id"`
 	OwnerUserID string `json:"owner_user_id"`
+}
+
+// ImportZipPayload is the comic:import_zip task body (P1.7): which import job to run.
+type ImportZipPayload struct {
+	ImportID string `json:"import_id"`
 }
 
 // ChapterPublishedEvent is the comic:chapter_published body (P1.9). The journal

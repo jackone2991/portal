@@ -1908,6 +1908,7 @@ components:
         description: { type: string, nullable: true }
         cover_asset_id: { type: string, format: uuid, nullable: true }
         status: { type: string, enum: [draft, published] }
+        reading_direction: { type: string, enum: [ltr, rtl, vertical], default: vertical, description: "Reading direction of the work (manga = rtl). Drives the reader's paged navigation order and default mode." }
         chapter_count: { type: integer }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
@@ -1930,6 +1931,7 @@ components:
       properties:
         title: { type: string, minLength: 1, maxLength: 200 }
         description: { type: string, nullable: true }
+        reading_direction: { type: string, enum: [ltr, rtl, vertical] }
         cover_asset_id: { type: string, format: uuid, nullable: true }
     Chapter:
       type: object

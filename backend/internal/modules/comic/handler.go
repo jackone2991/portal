@@ -100,19 +100,28 @@ func (h *Handler) UpdateComic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Title        *string         `json:"title"`
-		Description  *string         `json:"description"`
-		CoverAssetID json.RawMessage `json:"cover_asset_id"`
+		Title            *string         `json:"title"`
+		Description      *string         `json:"description"`
+		ReadingDirection *string         `json:"reading_direction"`
+		CoverAssetID     json.RawMessage `json:"cover_asset_id"`
 	}
 	if !decode(w, r, &body) {
 		return
+	}
+	if body.ReadingDirection != nil {
+		switch *body.ReadingDirection {
+		case "ltr", "rtl", "vertical":
+		default:
+			badReq(w, "reading_direction must be one of ltr, rtl, vertical")
+			return
+		}
 	}
 	cover, setCover, perr := parseRawOptID(body.CoverAssetID)
 	if perr {
 		badReq(w, "invalid cover_asset_id")
 		return
 	}
-	c, err := h.svc.UpdateComic(r.Context(), UpdateComicInput{ID: id, Title: body.Title, Description: body.Description, SetCover: setCover, CoverAssetID: cover})
+	c, err := h.svc.UpdateComic(r.Context(), UpdateComicInput{ID: id, Title: body.Title, Description: body.Description, ReadingDirection: body.ReadingDirection, SetCover: setCover, CoverAssetID: cover})
 	if err != nil {
 		writeComicErr(w, err)
 		return
@@ -344,13 +353,106 @@ func (h *Handler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ══ Zip import (P1.7) ═══════════════════════════════════════════════════
+
+func (h *Handler) CreateImport(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	chapterID, ok := parseID(w, r, "id")
+	if !ok {
+		return
+	}
+	job, err := h.svc.CreateImport(r.Context(), chapterID, uid)
+	if err != nil {
+		writeComicErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, importJSON(job))
+}
+
+func (h *Handler) CreateComicImport(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	comicID, ok := parseID(w, r, "id")
+	if !ok {
+		return
+	}
+	job, err := h.svc.CreateComicImport(r.Context(), comicID, uid)
+	if err != nil {
+		writeComicErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, importJSON(job))
+}
+
+func (h *Handler) UploadImportZip(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	importID, ok := parseID(w, r, "id")
+	if !ok {
+		return
+	}
+	defer r.Body.Close()
+	job, err := h.svc.SaveImportZip(r.Context(), importID, uid, r.Body)
+	if err != nil {
+		writeComicErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, importJSON(job))
+}
+
+func (h *Handler) GetImport(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	importID, ok := parseID(w, r, "id")
+	if !ok {
+		return
+	}
+	job, err := h.svc.GetImport(r.Context(), importID, uid)
+	if err != nil {
+		writeComicErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, importJSON(job))
+}
+
+func importJSON(j ImportJob) map[string]any {
+	report := make([]any, 0, len(j.Report))
+	for _, r := range j.Report {
+		item := map[string]any{"name": r.Name, "ok": r.OK}
+		if r.Error != "" {
+			item["error"] = r.Error
+		}
+		report = append(report, item)
+	}
+	m := map[string]any{
+		"id": j.ID, "comic_id": j.ComicID, "chapter_id": j.ChapterID,
+		"status": j.Status, "total": j.Total, "succeeded": j.Succeeded, "failed": j.Failed,
+		"report":     report,
+		"created_at": j.CreatedAt.Format(time.RFC3339), "updated_at": j.UpdatedAt.Format(time.RFC3339),
+	}
+	if j.Error != nil {
+		m["error"] = *j.Error
+	}
+	return m
+}
+
 // ── JSON shapes ───────────────────────────────────────────────────────
 
 func comicJSON(c Comic) map[string]any {
 	m := map[string]any{
 		"id": c.ID, "owner_id": c.OwnerID, "title": c.Title, "description": c.Description,
 		"cover_asset_id": uuidPtrJSON(c.CoverAssetID), "status": c.Status,
-		"created_at": c.CreatedAt.Format(time.RFC3339), "updated_at": c.UpdatedAt.Format(time.RFC3339),
+		"reading_direction": c.ReadingDirection,
+		"created_at":        c.CreatedAt.Format(time.RFC3339), "updated_at": c.UpdatedAt.Format(time.RFC3339),
 	}
 	if c.ChapterCount > 0 {
 		m["chapter_count"] = c.ChapterCount
