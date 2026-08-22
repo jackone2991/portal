@@ -380,11 +380,15 @@ function ChapterRow({ id, chapter, index, total, onMove }: { id: string; chapter
             <button type="button" onClick={() => { setEditing(false); setTitle(chapter.title); }} className="text-xs" style={{ color: "var(--tpl-muted)" }}>Huỷ</button>
           </form>
         ) : (
-          <button type="button" onClick={() => setOpen((o) => !o)} className="flex-1 truncate text-left text-sm font-medium" style={{ color: "var(--tpl-heading)" }}>
-            {chapter.title} <span style={{ color: "var(--tpl-muted)" }}>{open ? "▾" : "▸"}</span>
-          </button>
+          // The title IS the read affordance: clicking a chapter goes straight into
+          // it. A real <Link>, so middle-click and "open in new tab" work. Expanding
+          // the page manager moved to its own ▸ button below — that is the rarer,
+          // editing-only action, so it should not own the primary click.
+          <Link href={`/library/comic/${id}/read/${chapter.id}` as Route} title={`Đọc: ${chapter.title}`} className="flex-1 truncate text-left text-sm font-medium hover:underline" style={{ color: "var(--tpl-heading)" }}>
+            {chapter.title}
+          </Link>
         )}
-        <IconLink label={`Đọc: ${chapter.title}`} href={`/library/comic/${id}/read/${chapter.id}` as Route}>▶</IconLink>
+        <IconBtn label={open ? "Ẩn danh sách trang" : "Danh sách trang"} onClick={() => setOpen((o) => !o)}>{open ? "▾" : "▸"}</IconBtn>
         <IconBtn label="Lên" disabled={index === 0} onClick={() => onMove(index, -1)}>↑</IconBtn>
         <IconBtn label="Xuống" disabled={index === total - 1} onClick={() => onMove(index, 1)}>↓</IconBtn>
         <IconBtn label="Sửa tên" onClick={() => { setTitle(chapter.title); setEditing(true); }}>✎</IconBtn>
@@ -543,16 +547,6 @@ function IconBtn({ children, label, onClick, disabled }: { children: React.React
     <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-30" style={{ color: "var(--tpl-muted)" }}>
       {children}
     </button>
-  );
-}
-
-// Navigation twin of IconBtn. A real <Link>, not a button with router.push, so
-// middle-click and "open in new tab" work and it is announced as a link.
-function IconLink({ children, label, href }: { children: React.ReactNode; label: string; href: Route }) {
-  return (
-    <Link href={href} aria-label={label} title={label} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)]" style={{ color: "var(--tpl-muted)" }}>
-      {children}
-    </Link>
   );
 }
 
