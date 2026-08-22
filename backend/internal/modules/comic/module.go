@@ -36,6 +36,9 @@ type Deps struct {
 	// InternalSecret guards the scraper→api sync-callback. Nil Scraper ⇒ 503.
 	Scraper        ScraperClient
 	InternalSecret string
+	// SourceAllowlist restricts sync-source hosts (COMIC_SOURCE_ALLOWLIST). Empty
+	// allows any public host; internal/private addresses are always rejected.
+	SourceAllowlist []string
 
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -58,7 +61,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("comic: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant, scraper: d.Scraper}
+	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant, scraper: d.Scraper, sourceAllowlist: d.SourceAllowlist}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -77,10 +80,10 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/unpublish", m.handler.Unpublish)
 		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/chapters", m.handler.CreateChapter)
 		r.With(m.guard(m.deps.WriteComicMW)).Put("/{id}/chapters:order", m.handler.ReorderChapters)
-		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/imports", m.handler.CreateComicImport) // P1.7: whole-comic (multi-chapter) zip import
+		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/imports", m.handler.CreateComicImport)     // P1.7: whole-comic (multi-chapter) zip import
 		r.With(m.guard(m.deps.WriteComicMW)).Get("/{id}/sync-sources", m.handler.ListSyncSources)   // P1.8
-		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/sync-sources", m.handler.CreateSyncSource)  // P1.8
-		r.Put("/{id}/progress", m.handler.SaveProgress) // authenticated; service validates readability
+		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/sync-sources", m.handler.CreateSyncSource) // P1.8
+		r.Put("/{id}/progress", m.handler.SaveProgress)                                             // authenticated; service validates readability
 	})
 	r.Route("/sync-sources", func(r chi.Router) { // P1.8: sync source ops (owner-checked in handler)
 		if m.deps.RequireAuth != nil {

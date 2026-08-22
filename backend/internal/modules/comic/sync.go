@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -26,9 +25,10 @@ const syncStaleAfter = 15 * time.Minute
 // by the comic middleware). The URL must be absolute http(s).
 func (s *Service) CreateSyncSource(ctx context.Context, comicID, ownerID uuid.UUID, sourceURL, chaptersHint string) (SyncSource, error) {
 	sourceURL = strings.TrimSpace(sourceURL)
-	u, err := url.Parse(sourceURL)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return SyncSource{}, fmt.Errorf("%w: source_url phải là http(s) hợp lệ", ErrValidation)
+	// SSRF guard — see sourceguard.go. Rechecked before every scrape too.
+	u, err := validateSourceURL(ctx, sourceURL, s.sourceAllowlist)
+	if err != nil {
+		return SyncSource{}, err
 	}
 	return s.repo.CreateSyncSource(ctx, comicID, ownerID, sourceURL, u.Host, strings.TrimSpace(chaptersHint))
 }
@@ -71,6 +71,14 @@ func (s *Service) TriggerSync(ctx context.Context, sourceID, ownerID uuid.UUID) 
 	}
 	if src.LastStatus == "syncing" && time.Since(src.UpdatedAt) < syncStaleAfter {
 		return src, fmt.Errorf("%w: đang đồng bộ", ErrValidation)
+	}
+	// Re-run the SSRF guard right before handing the URL to the scraper: DNS may
+	// have changed since the source was created (rebinding), and rows created
+	// before this guard landed were never checked at all.
+	if _, verr := validateSourceURL(ctx, src.SourceURL, s.sourceAllowlist); verr != nil {
+		msg := verr.Error()
+		_ = s.repo.UpdateSyncStatus(ctx, src.ID, "failed", nil, &msg, false)
+		return SyncSource{}, verr
 	}
 	// Reset progress; the scraper drives the whole batched sync from here.
 	_ = s.repo.UpdateSyncProgress(ctx, src.ID, 0, 0)

@@ -422,7 +422,10 @@ func run() error {
 		Enqueuer:       asynqClient, // P1.7: enqueue comic:import_zip
 		Scraper:        comicScraper,
 		InternalSecret: os.Getenv("COMIC_SYNC_SECRET"),
-		RequireAuth:    authTenant,
+		// SSRF guard: restrict which hosts a sync source may target. Empty allows
+		// any public host; internal/private addresses are rejected either way.
+		SourceAllowlist: comic.ParseSourceAllowlist(os.Getenv("COMIC_SOURCE_ALLOWLIST")),
+		RequireAuth:     authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
 		},

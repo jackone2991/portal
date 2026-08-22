@@ -465,7 +465,7 @@ func TestChapterSortOrder(t *testing.T) {
 		{"Chương 7", 70, true}, // hand-made zip
 		{"Chapter 108", 1080, true},
 		{"1", 10, true},
-		{"", 0, false},           // no number → caller appends instead
+		{"", 0, false}, // no number → caller appends instead
 		{"Ngoại truyện", 0, false},
 		{"99999999999", 0, false}, // absurd: a digit run that isn't a chapter number
 	}

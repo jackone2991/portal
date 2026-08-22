@@ -50,8 +50,8 @@ const (
 	importMaxRatio     = 100 // per-entry compression ratio (zip-bomb guard)
 	importPollInterval = 2 * time.Second
 	importPollFloor    = 2 * time.Minute
-	importPollPerImage = 5 * time.Second  // amortized budget per image (parallel image pool)
-	importPollCeiling  = 11 * time.Hour   // hard cap, safely under the 12h task Timeout
+	importPollPerImage = 5 * time.Second // amortized budget per image (parallel image pool)
+	importPollCeiling  = 11 * time.Hour  // hard cap, safely under the 12h task Timeout
 )
 
 var importImageExt = map[string]bool{".png": true, ".jpg": true, ".jpeg": true, ".webp": true, ".gif": true, ".avif": true, ".bmp": true}

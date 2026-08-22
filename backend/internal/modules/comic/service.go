@@ -29,6 +29,9 @@ type Service struct {
 
 	// external-source sync (P1.8) — API side only; nil disables the feature.
 	scraper ScraperClient
+	// sourceAllowlist limits which hosts a sync source may point at. Empty means
+	// "any public host" — the non-public-IP check in sourceguard.go always runs.
+	sourceAllowlist []string
 }
 
 // ReaderPage is one page in the reader payload (P0.3): id + asset + dims (from

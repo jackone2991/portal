@@ -10,14 +10,17 @@ worker consumes, so all of Portal's optimized import pipeline is reused.
 
 import concurrent.futures
 import io
+import ipaddress
 import os
 import queue
 import re
 import shutil
+import socket
 import tempfile
 import threading
 import time
 import zipfile
+from urllib.parse import urljoin, urlparse
 
 import boto3
 import requests
@@ -70,6 +73,68 @@ def _s3():
 def _referer(url: str) -> str:
     m = re.match(r"^(https?://[^/]+)", url)
     return (m.group(1) + "/") if m else url
+
+
+# ── SSRF guard ────────────────────────────────────────────────────────────────
+# Mirrors backend/internal/modules/comic/sourceguard.go. The Go side validates a
+# source when it is created and again when a sync is triggered; this is the last
+# line of defence, re-resolving at fetch time so DNS rebinding between those two
+# points loses, and covering URLs discovered from the source page (chapter links,
+# image srcs) which the Go side never sees. This process sits on the compose
+# `internal` network, so an unchecked fetch reaches api:8080, minio:9000,
+# dragonfly:6379 and the cloud metadata endpoint.
+MAX_REDIRECTS = 5
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")
+
+
+def _is_public_ip(addr: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(addr)
+    except ValueError:
+        return False
+    if (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast
+            or ip.is_reserved or ip.is_unspecified):
+        return False
+    return not (ip.version == 4 and ip in _CGNAT)
+
+
+def assert_public_url(url: str) -> None:
+    """Raise ValueError unless url is http(s) and every address it resolves to is public."""
+    p = urlparse(url)
+    if p.scheme not in ("http", "https") or not p.hostname:
+        raise ValueError(f"blocked non-http(s) url: {url!r}")
+    port = p.port or (443 if p.scheme == "https" else 80)
+    try:
+        infos = socket.getaddrinfo(p.hostname, port, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as e:
+        raise ValueError(f"cannot resolve {p.hostname!r}: {e}") from e
+    for info in infos:
+        addr = info[4][0]
+        if not _is_public_ip(addr):
+            raise ValueError(f"blocked internal address {addr} for host {p.hostname!r}")
+
+
+def _get_checked(session, url, **kw):
+    """GET with the SSRF check applied to the initial URL and to every redirect hop.
+
+    requests follows 3xx transparently, which would let an allowed host bounce us
+    to an internal address, so redirects are disabled and each Location is
+    re-validated here instead.
+    """
+    kw.pop("allow_redirects", None)
+    current = url
+    for _ in range(MAX_REDIRECTS + 1):
+        assert_public_url(current)
+        r = session.get(current, allow_redirects=False, **kw)
+        if r.status_code in (301, 302, 303, 307, 308):
+            loc = r.headers.get("Location")
+            if not loc:
+                return r
+            r.close()
+            current = urljoin(current, loc)
+            continue
+        return r
+    raise ValueError(f"too many redirects from {url!r}")
 
 
 _display = None
@@ -248,6 +313,9 @@ def _await_lazy_images(driver, timeout: float = LAZY_TIMEOUT) -> list[str]:
 def get_image_links(driver, chapter_url: str, max_retries: int = 2) -> list[str]:
     for attempt in range(max_retries):
         try:
+            # Chapter URLs come from the source page, so the Go guard never saw
+            # them — check before Chrome navigates.
+            assert_public_url(chapter_url)
             driver.uc_open_with_reconnect(chapter_url, reconnect_time=RECONNECT_TIME)
             _pass_cloudflare(driver)
             # No blind sleep + no separate wait_for_element_present: the poll below
@@ -273,7 +341,8 @@ def _download_one(session, url, path, referer):
     headers = dict(DL_HEADERS, Referer=referer)
     for attempt in range(3):
         try:
-            r = session.get(url, headers=headers, stream=True, timeout=20)
+            # SSRF-checked, including every redirect hop.
+            r = _get_checked(session, url, headers=headers, stream=True, timeout=20)
             r.raise_for_status()
             r.raw.decode_content = True
             with open(path, "wb") as f:
@@ -509,6 +578,12 @@ def run_sync(source_id: str, source_url: str, chapters_hint: str, existing: str 
     Chapters land out of order — the api derives a chapter's position from its title,
     so the reader still sees them in order. Failures are reported to the UI."""
     print(f"[scraper] sync source {source_id} start: {source_url}", flush=True)
+    try:
+        assert_public_url(source_url)
+    except ValueError as e:
+        print(f"[scraper] refusing source {source_id}: {e}", flush=True)
+        finalize(source_id, False, note=f"nguồn bị chặn: {e}")
+        return
     _clear_cancel(source_id)  # a fresh sync must not inherit a stale cancel flag
     lead = None
     try:

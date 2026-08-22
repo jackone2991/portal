@@ -203,9 +203,9 @@ type Repository interface {
 // SyncSource binds a comic to an external source URL (SPEC-02 P1.8). Triggering a
 // sync creates a comic-level ImportJob whose zip is produced by the scraper service.
 type SyncSource struct {
-	ID           uuid.UUID
-	ComicID      uuid.UUID
-	OwnerUserID  uuid.UUID
+	ID              uuid.UUID
+	ComicID         uuid.UUID
+	OwnerUserID     uuid.UUID
 	SourceURL       string
 	SourceSite      string
 	ChaptersHint    string
