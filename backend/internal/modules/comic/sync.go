@@ -148,8 +148,20 @@ func (s *Service) CancelSync(ctx context.Context, sourceID, ownerID uuid.UUID) (
 	if err != nil {
 		return SyncSource{}, err
 	}
+	// Only a running sync can be cancelled. Without this an idle/done/failed source
+	// could be flipped to "cancelled", which then reads as "the user stopped this"
+	// on a sync that finished normally.
+	if src.LastStatus != "syncing" {
+		return SyncSource{}, fmt.Errorf("%w: nguồn không đang đồng bộ", ErrValidation)
+	}
+	// The scraper's in-memory cancel set is what actually stops the scrape, so a
+	// refused signal must not be reported as a successful cancel — the source would
+	// say "cancelled" while chapters keep arriving. A dead scraper is not fatal:
+	// syncStaleAfter lets the source be re-triggered.
 	if s.scraper != nil {
-		_ = s.scraper.CancelScrape(ctx, sourceID)
+		if cerr := s.scraper.CancelScrape(ctx, sourceID); cerr != nil {
+			return SyncSource{}, fmt.Errorf("comic: không báo được huỷ cho scraper: %w", cerr)
+		}
 	}
 	if err := s.repo.UpdateSyncStatus(ctx, sourceID, "cancelled", nil, nil, false); err != nil {
 		return SyncSource{}, err

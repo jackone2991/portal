@@ -881,6 +881,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/comics/{id}/sync-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** List the comic's external sync sources (SPEC-02 P1.8) */
+        get: operations["listSyncSources"];
+        put?: never;
+        /**
+         * Bind an external source URL to the comic
+         * @description The URL is SSRF-checked: it must be http(s), must match COMIC_SOURCE_ALLOWLIST
+         *     when that is set, and must not resolve to a loopback, private, link-local,
+         *     CGNAT or multicast address. Re-checked before every scrape.
+         */
+        post: operations["createSyncSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a sync source (owner-checked) */
+        delete: operations["deleteSyncSource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a scrape of the source (async; the scraper calls back) */
+        post: operations["triggerSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop a running sync (chapters already imported are kept) */
+        post: operations["cancelSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Allocate an import job for one batch of scraped chapters */
+        post: operations["syncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One batch's zip is uploaded (or that batch failed) */
+        post: operations["syncCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report overall chapter progress for the source */
+        post: operations["syncProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Every batch is done — set the source's final status */
+        post: operations["syncFinalize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chapters/{id}": {
         parameters: {
             query?: never;
@@ -1298,6 +1448,99 @@ export interface components {
             budgets: components["schemas"]["BankBudgetLine"][];
             recent: components["schemas"]["BankTransaction"][];
         };
+        SyncSource: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            comic_id: string;
+            /** Format: uri */
+            source_url: string;
+            /** @description Host extracted from source_url */
+            source_site: string;
+            /** @description Blank = all; an 'A-B' range, or explicit chapter URLs */
+            chapters_hint: string;
+            /** @enum {string} */
+            last_status: "idle" | "syncing" | "done" | "failed" | "cancelled";
+            /** @description Chapters discovered at the source */
+            total_chapters: number;
+            /** @description Chapters scraped so far this run */
+            scraped_chapters: number;
+            /**
+             * Format: uuid
+             * @description The batch import currently in flight
+             */
+            last_import_id?: string;
+            last_error?: string;
+            /** Format: date-time */
+            last_synced_at?: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SyncSourceCreate: {
+            /**
+             * Format: uri
+             * @description Must be http(s)
+             */
+            source_url: string;
+            chapters_hint?: string;
+        };
+        SyncBatchRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description The source owner, echoed back from the value the api handed the scraper.
+             *     It supplies the tenant these session-less endpoints scope their writes to,
+             *     and is verified against the row — a wrong value yields 404.
+             */
+            owner_id: string;
+        };
+        SyncBatchResponse: {
+            /** Format: uuid */
+            import_id: string;
+            /** @description Object key the batch zip must be uploaded to (import/{import_id}.zip) */
+            upload_key: string;
+        };
+        SyncCallbackRequest: {
+            /** Format: uuid */
+            import_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            /** @description false fails that batch's import job */
+            ok: boolean;
+            error?: string;
+        };
+        SyncProgressRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            scraped: number;
+            total: number;
+        };
+        SyncFinalizeRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            ok: boolean;
+            /** @description Summary of chapters that failed */
+            failed?: string;
+        };
+        OkResponse: {
+            ok: boolean;
+        };
         Comic: {
             /** Format: uuid */
             id: string;
@@ -1309,6 +1552,12 @@ export interface components {
             cover_asset_id?: string | null;
             /** @enum {string} */
             status: "draft" | "published";
+            /**
+             * @description Reading direction of the work (manga = rtl). Drives the reader's paged navigation order and default mode.
+             * @default vertical
+             * @enum {string}
+             */
+            reading_direction: "ltr" | "rtl" | "vertical";
             chapter_count?: number;
             /** Format: date-time */
             created_at: string;
@@ -1331,6 +1580,8 @@ export interface components {
         ComicPatch: {
             title?: string;
             description?: string | null;
+            /** @enum {string} */
+            reading_direction?: "ltr" | "rtl" | "vertical";
             /** Format: uuid */
             cover_asset_id?: string | null;
         };
@@ -3407,6 +3658,308 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listSyncSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sources */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createSyncSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Invalid or blocked source URL */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteSyncSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    triggerSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync started */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description Already syncing, or the source URL no longer passes the SSRF check */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancelSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description The source is not currently syncing, or the scraper refused the cancel */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    syncBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Batch allocated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncBatchResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    syncCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncCallbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing import_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncFinalize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncFinalizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Finalized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     deleteChapter: {

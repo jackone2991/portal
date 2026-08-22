@@ -63,5 +63,12 @@ func (s *httpScraper) CancelScrape(ctx context.Context, sourceID uuid.UUID) erro
 		return err
 	}
 	defer resp.Body.Close()
+	// Same check StartScrape makes: without it a scraper that refused the cancel
+	// still reads as success, and the source is marked cancelled while the scrape
+	// keeps running.
+	if resp.StatusCode >= 300 {
+		b, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return fmt.Errorf("scraper cancel %d: %s", resp.StatusCode, string(b))
+	}
 	return nil
 }

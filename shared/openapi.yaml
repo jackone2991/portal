@@ -37,6 +37,8 @@ tags:
   - name: movies
   - name: music
   - name: stories
+  - name: comic
+  - name: comic-internal
 
 paths:
   /healthz:
@@ -1406,6 +1408,130 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /comics/{id}/sync-sources:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [comic]
+      summary: List the comic's external sync sources (SPEC-02 P1.8)
+      operationId: listSyncSources
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Sources
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/SyncSource" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [comic]
+      summary: Bind an external source URL to the comic
+      description: |
+        The URL is SSRF-checked: it must be http(s), must match COMIC_SOURCE_ALLOWLIST
+        when that is set, and must not resolve to a loopback, private, link-local,
+        CGNAT or multicast address. Re-checked before every scrape.
+      operationId: createSyncSource
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SyncSourceCreate" } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/SyncSource" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422":
+          description: Invalid or blocked source URL
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  /sync-sources/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [comic]
+      summary: Remove a sync source (owner-checked)
+      operationId: deleteSyncSource
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /sync-sources/{id}/sync:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [comic]
+      summary: Start a scrape of the source (async; the scraper calls back)
+      operationId: triggerSync
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Sync started, content: { application/json: { schema: { $ref: "#/components/schemas/SyncSource" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Already syncing, or the source URL no longer passes the SSRF check
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  /sync-sources/{id}/cancel:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [comic]
+      summary: Stop a running sync (chapters already imported are kept)
+      operationId: cancelSync
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Cancelled, content: { application/json: { schema: { $ref: "#/components/schemas/SyncSource" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: The source is not currently syncing, or the scraper refused the cancel
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  /internal/comic/sync-batch:
+    post:
+      tags: [comic-internal]
+      summary: Allocate an import job for one batch of scraped chapters
+      operationId: syncBatch
+      security: [{ internalSecret: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SyncBatchRequest" } } }
+      responses:
+        "200": { description: Batch allocated, content: { application/json: { schema: { $ref: "#/components/schemas/SyncBatchResponse" } } } }
+        "400": { description: Malformed or missing source_id / owner_id }
+        "401": { description: Bad or missing X-Internal-Secret }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /internal/comic/sync-callback:
+    post:
+      tags: [comic-internal]
+      summary: One batch's zip is uploaded (or that batch failed)
+      operationId: syncCallback
+      security: [{ internalSecret: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SyncCallbackRequest" } } }
+      responses:
+        "200": { description: Accepted, content: { application/json: { schema: { $ref: "#/components/schemas/OkResponse" } } } }
+        "400": { description: Malformed or missing import_id / owner_id }
+        "401": { description: Bad or missing X-Internal-Secret }
+  /internal/comic/sync-progress:
+    post:
+      tags: [comic-internal]
+      summary: Report overall chapter progress for the source
+      operationId: syncProgress
+      security: [{ internalSecret: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SyncProgressRequest" } } }
+      responses:
+        "200": { description: Recorded, content: { application/json: { schema: { $ref: "#/components/schemas/OkResponse" } } } }
+        "400": { description: Malformed or missing source_id / owner_id }
+        "401": { description: Bad or missing X-Internal-Secret }
+  /internal/comic/sync-finalize:
+    post:
+      tags: [comic-internal]
+      summary: Every batch is done — set the source's final status
+      operationId: syncFinalize
+      security: [{ internalSecret: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SyncFinalizeRequest" } } }
+      responses:
+        "200": { description: Finalized, content: { application/json: { schema: { $ref: "#/components/schemas/OkResponse" } } } }
+        "400": { description: Malformed or missing source_id / owner_id }
+        "401": { description: Bad or missing X-Internal-Secret }
   /chapters/{id}:
     parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
     patch:
@@ -1609,6 +1735,14 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    internalSecret:
+      type: apiKey
+      in: header
+      name: X-Internal-Secret
+      description: |
+        Shared secret (COMIC_SYNC_SECRET) for service-to-service calls from the
+        Python scraper. These endpoints carry no user session, which is why each
+        one also takes owner_id — see the SPEC-02 P1.8 sync flow.
 
   parameters:
     AssetID:
@@ -1898,6 +2032,78 @@ components:
           items: { $ref: "#/components/schemas/BankTransaction" }
 
     # ── Comic vertical (SPEC-02) ────────────────────────────────────────────
+    SyncSource:
+      type: object
+      required: [id, comic_id, source_url, source_site, chapters_hint, last_status, total_chapters, scraped_chapters, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        comic_id: { type: string, format: uuid }
+        source_url: { type: string, format: uri }
+        source_site: { type: string, description: Host extracted from source_url }
+        chapters_hint: { type: string, description: "Blank = all; an 'A-B' range, or explicit chapter URLs" }
+        last_status:
+          type: string
+          enum: [idle, syncing, done, failed, cancelled]
+        total_chapters: { type: integer, description: Chapters discovered at the source }
+        scraped_chapters: { type: integer, description: Chapters scraped so far this run }
+        last_import_id: { type: string, format: uuid, description: The batch import currently in flight }
+        last_error: { type: string }
+        last_synced_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SyncSourceCreate:
+      type: object
+      required: [source_url]
+      properties:
+        source_url: { type: string, format: uri, description: Must be http(s), allowlisted, and resolve to a public address }
+        chapters_hint: { type: string }
+    SyncBatchRequest:
+      type: object
+      required: [source_id, owner_id]
+      properties:
+        source_id: { type: string, format: uuid }
+        owner_id:
+          type: string
+          format: uuid
+          description: |
+            The source owner, echoed back from the value the api handed the scraper.
+            It supplies the tenant these session-less endpoints scope their writes to,
+            and is verified against the row — a wrong value yields 404.
+    SyncBatchResponse:
+      type: object
+      required: [import_id, upload_key]
+      properties:
+        import_id: { type: string, format: uuid }
+        upload_key: { type: string, description: "Object key the batch zip must be uploaded to (import/{import_id}.zip)" }
+    SyncCallbackRequest:
+      type: object
+      required: [import_id, owner_id, ok]
+      properties:
+        import_id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid, description: See SyncBatchRequest.owner_id }
+        ok: { type: boolean, description: false fails that batch's import job }
+        error: { type: string }
+    SyncProgressRequest:
+      type: object
+      required: [source_id, owner_id, scraped, total]
+      properties:
+        source_id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid, description: See SyncBatchRequest.owner_id }
+        scraped: { type: integer }
+        total: { type: integer }
+    SyncFinalizeRequest:
+      type: object
+      required: [source_id, owner_id, ok]
+      properties:
+        source_id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid, description: See SyncBatchRequest.owner_id }
+        ok: { type: boolean }
+        failed: { type: string, description: Summary of chapters that failed, shown on the source row }
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
     Comic:
       type: object
       required: [id, owner_id, title, status, created_at, updated_at]
