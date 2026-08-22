@@ -6,6 +6,8 @@ import (
 	"net"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 // stubDNS points every lookup at ip for the duration of the test.
@@ -119,5 +121,53 @@ func TestValidateSourceURL_SchemeAndAllowlist(t *testing.T) {
 	}
 	if _, err := validateSourceURL(ctx, "https://truyenqqko.com/truyen/abc", allow); err != nil {
 		t.Errorf("allowlisted public host should pass, got %v", err)
+	}
+}
+
+// The /internal/comic/* callbacks run outside authTenant, so they take the owner
+// echoed back by the scraper and scope every write to that tenant. The owner is
+// verified against the row, so a forged value must not be able to touch another
+// tenant's source — and a missing one must fail closed rather than write unscoped.
+func TestSyncCallbacksVerifyEchoedOwner(t *testing.T) {
+	ctx := context.Background()
+	realOwner, attacker := uuid.New(), uuid.New()
+	sourceID := uuid.New()
+
+	svc, repo, _ := newSvc()
+	repo.syncOwner = realOwner
+	var scopedTo []uuid.UUID
+	svc.runInTenant = func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+		scopedTo = append(scopedTo, userID)
+		return fn(ctx)
+	}
+
+	if err := svc.SyncProgress(ctx, sourceID, attacker, 1, 10); !errors.Is(err, ErrNotFound) {
+		t.Errorf("forged owner: got %v, want ErrNotFound", err)
+	}
+	if err := svc.FinalizeSync(ctx, sourceID, attacker, true, ""); !errors.Is(err, ErrNotFound) {
+		t.Errorf("forged owner on finalize: got %v, want ErrNotFound", err)
+	}
+	// Every attempt still opened a scope — none of them ran unscoped.
+	for _, id := range scopedTo {
+		if id != attacker {
+			t.Errorf("scoped to %s, want the echoed owner %s", id, attacker)
+		}
+	}
+
+	// A missing owner must be rejected outright, never silently unscoped.
+	before := len(scopedTo)
+	if err := svc.SyncProgress(ctx, sourceID, uuid.Nil, 1, 10); !errors.Is(err, ErrValidation) {
+		t.Errorf("missing owner: got %v, want ErrValidation", err)
+	}
+	if _, _, err := svc.RequestSyncBatch(ctx, sourceID, uuid.Nil); !errors.Is(err, ErrValidation) {
+		t.Errorf("missing owner on batch: got %v, want ErrValidation", err)
+	}
+	if len(scopedTo) != before {
+		t.Error("a missing owner opened a tenant scope; it should have been rejected first")
+	}
+
+	// The real owner gets through.
+	if err := svc.SyncProgress(ctx, sourceID, realOwner, 3, 10); err != nil {
+		t.Errorf("real owner rejected: %v", err)
 	}
 }

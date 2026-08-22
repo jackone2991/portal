@@ -21,6 +21,42 @@ import (
 // "syncing" this long — a lost scraper callback shouldn't strand it forever.
 const syncStaleAfter = 15 * time.Minute
 
+// errNoSyncOwner rejects an internal callback that arrived without the owner the
+// scraper is required to echo back. Fail closed: without an owner there is no
+// tenant to scope to, and the pre-0031 behaviour was to write unscoped.
+var errNoSyncOwner = fmt.Errorf("%w: thiếu owner_id", ErrValidation)
+
+// syncOwnerScope runs fn inside ownerID's tenant.
+//
+// The /internal/comic/* endpoints are shared-secret gated but carry no user
+// session, so nothing has put a tenant on the context — yet comic_sync_sources and
+// comic_imports are both FORCE ROW LEVEL SECURITY with a tenant_id policy. Writing
+// unscoped only appears to work because the app role is currently superuser; the
+// moment that changes, every callback fails. The owner echoed back by the scraper
+// supplies the missing tenant.
+//
+// Echoed identity is not trusted on its own: each caller re-reads the row inside
+// the scope and compares the real owner, so a forged owner_id resolves to
+// ErrNotFound today, and is additionally invisible to RLS once superuser is gone.
+func (s *Service) syncOwnerScope(ctx context.Context, ownerID uuid.UUID, fn func(context.Context) error) error {
+	if s.runInTenant == nil { // worker side / tests: no tenant plumbing wired
+		return fn(ctx)
+	}
+	return s.runInTenant(ctx, ownerID, fn)
+}
+
+// ownedSyncSource loads a source and confirms it really belongs to ownerID.
+func (s *Service) ownedSyncSource(ctx context.Context, sourceID, ownerID uuid.UUID) (SyncSource, error) {
+	src, err := s.repo.GetSyncSource(ctx, sourceID)
+	if err != nil {
+		return SyncSource{}, err
+	}
+	if src.OwnerUserID != ownerID {
+		return SyncSource{}, ErrNotFound
+	}
+	return src, nil
+}
+
 // CreateSyncSource registers an external source for a comic (owner-gated upstream
 // by the comic middleware). The URL must be absolute http(s).
 func (s *Service) CreateSyncSource(ctx context.Context, comicID, ownerID uuid.UUID, sourceURL, chaptersHint string) (SyncSource, error) {
@@ -95,7 +131,7 @@ func (s *Service) TriggerSync(ctx context.Context, sourceID, ownerID uuid.UUID) 
 			existing = append(existing, c.Title)
 		}
 	}
-	if serr := s.scraper.StartScrape(ctx, src.ID, src.SourceURL, src.ChaptersHint, existing); serr != nil {
+	if serr := s.scraper.StartScrape(ctx, src.ID, src.OwnerUserID, src.SourceURL, src.ChaptersHint, existing); serr != nil {
 		msg := serr.Error()
 		_ = s.repo.UpdateSyncStatus(ctx, src.ID, "failed", nil, &msg, false)
 		return SyncSource{}, fmt.Errorf("comic: không gọi được scraper: %w", serr)
@@ -125,45 +161,60 @@ func (s *Service) CancelSync(ctx context.Context, sourceID, ownerID uuid.UUID) (
 // RequestSyncBatch is called by the scraper (shared-secret guarded) to get a fresh
 // import job for one batch of chapters. Returns the import id + the storage key the
 // scraper must upload that batch's zip to.
-func (s *Service) RequestSyncBatch(ctx context.Context, sourceID uuid.UUID) (uuid.UUID, string, error) {
-	src, err := s.repo.GetSyncSource(ctx, sourceID)
-	if err != nil {
-		return uuid.Nil, "", err
+func (s *Service) RequestSyncBatch(ctx context.Context, sourceID, ownerID uuid.UUID) (uuid.UUID, string, error) {
+	if ownerID == uuid.Nil {
+		return uuid.Nil, "", errNoSyncOwner
 	}
-	// The import job insert needs a tenant scope (comic_imports.tenant_id default);
-	// this endpoint runs outside authTenant, so scope it to the source owner here.
+	// Read, verify and write all inside the owner's tenant — the read is what makes
+	// a forged owner_id useless, and keeping the insert in the same tx means a
+	// source never ends up pointing at an import that was rolled back.
 	var job ImportJob
-	create := func(ctx context.Context) error {
-		var e error
-		job, e = s.repo.CreateComicImport(ctx, src.ComicID, src.OwnerUserID)
-		return e
-	}
-	if s.runInTenant != nil {
-		err = s.runInTenant(ctx, src.OwnerUserID, create)
-	} else {
-		err = create(ctx)
-	}
+	err := s.syncOwnerScope(ctx, ownerID, func(ctx context.Context) error {
+		src, e := s.ownedSyncSource(ctx, sourceID, ownerID)
+		if e != nil {
+			return e
+		}
+		if job, e = s.repo.CreateComicImport(ctx, src.ComicID, src.OwnerUserID); e != nil {
+			return e
+		}
+		return s.repo.SetSyncLastImport(ctx, sourceID, job.ID) // UI follows the current batch
+	})
 	if err != nil {
 		return uuid.Nil, "", err
 	}
-	_ = s.repo.SetSyncLastImport(ctx, sourceID, job.ID) // UI can follow the current batch
 	return job.ID, importZipKey(job.ID), nil
 }
 
 // SyncBatchUploaded is invoked per batch: ok=true means its zip is uploaded → wire
 // the import to it + enqueue the worker; ok=false fails that batch's import job. It
 // does NOT change the source (FinalizeSync does, once all batches are done).
-func (s *Service) SyncBatchUploaded(ctx context.Context, importID uuid.UUID, ok bool, errMsg string) error {
-	if !ok {
-		m := errMsg
-		if m == "" {
-			m = "cào lô lỗi"
-		}
-		return s.repo.FinishImport(ctx, importID, ImportFailed, 0, 0, nil, &m)
+func (s *Service) SyncBatchUploaded(ctx context.Context, importID, ownerID uuid.UUID, ok bool, errMsg string) error {
+	if ownerID == uuid.Nil {
+		return errNoSyncOwner
 	}
-	if _, err := s.repo.SetImportUpload(ctx, importID, importZipKey(importID)); err != nil {
+	err := s.syncOwnerScope(ctx, ownerID, func(ctx context.Context) error {
+		// Keyed by import rather than source, so verify ownership on the job itself.
+		job, e := s.repo.GetImport(ctx, importID)
+		if e != nil {
+			return e
+		}
+		if job.OwnerUserID != ownerID {
+			return ErrNotFound
+		}
+		if !ok {
+			m := errMsg
+			if m == "" {
+				m = "cào lô lỗi"
+			}
+			return s.repo.FinishImport(ctx, importID, ImportFailed, 0, 0, nil, &m)
+		}
+		_, e = s.repo.SetImportUpload(ctx, importID, importZipKey(importID))
+		return e
+	})
+	if err != nil || !ok {
 		return err
 	}
+	// Enqueue only after the tx committed — the worker reads the row back.
 	if s.enqueue != nil {
 		return s.enqueueImportZip(importID)
 	}
@@ -172,13 +223,24 @@ func (s *Service) SyncBatchUploaded(ctx context.Context, importID uuid.UUID, ok 
 
 // SyncProgress records overall chapter progress on the source so the UI can show
 // "cào X/Y chương" across all batches.
-func (s *Service) SyncProgress(ctx context.Context, sourceID uuid.UUID, scraped, total int) error {
-	return s.repo.UpdateSyncProgress(ctx, sourceID, scraped, total)
+func (s *Service) SyncProgress(ctx context.Context, sourceID, ownerID uuid.UUID, scraped, total int) error {
+	if ownerID == uuid.Nil {
+		return errNoSyncOwner
+	}
+	return s.syncOwnerScope(ctx, ownerID, func(ctx context.Context) error {
+		if _, e := s.ownedSyncSource(ctx, sourceID, ownerID); e != nil {
+			return e
+		}
+		return s.repo.UpdateSyncProgress(ctx, sourceID, scraped, total)
+	})
 }
 
 // FinalizeSync marks the source done once the scraper has processed every batch.
 // failedSummary (blank if none) is stored in last_error and shown on the UI.
-func (s *Service) FinalizeSync(ctx context.Context, sourceID uuid.UUID, ok bool, failedSummary string) error {
+func (s *Service) FinalizeSync(ctx context.Context, sourceID, ownerID uuid.UUID, ok bool, failedSummary string) error {
+	if ownerID == uuid.Nil {
+		return errNoSyncOwner
+	}
 	status := "done"
 	if !ok {
 		status = "failed"
@@ -187,7 +249,12 @@ func (s *Service) FinalizeSync(ctx context.Context, sourceID uuid.UUID, ok bool,
 	if failedSummary != "" {
 		errp = &failedSummary
 	}
-	return s.repo.UpdateSyncStatus(ctx, sourceID, status, nil, errp, ok)
+	return s.syncOwnerScope(ctx, ownerID, func(ctx context.Context) error {
+		if _, e := s.ownedSyncSource(ctx, sourceID, ownerID); e != nil {
+			return e
+		}
+		return s.repo.UpdateSyncStatus(ctx, sourceID, status, nil, errp, ok)
+	})
 }
 
 func importZipKey(importID uuid.UUID) string { return fmt.Sprintf("import/%s.zip", importID) }

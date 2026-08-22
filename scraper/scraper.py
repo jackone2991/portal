@@ -388,6 +388,30 @@ PROGRESS_URL = CALLBACK_URL.replace("sync-callback", "sync-progress")
 FINALIZE_URL = CALLBACK_URL.replace("sync-callback", "sync-finalize")
 
 
+# owner_id echoed back to the api on every callback. The /internal/comic/* endpoints
+# are shared-secret gated but carry no user session, so this is what gives them a
+# tenant to scope their writes to (comic_sync_sources / comic_imports are both FORCE
+# ROW LEVEL SECURITY). The api re-reads the row and compares the real owner, so a
+# wrong value is rejected rather than trusted.
+_OWNERS: dict[str, str] = {}
+_OWNERS_LOCK = threading.Lock()
+
+
+def set_owner(source_id: str, owner_id: str) -> None:
+    with _OWNERS_LOCK:
+        _OWNERS[source_id] = owner_id
+
+
+def owner_of(source_id: str) -> str:
+    with _OWNERS_LOCK:
+        return _OWNERS.get(source_id, "")
+
+
+def clear_owner(source_id: str) -> None:
+    with _OWNERS_LOCK:
+        _OWNERS.pop(source_id, None)
+
+
 def _post(url: str, payload: dict, timeout: int = 15):
     verify = os.getenv("SCRAPER_VERIFY_TLS", "true").lower() != "false"
     r = requests.post(url, json=payload, headers={"X-Internal-Secret": INTERNAL_SECRET}, timeout=timeout, verify=verify)
@@ -397,21 +421,23 @@ def _post(url: str, payload: dict, timeout: int = 15):
 
 def request_batch(source_id: str):
     """Ask the api for a fresh import job for one batch → (import_id, upload_key)."""
-    d = _post(BATCH_URL, {"source_id": source_id})
+    d = _post(BATCH_URL, {"source_id": source_id, "owner_id": owner_of(source_id)})
     return d["import_id"], d["upload_key"]
 
 
 def report_progress(source_id: str, scraped: int, total: int):
     try:
-        _post(PROGRESS_URL, {"source_id": source_id, "scraped": scraped, "total": total}, timeout=8)
+        _post(PROGRESS_URL, {"source_id": source_id, "owner_id": owner_of(source_id),
+                             "scraped": scraped, "total": total}, timeout=8)
     except Exception:
         pass
 
 
-def callback(import_id: str, ok: bool, error: str = ""):
+def callback(source_id: str, import_id: str, ok: bool, error: str = ""):
     # A batch's zip is uploaded (ok) → api imports it; or fail that batch's job.
     try:
-        _post(CALLBACK_URL, {"import_id": import_id, "ok": ok, "error": error[:500]})
+        _post(CALLBACK_URL, {"import_id": import_id, "owner_id": owner_of(source_id),
+                             "ok": ok, "error": error[:500]})
     except Exception as e:
         print(f"[scraper] batch callback failed for {import_id}: {e}", flush=True)
 
@@ -422,7 +448,8 @@ def finalize(source_id: str, ok: bool, failed: list[str] | None = None, note: st
         shown = ", ".join(failed[:20])
         summary = f"{len(failed)} chương lỗi: {shown}" + ("…" if len(failed) > 20 else "")
     try:
-        _post(FINALIZE_URL, {"source_id": source_id, "ok": ok, "failed": summary})
+        _post(FINALIZE_URL, {"source_id": source_id, "owner_id": owner_of(source_id),
+                             "ok": ok, "failed": summary})
     except Exception as e:
         print(f"[scraper] finalize failed for {source_id}: {e}", flush=True)
 
@@ -518,7 +545,7 @@ def _finish_batch(state: _SyncState, tmp: str, batch, lbl: str):
         iid, key = request_batch(state.source_id)
         data = zip_dir(tmp)
         _s3().put_object(Bucket=S3_BUCKET, Key=key, Body=data, ContentType="application/zip")
-        callback(iid, True)
+        callback(state.source_id, iid, True)
         print(f"[scraper] {state.source_id}: chương {lbl} → import ({len(data)} bytes)", flush=True)
     except Exception as e:
         print(f"[scraper] {state.source_id}: chương {lbl} upload failed: {e}", flush=True)
@@ -572,12 +599,15 @@ def _sync_worker(driver, jobs: "queue.Queue", state: _SyncState, referer: str, i
                 pass
 
 
-def run_sync(source_id: str, source_url: str, chapters_hint: str, existing: str = ""):
+def run_sync(source_id: str, owner_id: str, source_url: str, chapters_hint: str, existing: str = ""):
     """Parallel sync: discover once, then SYNC_WORKERS browsers pull batches from a
     shared queue (retry ×3 each) while an upload pool zips/ships finished batches.
     Chapters land out of order — the api derives a chapter's position from its title,
     so the reader still sees them in order. Failures are reported to the UI."""
     print(f"[scraper] sync source {source_id} start: {source_url}", flush=True)
+    # Register before the first callback: every /internal/comic/* post echoes this
+    # back so the api has a tenant to scope to.
+    set_owner(source_id, owner_id)
     try:
         assert_public_url(source_url)
     except ValueError as e:
@@ -633,6 +663,7 @@ def run_sync(source_id: str, source_url: str, chapters_hint: str, existing: str 
         finalize(source_id, False, note=str(e)[:200])
     finally:
         _clear_cancel(source_id)
+        clear_owner(source_id)  # nothing calls back for this source after here
         if lead is not None:
             try:
                 lead.quit()

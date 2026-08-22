@@ -26,9 +26,10 @@ func newHTTPScraper(baseURL string) *httpScraper {
 	return &httpScraper{baseURL: baseURL, client: &http.Client{Timeout: 30 * time.Second}}
 }
 
-func (s *httpScraper) StartScrape(ctx context.Context, sourceID uuid.UUID, sourceURL, chaptersHint string, existing []string) error {
+func (s *httpScraper) StartScrape(ctx context.Context, sourceID, ownerID uuid.UUID, sourceURL, chaptersHint string, existing []string) error {
 	body, _ := json.Marshal(map[string]string{
 		"source_id":  sourceID.String(),
+		"owner_id":   ownerID.String(), // echoed back on every callback → tenant scope
 		"source_url": sourceURL,
 		"chapters":   chaptersHint,
 		"existing":   strings.Join(existing, ","),

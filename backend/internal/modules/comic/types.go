@@ -225,7 +225,10 @@ type SyncSource struct {
 // reporting progress, and finalizing — via the internal callback endpoints. A nil
 // client disables the sync feature.
 type ScraperClient interface {
-	StartScrape(ctx context.Context, sourceID uuid.UUID, sourceURL, chaptersHint string, existing []string) error
+	// ownerID travels with the scrape so the scraper can echo it back on every
+	// callback: the /internal/comic/* endpoints run outside authTenant and would
+	// otherwise have no tenant to scope their writes to. See syncOwnerScope.
+	StartScrape(ctx context.Context, sourceID, ownerID uuid.UUID, sourceURL, chaptersHint string, existing []string) error
 	CancelScrape(ctx context.Context, sourceID uuid.UUID) error
 }
 

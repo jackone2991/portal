@@ -623,6 +623,7 @@ func (h *Handler) DeleteSyncSource(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SyncBatch(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		SourceID string `json:"source_id"`
+		OwnerID  string `json:"owner_id"`
 	}
 	if !decode(w, r, &body) {
 		return
@@ -632,7 +633,12 @@ func (h *Handler) SyncBatch(w http.ResponseWriter, r *http.Request) {
 		badReq(w, "invalid source_id")
 		return
 	}
-	importID, uploadKey, err := h.svc.RequestSyncBatch(r.Context(), sourceID)
+	ownerID, err := uuid.Parse(body.OwnerID)
+	if err != nil {
+		badReq(w, "invalid owner_id")
+		return
+	}
+	importID, uploadKey, err := h.svc.RequestSyncBatch(r.Context(), sourceID, ownerID)
 	if err != nil {
 		writeComicErr(w, err)
 		return
@@ -645,6 +651,7 @@ func (h *Handler) SyncBatch(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SyncCallback(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ImportID string `json:"import_id"`
+		OwnerID  string `json:"owner_id"`
 		OK       bool   `json:"ok"`
 		Error    string `json:"error"`
 	}
@@ -656,7 +663,12 @@ func (h *Handler) SyncCallback(w http.ResponseWriter, r *http.Request) {
 		badReq(w, "invalid import_id")
 		return
 	}
-	if err := h.svc.SyncBatchUploaded(r.Context(), importID, body.OK, body.Error); err != nil {
+	ownerID, err := uuid.Parse(body.OwnerID)
+	if err != nil {
+		badReq(w, "invalid owner_id")
+		return
+	}
+	if err := h.svc.SyncBatchUploaded(r.Context(), importID, ownerID, body.OK, body.Error); err != nil {
 		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "callback failed")
 		return
 	}
@@ -667,6 +679,7 @@ func (h *Handler) SyncCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SyncProgress(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		SourceID string `json:"source_id"`
+		OwnerID  string `json:"owner_id"`
 		Scraped  int    `json:"scraped"`
 		Total    int    `json:"total"`
 	}
@@ -678,7 +691,12 @@ func (h *Handler) SyncProgress(w http.ResponseWriter, r *http.Request) {
 		badReq(w, "invalid source_id")
 		return
 	}
-	_ = h.svc.SyncProgress(r.Context(), sourceID, body.Scraped, body.Total)
+	ownerID, err := uuid.Parse(body.OwnerID)
+	if err != nil {
+		badReq(w, "invalid owner_id")
+		return
+	}
+	_ = h.svc.SyncProgress(r.Context(), sourceID, ownerID, body.Scraped, body.Total)
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
@@ -686,6 +704,7 @@ func (h *Handler) SyncProgress(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SyncFinalize(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		SourceID string `json:"source_id"`
+		OwnerID  string `json:"owner_id"`
 		OK       bool   `json:"ok"`
 		Failed   string `json:"failed"`
 	}
@@ -697,7 +716,12 @@ func (h *Handler) SyncFinalize(w http.ResponseWriter, r *http.Request) {
 		badReq(w, "invalid source_id")
 		return
 	}
-	_ = h.svc.FinalizeSync(r.Context(), sourceID, body.OK, body.Failed)
+	ownerID, err := uuid.Parse(body.OwnerID)
+	if err != nil {
+		badReq(w, "invalid owner_id")
+		return
+	}
+	_ = h.svc.FinalizeSync(r.Context(), sourceID, ownerID, body.OK, body.Failed)
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 

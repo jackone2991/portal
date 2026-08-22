@@ -45,6 +45,10 @@ type fakeRepo struct {
 	chapters map[uuid.UUID]*Chapter
 	pages    map[uuid.UUID]*Page
 	progress map[string]*Progress
+
+	// syncOwner is the owner GetSyncSource reports, so tests can exercise the
+	// owner check the internal sync callbacks do.
+	syncOwner uuid.UUID
 }
 
 func newFakeRepo() *fakeRepo {
@@ -306,7 +310,7 @@ func (r *fakeRepo) ListSyncSources(_ context.Context, _ uuid.UUID) ([]SyncSource
 	return nil, nil
 }
 func (r *fakeRepo) GetSyncSource(_ context.Context, id uuid.UUID) (SyncSource, error) {
-	return SyncSource{ID: id}, nil
+	return SyncSource{ID: id, OwnerUserID: r.syncOwner}, nil
 }
 func (r *fakeRepo) DeleteSyncSource(_ context.Context, _ uuid.UUID) error { return nil }
 func (r *fakeRepo) UpdateSyncStatus(_ context.Context, _ uuid.UUID, _ string, _ *uuid.UUID, _ *string, _ bool) error {

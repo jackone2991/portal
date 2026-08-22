@@ -23,6 +23,7 @@ _pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
 class SyncReq(BaseModel):
     source_id: str
+    owner_id: str  # echoed back on every callback so the api can scope to a tenant
     source_url: str
     chapters: str = ""
     existing: str = ""  # comma list of chapter labels already imported (skip on full sync)
@@ -39,7 +40,7 @@ def health():
 
 @app.post("/sync", status_code=202)
 def sync(req: SyncReq):
-    _pool.submit(run_sync, req.source_id, req.source_url, req.chapters, req.existing)
+    _pool.submit(run_sync, req.source_id, req.owner_id, req.source_url, req.chapters, req.existing)
     return {"accepted": True, "source_id": req.source_id}
 
 
