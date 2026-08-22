@@ -28,6 +28,7 @@ import {
 } from "@/lib/comic";
 import { uploadImage } from "@/lib/media-upload";
 import { runComicZipImport, runZipImport, type RunImportProgress } from "@/lib/comic-import";
+import { listSyncSources, createSyncSource, triggerSync, cancelSync, deleteSyncSource, type SyncSource, type SyncStatus } from "@/lib/comic-sync";
 
 // Comic detail (SPEC-02 P0.5) — a read view for everyone, plus a full owner manager
 // (edit metadata + cover, chapter CRUD/reorder, page upload/reorder/delete).
@@ -110,7 +111,96 @@ function OwnerManager({ id, comic }: { id: string; comic: ComicDetail }) {
       </div>
 
       <SettingsCard id={id} comic={comic} />
+      <SyncSourcesManager id={id} />
       <ChaptersManager id={id} comic={comic} />
+    </div>
+  );
+}
+
+/* ── Sync sources (P1.8) ────────────────────────────────────────────── */
+
+function SyncSourcesManager({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const [url, setUrl] = useState("");
+  const [hint, setHint] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const sources = useQuery({
+    queryKey: ["sync-sources", id],
+    queryFn: () => listSyncSources(id),
+    refetchInterval: (q) => ((q.state.data ?? []).some((s) => s.last_status === "syncing") ? 3000 : false),
+  });
+  const list = sources.data ?? [];
+
+  const onErr = (e: unknown) => setErr(e instanceof ApiError ? problemDisplayMessage(e.body) : e instanceof Error ? e.message : "Có lỗi xảy ra");
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["sync-sources", id] });
+  const add = useMutation({ mutationFn: () => createSyncSource(id, { source_url: url.trim(), chapters_hint: hint.trim() }), onSuccess: () => { setErr(null); setUrl(""); setHint(""); invalidate(); }, onError: onErr });
+  const sync = useMutation({ mutationFn: (sid: string) => triggerSync(sid), onSuccess: () => { setErr(null); invalidate(); }, onError: onErr });
+  const cancel = useMutation({ mutationFn: (sid: string) => cancelSync(sid), onSuccess: () => { setErr(null); invalidate(); }, onError: onErr });
+  const del = useMutation({ mutationFn: (sid: string) => deleteSyncSource(sid), onSuccess: invalidate, onError: onErr });
+
+  return (
+    <div className="rounded-2xl border p-5" style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }}>
+      <h2 className="text-sm font-bold" style={{ color: "var(--tpl-heading)" }}>Nguồn đồng bộ</h2>
+      <p className="mt-0.5 text-xs" style={{ color: "var(--tpl-muted)" }}>Tự động cào truyện từ nguồn ngoài rồi nhập vào bộ này (chạy nền).</p>
+      {err && <p className="mt-2 text-sm" style={{ color: "#ef4444" }}>{err}</p>}
+
+      <div className="mt-3 space-y-2">
+        {list.map((s) => (
+          <SyncSourceRow key={s.id} source={s} onSync={() => sync.mutate(s.id)} onCancel={() => cancel.mutate(s.id)} onDelete={() => del.mutate(s.id)} busy={sync.isPending || del.isPending || cancel.isPending} />
+        ))}
+        {list.length === 0 && <p className="text-sm" style={{ color: "var(--tpl-muted)" }}>Chưa có nguồn nào — thêm bên dưới.</p>}
+      </div>
+
+      <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); if (url.trim()) add.mutate(); }}>
+        <input className="flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]" style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }} placeholder="URL trang truyện (vd https://truyenqqno.com/truyen-tranh/...)" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <input className="w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)] sm:w-44" style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }} placeholder="Chương (trống = tất cả, vd 1-50)" value={hint} onChange={(e) => setHint(e.target.value)} />
+        <button type="submit" disabled={add.isPending || !url.trim()} className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50" style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}>Thêm nguồn</button>
+      </form>
+    </div>
+  );
+}
+
+function SyncSourceRow({ source, onSync, onCancel, onDelete, busy }: { source: SyncSource; onSync: () => void; onCancel: () => void; onDelete: () => void; busy: boolean }) {
+  const badge: Record<SyncStatus, { label: string; color: string }> = {
+    idle: { label: "Chưa chạy", color: "var(--tpl-muted)" },
+    syncing: { label: "Đang cào…", color: "#f59e0b" },
+    done: { label: "Đã cào xong", color: "#22c55e" },
+    failed: { label: "Lỗi", color: "#ef4444" },
+    cancelled: { label: "Đã ngừng", color: "var(--tpl-muted)" },
+  };
+  const b = badge[source.last_status];
+  const syncing = source.last_status === "syncing";
+  const pct = source.total_chapters > 0 ? Math.round((source.scraped_chapters / source.total_chapters) * 100) : 0;
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2" style={{ borderColor: "var(--tpl-border)" }}>
+      <div className="min-w-0">
+        <div className="truncate text-sm font-medium" style={{ color: "var(--tpl-heading)" }}>{source.source_site || source.source_url}</div>
+        <a href={source.source_url} target="_blank" rel="noreferrer" className="block truncate text-xs hover:underline" style={{ color: "var(--tpl-muted)" }}>{source.source_url}</a>
+        <div className="mt-0.5 text-xs" style={{ color: "var(--tpl-muted)" }}>
+          <span style={{ color: b.color }}>● {b.label}</span>
+          {source.chapters_hint && <span> · chương {source.chapters_hint}</span>}
+          {source.total_chapters > 0 && (source.last_status === "syncing"
+            ? <span> · Cào: {source.scraped_chapters}/{source.total_chapters} chương ({pct}%)</span>
+            : <span> · {source.total_chapters} chương</span>)}
+          {source.last_error && <span style={{ color: "#ef4444" }}> · ⚠ {source.last_error}</span>}
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        {syncing ? (
+          <button type="button" onClick={onCancel} disabled={busy} className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50" style={{ borderColor: "#ef4444", color: "#ef4444" }}>
+            ⏹ Ngừng
+          </button>
+        ) : (
+          <button type="button" onClick={onSync} disabled={busy} className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50" style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" }}>
+            ⟳ Đồng bộ
+          </button>
+        )}
+        <button type="button" onClick={onDelete} disabled={busy || syncing} className="rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50" style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}>
+          Xóa
+        </button>
+      </div>
     </div>
   );
 }

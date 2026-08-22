@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
+import { baseURL as API_BASE } from "@/lib/api-client";
 
 type Tab = "login" | "register";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
 
 /**
  * Login / register card — React + Tailwind port of the Olympus "Landing Page"

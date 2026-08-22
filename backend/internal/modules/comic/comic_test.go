@@ -3,6 +3,8 @@ package comic
 import (
 	"context"
 	"errors"
+	"slices"
+	"sort"
 	"testing"
 	"time"
 
@@ -297,6 +299,21 @@ func (r *fakeRepo) UpdateImportProgress(_ context.Context, _ uuid.UUID, _, _ int
 func (r *fakeRepo) FinishImport(_ context.Context, _ uuid.UUID, _ string, _, _ int, _ []ImportFileResult, _ *string) error {
 	return nil
 }
+func (r *fakeRepo) CreateSyncSource(_ context.Context, comicID, ownerID uuid.UUID, sourceURL, site, hint string) (SyncSource, error) {
+	return SyncSource{ID: uuid.New(), ComicID: comicID, OwnerUserID: ownerID, SourceURL: sourceURL, SourceSite: site, ChaptersHint: hint, LastStatus: "idle"}, nil
+}
+func (r *fakeRepo) ListSyncSources(_ context.Context, _ uuid.UUID) ([]SyncSource, error) {
+	return nil, nil
+}
+func (r *fakeRepo) GetSyncSource(_ context.Context, id uuid.UUID) (SyncSource, error) {
+	return SyncSource{ID: id}, nil
+}
+func (r *fakeRepo) DeleteSyncSource(_ context.Context, _ uuid.UUID) error { return nil }
+func (r *fakeRepo) UpdateSyncStatus(_ context.Context, _ uuid.UUID, _ string, _ *uuid.UUID, _ *string, _ bool) error {
+	return nil
+}
+func (r *fakeRepo) UpdateSyncProgress(_ context.Context, _ uuid.UUID, _, _ int) error { return nil }
+func (r *fakeRepo) SetSyncLastImport(_ context.Context, _, _ uuid.UUID) error         { return nil }
 
 // ── fixtures ─────────────────────────────────────────────────────────
 
@@ -432,5 +449,50 @@ func TestAssetDeletedConsumer(t *testing.T) {
 	// idempotent + no-op on an unknown asset
 	if err := svc.HandleAssetDeleted(ctx, uuid.New()); err != nil {
 		t.Fatalf("idempotent handle: %v", err)
+	}
+}
+
+func TestChapterSortOrder(t *testing.T) {
+	cases := []struct {
+		title string
+		want  int
+		ok    bool
+	}{
+		{"12", 120, true},      // scraper names its folders with the bare number
+		{"12.5", 125, true},    // a .5 side-story sits between 12 and 13
+		{"12,5", 125, true},    // comma decimal
+		{"216-1", 2161, true},  // hyphen side-chapter must NOT collapse onto 216
+		{"Chương 7", 70, true}, // hand-made zip
+		{"Chapter 108", 1080, true},
+		{"1", 10, true},
+		{"", 0, false},           // no number → caller appends instead
+		{"Ngoại truyện", 0, false},
+		{"99999999999", 0, false}, // absurd: a digit run that isn't a chapter number
+	}
+	for _, c := range cases {
+		got, ok := chapterSortOrder(c.title)
+		if ok != c.ok || (ok && got != c.want) {
+			t.Errorf("chapterSortOrder(%q) = (%d, %v), want (%d, %v)", c.title, got, ok, c.want, c.ok)
+		}
+	}
+
+	// The property the parallel scraper depends on: a chapter's slot is decided by
+	// its title alone, so importing out of order still reads back in order.
+	forward := []string{"1", "2", "3", "10", "10-5", "11"}
+	reverse := []string{"11", "10-5", "10", "3", "2", "1"}
+	slot := func(titles []string) []int {
+		out := make([]int, len(titles))
+		for i, ti := range titles {
+			out[i], _ = chapterSortOrder(ti)
+		}
+		sort.Ints(out)
+		return out
+	}
+	f, r := slot(forward), slot(reverse)
+	if !slices.Equal(f, r) {
+		t.Fatalf("arrival order changed the slots: %v vs %v", f, r)
+	}
+	if !sort.IntsAreSorted(f) || f[0] != 10 || f[len(f)-1] != 110 {
+		t.Fatalf("unexpected slot sequence: %v", f)
 	}
 }

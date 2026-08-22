@@ -26,6 +26,9 @@ type Service struct {
 	store       ObjectStore
 	enqueue     Enqueuer
 	runInTenant RunInTenant
+
+	// external-source sync (P1.8) — API side only; nil disables the feature.
+	scraper ScraperClient
 }
 
 // ReaderPage is one page in the reader payload (P0.3): id + asset + dims (from

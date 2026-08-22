@@ -52,3 +52,10 @@ frontend/.ds-compiled.css
 # design-sync npm-install byproduct (repo uses pnpm, no lockfile by design)
 frontend/package-lock.json
 .mcp.json
+# Claude Code local overrides (personal, not shared)
+.claude.local.md
+
+# Scraper service runtime artifacts (SPEC-02 P1.8)
+scraper/__pycache__/
+scraper/downloaded_files/
+scraper/*.log

@@ -251,7 +251,7 @@ func (h *AuthHandler) completeSession(w http.ResponseWriter, r *http.Request, us
 		return
 	}
 
-	h.setSessionCookies(w, access, refresh.Plaintext, remember)
+	h.setSessionCookies(w, r, access, refresh.Plaintext, remember)
 	h.Audit.Write(ctx, audit.Event{
 		Action:    audit.ActionAuthLogin,
 		ActorID:   &user.ID,
@@ -295,14 +295,14 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 				UserAgent: r.UserAgent(),
 			})
 		}
-		h.clearSessionCookies(w)
+		h.clearSessionCookies(w, r)
 		writeError(w, http.StatusUnauthorized, "unauthorized", "refresh failed")
 		return
 	}
 
 	snap, err := h.Users.GetUserAuthSnapshot(r.Context(), res.Row.UserID)
 	if err != nil || snap.Disabled {
-		h.clearSessionCookies(w)
+		h.clearSessionCookies(w, r)
 		writeError(w, http.StatusUnauthorized, "unauthorized", "user unavailable")
 		return
 	}
@@ -320,7 +320,7 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.setSessionCookies(w, access, res.Plaintext, rememberFromRequest(r))
+	h.setSessionCookies(w, r, access, res.Plaintext, rememberFromRequest(r))
 	h.Audit.Write(r.Context(), audit.Event{
 		Action:    audit.ActionAuthRefresh,
 		ActorID:   &snap.ID,
@@ -353,7 +353,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 			UserAgent: r.UserAgent(),
 		})
 	}
-	h.clearSessionCookies(w)
+	h.clearSessionCookies(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -376,7 +376,7 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 		UserAgent: r.UserAgent(),
 		Metadata:  map[string]any{"scope": "all_sessions"},
 	})
-	h.clearSessionCookies(w)
+	h.clearSessionCookies(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -444,7 +444,32 @@ func loginFailKeys(ip net.IP, email string) []string {
 // the access cookie stays short-lived and is re-minted by /auth/refresh.
 const sessionCookieName = "portal_session"
 
-func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh string, remember bool) {
+// cookieDomainFor picks the Set-Cookie Domain from the host the request actually
+// arrived on, so ONE deployment serves two access shapes:
+//
+//   - api.<domain> (behind Traefik): return <domain> so the marker cookie is shared
+//     with the frontend on the sibling <domain> subdomain (else the middleware gate
+//     never sees portal_session and redirect-loops).
+//   - a bare IP / localhost (a phone hitting 192.168.1.53:8080 directly): return ""
+//     for a host-only cookie — an IP can't carry a Domain attribute, and the frontend
+//     on the same IP (different port) receives host-only cookies anyway.
+//
+// h.CookieDomain remains the fallback for any other host shape.
+func (h *AuthHandler) cookieDomainFor(r *http.Request) string {
+	host := r.Host
+	if i := strings.IndexByte(host, ':'); i >= 0 {
+		host = host[:i] // strip port
+	}
+	if host == "localhost" || net.ParseIP(host) != nil {
+		return "" // host-only: IPs/localhost can't scope a Domain usefully
+	}
+	if parent, ok := strings.CutPrefix(host, "api."); ok {
+		return parent // api.portal.localhost → portal.localhost (shared with frontend)
+	}
+	return h.CookieDomain
+}
+
+func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, r *http.Request, access, refresh string, remember bool) {
 	// remember → persistent (Max-Age = refresh TTL); otherwise a session cookie
 	// (Max-Age omitted → cleared when the browser closes).
 	durableMaxAge := 0
@@ -455,12 +480,13 @@ func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh s
 	if remember {
 		markerValue = "p"
 	}
+	domain := h.cookieDomainFor(r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     middleware.AccessCookieName,
 		Value:    access,
 		Path:     "/",
-		Domain:   h.CookieDomain,
+		Domain:   domain,
 		MaxAge:   int(h.AccessTTL.Seconds()),
 		HttpOnly: true,
 		Secure:   h.CookieSecure,
@@ -470,7 +496,7 @@ func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh s
 		Name:     "portal_refresh",
 		Value:    refresh,
 		Path:     "/api/v1/auth",
-		Domain:   h.CookieDomain,
+		Domain:   domain,
 		MaxAge:   durableMaxAge,
 		HttpOnly: true,
 		Secure:   h.CookieSecure,
@@ -480,7 +506,7 @@ func (h *AuthHandler) setSessionCookies(w http.ResponseWriter, access, refresh s
 		Name:     sessionCookieName,
 		Value:    markerValue,
 		Path:     "/",
-		Domain:   h.CookieDomain,
+		Domain:   domain,
 		MaxAge:   durableMaxAge,
 		HttpOnly: true,
 		Secure:   h.CookieSecure,
@@ -501,11 +527,12 @@ func rememberFromRequest(r *http.Request) bool {
 // used when setting them (h.CookieDomain) — a browser only deletes a cookie when
 // the clearing Set-Cookie matches name + domain + path, so omitting Domain here
 // would leave the durable portal_session marker in place and cause a redirect loop.
-func (h *AuthHandler) clearSessionCookies(w http.ResponseWriter) {
+func (h *AuthHandler) clearSessionCookies(w http.ResponseWriter, r *http.Request) {
+	domain := h.cookieDomainFor(r)
 	for _, c := range []http.Cookie{
-		{Name: middleware.AccessCookieName, Path: "/", Domain: h.CookieDomain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
-		{Name: "portal_refresh", Path: "/api/v1/auth", Domain: h.CookieDomain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
-		{Name: sessionCookieName, Path: "/", Domain: h.CookieDomain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
+		{Name: middleware.AccessCookieName, Path: "/", Domain: domain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
+		{Name: "portal_refresh", Path: "/api/v1/auth", Domain: domain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
+		{Name: sessionCookieName, Path: "/", Domain: domain, MaxAge: -1, HttpOnly: true, Secure: h.CookieSecure, SameSite: http.SameSiteStrictMode},
 	} {
 		c := c
 		http.SetCookie(w, &c)

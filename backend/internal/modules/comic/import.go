@@ -17,8 +17,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,6 +29,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rs/zerolog/log"
 
 	comicapi "github.com/portal/backend/internal/modules/comic/api"
@@ -34,12 +37,16 @@ import (
 )
 
 // Import guardrails (P1.7). Sized for whole-comic archives (folder-per-chapter):
-// a 100-chapter comic is ~10k images / ~2 GB. Image variants transcode in
+// a full long-running series is ~350 chapters / ~42k images / ~4.2 GB (measured on
+// a real scrape), so the caps are set an order of magnitude above a "big comic"
+// rather than at it — a 3 GiB / 20k-entry pair rejected exactly the archives this
+// feature exists for. Both spool to a temp file (bounded memory) and the zip is
+// deleted from storage once the import finishes. Image variants transcode in
 // parallel on the "image" queue (IMAGE_CONCURRENCY), so the poll budget is per
 // image amortized across that pool, capped under the task's 12h lease.
 const (
-	importMaxZipBytes  = 3 << 30 // 3 GiB
-	importMaxEntries   = 20000
+	importMaxZipBytes  = 16 << 30 // 16 GiB
+	importMaxEntries   = 100000
 	importMaxRatio     = 100 // per-entry compression ratio (zip-bomb guard)
 	importPollInterval = 2 * time.Second
 	importPollFloor    = 2 * time.Minute
@@ -103,7 +110,7 @@ func (s *Service) SaveImportZip(ctx context.Context, importID, ownerID uuid.UUID
 		return ImportJob{}, err
 	}
 	if n > importMaxZipBytes {
-		return ImportJob{}, fmt.Errorf("%w: zip exceeds 500MB", ErrValidation)
+		return ImportJob{}, fmt.Errorf("%w: zip %s vượt giới hạn %s", ErrValidation, humanBytes(n), humanBytes(importMaxZipBytes))
 	}
 	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
 		return ImportJob{}, err
@@ -118,16 +125,22 @@ func (s *Service) SaveImportZip(ctx context.Context, importID, ownerID uuid.UUID
 	if err != nil {
 		return ImportJob{}, err
 	}
-	// A whole-comic import can run for tens of minutes; without a generous Timeout
-	// asynq's ~30-min task lease expires mid-run, cancels the context, and re-queues
-	// the task → it re-creates every chapter (duplicates). Timeout keeps the lease
-	// alive; MaxRetry(0) means a genuine failure aborts instead of re-running.
-	payload, _ := json.Marshal(comicapi.ImportZipPayload{ImportID: importID.String()})
-	task := asynq.NewTask(comicapi.TaskImportZip, payload, asynq.Queue("default"), asynq.Timeout(12*time.Hour), asynq.MaxRetry(0))
-	if _, err := s.enqueue.Enqueue(task); err != nil {
+	if err := s.enqueueImportZip(importID); err != nil {
 		return ImportJob{}, err
 	}
 	return updated, nil
+}
+
+// enqueueImportZip dispatches the comic:import_zip worker for a job whose upload is
+// ready. A whole-comic import can run for tens of minutes; without a generous
+// Timeout asynq's ~30-min task lease expires mid-run, cancels the context, and
+// re-queues the task → it re-creates every chapter (duplicates). Timeout keeps the
+// lease alive; MaxRetry(0) means a genuine failure aborts instead of re-running.
+func (s *Service) enqueueImportZip(importID uuid.UUID) error {
+	payload, _ := json.Marshal(comicapi.ImportZipPayload{ImportID: importID.String()})
+	task := asynq.NewTask(comicapi.TaskImportZip, payload, asynq.Queue("default"), asynq.Timeout(12*time.Hour), asynq.MaxRetry(0))
+	_, err := s.enqueue.Enqueue(task)
+	return err
 }
 
 // RunImport is the worker body (comic:import_zip). Best-effort: any hard failure
@@ -233,13 +246,59 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 		}
 	}
 
-	_ = s.repo.StartImport(ctx, importID, len(entries))
-	baseChapters := 0
+	// Idempotent sync (P1.8): reconcile scraped chapters against what the comic
+	// already has so re-syncing UPDATES the list in place instead of appending a
+	// duplicate copy. Per matched title:
+	//   • present WITH pages → skip the group (no re-import, no duplicate)
+	//   • present but EMPTY  → refill that same chapter in place (repairs gaps)
+	//   • absent             → create it at the slot its own title implies.
+	// sort_order comes from the chapter NUMBER in the title, so it does not depend on
+	// which batch happens to finish first: a sync may scrape chapters in parallel and
+	// import them out of order, and the reader still sees them in order.
+	// A title carrying no number (hand-made zips) falls back to appending after
+	// MAX(sort_order) — baseSort is MAX, not chapter COUNT, because the unique index
+	// is (comic_id, sort_order) and a chapter deleted from the middle leaves
+	// count < max, so (count+i)*10 would collide with a live row ("tạo chương lỗi").
+	baseSort := 0
+	usedSort := map[int]bool{}
 	if job.ChapterID == nil {
-		if n, err := s.repo.CountChapters(ctx, job.ComicID); err == nil {
-			baseChapters = n
+		existingID := map[string]uuid.UUID{}
+		if chs, err := s.repo.ListChapters(ctx, job.ComicID); err == nil {
+			for _, c := range chs {
+				existingID[c.Title] = c.ID
+				usedSort[c.SortOrder] = true
+				if c.SortOrder > baseSort {
+					baseSort = c.SortOrder
+				}
+			}
 		}
+		emptyTitle := map[string]bool{}
+		if refs, err := s.repo.ChaptersWithoutPages(ctx, job.ComicID); err == nil {
+			for _, r := range refs {
+				emptyTitle[r.Title] = true
+			}
+		}
+		kept := groups[:0]
+		for _, g := range groups {
+			id, exists := existingID[g.title]
+			if exists && !emptyTitle[g.title] {
+				continue // already present & complete → skip, don't duplicate
+			}
+			if exists { // present but empty → refill this exact chapter in place
+				cid := id
+				g.chapter = &cid
+			}
+			kept = append(kept, g)
+		}
+		groups = kept
 	}
+
+	// total = files that will actually be processed (after skipping present chapters)
+	total := 0
+	for _, g := range groups {
+		total += len(g.entries)
+	}
+	_ = s.repo.StartImport(ctx, importID, total)
 
 	report := make([]ImportFileResult, 0, len(entries))
 	succ, fail := 0, 0
@@ -260,12 +319,11 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 			}
 			continue
 		}
-		var ch Chapter
-		cerr := s.runInTenant(ctx, owner, func(ctx context.Context) error {
-			var e error
-			ch, e = s.repo.CreateChapter(ctx, job.ComicID, g.title, (baseChapters+gi+1)*10)
-			return e
-		})
+		want, ok := chapterSortOrder(g.title)
+		if !ok {
+			want = baseSort + (gi+1)*10 // untitled/numberless → keep appending
+		}
+		ch, cerr := s.createChapterAt(ctx, owner, job.ComicID, g.title, want, usedSort)
 		if cerr != nil {
 			for _, e := range g.entries {
 				report = append(report, ImportFileResult{Name: e.name, OK: false, Error: "tạo chương lỗi"})
@@ -365,7 +423,7 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 				pageChapter(gi)
 			}
 		}
-		_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, report)
+		_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, trimReport(report))
 	}
 
 	// Phase B — parallel ingest. Read zip entries serially (archive/zip over a
@@ -431,7 +489,7 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 			chapterFull[gi] = true
 		}
 	}
-	_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, report)
+	_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, trimReport(report))
 
 	// Phase C — drain: keep resolving until every ingested asset is ready/failed
 	// (or the budget runs out), paging chapters as they complete.
@@ -461,9 +519,9 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 			pageChapter(gi)
 		}
 	}
-	_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, report)
+	_ = s.repo.UpdateImportProgress(ctx, importID, succ, fail, trimReport(report))
 
-	if err := s.repo.FinishImport(ctx, importID, ImportDone, succ, fail, report, nil); err != nil {
+	if err := s.repo.FinishImport(ctx, importID, ImportDone, succ, fail, trimReport(report), nil); err != nil {
 		log.Error().Err(err).Str("import", importID.String()).Msg("comic: finish import")
 	}
 	_ = s.store.Delete(ctx, *job.UploadRef)
@@ -483,6 +541,77 @@ func pendingIDs(all []uuid.UUID, done map[uuid.UUID]bool) []uuid.UUID {
 }
 
 // chapterTitleFromDir derives a chapter title from a zip folder path.
+// chapterNumRe pulls the first number out of a chapter title. The scraper names its
+// folders with the bare chapter number ("12", "12.5"); hand-made zips tend to use
+// "Chương 12" / "Chapter 12" / "Chap 12,5". A hyphen counts as a decimal point too:
+// sources write side-chapters as "216-1", and reading only the "216" out of that
+// would aim it at the same slot as chapter 216 itself.
+var chapterNumRe = regexp.MustCompile(`(\d+(?:[.,-]\d+)?)`)
+
+// chapterDecimalSep normalises the three separators above to a parseable ".".
+var chapterDecimalSep = strings.NewReplacer(",", ".", "-", ".")
+
+// maxChapterNumber caps what we accept as a chapter number. sort_order is an int4,
+// and the ×10 below has to stay inside it; anything larger is not a chapter number
+// but some other digit run in the title, so fall back to appending.
+const maxChapterNumber = 10_000_000
+
+// chapterSlotAttempts bounds the walk for a free sort_order when the derived slot is
+// taken. Clashes are rare (same number twice) and resolved in a step or two.
+const chapterSlotAttempts = 64
+
+// chapterSortOrder derives a stable position from the chapter's title, scaled by 10
+// so a ".5" side-story lands between its neighbours (12 → 120, 12.5 → 125, 13 → 130).
+// Deriving it from the title instead of arrival order is what lets chapters be
+// imported concurrently. ok=false ⇒ no usable number; the caller appends instead.
+func chapterSortOrder(title string) (int, bool) {
+	m := chapterNumRe.FindStringSubmatch(title)
+	if m == nil {
+		return 0, false
+	}
+	n, err := strconv.ParseFloat(chapterDecimalSep.Replace(m[1]), 64)
+	if err != nil || n < 0 || n > maxChapterNumber {
+		return 0, false
+	}
+	return int(math.Round(n * 10)), true
+}
+
+// createChapterAt inserts the chapter at sortOrder, stepping forward when that slot
+// is taken. (comic_id, sort_order) is unique, and two concurrent sync batches can
+// derive the same slot for different titles, so a clash is an expected outcome to
+// route around rather than an error to report. `used` carries the slots this import
+// already knows about; the 23505 retry covers the ones another import took first.
+func (s *Service) createChapterAt(ctx context.Context, owner, comicID uuid.UUID, title string, sortOrder int, used map[int]bool) (Chapter, error) {
+	var lastErr error
+	for range chapterSlotAttempts {
+		for used[sortOrder] {
+			sortOrder++
+		}
+		var ch Chapter
+		err := s.runInTenant(ctx, owner, func(ctx context.Context) error {
+			var e error
+			ch, e = s.repo.CreateChapter(ctx, comicID, title, sortOrder)
+			return e
+		})
+		if err == nil {
+			used[sortOrder] = true
+			return ch, nil
+		}
+		if !isUniqueViolation(err) {
+			return Chapter{}, err
+		}
+		used[sortOrder] = true // someone else holds it — remember and move on
+		sortOrder++
+		lastErr = err
+	}
+	return Chapter{}, fmt.Errorf("no free sort_order near %d: %w", sortOrder, lastErr)
+}
+
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
+
 func chapterTitleFromDir(dir string) string {
 	if dir == "." || dir == "" {
 		return "Chương 1"
@@ -501,6 +630,52 @@ func (s *Service) failImport(ctx context.Context, importID uuid.UUID, msg string
 	}
 	log.Warn().Str("import", importID.String()).Str("reason", msg).Msg("comic: import failed")
 	return nil // handled — don't retry the task
+}
+
+// importMaxReportEntries caps what the per-file report persists. The report is
+// rewritten (as jsonb) every poll round and re-sent on every client poll, so a
+// 42k-image import would push megabytes per round for detail nothing reads:
+// progress comes from succeeded/failed, and only the failures are diagnostic.
+// Below the cap the report is kept whole; above it, failures win the slots.
+const importMaxReportEntries = 500
+
+// trimReport bounds what UpdateImportProgress/FinishImport persist (see above).
+func trimReport(report []ImportFileResult) []ImportFileResult {
+	if len(report) <= importMaxReportEntries {
+		return report
+	}
+	out := make([]ImportFileResult, 0, importMaxReportEntries)
+	for _, r := range report { // failures first — they are the ones worth reading
+		if !r.OK {
+			out = append(out, r)
+			if len(out) == importMaxReportEntries {
+				return out
+			}
+		}
+	}
+	for _, r := range report { // fill any remaining slots with a sample of the successes
+		if r.OK {
+			out = append(out, r)
+			if len(out) == importMaxReportEntries {
+				break
+			}
+		}
+	}
+	return out
+}
+
+// humanBytes renders a byte count for a user-facing message ("4.2 GB").
+func humanBytes(n int64) string {
+	const unit = 1024
+	if n < unit {
+		return fmt.Sprintf("%d B", n)
+	}
+	div, exp := int64(unit), 0
+	for m := n / unit; m >= unit && exp < 3; m /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(n)/float64(div), "KMGT"[exp])
 }
 
 // importIngestConcurrency is the number of parallel image-ingest workers

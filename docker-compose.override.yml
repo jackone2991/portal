@@ -14,3 +14,20 @@ services:
     volumes:
       - ./certs:/certs:ro
       - ./traefik/dynamic.dev.yml:/etc/traefik/dynamic/tls-local.yml:ro
+  # Expose MinIO's S3 port to the host so a HOST-run comic scraper (P1.8, needed to
+  # bypass Cloudflare with real Chrome) can upload the zip at http://localhost:9000.
+  minio:
+    ports:
+      - "9000:9000"
+  # Expose the api's HTTP port to the host so a HOST-run scraper can hit the
+  # sync-callback without needing *.portal.localhost DNS (Python won't resolve it).
+  api:
+    ports:
+      - "8080:8080"
+  # Expose the Next.js frontend to the host so a phone on the LAN can open the app
+  # at http://<this-machine-LAN-IP>:3000 (Traefik's *.portal.localhost host rules +
+  # local CA don't resolve/trust on a phone). The api-client derives the API base
+  # from window.location, so :3000 talks to :8080 of the same host automatically.
+  frontend:
+    ports:
+      - "3000:3000"

@@ -68,11 +68,13 @@ import (
 )
 
 // requestWindow bounds any single request. It is deliberately generous because
-// large API-proxied uploads (import zips up to 3 GB) stream + S3-Put on the request
-// context; a tight cap cancels a valid upload. ReadHeaderTimeout (5s) still guards
+// large API-proxied uploads (import zips up to 16 GB) stream + S3-Put on the request
+// context; a tight cap cancels a valid upload. The window has to cover the whole
+// browser→API→MinIO leg: 15 min needed a sustained ~5 MB/s to land a 4 GB archive,
+// which a phone on the LAN does not have. ReadHeaderTimeout (5s) still guards
 // the header phase and Traefik enforces edge timeouts, so this only removes the
 // pathological "runaway handler" ceiling — acceptable for a single-tenant deploy.
-const requestWindow = 15 * time.Minute
+const requestWindow = 45 * time.Minute
 
 func main() {
 	if err := run(); err != nil {
@@ -247,17 +249,35 @@ func run() error {
 	// comic:chapter_deleted → remove the published-chapter stream card (per chapter on chapter/comic delete).
 	mediaEvents.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
 
+	// ownerExtractor builds the {id}-keyed owner lookups every owner-or-elevated
+	// guard runs on. notFound is the owning module's "no such row" sentinel, and it
+	// is the ONLY error that becomes a 404 — anything else is the lookup itself
+	// failing and must reach the client as a 500 the server also logs, instead of a
+	// "not found" that reads as final (see accountmw.ErrOwnerNotFound).
+	ownerExtractor := func(notFound error, resolve func(context.Context, uuid.UUID) (uuid.UUID, error)) accountmw.OwnerExtractor {
+		return func(r *http.Request) (uuid.UUID, error) {
+			id, err := uuid.Parse(chi.URLParam(r, "id"))
+			if err != nil {
+				return uuid.Nil, accountmw.ErrOwnerNotFound // an unparseable id names nothing
+			}
+			owner, rerr := resolve(r.Context(), id)
+			if rerr != nil {
+				if errors.Is(rerr, notFound) {
+					return uuid.Nil, accountmw.ErrOwnerNotFound
+				}
+				return uuid.Nil, rerr
+			}
+			return owner, nil
+		}
+	}
+
 	// DELETE /assets/{id} is gated by "owner OR assets:delete:any" — the extractor
 	// resolves the asset's owner via the media module (built below; the closure
 	// captures the var so it is set by the time a request arrives).
 	var mediaMod *media.Module
-	extractAssetOwner := func(r *http.Request) (uuid.UUID, error) {
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
-		if err != nil {
-			return uuid.Nil, err
-		}
-		return mediaMod.AssetOwner(r.Context(), id)
-	}
+	extractAssetOwner := ownerExtractor(media.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+		return mediaMod.AssetOwner(ctx, id)
+	})
 	deleteMW := accountmw.RequireOwnerOrPermission(accountMod.Engine(), "assets:delete:any", extractAssetOwner)
 
 	mediaMod, err = media.New(media.Deps{
@@ -361,25 +381,48 @@ func run() error {
 	// the URL id via the module's extractors (comic must not import account/rbac).
 	engine := accountMod.Engine()
 	var comicMod *comic.Module
-	comicOwnerExtractor := func(resolve func(context.Context, uuid.UUID) (uuid.UUID, error)) func(*http.Request) (uuid.UUID, error) {
-		return func(r *http.Request) (uuid.UUID, error) {
-			id, err := uuid.Parse(chi.URLParam(r, "id"))
-			if err != nil {
-				return uuid.Nil, err
-			}
-			return resolve(r.Context(), id)
-		}
+	byComic := ownerExtractor(comic.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByComic(ctx, id) })
+	byChapter := ownerExtractor(comic.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByChapter(ctx, id) })
+	byPage := ownerExtractor(comic.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByPage(ctx, id) })
+	// P1.8 external-source sync: enable only when the Python scraper service URL is
+	// configured. COMIC_SYNC_SECRET guards the scraper→api callbacks.
+	var comicScraper comic.ScraperClient
+	if u := os.Getenv("COMIC_SCRAPER_URL"); u != "" {
+		comicScraper = newHTTPScraper(u)
 	}
-	byComic := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByComic(ctx, id) })
-	byChapter := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByChapter(ctx, id) })
-	byPage := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return comicMod.OwnerByPage(ctx, id) })
+	// runInUserTenant scopes an INSERT into a tenant-scoped table to a user's personal
+	// org (like cmd/worker) — needed because the scraper→api sync-batch endpoint runs
+	// outside authTenant, but comic_imports.tenant_id defaults from app.current_tenant.
+	tenantStore := tenantrepo.NewAdapter(conn)
+	runInUserTenant := func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error {
+		org, oerr := tenantStore.PersonalOrg(ctx, userID)
+		if oerr != nil {
+			return oerr
+		}
+		if org == nil {
+			return fmt.Errorf("api: no personal org for user %s", userID)
+		}
+		tx, terr := tdb.BeginTenantScope(ctx, org.ID)
+		if terr != nil {
+			return terr
+		}
+		ctx = platformdb.WithTx(ctx, tx)
+		if ferr := fn(ctx); ferr != nil {
+			_ = tx.Rollback(ctx)
+			return ferr
+		}
+		return tx.Commit(ctx)
+	}
 	comicMod, err = comic.New(comic.Deps{
-		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
-		Media:       mediaMod.API(),
-		Events:      mediaEvents,
-		Storage:     store,        // P1.7: store the uploaded chapter zip (import/ prefix)
-		Enqueuer:    asynqClient,  // P1.7: enqueue comic:import_zip
-		RequireAuth: authTenant,
+		Repo:           comicrepo.NewAdapter(conn, tdb.RunInTx),
+		RunInTenant:    runInUserTenant,
+		Media:          mediaMod.API(),
+		Events:         mediaEvents,
+		Storage:        store,       // P1.7: store the uploaded chapter zip (import/ prefix)
+		Enqueuer:       asynqClient, // P1.7: enqueue comic:import_zip
+		Scraper:        comicScraper,
+		InternalSecret: os.Getenv("COMIC_SYNC_SECRET"),
+		RequireAuth:    authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
 		},
@@ -425,13 +468,7 @@ func run() error {
 	// module's extractor (movie must not import account/rbac). Tenant-wrapped via
 	// authTenant like the other domain modules.
 	var movieMod *movie.Module
-	byMovie := func(r *http.Request) (uuid.UUID, error) {
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
-		if err != nil {
-			return uuid.Nil, err
-		}
-		return movieMod.OwnerByMovie(r.Context(), id)
-	}
+	byMovie := ownerExtractor(movie.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return movieMod.OwnerByMovie(ctx, id) })
 	movieMod, err = movie.New(movie.Deps{
 		Repo:        movierepo.NewAdapter(conn),
 		Media:       mediaMod.API(),
@@ -457,13 +494,7 @@ func run() error {
 
 	// ── Music module (tracks over media audio: /tracks) ─────────────
 	var musicMod *music.Module
-	byTrack := func(r *http.Request) (uuid.UUID, error) {
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
-		if err != nil {
-			return uuid.Nil, err
-		}
-		return musicMod.OwnerByTrack(r.Context(), id)
-	}
+	byTrack := ownerExtractor(music.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return musicMod.OwnerByTrack(ctx, id) })
 	musicMod, err = music.New(music.Deps{
 		Repo:        musicrepo.NewAdapter(conn),
 		Media:       mediaMod.API(),
@@ -491,8 +522,8 @@ func run() error {
 	// Chapters reorder in a tenant tx (tdb.RunInTx), like comic. Two owner
 	// extractors resolve story vs. chapter ids for the owner-or-elevated guards.
 	var storyMod *story.Module
-	byStory := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByStory(ctx, id) })
-	byStoryChapter := comicOwnerExtractor(func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByChapter(ctx, id) })
+	byStory := ownerExtractor(story.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByStory(ctx, id) })
+	byStoryChapter := ownerExtractor(story.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return storyMod.OwnerByChapter(ctx, id) })
 	storyMod, err = story.New(story.Deps{
 		Repo:        storyrepo.NewAdapter(conn, tdb.RunInTx),
 		Media:       mediaMod.API(),
@@ -522,7 +553,7 @@ func run() error {
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
 	r.Use(chimw.Recoverer)
-	// Generous per-request window: API-proxied uploads (comic import zips up to 3 GB,
+	// Generous per-request window: API-proxied uploads (comic import zips up to 16 GB,
 	// media sources) legitimately run well past a tight 30s cap — the S3 PutObject
 	// runs on the request context, so a short handler timeout cancels a valid upload
 	// (worse against slow dev MinIO). ReadHeaderTimeout still guards the slowloris

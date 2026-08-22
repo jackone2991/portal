@@ -189,6 +189,44 @@ type Repository interface {
 	StartImport(ctx context.Context, id uuid.UUID, total int) error
 	UpdateImportProgress(ctx context.Context, id uuid.UUID, succeeded, failed int, report []ImportFileResult) error
 	FinishImport(ctx context.Context, id uuid.UUID, status string, succeeded, failed int, report []ImportFileResult, errMsg *string) error
+
+	// sync sources (P1.8)
+	CreateSyncSource(ctx context.Context, comicID, ownerID uuid.UUID, sourceURL, site, chaptersHint string) (SyncSource, error)
+	ListSyncSources(ctx context.Context, comicID uuid.UUID) ([]SyncSource, error)
+	GetSyncSource(ctx context.Context, id uuid.UUID) (SyncSource, error)
+	DeleteSyncSource(ctx context.Context, id uuid.UUID) error
+	UpdateSyncStatus(ctx context.Context, id uuid.UUID, status string, importID *uuid.UUID, errMsg *string, synced bool) error
+	UpdateSyncProgress(ctx context.Context, id uuid.UUID, scraped, total int) error
+	SetSyncLastImport(ctx context.Context, id, importID uuid.UUID) error
+}
+
+// SyncSource binds a comic to an external source URL (SPEC-02 P1.8). Triggering a
+// sync creates a comic-level ImportJob whose zip is produced by the scraper service.
+type SyncSource struct {
+	ID           uuid.UUID
+	ComicID      uuid.UUID
+	OwnerUserID  uuid.UUID
+	SourceURL       string
+	SourceSite      string
+	ChaptersHint    string
+	LastStatus      string // idle | syncing | done | failed
+	LastImportID    *uuid.UUID
+	LastError       *string // per-chapter failure summary when done with errors
+	LastSyncedAt    *time.Time
+	TotalChapters   int // overall scrape progress (batched sync)
+	ScrapedChapters int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
+// ScraperClient triggers the external Python scraper service (P1.8). It returns as
+// soon as the job is accepted; the scraper then drives the whole sync — discovering
+// chapters, scraping in batches (requesting an import job per batch via sync-batch),
+// reporting progress, and finalizing — via the internal callback endpoints. A nil
+// client disables the sync feature.
+type ScraperClient interface {
+	StartScrape(ctx context.Context, sourceID uuid.UUID, sourceURL, chaptersHint string, existing []string) error
+	CancelScrape(ctx context.Context, sourceID uuid.UUID) error
 }
 
 // MediaAPI is the slice of media/api comic needs to validate asset references and

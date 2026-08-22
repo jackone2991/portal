@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/portal/backend/internal/modules/account/auth"
 	"github.com/portal/backend/internal/modules/account/rbac"
@@ -45,6 +46,14 @@ func RequirePermission(engine *rbac.Engine, code string) func(http.Handler) http
 // this is a database lookup keyed by URL parameter.
 type OwnerExtractor func(r *http.Request) (uuid.UUID, error)
 
+// ErrOwnerNotFound is how an OwnerExtractor says "no such resource" — the one
+// extractor failure that is the client's fault and therefore a 404. Every other
+// error means the lookup itself failed (a query error, a dead pooled connection),
+// and has to surface as a logged 500: answered with 404 it reads as "that row is
+// gone", which is both wrong and unactionable — the caller stops retrying and the
+// server records nothing to debug from.
+var ErrOwnerNotFound = errors.New("account: owner not found")
+
 // RequireOwnerOrPermission is the canonical "user can act on their own
 // resource OR an admin with elevated perm can act on anyone's" pattern.
 //
@@ -67,8 +76,14 @@ func RequireOwnerOrPermission(
 				return
 			}
 			ownerID, err := extractor(r)
-			if err != nil {
+			switch {
+			case err == nil:
+			case errors.Is(err, ErrOwnerNotFound):
 				writeJSONError(w, http.StatusNotFound, "not_found", "resource not found")
+				return
+			default:
+				log.Error().Err(err).Str("path", r.URL.Path).Msg("account: owner lookup failed")
+				writeJSONError(w, http.StatusInternalServerError, "internal", "owner lookup failed")
 				return
 			}
 			err = engine.AuthorizeOwnerOr(r.Context(),

@@ -65,39 +65,52 @@ services:
     networks: [edge]
 
   # ── Database ────────────────────────────────────────────────────
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks: [internal]
-
-  pgbouncer:
-    image: edoburu/pgbouncer:v1.23.1-p3
-    restart: unless-stopped
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: ${POSTGRES_DB}
-      POOL_MODE: ${PGBOUNCER_POOL_MODE}
-      MAX_CLIENT_CONN: ${PGBOUNCER_MAX_CLIENT_CONN}
-      DEFAULT_POOL_SIZE: ${PGBOUNCER_DEFAULT_POOL_SIZE}
-      AUTH_TYPE: scram-sha-256
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks: [internal]
+  # DISABLED 2026-08-21 — the database now lives on the HOST PostgreSQL 18
+  # (G:\data\postgres\18), reached at host.docker.internal:5432 via DATABASE_URL.
+  # The data was migrated with pg_dump/pg_restore; row counts were verified equal.
+  #
+  # pgbouncer went with it: DATABASE_URL already pointed straight at postgres:5432,
+  # so nothing was routing through the pooler anyway (session GUCs like
+  # `SET LOCAL app.current_tenant` need a session, not transaction pooling).
+  #
+  # To roll back: uncomment both services below AND the two `postgres:` depends_on
+  # blocks under api/worker, then set DATABASE_URL back to postgres:5432 in .env.
+  # The `postgres_data` volume is deliberately NOT removed — the pre-migration
+  # database is still in it, so rollback costs one `docker compose up -d`.
+  #
+  # postgres:
+  #   image: postgres:17-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks: [internal]
+  #
+  # pgbouncer:
+  #   image: edoburu/pgbouncer:v1.23.1-p3
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_USER: ${POSTGRES_USER}
+  #     DB_PASSWORD: ${POSTGRES_PASSWORD}
+  #     DB_NAME: ${POSTGRES_DB}
+  #     POOL_MODE: ${PGBOUNCER_POOL_MODE}
+  #     MAX_CLIENT_CONN: ${PGBOUNCER_MAX_CLIENT_CONN}
+  #     DEFAULT_POOL_SIZE: ${PGBOUNCER_DEFAULT_POOL_SIZE}
+  #     AUTH_TYPE: scram-sha-256
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks: [internal]
 
   # ── Cache + queue broker ────────────────────────────────────────
   dragonfly:
@@ -191,8 +204,8 @@ services:
     restart: unless-stopped
     env_file: .env
     depends_on:
-      postgres:
-        condition: service_healthy
+      # postgres:                       # moved to the host cluster — see above
+      #   condition: service_healthy
       dragonfly:
         condition: service_healthy
       minio:
@@ -215,14 +228,28 @@ services:
     restart: unless-stopped
     env_file: .env
     depends_on:
-      postgres:
-        condition: service_healthy
+      # postgres:                       # moved to the host cluster — see above
+      #   condition: service_healthy
       dragonfly:
         condition: service_healthy
       minio:
         condition: service_healthy
       minio-setup:
         condition: service_completed_successfully
+    networks: [internal]
+
+  # Comic external-source sync scraper (SPEC-02 P1.8): headful undetected-Chrome on
+  # xvfb behind FastAPI. Internal-only; the api reaches it at http://scraper:8000.
+  # Chrome needs a large /dev/shm (shm_size) or it crashes on big pages.
+  scraper:
+    build:
+      context: ./scraper
+    restart: unless-stopped
+    env_file: .env
+    shm_size: "1gb"
+    depends_on:
+      minio:
+        condition: service_healthy
     networks: [internal]
 
   frontend:

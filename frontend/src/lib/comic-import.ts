@@ -74,10 +74,22 @@ function putZip(importId: string, file: File, onProgress: (pct: number) => void)
     xhr.withCredentials = true;
     xhr.setRequestHeader("Content-Type", "application/zip");
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Tải zip lỗi (${xhr.status}).`)));
+    // Surface the API's problem+json `detail` — the status alone hid real reasons
+    // (e.g. the zip being over the size cap) behind a bare number.
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Tải zip lỗi (${xhr.status})${zipErrDetail(xhr.responseText)}.`)));
     xhr.onerror = () => reject(new Error("Lỗi mạng khi tải zip."));
     xhr.send(file);
   });
+}
+
+/** `: <detail>` from an RFC 7807 body, or "" when there is nothing readable. */
+function zipErrDetail(body: string): string {
+  try {
+    const detail = (JSON.parse(body) as { detail?: string }).detail;
+    return detail ? `: ${detail}` : "";
+  } catch {
+    return "";
+  }
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

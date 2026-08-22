@@ -28,13 +28,22 @@ const TaskTypePurgeOrphans = "media:purge_orphans"
 
 // Resource + variant guardrails (SPEC-01 P0.1).
 const (
-	// imageMaxDimension caps either dimension. Decoded RGBA at 8,000² ≈ 256 MB
-	// peak vs ≈ 576 MB at 12,000² — the difference between "tight" and
-	// "OOM-killer bait" on a small VPS (rev 2).
-	imageMaxDimension = 8000
-	thumbMaxWidth     = 320
-	mediumMaxWidth    = 1280
-	webpQuality       = "80"
+	// imageMaxPixels caps the DECODED AREA — the real memory guard. 8,000² px of
+	// RGBA ≈ 256 MB peak, the "tight but safe on a small VPS" budget. Capping area
+	// (not each side) lets tall-thin webtoon strips through: a 704×18000 strip is
+	// only ~13 M px (~50 MB), far under budget, yet its height alone tripped the
+	// old per-dimension 8,000 cap and made those chapters un-importable.
+	imageMaxPixels = 8000 * 8000
+	// imageMaxSide is an absolute per-side sanity ceiling for malformed/huge inputs.
+	imageMaxSide = 30000
+	// variantMaxHeight keeps every generated WebP variant within libwebp's hard
+	// 16,383 px per-dimension limit (with margin). Taller strips are scaled down to
+	// fit — width-scaling alone would leave a 704×18000 medium variant libwebp
+	// refuses to encode.
+	variantMaxHeight = 16000
+	thumbMaxWidth    = 320
+	mediumMaxWidth   = 1280
+	webpQuality      = "80"
 )
 
 // ProcessImagePayload is enqueued when an accepted image upload completes. The
@@ -48,7 +57,7 @@ type ProcessImagePayload struct {
 
 // NewProcessImageTask enqueues onto the "image" queue, served by its own pool
 // whose concurrency is IMAGE_CONCURRENCY (default 3) — separate from the video
-// "heavy" queue (concurrency 1). Image decodes are dimension-capped (imageMaxDimension),
+// "heavy" queue (concurrency 1). Image decodes are area-capped (imageMaxPixels),
 // so a few in parallel stay within the OOM budget while cutting batch-import time.
 func NewProcessImageTask(p ProcessImagePayload) (*asynq.Task, error) {
 	body, err := json.Marshal(p)
@@ -116,8 +125,8 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 	if w <= 0 || h <= 0 {
 		return errors.New("could not determine image dimensions")
 	}
-	if w > imageMaxDimension || h > imageMaxDimension {
-		return fmt.Errorf("image dimensions %dx%d exceed the %dpx limit", w, h, imageMaxDimension)
+	if w > imageMaxSide || h > imageMaxSide || w*h > imageMaxPixels {
+		return fmt.Errorf("image dimensions %dx%d exceed limits (max side %dpx, max area %dpx)", w, h, imageMaxSide, imageMaxPixels)
 	}
 
 	// 3. generate served variants (WebP, auto-oriented, metadata stripped)
@@ -191,7 +200,10 @@ func (ip *ImageProcessor) upload(ctx context.Context, path, key string) (int64, 
 // (default autorotate), all metadata stripped (-map_metadata -1). Alpha
 // (PNG transparency) is preserved by libwebp.
 func encodeWebP(ctx context.Context, src, dst string, maxW int) error {
-	scale := fmt.Sprintf("scale='min(%d,iw)':-2:flags=lanczos", maxW)
+	// Fit within maxW × variantMaxHeight, aspect-preserving, never upscaled (the
+	// min(…,iw/ih) keeps the box no larger than the source). The height cap keeps
+	// very tall webtoon strips within libwebp's 16,383 px per-dimension limit.
+	scale := fmt.Sprintf("scale=w='min(%d,iw)':h='min(%d,ih)':force_original_aspect_ratio=decrease:flags=lanczos", maxW, variantMaxHeight)
 	//nolint:gosec // fixed args, paths are server-controlled temp files
 	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-y", "-i", src,
@@ -245,12 +257,20 @@ func probeImage(ctx context.Context, path string) (width, height, frames int, er
 // upscaled. FFmpeg's -2 rounds to an even height, so this is a close estimate
 // (the exact pixels live in the stored object; the row is metadata).
 func scaledDims(w, h, maxW int) (int, int) {
-	if w <= maxW {
-		return w, h
+	nw, nh := w, h
+	if nw > maxW { // width-limit first (matches the scale box's width)
+		nh = int(float64(h) * float64(maxW) / float64(w))
+		nw = maxW
+		if nh < 1 {
+			nh = 1
+		}
 	}
-	nh := int(float64(h) * float64(maxW) / float64(w))
-	if nh < 1 {
-		nh = 1
+	if nh > variantMaxHeight { // then clamp height for libwebp's per-dimension limit
+		nw = int(float64(nw) * float64(variantMaxHeight) / float64(nh))
+		nh = variantMaxHeight
+		if nw < 1 {
+			nw = 1
+		}
 	}
-	return maxW, nh
+	return nw, nh
 }

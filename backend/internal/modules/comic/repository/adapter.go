@@ -366,6 +366,90 @@ func (a *Adapter) FinishImport(ctx context.Context, id uuid.UUID, status string,
 	return err
 }
 
+// ── sync sources (P1.8) — raw queries (no sqlc for this table) ─────────
+
+const syncSourceCols = `id, comic_id, owner_user_id, source_url, source_site, chapters_hint, last_status, last_import_id, last_error, last_synced_at, total_chapters, scraped_chapters, created_at, updated_at`
+
+func scanSyncSource(row pgx.Row) (comic.SyncSource, error) {
+	var id, comicID, ownerID, importID pgtype.UUID
+	var lastErr pgtype.Text
+	var syncedAt pgtype.Timestamptz
+	var total, scraped int32
+	var s comic.SyncSource
+	if err := row.Scan(&id, &comicID, &ownerID, &s.SourceURL, &s.SourceSite, &s.ChaptersHint, &s.LastStatus, &importID, &lastErr, &syncedAt, &total, &scraped, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		return comic.SyncSource{}, err
+	}
+	s.ID, s.ComicID, s.OwnerUserID, s.LastImportID = uuidFrom(id), uuidFrom(comicID), uuidFrom(ownerID), uuidPtr(importID)
+	s.TotalChapters, s.ScrapedChapters = int(total), int(scraped)
+	if lastErr.Valid {
+		e := lastErr.String
+		s.LastError = &e
+	}
+	if syncedAt.Valid {
+		t := syncedAt.Time
+		s.LastSyncedAt = &t
+	}
+	return s, nil
+}
+
+func (a *Adapter) CreateSyncSource(ctx context.Context, comicID, ownerID uuid.UUID, sourceURL, site, chaptersHint string) (comic.SyncSource, error) {
+	return scanSyncSource(a.db.QueryRow(ctx,
+		`INSERT INTO comic_sync_sources (comic_id, owner_user_id, source_url, source_site, chapters_hint) VALUES ($1,$2,$3,$4,$5) RETURNING `+syncSourceCols,
+		pgUUID(comicID), pgUUID(ownerID), sourceURL, site, chaptersHint))
+}
+
+func (a *Adapter) ListSyncSources(ctx context.Context, comicID uuid.UUID) ([]comic.SyncSource, error) {
+	rows, err := a.db.Query(ctx, `SELECT `+syncSourceCols+` FROM comic_sync_sources WHERE comic_id=$1 ORDER BY created_at`, pgUUID(comicID))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []comic.SyncSource
+	for rows.Next() {
+		s, err := scanSyncSource(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
+func (a *Adapter) GetSyncSource(ctx context.Context, id uuid.UUID) (comic.SyncSource, error) {
+	s, err := scanSyncSource(a.db.QueryRow(ctx, `SELECT `+syncSourceCols+` FROM comic_sync_sources WHERE id=$1`, pgUUID(id)))
+	if err != nil {
+		return comic.SyncSource{}, mapNotFound(err)
+	}
+	return s, nil
+}
+
+// UpdateSyncProgress stores overall chapter progress on the source (batched sync).
+func (a *Adapter) UpdateSyncProgress(ctx context.Context, id uuid.UUID, scraped, total int) error {
+	_, err := a.db.Exec(ctx, `UPDATE comic_sync_sources SET scraped_chapters=$2, total_chapters=$3, updated_at=now() WHERE id=$1`,
+		pgUUID(id), int32(scraped), int32(total))
+	return err
+}
+
+// SetSyncLastImport points the source at the current batch's import job (so the UI
+// can optionally follow it) without disturbing the other progress fields.
+func (a *Adapter) SetSyncLastImport(ctx context.Context, id, importID uuid.UUID) error {
+	_, err := a.db.Exec(ctx, `UPDATE comic_sync_sources SET last_import_id=$2, updated_at=now() WHERE id=$1`,
+		pgUUID(id), pgUUID(importID))
+	return err
+}
+
+func (a *Adapter) DeleteSyncSource(ctx context.Context, id uuid.UUID) error {
+	_, err := a.db.Exec(ctx, `DELETE FROM comic_sync_sources WHERE id=$1`, pgUUID(id))
+	return err
+}
+
+func (a *Adapter) UpdateSyncStatus(ctx context.Context, id uuid.UUID, status string, importID *uuid.UUID, errMsg *string, synced bool) error {
+	_, err := a.db.Exec(ctx,
+		`UPDATE comic_sync_sources SET last_status=$2, last_import_id=COALESCE($3, last_import_id), last_error=$4, last_synced_at = CASE WHEN $5 THEN now() ELSE last_synced_at END, updated_at=now() WHERE id=$1`,
+		pgUUID(id), status, optUUID(importID), errMsg, synced)
+	return err
+}
+
 func toImport(r ComicImport) comic.ImportJob {
 	var report []comic.ImportFileResult
 	if len(r.Report) > 0 {
