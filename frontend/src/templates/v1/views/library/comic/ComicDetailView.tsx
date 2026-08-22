@@ -384,6 +384,7 @@ function ChapterRow({ id, chapter, index, total, onMove }: { id: string; chapter
             {chapter.title} <span style={{ color: "var(--tpl-muted)" }}>{open ? "▾" : "▸"}</span>
           </button>
         )}
+        <IconLink label={`Đọc: ${chapter.title}`} href={`/library/comic/${id}/read/${chapter.id}` as Route}>▶</IconLink>
         <IconBtn label="Lên" disabled={index === 0} onClick={() => onMove(index, -1)}>↑</IconBtn>
         <IconBtn label="Xuống" disabled={index === total - 1} onClick={() => onMove(index, 1)}>↓</IconBtn>
         <IconBtn label="Sửa tên" onClick={() => { setTitle(chapter.title); setEditing(true); }}>✎</IconBtn>
@@ -542,6 +543,16 @@ function IconBtn({ children, label, onClick, disabled }: { children: React.React
     <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-30" style={{ color: "var(--tpl-muted)" }}>
       {children}
     </button>
+  );
+}
+
+// Navigation twin of IconBtn. A real <Link>, not a button with router.push, so
+// middle-click and "open in new tab" work and it is announced as a link.
+function IconLink({ children, label, href }: { children: React.ReactNode; label: string; href: Route }) {
+  return (
+    <Link href={href} aria-label={label} title={label} className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)]" style={{ color: "var(--tpl-muted)" }}>
+      {children}
+    </Link>
   );
 }
 
