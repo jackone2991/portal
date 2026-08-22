@@ -52,7 +52,10 @@ export function ComicIndexView() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {/* Create tile — the "new comic" action, first in the grid */}
+        {/* Create tile — "Của tôi" only. "Thư viện" is the published catalogue, a
+            browsing surface; an authoring action does not belong in it, and the new
+            comic it makes is a draft that would not show up there anyway. */}
+        {tab === "mine" && (
         <button type="button" onClick={() => { setErr(null); setModalOpen(true); }} className="group block text-left">
           <div
             className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition group-hover:border-[var(--tpl-accent)]"
@@ -64,6 +67,7 @@ export function ComicIndexView() {
           <div className="mt-1.5 truncate text-sm font-medium" style={{ color: "var(--tpl-heading)" }}>Truyện mới</div>
           <div className="text-xs" style={{ color: "var(--tpl-muted)" }}>Tạo bản nháp</div>
         </button>
+        )}
 
         {loading
           ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={`s${i}`} />)
