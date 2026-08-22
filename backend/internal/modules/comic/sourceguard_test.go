@@ -69,6 +69,18 @@ func TestHostAllowed(t *testing.T) {
 	}
 }
 
+// The shipped default must accept both truyenqq mirrors: truyenqqko.com is what
+// existing sources sync from, truyenqqno.com is what the UI placeholder suggests.
+// Listing only one silently rejects everyone who follows the other.
+func TestShippedAllowlistCoversBothMirrors(t *testing.T) {
+	shipped := ParseSourceAllowlist("truyenqqko.com,truyenqqno.com")
+	for _, host := range []string{"truyenqqko.com", "truyenqqno.com", "www.truyenqqno.com"} {
+		if !hostAllowed(host, shipped) {
+			t.Errorf("shipped allowlist rejects %q", host)
+		}
+	}
+}
+
 func TestValidateSourceURL_BlocksInternal(t *testing.T) {
 	ctx := context.Background()
 	// Literal internal IPs never reach DNS.

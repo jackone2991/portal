@@ -209,7 +209,7 @@ type SyncSource struct {
 	SourceURL       string
 	SourceSite      string
 	ChaptersHint    string
-	LastStatus      string // idle | syncing | done | failed
+	LastStatus      string // idle | syncing | done | failed | cancelled (0030)
 	LastImportID    *uuid.UUID
 	LastError       *string // per-chapter failure summary when done with errors
 	LastSyncedAt    *time.Time
