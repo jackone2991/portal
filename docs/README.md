@@ -5,9 +5,12 @@ facets for money, time, learning, social, and entertainment (see
 [product/vision.md](product/vision.md)). Go modular-monolith backend, Next.js 15
 frontend, Docker Compose behind Traefik.
 
-**Living status truth is [`/MILESTONE_CHECKS.md`](../MILESTONE_CHECKS.md)** (repo
-root) — trust it over any "open work" section in these documents. Session and repo
-conventions: [`/CLAUDE.md`](../CLAUDE.md). Module contract:
+**Living status truth is the code, not a document.** There is no status-tracker file
+(`MILESTONE_CHECKS.md` was deleted in `f11cf3f`) — check whether a module is
+constructed and mounted in `backend/cmd/api/main.go` and whether its `repository/`
+dir is populated. Trust that over any "open work" section in these documents; see
+[`/CLAUDE.md`](../CLAUDE.md) § "Current status" for the full set of signals. Session
+and repo conventions: [`/CLAUDE.md`](../CLAUDE.md). Module contract:
 [`/backend/MODULES.md`](../backend/MODULES.md).
 
 **Language:** English only ([ADR-09](adr/09-docs-architecture.md)). The former
@@ -18,7 +21,7 @@ Vietnamese mirror is frozen in [archive/vi-2026-07/](archive/).
 | Section | Answers | Start with |
 |---|---|---|
 | [product/](product/README.md) | Why does this exist, what are we building, in what order | [vision.md](product/vision.md) |
-| [adr/](adr/README.md) | What did we decide and why (00–09) | [adr/README.md](adr/README.md) |
+| [adr/](adr/README.md) | What did we decide and why (00–10) | [adr/README.md](adr/README.md) |
 | [architecture/](architecture/README.md) | How is it designed | [diagrams.md](architecture/diagrams.md) |
 | [guides/](guides/getting-started.md) | How do I run and work on it | [getting-started.md](guides/getting-started.md) |
 | [reference/](reference/README.md) | Lookup: events, contracts, canonical sources | [events.md](reference/events.md) |
