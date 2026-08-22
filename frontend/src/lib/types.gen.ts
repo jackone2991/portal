@@ -1478,6 +1478,9 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        SyncSourceList: {
+            sources: components["schemas"]["SyncSource"][];
+        };
         SyncSourceCreate: {
             /**
              * Format: uri
@@ -3677,7 +3680,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SyncSource"][];
+                    "application/json": components["schemas"]["SyncSourceList"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3754,8 +3757,8 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Sync started */
-            200: {
+            /** @description Sync accepted (the scraper works async and calls back) */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

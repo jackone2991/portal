@@ -1418,7 +1418,7 @@ paths:
       responses:
         "200":
           description: Sources
-          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/SyncSource" } } } }
+          content: { application/json: { schema: { $ref: "#/components/schemas/SyncSourceList" } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
     post:
@@ -1459,7 +1459,7 @@ paths:
       operationId: triggerSync
       security: [{ bearerAuth: [] }]
       responses:
-        "200": { description: Sync started, content: { application/json: { schema: { $ref: "#/components/schemas/SyncSource" } } } }
+        "202": { description: Sync accepted (the scraper works async and calls back), content: { application/json: { schema: { $ref: "#/components/schemas/SyncSource" } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
         "422":
@@ -2051,6 +2051,11 @@ components:
         last_synced_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    SyncSourceList:
+      type: object
+      required: [sources]
+      properties:
+        sources: { type: array, items: { $ref: "#/components/schemas/SyncSource" } }
     SyncSourceCreate:
       type: object
       required: [source_url]
