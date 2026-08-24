@@ -1,4 +1,4 @@
-<!-- @dsCard group="master" -->
+<!-- @dsCard group="master" viewport="900x700" -->
 <!doctype html>
 <html><head><meta charset="utf-8">
   <link rel="stylesheet" href="../../../styles.css">
@@ -27,9 +27,9 @@
     }
     window.__dsCells=E.slice();
     var q=null; try{q=new URLSearchParams(location.search).get('story')}catch(e){}
-    var MODE="grid";
+    var MODE="single";
     window.__dsMode=MODE;
-    var PRIMARY="";
+    var PRIMARY="App";
     if(MODE==='column'){
       g.className+=' ds-col';
       // primaryStory renders first — it's what shows above the product's fold.

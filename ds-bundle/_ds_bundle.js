@@ -1,4 +1,4 @@
-/* @ds-bundle: {"namespace":"PortalUI","components":[{"name":"ActivityFeed","sourcePath":"components/widget/ActivityFeed/ActivityFeed.jsx"},{"name":"AddBook","sourcePath":"components/popup/AddBook/AddBook.jsx"},{"name":"AudioPlayer","sourcePath":"components/music/AudioPlayer/AudioPlayer.jsx"},{"name":"AuthForm","sourcePath":"components/auth/AuthForm/AuthForm.jsx"},{"name":"AuthLanding","sourcePath":"components/auth/AuthLanding/AuthLanding.jsx"},{"name":"Avatar","sourcePath":"components/general/Avatar/Avatar.jsx"},{"name":"BadgeCard","sourcePath":"components/social/BadgeCard/BadgeCard.jsx"},{"name":"BirthdayCard","sourcePath":"components/widget/BirthdayCard/BirthdayCard.jsx"},{"name":"BlogCard","sourcePath":"components/blog/BlogCard/BlogCard.jsx"},{"name":"CalendarWidget","sourcePath":"components/widget/CalendarWidget/CalendarWidget.jsx"},{"name":"ChatResponsive","sourcePath":"components/popup/ChatResponsive/ChatResponsive.jsx"},{"name":"ChoseFromMyPhoto","sourcePath":"components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx"},{"name":"ComicIndexView","sourcePath":"components/comic/ComicIndexView/ComicIndexView.jsx"},{"name":"CommentForm","sourcePath":"components/comment/CommentForm/CommentForm.jsx"},{"name":"CommentItem","sourcePath":"components/comment/CommentItem/CommentItem.jsx"},{"name":"CommentThread","sourcePath":"components/comment/CommentThread/CommentThread.jsx"},{"name":"Composer","sourcePath":"components/general/Composer/Composer.jsx"},{"name":"ControlBlockButtons","sourcePath":"components/profile/ControlBlockButtons/ControlBlockButtons.jsx"},{"name":"EventItem","sourcePath":"components/social/EventItem/EventItem.jsx"},{"name":"FormField","sourcePath":"components/form/FormField/FormField.jsx"},{"name":"FriendCard","sourcePath":"components/social/FriendCard/FriendCard.jsx"},{"name":"FriendRequestItem","sourcePath":"components/social/FriendRequestItem/FriendRequestItem.jsx"},{"name":"FriendRequestsMenu","sourcePath":"components/general/FriendRequestsMenu/FriendRequestsMenu.jsx"},{"name":"FriendSuggestions","sourcePath":"components/widget/FriendSuggestions/FriendSuggestions.jsx"},{"name":"GoToTop","sourcePath":"components/partials/GoToTop/GoToTop.jsx"},{"name":"HelloPreloader","sourcePath":"components/partials/HelloPreloader/HelloPreloader.jsx"},{"name":"HomeView","sourcePath":"components/home/HomeView/HomeView.jsx"},{"name":"Icon","sourcePath":"components/general/Icon/Icon.jsx"},{"name":"LoginView","sourcePath":"components/auth/LoginView/LoginView.jsx"},{"name":"MasterBase","sourcePath":"components/master/MasterBase/MasterBase.jsx"},{"name":"MasterPublic","sourcePath":"components/master/MasterPublic/MasterPublic.jsx"},{"name":"MessagesMenu","sourcePath":"components/general/MessagesMenu/MessagesMenu.jsx"},{"name":"NotificationsMenu","sourcePath":"components/general/NotificationsMenu/NotificationsMenu.jsx"},{"name":"NovelDetailView","sourcePath":"components/novel/NovelDetailView/NovelDetailView.jsx"},{"name":"PagesWidget","sourcePath":"components/widget/PagesWidget/PagesWidget.jsx"},{"name":"PersonalInfoWidget","sourcePath":"components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx"},{"name":"PlaylistWidget","sourcePath":"components/music/PlaylistWidget/PlaylistWidget.jsx"},{"name":"Post","sourcePath":"components/general/Post/Post.jsx"},{"name":"PostControlButtons","sourcePath":"components/post/PostControlButtons/PostControlButtons.jsx"},{"name":"ProfileHeader","sourcePath":"components/profile/ProfileHeader/ProfileHeader.jsx"},{"name":"ReactionBar","sourcePath":"components/post/ReactionBar/ReactionBar.jsx"},{"name":"RegisterView","sourcePath":"components/auth/RegisterView/RegisterView.jsx"},{"name":"SelectField","sourcePath":"components/form/SelectField/SelectField.jsx"},{"name":"SidebarCenter","sourcePath":"components/menu/SidebarCenter/SidebarCenter.jsx"},{"name":"SidebarLeft","sourcePath":"components/menu/SidebarLeft/SidebarLeft.jsx"},{"name":"SidebarRight","sourcePath":"components/menu/SidebarRight/SidebarRight.jsx"},{"name":"TagSelect","sourcePath":"components/form/TagSelect/TagSelect.jsx"},{"name":"ToggleRow","sourcePath":"components/form/ToggleRow/ToggleRow.jsx"},{"name":"TopMenu","sourcePath":"components/headers/TopMenu/TopMenu.jsx"},{"name":"TrackItem","sourcePath":"components/music/TrackItem/TrackItem.jsx"},{"name":"UpdateHeaderPhoto","sourcePath":"components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx"},{"name":"UploadStudio","sourcePath":"components/upload/UploadStudio/UploadStudio.jsx"},{"name":"WeatherWidget","sourcePath":"components/widget/WeatherWidget/WeatherWidget.jsx"},{"name":"WidgetCard","sourcePath":"components/widget/WidgetCard/WidgetCard.jsx"}],"sourceHashes":{"components/widget/ActivityFeed/ActivityFeed.jsx":"7d780fe14604","components/widget/ActivityFeed/ActivityFeed.d.ts":"8b486d78f855","components/widget/ActivityFeed/ActivityFeed.prompt.md":"f73a9dd2a222","components/popup/AddBook/AddBook.jsx":"342bf3316fa6","components/popup/AddBook/AddBook.d.ts":"955a5a8afa4f","components/popup/AddBook/AddBook.prompt.md":"01b8a578dfcb","components/music/AudioPlayer/AudioPlayer.jsx":"5838ad0176db","components/music/AudioPlayer/AudioPlayer.d.ts":"f9937a613082","components/music/AudioPlayer/AudioPlayer.prompt.md":"21d4ecf9ce8b","components/auth/AuthForm/AuthForm.jsx":"1e61c6521418","components/auth/AuthForm/AuthForm.d.ts":"aa7c72c0e540","components/auth/AuthForm/AuthForm.prompt.md":"a1d2e05687e3","components/auth/AuthLanding/AuthLanding.jsx":"8fb2228bac01","components/auth/AuthLanding/AuthLanding.d.ts":"ebe7795bc4c4","components/auth/AuthLanding/AuthLanding.prompt.md":"304b549afe05","components/general/Avatar/Avatar.jsx":"de2a9e21a364","components/general/Avatar/Avatar.d.ts":"cef099484f1a","components/general/Avatar/Avatar.prompt.md":"28cd154c7a58","components/social/BadgeCard/BadgeCard.jsx":"efa4a4d130a2","components/social/BadgeCard/BadgeCard.d.ts":"1a048347711e","components/social/BadgeCard/BadgeCard.prompt.md":"0cae404ebaf0","components/widget/BirthdayCard/BirthdayCard.jsx":"61b2b764bca9","components/widget/BirthdayCard/BirthdayCard.d.ts":"169c1800a17f","components/widget/BirthdayCard/BirthdayCard.prompt.md":"11c05b8aad9c","components/blog/BlogCard/BlogCard.jsx":"74fe53b4fae4","components/blog/BlogCard/BlogCard.d.ts":"5a355bf69952","components/blog/BlogCard/BlogCard.prompt.md":"40d84fd02627","components/widget/CalendarWidget/CalendarWidget.jsx":"e9a8b24134c7","components/widget/CalendarWidget/CalendarWidget.d.ts":"71b8eb108e7c","components/widget/CalendarWidget/CalendarWidget.prompt.md":"952e08c5e8e5","components/popup/ChatResponsive/ChatResponsive.jsx":"731a0df6f69c","components/popup/ChatResponsive/ChatResponsive.d.ts":"af5c346f0de7","components/popup/ChatResponsive/ChatResponsive.prompt.md":"c94a075c52fa","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx":"6351148a1e60","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.d.ts":"6b3b302ef68f","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.prompt.md":"53243c634d4a","components/comic/ComicIndexView/ComicIndexView.jsx":"4f28ea91cd2e","components/comic/ComicIndexView/ComicIndexView.d.ts":"35a2fcfc8e80","components/comic/ComicIndexView/ComicIndexView.prompt.md":"b968d5495e25","components/comment/CommentForm/CommentForm.jsx":"1c8a99defa49","components/comment/CommentForm/CommentForm.d.ts":"75d3009d0f00","components/comment/CommentForm/CommentForm.prompt.md":"60cb5b0b1258","components/comment/CommentItem/CommentItem.jsx":"6fb44b469784","components/comment/CommentItem/CommentItem.d.ts":"991573d78046","components/comment/CommentItem/CommentItem.prompt.md":"dc69c22361c1","components/comment/CommentThread/CommentThread.jsx":"6b7db8e67335","components/comment/CommentThread/CommentThread.d.ts":"462dfc0bfdf0","components/comment/CommentThread/CommentThread.prompt.md":"6024a885e2ea","components/general/Composer/Composer.jsx":"db23f5d95c44","components/general/Composer/Composer.d.ts":"d013ccadccf6","components/general/Composer/Composer.prompt.md":"e175ac291c78","components/profile/ControlBlockButtons/ControlBlockButtons.jsx":"9f5ea6dd02bb","components/profile/ControlBlockButtons/ControlBlockButtons.d.ts":"ff2cbc2650da","components/profile/ControlBlockButtons/ControlBlockButtons.prompt.md":"e1533879d5cb","components/social/EventItem/EventItem.jsx":"10a68507a826","components/social/EventItem/EventItem.d.ts":"7b4345824b98","components/social/EventItem/EventItem.prompt.md":"cc266956cb6c","components/form/FormField/FormField.jsx":"63b6f5ed57e0","components/form/FormField/FormField.d.ts":"90014143311a","components/form/FormField/FormField.prompt.md":"f174a5a62df9","components/social/FriendCard/FriendCard.jsx":"e64fc2419908","components/social/FriendCard/FriendCard.d.ts":"482754771ea9","components/social/FriendCard/FriendCard.prompt.md":"159a089de580","components/social/FriendRequestItem/FriendRequestItem.jsx":"65eee2d97545","components/social/FriendRequestItem/FriendRequestItem.d.ts":"52fa23811754","components/social/FriendRequestItem/FriendRequestItem.prompt.md":"528b63cb335c","components/general/FriendRequestsMenu/FriendRequestsMenu.jsx":"a08be07b3629","components/general/FriendRequestsMenu/FriendRequestsMenu.d.ts":"7fbf638c31d2","components/general/FriendRequestsMenu/FriendRequestsMenu.prompt.md":"c68f7472fcaf","components/widget/FriendSuggestions/FriendSuggestions.jsx":"9e987e330b53","components/widget/FriendSuggestions/FriendSuggestions.d.ts":"6dac979dce19","components/widget/FriendSuggestions/FriendSuggestions.prompt.md":"e09056352a81","components/partials/GoToTop/GoToTop.jsx":"ebc1876e812d","components/partials/GoToTop/GoToTop.d.ts":"dfc5a6093c65","components/partials/GoToTop/GoToTop.prompt.md":"a7cdd653a640","components/partials/HelloPreloader/HelloPreloader.jsx":"649f0aa9d0b0","components/partials/HelloPreloader/HelloPreloader.d.ts":"b1f073ad1018","components/partials/HelloPreloader/HelloPreloader.prompt.md":"8b3aa58951f6","components/home/HomeView/HomeView.jsx":"427c8d2a64cd","components/home/HomeView/HomeView.d.ts":"45e4f6c68587","components/home/HomeView/HomeView.prompt.md":"4114d3bc965d","components/general/Icon/Icon.jsx":"327e6a175e5e","components/general/Icon/Icon.d.ts":"b953cbae66e0","components/general/Icon/Icon.prompt.md":"3fc1f07b2b6a","components/auth/LoginView/LoginView.jsx":"b86ff10c6c9c","components/auth/LoginView/LoginView.d.ts":"12e5552a431b","components/auth/LoginView/LoginView.prompt.md":"319ac8630185","components/master/MasterBase/MasterBase.jsx":"794ed6094191","components/master/MasterBase/MasterBase.d.ts":"78c99aa225e5","components/master/MasterBase/MasterBase.prompt.md":"de08fd4cc44d","components/master/MasterPublic/MasterPublic.jsx":"68d654a8c687","components/master/MasterPublic/MasterPublic.d.ts":"f8e3f66856a2","components/master/MasterPublic/MasterPublic.prompt.md":"ac73aaeed1f5","components/general/MessagesMenu/MessagesMenu.jsx":"8f7d104afb2d","components/general/MessagesMenu/MessagesMenu.d.ts":"48058318671f","components/general/MessagesMenu/MessagesMenu.prompt.md":"2a02efd43086","components/general/NotificationsMenu/NotificationsMenu.jsx":"8f3b3658a39e","components/general/NotificationsMenu/NotificationsMenu.d.ts":"9f8d15496d0b","components/general/NotificationsMenu/NotificationsMenu.prompt.md":"99f463cc7de0","components/novel/NovelDetailView/NovelDetailView.jsx":"9e60657d9e70","components/novel/NovelDetailView/NovelDetailView.d.ts":"4d7af66ef501","components/novel/NovelDetailView/NovelDetailView.prompt.md":"524cdaadd871","components/widget/PagesWidget/PagesWidget.jsx":"519f4039a6a4","components/widget/PagesWidget/PagesWidget.d.ts":"b8788812f282","components/widget/PagesWidget/PagesWidget.prompt.md":"aef313730b35","components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx":"c77e6162454c","components/widget/PersonalInfoWidget/PersonalInfoWidget.d.ts":"81ab6fc38c0d","components/widget/PersonalInfoWidget/PersonalInfoWidget.prompt.md":"33f7eab8849e","components/music/PlaylistWidget/PlaylistWidget.jsx":"d141b1b1da88","components/music/PlaylistWidget/PlaylistWidget.d.ts":"003d70e56a97","components/music/PlaylistWidget/PlaylistWidget.prompt.md":"c8d60820436c","components/general/Post/Post.jsx":"543b6ccfbac2","components/general/Post/Post.d.ts":"0ea5d52ff044","components/general/Post/Post.prompt.md":"860707350182","components/post/PostControlButtons/PostControlButtons.jsx":"046b20a4f13f","components/post/PostControlButtons/PostControlButtons.d.ts":"40c709a63556","components/post/PostControlButtons/PostControlButtons.prompt.md":"e0e97ecb9bcf","components/profile/ProfileHeader/ProfileHeader.jsx":"17dc135c32e5","components/profile/ProfileHeader/ProfileHeader.d.ts":"c9881fdefc41","components/profile/ProfileHeader/ProfileHeader.prompt.md":"8eaed02cc313","components/post/ReactionBar/ReactionBar.jsx":"04d72b6d490c","components/post/ReactionBar/ReactionBar.d.ts":"90e910fa88a3","components/post/ReactionBar/ReactionBar.prompt.md":"5446f93193bf","components/auth/RegisterView/RegisterView.jsx":"0f9760f1341e","components/auth/RegisterView/RegisterView.d.ts":"92a8c302c44c","components/auth/RegisterView/RegisterView.prompt.md":"6ca50c2600a0","components/form/SelectField/SelectField.jsx":"52557bb1e40a","components/form/SelectField/SelectField.d.ts":"e663d927abec","components/form/SelectField/SelectField.prompt.md":"441b0b51704e","components/menu/SidebarCenter/SidebarCenter.jsx":"8d50d316a50b","components/menu/SidebarCenter/SidebarCenter.d.ts":"e2a916efabc5","components/menu/SidebarCenter/SidebarCenter.prompt.md":"d18e20ead63a","components/menu/SidebarLeft/SidebarLeft.jsx":"b6aae23633b9","components/menu/SidebarLeft/SidebarLeft.d.ts":"f12def96299c","components/menu/SidebarLeft/SidebarLeft.prompt.md":"e9b262d2b815","components/menu/SidebarRight/SidebarRight.jsx":"e9b448900d53","components/menu/SidebarRight/SidebarRight.d.ts":"0d4d15dd7d60","components/menu/SidebarRight/SidebarRight.prompt.md":"50b7c004f1d4","components/form/TagSelect/TagSelect.jsx":"af91776a8220","components/form/TagSelect/TagSelect.d.ts":"87f6b55f58b9","components/form/TagSelect/TagSelect.prompt.md":"b33852eb9270","components/form/ToggleRow/ToggleRow.jsx":"35633469de90","components/form/ToggleRow/ToggleRow.d.ts":"928f35533522","components/form/ToggleRow/ToggleRow.prompt.md":"79a8971f5545","components/headers/TopMenu/TopMenu.jsx":"3540cfee1989","components/headers/TopMenu/TopMenu.d.ts":"6516d4db52ab","components/headers/TopMenu/TopMenu.prompt.md":"7bbf0356c5e0","components/music/TrackItem/TrackItem.jsx":"db070a19f13d","components/music/TrackItem/TrackItem.d.ts":"91c728ee02c2","components/music/TrackItem/TrackItem.prompt.md":"00b43be10f28","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx":"1625f80c3af1","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.d.ts":"261b915ce28d","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.prompt.md":"b4e809dc5e46","components/upload/UploadStudio/UploadStudio.jsx":"e4e9f9702fee","components/upload/UploadStudio/UploadStudio.d.ts":"1e0a5a083112","components/upload/UploadStudio/UploadStudio.prompt.md":"74f724f476de","components/widget/WeatherWidget/WeatherWidget.jsx":"68162d56f018","components/widget/WeatherWidget/WeatherWidget.d.ts":"6d59df58d78a","components/widget/WeatherWidget/WeatherWidget.prompt.md":"77d3e21f57d4","components/widget/WidgetCard/WidgetCard.jsx":"2dde1e2d0e88","components/widget/WidgetCard/WidgetCard.d.ts":"79ae7519da81","components/widget/WidgetCard/WidgetCard.prompt.md":"c73ea6104733"},"inlinedExternals":["@floating-ui/core","@floating-ui/dom","@floating-ui/utils","@vidstack/react","media-captions","portal-frontend"],"builtBy":"cc-design-sync"} */
+/* @ds-bundle: {"namespace":"PortalUI","components":[{"name":"AccountsView","sourcePath":"components/bank/AccountsView/AccountsView.jsx"},{"name":"ActivityFeed","sourcePath":"components/widget/ActivityFeed/ActivityFeed.jsx"},{"name":"AddBook","sourcePath":"components/popup/AddBook/AddBook.jsx"},{"name":"AudioPlayer","sourcePath":"components/music/AudioPlayer/AudioPlayer.jsx"},{"name":"AuthForm","sourcePath":"components/auth/AuthForm/AuthForm.jsx"},{"name":"AuthLanding","sourcePath":"components/auth/AuthLanding/AuthLanding.jsx"},{"name":"Avatar","sourcePath":"components/general/Avatar/Avatar.jsx"},{"name":"BadgeCard","sourcePath":"components/social/BadgeCard/BadgeCard.jsx"},{"name":"BirthdayCard","sourcePath":"components/widget/BirthdayCard/BirthdayCard.jsx"},{"name":"BlogCard","sourcePath":"components/blog/BlogCard/BlogCard.jsx"},{"name":"BudgetsView","sourcePath":"components/bank/BudgetsView/BudgetsView.jsx"},{"name":"CalendarView","sourcePath":"components/calendar/CalendarView/CalendarView.jsx"},{"name":"CalendarWidget","sourcePath":"components/widget/CalendarWidget/CalendarWidget.jsx"},{"name":"ChapterMenu","sourcePath":"components/reader/ChapterMenu/ChapterMenu.jsx"},{"name":"ChatResponsive","sourcePath":"components/popup/ChatResponsive/ChatResponsive.jsx"},{"name":"ChoseFromMyPhoto","sourcePath":"components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx"},{"name":"ComicDetailView","sourcePath":"components/comic/ComicDetailView/ComicDetailView.jsx"},{"name":"ComicIndexView","sourcePath":"components/comic/ComicIndexView/ComicIndexView.jsx"},{"name":"ComicReaderView","sourcePath":"components/comic/ComicReaderView/ComicReaderView.jsx"},{"name":"CommentForm","sourcePath":"components/comment/CommentForm/CommentForm.jsx"},{"name":"CommentItem","sourcePath":"components/comment/CommentItem/CommentItem.jsx"},{"name":"CommentThread","sourcePath":"components/comment/CommentThread/CommentThread.jsx"},{"name":"Composer","sourcePath":"components/general/Composer/Composer.jsx"},{"name":"ContinueRail","sourcePath":"components/library/ContinueRail/ContinueRail.jsx"},{"name":"ContinueWidget","sourcePath":"components/widget/ContinueWidget/ContinueWidget.jsx"},{"name":"ControlBlockButtons","sourcePath":"components/profile/ControlBlockButtons/ControlBlockButtons.jsx"},{"name":"DashboardView","sourcePath":"components/bank/DashboardView/DashboardView.jsx"},{"name":"EntryCard","sourcePath":"components/journal/EntryCard/EntryCard.jsx"},{"name":"EventItem","sourcePath":"components/social/EventItem/EventItem.jsx"},{"name":"FinanceWidget","sourcePath":"components/widget/FinanceWidget/FinanceWidget.jsx"},{"name":"FormField","sourcePath":"components/form/FormField/FormField.jsx"},{"name":"FriendCard","sourcePath":"components/social/FriendCard/FriendCard.jsx"},{"name":"FriendRequestItem","sourcePath":"components/social/FriendRequestItem/FriendRequestItem.jsx"},{"name":"FriendRequestsMenu","sourcePath":"components/general/FriendRequestsMenu/FriendRequestsMenu.jsx"},{"name":"FriendSuggestions","sourcePath":"components/widget/FriendSuggestions/FriendSuggestions.jsx"},{"name":"GoToTop","sourcePath":"components/partials/GoToTop/GoToTop.jsx"},{"name":"HelloPreloader","sourcePath":"components/partials/HelloPreloader/HelloPreloader.jsx"},{"name":"HomeView","sourcePath":"components/home/HomeView/HomeView.jsx"},{"name":"Icon","sourcePath":"components/general/Icon/Icon.jsx"},{"name":"LoginView","sourcePath":"components/auth/LoginView/LoginView.jsx"},{"name":"MasterBase","sourcePath":"components/master/MasterBase/MasterBase.jsx"},{"name":"MasterPublic","sourcePath":"components/master/MasterPublic/MasterPublic.jsx"},{"name":"MediaDetailView","sourcePath":"components/media/MediaDetailView/MediaDetailView.jsx"},{"name":"MediaIndexView","sourcePath":"components/media/MediaIndexView/MediaIndexView.jsx"},{"name":"MessagesMenu","sourcePath":"components/general/MessagesMenu/MessagesMenu.jsx"},{"name":"MoneyDisplay","sourcePath":"components/general/MoneyDisplay/MoneyDisplay.jsx"},{"name":"MoneyInput","sourcePath":"components/general/MoneyInput/MoneyInput.jsx"},{"name":"NotificationsMenu","sourcePath":"components/general/NotificationsMenu/NotificationsMenu.jsx"},{"name":"NovelDetailView","sourcePath":"components/novel/NovelDetailView/NovelDetailView.jsx"},{"name":"PagedReader","sourcePath":"components/reader/PagedReader/PagedReader.jsx"},{"name":"PagesWidget","sourcePath":"components/widget/PagesWidget/PagesWidget.jsx"},{"name":"PeopleIndexView","sourcePath":"components/people/PeopleIndexView/PeopleIndexView.jsx"},{"name":"PersonalInfoWidget","sourcePath":"components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx"},{"name":"PersonDetailView","sourcePath":"components/people/PersonDetailView/PersonDetailView.jsx"},{"name":"PlaylistWidget","sourcePath":"components/music/PlaylistWidget/PlaylistWidget.jsx"},{"name":"Post","sourcePath":"components/general/Post/Post.jsx"},{"name":"PostControlButtons","sourcePath":"components/post/PostControlButtons/PostControlButtons.jsx"},{"name":"ProfileHeader","sourcePath":"components/profile/ProfileHeader/ProfileHeader.jsx"},{"name":"ReactionBar","sourcePath":"components/post/ReactionBar/ReactionBar.jsx"},{"name":"ReaderChrome","sourcePath":"components/reader/ReaderChrome/ReaderChrome.jsx"},{"name":"ReaderHelp","sourcePath":"components/reader/ReaderHelp/ReaderHelp.jsx"},{"name":"ReaderSettings","sourcePath":"components/reader/ReaderSettings/ReaderSettings.jsx"},{"name":"RegisterView","sourcePath":"components/auth/RegisterView/RegisterView.jsx"},{"name":"SelectField","sourcePath":"components/form/SelectField/SelectField.jsx"},{"name":"SidebarCenter","sourcePath":"components/menu/SidebarCenter/SidebarCenter.jsx"},{"name":"SidebarLeft","sourcePath":"components/menu/SidebarLeft/SidebarLeft.jsx"},{"name":"SidebarRight","sourcePath":"components/menu/SidebarRight/SidebarRight.jsx"},{"name":"StreamItemCard","sourcePath":"components/stream/StreamItemCard/StreamItemCard.jsx"},{"name":"StripReader","sourcePath":"components/reader/StripReader/StripReader.jsx"},{"name":"TagSelect","sourcePath":"components/form/TagSelect/TagSelect.jsx"},{"name":"ToggleRow","sourcePath":"components/form/ToggleRow/ToggleRow.jsx"},{"name":"TopMenu","sourcePath":"components/headers/TopMenu/TopMenu.jsx"},{"name":"TrackItem","sourcePath":"components/music/TrackItem/TrackItem.jsx"},{"name":"TransactionsView","sourcePath":"components/bank/TransactionsView/TransactionsView.jsx"},{"name":"UpdateHeaderPhoto","sourcePath":"components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx"},{"name":"UploadStudio","sourcePath":"components/upload/UploadStudio/UploadStudio.jsx"},{"name":"WeatherView","sourcePath":"components/weather/WeatherView/WeatherView.jsx"},{"name":"WeatherWidget","sourcePath":"components/widget/WeatherWidget/WeatherWidget.jsx"},{"name":"WidgetCard","sourcePath":"components/widget/WidgetCard/WidgetCard.jsx"}],"sourceHashes":{"components/bank/AccountsView/AccountsView.jsx":"301e6665fc51","components/bank/AccountsView/AccountsView.d.ts":"f3ea75294ad2","components/bank/AccountsView/AccountsView.prompt.md":"cbecc4802017","components/widget/ActivityFeed/ActivityFeed.jsx":"7d780fe14604","components/widget/ActivityFeed/ActivityFeed.d.ts":"8b486d78f855","components/widget/ActivityFeed/ActivityFeed.prompt.md":"472a459810ce","components/popup/AddBook/AddBook.jsx":"342bf3316fa6","components/popup/AddBook/AddBook.d.ts":"955a5a8afa4f","components/popup/AddBook/AddBook.prompt.md":"01b8a578dfcb","components/music/AudioPlayer/AudioPlayer.jsx":"5838ad0176db","components/music/AudioPlayer/AudioPlayer.d.ts":"f9937a613082","components/music/AudioPlayer/AudioPlayer.prompt.md":"21d4ecf9ce8b","components/auth/AuthForm/AuthForm.jsx":"1e61c6521418","components/auth/AuthForm/AuthForm.d.ts":"aa7c72c0e540","components/auth/AuthForm/AuthForm.prompt.md":"a1d2e05687e3","components/auth/AuthLanding/AuthLanding.jsx":"8fb2228bac01","components/auth/AuthLanding/AuthLanding.d.ts":"ebe7795bc4c4","components/auth/AuthLanding/AuthLanding.prompt.md":"304b549afe05","components/general/Avatar/Avatar.jsx":"de2a9e21a364","components/general/Avatar/Avatar.d.ts":"cef099484f1a","components/general/Avatar/Avatar.prompt.md":"28cd154c7a58","components/social/BadgeCard/BadgeCard.jsx":"efa4a4d130a2","components/social/BadgeCard/BadgeCard.d.ts":"1a048347711e","components/social/BadgeCard/BadgeCard.prompt.md":"0cae404ebaf0","components/widget/BirthdayCard/BirthdayCard.jsx":"61b2b764bca9","components/widget/BirthdayCard/BirthdayCard.d.ts":"169c1800a17f","components/widget/BirthdayCard/BirthdayCard.prompt.md":"4df990b65e98","components/blog/BlogCard/BlogCard.jsx":"74fe53b4fae4","components/blog/BlogCard/BlogCard.d.ts":"5a355bf69952","components/blog/BlogCard/BlogCard.prompt.md":"40d84fd02627","components/bank/BudgetsView/BudgetsView.jsx":"424a4a18ba05","components/bank/BudgetsView/BudgetsView.d.ts":"e379ed80f5a2","components/bank/BudgetsView/BudgetsView.prompt.md":"ce825953d0f6","components/calendar/CalendarView/CalendarView.jsx":"7bb2022cea9e","components/calendar/CalendarView/CalendarView.d.ts":"fbaaa115c7bf","components/calendar/CalendarView/CalendarView.prompt.md":"93c071523ede","components/widget/CalendarWidget/CalendarWidget.jsx":"e9a8b24134c7","components/widget/CalendarWidget/CalendarWidget.d.ts":"71b8eb108e7c","components/widget/CalendarWidget/CalendarWidget.prompt.md":"40e66331e9ec","components/reader/ChapterMenu/ChapterMenu.jsx":"a06005c70a72","components/reader/ChapterMenu/ChapterMenu.d.ts":"d9cd68d278e4","components/reader/ChapterMenu/ChapterMenu.prompt.md":"7fb20fa4764b","components/popup/ChatResponsive/ChatResponsive.jsx":"731a0df6f69c","components/popup/ChatResponsive/ChatResponsive.d.ts":"af5c346f0de7","components/popup/ChatResponsive/ChatResponsive.prompt.md":"c94a075c52fa","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx":"6351148a1e60","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.d.ts":"6b3b302ef68f","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.prompt.md":"53243c634d4a","components/comic/ComicDetailView/ComicDetailView.jsx":"868e712e47ae","components/comic/ComicDetailView/ComicDetailView.d.ts":"0eabd607602a","components/comic/ComicDetailView/ComicDetailView.prompt.md":"eafc2a792c03","components/comic/ComicIndexView/ComicIndexView.jsx":"4f28ea91cd2e","components/comic/ComicIndexView/ComicIndexView.d.ts":"35a2fcfc8e80","components/comic/ComicIndexView/ComicIndexView.prompt.md":"22aad7660d9b","components/comic/ComicReaderView/ComicReaderView.jsx":"445de30e9ec3","components/comic/ComicReaderView/ComicReaderView.d.ts":"abd83f30dddc","components/comic/ComicReaderView/ComicReaderView.prompt.md":"bfd5797c2caf","components/comment/CommentForm/CommentForm.jsx":"1c8a99defa49","components/comment/CommentForm/CommentForm.d.ts":"75d3009d0f00","components/comment/CommentForm/CommentForm.prompt.md":"60cb5b0b1258","components/comment/CommentItem/CommentItem.jsx":"6fb44b469784","components/comment/CommentItem/CommentItem.d.ts":"991573d78046","components/comment/CommentItem/CommentItem.prompt.md":"dc69c22361c1","components/comment/CommentThread/CommentThread.jsx":"6b7db8e67335","components/comment/CommentThread/CommentThread.d.ts":"462dfc0bfdf0","components/comment/CommentThread/CommentThread.prompt.md":"6024a885e2ea","components/general/Composer/Composer.jsx":"db23f5d95c44","components/general/Composer/Composer.d.ts":"d013ccadccf6","components/general/Composer/Composer.prompt.md":"37fe9d8ce0c5","components/library/ContinueRail/ContinueRail.jsx":"550b895ddd13","components/library/ContinueRail/ContinueRail.d.ts":"b18bfb68ce8e","components/library/ContinueRail/ContinueRail.prompt.md":"6ab8419506f9","components/widget/ContinueWidget/ContinueWidget.jsx":"a1266e7aafd8","components/widget/ContinueWidget/ContinueWidget.d.ts":"dc2bc3dbad69","components/widget/ContinueWidget/ContinueWidget.prompt.md":"dd755077a299","components/profile/ControlBlockButtons/ControlBlockButtons.jsx":"9f5ea6dd02bb","components/profile/ControlBlockButtons/ControlBlockButtons.d.ts":"ff2cbc2650da","components/profile/ControlBlockButtons/ControlBlockButtons.prompt.md":"e1533879d5cb","components/bank/DashboardView/DashboardView.jsx":"2139072cd085","components/bank/DashboardView/DashboardView.d.ts":"1c53b7f90098","components/bank/DashboardView/DashboardView.prompt.md":"12a5d9470fc0","components/journal/EntryCard/EntryCard.jsx":"213a325fd955","components/journal/EntryCard/EntryCard.d.ts":"898570d691db","components/journal/EntryCard/EntryCard.prompt.md":"b88a75cb6cea","components/social/EventItem/EventItem.jsx":"10a68507a826","components/social/EventItem/EventItem.d.ts":"7b4345824b98","components/social/EventItem/EventItem.prompt.md":"cc266956cb6c","components/widget/FinanceWidget/FinanceWidget.jsx":"a39aabcb16aa","components/widget/FinanceWidget/FinanceWidget.d.ts":"13ef4f8960a7","components/widget/FinanceWidget/FinanceWidget.prompt.md":"e93160901909","components/form/FormField/FormField.jsx":"63b6f5ed57e0","components/form/FormField/FormField.d.ts":"90014143311a","components/form/FormField/FormField.prompt.md":"f174a5a62df9","components/social/FriendCard/FriendCard.jsx":"e64fc2419908","components/social/FriendCard/FriendCard.d.ts":"482754771ea9","components/social/FriendCard/FriendCard.prompt.md":"159a089de580","components/social/FriendRequestItem/FriendRequestItem.jsx":"65eee2d97545","components/social/FriendRequestItem/FriendRequestItem.d.ts":"52fa23811754","components/social/FriendRequestItem/FriendRequestItem.prompt.md":"528b63cb335c","components/general/FriendRequestsMenu/FriendRequestsMenu.jsx":"a08be07b3629","components/general/FriendRequestsMenu/FriendRequestsMenu.d.ts":"7fbf638c31d2","components/general/FriendRequestsMenu/FriendRequestsMenu.prompt.md":"c68f7472fcaf","components/widget/FriendSuggestions/FriendSuggestions.jsx":"9e987e330b53","components/widget/FriendSuggestions/FriendSuggestions.d.ts":"6dac979dce19","components/widget/FriendSuggestions/FriendSuggestions.prompt.md":"2a954eb8726e","components/partials/GoToTop/GoToTop.jsx":"ebc1876e812d","components/partials/GoToTop/GoToTop.d.ts":"dfc5a6093c65","components/partials/GoToTop/GoToTop.prompt.md":"a7cdd653a640","components/partials/HelloPreloader/HelloPreloader.jsx":"649f0aa9d0b0","components/partials/HelloPreloader/HelloPreloader.d.ts":"b1f073ad1018","components/partials/HelloPreloader/HelloPreloader.prompt.md":"8b3aa58951f6","components/home/HomeView/HomeView.jsx":"427c8d2a64cd","components/home/HomeView/HomeView.d.ts":"45e4f6c68587","components/home/HomeView/HomeView.prompt.md":"4114d3bc965d","components/general/Icon/Icon.jsx":"327e6a175e5e","components/general/Icon/Icon.d.ts":"b953cbae66e0","components/general/Icon/Icon.prompt.md":"3fc1f07b2b6a","components/auth/LoginView/LoginView.jsx":"b86ff10c6c9c","components/auth/LoginView/LoginView.d.ts":"12e5552a431b","components/auth/LoginView/LoginView.prompt.md":"319ac8630185","components/master/MasterBase/MasterBase.jsx":"794ed6094191","components/master/MasterBase/MasterBase.d.ts":"78c99aa225e5","components/master/MasterBase/MasterBase.prompt.md":"de08fd4cc44d","components/master/MasterPublic/MasterPublic.jsx":"68d654a8c687","components/master/MasterPublic/MasterPublic.d.ts":"f8e3f66856a2","components/master/MasterPublic/MasterPublic.prompt.md":"ac73aaeed1f5","components/media/MediaDetailView/MediaDetailView.jsx":"d889ecab9187","components/media/MediaDetailView/MediaDetailView.d.ts":"f6579d22185b","components/media/MediaDetailView/MediaDetailView.prompt.md":"322ad994a10d","components/media/MediaIndexView/MediaIndexView.jsx":"ad811ffe5ab7","components/media/MediaIndexView/MediaIndexView.d.ts":"9a861cde8f90","components/media/MediaIndexView/MediaIndexView.prompt.md":"c06c8c580f99","components/general/MessagesMenu/MessagesMenu.jsx":"8f7d104afb2d","components/general/MessagesMenu/MessagesMenu.d.ts":"48058318671f","components/general/MessagesMenu/MessagesMenu.prompt.md":"2a02efd43086","components/general/MoneyDisplay/MoneyDisplay.jsx":"4ca92f0a28e0","components/general/MoneyDisplay/MoneyDisplay.d.ts":"dfadca9ab6e9","components/general/MoneyDisplay/MoneyDisplay.prompt.md":"634993ec997a","components/general/MoneyInput/MoneyInput.jsx":"a6dc564d16ab","components/general/MoneyInput/MoneyInput.d.ts":"6c41cbfd666d","components/general/MoneyInput/MoneyInput.prompt.md":"726612f534f7","components/general/NotificationsMenu/NotificationsMenu.jsx":"8f3b3658a39e","components/general/NotificationsMenu/NotificationsMenu.d.ts":"9f8d15496d0b","components/general/NotificationsMenu/NotificationsMenu.prompt.md":"99f463cc7de0","components/novel/NovelDetailView/NovelDetailView.jsx":"9e60657d9e70","components/novel/NovelDetailView/NovelDetailView.d.ts":"4d7af66ef501","components/novel/NovelDetailView/NovelDetailView.prompt.md":"524cdaadd871","components/reader/PagedReader/PagedReader.jsx":"bb4f64370dc0","components/reader/PagedReader/PagedReader.d.ts":"e71f760160ac","components/reader/PagedReader/PagedReader.prompt.md":"05bd834a6363","components/widget/PagesWidget/PagesWidget.jsx":"519f4039a6a4","components/widget/PagesWidget/PagesWidget.d.ts":"b8788812f282","components/widget/PagesWidget/PagesWidget.prompt.md":"40cb0997f850","components/people/PeopleIndexView/PeopleIndexView.jsx":"81a668759e9e","components/people/PeopleIndexView/PeopleIndexView.d.ts":"2270f7e4d300","components/people/PeopleIndexView/PeopleIndexView.prompt.md":"ae841d31657f","components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx":"c77e6162454c","components/widget/PersonalInfoWidget/PersonalInfoWidget.d.ts":"81ab6fc38c0d","components/widget/PersonalInfoWidget/PersonalInfoWidget.prompt.md":"33f7eab8849e","components/people/PersonDetailView/PersonDetailView.jsx":"5fd05308ff9f","components/people/PersonDetailView/PersonDetailView.d.ts":"4538b687c1c5","components/people/PersonDetailView/PersonDetailView.prompt.md":"0ff37aff8a6f","components/music/PlaylistWidget/PlaylistWidget.jsx":"d141b1b1da88","components/music/PlaylistWidget/PlaylistWidget.d.ts":"003d70e56a97","components/music/PlaylistWidget/PlaylistWidget.prompt.md":"c8d60820436c","components/general/Post/Post.jsx":"543b6ccfbac2","components/general/Post/Post.d.ts":"0ea5d52ff044","components/general/Post/Post.prompt.md":"860707350182","components/post/PostControlButtons/PostControlButtons.jsx":"046b20a4f13f","components/post/PostControlButtons/PostControlButtons.d.ts":"40c709a63556","components/post/PostControlButtons/PostControlButtons.prompt.md":"e0e97ecb9bcf","components/profile/ProfileHeader/ProfileHeader.jsx":"17dc135c32e5","components/profile/ProfileHeader/ProfileHeader.d.ts":"c9881fdefc41","components/profile/ProfileHeader/ProfileHeader.prompt.md":"8eaed02cc313","components/post/ReactionBar/ReactionBar.jsx":"04d72b6d490c","components/post/ReactionBar/ReactionBar.d.ts":"90e910fa88a3","components/post/ReactionBar/ReactionBar.prompt.md":"5446f93193bf","components/reader/ReaderChrome/ReaderChrome.jsx":"aa30d46b0a21","components/reader/ReaderChrome/ReaderChrome.d.ts":"5b7f9228ec0d","components/reader/ReaderChrome/ReaderChrome.prompt.md":"3fab920b57cc","components/reader/ReaderHelp/ReaderHelp.jsx":"153691b76234","components/reader/ReaderHelp/ReaderHelp.d.ts":"b3dae7ecbfba","components/reader/ReaderHelp/ReaderHelp.prompt.md":"8d026d225a88","components/reader/ReaderSettings/ReaderSettings.jsx":"0e04895e054e","components/reader/ReaderSettings/ReaderSettings.d.ts":"e93cc06aadd1","components/reader/ReaderSettings/ReaderSettings.prompt.md":"7ae06a03ad84","components/auth/RegisterView/RegisterView.jsx":"0f9760f1341e","components/auth/RegisterView/RegisterView.d.ts":"92a8c302c44c","components/auth/RegisterView/RegisterView.prompt.md":"6ca50c2600a0","components/form/SelectField/SelectField.jsx":"52557bb1e40a","components/form/SelectField/SelectField.d.ts":"e663d927abec","components/form/SelectField/SelectField.prompt.md":"441b0b51704e","components/menu/SidebarCenter/SidebarCenter.jsx":"8d50d316a50b","components/menu/SidebarCenter/SidebarCenter.d.ts":"e2a916efabc5","components/menu/SidebarCenter/SidebarCenter.prompt.md":"d18e20ead63a","components/menu/SidebarLeft/SidebarLeft.jsx":"b6aae23633b9","components/menu/SidebarLeft/SidebarLeft.d.ts":"f12def96299c","components/menu/SidebarLeft/SidebarLeft.prompt.md":"e9b262d2b815","components/menu/SidebarRight/SidebarRight.jsx":"e9b448900d53","components/menu/SidebarRight/SidebarRight.d.ts":"0d4d15dd7d60","components/menu/SidebarRight/SidebarRight.prompt.md":"50b7c004f1d4","components/stream/StreamItemCard/StreamItemCard.jsx":"a521642ea3ac","components/stream/StreamItemCard/StreamItemCard.d.ts":"b503e0607029","components/stream/StreamItemCard/StreamItemCard.prompt.md":"8bdd6786e8e1","components/reader/StripReader/StripReader.jsx":"05cbce2ea80f","components/reader/StripReader/StripReader.d.ts":"5e21494e4a02","components/reader/StripReader/StripReader.prompt.md":"dfdf0101fe06","components/form/TagSelect/TagSelect.jsx":"af91776a8220","components/form/TagSelect/TagSelect.d.ts":"87f6b55f58b9","components/form/TagSelect/TagSelect.prompt.md":"b33852eb9270","components/form/ToggleRow/ToggleRow.jsx":"35633469de90","components/form/ToggleRow/ToggleRow.d.ts":"928f35533522","components/form/ToggleRow/ToggleRow.prompt.md":"79a8971f5545","components/headers/TopMenu/TopMenu.jsx":"3540cfee1989","components/headers/TopMenu/TopMenu.d.ts":"6516d4db52ab","components/headers/TopMenu/TopMenu.prompt.md":"7bbf0356c5e0","components/music/TrackItem/TrackItem.jsx":"db070a19f13d","components/music/TrackItem/TrackItem.d.ts":"91c728ee02c2","components/music/TrackItem/TrackItem.prompt.md":"00b43be10f28","components/bank/TransactionsView/TransactionsView.jsx":"87d493f301fb","components/bank/TransactionsView/TransactionsView.d.ts":"f7a9df3d734f","components/bank/TransactionsView/TransactionsView.prompt.md":"e8d4d00e078e","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx":"1625f80c3af1","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.d.ts":"261b915ce28d","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.prompt.md":"b4e809dc5e46","components/upload/UploadStudio/UploadStudio.jsx":"e4e9f9702fee","components/upload/UploadStudio/UploadStudio.d.ts":"1e0a5a083112","components/upload/UploadStudio/UploadStudio.prompt.md":"74f724f476de","components/weather/WeatherView/WeatherView.jsx":"a18d60399e3a","components/weather/WeatherView/WeatherView.d.ts":"41010dd77c65","components/weather/WeatherView/WeatherView.prompt.md":"c07d55bb6495","components/widget/WeatherWidget/WeatherWidget.jsx":"68162d56f018","components/widget/WeatherWidget/WeatherWidget.d.ts":"6d59df58d78a","components/widget/WeatherWidget/WeatherWidget.prompt.md":"774b3b2e3d78","components/widget/WidgetCard/WidgetCard.jsx":"2dde1e2d0e88","components/widget/WidgetCard/WidgetCard.d.ts":"79ae7519da81","components/widget/WidgetCard/WidgetCard.prompt.md":"c73ea6104733"},"inlinedExternals":["@floating-ui/core","@floating-ui/dom","@floating-ui/utils","@tanstack/query-core","@tanstack/react-query","@vidstack/react","media-captions","portal-frontend","zustand"],"builtBy":"cc-design-sync"} */
 var PortalUI = (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -78,7 +78,7 @@ var PortalUI = (() => {
         if (k !== void 0) o2.key = k;
         return o2;
       }
-      function jsx(t2, p, k) {
+      function jsx3(t2, p, k) {
         var c = p && p.children;
         return c === void 0 ? R.createElement(t2, np(p, k)) : R.createElement(t2, np(p, k), c);
       }
@@ -86,10 +86,10 @@ var PortalUI = (() => {
         return R.createElement.apply(R, [t2, np(p, k)].concat(p.children));
       }
       module.exports = R;
-      module.exports.jsx = jsx;
+      module.exports.jsx = jsx3;
       module.exports.jsxs = jsxs;
       module.exports.jsxDEV = function(t2, p, k, s) {
-        return (s ? jsxs : jsx)(t2, p, k);
+        return (s ? jsxs : jsx3)(t2, p, k);
       };
       module.exports.Fragment = R.Fragment;
     }
@@ -163,7 +163,7 @@ var PortalUI = (() => {
     chromecast_exports: () => chromecast_exports,
     composeRefs: () => composeRefs,
     computed: () => computed,
-    createContext: () => createContext2,
+    createContext: () => createContext5,
     createDisposalBin: () => createDisposalBin,
     createReactComponent: () => createReactComponent,
     createScope: () => createScope,
@@ -196,7 +196,7 @@ var PortalUI = (() => {
     keysOf: () => keysOf,
     listenEvent: () => listenEvent,
     method: () => method,
-    noop: () => noop,
+    noop: () => noop3,
     onDispose: () => onDispose,
     peek: () => peek,
     prop: () => prop,
@@ -210,12 +210,12 @@ var PortalUI = (() => {
     toggleClass: () => toggleClass,
     untrack: () => untrack,
     uppercaseFirstChar: () => uppercaseFirstChar,
-    useContext: () => useContext2,
+    useContext: () => useContext5,
     useReactContext: () => useReactContext,
     useReactScope: () => useReactScope,
     useSignal: () => useSignal,
     useSignalRecord: () => useSignalRecord,
-    useState: () => useState18,
+    useState: () => useState34,
     useStateContext: () => useStateContext,
     waitIdlePeriod: () => waitIdlePeriod,
     waitTimeout: () => waitTimeout,
@@ -472,7 +472,7 @@ var PortalUI = (() => {
   function isWriteSignal(fn) {
     return isReadSignal(fn) && "set" in fn;
   }
-  function noop(...args) {
+  function noop3(...args) {
   }
   function isNull(value) {
     return value === null;
@@ -640,7 +640,7 @@ var PortalUI = (() => {
       }, options);
     });
   }
-  function createContext2(provide) {
+  function createContext5(provide) {
     return {
       id: /* @__PURE__ */ Symbol(),
       provide
@@ -650,7 +650,7 @@ var PortalUI = (() => {
     const hasProvidedValue = !isUndefined(value);
     setContext(context.id, hasProvidedValue ? value : context.provide?.(), scope);
   }
-  function useContext2(context) {
+  function useContext5(context) {
     return getContext(context.id);
   }
   function hasProvidedContext(context) {
@@ -681,8 +681,8 @@ var PortalUI = (() => {
     if (!target[METHODS]) target[METHODS] = /* @__PURE__ */ new Set();
     target[METHODS].add(propertyKey);
   }
-  function useState18(state) {
-    return useContext2(state);
+  function useState34(state) {
+    return useContext5(state);
   }
   function throttle(fn, interval, options) {
     var timeoutId = null;
@@ -762,14 +762,14 @@ var PortalUI = (() => {
     return debounceWrapper;
   }
   function WithScope(scope, ...children) {
-    return React4.createElement(ReactScopeContext.Provider, { value: scope }, ...children);
+    return React12.createElement(ReactScopeContext.Provider, { value: scope }, ...children);
   }
   function useReactScope() {
-    return React4.useContext(ReactScopeContext).current;
+    return React12.useContext(ReactScopeContext).current;
   }
   function useReactContext(context) {
     const scope = useReactScope();
-    return React4.useMemo(() => getContext(context.id, scope), [scope]);
+    return React12.useMemo(() => getContext(context.id, scope), [scope]);
   }
   function setRef(ref, value) {
     if (typeof ref === "function") ref(value);
@@ -779,8 +779,8 @@ var PortalUI = (() => {
     return (node) => refs.forEach((ref) => setRef(ref, node));
   }
   function createClientComponent(Component3, options) {
-    const forwardComponent = React4.forwardRef((props, forwardRef8) => {
-      let parentScopeRef = React4.useContext(ReactScopeContext), scopeRef = React4.useRef(null), stateRef = React4.useRef();
+    const forwardComponent = React12.forwardRef((props, forwardRef9) => {
+      let parentScopeRef = React12.useContext(ReactScopeContext), scopeRef = React12.useRef(null), stateRef = React12.useRef();
       if (!stateRef.current) {
         const state2 = createInternalState(), component = initComponent(Component3, state2, props, parentScopeRef.current);
         state2.component = component;
@@ -800,7 +800,7 @@ var PortalUI = (() => {
         }
         if (state2.el) attachToHost(state2, state2.el);
         if (!state2.forwardRef) {
-          setRef(forwardRef8, state2.component);
+          setRef(forwardRef9, state2.component);
           state2.forwardRef = true;
         }
         return () => detachFromHost(state2);
@@ -821,7 +821,7 @@ var PortalUI = (() => {
           state3.el = el;
         });
       }
-      React4.useEffect(() => {
+      React12.useEffect(() => {
         const state2 = stateRef.current;
         clearTimeout(state2.destroyId);
         state2.destroyId = -1;
@@ -843,7 +843,7 @@ var PortalUI = (() => {
           });
         };
       }, []);
-      React4.useEffect(tick);
+      React12.useEffect(tick);
       let state = stateRef.current, { children, ...renderProps } = props, attrs = {}, prevPropNames = state.prevProps, newPropNames = Object.keys(renderProps);
       state.callbacks = {};
       for (const name of [...prevPropNames, ...newPropNames]) if (options.props.has(name)) state.component.$props[name].set(isUndefined(renderProps[name]) ? Component3.props?.[name] : renderProps[name]);
@@ -861,7 +861,7 @@ var PortalUI = (() => {
         }
       } else attrs[name] = renderProps[name];
       state.prevProps = newPropNames;
-      return WithScope(scopeRef, React4.createElement(AttachEffect, { effect: onAttach }), isFunction(children) ? children?.({
+      return WithScope(scopeRef, React12.createElement(AttachEffect, { effect: onAttach }), isFunction(children) ? children?.({
         ...attrs,
         suppressHydrationWarning: true,
         ref: onRefChange
@@ -871,7 +871,7 @@ var PortalUI = (() => {
     return forwardComponent;
   }
   function AttachEffect({ effect: effect2 }) {
-    React4.useEffect(effect2, []);
+    React12.useEffect(effect2, []);
     return null;
   }
   function createInternalState() {
@@ -940,8 +940,8 @@ var PortalUI = (() => {
     return useReactContext(state);
   }
   function useSignal(signal2, key2) {
-    const [, scheduleReactUpdate] = React4.useState();
-    React4.useEffect(() => {
+    const [, scheduleReactUpdate] = React12.useState();
+    React12.useEffect(() => {
       return effect$1(() => {
         signal2();
         scheduleReactUpdate({});
@@ -950,13 +950,13 @@ var PortalUI = (() => {
     return signal2();
   }
   function useSignalRecord($state) {
-    const [, scheduleReactUpdate] = React4.useState(), tracking = React4.useRef(null);
+    const [, scheduleReactUpdate] = React12.useState(), tracking = React12.useRef(null);
     if (tracking.current == null) tracking.current = {
       state: {},
       $update: signal({}),
       props: /* @__PURE__ */ new Set()
     };
-    React4.useEffect(() => {
+    React12.useEffect(() => {
       let { state, $update, props } = tracking.current;
       return effect(() => {
         for (const prop2 of props) {
@@ -967,7 +967,7 @@ var PortalUI = (() => {
         scheduleReactUpdate({});
       });
     }, [$state]);
-    return React4.useMemo(() => {
+    return React12.useMemo(() => {
       let { state, $update, props } = tracking.current, scheduledUpdate = false;
       props.clear();
       return new Proxy(state, {
@@ -1000,13 +1000,13 @@ var PortalUI = (() => {
       domEventsRE: options?.domEventsRegex
     });
   }
-  var React4, SCOPE, scheduledEffects, runningEffects, currentScope, currentObserver, currentObservers, currentObserversIndex, effects, defaultContext, NOOP, STATE_CLEAN, STATE_CHECK, STATE_DIRTY, STATE_DISPOSED, ScopeNode, ScopeProto, ComputeNode, ComputeProto, effect, EVENT, DOM_EVENT, DOMEvent, EventTriggers, EventsTarget, _target, _controller, _a, EventsController, requestIdleCallback, key, webkit, moz, ms, document$1, vendor, fscreen, PROPS, METHODS, ON_DISPATCH, EMPTY_PROPS, _setupCallbacks, _attachCallbacks, _connectCallbacks, _destroyCallbacks, _Instance_instances, attachAttrs_fn, attachStyles_fn, setAttr_fn, setStyle_fn, _a2, Instance, currentInstance, ViewController, Component2, _descriptors, _a3, State, functionThrottle, functionDebounce, t, e, n, o, l, r, ReactScopeContext, _a4, _context, _provide, _scope, eventTypeToCallbackName, Icon$0, Icon$5, Icon$8, Icon$11, Icon$13, Icon$16, Icon$19, Icon$22, chromecast_exports, Icon$24, Icon$26, Icon$27, Icon$31, Icon$33, Icon$34, Icon$35, Icon$39, Icon$40, Icon$53, Icon$54, Icon$56, Icon$58, Icon$59, Icon$60, Icon$61, Icon$62, Icon$63, Icon$74, Icon$77, Icon$81, Icon$86, Icon$88, Icon$104, Icon$105;
+  var React12, SCOPE, scheduledEffects, runningEffects, currentScope, currentObserver, currentObservers, currentObserversIndex, effects, defaultContext, NOOP, STATE_CLEAN, STATE_CHECK, STATE_DIRTY, STATE_DISPOSED, ScopeNode, ScopeProto, ComputeNode, ComputeProto, effect, EVENT, DOM_EVENT, DOMEvent, EventTriggers, EventsTarget, _target, _controller, _a12, EventsController, requestIdleCallback, key, webkit, moz, ms, document$1, vendor, fscreen, PROPS, METHODS, ON_DISPATCH, EMPTY_PROPS, _setupCallbacks, _attachCallbacks, _connectCallbacks, _destroyCallbacks, _Instance_instances, attachAttrs_fn, attachStyles_fn, setAttr_fn, setStyle_fn, _a13, Instance, currentInstance, ViewController, Component2, _descriptors, _a14, State, functionThrottle, functionDebounce, t, e, n, o, l, r, ReactScopeContext, _a15, _context, _provide, _scope, eventTypeToCallbackName, Icon$0, Icon$5, Icon$8, Icon$11, Icon$13, Icon$16, Icon$19, Icon$22, chromecast_exports, Icon$24, Icon$26, Icon$27, Icon$31, Icon$33, Icon$34, Icon$35, Icon$39, Icon$40, Icon$53, Icon$54, Icon$56, Icon$58, Icon$59, Icon$60, Icon$61, Icon$62, Icon$63, Icon$74, Icon$77, Icon$81, Icon$86, Icon$88, Icon$104, Icon$105;
   var init_vidstack_B9fTkxQO = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-B9fTkxQO.js"() {
       "use client";
       init_define_import_meta_env();
       init_vidstack_BLEs9rMG();
-      React4 = __toESM(require_react_shim(), 1);
+      React12 = __toESM(require_react_shim(), 1);
       SCOPE = /* @__PURE__ */ Symbol(0);
       scheduledEffects = false;
       runningEffects = false;
@@ -1156,7 +1156,7 @@ var PortalUI = (() => {
           return super.removeEventListener(type, callback, options);
         }
       };
-      EventsController = (_a = class {
+      EventsController = (_a12 = class {
         constructor(target) {
           __privateAdd(this, _target);
           __privateAdd(this, _controller);
@@ -1182,8 +1182,8 @@ var PortalUI = (() => {
         abort(reason) {
           __privateGet(this, _controller).abort(reason);
         }
-      }, _target = new WeakMap(), _controller = new WeakMap(), _a);
-      requestIdleCallback = typeof window !== "undefined" ? "requestIdleCallback" in window ? window.requestIdleCallback : (cb) => window.setTimeout(cb, 1) : noop;
+      }, _target = new WeakMap(), _controller = new WeakMap(), _a12);
+      requestIdleCallback = typeof window !== "undefined" ? "requestIdleCallback" in window ? window.requestIdleCallback : (cb) => window.setTimeout(cb, 1) : noop3;
       key = {
         fullscreenEnabled: 0,
         fullscreenElement: 1,
@@ -1268,7 +1268,7 @@ var PortalUI = (() => {
       METHODS = /* @__PURE__ */ Symbol(0);
       ON_DISPATCH = /* @__PURE__ */ Symbol(0);
       EMPTY_PROPS = {};
-      Instance = (_a2 = class {
+      Instance = (_a13 = class {
         constructor(Component3, scope, init) {
           __privateAdd(this, _Instance_instances);
           __privateAdd(this, _setupCallbacks);
@@ -1383,7 +1383,7 @@ var PortalUI = (() => {
         setAttribute(this.el, name, this.attrs[name].call(this.component));
       }, setStyle_fn = function(name) {
         setStyle(this.el, name, this.styles[name].call(this.component));
-      }, _a2);
+      }, _a13);
       currentInstance = { $$: null };
       ViewController = class extends EventTarget {
         get el() {
@@ -1480,7 +1480,7 @@ var PortalUI = (() => {
         * - This method is safe to use on the server (noop).
         */
         listen(type, handler, options) {
-          if (!this.el) return noop;
+          if (!this.el) return noop3;
           return listenEvent(this.el, type, handler, options);
         }
       };
@@ -1492,7 +1492,7 @@ var PortalUI = (() => {
           this.$$.destroy();
         }
       };
-      State = (_a3 = class {
+      State = (_a14 = class {
         constructor(record) {
           __privateAdd(this, _descriptors);
           this.id = /* @__PURE__ */ Symbol(0);
@@ -1510,7 +1510,7 @@ var PortalUI = (() => {
         reset(record, filter) {
           for (const name of Object.keys(record)) if (!__privateGet(this, _descriptors)[name].get && (!filter || filter(name))) record[name].set(this.record[name]);
         }
-      }, _descriptors = new WeakMap(), _a3);
+      }, _descriptors = new WeakMap(), _a14);
       functionThrottle = throttle;
       functionDebounce = debounce;
       t = (t2) => "object" == typeof t2 && null != t2 && 1 === t2.nodeType;
@@ -1582,17 +1582,17 @@ var PortalUI = (() => {
         }
         return L;
       };
-      ReactScopeContext = React4.createContext({ current: null });
+      ReactScopeContext = React12.createContext({ current: null });
       ReactScopeContext.displayName = "Scope";
-      _a4 = class extends React4.Component {
+      _a15 = class extends React12.Component {
         constructor(props, context) {
-          var _a106;
+          var _a117;
           super(props);
           __privateAdd(this, _scope);
           __privateSet(this, _scope, { current: createScope() });
           if (context) context.append(__privateGet(this, _scope).current);
           const Ctor = this.constructor;
-          if (__privateGet(Ctor, _context)) provideContext(__privateGet(Ctor, _context), (_a106 = __privateGet(Ctor, _provide)) == null ? void 0 : _a106.call(Ctor), __privateGet(this, _scope).current);
+          if (__privateGet(Ctor, _context)) provideContext(__privateGet(Ctor, _context), (_a117 = __privateGet(Ctor, _provide)) == null ? void 0 : _a117.call(Ctor), __privateGet(this, _scope).current);
         }
         componentWillUnmount() {
           __privateGet(this, _scope).current?.dispose();
@@ -1601,7 +1601,7 @@ var PortalUI = (() => {
         render() {
           return WithScope(__privateGet(this, _scope), this.props?.children);
         }
-      }, _context = new WeakMap(), _provide = new WeakMap(), _scope = new WeakMap(), _a4.contextType = ReactScopeContext, __privateAdd(_a4, _context), __privateAdd(_a4, _provide), _a4;
+      }, _context = new WeakMap(), _provide = new WeakMap(), _scope = new WeakMap(), _a15.contextType = ReactScopeContext, __privateAdd(_a15, _context), __privateAdd(_a15, _provide), _a15;
       eventTypeToCallbackName = /* @__PURE__ */ new Map();
       Icon$0 = `<path fill-rule="evenodd" clip-rule="evenodd" d="M15.0007 28.7923C15.0007 29.0152 14.9774 29.096 14.9339 29.1775C14.8903 29.259 14.8263 29.323 14.7449 29.3665C14.6634 29.4101 14.5826 29.4333 14.3597 29.4333H12.575C12.3521 29.4333 12.2713 29.4101 12.1898 29.3665C12.1083 29.323 12.0443 29.259 12.0008 29.1775C11.9572 29.096 11.934 29.0152 11.934 28.7923V12.2993L5.97496 12.3C5.75208 12.3 5.67125 12.2768 5.58977 12.2332C5.50829 12.1896 5.44434 12.1257 5.40077 12.0442C5.35719 11.9627 5.33398 11.8819 5.33398 11.659V9.87429C5.33398 9.65141 5.35719 9.57059 5.40077 9.48911C5.44434 9.40762 5.50829 9.34368 5.58977 9.3001C5.67125 9.25652 5.75208 9.23332 5.97496 9.23332H26.0263C26.2492 9.23332 26.33 9.25652 26.4115 9.3001C26.493 9.34368 26.557 9.40762 26.6005 9.48911C26.6441 9.57059 26.6673 9.65141 26.6673 9.87429V11.659C26.6673 11.8819 26.6441 11.9627 26.6005 12.0442C26.557 12.1257 26.493 12.1896 26.4115 12.2332C26.33 12.2768 26.2492 12.3 26.0263 12.3L20.067 12.2993L20.0673 28.7923C20.0673 29.0152 20.0441 29.096 20.0005 29.1775C19.957 29.259 19.893 29.323 19.8115 29.3665C19.73 29.4101 19.6492 29.4333 19.4263 29.4333H17.6416C17.4187 29.4333 17.3379 29.4101 17.2564 29.3665C17.175 29.323 17.111 29.259 17.0674 29.1775C17.0239 29.096 17.0007 29.0152 17.0007 28.7923L17 22.7663H15L15.0007 28.7923Z" fill="currentColor"/> <path d="M16.0007 7.89998C17.4734 7.89998 18.6673 6.70608 18.6673 5.23332C18.6673 3.76056 17.4734 2.56665 16.0007 2.56665C14.5279 2.56665 13.334 3.76056 13.334 5.23332C13.334 6.70608 14.5279 7.89998 16.0007 7.89998Z" fill="currentColor"/>`;
       Icon$5 = `<path d="M5.33334 6.00001C5.33334 5.63182 5.63181 5.33334 6 5.33334H26C26.3682 5.33334 26.6667 5.63182 26.6667 6.00001V20.6667C26.6667 21.0349 26.3682 21.3333 26 21.3333H23.7072C23.4956 21.3333 23.2966 21.233 23.171 21.0628L22.1859 19.7295C21.8607 19.2894 22.1749 18.6667 22.7221 18.6667H23.3333C23.7015 18.6667 24 18.3682 24 18V8.66668C24 8.29849 23.7015 8.00001 23.3333 8.00001H8.66667C8.29848 8.00001 8 8.29849 8 8.66668V18C8 18.3682 8.29848 18.6667 8.66667 18.6667H9.29357C9.84072 18.6667 10.1549 19.2894 9.82976 19.7295L8.84467 21.0628C8.71898 21.233 8.52 21.3333 8.30848 21.3333H6C5.63181 21.3333 5.33334 21.0349 5.33334 20.6667V6.00001Z" fill="currentColor"/> <path d="M8.78528 25.6038C8.46013 26.0439 8.77431 26.6667 9.32147 26.6667L22.6785 26.6667C23.2256 26.6667 23.5398 26.0439 23.2146 25.6038L16.5358 16.5653C16.2693 16.2046 15.73 16.2047 15.4635 16.5653L8.78528 25.6038Z" fill="currentColor"/>`;
@@ -3858,7 +3858,7 @@ var PortalUI = (() => {
   function isRemotionSrc(src) {
     return src?.type === "video/remotion";
   }
-  var IS_SERVER2, UA, IS_IOS, IS_IPHONE, IS_CHROME, IS_SAFARI, _ranges, _a5, TimeRange, AUDIO_EXTENSIONS, AUDIO_TYPES, VIDEO_EXTENSIONS, VIDEO_TYPES, HLS_VIDEO_EXTENSIONS, DASH_VIDEO_EXTENSIONS, HLS_VIDEO_TYPES, DASH_VIDEO_TYPES, pendingRequests, TextTrackSymbol, _a6, _b, _c, _d, _canLoad, _currentTime, _mode, _metadata, _regions, _cues, _activeCues, _cueIds, _TextTrack_instances, parseContent_fn, load_fn, ready_fn, error_fn, parseJSON_fn, activeCuesChanged_fn, _e, TextTrack, captionRE, ListSymbol, QualitySymbol, audioContext, gainNodes, elAudioSources, _media, _onChange, _gainNode, _srcAudioNode, _AudioGain_instances, destroySrcNode_fn, destroyGainNode_fn, _a7, AudioGain, PAGE_EVENTS, _state, _visibility, _safariBeforeUnloadTimeout, _PageVisibility_instances, handlePageEvent_fn, _a8, PageVisibility, _id, _callback, _RAFLoop_instances, loop_fn, _a9, RAFLoop, _provider, _ctx, _waiting, _attachedLoadStart, _attachedCanPlay, _timeRAF, _pageVisibility, _events, _HTMLMediaEvents_instances, media_get, onDispose_fn, _lastSeenTime, _seekedTo, onAnimationFrame_fn, attachInitialListeners_fn, attachLoadStartListeners_fn, attachCanPlayListeners_fn, _devHandlers, _handleDevEvent, attachEventListener_fn, onDevEvent_fn, updateCurrentTime_fn, onLoadStart_fn, onAbort_fn, onEmptied_fn, onLoadedData_fn, onLoadedMetadata_fn, getCanPlayDetail_fn, onPlay_fn, onPause_fn, onCanPlay_fn, onCanPlayThrough_fn, onPlaying_fn, onStalled_fn, onWaiting_fn, onEnded_fn, attachTimeUpdate_fn, onTimeUpdate_fn, onDurationChange_fn, onVolumeChange_fn, onSeeked_fn, onSeeking_fn, onProgress_fn, onSuspend_fn, onRateChange_fn, onError_fn, _a10, HTMLMediaEvents, _provider2, _ctx2, _NativeAudioTracks_instances, nativeTracks_get, onAddNativeTrack_fn, onRemoveNativeTrack_fn, onChangeNativeTrack_fn, getEnabledNativeTrack_fn, onChangeTrack_fn, _a11, NativeAudioTracks, _HTMLMediaProvider_instances, appendMediaFragment_fn, _a12, HTMLMediaProvider, _media2, _ctx3, _state2, _supported, _HTMLRemotePlaybackAdapter_instances, setup_fn, watchSupported_fn, onStateChange_fn, _a13, HTMLRemotePlaybackAdapter, HTMLAirPlayAdapter, _video, _ctx4, _NativeHLSTextTracks_instances, onAddTrack_fn, onDispose_fn2, _a14, NativeHLSTextTracks, _video2, _media3, _VideoPictureInPicture_instances, onEnter_fn, onExit_fn, _onChange2, _a15, VideoPictureInPicture, _video3, _media4, _mode2, _VideoPresentation_instances, onModeChange_fn, _a16, VideoPresentation, _presentation, _a17, FullscreenPresentationAdapter, _presentation2, _a18, PIPPresentationAdapter, provider_exports$1, VideoProvider, toDOMEventType, _video4, _ctx5, _instance, _callbacks, _stopLiveSync, _DASHController_instances, createDOMEvent_fn, liveSync_fn, liveSyncPosition_fn, dispatchDASHEvent_fn, _currentTrack, _cueTracker, onTextFragmentLoaded_fn, onTextTracksAdded_fn, onTrackChange_fn, onQualityChange_fn, onManifestLoaded_fn, onError_fn2, onFragmentLoadStart_fn, onFragmentLoadComplete_fn, _retryLoadingTimer, onNetworkError_fn, clearRetryTimer_fn, onFatalError_fn, enableAutoQuality_fn, switchAutoBitrate_fn, onUserQualityChange_fn, onUserAudioChange_fn, reset_fn, _a19, DASHController, _lib, _ctx6, _callback2, _DASHLibLoader_instances, startLoading_fn, onLoadStart_fn2, onLoaded_fn, onLoadError_fn, _a20, DASHLibLoader, provider_exports, JS_DELIVR_CDN, _ctor, _controller2, _a21, _library, DASHProvider;
+  var IS_SERVER2, UA, IS_IOS, IS_IPHONE, IS_CHROME, IS_SAFARI, _ranges, _a16, TimeRange, AUDIO_EXTENSIONS, AUDIO_TYPES, VIDEO_EXTENSIONS, VIDEO_TYPES, HLS_VIDEO_EXTENSIONS, DASH_VIDEO_EXTENSIONS, HLS_VIDEO_TYPES, DASH_VIDEO_TYPES, pendingRequests, TextTrackSymbol, _a17, _b, _c, _d, _canLoad, _currentTime, _mode, _metadata, _regions, _cues, _activeCues, _cueIds, _TextTrack_instances, parseContent_fn, load_fn, ready_fn, error_fn, parseJSON_fn, activeCuesChanged_fn, _e, TextTrack, captionRE, ListSymbol, QualitySymbol, audioContext, gainNodes, elAudioSources, _media, _onChange, _gainNode, _srcAudioNode, _AudioGain_instances, destroySrcNode_fn, destroyGainNode_fn, _a18, AudioGain, PAGE_EVENTS, _state, _visibility, _safariBeforeUnloadTimeout, _PageVisibility_instances, handlePageEvent_fn, _a19, PageVisibility, _id, _callback, _RAFLoop_instances, loop_fn, _a20, RAFLoop, _provider2, _ctx, _waiting, _attachedLoadStart, _attachedCanPlay, _timeRAF, _pageVisibility, _events, _HTMLMediaEvents_instances, media_get, onDispose_fn, _lastSeenTime, _seekedTo, onAnimationFrame_fn, attachInitialListeners_fn, attachLoadStartListeners_fn, attachCanPlayListeners_fn, _devHandlers, _handleDevEvent, attachEventListener_fn, onDevEvent_fn, updateCurrentTime_fn, onLoadStart_fn, onAbort_fn, onEmptied_fn, onLoadedData_fn, onLoadedMetadata_fn, getCanPlayDetail_fn, onPlay_fn, onPause_fn, onCanPlay_fn, onCanPlayThrough_fn, onPlaying_fn, onStalled_fn, onWaiting_fn, onEnded_fn, attachTimeUpdate_fn, onTimeUpdate_fn, onDurationChange_fn, onVolumeChange_fn, onSeeked_fn, onSeeking_fn, onProgress_fn, onSuspend_fn, onRateChange_fn, onError_fn, _a21, HTMLMediaEvents, _provider3, _ctx2, _NativeAudioTracks_instances, nativeTracks_get, onAddNativeTrack_fn, onRemoveNativeTrack_fn, onChangeNativeTrack_fn, getEnabledNativeTrack_fn, onChangeTrack_fn, _a22, NativeAudioTracks, _HTMLMediaProvider_instances, appendMediaFragment_fn, _a23, HTMLMediaProvider, _media2, _ctx3, _state2, _supported, _HTMLRemotePlaybackAdapter_instances, setup_fn, watchSupported_fn, onStateChange_fn, _a24, HTMLRemotePlaybackAdapter, HTMLAirPlayAdapter, _video, _ctx4, _NativeHLSTextTracks_instances, onAddTrack_fn, onDispose_fn2, _a25, NativeHLSTextTracks, _video2, _media3, _VideoPictureInPicture_instances, onEnter_fn, onExit_fn, _onChange2, _a26, VideoPictureInPicture, _video3, _media4, _mode2, _VideoPresentation_instances, onModeChange_fn, _a27, VideoPresentation, _presentation, _a28, FullscreenPresentationAdapter, _presentation2, _a29, PIPPresentationAdapter, provider_exports$1, VideoProvider, toDOMEventType, _video4, _ctx5, _instance, _callbacks, _stopLiveSync, _DASHController_instances, createDOMEvent_fn, liveSync_fn, liveSyncPosition_fn, dispatchDASHEvent_fn, _currentTrack, _cueTracker, onTextFragmentLoaded_fn, onTextTracksAdded_fn, onTrackChange_fn, onQualityChange_fn, onManifestLoaded_fn, onError_fn2, onFragmentLoadStart_fn, onFragmentLoadComplete_fn, _retryLoadingTimer, onNetworkError_fn, clearRetryTimer_fn, onFatalError_fn, enableAutoQuality_fn, switchAutoBitrate_fn, onUserQualityChange_fn, onUserAudioChange_fn, reset_fn, _a30, DASHController, _lib, _ctx6, _callback2, _DASHLibLoader_instances, startLoading_fn, onLoadStart_fn2, onLoaded_fn, onLoadError_fn, _a31, DASHLibLoader, provider_exports, JS_DELIVR_CDN, _ctor, _controller2, _a32, _library, DASHProvider;
   var init_vidstack_CvezEmSQ = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-CvezEmSQ.js"() {
       "use client";
@@ -3872,7 +3872,7 @@ var PortalUI = (() => {
       IS_CHROME = !IS_SERVER2 && !!window.chrome;
       !IS_SERVER2 && /crios/i.test(UA);
       IS_SAFARI = !IS_SERVER2 && (!!window.safari || IS_IOS);
-      TimeRange = (_a5 = class {
+      TimeRange = (_a16 = class {
         constructor(start, end) {
           __privateAdd(this, _ranges);
           if (isArray(start)) __privateSet(this, _ranges, start);
@@ -3888,7 +3888,7 @@ var PortalUI = (() => {
         end(index) {
           return __privateGet(this, _ranges)[index][1] ?? Infinity;
         }
-      }, _ranges = new WeakMap(), _a5);
+      }, _ranges = new WeakMap(), _a16);
       AUDIO_EXTENSIONS = /\.(m4a|m4b|mp4a|mpga|mp2|mp2a|mp3|m2a|m3a|wav|weba|aac|oga|spx|flac)($|\?)/i;
       AUDIO_TYPES = /* @__PURE__ */ new Set([
         "audio/mpeg",
@@ -3961,7 +3961,7 @@ var PortalUI = (() => {
           /** @internal */
           __publicField(this, _b, null);
           /** @internal */
-          __publicField(this, _a6, null);
+          __publicField(this, _a17, null);
           for (const prop2 of Object.keys(init)) this[prop2] = init[prop2];
           if (!this.type) this.type = "vtt";
           if (!IS_SERVER2 && init.content) __privateMethod(this, _TextTrack_instances, parseContent_fn).call(this, init);
@@ -4042,7 +4042,7 @@ var PortalUI = (() => {
           this[TextTrackSymbol.onModeChange]?.();
         }
         /** @internal */
-        [(_d = TextTrackSymbol.readyState, _c = TextTrackSymbol.crossOrigin, _b = TextTrackSymbol.onModeChange, _a6 = TextTrackSymbol.native, TextTrackSymbol.updateActiveCues)](currentTime, trigger) {
+        [(_d = TextTrackSymbol.readyState, _c = TextTrackSymbol.crossOrigin, _b = TextTrackSymbol.onModeChange, _a17 = TextTrackSymbol.native, TextTrackSymbol.updateActiveCues)](currentTime, trigger) {
           __privateSet(this, _currentTime, currentTime);
           if (this.mode === "disabled" || !__privateGet(this, _cues).length) return;
           const activeCues = [];
@@ -4149,7 +4149,7 @@ var PortalUI = (() => {
       audioContext = null;
       gainNodes = [];
       elAudioSources = [];
-      AudioGain = (_a7 = class {
+      AudioGain = (_a18 = class {
         constructor(media, onChange) {
           __privateAdd(this, _AudioGain_instances);
           __privateAdd(this, _media);
@@ -4206,7 +4206,7 @@ var PortalUI = (() => {
         } finally {
           __privateSet(this, _gainNode, null);
         }
-      }, _a7);
+      }, _a18);
       PAGE_EVENTS = [
         "focus",
         "blur",
@@ -4214,7 +4214,7 @@ var PortalUI = (() => {
         "pageshow",
         "pagehide"
       ];
-      PageVisibility = (_a8 = class {
+      PageVisibility = (_a19 = class {
         constructor() {
           __privateAdd(this, _PageVisibility_instances);
           __privateAdd(this, _state, signal(determinePageState()));
@@ -4266,8 +4266,8 @@ var PortalUI = (() => {
           __privateGet(this, _state).set(determinePageState(event));
           __privateGet(this, _visibility).set(document.visibilityState == "hidden" ? "hidden" : "visible");
         }
-      }, _a8);
-      RAFLoop = (_a9 = class {
+      }, _a19);
+      RAFLoop = (_a20 = class {
         constructor(callback) {
           __privateAdd(this, _RAFLoop_instances);
           __privateAdd(this, _id);
@@ -4288,11 +4288,11 @@ var PortalUI = (() => {
           __privateGet(this, _callback).call(this);
           __privateMethod(this, _RAFLoop_instances, loop_fn).call(this);
         }));
-      }, _a9);
-      HTMLMediaEvents = (_a10 = class {
+      }, _a20);
+      HTMLMediaEvents = (_a21 = class {
         constructor(provider, ctx) {
           __privateAdd(this, _HTMLMediaEvents_instances);
-          __privateAdd(this, _provider);
+          __privateAdd(this, _provider2);
           __privateAdd(this, _ctx);
           __privateAdd(this, _waiting, false);
           __privateAdd(this, _attachedLoadStart, false);
@@ -4309,7 +4309,7 @@ var PortalUI = (() => {
           __privateAdd(this, _seekedTo, -1);
           __privateAdd(this, _devHandlers);
           __privateAdd(this, _handleDevEvent);
-          __privateSet(this, _provider, provider);
+          __privateSet(this, _provider2, provider);
           __privateSet(this, _ctx, ctx);
           __privateSet(this, _events, new EventsController(provider.media));
           __privateMethod(this, _HTMLMediaEvents_instances, attachInitialListeners_fn).call(this);
@@ -4317,8 +4317,8 @@ var PortalUI = (() => {
           effect(__privateMethod(this, _HTMLMediaEvents_instances, attachTimeUpdate_fn).bind(this));
           onDispose(__privateMethod(this, _HTMLMediaEvents_instances, onDispose_fn).bind(this));
         }
-      }, _provider = new WeakMap(), _ctx = new WeakMap(), _waiting = new WeakMap(), _attachedLoadStart = new WeakMap(), _attachedCanPlay = new WeakMap(), _timeRAF = new WeakMap(), _pageVisibility = new WeakMap(), _events = new WeakMap(), _HTMLMediaEvents_instances = new WeakSet(), media_get = function() {
-        return __privateGet(this, _provider).media;
+      }, _provider2 = new WeakMap(), _ctx = new WeakMap(), _waiting = new WeakMap(), _attachedLoadStart = new WeakMap(), _attachedCanPlay = new WeakMap(), _timeRAF = new WeakMap(), _pageVisibility = new WeakMap(), _events = new WeakMap(), _HTMLMediaEvents_instances = new WeakSet(), media_get = function() {
+        return __privateGet(this, _provider2).media;
       }, onDispose_fn = function() {
         __privateSet(this, _attachedLoadStart, false);
         __privateSet(this, _attachedCanPlay, false);
@@ -4470,21 +4470,21 @@ var PortalUI = (() => {
           mediaError: error
         };
         __privateGet(this, _ctx).notify("error", detail, event);
-      }, _a10);
-      NativeAudioTracks = (_a11 = class {
+      }, _a21);
+      NativeAudioTracks = (_a22 = class {
         constructor(provider, ctx) {
           __privateAdd(this, _NativeAudioTracks_instances);
-          __privateAdd(this, _provider2);
+          __privateAdd(this, _provider3);
           __privateAdd(this, _ctx2);
-          __privateSet(this, _provider2, provider);
+          __privateSet(this, _provider3, provider);
           __privateSet(this, _ctx2, ctx);
           __privateGet(this, _NativeAudioTracks_instances, nativeTracks_get).onaddtrack = __privateMethod(this, _NativeAudioTracks_instances, onAddNativeTrack_fn).bind(this);
           __privateGet(this, _NativeAudioTracks_instances, nativeTracks_get).onremovetrack = __privateMethod(this, _NativeAudioTracks_instances, onRemoveNativeTrack_fn).bind(this);
           __privateGet(this, _NativeAudioTracks_instances, nativeTracks_get).onchange = __privateMethod(this, _NativeAudioTracks_instances, onChangeNativeTrack_fn).bind(this);
           listenEvent(__privateGet(this, _ctx2).audioTracks, "change", __privateMethod(this, _NativeAudioTracks_instances, onChangeTrack_fn).bind(this));
         }
-      }, _provider2 = new WeakMap(), _ctx2 = new WeakMap(), _NativeAudioTracks_instances = new WeakSet(), nativeTracks_get = function() {
-        return __privateGet(this, _provider2).media.audioTracks;
+      }, _provider3 = new WeakMap(), _ctx2 = new WeakMap(), _NativeAudioTracks_instances = new WeakSet(), nativeTracks_get = function() {
+        return __privateGet(this, _provider3).media.audioTracks;
       }, onAddNativeTrack_fn = function(event) {
         const nativeTrack = event.track;
         if (nativeTrack.label === "") return;
@@ -4516,8 +4516,8 @@ var PortalUI = (() => {
           if (prev) prev.enabled = false;
           track.enabled = true;
         }
-      }, _a11);
-      HTMLMediaProvider = (_a12 = class {
+      }, _a22);
+      HTMLMediaProvider = (_a23 = class {
         constructor(media, ctx) {
           __privateAdd(this, _HTMLMediaProvider_instances);
           __publicField(this, "media");
@@ -4611,8 +4611,8 @@ var PortalUI = (() => {
         else if (startTime > 0) return `${src}#t=${startTime}`;
         else if (endTime > 0) return `${src}#t=0,${endTime}`;
         return src;
-      }, _a12);
-      HTMLRemotePlaybackAdapter = (_a13 = class {
+      }, _a23);
+      HTMLRemotePlaybackAdapter = (_a24 = class {
         constructor(media, ctx) {
           __privateAdd(this, _HTMLRemotePlaybackAdapter_instances);
           __privateAdd(this, _media2);
@@ -4659,7 +4659,7 @@ var PortalUI = (() => {
         };
         __privateGet(this, _ctx3).notify("remote-playback-change", detail, event);
         __privateSet(this, _state2, state);
-      }, _a13);
+      }, _a24);
       HTMLAirPlayAdapter = class extends HTMLRemotePlaybackAdapter {
         constructor() {
           super(...arguments);
@@ -4669,7 +4669,7 @@ var PortalUI = (() => {
           return "WebKitPlaybackTargetAvailabilityEvent" in window;
         }
       };
-      NativeHLSTextTracks = (_a14 = class {
+      NativeHLSTextTracks = (_a25 = class {
         constructor(video, ctx) {
           __privateAdd(this, _NativeHLSTextTracks_instances);
           __privateAdd(this, _video);
@@ -4710,8 +4710,8 @@ var PortalUI = (() => {
           const nativeTrack = track[TextTrackSymbol.native]?.track;
           if (nativeTrack?.oncuechange) nativeTrack.oncuechange = null;
         }
-      }, _a14);
-      VideoPictureInPicture = (_a15 = class {
+      }, _a25);
+      VideoPictureInPicture = (_a26 = class {
         constructor(video, media) {
           __privateAdd(this, _VideoPictureInPicture_instances);
           __privateAdd(this, _video2);
@@ -4739,8 +4739,8 @@ var PortalUI = (() => {
         __privateGet(this, _onChange2).call(this, true, event);
       }, onExit_fn = function(event) {
         __privateGet(this, _onChange2).call(this, false, event);
-      }, _onChange2 = new WeakMap(), _a15);
-      VideoPresentation = (_a16 = class {
+      }, _onChange2 = new WeakMap(), _a26);
+      VideoPresentation = (_a27 = class {
         constructor(video, media) {
           __privateAdd(this, _VideoPresentation_instances);
           __privateAdd(this, _video3);
@@ -4770,8 +4770,8 @@ var PortalUI = (() => {
         ["fullscreen", "picture-in-picture"].forEach((type) => {
           if (__privateGet(this, _mode2) === type || prevMode === type) __privateGet(this, _media4).notify(`${type}-change`, __privateGet(this, _mode2) === type, event);
         });
-      }, _a16);
-      FullscreenPresentationAdapter = (_a17 = class {
+      }, _a27);
+      FullscreenPresentationAdapter = (_a28 = class {
         constructor(presentation) {
           __privateAdd(this, _presentation);
           __privateSet(this, _presentation, presentation);
@@ -4788,8 +4788,8 @@ var PortalUI = (() => {
         async exit() {
           __privateGet(this, _presentation).setPresentationMode("inline");
         }
-      }, _presentation = new WeakMap(), _a17);
-      PIPPresentationAdapter = (_a18 = class {
+      }, _presentation = new WeakMap(), _a28);
+      PIPPresentationAdapter = (_a29 = class {
         constructor(presentation) {
           __privateAdd(this, _presentation2);
           __privateSet(this, _presentation2, presentation);
@@ -4806,7 +4806,7 @@ var PortalUI = (() => {
         async exit() {
           __privateGet(this, _presentation2).setPresentationMode("inline");
         }
-      }, _presentation2 = new WeakMap(), _a18);
+      }, _presentation2 = new WeakMap(), _a29);
       provider_exports$1 = /* @__PURE__ */ __exportAll({ VideoProvider: () => VideoProvider });
       VideoProvider = class extends HTMLMediaProvider {
         constructor(video, ctx) {
@@ -4846,7 +4846,7 @@ var PortalUI = (() => {
         }
       };
       toDOMEventType = (type) => `dash-${camelToKebabCase(type)}`;
-      DASHController = (_a19 = class {
+      DASHController = (_a30 = class {
         constructor(video, ctx) {
           __privateAdd(this, _DASHController_instances);
           __privateAdd(this, _video4);
@@ -4903,11 +4903,11 @@ var PortalUI = (() => {
           __privateGet(this, _instance)?.attachSource(src.src);
         }
         destroy() {
-          var _a106;
+          var _a117;
           __privateMethod(this, _DASHController_instances, reset_fn).call(this);
           __privateGet(this, _instance)?.destroy();
           __privateSet(this, _instance, null);
-          (_a106 = __privateGet(this, _stopLiveSync)) == null ? void 0 : _a106.call(this);
+          (_a117 = __privateGet(this, _stopLiveSync)) == null ? void 0 : _a117.call(this);
           __privateSet(this, _stopLiveSync, null);
         }
       }, _video4 = new WeakMap(), _ctx5 = new WeakMap(), _instance = new WeakMap(), _callbacks = new WeakMap(), _stopLiveSync = new WeakMap(), _DASHController_instances = new WeakSet(), createDOMEvent_fn = function(event) {
@@ -5076,8 +5076,8 @@ var PortalUI = (() => {
         __privateMethod(this, _DASHController_instances, clearRetryTimer_fn).call(this);
         __privateSet(this, _currentTrack, null);
         __privateSet(this, _cueTracker, {});
-      }, _a19);
-      DASHLibLoader = (_a20 = class {
+      }, _a30);
+      DASHLibLoader = (_a31 = class {
         constructor(lib, ctx, callback) {
           __privateAdd(this, _DASHLibLoader_instances);
           __privateAdd(this, _lib);
@@ -5120,10 +5120,10 @@ var PortalUI = (() => {
           code: 4,
           error
         });
-      }, _a20);
+      }, _a31);
       provider_exports = /* @__PURE__ */ __exportAll({ DASHProvider: () => DASHProvider });
       JS_DELIVR_CDN = "https://cdn.jsdelivr.net";
-      DASHProvider = (_a21 = class extends VideoProvider {
+      DASHProvider = (_a32 = class extends VideoProvider {
         constructor() {
           super(...arguments);
           __publicField(this, "$$PROVIDER_TYPE", "DASH");
@@ -5210,7 +5210,7 @@ var PortalUI = (() => {
       }, _ctor = new WeakMap(), _controller2 = new WeakMap(), _library = new WeakMap(), /**
       * Whether `dash.js` is supported in this environment.
       */
-      __publicField(_a21, "supported", isDASHSupported()), _a21);
+      __publicField(_a32, "supported", isDASHSupported()), _a32);
     }
   });
 
@@ -5288,7 +5288,7 @@ var PortalUI = (() => {
       callbacks.onLoadError?.(err);
     }
   }
-  var toDOMEventType2, _video5, _ctx7, _instance2, _stopLiveSync2, _callbacks2, _HLSController_instances, createDOMEvent_fn2, liveSync_fn2, liveSyncPosition_fn2, dispatchHLSEvent_fn, onTracksFound_fn, onCuesParsed_fn, onAudioSwitch_fn, onLevelSwitched_fn, onLevelUpdated_fn, onLevelLoaded_fn, onError_fn3, onFatalError_fn2, enableAutoQuality_fn2, onUserQualityChange_fn2, onUserAudioChange_fn2, _a22, HLSController, _lib2, _ctx8, _callback3, _HLSLibLoader_instances, startLoading_fn2, onLoadStart_fn3, onLoaded_fn2, onLoadError_fn2, _a23, HLSLibLoader, JS_DELIVR_CDN2, _ctor2, _controller3, _a24, _library2, HLSProvider;
+  var toDOMEventType2, _video5, _ctx7, _instance2, _stopLiveSync2, _callbacks2, _HLSController_instances, createDOMEvent_fn2, liveSync_fn2, liveSyncPosition_fn2, dispatchHLSEvent_fn, onTracksFound_fn, onCuesParsed_fn, onAudioSwitch_fn, onLevelSwitched_fn, onLevelUpdated_fn, onLevelLoaded_fn, onError_fn3, onFatalError_fn2, enableAutoQuality_fn2, onUserQualityChange_fn2, onUserAudioChange_fn2, _a33, HLSController, _lib2, _ctx8, _callback3, _HLSLibLoader_instances, startLoading_fn2, onLoadStart_fn3, onLoaded_fn2, onLoadError_fn2, _a34, HLSLibLoader, JS_DELIVR_CDN2, _ctor2, _controller3, _a35, _library2, HLSProvider;
   var init_vidstack_DiaLSJYx = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-DiaLSJYx.js"() {
       "use client";
@@ -5296,7 +5296,7 @@ var PortalUI = (() => {
       init_vidstack_B9fTkxQO();
       init_vidstack_CvezEmSQ();
       toDOMEventType2 = (type) => camelToKebabCase(type);
-      HLSController = (_a22 = class {
+      HLSController = (_a33 = class {
         constructor(video, ctx) {
           __privateAdd(this, _HLSController_instances);
           __privateAdd(this, _video5);
@@ -5350,10 +5350,10 @@ var PortalUI = (() => {
           __privateGet(this, _instance2)?.loadSource(src.src);
         }
         destroy() {
-          var _a106;
+          var _a117;
           __privateGet(this, _instance2)?.destroy();
           __privateSet(this, _instance2, null);
-          (_a106 = __privateGet(this, _stopLiveSync2)) == null ? void 0 : _a106.call(this);
+          (_a117 = __privateGet(this, _stopLiveSync2)) == null ? void 0 : _a117.call(this);
           __privateSet(this, _stopLiveSync2, null);
         }
       }, _video5 = new WeakMap(), _ctx7 = new WeakMap(), _instance2 = new WeakMap(), _stopLiveSync2 = new WeakMap(), _callbacks2 = new WeakMap(), _HLSController_instances = new WeakSet(), createDOMEvent_fn2 = function(type, data) {
@@ -5467,8 +5467,8 @@ var PortalUI = (() => {
       }, onUserAudioChange_fn2 = function() {
         const { audioTracks } = __privateGet(this, _ctx7);
         if (__privateGet(this, _instance2) && __privateGet(this, _instance2).audioTrack !== audioTracks.selectedIndex) __privateGet(this, _instance2).audioTrack = audioTracks.selectedIndex;
-      }, _a22);
-      HLSLibLoader = (_a23 = class {
+      }, _a33);
+      HLSLibLoader = (_a34 = class {
         constructor(lib, ctx, callback) {
           __privateAdd(this, _HLSLibLoader_instances);
           __privateAdd(this, _lib2);
@@ -5511,9 +5511,9 @@ var PortalUI = (() => {
           code: 4,
           error
         });
-      }, _a23);
+      }, _a34);
       JS_DELIVR_CDN2 = "https://cdn.jsdelivr.net";
-      HLSProvider = (_a24 = class extends VideoProvider {
+      HLSProvider = (_a35 = class extends VideoProvider {
         constructor() {
           super(...arguments);
           __publicField(this, "$$PROVIDER_TYPE", "HLS");
@@ -5600,19 +5600,19 @@ var PortalUI = (() => {
       }, _ctor2 = new WeakMap(), _controller3 = new WeakMap(), _library2 = new WeakMap(), /**
       * Whether `hls.js` is supported in this environment.
       */
-      __publicField(_a24, "supported", isHLSSupported()), _a24);
+      __publicField(_a35, "supported", isHLSSupported()), _a35);
     }
   });
 
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-CQuJTPFJ.js
-  var _iframe, _EmbedProvider_instances, watchSrc_fn, onWindowMessage_fn, _a25, EmbedProvider;
+  var _iframe, _EmbedProvider_instances, watchSrc_fn, onWindowMessage_fn, _a36, EmbedProvider;
   var init_vidstack_CQuJTPFJ = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-CQuJTPFJ.js"() {
       "use client";
       init_define_import_meta_env();
       init_vidstack_B9fTkxQO();
       init_vidstack_CvezEmSQ();
-      EmbedProvider = (_a25 = class {
+      EmbedProvider = (_a36 = class {
         constructor(iframe) {
           __privateAdd(this, _EmbedProvider_instances);
           __privateAdd(this, _iframe);
@@ -5659,7 +5659,7 @@ var PortalUI = (() => {
         } catch (e2) {
         }
         if (event.data) this.onMessage(event.data, event);
-      }, _a25);
+      }, _a36);
     }
   });
 
@@ -5732,7 +5732,7 @@ var PortalUI = (() => {
   __export(vidstack_GkTzay8D_exports, {
     VimeoProvider: () => VimeoProvider
   });
-  var trackedVimeoEvents, _ctx9, _videoId, _pro, _hash, _currentSrc, _fullscreenActive, _seekableRange, _timeRAF2, _currentCue, _chaptersTrack, _promises, _videoInfoPromise, _VimeoProvider_instances, watchVideoId_fn, watchVideoInfo_fn, watchPro_fn, onAnimationFrame_fn2, _preventTimeUpdates, onTimeUpdate_fn2, onSeeked_fn2, onLoaded_fn3, onReady_fn, onMethod_fn, attachListeners_fn, onPause_fn2, onPlay_fn2, onPlayProgress_fn, onLoadProgress_fn, onBufferStart_fn, onBufferEnd_fn, onWaiting_fn2, onVolumeChange_fn2, onChaptersChange_fn, removeChapters_fn, onQualitiesChange_fn, onQualityChange_fn2, onEvent_fn, onError_fn4, remote_fn, reset_fn2, getPromise_fn, _a26, VimeoProvider;
+  var trackedVimeoEvents, _ctx9, _videoId, _pro, _hash, _currentSrc, _fullscreenActive, _seekableRange, _timeRAF2, _currentCue, _chaptersTrack, _promises, _videoInfoPromise, _VimeoProvider_instances, watchVideoId_fn, watchVideoInfo_fn, watchPro_fn, onAnimationFrame_fn2, _preventTimeUpdates, onTimeUpdate_fn2, onSeeked_fn2, onLoaded_fn3, onReady_fn, onMethod_fn, attachListeners_fn, onPause_fn2, onPlay_fn2, onPlayProgress_fn, onLoadProgress_fn, onBufferStart_fn, onBufferEnd_fn, onWaiting_fn2, onVolumeChange_fn2, onChaptersChange_fn, removeChapters_fn, onQualitiesChange_fn, onQualityChange_fn2, onEvent_fn, onError_fn4, remote_fn, reset_fn2, getPromise_fn, _a37, VimeoProvider;
   var init_vidstack_GkTzay8D = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-GkTzay8D.js"() {
       "use client";
@@ -5763,7 +5763,7 @@ var PortalUI = (() => {
         "volumechange",
         "waiting"
       ];
-      VimeoProvider = (_a26 = class extends EmbedProvider {
+      VimeoProvider = (_a37 = class extends EmbedProvider {
         constructor(iframe, ctx) {
           super(iframe);
           __privateAdd(this, _VimeoProvider_instances);
@@ -6163,7 +6163,7 @@ var PortalUI = (() => {
         __privateMethod(this, _VimeoProvider_instances, removeChapters_fn).call(this);
       }, getPromise_fn = function(command) {
         return __privateGet(this, _promises).get(command)?.shift();
-      }, _a26);
+      }, _a37);
     }
   });
 
@@ -6218,7 +6218,7 @@ var PortalUI = (() => {
   __export(vidstack_BmcqUMKx_exports, {
     YouTubeProvider: () => YouTubeProvider
   });
-  var YouTubePlayerState, _ctx10, _videoId2, _state3, _currentSrc2, _seekingTimer, _invalidPlay, _promises2, _YouTubeProvider_instances, playFail_fn, pauseFail_fn, watchVideoId_fn2, remote_fn2, onReady_fn2, onPause_fn3, onTimeUpdate_fn3, onProgress_fn2, onSeeked_fn3, onEnded_fn2, onStateChange_fn2, reset_fn3, getPromise_fn2, isPending_fn, _a27, YouTubeProvider;
+  var YouTubePlayerState, _ctx10, _videoId2, _state3, _currentSrc2, _seekingTimer, _invalidPlay, _promises2, _YouTubeProvider_instances, playFail_fn, pauseFail_fn, watchVideoId_fn2, remote_fn2, onReady_fn2, onPause_fn3, onTimeUpdate_fn3, onProgress_fn2, onSeeked_fn3, onEnded_fn2, onStateChange_fn2, reset_fn3, getPromise_fn2, isPending_fn, _a38, YouTubeProvider;
   var init_vidstack_BmcqUMKx = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-BmcqUMKx.js"() {
       "use client";
@@ -6235,7 +6235,7 @@ var PortalUI = (() => {
         Buffering: 3,
         Cued: 5
       };
-      YouTubeProvider = (_a27 = class extends EmbedProvider {
+      YouTubeProvider = (_a38 = class extends EmbedProvider {
         constructor(iframe, ctx) {
           super(iframe);
           __privateAdd(this, _YouTubeProvider_instances);
@@ -6471,7 +6471,7 @@ var PortalUI = (() => {
         return __privateGet(this, _promises2).get(command)?.shift();
       }, isPending_fn = function(command) {
         return Boolean(__privateGet(this, _promises2).get(command)?.length);
-      }, _a27);
+      }, _a38);
     }
   });
 
@@ -6528,7 +6528,7 @@ var PortalUI = (() => {
   __export(vidstack_D2vrrUMs_exports, {
     GoogleCastProvider: () => GoogleCastProvider
   });
-  var _info, _GoogleCastMediaInfoBuilder_instances, buildCastTrack_fn, _a28, GoogleCastMediaInfoBuilder, _cast, _ctx11, _onNewLocalTracks, _GoogleCastTracksManager_instances, getLocalAudioTracks_fn, getRemoteTracks_fn, getRemoteActiveIds_fn, syncLocalTracks_fn, editTracksInfo_fn, findLocalTrack_fn, findRemoteTrack_fn, isMatch_fn, _a29, GoogleCastTracksManager, _player, _ctx12, _tracks, _currentSrc3, _state4, _currentTime2, _played, _seekableRange2, _timeRAF3, _playerEventHandlers, _reloadInfo, _isIdle, _GoogleCastProvider_instances, attachCastContextEventListeners_fn, attachCastPlayerEventListeners_fn, reset_fn4, resumeSession_fn, endSession_fn, disconnectFromReceiver_fn, onAnimationFrame_fn3, onRemotePlayerEvent_fn, onCastStateChange_fn, onMediaLoadedChange_fn, onCanControlVolumeChange_fn, onCanSeekChange_fn, getStreamType_fn, onCurrentTimeChange_fn, onDurationChange_fn2, onVolumeChange_fn3, onPausedChange_fn, onProgress_fn3, onPlayerStateChange_fn, getSeekableRange_fn, createEvent_fn, buildMediaInfo_fn, buildLoadRequest_fn, reload_fn, onNewLocalTracks_fn, _a30, GoogleCastProvider;
+  var _info, _GoogleCastMediaInfoBuilder_instances, buildCastTrack_fn, _a39, GoogleCastMediaInfoBuilder, _cast, _ctx11, _onNewLocalTracks, _GoogleCastTracksManager_instances, getLocalAudioTracks_fn, getRemoteTracks_fn, getRemoteActiveIds_fn, syncLocalTracks_fn, editTracksInfo_fn, findLocalTrack_fn, findRemoteTrack_fn, isMatch_fn, _a40, GoogleCastTracksManager, _player, _ctx12, _tracks, _currentSrc3, _state4, _currentTime2, _played, _seekableRange2, _timeRAF3, _playerEventHandlers, _reloadInfo, _isIdle, _GoogleCastProvider_instances, attachCastContextEventListeners_fn, attachCastPlayerEventListeners_fn, reset_fn4, resumeSession_fn, endSession_fn, disconnectFromReceiver_fn, onAnimationFrame_fn3, onRemotePlayerEvent_fn, onCastStateChange_fn, onMediaLoadedChange_fn, onCanControlVolumeChange_fn, onCanSeekChange_fn, getStreamType_fn, onCurrentTimeChange_fn, onDurationChange_fn2, onVolumeChange_fn3, onPausedChange_fn, onProgress_fn3, onPlayerStateChange_fn, getSeekableRange_fn, createEvent_fn, buildMediaInfo_fn, buildLoadRequest_fn, reload_fn, onNewLocalTracks_fn, _a41, GoogleCastProvider;
   var init_vidstack_D2vrrUMs = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-D2vrrUMs.js"() {
       "use client";
@@ -6536,7 +6536,7 @@ var PortalUI = (() => {
       init_vidstack_B9fTkxQO();
       init_vidstack_CvezEmSQ();
       init_vidstack_aCAqaLv8();
-      GoogleCastMediaInfoBuilder = (_a28 = class {
+      GoogleCastMediaInfoBuilder = (_a39 = class {
         constructor(src) {
           __privateAdd(this, _GoogleCastMediaInfoBuilder_instances);
           __privateAdd(this, _info);
@@ -6568,8 +6568,8 @@ var PortalUI = (() => {
         castTrack.language = track.language;
         castTrack.subtype = track.kind.toUpperCase();
         return castTrack;
-      }, _a28);
-      GoogleCastTracksManager = (_a29 = class {
+      }, _a39);
+      GoogleCastTracksManager = (_a40 = class {
         constructor(cast2, ctx, onNewLocalTracks) {
           __privateAdd(this, _GoogleCastTracksManager_instances);
           __privateAdd(this, _cast);
@@ -6645,8 +6645,8 @@ var PortalUI = (() => {
         const remoteTextTracks = __privateMethod(this, _GoogleCastTracksManager_instances, getRemoteTracks_fn).call(this, chrome.cast.media.TrackType.TEXT);
         for (const localTrack of localTextTracks) if (!__privateMethod(this, _GoogleCastTracksManager_instances, findRemoteTrack_fn).call(this, remoteTextTracks, localTrack)) {
           untrack(() => {
-            var _a106;
-            return (_a106 = __privateGet(this, _onNewLocalTracks)) == null ? void 0 : _a106.call(this);
+            var _a117;
+            return (_a117 = __privateGet(this, _onNewLocalTracks)) == null ? void 0 : _a117.call(this);
           });
           break;
         }
@@ -6659,8 +6659,8 @@ var PortalUI = (() => {
         return remoteTracks.find((remoteTrack) => __privateMethod(this, _GoogleCastTracksManager_instances, isMatch_fn).call(this, localTrack, remoteTrack));
       }, isMatch_fn = function(localTrack, remoteTrack) {
         return remoteTrack.name === localTrack.label && remoteTrack.language === localTrack.language && remoteTrack.subtype.toLowerCase() === localTrack.kind.toLowerCase();
-      }, _a29);
-      GoogleCastProvider = (_a30 = class {
+      }, _a40);
+      GoogleCastProvider = (_a41 = class {
         constructor(player, ctx) {
           __privateAdd(this, _GoogleCastProvider_instances);
           __publicField(this, "$$PROVIDER_TYPE", "GOOGLE_CAST");
@@ -6943,7 +6943,7 @@ var PortalUI = (() => {
       }, onNewLocalTracks_fn = function() {
         __privateMethod(this, _GoogleCastProvider_instances, reload_fn).call(this, __privateGet(this, _player).isPaused, __privateGet(this, _player).currentTime).catch((error) => {
         });
-      }, _a30);
+      }, _a41);
     }
   });
 
@@ -6952,7 +6952,7 @@ var PortalUI = (() => {
   __export(vidstack_Di0HObvT_exports, {
     GoogleCastLoader: () => GoogleCastLoader
   });
-  var _player2, _GoogleCastLoader_instances, loadCastFramework_fn, showPrompt_fn, setOptions_fn, notifyRemoteStateChange_fn, createError_fn, _a31, GoogleCastLoader;
+  var _player2, _GoogleCastLoader_instances, loadCastFramework_fn, showPrompt_fn, setOptions_fn, notifyRemoteStateChange_fn, createError_fn, _a42, GoogleCastLoader;
   var init_vidstack_Di0HObvT = __esm({
     "frontend/node_modules/@vidstack/react/prod/chunks/vidstack-Di0HObvT.js"() {
       "use client";
@@ -6960,7 +6960,7 @@ var PortalUI = (() => {
       init_vidstack_B9fTkxQO();
       init_vidstack_CvezEmSQ();
       init_vidstack_aCAqaLv8();
-      GoogleCastLoader = (_a31 = class {
+      GoogleCastLoader = (_a42 = class {
         constructor() {
           __privateAdd(this, _GoogleCastLoader_instances);
           __publicField(this, "name", "google-cast");
@@ -7041,7 +7041,7 @@ var PortalUI = (() => {
         const error = Error(message);
         error.code = code;
         return error;
-      }, _a31);
+      }, _a42);
     }
   });
 
@@ -7059,6 +7059,7 @@ var PortalUI = (() => {
   // ds-bundle/.bundle-entry.mjs
   var bundle_entry_exports = {};
   __export(bundle_entry_exports, {
+    AccountsView: () => AccountsView,
     ActivityFeed: () => ActivityFeed,
     AddBook: () => AddBook,
     AudioPlayer: () => AudioPlayer,
@@ -7070,19 +7071,30 @@ var PortalUI = (() => {
     BlogCard: () => BlogCard,
     BtnPrimary: () => BtnPrimary,
     BtnSecondary: () => BtnSecondary,
+    BudgetsView: () => BudgetsView,
+    CalendarView: () => CalendarView,
     CalendarWidget: () => CalendarWidget,
     Card: () => Card,
+    ChapterMenu: () => ChapterMenu,
     ChatResponsive: () => ChatResponsive,
     ChoseFromMyPhoto: () => ChoseFromMyPhoto,
+    ComicDetailView: () => ComicDetailView,
     ComicIndexView: () => ComicIndexView,
+    ComicReaderView: () => ComicReaderView,
     CommentForm: () => CommentForm,
     CommentItem: () => CommentItem,
     CommentThread: () => CommentThread,
     Composer: () => Composer,
+    ContinueRail: () => ContinueRail,
+    ContinueWidget: () => ContinueWidget,
     ControlBlockButtons: () => ControlBlockButtons,
     DSProvider: () => DSProvider,
+    DSQuerySeed: () => DSQuerySeed,
+    DashboardView: () => DashboardView,
+    EntryCard: () => EntryCard,
     EventItem: () => EventItem,
     Field: () => Field,
+    FinanceWidget: () => FinanceWidget,
     FormField: () => FormField,
     FriendCard: () => FriendCard,
     FriendRequestItem: () => FriendRequestItem,
@@ -7095,31 +7107,45 @@ var PortalUI = (() => {
     LoginView: () => LoginView,
     MasterBase: () => MasterBase,
     MasterPublic: () => MasterPublic,
+    MediaDetailView: () => MediaDetailView,
+    MediaIndexView: () => MediaIndexView,
     MessagesMenu: () => MessagesMenu,
     Modal: () => Modal,
+    MoneyDisplay: () => MoneyDisplay,
+    MoneyInput: () => MoneyInput,
     NotificationsMenu: () => NotificationsMenu,
     NovelDetailView: () => NovelDetailView,
     OLYMP_VIEWBOX: () => OLYMP_VIEWBOX,
+    PagedReader: () => PagedReader,
     PagesWidget: () => PagesWidget,
+    PeopleIndexView: () => PeopleIndexView,
+    PersonDetailView: () => PersonDetailView,
     PersonalInfoWidget: () => PersonalInfoWidget,
     PlaylistWidget: () => PlaylistWidget,
     Post: () => Post,
     PostControlButtons: () => PostControlButtons,
     ProfileHeader: () => ProfileHeader,
     ReactionBar: () => ReactionBar,
+    ReaderChrome: () => ReaderChrome,
+    ReaderHelp: () => ReaderHelp,
+    ReaderSettings: () => ReaderSettings,
     RegisterView: () => RegisterView,
     SelectField: () => SelectField,
     SessionKeeper: () => SessionKeeper,
     SidebarCenter: () => SidebarCenter,
     SidebarLeft: () => SidebarLeft,
     SidebarRight: () => SidebarRight,
+    StreamItemCard: () => StreamItemCard,
+    StripReader: () => StripReader,
     SvgSprite: () => SvgSprite,
     TagSelect: () => TagSelect,
     ToggleRow: () => ToggleRow,
     TopMenu: () => TopMenu,
     TrackItem: () => TrackItem,
+    TransactionsView: () => TransactionsView,
     UpdateHeaderPhoto: () => UpdateHeaderPhoto,
     UploadStudio: () => UploadStudio,
+    WeatherView: () => WeatherView,
     WeatherWidget: () => WeatherWidget,
     WidgetCard: () => WidgetCard,
     __dsMainNs: () => pkg_entry_exports,
@@ -7130,7 +7156,2995 @@ var PortalUI = (() => {
 
   // frontend/.ds-shims/ds-provider.tsx
   init_define_import_meta_env();
-  var React2 = __toESM(require_react_shim());
+  var React8 = __toESM(require_react_shim());
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/index.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/index.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/focusManager.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/subscribable.js
+  init_define_import_meta_env();
+  var Subscribable = class {
+    constructor() {
+      this.listeners = /* @__PURE__ */ new Set();
+      this.subscribe = this.subscribe.bind(this);
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      this.onSubscribe();
+      return () => {
+        this.listeners.delete(listener);
+        this.onUnsubscribe();
+      };
+    }
+    hasListeners() {
+      return this.listeners.size > 0;
+    }
+    onSubscribe() {
+    }
+    onUnsubscribe() {
+    }
+  };
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/focusManager.js
+  var _focused, _cleanup, _setup, _a;
+  var FocusManager = (_a = class extends Subscribable {
+    constructor() {
+      super();
+      __privateAdd(this, _focused);
+      __privateAdd(this, _cleanup);
+      __privateAdd(this, _setup);
+      __privateSet(this, _setup, (onFocus) => {
+        if (typeof window !== "undefined" && window.addEventListener) {
+          const listener = () => onFocus();
+          window.addEventListener("visibilitychange", listener, false);
+          return () => {
+            window.removeEventListener("visibilitychange", listener);
+          };
+        }
+        return;
+      });
+    }
+    onSubscribe() {
+      if (!__privateGet(this, _cleanup)) {
+        this.setEventListener(__privateGet(this, _setup));
+      }
+    }
+    onUnsubscribe() {
+      var _a117;
+      if (!this.hasListeners()) {
+        (_a117 = __privateGet(this, _cleanup)) == null ? void 0 : _a117.call(this);
+        __privateSet(this, _cleanup, void 0);
+      }
+    }
+    setEventListener(setup) {
+      var _a117;
+      __privateSet(this, _setup, setup);
+      (_a117 = __privateGet(this, _cleanup)) == null ? void 0 : _a117.call(this);
+      __privateSet(this, _cleanup, setup((focused) => {
+        if (typeof focused === "boolean") {
+          this.setFocused(focused);
+        } else {
+          this.onFocus();
+        }
+      }));
+    }
+    setFocused(focused) {
+      const changed = __privateGet(this, _focused) !== focused;
+      if (changed) {
+        __privateSet(this, _focused, focused);
+        this.onFocus();
+      }
+    }
+    onFocus() {
+      const isFocused = this.isFocused();
+      this.listeners.forEach((listener) => {
+        listener(isFocused);
+      });
+    }
+    isFocused() {
+      if (typeof __privateGet(this, _focused) === "boolean") {
+        return __privateGet(this, _focused);
+      }
+      return globalThis.document?.visibilityState !== "hidden";
+    }
+  }, _focused = new WeakMap(), _cleanup = new WeakMap(), _setup = new WeakMap(), _a);
+  var focusManager = new FocusManager();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/environmentManager.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/utils.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/timeoutManager.js
+  init_define_import_meta_env();
+  var defaultTimeoutProvider = {
+    // We need the wrapper function syntax below instead of direct references to
+    // global setTimeout etc.
+    //
+    // BAD: `setTimeout: setTimeout`
+    // GOOD: `setTimeout: (cb, delay) => setTimeout(cb, delay)`
+    //
+    // If we use direct references here, then anything that wants to spy on or
+    // replace the global setTimeout (like tests) won't work since we'll already
+    // have a hard reference to the original implementation at the time when this
+    // file was imported.
+    setTimeout: (callback, delay) => setTimeout(callback, delay),
+    clearTimeout: (timeoutId) => clearTimeout(timeoutId),
+    setInterval: (callback, delay) => setInterval(callback, delay),
+    clearInterval: (intervalId) => clearInterval(intervalId)
+  };
+  var _provider, _providerCalled, _a2;
+  var TimeoutManager = (_a2 = class {
+    constructor() {
+      // We cannot have TimeoutManager<T> as we must instantiate it with a concrete
+      // type at app boot; and if we leave that type, then any new timer provider
+      // would need to support the default provider's concrete timer ID, which is
+      // infeasible across environments.
+      //
+      // We settle for type safety for the TimeoutProvider type, and accept that
+      // this class is unsafe internally to allow for extension.
+      __privateAdd(this, _provider, defaultTimeoutProvider);
+      __privateAdd(this, _providerCalled, false);
+    }
+    setTimeoutProvider(provider) {
+      if (true) {
+        if (__privateGet(this, _providerCalled) && provider !== __privateGet(this, _provider)) {
+          console.error(
+            `[timeoutManager]: Switching provider after calls to previous provider might result in unexpected behavior.`,
+            { previous: __privateGet(this, _provider), provider }
+          );
+        }
+      }
+      __privateSet(this, _provider, provider);
+      if (true) {
+        __privateSet(this, _providerCalled, false);
+      }
+    }
+    setTimeout(callback, delay) {
+      if (true) {
+        __privateSet(this, _providerCalled, true);
+      }
+      return __privateGet(this, _provider).setTimeout(callback, delay);
+    }
+    clearTimeout(timeoutId) {
+      __privateGet(this, _provider).clearTimeout(timeoutId);
+    }
+    setInterval(callback, delay) {
+      if (true) {
+        __privateSet(this, _providerCalled, true);
+      }
+      return __privateGet(this, _provider).setInterval(callback, delay);
+    }
+    clearInterval(intervalId) {
+      __privateGet(this, _provider).clearInterval(intervalId);
+    }
+  }, _provider = new WeakMap(), _providerCalled = new WeakMap(), _a2);
+  var timeoutManager = new TimeoutManager();
+  function systemSetTimeoutZero(callback) {
+    setTimeout(callback, 0);
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/utils.js
+  var isServer = typeof window === "undefined" || "Deno" in globalThis;
+  function noop() {
+  }
+  function functionalUpdate(updater, input) {
+    return typeof updater === "function" ? updater(input) : updater;
+  }
+  function isValidTimeout(value) {
+    return typeof value === "number" && value >= 0 && value !== Infinity;
+  }
+  function timeUntilStale(updatedAt, staleTime) {
+    return Math.max(updatedAt + (staleTime || 0) - Date.now(), 0);
+  }
+  function resolveStaleTime(staleTime, query) {
+    return typeof staleTime === "function" ? staleTime(query) : staleTime;
+  }
+  function resolveQueryBoolean(option, query) {
+    return typeof option === "function" ? option(query) : option;
+  }
+  function matchQuery(filters, query) {
+    const {
+      type = "all",
+      exact,
+      fetchStatus,
+      predicate,
+      queryKey,
+      stale
+    } = filters;
+    if (queryKey) {
+      if (exact) {
+        if (query.queryHash !== hashQueryKeyByOptions(queryKey, query.options)) {
+          return false;
+        }
+      } else if (!partialMatchKey(query.queryKey, queryKey)) {
+        return false;
+      }
+    }
+    if (type !== "all") {
+      const isActive = query.isActive();
+      if (type === "active" && !isActive) {
+        return false;
+      }
+      if (type === "inactive" && isActive) {
+        return false;
+      }
+    }
+    if (typeof stale === "boolean" && query.isStale() !== stale) {
+      return false;
+    }
+    if (fetchStatus && fetchStatus !== query.state.fetchStatus) {
+      return false;
+    }
+    if (predicate && !predicate(query)) {
+      return false;
+    }
+    return true;
+  }
+  function matchMutation(filters, mutation) {
+    const { exact, status, predicate, mutationKey } = filters;
+    if (mutationKey) {
+      if (!mutation.options.mutationKey) {
+        return false;
+      }
+      if (exact) {
+        if (hashKey(mutation.options.mutationKey) !== hashKey(mutationKey)) {
+          return false;
+        }
+      } else if (!partialMatchKey(mutation.options.mutationKey, mutationKey)) {
+        return false;
+      }
+    }
+    if (status && mutation.state.status !== status) {
+      return false;
+    }
+    if (predicate && !predicate(mutation)) {
+      return false;
+    }
+    return true;
+  }
+  function hashQueryKeyByOptions(queryKey, options) {
+    const hashFn = options?.queryKeyHashFn || hashKey;
+    return hashFn(queryKey);
+  }
+  function hashKey(queryKey) {
+    return JSON.stringify(
+      queryKey,
+      (_, val) => isPlainObject(val) ? Object.keys(val).sort().reduce((result, key2) => {
+        result[key2] = val[key2];
+        return result;
+      }, {}) : val
+    );
+  }
+  function partialMatchKey(a, b) {
+    if (a === b) {
+      return true;
+    }
+    if (typeof a !== typeof b) {
+      return false;
+    }
+    if (a && b && typeof a === "object" && typeof b === "object") {
+      return Object.keys(b).every((key2) => partialMatchKey(a[key2], b[key2]));
+    }
+    return false;
+  }
+  var hasOwn = Object.prototype.hasOwnProperty;
+  function replaceEqualDeep(a, b, depth = 0) {
+    if (a === b) {
+      return a;
+    }
+    if (depth > 500) return b;
+    const array = isPlainArray(a) && isPlainArray(b);
+    if (!array && !(isPlainObject(a) && isPlainObject(b))) return b;
+    const aItems = array ? a : Object.keys(a);
+    const aSize = aItems.length;
+    const bItems = array ? b : Object.keys(b);
+    const bSize = bItems.length;
+    const copy = array ? new Array(bSize) : {};
+    let equalItems = 0;
+    for (let i = 0; i < bSize; i++) {
+      const key2 = array ? i : bItems[i];
+      const aItem = a[key2];
+      const bItem = b[key2];
+      if (aItem === bItem) {
+        copy[key2] = aItem;
+        if (array ? i < aSize : hasOwn.call(a, key2)) equalItems++;
+        continue;
+      }
+      if (aItem === null || bItem === null || typeof aItem !== "object" || typeof bItem !== "object") {
+        copy[key2] = bItem;
+        continue;
+      }
+      const v = replaceEqualDeep(aItem, bItem, depth + 1);
+      copy[key2] = v;
+      if (v === aItem) equalItems++;
+    }
+    return aSize === bSize && equalItems === aSize ? a : copy;
+  }
+  function shallowEqualObjects(a, b) {
+    if (!b || Object.keys(a).length !== Object.keys(b).length) {
+      return false;
+    }
+    for (const key2 in a) {
+      if (a[key2] !== b[key2]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function isPlainArray(value) {
+    return Array.isArray(value) && value.length === Object.keys(value).length;
+  }
+  function isPlainObject(o2) {
+    if (!hasObjectPrototype(o2)) {
+      return false;
+    }
+    const ctor = o2.constructor;
+    if (ctor === void 0) {
+      return true;
+    }
+    const prot = ctor.prototype;
+    if (!hasObjectPrototype(prot)) {
+      return false;
+    }
+    if (!prot.hasOwnProperty("isPrototypeOf")) {
+      return false;
+    }
+    if (Object.getPrototypeOf(o2) !== Object.prototype) {
+      return false;
+    }
+    return true;
+  }
+  function hasObjectPrototype(o2) {
+    return Object.prototype.toString.call(o2) === "[object Object]";
+  }
+  function sleep(timeout) {
+    return new Promise((resolve) => {
+      timeoutManager.setTimeout(resolve, timeout);
+    });
+  }
+  function replaceData(prevData, data, options) {
+    if (typeof options.structuralSharing === "function") {
+      return options.structuralSharing(prevData, data);
+    } else if (options.structuralSharing !== false) {
+      if (true) {
+        try {
+          return replaceEqualDeep(prevData, data);
+        } catch (error) {
+          console.error(
+            `Structural sharing requires data to be JSON serializable. To fix this, turn off structuralSharing or return JSON-serializable data from your queryFn. [${options.queryHash}]: ${error}`
+          );
+          throw error;
+        }
+      }
+      return replaceEqualDeep(prevData, data);
+    }
+    return data;
+  }
+  function addToEnd(items, item, max2 = 0) {
+    const newItems = [...items, item];
+    return max2 && newItems.length > max2 ? newItems.slice(1) : newItems;
+  }
+  function addToStart(items, item, max2 = 0) {
+    const newItems = [item, ...items];
+    return max2 && newItems.length > max2 ? newItems.slice(0, -1) : newItems;
+  }
+  var skipToken = /* @__PURE__ */ Symbol();
+  function ensureQueryFn(options, fetchOptions) {
+    if (true) {
+      if (options.queryFn === skipToken) {
+        console.error(
+          `Attempted to invoke queryFn when set to skipToken. This is likely a configuration error. Query hash: '${options.queryHash}'`
+        );
+      }
+    }
+    if (!options.queryFn && fetchOptions?.initialPromise) {
+      return () => fetchOptions.initialPromise;
+    }
+    if (!options.queryFn || options.queryFn === skipToken) {
+      return () => Promise.reject(new Error(`Missing queryFn: '${options.queryHash}'`));
+    }
+    return options.queryFn;
+  }
+  function shouldThrowError(throwOnError, params) {
+    if (typeof throwOnError === "function") {
+      return throwOnError(...params);
+    }
+    return !!throwOnError;
+  }
+  function addConsumeAwareSignal(object, getSignal, onCancelled) {
+    let consumed = false;
+    let signal2;
+    Object.defineProperty(object, "signal", {
+      enumerable: true,
+      get: () => {
+        signal2 ?? (signal2 = getSignal());
+        if (consumed) {
+          return signal2;
+        }
+        consumed = true;
+        if (signal2.aborted) {
+          onCancelled();
+        } else {
+          signal2.addEventListener("abort", onCancelled, { once: true });
+        }
+        return signal2;
+      }
+    });
+    return object;
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/environmentManager.js
+  var environmentManager = /* @__PURE__ */ (() => {
+    let isServerFn = () => isServer;
+    return {
+      /**
+       * Returns whether the current runtime should be treated as a server environment.
+       */
+      isServer() {
+        return isServerFn();
+      },
+      /**
+       * Overrides the server check globally.
+       */
+      setIsServer(isServerValue) {
+        isServerFn = isServerValue;
+      }
+    };
+  })();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/thenable.js
+  init_define_import_meta_env();
+  function pendingThenable() {
+    let resolve;
+    let reject;
+    const thenable = new Promise((_resolve, _reject) => {
+      resolve = _resolve;
+      reject = _reject;
+    });
+    thenable.status = "pending";
+    thenable.catch(() => {
+    });
+    function finalize(data) {
+      Object.assign(thenable, data);
+      delete thenable.resolve;
+      delete thenable.reject;
+    }
+    thenable.resolve = (value) => {
+      finalize({
+        status: "fulfilled",
+        value
+      });
+      resolve(value);
+    };
+    thenable.reject = (reason) => {
+      finalize({
+        status: "rejected",
+        reason
+      });
+      reject(reason);
+    };
+    return thenable;
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/infiniteQueryObserver.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/queryObserver.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/notifyManager.js
+  init_define_import_meta_env();
+  var defaultScheduler = systemSetTimeoutZero;
+  function createNotifyManager() {
+    let queue = [];
+    let transactions = 0;
+    let notifyFn = (callback) => {
+      callback();
+    };
+    let batchNotifyFn = (callback) => {
+      callback();
+    };
+    let scheduleFn = defaultScheduler;
+    const schedule = (callback) => {
+      if (transactions) {
+        queue.push(callback);
+      } else {
+        scheduleFn(() => {
+          notifyFn(callback);
+        });
+      }
+    };
+    const flush = () => {
+      const originalQueue = queue;
+      queue = [];
+      if (originalQueue.length) {
+        scheduleFn(() => {
+          batchNotifyFn(() => {
+            originalQueue.forEach((callback) => {
+              notifyFn(callback);
+            });
+          });
+        });
+      }
+    };
+    return {
+      batch: (callback) => {
+        let result;
+        transactions++;
+        try {
+          result = callback();
+        } finally {
+          transactions--;
+          if (!transactions) {
+            flush();
+          }
+        }
+        return result;
+      },
+      /**
+       * All calls to the wrapped function will be batched.
+       */
+      batchCalls: (callback) => {
+        return (...args) => {
+          schedule(() => {
+            callback(...args);
+          });
+        };
+      },
+      schedule,
+      /**
+       * Use this method to set a custom notify function.
+       * This can be used to for example wrap notifications with `React.act` while running tests.
+       */
+      setNotifyFunction: (fn) => {
+        notifyFn = fn;
+      },
+      /**
+       * Use this method to set a custom function to batch notifications together into a single tick.
+       * By default React Query will use the batch function provided by ReactDOM or React Native.
+       */
+      setBatchNotifyFunction: (fn) => {
+        batchNotifyFn = fn;
+      },
+      setScheduler: (fn) => {
+        scheduleFn = fn;
+      }
+    };
+  }
+  var notifyManager = createNotifyManager();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/query.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/retryer.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/onlineManager.js
+  init_define_import_meta_env();
+  var _online, _cleanup2, _setup2, _a3;
+  var OnlineManager = (_a3 = class extends Subscribable {
+    constructor() {
+      super();
+      __privateAdd(this, _online, true);
+      __privateAdd(this, _cleanup2);
+      __privateAdd(this, _setup2);
+      __privateSet(this, _setup2, (onOnline) => {
+        if (typeof window !== "undefined" && window.addEventListener) {
+          const onlineListener = () => onOnline(true);
+          const offlineListener = () => onOnline(false);
+          window.addEventListener("online", onlineListener, false);
+          window.addEventListener("offline", offlineListener, false);
+          return () => {
+            window.removeEventListener("online", onlineListener);
+            window.removeEventListener("offline", offlineListener);
+          };
+        }
+        return;
+      });
+    }
+    onSubscribe() {
+      if (!__privateGet(this, _cleanup2)) {
+        this.setEventListener(__privateGet(this, _setup2));
+      }
+    }
+    onUnsubscribe() {
+      var _a117;
+      if (!this.hasListeners()) {
+        (_a117 = __privateGet(this, _cleanup2)) == null ? void 0 : _a117.call(this);
+        __privateSet(this, _cleanup2, void 0);
+      }
+    }
+    setEventListener(setup) {
+      var _a117;
+      __privateSet(this, _setup2, setup);
+      (_a117 = __privateGet(this, _cleanup2)) == null ? void 0 : _a117.call(this);
+      __privateSet(this, _cleanup2, setup(this.setOnline.bind(this)));
+    }
+    setOnline(online) {
+      const changed = __privateGet(this, _online) !== online;
+      if (changed) {
+        __privateSet(this, _online, online);
+        this.listeners.forEach((listener) => {
+          listener(online);
+        });
+      }
+    }
+    isOnline() {
+      return __privateGet(this, _online);
+    }
+  }, _online = new WeakMap(), _cleanup2 = new WeakMap(), _setup2 = new WeakMap(), _a3);
+  var onlineManager = new OnlineManager();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/retryer.js
+  function defaultRetryDelay(failureCount) {
+    return Math.min(1e3 * 2 ** failureCount, 3e4);
+  }
+  function canFetch(networkMode) {
+    return (networkMode ?? "online") === "online" ? onlineManager.isOnline() : true;
+  }
+  var CancelledError = class extends Error {
+    constructor(options) {
+      super("CancelledError");
+      this.revert = options?.revert;
+      this.silent = options?.silent;
+    }
+  };
+  function createRetryer(config) {
+    let isRetryCancelled = false;
+    let failureCount = 0;
+    let continueFn;
+    const thenable = pendingThenable();
+    const isResolved = () => thenable.status !== "pending";
+    const cancel = (cancelOptions) => {
+      if (!isResolved()) {
+        const error = new CancelledError(cancelOptions);
+        reject(error);
+        config.onCancel?.(error);
+      }
+    };
+    const cancelRetry = () => {
+      isRetryCancelled = true;
+    };
+    const continueRetry = () => {
+      isRetryCancelled = false;
+    };
+    const canContinue = () => focusManager.isFocused() && (config.networkMode === "always" || onlineManager.isOnline()) && config.canRun();
+    const canStart = () => canFetch(config.networkMode) && config.canRun();
+    const resolve = (value) => {
+      if (!isResolved()) {
+        continueFn?.();
+        thenable.resolve(value);
+      }
+    };
+    const reject = (value) => {
+      if (!isResolved()) {
+        continueFn?.();
+        thenable.reject(value);
+      }
+    };
+    const pause = () => {
+      return new Promise((continueResolve) => {
+        continueFn = (value) => {
+          if (isResolved() || canContinue()) {
+            continueResolve(value);
+          }
+        };
+        config.onPause?.();
+      }).then(() => {
+        continueFn = void 0;
+        if (!isResolved()) {
+          config.onContinue?.();
+        }
+      });
+    };
+    const run = () => {
+      if (isResolved()) {
+        return;
+      }
+      let promiseOrValue;
+      const initialPromise = failureCount === 0 ? config.initialPromise : void 0;
+      try {
+        promiseOrValue = initialPromise ?? config.fn();
+      } catch (error) {
+        promiseOrValue = Promise.reject(error);
+      }
+      Promise.resolve(promiseOrValue).then(resolve).catch((error) => {
+        if (isResolved()) {
+          return;
+        }
+        const retry = config.retry ?? (environmentManager.isServer() ? 0 : 3);
+        const retryDelay = config.retryDelay ?? defaultRetryDelay;
+        const delay = typeof retryDelay === "function" ? retryDelay(failureCount, error) : retryDelay;
+        const shouldRetry = retry === true || typeof retry === "number" && failureCount < retry || typeof retry === "function" && retry(failureCount, error);
+        if (isRetryCancelled || !shouldRetry) {
+          reject(error);
+          return;
+        }
+        failureCount++;
+        config.onFail?.(failureCount, error);
+        sleep(delay).then(() => {
+          return canContinue() ? void 0 : pause();
+        }).then(() => {
+          if (isRetryCancelled) {
+            reject(error);
+          } else {
+            run();
+          }
+        });
+      });
+    };
+    return {
+      promise: thenable,
+      status: () => thenable.status,
+      cancel,
+      continue: () => {
+        continueFn?.();
+        return thenable;
+      },
+      cancelRetry,
+      continueRetry,
+      canStart,
+      start: () => {
+        if (canStart()) {
+          run();
+        } else {
+          pause().then(run);
+        }
+        return thenable;
+      }
+    };
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/removable.js
+  init_define_import_meta_env();
+  var _gcTimeout, _a4;
+  var Removable = (_a4 = class {
+    constructor() {
+      __privateAdd(this, _gcTimeout);
+    }
+    destroy() {
+      this.clearGcTimeout();
+    }
+    scheduleGc() {
+      this.clearGcTimeout();
+      if (isValidTimeout(this.gcTime)) {
+        __privateSet(this, _gcTimeout, timeoutManager.setTimeout(() => {
+          this.optionalRemove();
+        }, this.gcTime));
+      }
+    }
+    updateGcTime(newGcTime) {
+      this.gcTime = Math.max(
+        this.gcTime || 0,
+        newGcTime ?? (environmentManager.isServer() ? Infinity : 5 * 60 * 1e3)
+      );
+    }
+    clearGcTimeout() {
+      if (__privateGet(this, _gcTimeout) !== void 0) {
+        timeoutManager.clearTimeout(__privateGet(this, _gcTimeout));
+        __privateSet(this, _gcTimeout, void 0);
+      }
+    }
+  }, _gcTimeout = new WeakMap(), _a4);
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/infiniteQueryBehavior.js
+  init_define_import_meta_env();
+  function infiniteQueryBehavior(pages) {
+    return {
+      onFetch: (context, query) => {
+        const options = context.options;
+        const direction = context.fetchOptions?.meta?.fetchMore?.direction;
+        const oldPages = context.state.data?.pages || [];
+        const oldPageParams = context.state.data?.pageParams || [];
+        let result = { pages: [], pageParams: [] };
+        let currentPage = 0;
+        const fetchFn = async () => {
+          let cancelled = false;
+          const addSignalProperty = (object) => {
+            addConsumeAwareSignal(
+              object,
+              () => context.signal,
+              () => cancelled = true
+            );
+          };
+          const queryFn = ensureQueryFn(context.options, context.fetchOptions);
+          const fetchPage = async (data, param, previous) => {
+            if (cancelled) {
+              return Promise.reject(context.signal.reason);
+            }
+            if (param == null && data.pages.length) {
+              return Promise.resolve(data);
+            }
+            const createQueryFnContext = () => {
+              const queryFnContext2 = {
+                client: context.client,
+                queryKey: context.queryKey,
+                pageParam: param,
+                direction: previous ? "backward" : "forward",
+                meta: context.options.meta
+              };
+              addSignalProperty(queryFnContext2);
+              return queryFnContext2;
+            };
+            const queryFnContext = createQueryFnContext();
+            const page = await queryFn(queryFnContext);
+            const { maxPages } = context.options;
+            const addTo = previous ? addToStart : addToEnd;
+            return {
+              pages: addTo(data.pages, page, maxPages),
+              pageParams: addTo(data.pageParams, param, maxPages)
+            };
+          };
+          if (direction && oldPages.length) {
+            const previous = direction === "backward";
+            const pageParamFn = previous ? getPreviousPageParam : getNextPageParam;
+            const oldData = {
+              pages: oldPages,
+              pageParams: oldPageParams
+            };
+            const param = pageParamFn(options, oldData);
+            result = await fetchPage(oldData, param, previous);
+          } else {
+            const remainingPages = pages ?? oldPages.length;
+            do {
+              const param = currentPage === 0 ? oldPageParams[0] ?? options.initialPageParam : getNextPageParam(options, result);
+              if (currentPage > 0 && param == null) {
+                break;
+              }
+              result = await fetchPage(result, param);
+              currentPage++;
+            } while (currentPage < remainingPages);
+          }
+          return result;
+        };
+        if (context.options.persister) {
+          context.fetchFn = () => {
+            return context.options.persister?.(
+              fetchFn,
+              {
+                client: context.client,
+                queryKey: context.queryKey,
+                meta: context.options.meta,
+                signal: context.signal
+              },
+              query
+            );
+          };
+        } else {
+          context.fetchFn = fetchFn;
+        }
+      }
+    };
+  }
+  function getNextPageParam(options, { pages, pageParams }) {
+    const lastIndex = pages.length - 1;
+    return pages.length > 0 ? options.getNextPageParam(
+      pages[lastIndex],
+      pages,
+      pageParams[lastIndex],
+      pageParams
+    ) : void 0;
+  }
+  function getPreviousPageParam(options, { pages, pageParams }) {
+    return pages.length > 0 ? options.getPreviousPageParam?.(pages[0], pages, pageParams[0], pageParams) : void 0;
+  }
+  function hasNextPage(options, data) {
+    if (!data) return false;
+    return getNextPageParam(options, data) != null;
+  }
+  function hasPreviousPage(options, data) {
+    if (!data || !options.getPreviousPageParam) return false;
+    return getPreviousPageParam(options, data) != null;
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/query.js
+  var _queryType, _initialState, _revertState, _cache, _client, _retryer, _defaultOptions, _abortSignalConsumed, _Query_instances, isInitialPausedFetch_fn, dispatch_fn, _a5;
+  var Query = (_a5 = class extends Removable {
+    constructor(config) {
+      super();
+      __privateAdd(this, _Query_instances);
+      __privateAdd(this, _queryType);
+      __privateAdd(this, _initialState);
+      __privateAdd(this, _revertState);
+      __privateAdd(this, _cache);
+      __privateAdd(this, _client);
+      __privateAdd(this, _retryer);
+      __privateAdd(this, _defaultOptions);
+      __privateAdd(this, _abortSignalConsumed);
+      __privateSet(this, _abortSignalConsumed, false);
+      __privateSet(this, _defaultOptions, config.defaultOptions);
+      this.setOptions(config.options);
+      this.observers = [];
+      __privateSet(this, _client, config.client);
+      __privateSet(this, _cache, __privateGet(this, _client).getQueryCache());
+      this.queryKey = config.queryKey;
+      this.queryHash = config.queryHash;
+      __privateSet(this, _initialState, getDefaultState(this.options));
+      this.state = config.state ?? __privateGet(this, _initialState);
+      this.scheduleGc();
+    }
+    get meta() {
+      return this.options.meta;
+    }
+    get queryType() {
+      return __privateGet(this, _queryType);
+    }
+    get promise() {
+      return __privateGet(this, _retryer)?.promise;
+    }
+    setOptions(options) {
+      this.options = { ...__privateGet(this, _defaultOptions), ...options };
+      if (options?._type) {
+        __privateSet(this, _queryType, options._type);
+      }
+      this.updateGcTime(this.options.gcTime);
+      if (this.state && this.state.data === void 0) {
+        const defaultState = getDefaultState(this.options);
+        if (defaultState.data !== void 0) {
+          this.setState(
+            successState(defaultState.data, defaultState.dataUpdatedAt)
+          );
+          __privateSet(this, _initialState, defaultState);
+        }
+      }
+    }
+    optionalRemove() {
+      if (!this.observers.length && this.state.fetchStatus === "idle") {
+        __privateGet(this, _cache).remove(this);
+      }
+    }
+    setData(newData, options) {
+      const data = replaceData(this.state.data, newData, this.options);
+      __privateMethod(this, _Query_instances, dispatch_fn).call(this, {
+        data,
+        type: "success",
+        dataUpdatedAt: options?.updatedAt,
+        manual: options?.manual
+      });
+      return data;
+    }
+    setState(state) {
+      __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "setState", state });
+    }
+    cancel(options) {
+      const promise = __privateGet(this, _retryer)?.promise;
+      __privateGet(this, _retryer)?.cancel(options);
+      return promise ? promise.then(noop).catch(noop) : Promise.resolve();
+    }
+    destroy() {
+      super.destroy();
+      this.cancel({ silent: true });
+    }
+    get resetState() {
+      return __privateGet(this, _initialState);
+    }
+    reset() {
+      this.destroy();
+      this.setState(this.resetState);
+    }
+    isActive() {
+      return this.observers.some(
+        (observer) => resolveQueryBoolean(observer.options.enabled, this) !== false
+      );
+    }
+    isDisabled() {
+      if (this.getObserversCount() > 0) {
+        return !this.isActive();
+      }
+      return this.options.queryFn === skipToken || !this.isFetched();
+    }
+    isFetched() {
+      return this.state.dataUpdateCount + this.state.errorUpdateCount > 0;
+    }
+    isStatic() {
+      if (this.getObserversCount() > 0) {
+        return this.observers.some(
+          (observer) => resolveStaleTime(observer.options.staleTime, this) === "static"
+        );
+      }
+      return false;
+    }
+    isStale() {
+      if (this.getObserversCount() > 0) {
+        return this.observers.some(
+          (observer) => observer.getCurrentResult().isStale
+        );
+      }
+      return this.state.data === void 0 || this.state.isInvalidated;
+    }
+    isStaleByTime(staleTime = 0) {
+      if (this.state.data === void 0) {
+        return true;
+      }
+      if (staleTime === "static") {
+        return false;
+      }
+      if (this.state.isInvalidated) {
+        return true;
+      }
+      return !timeUntilStale(this.state.dataUpdatedAt, staleTime);
+    }
+    onFocus() {
+      const observer = this.observers.find((x) => x.shouldFetchOnWindowFocus());
+      observer?.refetch({ cancelRefetch: false });
+      __privateGet(this, _retryer)?.continue();
+    }
+    onOnline() {
+      const observer = this.observers.find((x) => x.shouldFetchOnReconnect());
+      observer?.refetch({ cancelRefetch: false });
+      __privateGet(this, _retryer)?.continue();
+    }
+    addObserver(observer) {
+      if (!this.observers.includes(observer)) {
+        this.observers.push(observer);
+        this.clearGcTimeout();
+        __privateGet(this, _cache).notify({ type: "observerAdded", query: this, observer });
+      }
+    }
+    removeObserver(observer) {
+      if (this.observers.includes(observer)) {
+        this.observers = this.observers.filter((x) => x !== observer);
+        if (!this.observers.length) {
+          if (__privateGet(this, _retryer)) {
+            if (__privateGet(this, _abortSignalConsumed) || __privateMethod(this, _Query_instances, isInitialPausedFetch_fn).call(this)) {
+              __privateGet(this, _retryer).cancel({ revert: true });
+            } else {
+              __privateGet(this, _retryer).cancelRetry();
+            }
+          }
+          this.scheduleGc();
+        }
+        __privateGet(this, _cache).notify({ type: "observerRemoved", query: this, observer });
+      }
+    }
+    getObserversCount() {
+      return this.observers.length;
+    }
+    invalidate() {
+      if (!this.state.isInvalidated) {
+        __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "invalidate" });
+      }
+    }
+    async fetch(options, fetchOptions) {
+      if (this.state.fetchStatus !== "idle" && // If the promise in the retryer is already rejected, we have to definitely
+      // re-start the fetch; there is a chance that the query is still in a
+      // pending state when that happens
+      __privateGet(this, _retryer)?.status() !== "rejected") {
+        if (this.state.data !== void 0 && fetchOptions?.cancelRefetch) {
+          this.cancel({ silent: true });
+        } else if (__privateGet(this, _retryer)) {
+          __privateGet(this, _retryer).continueRetry();
+          return __privateGet(this, _retryer).promise;
+        }
+      }
+      if (options) {
+        this.setOptions(options);
+      }
+      if (!this.options.queryFn) {
+        const observer = this.observers.find((x) => x.options.queryFn);
+        if (observer) {
+          this.setOptions(observer.options);
+        }
+      }
+      if (true) {
+        if (!Array.isArray(this.options.queryKey)) {
+          console.error(
+            `As of v4, queryKey needs to be an Array. If you are using a string like 'repoData', please change it to an Array, e.g. ['repoData']`
+          );
+        }
+      }
+      const abortController = new AbortController();
+      const addSignalProperty = (object) => {
+        Object.defineProperty(object, "signal", {
+          enumerable: true,
+          get: () => {
+            __privateSet(this, _abortSignalConsumed, true);
+            return abortController.signal;
+          }
+        });
+      };
+      const fetchFn = () => {
+        const queryFn = ensureQueryFn(this.options, fetchOptions);
+        const createQueryFnContext = () => {
+          const queryFnContext2 = {
+            client: __privateGet(this, _client),
+            queryKey: this.queryKey,
+            meta: this.meta
+          };
+          addSignalProperty(queryFnContext2);
+          return queryFnContext2;
+        };
+        const queryFnContext = createQueryFnContext();
+        __privateSet(this, _abortSignalConsumed, false);
+        if (this.options.persister) {
+          return this.options.persister(
+            queryFn,
+            queryFnContext,
+            this
+          );
+        }
+        return queryFn(queryFnContext);
+      };
+      const createFetchContext = () => {
+        const context2 = {
+          fetchOptions,
+          options: this.options,
+          queryKey: this.queryKey,
+          client: __privateGet(this, _client),
+          state: this.state,
+          fetchFn
+        };
+        addSignalProperty(context2);
+        return context2;
+      };
+      const context = createFetchContext();
+      const behavior = __privateGet(this, _queryType) === "infinite" ? infiniteQueryBehavior(
+        this.options.pages
+      ) : this.options.behavior;
+      behavior?.onFetch(context, this);
+      __privateSet(this, _revertState, this.state);
+      if (this.state.fetchStatus === "idle" || this.state.fetchMeta !== context.fetchOptions?.meta) {
+        __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "fetch", meta: context.fetchOptions?.meta });
+      }
+      __privateSet(this, _retryer, createRetryer({
+        initialPromise: fetchOptions?.initialPromise,
+        fn: context.fetchFn,
+        onCancel: (error) => {
+          if (error instanceof CancelledError && error.revert) {
+            this.setState({
+              ...__privateGet(this, _revertState),
+              fetchStatus: "idle"
+            });
+          }
+          abortController.abort();
+        },
+        onFail: (failureCount, error) => {
+          __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "failed", failureCount, error });
+        },
+        onPause: () => {
+          __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "pause" });
+        },
+        onContinue: () => {
+          __privateMethod(this, _Query_instances, dispatch_fn).call(this, { type: "continue" });
+        },
+        retry: context.options.retry,
+        retryDelay: context.options.retryDelay,
+        networkMode: context.options.networkMode,
+        canRun: () => true
+      }));
+      try {
+        const data = await __privateGet(this, _retryer).start();
+        if (data === void 0) {
+          if (true) {
+            console.error(
+              `Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ${this.queryHash}`
+            );
+          }
+          throw new Error(`${this.queryHash} data is undefined`);
+        }
+        this.setData(data);
+        __privateGet(this, _cache).config.onSuccess?.(data, this);
+        __privateGet(this, _cache).config.onSettled?.(
+          data,
+          this.state.error,
+          this
+        );
+        return data;
+      } catch (error) {
+        if (error instanceof CancelledError) {
+          if (error.silent) {
+            return __privateGet(this, _retryer).promise;
+          } else if (error.revert) {
+            if (this.state.data === void 0) {
+              throw error;
+            }
+            return this.state.data;
+          }
+        }
+        __privateMethod(this, _Query_instances, dispatch_fn).call(this, {
+          type: "error",
+          error
+        });
+        __privateGet(this, _cache).config.onError?.(
+          error,
+          this
+        );
+        __privateGet(this, _cache).config.onSettled?.(
+          this.state.data,
+          error,
+          this
+        );
+        throw error;
+      } finally {
+        this.scheduleGc();
+      }
+    }
+  }, _queryType = new WeakMap(), _initialState = new WeakMap(), _revertState = new WeakMap(), _cache = new WeakMap(), _client = new WeakMap(), _retryer = new WeakMap(), _defaultOptions = new WeakMap(), _abortSignalConsumed = new WeakMap(), _Query_instances = new WeakSet(), isInitialPausedFetch_fn = function() {
+    return this.state.fetchStatus === "paused" && this.state.status === "pending";
+  }, dispatch_fn = function(action) {
+    const reducer = (state) => {
+      switch (action.type) {
+        case "failed":
+          return {
+            ...state,
+            fetchFailureCount: action.failureCount,
+            fetchFailureReason: action.error
+          };
+        case "pause":
+          return {
+            ...state,
+            fetchStatus: "paused"
+          };
+        case "continue":
+          return {
+            ...state,
+            fetchStatus: "fetching"
+          };
+        case "fetch":
+          return {
+            ...state,
+            ...fetchState(state.data, this.options),
+            fetchMeta: action.meta ?? null
+          };
+        case "success":
+          const newState = {
+            ...state,
+            ...successState(action.data, action.dataUpdatedAt),
+            dataUpdateCount: state.dataUpdateCount + 1,
+            ...!action.manual && {
+              fetchStatus: "idle",
+              fetchFailureCount: 0,
+              fetchFailureReason: null
+            }
+          };
+          __privateSet(this, _revertState, action.manual ? newState : void 0);
+          return newState;
+        case "error":
+          const error = action.error;
+          return {
+            ...state,
+            error,
+            errorUpdateCount: state.errorUpdateCount + 1,
+            errorUpdatedAt: Date.now(),
+            fetchFailureCount: state.fetchFailureCount + 1,
+            fetchFailureReason: error,
+            fetchStatus: "idle",
+            status: "error",
+            // flag existing data as invalidated if we get a background error
+            // note that "no data" always means stale so we can set unconditionally here
+            isInvalidated: true
+          };
+        case "invalidate":
+          return {
+            ...state,
+            isInvalidated: true
+          };
+        case "setState":
+          return {
+            ...state,
+            ...action.state
+          };
+      }
+    };
+    this.state = reducer(this.state);
+    notifyManager.batch(() => {
+      this.observers.forEach((observer) => {
+        observer.onQueryUpdate();
+      });
+      __privateGet(this, _cache).notify({ query: this, type: "updated", action });
+    });
+  }, _a5);
+  function fetchState(data, options) {
+    return {
+      fetchFailureCount: 0,
+      fetchFailureReason: null,
+      fetchStatus: canFetch(options.networkMode) ? "fetching" : "paused",
+      ...data === void 0 && {
+        error: null,
+        status: "pending"
+      }
+    };
+  }
+  function successState(data, dataUpdatedAt) {
+    return {
+      data,
+      dataUpdatedAt: dataUpdatedAt ?? Date.now(),
+      error: null,
+      isInvalidated: false,
+      status: "success"
+    };
+  }
+  function getDefaultState(options) {
+    const data = typeof options.initialData === "function" ? options.initialData() : options.initialData;
+    const hasData = data !== void 0;
+    const initialDataUpdatedAt = hasData ? typeof options.initialDataUpdatedAt === "function" ? options.initialDataUpdatedAt() : options.initialDataUpdatedAt : 0;
+    return {
+      data,
+      dataUpdateCount: 0,
+      dataUpdatedAt: hasData ? initialDataUpdatedAt ?? Date.now() : 0,
+      error: null,
+      errorUpdateCount: 0,
+      errorUpdatedAt: 0,
+      fetchFailureCount: 0,
+      fetchFailureReason: null,
+      fetchMeta: null,
+      isInvalidated: false,
+      status: hasData ? "success" : "pending",
+      fetchStatus: "idle"
+    };
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/queryObserver.js
+  var _client2, _currentQuery, _currentQueryInitialState, _currentResult, _currentResultState, _currentResultOptions, _currentThenable, _selectError, _selectFn, _selectResult, _lastQueryWithDefinedData, _staleTimeoutId, _refetchIntervalId, _currentRefetchInterval, _trackedProps, _QueryObserver_instances, executeFetch_fn, updateStaleTimeout_fn, computeRefetchInterval_fn, updateRefetchInterval_fn, updateTimers_fn, clearStaleTimeout_fn, clearRefetchInterval_fn, updateQuery_fn, notify_fn, _a6;
+  var QueryObserver = (_a6 = class extends Subscribable {
+    constructor(client, options) {
+      super();
+      __privateAdd(this, _QueryObserver_instances);
+      __privateAdd(this, _client2);
+      __privateAdd(this, _currentQuery);
+      __privateAdd(this, _currentQueryInitialState);
+      __privateAdd(this, _currentResult);
+      __privateAdd(this, _currentResultState);
+      __privateAdd(this, _currentResultOptions);
+      __privateAdd(this, _currentThenable);
+      __privateAdd(this, _selectError);
+      __privateAdd(this, _selectFn);
+      __privateAdd(this, _selectResult);
+      // This property keeps track of the last query with defined data.
+      // It will be used to pass the previous data and query to the placeholder function between renders.
+      __privateAdd(this, _lastQueryWithDefinedData);
+      __privateAdd(this, _staleTimeoutId);
+      __privateAdd(this, _refetchIntervalId);
+      __privateAdd(this, _currentRefetchInterval);
+      __privateAdd(this, _trackedProps, /* @__PURE__ */ new Set());
+      this.options = options;
+      __privateSet(this, _client2, client);
+      __privateSet(this, _selectError, null);
+      __privateSet(this, _currentThenable, pendingThenable());
+      this.bindMethods();
+      this.setOptions(options);
+    }
+    bindMethods() {
+      this.refetch = this.refetch.bind(this);
+    }
+    onSubscribe() {
+      if (this.listeners.size === 1) {
+        __privateGet(this, _currentQuery).addObserver(this);
+        if (shouldFetchOnMount(__privateGet(this, _currentQuery), this.options)) {
+          __privateMethod(this, _QueryObserver_instances, executeFetch_fn).call(this);
+        } else {
+          this.updateResult();
+        }
+        __privateMethod(this, _QueryObserver_instances, updateTimers_fn).call(this);
+      }
+    }
+    onUnsubscribe() {
+      if (!this.hasListeners()) {
+        this.destroy();
+      }
+    }
+    shouldFetchOnReconnect() {
+      return shouldFetchOn(
+        __privateGet(this, _currentQuery),
+        this.options,
+        this.options.refetchOnReconnect
+      );
+    }
+    shouldFetchOnWindowFocus() {
+      return shouldFetchOn(
+        __privateGet(this, _currentQuery),
+        this.options,
+        this.options.refetchOnWindowFocus
+      );
+    }
+    destroy() {
+      this.listeners = /* @__PURE__ */ new Set();
+      __privateMethod(this, _QueryObserver_instances, clearStaleTimeout_fn).call(this);
+      __privateMethod(this, _QueryObserver_instances, clearRefetchInterval_fn).call(this);
+      __privateGet(this, _currentQuery).removeObserver(this);
+    }
+    setOptions(options) {
+      const prevOptions = this.options;
+      const prevQuery = __privateGet(this, _currentQuery);
+      this.options = __privateGet(this, _client2).defaultQueryOptions(options);
+      if (this.options.enabled !== void 0 && typeof this.options.enabled !== "boolean" && typeof this.options.enabled !== "function" && typeof resolveQueryBoolean(this.options.enabled, __privateGet(this, _currentQuery)) !== "boolean") {
+        throw new Error(
+          "Expected enabled to be a boolean or a callback that returns a boolean"
+        );
+      }
+      __privateMethod(this, _QueryObserver_instances, updateQuery_fn).call(this);
+      __privateGet(this, _currentQuery).setOptions(this.options);
+      if (prevOptions._defaulted && !shallowEqualObjects(this.options, prevOptions)) {
+        __privateGet(this, _client2).getQueryCache().notify({
+          type: "observerOptionsUpdated",
+          query: __privateGet(this, _currentQuery),
+          observer: this
+        });
+      }
+      const mounted = this.hasListeners();
+      if (mounted && shouldFetchOptionally(
+        __privateGet(this, _currentQuery),
+        prevQuery,
+        this.options,
+        prevOptions
+      )) {
+        __privateMethod(this, _QueryObserver_instances, executeFetch_fn).call(this);
+      }
+      this.updateResult();
+      if (mounted && (__privateGet(this, _currentQuery) !== prevQuery || resolveQueryBoolean(this.options.enabled, __privateGet(this, _currentQuery)) !== resolveQueryBoolean(prevOptions.enabled, __privateGet(this, _currentQuery)) || resolveStaleTime(this.options.staleTime, __privateGet(this, _currentQuery)) !== resolveStaleTime(prevOptions.staleTime, __privateGet(this, _currentQuery)))) {
+        __privateMethod(this, _QueryObserver_instances, updateStaleTimeout_fn).call(this);
+      }
+      const nextRefetchInterval = __privateMethod(this, _QueryObserver_instances, computeRefetchInterval_fn).call(this);
+      if (mounted && (__privateGet(this, _currentQuery) !== prevQuery || resolveQueryBoolean(this.options.enabled, __privateGet(this, _currentQuery)) !== resolveQueryBoolean(prevOptions.enabled, __privateGet(this, _currentQuery)) || nextRefetchInterval !== __privateGet(this, _currentRefetchInterval))) {
+        __privateMethod(this, _QueryObserver_instances, updateRefetchInterval_fn).call(this, nextRefetchInterval);
+      }
+    }
+    getOptimisticResult(options) {
+      const query = __privateGet(this, _client2).getQueryCache().build(__privateGet(this, _client2), options);
+      const result = this.createResult(query, options);
+      if (shouldAssignObserverCurrentProperties(this, result)) {
+        __privateSet(this, _currentResult, result);
+        __privateSet(this, _currentResultOptions, this.options);
+        __privateSet(this, _currentResultState, __privateGet(this, _currentQuery).state);
+      }
+      return result;
+    }
+    getCurrentResult() {
+      return __privateGet(this, _currentResult);
+    }
+    trackResult(result, onPropTracked) {
+      return new Proxy(result, {
+        get: (target, key2) => {
+          this.trackProp(key2);
+          onPropTracked?.(key2);
+          if (key2 === "promise") {
+            this.trackProp("data");
+            if (!this.options.experimental_prefetchInRender && __privateGet(this, _currentThenable).status === "pending") {
+              __privateGet(this, _currentThenable).reject(
+                new Error(
+                  "experimental_prefetchInRender feature flag is not enabled"
+                )
+              );
+            }
+          }
+          return Reflect.get(target, key2);
+        }
+      });
+    }
+    trackProp(key2) {
+      __privateGet(this, _trackedProps).add(key2);
+    }
+    getCurrentQuery() {
+      return __privateGet(this, _currentQuery);
+    }
+    refetch({ ...options } = {}) {
+      return this.fetch({
+        ...options
+      });
+    }
+    fetchOptimistic(options) {
+      const defaultedOptions = __privateGet(this, _client2).defaultQueryOptions(options);
+      const query = __privateGet(this, _client2).getQueryCache().build(__privateGet(this, _client2), defaultedOptions);
+      return query.fetch().then(() => this.createResult(query, defaultedOptions));
+    }
+    fetch(fetchOptions) {
+      return __privateMethod(this, _QueryObserver_instances, executeFetch_fn).call(this, {
+        ...fetchOptions,
+        cancelRefetch: fetchOptions.cancelRefetch ?? true
+      }).then(() => {
+        this.updateResult();
+        return __privateGet(this, _currentResult);
+      });
+    }
+    createResult(query, options) {
+      const prevQuery = __privateGet(this, _currentQuery);
+      const prevOptions = this.options;
+      const prevResult = __privateGet(this, _currentResult);
+      const prevResultState = __privateGet(this, _currentResultState);
+      const prevResultOptions = __privateGet(this, _currentResultOptions);
+      const queryChange = query !== prevQuery;
+      const queryInitialState = queryChange ? query.state : __privateGet(this, _currentQueryInitialState);
+      const { state } = query;
+      let newState = { ...state };
+      let isPlaceholderData = false;
+      let data;
+      if (options._optimisticResults) {
+        const mounted = this.hasListeners();
+        const fetchOnMount = !mounted && shouldFetchOnMount(query, options);
+        const fetchOptionally = mounted && shouldFetchOptionally(query, prevQuery, options, prevOptions);
+        if (fetchOnMount || fetchOptionally) {
+          newState = {
+            ...newState,
+            ...fetchState(state.data, query.options)
+          };
+        }
+        if (options._optimisticResults === "isRestoring") {
+          newState.fetchStatus = "idle";
+        }
+      }
+      let { error, errorUpdatedAt, status } = newState;
+      data = newState.data;
+      let skipSelect = false;
+      if (options.placeholderData !== void 0 && data === void 0 && status === "pending") {
+        let placeholderData;
+        if (prevResult?.isPlaceholderData && options.placeholderData === prevResultOptions?.placeholderData) {
+          placeholderData = prevResult.data;
+          skipSelect = true;
+        } else {
+          placeholderData = typeof options.placeholderData === "function" ? options.placeholderData(
+            __privateGet(this, _lastQueryWithDefinedData)?.state.data,
+            __privateGet(this, _lastQueryWithDefinedData)
+          ) : options.placeholderData;
+        }
+        if (placeholderData !== void 0) {
+          status = "success";
+          data = replaceData(
+            prevResult?.data,
+            placeholderData,
+            options
+          );
+          isPlaceholderData = true;
+        }
+      }
+      if (options.select && data !== void 0 && !skipSelect) {
+        if (prevResult && data === prevResultState?.data && options.select === __privateGet(this, _selectFn)) {
+          data = __privateGet(this, _selectResult);
+        } else {
+          try {
+            __privateSet(this, _selectFn, options.select);
+            data = options.select(data);
+            data = replaceData(prevResult?.data, data, options);
+            __privateSet(this, _selectResult, data);
+            __privateSet(this, _selectError, null);
+          } catch (selectError) {
+            __privateSet(this, _selectError, selectError);
+          }
+        }
+      }
+      if (__privateGet(this, _selectError)) {
+        error = __privateGet(this, _selectError);
+        data = __privateGet(this, _selectResult);
+        errorUpdatedAt = Date.now();
+        status = "error";
+      }
+      const isFetching = newState.fetchStatus === "fetching";
+      const isPending = status === "pending";
+      const isError = status === "error";
+      const isLoading = isPending && isFetching;
+      const hasData = data !== void 0;
+      const result = {
+        status,
+        fetchStatus: newState.fetchStatus,
+        isPending,
+        isSuccess: status === "success",
+        isError,
+        isInitialLoading: isLoading,
+        isLoading,
+        data,
+        dataUpdatedAt: newState.dataUpdatedAt,
+        error,
+        errorUpdatedAt,
+        failureCount: newState.fetchFailureCount,
+        failureReason: newState.fetchFailureReason,
+        errorUpdateCount: newState.errorUpdateCount,
+        isFetched: query.isFetched(),
+        isFetchedAfterMount: newState.dataUpdateCount > queryInitialState.dataUpdateCount || newState.errorUpdateCount > queryInitialState.errorUpdateCount,
+        isFetching,
+        isRefetching: isFetching && !isPending,
+        isLoadingError: isError && !hasData,
+        isPaused: newState.fetchStatus === "paused",
+        isPlaceholderData,
+        isRefetchError: isError && hasData,
+        isStale: isStale(query, options),
+        refetch: this.refetch,
+        promise: __privateGet(this, _currentThenable),
+        isEnabled: resolveQueryBoolean(options.enabled, query) !== false
+      };
+      const nextResult = result;
+      if (this.options.experimental_prefetchInRender) {
+        const hasResultData = nextResult.data !== void 0;
+        const isErrorWithoutData = nextResult.status === "error" && !hasResultData;
+        const finalizeThenableIfPossible = (thenable) => {
+          if (isErrorWithoutData) {
+            thenable.reject(nextResult.error);
+          } else if (hasResultData) {
+            thenable.resolve(nextResult.data);
+          }
+        };
+        const recreateThenable = () => {
+          const pending2 = __privateSet(this, _currentThenable, nextResult.promise = pendingThenable());
+          finalizeThenableIfPossible(pending2);
+        };
+        const prevThenable = __privateGet(this, _currentThenable);
+        switch (prevThenable.status) {
+          case "pending":
+            if (query.queryHash === prevQuery.queryHash) {
+              finalizeThenableIfPossible(prevThenable);
+            }
+            break;
+          case "fulfilled":
+            if (isErrorWithoutData || nextResult.data !== prevThenable.value) {
+              recreateThenable();
+            }
+            break;
+          case "rejected":
+            if (!isErrorWithoutData || nextResult.error !== prevThenable.reason) {
+              recreateThenable();
+            }
+            break;
+        }
+      }
+      return nextResult;
+    }
+    updateResult() {
+      const prevResult = __privateGet(this, _currentResult);
+      const nextResult = this.createResult(__privateGet(this, _currentQuery), this.options);
+      __privateSet(this, _currentResultState, __privateGet(this, _currentQuery).state);
+      __privateSet(this, _currentResultOptions, this.options);
+      if (__privateGet(this, _currentResultState).data !== void 0) {
+        __privateSet(this, _lastQueryWithDefinedData, __privateGet(this, _currentQuery));
+      }
+      if (shallowEqualObjects(nextResult, prevResult)) {
+        return;
+      }
+      __privateSet(this, _currentResult, nextResult);
+      const shouldNotifyListeners = () => {
+        if (!prevResult) {
+          return true;
+        }
+        const { notifyOnChangeProps } = this.options;
+        const notifyOnChangePropsValue = typeof notifyOnChangeProps === "function" ? notifyOnChangeProps() : notifyOnChangeProps;
+        if (notifyOnChangePropsValue === "all" || !notifyOnChangePropsValue && !__privateGet(this, _trackedProps).size) {
+          return true;
+        }
+        const includedProps = new Set(
+          notifyOnChangePropsValue ?? __privateGet(this, _trackedProps)
+        );
+        if (this.options.throwOnError) {
+          includedProps.add("error");
+        }
+        return Object.keys(__privateGet(this, _currentResult)).some((key2) => {
+          const typedKey = key2;
+          const changed = __privateGet(this, _currentResult)[typedKey] !== prevResult[typedKey];
+          return changed && includedProps.has(typedKey);
+        });
+      };
+      __privateMethod(this, _QueryObserver_instances, notify_fn).call(this, { listeners: shouldNotifyListeners() });
+    }
+    onQueryUpdate() {
+      this.updateResult();
+      if (this.hasListeners()) {
+        __privateMethod(this, _QueryObserver_instances, updateTimers_fn).call(this);
+      }
+    }
+  }, _client2 = new WeakMap(), _currentQuery = new WeakMap(), _currentQueryInitialState = new WeakMap(), _currentResult = new WeakMap(), _currentResultState = new WeakMap(), _currentResultOptions = new WeakMap(), _currentThenable = new WeakMap(), _selectError = new WeakMap(), _selectFn = new WeakMap(), _selectResult = new WeakMap(), _lastQueryWithDefinedData = new WeakMap(), _staleTimeoutId = new WeakMap(), _refetchIntervalId = new WeakMap(), _currentRefetchInterval = new WeakMap(), _trackedProps = new WeakMap(), _QueryObserver_instances = new WeakSet(), executeFetch_fn = function(fetchOptions) {
+    __privateMethod(this, _QueryObserver_instances, updateQuery_fn).call(this);
+    let promise = __privateGet(this, _currentQuery).fetch(
+      this.options,
+      fetchOptions
+    );
+    if (!fetchOptions?.throwOnError) {
+      promise = promise.catch(noop);
+    }
+    return promise;
+  }, updateStaleTimeout_fn = function() {
+    __privateMethod(this, _QueryObserver_instances, clearStaleTimeout_fn).call(this);
+    const staleTime = resolveStaleTime(
+      this.options.staleTime,
+      __privateGet(this, _currentQuery)
+    );
+    if (environmentManager.isServer() || __privateGet(this, _currentResult).isStale || !isValidTimeout(staleTime)) {
+      return;
+    }
+    const time = timeUntilStale(__privateGet(this, _currentResult).dataUpdatedAt, staleTime);
+    const timeout = time + 1;
+    __privateSet(this, _staleTimeoutId, timeoutManager.setTimeout(() => {
+      if (!__privateGet(this, _currentResult).isStale) {
+        this.updateResult();
+      }
+    }, timeout));
+  }, computeRefetchInterval_fn = function() {
+    return (typeof this.options.refetchInterval === "function" ? this.options.refetchInterval(__privateGet(this, _currentQuery)) : this.options.refetchInterval) ?? false;
+  }, updateRefetchInterval_fn = function(nextInterval) {
+    __privateMethod(this, _QueryObserver_instances, clearRefetchInterval_fn).call(this);
+    __privateSet(this, _currentRefetchInterval, nextInterval);
+    if (environmentManager.isServer() || resolveQueryBoolean(this.options.enabled, __privateGet(this, _currentQuery)) === false || !isValidTimeout(__privateGet(this, _currentRefetchInterval)) || __privateGet(this, _currentRefetchInterval) === 0) {
+      return;
+    }
+    __privateSet(this, _refetchIntervalId, timeoutManager.setInterval(() => {
+      if (this.options.refetchIntervalInBackground || focusManager.isFocused()) {
+        __privateMethod(this, _QueryObserver_instances, executeFetch_fn).call(this);
+      }
+    }, __privateGet(this, _currentRefetchInterval)));
+  }, updateTimers_fn = function() {
+    __privateMethod(this, _QueryObserver_instances, updateStaleTimeout_fn).call(this);
+    __privateMethod(this, _QueryObserver_instances, updateRefetchInterval_fn).call(this, __privateMethod(this, _QueryObserver_instances, computeRefetchInterval_fn).call(this));
+  }, clearStaleTimeout_fn = function() {
+    if (__privateGet(this, _staleTimeoutId) !== void 0) {
+      timeoutManager.clearTimeout(__privateGet(this, _staleTimeoutId));
+      __privateSet(this, _staleTimeoutId, void 0);
+    }
+  }, clearRefetchInterval_fn = function() {
+    if (__privateGet(this, _refetchIntervalId) !== void 0) {
+      timeoutManager.clearInterval(__privateGet(this, _refetchIntervalId));
+      __privateSet(this, _refetchIntervalId, void 0);
+    }
+  }, updateQuery_fn = function() {
+    const query = __privateGet(this, _client2).getQueryCache().build(__privateGet(this, _client2), this.options);
+    if (query === __privateGet(this, _currentQuery)) {
+      return;
+    }
+    const prevQuery = __privateGet(this, _currentQuery);
+    __privateSet(this, _currentQuery, query);
+    __privateSet(this, _currentQueryInitialState, query.state);
+    if (this.hasListeners()) {
+      prevQuery?.removeObserver(this);
+      query.addObserver(this);
+    }
+  }, notify_fn = function(notifyOptions) {
+    notifyManager.batch(() => {
+      if (notifyOptions.listeners) {
+        this.listeners.forEach((listener) => {
+          listener(__privateGet(this, _currentResult));
+        });
+      }
+      __privateGet(this, _client2).getQueryCache().notify({
+        query: __privateGet(this, _currentQuery),
+        type: "observerResultsUpdated"
+      });
+    });
+  }, _a6);
+  function shouldLoadOnMount(query, options) {
+    return resolveQueryBoolean(options.enabled, query) !== false && query.state.data === void 0 && !(query.state.status === "error" && resolveQueryBoolean(options.retryOnMount, query) === false);
+  }
+  function shouldFetchOnMount(query, options) {
+    return shouldLoadOnMount(query, options) || query.state.data !== void 0 && shouldFetchOn(query, options, options.refetchOnMount);
+  }
+  function shouldFetchOn(query, options, field) {
+    if (resolveQueryBoolean(options.enabled, query) !== false && resolveStaleTime(options.staleTime, query) !== "static") {
+      const value = typeof field === "function" ? field(query) : field;
+      return value === "always" || value !== false && isStale(query, options);
+    }
+    return false;
+  }
+  function shouldFetchOptionally(query, prevQuery, options, prevOptions) {
+    return (query !== prevQuery || resolveQueryBoolean(prevOptions.enabled, query) === false) && (!options.suspense || query.state.status !== "error") && isStale(query, options);
+  }
+  function isStale(query, options) {
+    return resolveQueryBoolean(options.enabled, query) !== false && query.isStaleByTime(resolveStaleTime(options.staleTime, query));
+  }
+  function shouldAssignObserverCurrentProperties(observer, optimisticResult) {
+    if (!shallowEqualObjects(observer.getCurrentResult(), optimisticResult)) {
+      return true;
+    }
+    return false;
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/infiniteQueryObserver.js
+  var InfiniteQueryObserver = class extends QueryObserver {
+    constructor(client, options) {
+      super(client, options);
+    }
+    bindMethods() {
+      super.bindMethods();
+      this.fetchNextPage = this.fetchNextPage.bind(this);
+      this.fetchPreviousPage = this.fetchPreviousPage.bind(this);
+    }
+    setOptions(options) {
+      options._type = "infinite";
+      super.setOptions(options);
+    }
+    getOptimisticResult(options) {
+      options._type = "infinite";
+      return super.getOptimisticResult(options);
+    }
+    fetchNextPage(options) {
+      return this.fetch({
+        ...options,
+        meta: {
+          fetchMore: { direction: "forward" }
+        }
+      });
+    }
+    fetchPreviousPage(options) {
+      return this.fetch({
+        ...options,
+        meta: {
+          fetchMore: { direction: "backward" }
+        }
+      });
+    }
+    createResult(query, options) {
+      const { state } = query;
+      const parentResult = super.createResult(query, options);
+      const { isFetching, isRefetching, isError, isRefetchError } = parentResult;
+      const fetchDirection = state.fetchMeta?.fetchMore?.direction;
+      const isFetchNextPageError = isError && fetchDirection === "forward";
+      const isFetchingNextPage = isFetching && fetchDirection === "forward";
+      const isFetchPreviousPageError = isError && fetchDirection === "backward";
+      const isFetchingPreviousPage = isFetching && fetchDirection === "backward";
+      const result = {
+        ...parentResult,
+        fetchNextPage: this.fetchNextPage,
+        fetchPreviousPage: this.fetchPreviousPage,
+        hasNextPage: hasNextPage(options, state.data),
+        hasPreviousPage: hasPreviousPage(options, state.data),
+        isFetchNextPageError,
+        isFetchingNextPage,
+        isFetchPreviousPageError,
+        isFetchingPreviousPage,
+        isRefetchError: isRefetchError && !isFetchNextPageError && !isFetchPreviousPageError,
+        isRefetching: isRefetching && !isFetchingNextPage && !isFetchingPreviousPage
+      };
+      return result;
+    }
+  };
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/mutationCache.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/mutation.js
+  init_define_import_meta_env();
+  var _client3, _observers, _mutationCache, _retryer2, _Mutation_instances, dispatch_fn2, _a7;
+  var Mutation = (_a7 = class extends Removable {
+    constructor(config) {
+      super();
+      __privateAdd(this, _Mutation_instances);
+      __privateAdd(this, _client3);
+      __privateAdd(this, _observers);
+      __privateAdd(this, _mutationCache);
+      __privateAdd(this, _retryer2);
+      __privateSet(this, _client3, config.client);
+      this.mutationId = config.mutationId;
+      __privateSet(this, _mutationCache, config.mutationCache);
+      __privateSet(this, _observers, []);
+      this.state = config.state || getDefaultState2();
+      this.setOptions(config.options);
+      this.scheduleGc();
+    }
+    setOptions(options) {
+      this.options = options;
+      this.updateGcTime(this.options.gcTime);
+    }
+    get meta() {
+      return this.options.meta;
+    }
+    addObserver(observer) {
+      if (!__privateGet(this, _observers).includes(observer)) {
+        __privateGet(this, _observers).push(observer);
+        this.clearGcTimeout();
+        __privateGet(this, _mutationCache).notify({
+          type: "observerAdded",
+          mutation: this,
+          observer
+        });
+      }
+    }
+    removeObserver(observer) {
+      __privateSet(this, _observers, __privateGet(this, _observers).filter((x) => x !== observer));
+      this.scheduleGc();
+      __privateGet(this, _mutationCache).notify({
+        type: "observerRemoved",
+        mutation: this,
+        observer
+      });
+    }
+    optionalRemove() {
+      if (!__privateGet(this, _observers).length) {
+        if (this.state.status === "pending") {
+          this.scheduleGc();
+        } else {
+          __privateGet(this, _mutationCache).remove(this);
+        }
+      }
+    }
+    continue() {
+      return __privateGet(this, _retryer2)?.continue() ?? // continuing a mutation assumes that variables are set, mutation must have been dehydrated before
+      this.execute(this.state.variables);
+    }
+    async execute(variables) {
+      const onContinue = () => {
+        __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "continue" });
+      };
+      const mutationFnContext = {
+        client: __privateGet(this, _client3),
+        meta: this.options.meta,
+        mutationKey: this.options.mutationKey
+      };
+      __privateSet(this, _retryer2, createRetryer({
+        fn: () => {
+          if (!this.options.mutationFn) {
+            return Promise.reject(new Error("No mutationFn found"));
+          }
+          return this.options.mutationFn(variables, mutationFnContext);
+        },
+        onFail: (failureCount, error) => {
+          __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "failed", failureCount, error });
+        },
+        onPause: () => {
+          __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "pause" });
+        },
+        onContinue,
+        retry: this.options.retry ?? 0,
+        retryDelay: this.options.retryDelay,
+        networkMode: this.options.networkMode,
+        canRun: () => __privateGet(this, _mutationCache).canRun(this)
+      }));
+      const restored = this.state.status === "pending";
+      const isPaused = !__privateGet(this, _retryer2).canStart();
+      try {
+        if (restored) {
+          onContinue();
+        } else {
+          __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "pending", variables, isPaused });
+          if (__privateGet(this, _mutationCache).config.onMutate) {
+            await __privateGet(this, _mutationCache).config.onMutate(
+              variables,
+              this,
+              mutationFnContext
+            );
+          }
+          const context = await this.options.onMutate?.(
+            variables,
+            mutationFnContext
+          );
+          if (context !== this.state.context) {
+            __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, {
+              type: "pending",
+              context,
+              variables,
+              isPaused
+            });
+          }
+        }
+        const data = await __privateGet(this, _retryer2).start();
+        await __privateGet(this, _mutationCache).config.onSuccess?.(
+          data,
+          variables,
+          this.state.context,
+          this,
+          mutationFnContext
+        );
+        await this.options.onSuccess?.(
+          data,
+          variables,
+          this.state.context,
+          mutationFnContext
+        );
+        await __privateGet(this, _mutationCache).config.onSettled?.(
+          data,
+          null,
+          this.state.variables,
+          this.state.context,
+          this,
+          mutationFnContext
+        );
+        await this.options.onSettled?.(
+          data,
+          null,
+          variables,
+          this.state.context,
+          mutationFnContext
+        );
+        __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "success", data });
+        return data;
+      } catch (error) {
+        try {
+          await __privateGet(this, _mutationCache).config.onError?.(
+            error,
+            variables,
+            this.state.context,
+            this,
+            mutationFnContext
+          );
+        } catch (e2) {
+          void Promise.reject(e2);
+        }
+        try {
+          await this.options.onError?.(
+            error,
+            variables,
+            this.state.context,
+            mutationFnContext
+          );
+        } catch (e2) {
+          void Promise.reject(e2);
+        }
+        try {
+          await __privateGet(this, _mutationCache).config.onSettled?.(
+            void 0,
+            error,
+            this.state.variables,
+            this.state.context,
+            this,
+            mutationFnContext
+          );
+        } catch (e2) {
+          void Promise.reject(e2);
+        }
+        try {
+          await this.options.onSettled?.(
+            void 0,
+            error,
+            variables,
+            this.state.context,
+            mutationFnContext
+          );
+        } catch (e2) {
+          void Promise.reject(e2);
+        }
+        __privateMethod(this, _Mutation_instances, dispatch_fn2).call(this, { type: "error", error });
+        throw error;
+      } finally {
+        __privateGet(this, _mutationCache).runNext(this);
+      }
+    }
+  }, _client3 = new WeakMap(), _observers = new WeakMap(), _mutationCache = new WeakMap(), _retryer2 = new WeakMap(), _Mutation_instances = new WeakSet(), dispatch_fn2 = function(action) {
+    const reducer = (state) => {
+      switch (action.type) {
+        case "failed":
+          return {
+            ...state,
+            failureCount: action.failureCount,
+            failureReason: action.error
+          };
+        case "pause":
+          return {
+            ...state,
+            isPaused: true
+          };
+        case "continue":
+          return {
+            ...state,
+            isPaused: false
+          };
+        case "pending":
+          return {
+            ...state,
+            context: action.context,
+            data: void 0,
+            failureCount: 0,
+            failureReason: null,
+            error: null,
+            isPaused: action.isPaused,
+            status: "pending",
+            variables: action.variables,
+            submittedAt: Date.now()
+          };
+        case "success":
+          return {
+            ...state,
+            data: action.data,
+            failureCount: 0,
+            failureReason: null,
+            error: null,
+            status: "success",
+            isPaused: false
+          };
+        case "error":
+          return {
+            ...state,
+            data: void 0,
+            error: action.error,
+            failureCount: state.failureCount + 1,
+            failureReason: action.error,
+            isPaused: false,
+            status: "error"
+          };
+      }
+    };
+    this.state = reducer(this.state);
+    notifyManager.batch(() => {
+      __privateGet(this, _observers).forEach((observer) => {
+        observer.onMutationUpdate(action);
+      });
+      __privateGet(this, _mutationCache).notify({
+        mutation: this,
+        type: "updated",
+        action
+      });
+    });
+  }, _a7);
+  function getDefaultState2() {
+    return {
+      context: void 0,
+      data: void 0,
+      error: null,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      status: "idle",
+      variables: void 0,
+      submittedAt: 0
+    };
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/mutationCache.js
+  var _mutations, _scopes, _mutationId, _a8;
+  var MutationCache = (_a8 = class extends Subscribable {
+    constructor(config = {}) {
+      super();
+      __privateAdd(this, _mutations);
+      __privateAdd(this, _scopes);
+      __privateAdd(this, _mutationId);
+      this.config = config;
+      __privateSet(this, _mutations, /* @__PURE__ */ new Set());
+      __privateSet(this, _scopes, /* @__PURE__ */ new Map());
+      __privateSet(this, _mutationId, 0);
+    }
+    build(client, options, state) {
+      const mutation = new Mutation({
+        client,
+        mutationCache: this,
+        mutationId: ++__privateWrapper(this, _mutationId)._,
+        options: client.defaultMutationOptions(options),
+        state
+      });
+      this.add(mutation);
+      return mutation;
+    }
+    add(mutation) {
+      __privateGet(this, _mutations).add(mutation);
+      const scope = scopeFor(mutation);
+      if (typeof scope === "string") {
+        const scopedMutations = __privateGet(this, _scopes).get(scope);
+        if (scopedMutations) {
+          scopedMutations.push(mutation);
+        } else {
+          __privateGet(this, _scopes).set(scope, [mutation]);
+        }
+      }
+      this.notify({ type: "added", mutation });
+    }
+    remove(mutation) {
+      if (__privateGet(this, _mutations).delete(mutation)) {
+        const scope = scopeFor(mutation);
+        if (typeof scope === "string") {
+          const scopedMutations = __privateGet(this, _scopes).get(scope);
+          if (scopedMutations) {
+            if (scopedMutations.length > 1) {
+              const index = scopedMutations.indexOf(mutation);
+              if (index !== -1) {
+                scopedMutations.splice(index, 1);
+              }
+            } else if (scopedMutations[0] === mutation) {
+              __privateGet(this, _scopes).delete(scope);
+            }
+          }
+        }
+      }
+      this.notify({ type: "removed", mutation });
+    }
+    canRun(mutation) {
+      const scope = scopeFor(mutation);
+      if (typeof scope === "string") {
+        const mutationsWithSameScope = __privateGet(this, _scopes).get(scope);
+        const firstPendingMutation = mutationsWithSameScope?.find(
+          (m) => m.state.status === "pending"
+        );
+        return !firstPendingMutation || firstPendingMutation === mutation;
+      } else {
+        return true;
+      }
+    }
+    runNext(mutation) {
+      const scope = scopeFor(mutation);
+      if (typeof scope === "string") {
+        const foundMutation = __privateGet(this, _scopes).get(scope)?.find((m) => m !== mutation && m.state.isPaused);
+        return foundMutation?.continue() ?? Promise.resolve();
+      } else {
+        return Promise.resolve();
+      }
+    }
+    clear() {
+      notifyManager.batch(() => {
+        __privateGet(this, _mutations).forEach((mutation) => {
+          this.notify({ type: "removed", mutation });
+        });
+        __privateGet(this, _mutations).clear();
+        __privateGet(this, _scopes).clear();
+      });
+    }
+    getAll() {
+      return Array.from(__privateGet(this, _mutations));
+    }
+    find(filters) {
+      const defaultedFilters = { exact: true, ...filters };
+      return this.getAll().find(
+        (mutation) => matchMutation(defaultedFilters, mutation)
+      );
+    }
+    findAll(filters = {}) {
+      return this.getAll().filter((mutation) => matchMutation(filters, mutation));
+    }
+    notify(event) {
+      notifyManager.batch(() => {
+        this.listeners.forEach((listener) => {
+          listener(event);
+        });
+      });
+    }
+    resumePausedMutations() {
+      const pausedMutations = this.getAll().filter((x) => x.state.isPaused);
+      return notifyManager.batch(
+        () => Promise.all(
+          pausedMutations.map((mutation) => mutation.continue().catch(noop))
+        )
+      );
+    }
+  }, _mutations = new WeakMap(), _scopes = new WeakMap(), _mutationId = new WeakMap(), _a8);
+  function scopeFor(mutation) {
+    return mutation.options.scope?.id;
+  }
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/mutationObserver.js
+  init_define_import_meta_env();
+  var _client4, _currentResult2, _currentMutation, _mutateOptions, _MutationObserver_instances, updateResult_fn, notify_fn2, _a9;
+  var MutationObserver2 = (_a9 = class extends Subscribable {
+    constructor(client, options) {
+      super();
+      __privateAdd(this, _MutationObserver_instances);
+      __privateAdd(this, _client4);
+      __privateAdd(this, _currentResult2);
+      __privateAdd(this, _currentMutation);
+      __privateAdd(this, _mutateOptions);
+      __privateSet(this, _client4, client);
+      this.setOptions(options);
+      this.bindMethods();
+      __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
+    }
+    bindMethods() {
+      this.mutate = this.mutate.bind(this);
+      this.reset = this.reset.bind(this);
+    }
+    setOptions(options) {
+      const prevOptions = this.options;
+      this.options = __privateGet(this, _client4).defaultMutationOptions(options);
+      if (!shallowEqualObjects(this.options, prevOptions)) {
+        __privateGet(this, _client4).getMutationCache().notify({
+          type: "observerOptionsUpdated",
+          mutation: __privateGet(this, _currentMutation),
+          observer: this
+        });
+      }
+      if (prevOptions?.mutationKey && this.options.mutationKey && hashKey(prevOptions.mutationKey) !== hashKey(this.options.mutationKey)) {
+        this.reset();
+      } else if (__privateGet(this, _currentMutation)?.state.status === "pending") {
+        __privateGet(this, _currentMutation).setOptions(this.options);
+      }
+    }
+    onUnsubscribe() {
+      if (!this.hasListeners()) {
+        __privateGet(this, _currentMutation)?.removeObserver(this);
+      }
+    }
+    onMutationUpdate(action) {
+      __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
+      __privateMethod(this, _MutationObserver_instances, notify_fn2).call(this, action);
+    }
+    getCurrentResult() {
+      return __privateGet(this, _currentResult2);
+    }
+    reset() {
+      __privateGet(this, _currentMutation)?.removeObserver(this);
+      __privateSet(this, _currentMutation, void 0);
+      __privateMethod(this, _MutationObserver_instances, updateResult_fn).call(this);
+      __privateMethod(this, _MutationObserver_instances, notify_fn2).call(this);
+    }
+    mutate(variables, options) {
+      __privateSet(this, _mutateOptions, options);
+      __privateGet(this, _currentMutation)?.removeObserver(this);
+      __privateSet(this, _currentMutation, __privateGet(this, _client4).getMutationCache().build(__privateGet(this, _client4), this.options));
+      __privateGet(this, _currentMutation).addObserver(this);
+      return __privateGet(this, _currentMutation).execute(variables);
+    }
+  }, _client4 = new WeakMap(), _currentResult2 = new WeakMap(), _currentMutation = new WeakMap(), _mutateOptions = new WeakMap(), _MutationObserver_instances = new WeakSet(), updateResult_fn = function() {
+    const state = __privateGet(this, _currentMutation)?.state ?? getDefaultState2();
+    __privateSet(this, _currentResult2, {
+      ...state,
+      isPending: state.status === "pending",
+      isSuccess: state.status === "success",
+      isError: state.status === "error",
+      isIdle: state.status === "idle",
+      mutate: this.mutate,
+      reset: this.reset
+    });
+  }, notify_fn2 = function(action) {
+    notifyManager.batch(() => {
+      if (__privateGet(this, _mutateOptions) && this.hasListeners()) {
+        const variables = __privateGet(this, _currentResult2).variables;
+        const onMutateResult = __privateGet(this, _currentResult2).context;
+        const context = {
+          client: __privateGet(this, _client4),
+          meta: this.options.meta,
+          mutationKey: this.options.mutationKey
+        };
+        if (action?.type === "success") {
+          try {
+            __privateGet(this, _mutateOptions).onSuccess?.(
+              action.data,
+              variables,
+              onMutateResult,
+              context
+            );
+          } catch (e2) {
+            void Promise.reject(e2);
+          }
+          try {
+            __privateGet(this, _mutateOptions).onSettled?.(
+              action.data,
+              null,
+              variables,
+              onMutateResult,
+              context
+            );
+          } catch (e2) {
+            void Promise.reject(e2);
+          }
+        } else if (action?.type === "error") {
+          try {
+            __privateGet(this, _mutateOptions).onError?.(
+              action.error,
+              variables,
+              onMutateResult,
+              context
+            );
+          } catch (e2) {
+            void Promise.reject(e2);
+          }
+          try {
+            __privateGet(this, _mutateOptions).onSettled?.(
+              void 0,
+              action.error,
+              variables,
+              onMutateResult,
+              context
+            );
+          } catch (e2) {
+            void Promise.reject(e2);
+          }
+        }
+      }
+      this.listeners.forEach((listener) => {
+        listener(__privateGet(this, _currentResult2));
+      });
+    });
+  }, _a9);
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/queryCache.js
+  init_define_import_meta_env();
+  var _queries, _a10;
+  var QueryCache = (_a10 = class extends Subscribable {
+    constructor(config = {}) {
+      super();
+      __privateAdd(this, _queries);
+      this.config = config;
+      __privateSet(this, _queries, /* @__PURE__ */ new Map());
+    }
+    build(client, options, state) {
+      const queryKey = options.queryKey;
+      const queryHash = options.queryHash ?? hashQueryKeyByOptions(queryKey, options);
+      let query = this.get(queryHash);
+      if (!query) {
+        query = new Query({
+          client,
+          queryKey,
+          queryHash,
+          options: client.defaultQueryOptions(options),
+          state,
+          defaultOptions: client.getQueryDefaults(queryKey)
+        });
+        this.add(query);
+      }
+      return query;
+    }
+    add(query) {
+      if (!__privateGet(this, _queries).has(query.queryHash)) {
+        __privateGet(this, _queries).set(query.queryHash, query);
+        this.notify({
+          type: "added",
+          query
+        });
+      }
+    }
+    remove(query) {
+      const queryInMap = __privateGet(this, _queries).get(query.queryHash);
+      if (queryInMap) {
+        query.destroy();
+        if (queryInMap === query) {
+          __privateGet(this, _queries).delete(query.queryHash);
+        }
+        this.notify({ type: "removed", query });
+      }
+    }
+    clear() {
+      notifyManager.batch(() => {
+        this.getAll().forEach((query) => {
+          this.remove(query);
+        });
+      });
+    }
+    get(queryHash) {
+      return __privateGet(this, _queries).get(queryHash);
+    }
+    getAll() {
+      return [...__privateGet(this, _queries).values()];
+    }
+    find(filters) {
+      const defaultedFilters = { exact: true, ...filters };
+      return this.getAll().find(
+        (query) => matchQuery(defaultedFilters, query)
+      );
+    }
+    findAll(filters = {}) {
+      const queries = this.getAll();
+      return Object.keys(filters).length > 0 ? queries.filter((query) => matchQuery(filters, query)) : queries;
+    }
+    notify(event) {
+      notifyManager.batch(() => {
+        this.listeners.forEach((listener) => {
+          listener(event);
+        });
+      });
+    }
+    onFocus() {
+      notifyManager.batch(() => {
+        this.getAll().forEach((query) => {
+          query.onFocus();
+        });
+      });
+    }
+    onOnline() {
+      notifyManager.batch(() => {
+        this.getAll().forEach((query) => {
+          query.onOnline();
+        });
+      });
+    }
+  }, _queries = new WeakMap(), _a10);
+
+  // frontend/node_modules/@tanstack/query-core/build/modern/queryClient.js
+  init_define_import_meta_env();
+  var _queryCache, _mutationCache2, _defaultOptions2, _queryDefaults, _mutationDefaults, _mountCount, _unsubscribeFocus, _unsubscribeOnline, _a11;
+  var QueryClient = (_a11 = class {
+    constructor(config = {}) {
+      __privateAdd(this, _queryCache);
+      __privateAdd(this, _mutationCache2);
+      __privateAdd(this, _defaultOptions2);
+      __privateAdd(this, _queryDefaults);
+      __privateAdd(this, _mutationDefaults);
+      __privateAdd(this, _mountCount);
+      __privateAdd(this, _unsubscribeFocus);
+      __privateAdd(this, _unsubscribeOnline);
+      __privateSet(this, _queryCache, config.queryCache || new QueryCache());
+      __privateSet(this, _mutationCache2, config.mutationCache || new MutationCache());
+      __privateSet(this, _defaultOptions2, config.defaultOptions || {});
+      __privateSet(this, _queryDefaults, /* @__PURE__ */ new Map());
+      __privateSet(this, _mutationDefaults, /* @__PURE__ */ new Map());
+      __privateSet(this, _mountCount, 0);
+    }
+    mount() {
+      __privateWrapper(this, _mountCount)._++;
+      if (__privateGet(this, _mountCount) !== 1) return;
+      __privateSet(this, _unsubscribeFocus, focusManager.subscribe(async (focused) => {
+        if (focused) {
+          await this.resumePausedMutations();
+          __privateGet(this, _queryCache).onFocus();
+        }
+      }));
+      __privateSet(this, _unsubscribeOnline, onlineManager.subscribe(async (online) => {
+        if (online) {
+          await this.resumePausedMutations();
+          __privateGet(this, _queryCache).onOnline();
+        }
+      }));
+    }
+    unmount() {
+      var _a117, _b5;
+      __privateWrapper(this, _mountCount)._--;
+      if (__privateGet(this, _mountCount) !== 0) return;
+      (_a117 = __privateGet(this, _unsubscribeFocus)) == null ? void 0 : _a117.call(this);
+      __privateSet(this, _unsubscribeFocus, void 0);
+      (_b5 = __privateGet(this, _unsubscribeOnline)) == null ? void 0 : _b5.call(this);
+      __privateSet(this, _unsubscribeOnline, void 0);
+    }
+    isFetching(filters) {
+      return __privateGet(this, _queryCache).findAll({ ...filters, fetchStatus: "fetching" }).length;
+    }
+    isMutating(filters) {
+      return __privateGet(this, _mutationCache2).findAll({ ...filters, status: "pending" }).length;
+    }
+    /**
+     * Imperative (non-reactive) way to retrieve data for a QueryKey.
+     * Should only be used in callbacks or functions where reading the latest data is necessary, e.g. for optimistic updates.
+     *
+     * Hint: Do not use this function inside a component, because it won't receive updates.
+     * Use `useQuery` to create a `QueryObserver` that subscribes to changes.
+     */
+    getQueryData(queryKey) {
+      const options = this.defaultQueryOptions({ queryKey });
+      return __privateGet(this, _queryCache).get(options.queryHash)?.state.data;
+    }
+    ensureQueryData(options) {
+      const defaultedOptions = this.defaultQueryOptions(options);
+      const query = __privateGet(this, _queryCache).build(this, defaultedOptions);
+      const cachedData = query.state.data;
+      if (cachedData === void 0) {
+        return this.fetchQuery(options);
+      }
+      if (options.revalidateIfStale && query.isStaleByTime(resolveStaleTime(defaultedOptions.staleTime, query))) {
+        void this.prefetchQuery(defaultedOptions);
+      }
+      return Promise.resolve(cachedData);
+    }
+    getQueriesData(filters) {
+      return __privateGet(this, _queryCache).findAll(filters).map(({ queryKey, state }) => {
+        const data = state.data;
+        return [queryKey, data];
+      });
+    }
+    setQueryData(queryKey, updater, options) {
+      const defaultedOptions = this.defaultQueryOptions({ queryKey });
+      const query = __privateGet(this, _queryCache).get(
+        defaultedOptions.queryHash
+      );
+      const prevData = query?.state.data;
+      const data = functionalUpdate(updater, prevData);
+      if (data === void 0) {
+        return void 0;
+      }
+      return __privateGet(this, _queryCache).build(this, defaultedOptions).setData(data, { ...options, manual: true });
+    }
+    setQueriesData(filters, updater, options) {
+      return notifyManager.batch(
+        () => __privateGet(this, _queryCache).findAll(filters).map(({ queryKey }) => [
+          queryKey,
+          this.setQueryData(queryKey, updater, options)
+        ])
+      );
+    }
+    getQueryState(queryKey) {
+      const options = this.defaultQueryOptions({ queryKey });
+      return __privateGet(this, _queryCache).get(
+        options.queryHash
+      )?.state;
+    }
+    removeQueries(filters) {
+      const queryCache = __privateGet(this, _queryCache);
+      notifyManager.batch(() => {
+        queryCache.findAll(filters).forEach((query) => {
+          queryCache.remove(query);
+        });
+      });
+    }
+    resetQueries(filters, options) {
+      const queryCache = __privateGet(this, _queryCache);
+      return notifyManager.batch(() => {
+        queryCache.findAll(filters).forEach((query) => {
+          query.reset();
+        });
+        return this.refetchQueries(
+          {
+            type: "active",
+            ...filters
+          },
+          options
+        );
+      });
+    }
+    cancelQueries(filters, cancelOptions = {}) {
+      const defaultedCancelOptions = { revert: true, ...cancelOptions };
+      const promises = notifyManager.batch(
+        () => __privateGet(this, _queryCache).findAll(filters).map((query) => query.cancel(defaultedCancelOptions))
+      );
+      return Promise.all(promises).then(noop).catch(noop);
+    }
+    invalidateQueries(filters, options = {}) {
+      return notifyManager.batch(() => {
+        __privateGet(this, _queryCache).findAll(filters).forEach((query) => {
+          query.invalidate();
+        });
+        if (filters?.refetchType === "none") {
+          return Promise.resolve();
+        }
+        return this.refetchQueries(
+          {
+            ...filters,
+            type: filters?.refetchType ?? filters?.type ?? "active"
+          },
+          options
+        );
+      });
+    }
+    refetchQueries(filters, options = {}) {
+      const fetchOptions = {
+        ...options,
+        cancelRefetch: options.cancelRefetch ?? true
+      };
+      const promises = notifyManager.batch(
+        () => __privateGet(this, _queryCache).findAll(filters).filter((query) => !query.isDisabled() && !query.isStatic()).map((query) => {
+          let promise = query.fetch(void 0, fetchOptions);
+          if (!fetchOptions.throwOnError) {
+            promise = promise.catch(noop);
+          }
+          return query.state.fetchStatus === "paused" ? Promise.resolve() : promise;
+        })
+      );
+      return Promise.all(promises).then(noop);
+    }
+    fetchQuery(options) {
+      const defaultedOptions = this.defaultQueryOptions(options);
+      if (defaultedOptions.retry === void 0) {
+        defaultedOptions.retry = false;
+      }
+      const query = __privateGet(this, _queryCache).build(this, defaultedOptions);
+      return query.isStaleByTime(
+        resolveStaleTime(defaultedOptions.staleTime, query)
+      ) ? query.fetch(defaultedOptions) : Promise.resolve(query.state.data);
+    }
+    prefetchQuery(options) {
+      return this.fetchQuery(options).then(noop).catch(noop);
+    }
+    fetchInfiniteQuery(options) {
+      options._type = "infinite";
+      return this.fetchQuery(options);
+    }
+    prefetchInfiniteQuery(options) {
+      return this.fetchInfiniteQuery(options).then(noop).catch(noop);
+    }
+    ensureInfiniteQueryData(options) {
+      options._type = "infinite";
+      return this.ensureQueryData(options);
+    }
+    resumePausedMutations() {
+      if (onlineManager.isOnline()) {
+        return __privateGet(this, _mutationCache2).resumePausedMutations();
+      }
+      return Promise.resolve();
+    }
+    getQueryCache() {
+      return __privateGet(this, _queryCache);
+    }
+    getMutationCache() {
+      return __privateGet(this, _mutationCache2);
+    }
+    getDefaultOptions() {
+      return __privateGet(this, _defaultOptions2);
+    }
+    setDefaultOptions(options) {
+      __privateSet(this, _defaultOptions2, options);
+    }
+    setQueryDefaults(queryKey, options) {
+      __privateGet(this, _queryDefaults).set(hashKey(queryKey), {
+        queryKey,
+        defaultOptions: options
+      });
+    }
+    getQueryDefaults(queryKey) {
+      const defaults = [...__privateGet(this, _queryDefaults).values()];
+      const result = {};
+      defaults.forEach((queryDefault) => {
+        if (partialMatchKey(queryKey, queryDefault.queryKey)) {
+          Object.assign(result, queryDefault.defaultOptions);
+        }
+      });
+      return result;
+    }
+    setMutationDefaults(mutationKey, options) {
+      __privateGet(this, _mutationDefaults).set(hashKey(mutationKey), {
+        mutationKey,
+        defaultOptions: options
+      });
+    }
+    getMutationDefaults(mutationKey) {
+      const defaults = [...__privateGet(this, _mutationDefaults).values()];
+      const result = {};
+      defaults.forEach((queryDefault) => {
+        if (partialMatchKey(mutationKey, queryDefault.mutationKey)) {
+          Object.assign(result, queryDefault.defaultOptions);
+        }
+      });
+      return result;
+    }
+    defaultQueryOptions(options) {
+      if (options._defaulted) {
+        return options;
+      }
+      const defaultedOptions = {
+        ...__privateGet(this, _defaultOptions2).queries,
+        ...this.getQueryDefaults(options.queryKey),
+        ...options,
+        _defaulted: true
+      };
+      if (!defaultedOptions.queryHash) {
+        defaultedOptions.queryHash = hashQueryKeyByOptions(
+          defaultedOptions.queryKey,
+          defaultedOptions
+        );
+      }
+      if (defaultedOptions.refetchOnReconnect === void 0) {
+        defaultedOptions.refetchOnReconnect = defaultedOptions.networkMode !== "always";
+      }
+      if (defaultedOptions.throwOnError === void 0) {
+        defaultedOptions.throwOnError = !!defaultedOptions.suspense;
+      }
+      if (!defaultedOptions.networkMode && defaultedOptions.persister) {
+        defaultedOptions.networkMode = "offlineFirst";
+      }
+      if (defaultedOptions.queryFn === skipToken) {
+        defaultedOptions.enabled = false;
+      }
+      return defaultedOptions;
+    }
+    defaultMutationOptions(options) {
+      if (options?._defaulted) {
+        return options;
+      }
+      return {
+        ...__privateGet(this, _defaultOptions2).mutations,
+        ...options?.mutationKey && this.getMutationDefaults(options.mutationKey),
+        ...options,
+        _defaulted: true
+      };
+    }
+    clear() {
+      __privateGet(this, _queryCache).clear();
+      __privateGet(this, _mutationCache2).clear();
+    }
+  }, _queryCache = new WeakMap(), _mutationCache2 = new WeakMap(), _defaultOptions2 = new WeakMap(), _queryDefaults = new WeakMap(), _mutationDefaults = new WeakMap(), _mountCount = new WeakMap(), _unsubscribeFocus = new WeakMap(), _unsubscribeOnline = new WeakMap(), _a11);
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js
+  init_define_import_meta_env();
+  var React2 = __toESM(require_react_shim(), 1);
+  var import_jsx_runtime = __toESM(require_react_shim(), 1);
+  var QueryClientContext = React2.createContext(
+    void 0
+  );
+  var useQueryClient = (queryClient2) => {
+    const client = React2.useContext(QueryClientContext);
+    if (queryClient2) {
+      return queryClient2;
+    }
+    if (!client) {
+      throw new Error("No QueryClient set, use QueryClientProvider to set one");
+    }
+    return client;
+  };
+  var QueryClientProvider = ({
+    client,
+    children
+  }) => {
+    React2.useEffect(() => {
+      client.mount();
+      return () => {
+        client.unmount();
+      };
+    }, [client]);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QueryClientContext.Provider, { value: client, children });
+  };
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/IsRestoringProvider.js
+  init_define_import_meta_env();
+  var React3 = __toESM(require_react_shim(), 1);
+  var IsRestoringContext = React3.createContext(false);
+  var useIsRestoring = () => React3.useContext(IsRestoringContext);
+  var IsRestoringProvider = IsRestoringContext.Provider;
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js
+  init_define_import_meta_env();
+  var React4 = __toESM(require_react_shim(), 1);
+  var import_jsx_runtime2 = __toESM(require_react_shim(), 1);
+  function createValue() {
+    let isReset = false;
+    return {
+      clearReset: () => {
+        isReset = false;
+      },
+      reset: () => {
+        isReset = true;
+      },
+      isReset: () => {
+        return isReset;
+      }
+    };
+  }
+  var QueryErrorResetBoundaryContext = React4.createContext(createValue());
+  var useQueryErrorResetBoundary = () => React4.useContext(QueryErrorResetBoundaryContext);
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js
+  init_define_import_meta_env();
+  var React5 = __toESM(require_react_shim(), 1);
+  var ensurePreventErrorBoundaryRetry = (options, errorResetBoundary, query) => {
+    const throwOnError = query?.state.error && typeof options.throwOnError === "function" ? shouldThrowError(options.throwOnError, [query.state.error, query]) : options.throwOnError;
+    if (options.suspense || options.experimental_prefetchInRender || throwOnError) {
+      if (!errorResetBoundary.isReset()) {
+        options.retryOnMount = false;
+      }
+    }
+  };
+  var useClearResetErrorBoundary = (errorResetBoundary) => {
+    React5.useEffect(() => {
+      errorResetBoundary.clearReset();
+    }, [errorResetBoundary]);
+  };
+  var getHasError = ({
+    result,
+    errorResetBoundary,
+    throwOnError,
+    query,
+    suspense
+  }) => {
+    return result.isError && !errorResetBoundary.isReset() && !result.isFetching && query && (suspense && result.data === void 0 || shouldThrowError(throwOnError, [result.error, query]));
+  };
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/suspense.js
+  init_define_import_meta_env();
+  var ensureSuspenseTimers = (defaultedOptions) => {
+    if (defaultedOptions.suspense) {
+      const MIN_SUSPENSE_TIME_MS = 1e3;
+      const clamp2 = (value) => value === "static" ? value : Math.max(value ?? MIN_SUSPENSE_TIME_MS, MIN_SUSPENSE_TIME_MS);
+      const originalStaleTime = defaultedOptions.staleTime;
+      defaultedOptions.staleTime = typeof originalStaleTime === "function" ? (...args) => clamp2(originalStaleTime(...args)) : clamp2(originalStaleTime);
+      if (typeof defaultedOptions.gcTime === "number") {
+        defaultedOptions.gcTime = Math.max(
+          defaultedOptions.gcTime,
+          MIN_SUSPENSE_TIME_MS
+        );
+      }
+    }
+  };
+  var willFetch = (result, isRestoring) => result.isLoading && result.isFetching && !isRestoring;
+  var shouldSuspend = (defaultedOptions, result) => defaultedOptions?.suspense && result.isPending;
+  var fetchOptimistic = (defaultedOptions, observer, errorResetBoundary) => observer.fetchOptimistic(defaultedOptions).catch(() => {
+    errorResetBoundary.clearReset();
+  });
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/useQuery.js
+  init_define_import_meta_env();
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/useBaseQuery.js
+  init_define_import_meta_env();
+  var React6 = __toESM(require_react_shim(), 1);
+  function useBaseQuery(options, Observer, queryClient2) {
+    if (true) {
+      if (typeof options !== "object" || Array.isArray(options)) {
+        throw new Error(
+          'Bad argument type. Starting with v5, only the "Object" form is allowed when calling query related functions. Please use the error stack to find the culprit call. More info here: https://tanstack.com/query/latest/docs/react/guides/migrating-to-v5#supports-a-single-signature-one-object'
+        );
+      }
+    }
+    const isRestoring = useIsRestoring();
+    const errorResetBoundary = useQueryErrorResetBoundary();
+    const client = useQueryClient(queryClient2);
+    const defaultedOptions = client.defaultQueryOptions(options);
+    client.getDefaultOptions().queries?._experimental_beforeQuery?.(
+      defaultedOptions
+    );
+    const query = client.getQueryCache().get(defaultedOptions.queryHash);
+    if (true) {
+      if (!defaultedOptions.queryFn) {
+        console.error(
+          `[${defaultedOptions.queryHash}]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function`
+        );
+      }
+    }
+    const subscribed = options.subscribed !== false;
+    defaultedOptions._optimisticResults = isRestoring ? "isRestoring" : subscribed ? "optimistic" : void 0;
+    ensureSuspenseTimers(defaultedOptions);
+    ensurePreventErrorBoundaryRetry(defaultedOptions, errorResetBoundary, query);
+    useClearResetErrorBoundary(errorResetBoundary);
+    const isNewCacheEntry = !client.getQueryCache().get(defaultedOptions.queryHash);
+    const [observer] = React6.useState(
+      () => new Observer(
+        client,
+        defaultedOptions
+      )
+    );
+    const result = observer.getOptimisticResult(defaultedOptions);
+    const shouldSubscribe = !isRestoring && subscribed;
+    React6.useSyncExternalStore(
+      React6.useCallback(
+        (onStoreChange) => {
+          const unsubscribe = shouldSubscribe ? observer.subscribe(notifyManager.batchCalls(onStoreChange)) : noop;
+          observer.updateResult();
+          return unsubscribe;
+        },
+        [observer, shouldSubscribe]
+      ),
+      () => observer.getCurrentResult(),
+      () => observer.getCurrentResult()
+    );
+    React6.useEffect(() => {
+      observer.setOptions(defaultedOptions);
+    }, [defaultedOptions, observer]);
+    if (shouldSuspend(defaultedOptions, result)) {
+      throw fetchOptimistic(defaultedOptions, observer, errorResetBoundary);
+    }
+    if (getHasError({
+      result,
+      errorResetBoundary,
+      throwOnError: defaultedOptions.throwOnError,
+      query,
+      suspense: defaultedOptions.suspense
+    })) {
+      throw result.error;
+    }
+    ;
+    client.getDefaultOptions().queries?._experimental_afterQuery?.(
+      defaultedOptions,
+      result
+    );
+    if (defaultedOptions.experimental_prefetchInRender && !environmentManager.isServer() && willFetch(result, isRestoring)) {
+      const promise = isNewCacheEntry ? (
+        // Fetch immediately on render in order to ensure `.promise` is resolved even if the component is unmounted
+        fetchOptimistic(defaultedOptions, observer, errorResetBoundary)
+      ) : (
+        // subscribe to the "cache promise" so that we can finalize the currentThenable once data comes in
+        query?.promise
+      );
+      promise?.catch(noop).finally(() => {
+        observer.updateResult();
+      });
+    }
+    return !defaultedOptions.notifyOnChangeProps ? observer.trackResult(result) : result;
+  }
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/useQuery.js
+  function useQuery(options, queryClient2) {
+    return useBaseQuery(options, QueryObserver, queryClient2);
+  }
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/useMutation.js
+  init_define_import_meta_env();
+  var React7 = __toESM(require_react_shim(), 1);
+  function useMutation(options, queryClient2) {
+    const client = useQueryClient(queryClient2);
+    const [observer] = React7.useState(
+      () => new MutationObserver2(
+        client,
+        options
+      )
+    );
+    React7.useEffect(() => {
+      observer.setOptions(options);
+    }, [observer, options]);
+    const result = React7.useSyncExternalStore(
+      React7.useCallback(
+        (onStoreChange) => observer.subscribe(notifyManager.batchCalls(onStoreChange)),
+        [observer]
+      ),
+      () => observer.getCurrentResult(),
+      () => observer.getCurrentResult()
+    );
+    const mutate = React7.useCallback(
+      (variables, mutateOptions) => {
+        observer.mutate(variables, mutateOptions).catch(noop);
+      },
+      [observer]
+    );
+    if (result.error && shouldThrowError(observer.options.throwOnError, [result.error])) {
+      throw result.error;
+    }
+    return { ...result, mutate, mutateAsync: result.mutate };
+  }
+
+  // frontend/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js
+  init_define_import_meta_env();
+  function useInfiniteQuery(options, queryClient2) {
+    return useBaseQuery(
+      options,
+      InfiniteQueryObserver,
+      queryClient2
+    );
+  }
 
   // frontend/src/templates/v1/components/footers/SvgSprite.tsx
   init_define_import_meta_env();
@@ -7293,11 +10307,30 @@ var PortalUI = (() => {
   globalThis.process ?? (globalThis.process = {
     env: {}
   });
+  var queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, refetchOnWindowFocus: false, staleTime: Infinity },
+      mutations: { retry: false }
+    }
+  });
+  function DSQuerySeed({
+    seed,
+    children
+  }) {
+    const client = React8.useMemo(() => {
+      const qc = new QueryClient({
+        defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false, staleTime: Infinity } }
+      });
+      for (const [key2, value] of seed ?? []) qc.setQueryData(key2, value);
+      return qc;
+    }, [seed]);
+    return React8.createElement(QueryClientProvider, { client }, children);
+  }
   function DSProvider({ children }) {
-    return React2.createElement(
-      React2.Fragment,
-      null,
-      React2.createElement(SvgSprite, null),
+    return React8.createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      React8.createElement(SvgSprite, null),
       children
     );
   }
@@ -7305,6 +10338,7 @@ var PortalUI = (() => {
   // ds-bundle/.pkg-entry.mjs
   var pkg_entry_exports = {};
   __export(pkg_entry_exports, {
+    AccountsView: () => AccountsView,
     ActivityFeed: () => ActivityFeed,
     AddBook: () => AddBook,
     AudioPlayer: () => AudioPlayer,
@@ -7316,18 +10350,28 @@ var PortalUI = (() => {
     BlogCard: () => BlogCard,
     BtnPrimary: () => BtnPrimary,
     BtnSecondary: () => BtnSecondary,
+    BudgetsView: () => BudgetsView,
+    CalendarView: () => CalendarView,
     CalendarWidget: () => CalendarWidget,
     Card: () => Card,
+    ChapterMenu: () => ChapterMenu,
     ChatResponsive: () => ChatResponsive,
     ChoseFromMyPhoto: () => ChoseFromMyPhoto,
+    ComicDetailView: () => ComicDetailView,
     ComicIndexView: () => ComicIndexView,
+    ComicReaderView: () => ComicReaderView,
     CommentForm: () => CommentForm,
     CommentItem: () => CommentItem,
     CommentThread: () => CommentThread,
     Composer: () => Composer,
+    ContinueRail: () => ContinueRail,
+    ContinueWidget: () => ContinueWidget,
     ControlBlockButtons: () => ControlBlockButtons,
+    DashboardView: () => DashboardView,
+    EntryCard: () => EntryCard,
     EventItem: () => EventItem,
     Field: () => Field,
+    FinanceWidget: () => FinanceWidget,
     FormField: () => FormField,
     FriendCard: () => FriendCard,
     FriendRequestItem: () => FriendRequestItem,
@@ -7340,31 +10384,45 @@ var PortalUI = (() => {
     LoginView: () => LoginView,
     MasterBase: () => MasterBase,
     MasterPublic: () => MasterPublic,
+    MediaDetailView: () => MediaDetailView,
+    MediaIndexView: () => MediaIndexView,
     MessagesMenu: () => MessagesMenu,
     Modal: () => Modal,
+    MoneyDisplay: () => MoneyDisplay,
+    MoneyInput: () => MoneyInput,
     NotificationsMenu: () => NotificationsMenu,
     NovelDetailView: () => NovelDetailView,
     OLYMP_VIEWBOX: () => OLYMP_VIEWBOX,
+    PagedReader: () => PagedReader,
     PagesWidget: () => PagesWidget,
+    PeopleIndexView: () => PeopleIndexView,
+    PersonDetailView: () => PersonDetailView,
     PersonalInfoWidget: () => PersonalInfoWidget,
     PlaylistWidget: () => PlaylistWidget,
     Post: () => Post,
     PostControlButtons: () => PostControlButtons,
     ProfileHeader: () => ProfileHeader,
     ReactionBar: () => ReactionBar,
+    ReaderChrome: () => ReaderChrome,
+    ReaderHelp: () => ReaderHelp,
+    ReaderSettings: () => ReaderSettings,
     RegisterView: () => RegisterView,
     SelectField: () => SelectField,
     SessionKeeper: () => SessionKeeper,
     SidebarCenter: () => SidebarCenter,
     SidebarLeft: () => SidebarLeft,
     SidebarRight: () => SidebarRight,
+    StreamItemCard: () => StreamItemCard,
+    StripReader: () => StripReader,
     SvgSprite: () => SvgSprite,
     TagSelect: () => TagSelect,
     ToggleRow: () => ToggleRow,
     TopMenu: () => TopMenu,
     TrackItem: () => TrackItem,
+    TransactionsView: () => TransactionsView,
     UpdateHeaderPhoto: () => UpdateHeaderPhoto,
     UploadStudio: () => UploadStudio,
+    WeatherView: () => WeatherView,
     WeatherWidget: () => WeatherWidget,
     WidgetCard: () => WidgetCard,
     inputCls: () => inputCls,
@@ -7645,15 +10703,20 @@ var PortalUI = (() => {
     { key: "media", label: "Multimedia", icon: "multimedia-icon" },
     { key: "blog", label: "Blog Post", icon: "blog-icon" }
   ];
-  function Composer({ displayName, onPost, className = "" }) {
-    const [tab, setTab] = (0, import_react2.useState)("status");
-    const [text, setText] = (0, import_react2.useState)("");
+  function Composer({
+    displayName,
+    bodyMd,
+    onBodyMdChange,
+    onSubmit,
+    submitting = false,
+    error = null,
+    className = ""
+  }) {
+    const [preview, setPreview] = (0, import_react2.useState)(false);
     function submit(e2) {
       e2.preventDefault();
-      const t2 = text.trim();
-      if (!t2) return;
-      onPost(t2);
-      setText("");
+      if (!bodyMd.trim() || submitting) return;
+      onSubmit();
     }
     return /* @__PURE__ */ React.createElement(
       "div",
@@ -7666,61 +10729,61 @@ var PortalUI = (() => {
         {
           key: t2.key,
           type: "button",
-          onClick: () => setTab(t2.key),
           className: "flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition",
-          style: tab === t2.key ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" } : { color: "var(--tpl-muted)" }
+          style: t2.key === "status" ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" } : { color: "var(--tpl-muted)" },
+          "aria-current": t2.key === "status" ? "true" : void 0
         },
         /* @__PURE__ */ React.createElement(Icon, { name: t2.icon, size: 16 }),
         /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline" }, t2.label)
       ))),
-      /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), /* @__PURE__ */ React.createElement(
+      /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "p-4" }, error && /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          role: "alert",
+          className: "mb-3 rounded-lg border px-3 py-2 text-sm",
+          style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+        },
+        error
+      ), /* @__PURE__ */ React.createElement("div", { className: "flex gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), preview ? /* @__PURE__ */ React.createElement("div", { className: "min-h-[3rem] w-full whitespace-pre-wrap pt-2 text-sm", style: { color: "var(--tpl-text)" } }, bodyMd.trim() ? bodyMd : /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 n\u1ED9i dung \u0111\u1EC3 xem tr\u01B0\u1EDBc.")) : /* @__PURE__ */ React.createElement(
         "textarea",
         {
-          value: text,
-          onChange: (e2) => setText(e2.target.value),
+          value: bodyMd,
+          onChange: (e2) => onBodyMdChange(e2.target.value),
           rows: 2,
           placeholder: "Share what you are thinking here...",
           className: "min-h-[3rem] w-full resize-none border-0 bg-transparent pt-2 text-sm outline-none placeholder:text-[var(--tpl-muted)]",
           style: { color: "var(--tpl-text)" }
         }
-      )), /* @__PURE__ */ React.createElement(
-        "div",
+      )), /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex items-center gap-1 border-t pt-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(IconBtn, { label: "Add photos (coming soon)", icon: "camera-icon", disabled: true }), /* @__PURE__ */ React.createElement(IconBtn, { label: "Tag friends (coming soon)", icon: "computer-icon", disabled: true }), /* @__PURE__ */ React.createElement(IconBtn, { label: "Add location (coming soon)", icon: "small-pin-icon", disabled: true }), /* @__PURE__ */ React.createElement("div", { className: "ml-auto flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+        "button",
         {
-          className: "mt-2 flex items-center gap-1 border-t pt-3",
-          style: { borderColor: "var(--tpl-border)" }
+          type: "submit",
+          disabled: !bodyMd.trim() || submitting,
+          className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
         },
-        /* @__PURE__ */ React.createElement(IconBtn, { label: "Add photos", icon: "camera-icon" }),
-        /* @__PURE__ */ React.createElement(IconBtn, { label: "Tag friends", icon: "computer-icon" }),
-        /* @__PURE__ */ React.createElement(IconBtn, { label: "Add location", icon: "small-pin-icon" }),
-        /* @__PURE__ */ React.createElement("div", { className: "ml-auto flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
-            className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
-            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-          },
-          "Preview"
-        ), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "submit",
-            disabled: !text.trim(),
-            className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-            style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-          },
-          "Post Status"
-        ))
-      ))
+        submitting ? "Posting\u2026" : "Post Status"
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => setPreview((p) => !p),
+          className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+          style: { borderColor: "var(--tpl-border)", background: "transparent", color: "var(--tpl-muted)" }
+        },
+        preview ? "Edit" : "Preview"
+      ))))
     );
   }
-  function IconBtn({ label, icon }) {
+  function IconBtn({ label, icon, disabled }) {
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         title: label,
         "aria-label": label,
-        className: "grid h-9 w-9 place-items-center rounded-lg transition hover:bg-[var(--tpl-surface-2)]",
+        disabled,
+        className: "grid h-9 w-9 place-items-center rounded-lg transition hover:bg-[var(--tpl-surface-2)] disabled:cursor-not-allowed disabled:opacity-40",
         style: { color: "var(--tpl-muted)" }
       },
       /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 18 })
@@ -7986,6 +11049,103 @@ var PortalUI = (() => {
   // frontend/src/templates/v1/components/headers/NotifMenus.tsx
   init_define_import_meta_env();
   var import_react6 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/.ds-shims/next-navigation.tsx
+  init_define_import_meta_env();
+  var React9 = __toESM(require_react_shim());
+  var noop2 = () => {
+  };
+  function useRouter() {
+    return React9.useMemo(
+      () => ({
+        push: noop2,
+        replace: noop2,
+        back: noop2,
+        forward: noop2,
+        refresh: noop2,
+        prefetch: async () => {
+        }
+      }),
+      []
+    );
+  }
+  function usePathname() {
+    return "/";
+  }
+  function useSearchParams() {
+    return React9.useMemo(() => new URLSearchParams(), []);
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/notifications.ts
+  init_define_import_meta_env();
+
+  // frontend/src/lib/api-client.ts
+  init_define_import_meta_env();
+  function resolveBaseURL() {
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      if (hostname !== "portal.localhost") {
+        return `${protocol}//${hostname}:8080`;
+      }
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  }
+  var baseURL = resolveBaseURL();
+  var ApiError = class extends Error {
+    constructor(status, body, message) {
+      super(message ?? `API error ${status}`);
+      __publicField(this, "status", status);
+      __publicField(this, "body", body);
+    }
+  };
+  async function api(path, init = {}) {
+    const res = await fetch(`${baseURL}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers
+      },
+      credentials: "include"
+    });
+    const text = await res.text();
+    const body = text ? safeJSON(text) : void 0;
+    if (!res.ok) {
+      throw new ApiError(res.status, body);
+    }
+    return body;
+  }
+  function safeJSON(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/notifications.ts
+  async function listNotifications(params = {}) {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    return api(`/api/v1/me/notifications${qs ? `?${qs}` : ""}`);
+  }
+  async function markRead(id2) {
+    return api(`/api/v1/me/notifications/${id2}/read`, {
+      method: "POST"
+    });
+  }
+  async function markAllRead(before) {
+    const qs = before ? `?before=${encodeURIComponent(before)}` : "";
+    return api(`/api/v1/me/notifications/read-all${qs}`, {
+      method: "POST"
+    });
+  }
+  function watermarkCursor(item) {
+    return `${item.created_at}_${item.id}`;
+  }
+
+  // frontend/src/templates/v1/components/headers/NotifMenus.tsx
   function Trigger({
     icon,
     tone,
@@ -8150,16 +11310,94 @@ var PortalUI = (() => {
       ))
     ));
   }
-  var NOTIFS = [
-    { id: 1, who: "Mathilda Brinker", action: /* @__PURE__ */ React.createElement(React.Fragment, null, "commented on your ", /* @__PURE__ */ React.createElement(InlineLink, null, "photo"), "."), time: "2 mins ago", icon: "comments-post-icon" },
-    { id: 2, who: "Nicholas Grissom", action: /* @__PURE__ */ React.createElement(React.Fragment, null, "liked your ", /* @__PURE__ */ React.createElement(InlineLink, null, "status update"), "."), time: "5 mins ago", icon: "like-post-icon" },
-    { id: 3, who: "Sarah Hetfield", action: /* @__PURE__ */ React.createElement(React.Fragment, null, "started following you."), time: "12 mins ago", icon: "happy-face-icon" },
-    { id: 4, who: "Jake Parker", action: /* @__PURE__ */ React.createElement(React.Fragment, null, "shared your ", /* @__PURE__ */ React.createElement(InlineLink, null, "post"), "."), time: "1 hour ago", icon: "share-post-icon" }
-  ];
+  var NOTIFICATIONS_KEY = ["notifications"];
+  function timeAgo(iso) {
+    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 6e4);
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
   function NotificationsMenu({ open, onToggle }) {
-    const [items, setItems] = (0, import_react6.useState)(NOTIFS);
-    const unread = items.filter((n2) => !n2.read).length;
-    const markAll = () => setItems((x) => x.map((n2) => ({ ...n2, read: true })));
+    const router = useRouter();
+    const queryClient2 = useQueryClient();
+    const query = useQuery({
+      queryKey: NOTIFICATIONS_KEY,
+      queryFn: () => listNotifications(),
+      staleTime: 0,
+      // personal counter — always refetch-worthy (SPEC-04 P0.5)
+      refetchInterval: 6e4,
+      // P0 delivery is polling, not SessionKeeper (D-34)
+      refetchOnWindowFocus: true
+    });
+    const items = query.data?.items ?? [];
+    const unread = query.data?.unread_count ?? 0;
+    const markReadMutation = useMutation({
+      mutationFn: (id2) => markRead(id2),
+      onMutate: async (id2) => {
+        await queryClient2.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+        const previous = queryClient2.getQueryData(NOTIFICATIONS_KEY);
+        queryClient2.setQueryData(NOTIFICATIONS_KEY, (data) => {
+          if (!data) return data;
+          const target = data.items.find((n2) => n2.id === id2);
+          if (!target || target.read_at) return data;
+          return {
+            ...data,
+            items: data.items.map(
+              (n2) => n2.id === id2 ? { ...n2, read_at: (/* @__PURE__ */ new Date()).toISOString() } : n2
+            ),
+            unread_count: Math.max(0, data.unread_count - 1)
+          };
+        });
+        return { previous };
+      },
+      onError: (_err, _id3, context) => {
+        if (context?.previous) queryClient2.setQueryData(NOTIFICATIONS_KEY, context.previous);
+      },
+      onSuccess: (result) => {
+        queryClient2.setQueryData(
+          NOTIFICATIONS_KEY,
+          (data) => data ? { ...data, unread_count: result.unread_count } : data
+        );
+      }
+    });
+    const markAllReadMutation = useMutation({
+      mutationFn: (before) => markAllRead(before),
+      onMutate: async () => {
+        await queryClient2.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+        const previous = queryClient2.getQueryData(NOTIFICATIONS_KEY);
+        queryClient2.setQueryData(
+          NOTIFICATIONS_KEY,
+          (data) => data ? {
+            ...data,
+            items: data.items.map(
+              (n2) => n2.read_at ? n2 : { ...n2, read_at: (/* @__PURE__ */ new Date()).toISOString() }
+            ),
+            unread_count: 0
+          } : data
+        );
+        return { previous };
+      },
+      onError: (_err, _before, context) => {
+        if (context?.previous) queryClient2.setQueryData(NOTIFICATIONS_KEY, context.previous);
+      },
+      onSuccess: (result) => {
+        queryClient2.setQueryData(
+          NOTIFICATIONS_KEY,
+          (data) => data ? { ...data, unread_count: result.unread_count } : data
+        );
+      }
+    });
+    function markAll() {
+      const newest = items[0];
+      markAllReadMutation.mutate(newest ? watermarkCursor(newest) : void 0);
+    }
+    function openItem(n2) {
+      if (!n2.read_at) markReadMutation.mutate(n2.id);
+      if (n2.data.href) router.push(n2.data.href);
+    }
     return /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement(Trigger, { icon: "thunder-icon", tone: "var(--tpl-accent)", badge: unread, label: "Notifications", open, onToggle }), open && /* @__PURE__ */ React.createElement(
       DropdownCard,
       {
@@ -8167,16 +11405,23 @@ var PortalUI = (() => {
         actions: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(ActionLink, { onClick: markAll }, "Mark as read"), /* @__PURE__ */ React.createElement(ActionLink, null, "Settings")),
         footer: "Check all your Notifications"
       },
-      items.map((n2) => /* @__PURE__ */ React.createElement(
+      query.isPending ? /* @__PURE__ */ React.createElement(Empty, null, "Loading\u2026") : query.isError ? /* @__PURE__ */ React.createElement(Empty, null, "Couldn't load notifications.") : items.length === 0 ? /* @__PURE__ */ React.createElement(Empty, null, "No notifications yet") : items.map((n2) => /* @__PURE__ */ React.createElement(
         "li",
         {
           key: n2.id,
-          className: "flex items-start gap-3 border-b px-4 py-3",
-          style: { ...rowBorder, background: n2.read ? void 0 : "rgba(255,94,58,0.05)" }
+          onClick: () => openItem(n2),
+          className: "flex cursor-pointer items-start gap-3 border-b px-4 py-3 transition hover:bg-[var(--tpl-surface-2)]",
+          style: { ...rowBorder, background: n2.read_at ? void 0 : "rgba(255,94,58,0.05)" }
         },
-        /* @__PURE__ */ React.createElement(Avatar, { name: n2.who, size: 38 }),
-        /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm leading-snug", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("b", { style: { color: "var(--tpl-heading)" } }, n2.who), " ", n2.action), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-[11px]", style: { color: "var(--tpl-muted)" } }, n2.time)),
-        /* @__PURE__ */ React.createElement("span", { className: "mt-1 shrink-0", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: n2.icon, size: 16 }))
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full",
+            style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "thunder-icon", size: 16 })
+        ),
+        /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, n2.title), n2.body && /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, n2.body), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-[11px]", style: { color: "var(--tpl-muted)" } }, timeAgo(n2.created_at)))
       ))
     ));
   }
@@ -8187,25 +11432,67 @@ var PortalUI = (() => {
 
   // frontend/node_modules/portal-frontend/.ds-shims/next-link.tsx
   init_define_import_meta_env();
-  var React3 = __toESM(require_react_shim());
+  var React10 = __toESM(require_react_shim());
   function Link({
     href,
     children,
     ...rest
   }) {
     const to = typeof href === "string" ? href : href?.pathname ?? "#";
-    return React3.createElement("a", { href: to, ...rest }, children);
+    return React10.createElement("a", { href: to, ...rest }, children);
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/api-client.ts
+  init_define_import_meta_env();
+  function resolveBaseURL2() {
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      if (hostname !== "portal.localhost") {
+        return `${protocol}//${hostname}:8080`;
+      }
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  }
+  var baseURL2 = resolveBaseURL2();
+  var ApiError2 = class extends Error {
+    constructor(status, body, message) {
+      super(message ?? `API error ${status}`);
+      __publicField(this, "status", status);
+      __publicField(this, "body", body);
+    }
+  };
+  async function api2(path, init = {}) {
+    const res = await fetch(`${baseURL2}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers
+      },
+      credentials: "include"
+    });
+    const text = await res.text();
+    const body = text ? safeJSON2(text) : void 0;
+    if (!res.ok) {
+      throw new ApiError2(res.status, body);
+    }
+    return body;
+  }
+  function safeJSON2(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
   }
 
   // frontend/src/templates/v1/components/headers/TopMenu.tsx
-  var API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
   function TopMenu() {
     const [me, setMe] = (0, import_react7.useState)({ name: "Guest", role: "Member" });
     const [menu, setMenu] = (0, import_react7.useState)(null);
     const clusterRef = (0, import_react7.useRef)(null);
     (0, import_react7.useEffect)(() => {
       let alive = true;
-      fetch(`${API_BASE}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((d) => {
+      fetch(`${baseURL2}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((d) => {
         if (alive && d?.display_name) setMe({ name: d.display_name, role: d.roles?.[0] ?? "Member" });
       }).catch(() => {
       });
@@ -8276,8 +11563,8 @@ var PortalUI = (() => {
     }, [role]);
     async function logout() {
       try {
-        await fetch(`${API_BASE}/api/v1/auth/refresh`, { method: "POST", credentials: "include" });
-        await fetch(`${API_BASE}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
+        await fetch(`${baseURL2}/api/v1/auth/refresh`, { method: "POST", credentials: "include" });
+        await fetch(`${baseURL2}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
       } catch {
       }
       try {
@@ -8393,6 +11680,111 @@ var PortalUI = (() => {
     return /* @__PURE__ */ React.createElement(Link, { href: href ?? "/", className: cls }, inner);
   }
 
+  // frontend/src/templates/v1/components/journal/EntryCard.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/src/lib/markdown.tsx
+  init_define_import_meta_env();
+  function renderMarkdown(source) {
+    const paragraphs = source.replace(/\r\n/g, "\n").split(/\n{2,}/).filter((p) => p.trim().length > 0);
+    if (paragraphs.length === 0) return null;
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, paragraphs.map((paragraph, i) => /* @__PURE__ */ React.createElement("p", { key: i, className: i > 0 ? "mt-3" : void 0 }, renderParagraph(paragraph, i))));
+  }
+  function renderParagraph(paragraph, paragraphKey) {
+    const lines = paragraph.split("\n");
+    const out = [];
+    lines.forEach((line, i) => {
+      if (i > 0) out.push(/* @__PURE__ */ React.createElement("br", { key: `p${paragraphKey}-br${i}` }));
+      out.push(...renderInline(line, `${paragraphKey}-${i}`));
+    });
+    return out;
+  }
+  var INLINE_TOKEN = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|_[^_]+_)/g;
+  function renderInline(text, lineKey) {
+    const out = [];
+    let lastIndex = 0;
+    let key2 = 0;
+    for (const match of text.matchAll(INLINE_TOKEN)) {
+      const index = match.index ?? 0;
+      if (index > lastIndex) out.push(text.slice(lastIndex, index));
+      const token = match[0];
+      const k = `${lineKey}-${key2++}`;
+      if (token.startsWith("**")) {
+        out.push(/* @__PURE__ */ React.createElement("strong", { key: k }, token.slice(2, -2)));
+      } else if (token.startsWith("`")) {
+        out.push(
+          /* @__PURE__ */ React.createElement(
+            "code",
+            {
+              key: k,
+              className: "rounded px-1 py-0.5 text-[0.85em]",
+              style: { background: "var(--tpl-surface-2)" }
+            },
+            token.slice(1, -1)
+          )
+        );
+      } else {
+        out.push(/* @__PURE__ */ React.createElement("em", { key: k }, token.slice(1, -1)));
+      }
+      lastIndex = index + token.length;
+    }
+    if (lastIndex < text.length) out.push(text.slice(lastIndex));
+    return out;
+  }
+
+  // frontend/src/templates/v1/components/journal/EntryCard.tsx
+  function EntryCard({
+    displayName,
+    entry,
+    onRequestEdit,
+    onRequestDelete
+  }) {
+    const edited = new Date(entry.updated_at).getTime() - new Date(entry.created_at).getTime() > 6e4;
+    return /* @__PURE__ */ React.createElement(
+      "article",
+      {
+        className: "rounded-xl p-5 shadow-sm",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("header", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, displayName), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("time", { dateTime: entry.occurred_at }, formatOccurredAt(entry.occurred_at)), edited && /* @__PURE__ */ React.createElement("span", null, " \xB7 edited"))), entry.mood && /* @__PURE__ */ React.createElement(MoodPill, { mood: entry.mood })),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 text-sm leading-relaxed", style: { color: "var(--tpl-text)" } }, renderMarkdown(entry.body_md)),
+      /* @__PURE__ */ React.createElement("footer", { className: "mt-4 flex items-center gap-4 border-t pt-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onRequestEdit,
+          className: "text-xs font-semibold uppercase tracking-wide transition hover:text-[var(--tpl-accent)]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        "Edit"
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onRequestDelete,
+          className: "text-xs font-semibold uppercase tracking-wide transition hover:text-[#ef4444]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        "Delete"
+      ))
+    );
+  }
+  function MoodPill({ mood }) {
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
+        style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" }
+      },
+      mood
+    );
+  }
+  function formatOccurredAt(iso) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString(void 0, { dateStyle: "medium", timeStyle: "short" });
+  }
+
   // frontend/src/templates/v1/components/menu/SidebarCenter.tsx
   init_define_import_meta_env();
   function SidebarCenter() {
@@ -8411,11 +11803,13 @@ var PortalUI = (() => {
   var ITEMS = [
     { icon: "newsfeed-icon", label: "Newsfeed", href: "/", active: true },
     { icon: "multimedia-icon", label: "Upload Video", href: "/upload" },
-    { icon: "star-icon", label: "Fav Pages Feed", href: "/library/comic" },
+    { icon: "stats-icon", label: "Ledger", href: "/bank" },
+    { icon: "happy-faces-icon", label: "People", href: "/people" },
+    { icon: "albums-icon", label: "Commic", href: "/library/comic" },
     { icon: "happy-faces-icon", label: "Friend Groups" },
     { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" },
-    { icon: "weather-icon", label: "Weather App" },
-    { icon: "calendar-icon", label: "Calendar and Events" },
+    { icon: "weather-icon", label: "Weather App", href: "/weather" },
+    { icon: "calendar-icon", label: "Calendar and Events", href: "/calendar" },
     { icon: "badge-icon", label: "Community Badges" },
     { icon: "cupcake-icon", label: "Friends Birthdays" },
     { icon: "stats-icon", label: "Account Stats" },
@@ -9609,120 +13003,618 @@ var PortalUI = (() => {
     );
   }
 
+  // frontend/src/templates/v1/components/stream/StreamItemCard.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/src/lib/time.ts
+  init_define_import_meta_env();
+  var FALLBACK_TZ = "UTC";
+  var LOCALE = "en-GB";
+  async function getTimeConfig() {
+    try {
+      const res = await fetch(`${baseURL}/api/v1/time`, { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const j = await res.json();
+        const now = j.now ? new Date(j.now) : /* @__PURE__ */ new Date();
+        const timezone = isValidTz(j.timezone) ? j.timezone : FALLBACK_TZ;
+        if (!Number.isNaN(now.getTime())) return { now, timezone };
+      }
+    } catch {
+    }
+    return { now: /* @__PURE__ */ new Date(), timezone: FALLBACK_TZ };
+  }
+  function useTimeConfig() {
+    return useQuery({
+      queryKey: ["time-config"],
+      queryFn: getTimeConfig,
+      staleTime: 5 * 60 * 1e3,
+      retry: false
+    });
+  }
+  function isValidTz(tz) {
+    if (!tz) return false;
+    try {
+      new Intl.DateTimeFormat(LOCALE, { timeZone: tz });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  function zonedYMD(date, tz) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(date);
+    const val = (t2) => Number(parts.find((p) => p.type === t2)?.value);
+    return { year: val("year"), month: val("month") - 1, day: val("day") };
+  }
+  function formatDate(iso, tz) {
+    return new Intl.DateTimeFormat(LOCALE, { timeZone: tz, day: "numeric", month: "short" }).format(new Date(iso));
+  }
+  function fromDatetimeLocalInTz(local, tz) {
+    const asUTC = /* @__PURE__ */ new Date(`${local}:00Z`);
+    if (Number.isNaN(asUTC.getTime())) return new Date(local).toISOString();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).formatToParts(asUTC);
+    const g = (t2) => Number(parts.find((p) => p.type === t2)?.value);
+    const hh = g("hour") === 24 ? 0 : g("hour");
+    const shownAsUTC = Date.UTC(g("year"), g("month") - 1, g("day"), hh, g("minute"));
+    return new Date(asUTC.getTime() - (shownAsUTC - asUTC.getTime())).toISOString();
+  }
+  function relativeTime(iso, nowMs) {
+    const secs = Math.max(1, Math.floor((nowMs - new Date(iso).getTime()) / 1e3));
+    if (secs < 60) return `${secs}s ago`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  // frontend/src/templates/v1/components/stream/StreamItemCard.tsx
+  function StreamItemCard({ item, displayName }) {
+    const { data: tc } = useTimeConfig();
+    const when = formatDate(item.occurred_at, tc?.timezone ?? "UTC");
+    if (item.source_module === "journal") {
+      return /* @__PURE__ */ React.createElement(
+        Post,
+        {
+          author: displayName ?? "You",
+          time: item.mood ? `${when} \xB7 ${item.mood}` : when,
+          text: /* @__PURE__ */ React.createElement("span", { className: "whitespace-pre-wrap" }, item.body_md),
+          likes: 0,
+          likedBy: [],
+          comments: 0,
+          shares: 0
+        }
+      );
+    }
+    const icon = iconFor(item.source_module);
+    const body = /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex items-center gap-3 rounded-xl border p-3",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "grid h-9 w-9 shrink-0 place-items-center rounded-full", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 18 })),
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, item.title || item.event_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, when))
+    );
+    return item.href ? /* @__PURE__ */ React.createElement(Link, { href: item.href, className: "block transition hover:opacity-90" }, body) : body;
+  }
+  function iconFor(module) {
+    switch (module) {
+      case "media":
+        return "multimedia-icon";
+      case "bank":
+        return "stats-icon";
+      case "comic":
+        return "star-icon";
+      case "people":
+        return "cupcake-icon";
+      default:
+        return "newsfeed-icon";
+    }
+  }
+
+  // frontend/src/templates/v1/components/ui/Money.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/src/lib/bank.ts
+  init_define_import_meta_env();
+  async function listAccounts() {
+    const r2 = await api("/api/v1/bank/accounts");
+    return r2.accounts ?? [];
+  }
+  async function createAccount(body) {
+    return api("/api/v1/bank/accounts", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function updateAccount(id2, body) {
+    return api(`/api/v1/bank/accounts/${id2}`, { method: "PATCH", body: JSON.stringify(body) });
+  }
+  async function deleteAccount(id2) {
+    await api(`/api/v1/bank/accounts/${id2}`, { method: "DELETE" });
+  }
+  async function listCategories() {
+    const r2 = await api("/api/v1/bank/categories");
+    return r2.categories ?? [];
+  }
+  async function listTransactions(params = {}) {
+    const q = new URLSearchParams();
+    if (params.account) q.set("account", params.account);
+    if (params.category) q.set("category", params.category);
+    if (params.month) q.set("month", params.month);
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    const r2 = await api(`/api/v1/bank/transactions${qs ? `?${qs}` : ""}`);
+    return { transactions: r2.transactions ?? [], next_cursor: r2.next_cursor };
+  }
+  async function createTransaction(body) {
+    return api("/api/v1/bank/transactions", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function deleteTransaction(id2) {
+    await api(`/api/v1/bank/transactions/${id2}`, { method: "DELETE" });
+  }
+  async function listBudgets(month) {
+    const q = month ? `?month=${month}` : "";
+    const r2 = await api(`/api/v1/bank/budgets${q}`);
+    return { month: r2.month, budgets: r2.budgets ?? [] };
+  }
+  async function setBudget(body) {
+    await api("/api/v1/bank/budgets", { method: "PUT", body: JSON.stringify(body) });
+  }
+  async function getDashboard(month) {
+    const q = month ? `?month=${month}` : "";
+    return api(`/api/v1/bank/dashboard${q}`);
+  }
+  function formatVND(minor) {
+    const neg = minor < 0;
+    const digits = Math.abs(minor).toString();
+    const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (neg ? "-" : "") + grouped;
+  }
+  function parseVND(s) {
+    const cleaned = s.replace(/[^\d-]/g, "");
+    if (cleaned === "" || cleaned === "-") return 0;
+    return parseInt(cleaned, 10) || 0;
+  }
+  function currentMonth() {
+    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+  }
+
+  // frontend/src/templates/v1/components/ui/Money.tsx
+  function MoneyDisplay({
+    amount,
+    currency,
+    className,
+    signed
+  }) {
+    const tone = signed ? amount < 0 ? "text-red-400" : amount > 0 ? "text-green-400" : "" : "";
+    const prefix = signed && amount > 0 ? "+" : "";
+    return /* @__PURE__ */ React.createElement("span", { className: `tabular-nums ${tone} ${className ?? ""}` }, prefix, formatVND(amount), currency ? /* @__PURE__ */ React.createElement("span", { className: "ml-1 text-xs opacity-60" }, currency) : null);
+  }
+  function MoneyInput({
+    value,
+    onChange,
+    placeholder,
+    className,
+    id: id2
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        id: id2,
+        type: "text",
+        inputMode: "numeric",
+        value: value === 0 ? "" : formatVND(value),
+        placeholder: placeholder ?? "0",
+        onChange: (e2) => onChange(parseVND(e2.target.value)),
+        className: className ?? "w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-right tabular-nums text-white focus:border-blue-500 focus:outline-none"
+      }
+    );
+  }
+
   // frontend/src/templates/v1/components/widget/ActivityFeed.tsx
   init_define_import_meta_env();
-  var DEFAULT_ITEMS = [
-    {
-      actor: "Marina Polson",
-      action: /* @__PURE__ */ React.createElement(React.Fragment, null, "commented on Jason Mark's ", /* @__PURE__ */ React.createElement(FeedLink, null, "photo"), "."),
-      time: "2 mins ago",
-      icon: "comments-post-icon"
-    },
-    {
-      actor: "Jake Parker",
-      action: /* @__PURE__ */ React.createElement(React.Fragment, null, "liked Nicholas Grissom's ", /* @__PURE__ */ React.createElement(FeedLink, null, "status update"), "."),
-      time: "5 mins ago",
-      icon: "like-post-icon"
-    },
-    {
-      actor: "Mary Jane Stark",
-      action: /* @__PURE__ */ React.createElement(React.Fragment, null, "added 20 new photos to her ", /* @__PURE__ */ React.createElement(FeedLink, null, "gallery album"), "."),
-      time: "12 mins ago",
-      icon: "photos-icon"
-    },
-    {
-      actor: "Nicholas Grissom",
-      action: /* @__PURE__ */ React.createElement(React.Fragment, null, "updated his profile ", /* @__PURE__ */ React.createElement(FeedLink, null, "photo"), "."),
-      time: "1 hour ago",
-      icon: "happy-face-icon"
-    }
-  ];
-  function ActivityFeed({
-    items = DEFAULT_ITEMS,
-    title = "Activity Feed"
-  } = {}) {
-    return /* @__PURE__ */ React.createElement(WidgetCard, { title }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-4" }, items.map((it, i) => /* @__PURE__ */ React.createElement("li", { key: `${it.actor}-${i}`, className: "flex items-start gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: it.actor, size: 36 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm leading-snug", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("b", { style: { color: "var(--tpl-heading)" } }, it.actor), " ", it.action), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, it.time)), /* @__PURE__ */ React.createElement("span", { className: "mt-1 shrink-0", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: it.icon, size: 16 }))))));
-  }
-  function FeedLink({ children }) {
-    return /* @__PURE__ */ React.createElement("a", { href: "#", className: "font-medium hover:underline", style: { color: "var(--tpl-accent)" } }, children);
+  function ActivityFeed() {
+    const { data } = useQuery({
+      queryKey: ["notifications", "rail"],
+      queryFn: () => listNotifications(),
+      retry: false
+    });
+    const { data: tc } = useTimeConfig();
+    const nowMs = tc?.now.getTime() ?? Date.now();
+    const items = (data?.items ?? []).slice(0, 5);
+    return /* @__PURE__ */ React.createElement(WidgetCard, { title: "Recent activity" }, items.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "py-1 text-xs", style: { color: "var(--tpl-muted)" } }, "You're all caught up.") : /* @__PURE__ */ React.createElement("ul", { className: "space-y-4" }, items.map((it) => {
+      const href = it.data?.href;
+      return /* @__PURE__ */ React.createElement("li", { key: it.id, className: "flex items-start gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: it.title, size: 36 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm leading-snug", style: { color: "var(--tpl-text)" } }, href ? /* @__PURE__ */ React.createElement(
+        Link,
+        {
+          href,
+          className: "font-semibold hover:underline",
+          style: { color: "var(--tpl-heading)" }
+        },
+        it.title
+      ) : /* @__PURE__ */ React.createElement("b", { style: { color: "var(--tpl-heading)" } }, it.title), it.body ? /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, " \u2014 ", it.body) : null), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, relativeTime(it.created_at, nowMs))), it.read_at === null && /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+          style: { background: "var(--tpl-accent)" },
+          "aria-label": "unread"
+        }
+      ));
+    })));
   }
 
   // frontend/src/templates/v1/components/widget/BirthdayCard.tsx
   init_define_import_meta_env();
-  function BirthdayCard({
-    name = "Marina Valentine",
-    message = "Leave her a message with your best wishes on her profile page!"
-  } = {}) {
-    return /* @__PURE__ */ React.createElement(
+
+  // frontend/node_modules/portal-frontend/src/lib/people.ts
+  init_define_import_meta_env();
+  async function listPeople(cursor) {
+    const q = cursor ? `?cursor=${cursor}` : "";
+    const r2 = await api(`/api/v1/people${q}`);
+    return { people: r2.people ?? [], next_cursor: r2.next_cursor };
+  }
+  async function getPerson(id2) {
+    return api(`/api/v1/people/${id2}`);
+  }
+  async function createPerson(body) {
+    return api("/api/v1/people", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function deletePerson(id2) {
+    await api(`/api/v1/people/${id2}`, { method: "DELETE" });
+  }
+  async function upcomingBirthdays(days = 14) {
+    const r2 = await api(`/api/v1/people/upcoming-birthdays?days=${days}`);
+    return r2.upcoming ?? [];
+  }
+  function formatBirthday(b) {
+    if (!b) return "";
+    const dd = String(b.day).padStart(2, "0");
+    const mm = String(b.month).padStart(2, "0");
+    return b.year ? `${dd}/${mm}/${b.year}` : `${dd}/${mm}`;
+  }
+
+  // frontend/src/templates/v1/components/widget/BirthdayCard.tsx
+  function BirthdayCard() {
+    const { data = [], isLoading } = useQuery({ queryKey: ["people", "upcoming"], queryFn: () => upcomingBirthdays(14) });
+    const next = data[0];
+    if (isLoading || !next) return null;
+    const when = next.days_until === 0 ? "Today is" : next.days_until === 1 ? "Tomorrow is" : `In ${next.days_until} days \u2014`;
+    const age = next.age_turning != null ? ` (turning ${next.age_turning})` : "";
+    return /* @__PURE__ */ React.createElement("div", { className: "relative overflow-hidden rounded-xl p-5 text-white shadow-sm", style: { background: "linear-gradient(150deg, #8a63d2, #6d4bb8)" } }, /* @__PURE__ */ React.createElement(
       "div",
       {
-        className: "relative overflow-hidden rounded-xl p-5 text-white shadow-sm",
-        style: { background: "linear-gradient(150deg, #8a63d2, #6d4bb8)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          "aria-hidden": true,
-          className: "pointer-events-none absolute inset-0 opacity-20",
-          style: {
-            background: "radial-gradient(60% 60% at 85% 15%, rgba(255,255,255,0.5), transparent 60%),radial-gradient(50% 50% at 20% 90%, rgba(255,255,255,0.25), transparent 60%)"
-          }
+        "aria-hidden": true,
+        className: "pointer-events-none absolute inset-0 opacity-20",
+        style: {
+          background: "radial-gradient(60% 60% at 85% 15%, rgba(255,255,255,0.5), transparent 60%),radial-gradient(50% 50% at 20% 90%, rgba(255,255,255,0.25), transparent 60%)"
         }
-      ),
-      /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement(Icon, { name: "cupcake-icon", size: 22 }), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Options" }, /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 18 }))), /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(Avatar, { name, size: 44, className: "ring-2 ring-white/40" })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm text-white/80" }, "Today is"), /* @__PURE__ */ React.createElement("h3", { className: "text-2xl font-bold leading-tight" }, name, "'s Birthday!"), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm leading-relaxed text-white/80" }, message))
-    );
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement(Icon, { name: "cupcake-icon", size: 22 }), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Options" }, /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 18 }))), /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(Avatar, { name: next.display_name, size: 44, className: "ring-2 ring-white/40" })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm text-white/80" }, when), /* @__PURE__ */ React.createElement("h3", { className: "text-2xl font-bold leading-tight" }, next.display_name, "'s Birthday!", age), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm leading-relaxed text-white/80" }, next.days_until <= 1 ? "Reach out and make their day." : "A heads-up so you don't forget.")));
   }
 
   // frontend/src/templates/v1/components/widget/CalendarWidget.tsx
   init_define_import_meta_env();
-  var DEFAULT_WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  function CalendarWidget({
-    month = "May",
-    today = 12,
-    daysInMonth = 31,
-    weekdays = DEFAULT_WEEKDAYS,
-    onPrev,
-    onNext
-  } = {}) {
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    return /* @__PURE__ */ React.createElement(WidgetCard, null, /* @__PURE__ */ React.createElement(
-      "div",
+  var import_react13 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/journal.ts
+  init_define_import_meta_env();
+  async function listEntries(params = {}) {
+    const q = new URLSearchParams();
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    return api(`/api/v1/journal/entries${qs ? `?${qs}` : ""}`);
+  }
+  async function createEntry(input) {
+    return api("/api/v1/journal/entries", {
+      method: "POST",
+      body: JSON.stringify(input)
+    });
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/lunar.ts
+  init_define_import_meta_env();
+  var PI = Math.PI;
+  var VN_TZ = 7;
+  var CAN = ["Gi\xE1p", "\u1EA4t", "B\xEDnh", "\u0110inh", "M\u1EADu", "K\u1EF7", "Canh", "T\xE2n", "Nh\xE2m", "Qu\xFD"];
+  var CHI = ["T\xFD", "S\u1EEDu", "D\u1EA7n", "M\xE3o", "Th\xECn", "T\u1EF5", "Ng\u1ECD", "M\xF9i", "Th\xE2n", "D\u1EADu", "Tu\u1EA5t", "H\u1EE3i"];
+  function jdFromDate(dd, mm, yy) {
+    const a = Math.floor((14 - mm) / 12);
+    const y = yy + 4800 - a;
+    const m = mm + 12 * a - 3;
+    let jd = dd + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    if (jd < 2299161) {
+      jd = dd + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - 32083;
+    }
+    return jd;
+  }
+  function newMoon(k) {
+    const T = k / 1236.85;
+    const T2 = T * T;
+    const T3 = T2 * T;
+    const dr = PI / 180;
+    let Jd1 = 241502075933e-5 + 29.53058868 * k + 1178e-7 * T2 - 155e-9 * T3;
+    Jd1 += 33e-5 * Math.sin((166.56 + 132.87 * T - 9173e-6 * T2) * dr);
+    const M = 359.2242 + 29.10535608 * k - 333e-7 * T2 - 347e-8 * T3;
+    const Mpr = 306.0253 + 385.81691806 * k + 0.0107306 * T2 + 1236e-8 * T3;
+    const F = 21.2964 + 390.67050646 * k - 16528e-7 * T2 - 239e-8 * T3;
+    let C1 = (0.1734 - 393e-6 * T) * Math.sin(M * dr) + 21e-4 * Math.sin(2 * dr * M);
+    C1 = C1 - 0.4068 * Math.sin(Mpr * dr) + 0.0161 * Math.sin(dr * 2 * Mpr);
+    C1 = C1 - 4e-4 * Math.sin(dr * 3 * Mpr);
+    C1 = C1 + 0.0104 * Math.sin(dr * 2 * F) - 51e-4 * Math.sin(dr * (M + Mpr));
+    C1 = C1 - 74e-4 * Math.sin(dr * (M - Mpr)) + 4e-4 * Math.sin(dr * (2 * F + M));
+    C1 = C1 - 4e-4 * Math.sin(dr * (2 * F - M)) - 6e-4 * Math.sin(dr * (2 * F + Mpr));
+    C1 = C1 + 1e-3 * Math.sin(dr * (2 * F - Mpr)) + 5e-4 * Math.sin(dr * (2 * Mpr + M));
+    const deltat = T < -11 ? 1e-3 + 839e-6 * T + 2261e-7 * T2 - 845e-8 * T3 - 81e-9 * T * T3 : -278e-6 + 265e-6 * T + 262e-6 * T2;
+    return Jd1 + C1 - deltat;
+  }
+  function getNewMoonDay(k, tz) {
+    return Math.floor(newMoon(k) + 0.5 + tz / 24);
+  }
+  function sunLongitude(jdn) {
+    const T = (jdn - 2451545) / 36525;
+    const T2 = T * T;
+    const dr = PI / 180;
+    const M = 357.5291 + 35999.0503 * T - 1559e-7 * T2 - 48e-8 * T * T2;
+    const L0 = 280.46645 + 36000.76983 * T + 3032e-7 * T2;
+    let DL = (1.9146 - 4817e-6 * T - 14e-6 * T2) * Math.sin(dr * M);
+    DL = DL + (0.019993 - 101e-6 * T) * Math.sin(dr * 2 * M) + 29e-5 * Math.sin(dr * 3 * M);
+    let L = (L0 + DL) * dr;
+    L = L - PI * 2 * Math.floor(L / (PI * 2));
+    return L;
+  }
+  function getSunLongitude(dayNumber, tz) {
+    return Math.floor(sunLongitude(dayNumber - 0.5 - tz / 24) / PI * 6);
+  }
+  function getLunarMonth11(yy, tz) {
+    const off = jdFromDate(31, 12, yy) - 2415021;
+    const k = Math.floor(off / 29.530588853);
+    let nm = getNewMoonDay(k, tz);
+    if (getSunLongitude(nm, tz) >= 9) nm = getNewMoonDay(k - 1, tz);
+    return nm;
+  }
+  function getLeapMonthOffset(a11, tz) {
+    const k = Math.floor((a11 - 2415021076998695e-9) / 29.530588853 + 0.5);
+    let last = 0;
+    let i = 1;
+    let arc = getSunLongitude(getNewMoonDay(k + i, tz), tz);
+    do {
+      last = arc;
+      i += 1;
+      arc = getSunLongitude(getNewMoonDay(k + i, tz), tz);
+    } while (arc !== last && i < 14);
+    return i - 1;
+  }
+  function solarToLunar(dd, mm, yy, tz = VN_TZ) {
+    const dayNumber = jdFromDate(dd, mm, yy);
+    const k = Math.floor((dayNumber - 2415021076998695e-9) / 29.530588853);
+    let monthStart = getNewMoonDay(k + 1, tz);
+    if (monthStart > dayNumber) monthStart = getNewMoonDay(k, tz);
+    let a11 = getLunarMonth11(yy, tz);
+    let b11 = a11;
+    let lunarYear;
+    if (a11 >= monthStart) {
+      lunarYear = yy;
+      a11 = getLunarMonth11(yy - 1, tz);
+    } else {
+      lunarYear = yy + 1;
+      b11 = getLunarMonth11(yy + 1, tz);
+    }
+    const lunarDay = dayNumber - monthStart + 1;
+    const diff = Math.floor((monthStart - a11) / 29);
+    let lunarLeap = 0;
+    let lunarMonth = diff + 11;
+    if (b11 - a11 > 365) {
+      const leapMonthDiff = getLeapMonthOffset(a11, tz);
+      if (diff >= leapMonthDiff) {
+        lunarMonth = diff + 10;
+        if (diff === leapMonthDiff) lunarLeap = 1;
+      }
+    }
+    if (lunarMonth > 12) lunarMonth -= 12;
+    if (lunarMonth >= 11 && diff < 4) lunarYear -= 1;
+    return { day: lunarDay, month: lunarMonth, year: lunarYear, leap: lunarLeap === 1 };
+  }
+  function canChiYear(lunarYear) {
+    return `${CAN[(lunarYear + 6) % 10]} ${CHI[(lunarYear + 8) % 12]}`;
+  }
+  function canChiDay(dd, mm, yy) {
+    const jd = jdFromDate(dd, mm, yy);
+    return `${CAN[(jd + 9) % 10]} ${CHI[(jd + 1) % 12]}`;
+  }
+
+  // frontend/src/templates/v1/components/widget/CalendarWidget.tsx
+  var WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  function CalendarWidget() {
+    const { data: tc } = useTimeConfig();
+    const { data } = useQuery({
+      queryKey: ["journal", "calendar"],
+      queryFn: () => listEntries(),
+      retry: false
+    });
+    const [ym, setYm] = (0, import_react13.useState)(null);
+    (0, import_react13.useEffect)(() => {
+      if (tc && !ym) {
+        const c = zonedYMD(tc.now, tc.timezone);
+        setYm({ year: c.year, month: c.month });
+      }
+    }, [tc, ym]);
+    const activeDays = (0, import_react13.useMemo)(() => {
+      const s = /* @__PURE__ */ new Set();
+      if (!tc || !ym) return s;
+      for (const e2 of data?.items ?? []) {
+        const p = zonedYMD(new Date(e2.occurred_at), tc.timezone);
+        if (p.year === ym.year && p.month === ym.month) s.add(p.day);
+      }
+      return s;
+    }, [data, tc, ym]);
+    const lunarByDay = (0, import_react13.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      if (!ym) return map;
+      const dim = new Date(Date.UTC(ym.year, ym.month + 1, 0)).getUTCDate();
+      for (let d = 1; d <= dim; d += 1) {
+        const l2 = solarToLunar(d, ym.month + 1, ym.year);
+        map.set(d, { day: l2.day, month: l2.month });
+      }
+      return map;
+    }, [ym]);
+    if (!tc || !ym) return null;
+    const { year, month } = ym;
+    const now = zonedYMD(tc.now, tc.timezone);
+    const isThisMonth = now.year === year && now.month === month;
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const firstDow = (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7;
+    const cells = [
+      ...Array.from({ length: firstDow }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+    ];
+    const shiftMonth = (delta) => setYm((m) => {
+      if (!m) return m;
+      const d = new Date(Date.UTC(m.year, m.month + delta, 1));
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+    });
+    const goToday = () => setYm({ year: now.year, month: now.month });
+    return /* @__PURE__ */ React.createElement(Card, { className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m tr\u01B0\u1EDBc", glyph: "\xAB", onClick: () => shiftMonth(-12) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth(-1) })), /* @__PURE__ */ React.createElement(
+      "button",
       {
-        className: "mb-3 flex items-center justify-between px-1",
+        type: "button",
+        onClick: goToday,
+        title: isThisMonth ? "Th\xE1ng n\xE0y" : "V\u1EC1 h\xF4m nay",
+        className: "rounded-md px-1.5 py-0.5 text-sm font-bold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { color: "var(--tpl-heading)" }
+      },
+      "Th\xE1ng ",
+      month + 1,
+      ", ",
+      year
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth(1) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m sau", glyph: "\xBB", onClick: () => shiftMonth(12) }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-y-1.5 text-center" }, WEEKDAYS.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, className: "text-[10px] font-bold", style: { color: i === 6 ? "var(--tpl-accent)" : "var(--tpl-muted)" } }, d)), cells.map((day, i) => {
+      if (day === null) return /* @__PURE__ */ React.createElement("span", { key: `b${i}` });
+      const lunar = lunarByDay.get(day);
+      const isMonthStart = lunar?.day === 1;
+      const isToday = isThisMonth && day === now.day;
+      return /* @__PURE__ */ React.createElement("div", { key: day, className: "flex flex-col items-center leading-none" }, /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "relative grid h-5 w-5 place-items-center rounded-full text-[11px]",
+          style: isToday ? { background: "var(--tpl-accent)", color: "#fff", fontWeight: 600 } : { color: "var(--tpl-heading)" }
+        },
+        day,
+        activeDays.has(day) && !isToday && /* @__PURE__ */ React.createElement("span", { className: "absolute -right-0.5 -top-0.5 h-1 w-1 rounded-full", style: { background: "var(--tpl-accent)" }, "aria-label": "c\xF3 ghi ch\xFA" })
+      ), /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "mt-0.5 text-[8px]",
+          style: { color: isMonthStart ? "var(--tpl-accent)" : "var(--tpl-muted)", fontWeight: isMonthStart ? 700 : 400 }
+        },
+        isMonthStart ? `1/${lunar?.month}` : lunar?.day
+      ));
+    })), /* @__PURE__ */ React.createElement("div", { className: "mt-3 border-t pt-2 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/calendar",
+        className: "text-[11px] font-semibold transition hover:opacity-80",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "M\u1EDF L\u1ECBch \xC2m D\u01B0\u01A1ng \u2192"
+    )));
+  }
+  function NavBtn({ label, glyph, onClick }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        "aria-label": label,
+        title: label,
+        className: "grid h-6 w-6 place-items-center rounded-md text-sm leading-none transition hover:bg-[var(--tpl-surface-2)]",
         style: { color: "var(--tpl-muted)" }
       },
-      /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Previous month", onClick: onPrev }, /* @__PURE__ */ React.createElement(Icon, { name: "popup-left-arrow", size: 12 })),
-      /* @__PURE__ */ React.createElement("span", { className: "font-semibold", style: { color: "var(--tpl-heading)" } }, month),
-      /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Next month", onClick: onNext }, /* @__PURE__ */ React.createElement(Icon, { name: "popup-right-arrow", size: 12 }))
-    ), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-y-2 text-center text-[11px]" }, weekdays.map((d) => /* @__PURE__ */ React.createElement("span", { key: d, className: "font-semibold", style: { color: "var(--tpl-muted)" } }, d)), days.map((n2) => /* @__PURE__ */ React.createElement(
-      "span",
-      {
-        key: n2,
-        className: "grid h-7 place-items-center rounded-full text-xs",
-        style: n2 === today ? { background: "var(--tpl-accent)", color: "#fff", margin: "0 auto", width: 28 } : { color: "var(--tpl-text)" }
-      },
-      n2
-    ))));
+      glyph
+    );
+  }
+
+  // frontend/src/templates/v1/components/widget/ContinueWidget.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/src/lib/media-assets.ts
+  init_define_import_meta_env();
+  async function listAssets(params = {}) {
+    const q = new URLSearchParams();
+    if (params.kind && params.kind !== "all") q.set("kind", params.kind);
+    if (params.status && params.status !== "all") q.set("status", params.status);
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    return api(`/api/v1/assets${qs ? `?${qs}` : ""}`);
+  }
+  async function deleteAsset(id2) {
+    await api(`/api/v1/assets/${id2}`, { method: "DELETE" });
+  }
+  function assetVariantURL(id2, variant) {
+    return `${baseURL}/api/v1/assets/${id2}/variants/${variant}`;
+  }
+  function assetOriginalURL(id2) {
+    return `${baseURL}/api/v1/assets/${id2}/original`;
+  }
+  async function getAsset(id2) {
+    return api(`/api/v1/assets/${id2}`);
+  }
+  async function getPlaybackProgress(id2) {
+    return api(`/api/v1/assets/${id2}/progress`);
+  }
+  async function getContinueItems(limit = 10) {
+    return api(`/api/v1/continue?limit=${limit}`);
+  }
+
+  // frontend/src/templates/v1/components/widget/ContinueWidget.tsx
+  function ContinueWidget() {
+    const { data } = useQuery({ queryKey: ["continue", "home"], queryFn: () => getContinueItems(5), retry: false });
+    const items = data?.items ?? [];
+    if (items.length === 0) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border p-4", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h3", { className: "mb-3 text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, "Continue"), /* @__PURE__ */ React.createElement("ul", { className: "space-y-2" }, items.map((it) => /* @__PURE__ */ React.createElement("li", { key: it.ref_id }, /* @__PURE__ */ React.createElement(Link, { href: it.href, className: "flex items-center gap-2 text-sm hover:opacity-90", style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement("span", { className: "h-1.5 w-1.5 rounded-full", style: { background: "var(--tpl-accent)" } }), /* @__PURE__ */ React.createElement("span", { className: "truncate" }, it.title), /* @__PURE__ */ React.createElement("span", { className: "ml-auto text-xs", style: { color: "var(--tpl-muted)" } }, it.progress_pct, "%"))))));
+  }
+
+  // frontend/src/templates/v1/components/widget/FinanceWidget.tsx
+  init_define_import_meta_env();
+  function FinanceWidget() {
+    const { data } = useQuery({ queryKey: ["bank", "dashboard", "home"], queryFn: () => getDashboard(), retry: false });
+    if (!data) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border p-4", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h3", { className: "text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, "This month"), /* @__PURE__ */ React.createElement(Link, { href: "/bank", className: "text-xs", style: { color: "var(--tpl-accent)" } }, "Ledger")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2 text-sm" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Income"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data.income, className: "font-semibold text-green-500" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Expense"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data.expense, className: "font-semibold text-red-500" }))));
   }
 
   // frontend/src/templates/v1/components/widget/FriendSuggestions.tsx
   init_define_import_meta_env();
-  var DEFAULT_PEOPLE = [
-    { name: "Francine Smith", meta: "8 Friends in Common" },
-    { name: "Hugh Wilson", meta: "6 Friends in Common" },
-    { name: "Karen Masters", meta: "6 Friends in Common" }
-  ];
-  function FriendSuggestions({
-    people = DEFAULT_PEOPLE,
-    title = "Friend Suggestions"
-  } = {}) {
-    return /* @__PURE__ */ React.createElement(WidgetCard, { title, more: true }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, people.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.name, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: p.name, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, p.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, p.meta)), /* @__PURE__ */ React.createElement(
-      "button",
+  function FriendSuggestions() {
+    const { data } = useQuery({
+      queryKey: ["people", "rail"],
+      queryFn: () => listPeople(),
+      retry: false
+    });
+    const people = (data?.people ?? []).slice(0, 5);
+    return /* @__PURE__ */ React.createElement(WidgetCard, { title: "People" }, people.length === 0 ? /* @__PURE__ */ React.createElement(
+      Link,
       {
-        type: "button",
+        href: "/people",
+        className: "block rounded-md py-1 text-xs hover:underline",
+        style: { color: "var(--tpl-muted)" }
+      },
+      "No people yet \u2014 add someone to your registry."
+    ) : /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, people.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.id, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: p.display_name, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, p.display_name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs capitalize", style: { color: "var(--tpl-muted)" } }, p.relationship ?? "Contact")), /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: `/people/${p.id}`,
         className: "ml-auto grid h-8 w-8 place-items-center rounded-md text-white transition hover:opacity-90",
         style: { background: "var(--tpl-blue)" },
-        "aria-label": `Add ${p.name}`
+        "aria-label": `Open ${p.display_name}`
       },
       /* @__PURE__ */ React.createElement(Icon, { name: "happy-face-icon", size: 16 })
     )))));
@@ -9730,22 +13622,99 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/PagesWidget.tsx
   init_define_import_meta_env();
-  var DEFAULT_PAGES = [
-    { name: "The Marina Bar", category: "Restaurant \xB7 Bar" },
-    { name: "Tapronus Rock", category: "Rock Band" },
-    { name: "Pixel Digital Design", category: "Company" },
-    { name: "Thompson's Custom Clothing Boutique", category: "Clothing Store" }
-  ];
-  function PagesWidget({
-    pages = DEFAULT_PAGES,
-    title = "Pages You May Like"
-  } = {}) {
-    return /* @__PURE__ */ React.createElement(WidgetCard, { title, more: true }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, pages.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.name, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: p.name, size: 38 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, p.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, p.category)), /* @__PURE__ */ React.createElement(
-      "button",
+
+  // frontend/node_modules/portal-frontend/src/lib/comic.ts
+  init_define_import_meta_env();
+  function variantURL(assetId, variant) {
+    return `${baseURL}/api/v1/assets/${assetId}/variants/${variant}`;
+  }
+  async function listComics(cursor) {
+    const q = cursor ? `?cursor=${cursor}` : "";
+    const r2 = await api(`/api/v1/comics${q}`);
+    return { comics: r2.comics ?? [], next_cursor: r2.next_cursor };
+  }
+  async function listMyComics(cursor) {
+    const q = cursor ? `?cursor=${cursor}` : "";
+    const r2 = await api(`/api/v1/comics/mine${q}`);
+    return { comics: r2.comics ?? [], next_cursor: r2.next_cursor };
+  }
+  async function createComic(body) {
+    return api("/api/v1/comics", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function getComic(id2) {
+    return api(`/api/v1/comics/${id2}`);
+  }
+  async function updateComic(id2, patch) {
+    return api(`/api/v1/comics/${id2}`, { method: "PATCH", body: JSON.stringify(patch) });
+  }
+  async function deleteComic(id2) {
+    await api(`/api/v1/comics/${id2}`, { method: "DELETE" });
+  }
+  async function publishComic(id2) {
+    return api(`/api/v1/comics/${id2}/publish`, { method: "POST" });
+  }
+  async function unpublishComic(id2) {
+    return api(`/api/v1/comics/${id2}/unpublish`, { method: "POST" });
+  }
+  async function createChapter(comicId, body) {
+    return api(`/api/v1/comics/${comicId}/chapters`, { method: "POST", body: JSON.stringify(body) });
+  }
+  async function updateChapter(chapterId, body) {
+    return api(`/api/v1/chapters/${chapterId}`, { method: "PATCH", body: JSON.stringify(body) });
+  }
+  async function deleteChapter(chapterId) {
+    await api(`/api/v1/chapters/${chapterId}`, { method: "DELETE" });
+  }
+  async function reorderChapters(comicId, order) {
+    await api(`/api/v1/comics/${comicId}/chapters:order`, { method: "PUT", body: JSON.stringify({ order }) });
+  }
+  async function getChapterPages(chapterId) {
+    const r2 = await api(`/api/v1/chapters/${chapterId}/pages`);
+    return r2.pages ?? [];
+  }
+  async function createPages(chapterId, pages) {
+    const r2 = await api(`/api/v1/chapters/${chapterId}/pages`, { method: "POST", body: JSON.stringify({ pages }) });
+    return r2.pages ?? [];
+  }
+  async function deletePage(pageId) {
+    await api(`/api/v1/pages/${pageId}`, { method: "DELETE" });
+  }
+  async function reorderPages(chapterId, order) {
+    await api(`/api/v1/chapters/${chapterId}/pages:order`, { method: "PUT", body: JSON.stringify({ order }) });
+  }
+  function saveComicProgress(comicId, chapterId, pageId) {
+    const url = `${baseURL}/api/v1/comics/${comicId}/progress`;
+    const body = JSON.stringify({ chapter_id: chapterId, page_id: pageId });
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+    } else {
+      fetch(url, { method: "PUT", headers: { "Content-Type": "application/json" }, body, credentials: "include", keepalive: true }).catch(() => {
+      });
+    }
+  }
+
+  // frontend/src/templates/v1/components/widget/PagesWidget.tsx
+  function PagesWidget() {
+    const { data } = useQuery({
+      queryKey: ["comics", "discover"],
+      queryFn: () => listComics(),
+      retry: false
+    });
+    const comics = (data?.comics ?? []).slice(0, 4);
+    return /* @__PURE__ */ React.createElement(WidgetCard, { title: "Discover" }, comics.length === 0 ? /* @__PURE__ */ React.createElement(
+      Link,
       {
-        type: "button",
+        href: "/library/comic",
+        className: "block rounded-md py-1 text-xs hover:underline",
+        style: { color: "var(--tpl-muted)" }
+      },
+      "Nothing published yet \u2014 browse the library."
+    ) : /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, comics.map((c) => /* @__PURE__ */ React.createElement("li", { key: c.id, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: c.title, size: 38 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, c.title), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, c.chapter_count ? `${c.chapter_count} chapter${c.chapter_count === 1 ? "" : "s"}` : "Comic")), /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: `/library/comic/${c.id}`,
         className: "ml-auto text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]",
-        "aria-label": "Like page"
+        "aria-label": `Open ${c.title}`
       },
       /* @__PURE__ */ React.createElement(Icon, { name: "star-icon", size: 18 })
     )))));
@@ -9753,7 +13722,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/PersonalInfoWidget.tsx
   init_define_import_meta_env();
-  var DEFAULT_ITEMS2 = [
+  var DEFAULT_ITEMS = [
     {
       label: "About",
       value: "Hi, I'm James \u2014 a Digital Designer at the \u201CDaydreams\u201D Agency in Pier 56."
@@ -9763,7 +13732,7 @@ var PortalUI = (() => {
     { label: "Website", value: "portal.example" }
   ];
   function PersonalInfoWidget({
-    items = DEFAULT_ITEMS2,
+    items = DEFAULT_ITEMS,
     title = "Personal Info"
   } = {}) {
     return /* @__PURE__ */ React.createElement(WidgetCard, { title }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, items.map((it, i) => /* @__PURE__ */ React.createElement("li", { key: `${it.label}-${i}` }, /* @__PURE__ */ React.createElement(
@@ -9778,65 +13747,136 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/WeatherWidget.tsx
   init_define_import_meta_env();
-  var DEFAULT_WEEK = [
-    { day: "SUN", icon: "weather-sunny-icon", temp: 60 },
-    { day: "MON", icon: "weather-sunny-icon", temp: 58 },
-    { day: "TUE", icon: "weather-cloudy-icon", temp: 67 },
-    { day: "WED", icon: "weather-rain-icon", temp: 70 },
-    { day: "THU", icon: "weather-rain-icon", temp: 58 },
-    { day: "FRI", icon: "weather-rain-icon", temp: 68 },
-    { day: "SAT", icon: "weather-partly-sunny-icon", temp: 65 }
-  ];
-  function WeatherWidget({
-    temp = 64,
-    low = 58,
-    high = 76,
-    condition = "Partly Sunny",
-    realFeel = 67,
-    chanceOfRain = 49,
-    icon = "weather-partly-sunny-icon",
-    week = DEFAULT_WEEK,
-    date = "Saturday, March 26th",
-    location: location2 = "San Francisco, CA"
-  } = {}) {
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "overflow-hidden rounded-xl text-white shadow-sm",
-        style: { background: "linear-gradient(160deg, var(--tpl-weather-1), var(--tpl-weather-2))" }
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-5xl font-light leading-none" }, temp, "\xB0"), /* @__PURE__ */ React.createElement("span", { className: "mt-1 text-xs leading-tight text-white/80" }, low, "\xB0", /* @__PURE__ */ React.createElement("br", null), high, "\xB0")), /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 40 })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-lg font-semibold" }, condition), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "Real Feel: ", realFeel, "\xB0\xA0\xA0\xA0Chance of Rain: ", chanceOfRain, "%")),
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          className: "grid grid-cols-7 gap-1 px-3 py-4",
-          style: { background: "rgba(255,255,255,0.08)" }
+
+  // frontend/node_modules/portal-frontend/src/lib/weather.ts
+  init_define_import_meta_env();
+  var import_react14 = __toESM(require_react_shim());
+  function wmo(code) {
+    if (code === 0) return { icon: "weather-sunny-icon", label: "Tr\u1EDDi quang" };
+    if (code <= 2) return { icon: "weather-partly-sunny-icon", label: "\xCDt m\xE2y" };
+    if (code === 3) return { icon: "weather-cloudy-icon", label: "Nhi\u1EC1u m\xE2y" };
+    if (code <= 48) return { icon: "weather-cloudy-icon", label: "S\u01B0\u01A1ng m\xF9" };
+    if (code <= 57) return { icon: "weather-rain-icon", label: "M\u01B0a ph\xF9n" };
+    if (code <= 67) return { icon: "weather-rain-icon", label: "M\u01B0a" };
+    if (code <= 77) return { icon: "weather-rain-icon", label: "Tuy\u1EBFt" };
+    if (code <= 82) return { icon: "weather-rain-icon", label: "M\u01B0a r\xE0o" };
+    if (code <= 86) return { icon: "weather-rain-icon", label: "M\u01B0a tuy\u1EBFt" };
+    return { icon: "weather-rain-icon", label: "Gi\xF4ng b\xE3o" };
+  }
+  var DOW_VI = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  async function fetchWeather(lat, lon, place = null) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(String(res.status));
+    const j = await res.json();
+    const c = j.current ?? {};
+    const d = j.daily ?? {};
+    const h = j.hourly ?? {};
+    const cw = wmo(Math.round(c.weather_code ?? 0));
+    const now = {
+      temp: Math.round(c.temperature_2m ?? 0),
+      feels: Math.round(c.apparent_temperature ?? c.temperature_2m ?? 0),
+      code: Math.round(c.weather_code ?? 0),
+      icon: cw.icon,
+      label: cw.label,
+      low: Math.round(d.temperature_2m_min?.[0] ?? 0),
+      high: Math.round(d.temperature_2m_max?.[0] ?? 0),
+      rain: Math.round(c.precipitation_probability ?? 0),
+      humidity: Math.round(c.relative_humidity_2m ?? 0),
+      wind: Math.round(c.wind_speed_10m ?? 0)
+    };
+    const times = h.time ?? [];
+    let start = 0;
+    if (c.time) {
+      const ct = c.time;
+      const idx = times.findIndex((t2) => t2 >= ct);
+      if (idx > 0) start = idx;
+    }
+    const hourly = times.slice(start, start + 24).map((t2, i) => ({
+      time: t2.slice(11, 16),
+      temp: Math.round(h.temperature_2m?.[start + i] ?? 0),
+      icon: wmo(Math.round(h.weather_code?.[start + i] ?? 0)).icon
+    }));
+    const daily = (d.time ?? []).slice(0, 7).map((iso, i) => {
+      const w = wmo(Math.round(d.weather_code?.[i] ?? 0));
+      return {
+        dow: i === 0 ? "H\xF4m nay" : DOW_VI[(/* @__PURE__ */ new Date(`${iso}T12:00:00Z`)).getUTCDay()] ?? "",
+        icon: w.icon,
+        label: w.label,
+        low: Math.round(d.temperature_2m_min?.[i] ?? 0),
+        high: Math.round(d.temperature_2m_max?.[i] ?? 0),
+        rain: Math.round(d.precipitation_probability_max?.[i] ?? 0)
+      };
+    });
+    return { now, hourly, daily, place };
+  }
+  function configuredLocation() {
+    const lat = Number(process.env.NEXT_PUBLIC_WEATHER_LAT);
+    const lon = Number(process.env.NEXT_PUBLIC_WEATHER_LON);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat === 0 && lon === 0) return null;
+    const place = (process.env.NEXT_PUBLIC_WEATHER_PLACE ?? "").trim();
+    return { lat, lon, place: place || null };
+  }
+  function useGeoWeather() {
+    const [state, setState] = (0, import_react14.useState)({ status: "loading", data: null });
+    (0, import_react14.useEffect)(() => {
+      let alive = true;
+      const cfg = configuredLocation();
+      if (cfg) {
+        fetchWeather(cfg.lat, cfg.lon, cfg.place).then((data) => {
+          if (alive) setState({ status: "ok", data });
+        }).catch(() => {
+          if (alive) setState({ status: "unavailable", data: null });
+        });
+        return () => {
+          alive = false;
+        };
+      }
+      if (typeof navigator === "undefined" || !navigator.geolocation) {
+        setState({ status: "unavailable", data: null });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const data = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
+            if (alive) setState({ status: "ok", data });
+          } catch {
+            if (alive) setState({ status: "unavailable", data: null });
+          }
         },
-        week.map((d) => /* @__PURE__ */ React.createElement(
-          "div",
-          {
-            key: d.day,
-            className: "flex flex-col items-center gap-1.5 text-[10px] text-white/85"
-          },
-          /* @__PURE__ */ React.createElement("span", { className: "font-semibold" }, d.day),
-          /* @__PURE__ */ React.createElement(Icon, { name: d.icon, size: 18 }),
-          /* @__PURE__ */ React.createElement("span", null, d.temp, "\xB0")
-        ))
-      ),
-      /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 text-center text-xs" }, /* @__PURE__ */ React.createElement("p", { className: "font-semibold" }, date), /* @__PURE__ */ React.createElement("p", { className: "text-white/75" }, location2))
-    );
+        () => {
+          if (alive) setState({ status: "unavailable", data: null });
+        },
+        { timeout: 8e3, maximumAge: 30 * 60 * 1e3 }
+      );
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return state;
+  }
+
+  // frontend/src/templates/v1/components/widget/WeatherWidget.tsx
+  function WeatherWidget() {
+    const { status, data } = useGeoWeather();
+    if (status !== "ok" || !data) {
+      return /* @__PURE__ */ React.createElement(Card, { className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "weather-partly-sunny-icon", size: 22 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Th\u1EDDi ti\u1EBFt"), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, status === "loading" ? "\u0110ang \u0111\u1ECBnh v\u1ECB\u2026" : "B\u1EADt \u0111\u1ECBnh v\u1ECB \u0111\u1EC3 xem th\u1EDDi ti\u1EBFt"))));
+    }
+    const { now, daily } = data;
+    return /* @__PURE__ */ React.createElement(Link, { href: "/weather", className: "block transition hover:opacity-90", title: "M\u1EDF trang th\u1EDDi ti\u1EBFt" }, /* @__PURE__ */ React.createElement(Card, { className: "overflow-hidden" }, /* @__PURE__ */ React.createElement("div", { className: "p-4", style: { background: "linear-gradient(150deg, var(--tpl-accent), var(--tpl-blue))", color: "#fff" } }, /* @__PURE__ */ React.createElement("p", { className: "mb-1 truncate text-[11px] font-medium text-white/85" }, data.place ?? "V\u1ECB tr\xED c\u1EE7a b\u1EA1n"), /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-3xl font-bold leading-none" }, now.temp, "\xB0"), /* @__PURE__ */ React.createElement("div", { className: "mt-1 text-xs text-white/80" }, now.high, "\xB0 / ", now.low, "\xB0")), /* @__PURE__ */ React.createElement(Icon, { name: now.icon, size: 40 })), /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm font-semibold" }, now.label), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "C\u1EA3m gi\xE1c ", now.feels, "\xB0 \xB7 M\u01B0a ", now.rain, "%")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-1 px-2 py-3" }, daily.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "flex flex-col items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-[10px] font-semibold", style: { color: "var(--tpl-muted)" } }, i === 0 ? "Nay" : d.dow), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement(Icon, { name: d.icon, size: 16 })), /* @__PURE__ */ React.createElement("span", { className: "text-[11px]", style: { color: "var(--tpl-heading)" } }, d.high, "\xB0"))))));
   }
 
   // frontend/src/templates/v1/master/MasterBase.tsx
   init_define_import_meta_env();
-  var import_react16 = __toESM(require_react_shim());
+  var import_react18 = __toESM(require_react_shim());
 
   // frontend/src/templates/v1/partials/HelloPreloader.tsx
   init_define_import_meta_env();
-  var import_react13 = __toESM(require_react_shim());
+  var import_react15 = __toESM(require_react_shim());
   function HelloPreloader() {
-    const [done, setDone] = (0, import_react13.useState)(false);
-    (0, import_react13.useEffect)(() => {
+    const [done, setDone] = (0, import_react15.useState)(false);
+    (0, import_react15.useEffect)(() => {
       const t2 = setTimeout(() => setDone(true), 300);
       return () => clearTimeout(t2);
     }, []);
@@ -9854,10 +13894,10 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/partials/GoToTop.tsx
   init_define_import_meta_env();
-  var import_react14 = __toESM(require_react_shim());
+  var import_react16 = __toESM(require_react_shim());
   function GoToTop() {
-    const [show, setShow] = (0, import_react14.useState)(false);
-    (0, import_react14.useEffect)(() => {
+    const [show, setShow] = (0, import_react16.useState)(false);
+    (0, import_react16.useEffect)(() => {
       const onScroll = () => setShow(window.scrollY > 300);
       onScroll();
       window.addEventListener("scroll", onScroll, { passive: true });
@@ -9892,13 +13932,12 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/partials/SessionKeeper.tsx
   init_define_import_meta_env();
-  var import_react15 = __toESM(require_react_shim());
-  var API_BASE2 = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
+  var import_react17 = __toESM(require_react_shim());
   var REFRESH_MS = 4 * 60 * 1e3;
   var CLAIM_MS = REFRESH_MS - 15e3;
   var KEY = "portal_refresh_at";
   function SessionKeeper() {
-    (0, import_react15.useEffect)(() => {
+    (0, import_react17.useEffect)(() => {
       let stopped = false;
       async function refresh(force) {
         const last = Number(localStorage.getItem(KEY) || 0);
@@ -9906,7 +13945,7 @@ var PortalUI = (() => {
         if (!force && now - last < CLAIM_MS) return;
         localStorage.setItem(KEY, String(now));
         try {
-          const res = await fetch(`${API_BASE2}/api/v1/auth/refresh`, {
+          const res = await fetch(`${baseURL2}/api/v1/auth/refresh`, {
             method: "POST",
             credentials: "include"
           });
@@ -9939,8 +13978,8 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/master/MasterBase.tsx
   function MasterBase({ children }) {
-    const [collapsed, setCollapsed] = (0, import_react16.useState)(false);
-    const [rightCollapsed, setRightCollapsed] = (0, import_react16.useState)(false);
+    const [collapsed, setCollapsed] = (0, import_react18.useState)(false);
+    const [rightCollapsed, setRightCollapsed] = (0, import_react18.useState)(false);
     const rootStyle = {
       background: "var(--tpl-bg)",
       "--tpl-sidebar-cur": collapsed ? "var(--tpl-rail-w)" : "var(--tpl-sidebar-w)",
@@ -9964,12 +14003,11 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/auth/AuthForm.tsx
   init_define_import_meta_env();
-  var import_react17 = __toESM(require_react_shim());
-  var API_BASE3 = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
+  var import_react19 = __toESM(require_react_shim());
   function AuthForm({ defaultTab = "login" }) {
-    const [tab, setTab] = (0, import_react17.useState)(defaultTab);
-    const [notice, setNotice] = (0, import_react17.useState)(null);
-    const [prefillEmail, setPrefillEmail] = (0, import_react17.useState)("");
+    const [tab, setTab] = (0, import_react19.useState)(defaultTab);
+    const [notice, setNotice] = (0, import_react19.useState)(null);
+    const [prefillEmail, setPrefillEmail] = (0, import_react19.useState)("");
     function handleRegistered(email) {
       setPrefillEmail(email);
       setNotice("Account created. Please sign in with your new account.");
@@ -10010,7 +14048,7 @@ var PortalUI = (() => {
     return n2 && n2.startsWith("/") ? n2 : "/";
   }
   async function postAuth(path, payload) {
-    const res = await fetch(`${API_BASE3}/api/v1/auth/${path}`, {
+    const res = await fetch(`${baseURL2}/api/v1/auth/${path}`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -10030,11 +14068,11 @@ var PortalUI = (() => {
     initialEmail = "",
     notice = null
   }) {
-    const [email, setEmail] = (0, import_react17.useState)(initialEmail);
-    const [password, setPassword] = (0, import_react17.useState)("");
-    const [remember, setRemember] = (0, import_react17.useState)(true);
-    const [error, setError] = (0, import_react17.useState)(null);
-    const [loading, setLoading] = (0, import_react17.useState)(false);
+    const [email, setEmail] = (0, import_react19.useState)(initialEmail);
+    const [password, setPassword] = (0, import_react19.useState)("");
+    const [remember, setRemember] = (0, import_react19.useState)(true);
+    const [error, setError] = (0, import_react19.useState)(null);
+    const [loading, setLoading] = (0, import_react19.useState)(false);
     async function onSubmit(e2) {
       e2.preventDefault();
       setError(null);
@@ -10107,12 +14145,12 @@ var PortalUI = (() => {
     onSwitch,
     onRegistered
   }) {
-    const [displayName, setDisplayName] = (0, import_react17.useState)("");
-    const [email, setEmail] = (0, import_react17.useState)("");
-    const [password, setPassword] = (0, import_react17.useState)("");
-    const [accepted, setAccepted] = (0, import_react17.useState)(false);
-    const [error, setError] = (0, import_react17.useState)(null);
-    const [loading, setLoading] = (0, import_react17.useState)(false);
+    const [displayName, setDisplayName] = (0, import_react19.useState)("");
+    const [email, setEmail] = (0, import_react19.useState)("");
+    const [password, setPassword] = (0, import_react19.useState)("");
+    const [accepted, setAccepted] = (0, import_react19.useState)(false);
+    const [error, setError] = (0, import_react19.useState)(null);
+    const [loading, setLoading] = (0, import_react19.useState)(false);
     async function onSubmit(e2) {
       e2.preventDefault();
       setError(null);
@@ -10360,378 +14398,2181 @@ var PortalUI = (() => {
     return /* @__PURE__ */ React.createElement(AuthLanding, { defaultTab: "register" });
   }
 
-  // frontend/src/templates/v1/views/home/HomeView.tsx
+  // frontend/src/templates/v1/views/bank/AccountsView.tsx
   init_define_import_meta_env();
-  var import_react18 = __toESM(require_react_shim());
-  var API_BASE4 = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
-  var INITIAL_FEED = [
-    {
-      id: "p1",
-      author: "Marina Valentine",
-      action: /* @__PURE__ */ React.createElement(React.Fragment, null, "shared a ", /* @__PURE__ */ React.createElement(A, null, "link")),
-      time: "March 4 at 2:05pm",
-      text: /* @__PURE__ */ React.createElement(React.Fragment, null, "Hey ", /* @__PURE__ */ React.createElement(A, null, "Cindi"), ", you should really check out this new song by Iron Maid. The next time they come to the city we should totally go!"),
-      media: {
-        title: "Iron Maid - ChillGroves",
-        desc: "Lorem ipsum dolor sit amet, consectetur ipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
-        source: "YOUTUBE.COM"
-      },
-      likes: 18,
-      likedByLabel: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, "Jenny"), ", ", /* @__PURE__ */ React.createElement("b", null, "Robert"), " and ", /* @__PURE__ */ React.createElement("b", null, "18 more"), " liked this"),
-      comments: 0,
-      shares: 16
-    },
-    {
-      id: "p2",
-      author: "Elaine Dreyfuss",
-      action: "",
-      time: "9 hours ago",
-      text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempo incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris consequat.",
-      likes: 24,
-      likedByLabel: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, "You"), ", ", /* @__PURE__ */ React.createElement("b", null, "Elaine"), " and ", /* @__PURE__ */ React.createElement("b", null, "22 more"), " liked this"),
-      comments: 17,
-      shares: 24
-    },
-    {
-      id: "p3",
-      author: "James Spiegel",
-      action: "",
-      time: "38 mins ago",
-      text: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium der doloremque laudantium, totam rem aperiam.",
-      likes: 12,
-      likedByLabel: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, "Nicholas"), ", ", /* @__PURE__ */ React.createElement("b", null, "Diana"), " and ", /* @__PURE__ */ React.createElement("b", null, "10 more"), " liked this"),
-      comments: 3,
-      shares: 5
+  var import_react20 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/problems.ts
+  init_define_import_meta_env();
+  var PROBLEM_MESSAGES = {
+    "media/unsupported-format": "This file format isn't supported. Try converting it and uploading again.",
+    "media/file-too-large": "This file is too large to upload.",
+    "media/asset-not-found": "This asset doesn't exist or was already removed.",
+    "media/asset-not-ready": "This asset is still being uploaded \u2014 try again in a moment.",
+    "journal/entry-not-found": "This entry doesn't exist or was already removed.",
+    "journal/invalid-body": "Entries need 1-20,000 characters of text.",
+    "journal/invalid-mood": "Mood can't be blank \u2014 leave it empty or add a word.",
+    "journal/invalid-asset": "Photo attachments aren't supported yet.",
+    "bank/not-found": "This item doesn't exist or was already removed.",
+    "bank/account-not-empty": "This account has transactions \u2014 archive it instead of deleting.",
+    "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
+    "bank/is-transfer-leg": "This is part of a transfer \u2014 edit or delete it from the transfer instead.",
+    "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
+    "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
+    "bank/category-immutable": "A category's kind can't be changed after it's created.",
+    "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
+    "bank/same-account-transfer": "Pick two different accounts for a transfer.",
+    "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
+    "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
+    "bank/invalid-amount": "Enter an amount greater than zero.",
+    "bank/validation": "Please check the form and try again.",
+    "bank/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "comic/not-found": "This comic doesn't exist or was already removed.",
+    "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
+    "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
+    "comic/invalid-progress-target": "Couldn't save your place on this comic.",
+    "comic/not-publishable": "Every chapter needs at least one page before publishing.",
+    "comic/validation": "Please check the form and try again.",
+    "comic/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "people/person-not-found": "This person doesn't exist or was already removed.",
+    "people/invalid-birthday": "Enter a real date \u2014 day and month together, year optional.",
+    "people/validation": "Please check the form and try again.",
+    "people/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "stream/invalid-cursor": "Couldn't load more of your stream \u2014 please refresh."
+  };
+  var FALLBACK_MESSAGE = "Something went wrong. Please try again.";
+  function problemMessage(type) {
+    if (type && type in PROBLEM_MESSAGES) {
+      return PROBLEM_MESSAGES[type];
     }
-  ];
-  function HomeView() {
-    const [displayName, setDisplayName] = (0, import_react18.useState)("You");
-    const [posts, setPosts] = (0, import_react18.useState)(INITIAL_FEED);
-    (0, import_react18.useEffect)(() => {
-      let alive = true;
-      fetch(`${API_BASE4}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((me) => {
-        if (alive && me?.display_name) setDisplayName(me.display_name);
-      }).catch(() => {
-      });
-      return () => {
-        alive = false;
-      };
-    }, []);
-    function handlePost(text) {
-      setPosts((prev) => [
-        {
-          id: `me-${prev.length}-${text.length}`,
-          author: displayName,
-          action: "",
-          time: "Just now",
-          text,
-          likes: 0,
-          likedByLabel: /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Be the first to like this"),
-          comments: 0,
-          shares: 0
-        },
-        ...prev
-      ]);
-    }
-    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]" }, /* @__PURE__ */ React.createElement("div", { className: "hidden space-y-5 lg:block" }, /* @__PURE__ */ React.createElement(WeatherWidget2, null), /* @__PURE__ */ React.createElement(CalendarWidget2, null), /* @__PURE__ */ React.createElement(PagesWidget2, null)), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 space-y-5" }, /* @__PURE__ */ React.createElement(Composer2, { displayName, onPost: handlePost }), posts.map((p) => /* @__PURE__ */ React.createElement(
-      PostCard,
-      {
-        key: p.id,
-        post: p,
-        onToggleLike: () => setPosts(
-          (prev) => prev.map(
-            (x) => x.id === p.id ? { ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) } : x
-          )
-        )
-      }
-    ))), /* @__PURE__ */ React.createElement("aside", { className: "hidden space-y-5 2xl:block" }, /* @__PURE__ */ React.createElement(BirthdayCard2, null), /* @__PURE__ */ React.createElement(FriendSuggestions2, null), /* @__PURE__ */ React.createElement(ActivityFeed2, null)));
+    return FALLBACK_MESSAGE;
   }
-  function WeatherWidget2() {
-    const week = [
-      ["SUN", "weather-sunny-icon", 60],
-      ["MON", "weather-sunny-icon", 58],
-      ["TUE", "weather-cloudy-icon", 67],
-      ["WED", "weather-rain-icon", 70],
-      ["THU", "weather-rain-icon", 58],
-      ["FRI", "weather-rain-icon", 68],
-      ["SAT", "weather-partly-sunny-icon", 65]
-    ];
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "overflow-hidden rounded-xl text-white shadow-sm",
-        style: { background: "linear-gradient(160deg, var(--tpl-weather-1), var(--tpl-weather-2))" }
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-5xl font-light leading-none" }, "64\xB0"), /* @__PURE__ */ React.createElement("span", { className: "mt-1 text-xs leading-tight text-white/80" }, "58\xB0", /* @__PURE__ */ React.createElement("br", null), "76\xB0")), /* @__PURE__ */ React.createElement(Icon, { name: "weather-partly-sunny-icon", size: 40 })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-lg font-semibold" }, "Partly Sunny"), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "Real Feel: 67\xB0\xA0\xA0\xA0Chance of Rain: 49%")),
-      /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-1 px-3 py-4", style: { background: "rgba(255,255,255,0.08)" } }, week.map(([d, ic, t2]) => /* @__PURE__ */ React.createElement("div", { key: d, className: "flex flex-col items-center gap-1.5 text-[10px] text-white/85" }, /* @__PURE__ */ React.createElement("span", { className: "font-semibold" }, d), /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 18 }), /* @__PURE__ */ React.createElement("span", null, t2, "\xB0")))),
-      /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 text-center text-xs" }, /* @__PURE__ */ React.createElement("p", { className: "font-semibold" }, "Saturday, March 26th"), /* @__PURE__ */ React.createElement("p", { className: "text-white/75" }, "San Francisco, CA"))
-    );
+  function problemDisplayMessage(body) {
+    const problem = body;
+    return problem?.detail || problemMessage(problem?.type);
   }
-  function CalendarWidget2() {
-    const days = Array.from({ length: 31 }, (_, i) => i + 1);
-    return /* @__PURE__ */ React.createElement(WidgetCard2, null, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between px-1", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Previous month" }, /* @__PURE__ */ React.createElement(Icon, { name: "popup-left-arrow", size: 12 })), /* @__PURE__ */ React.createElement("span", { className: "font-semibold", style: { color: "var(--tpl-heading)" } }, "May"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Next month" }, /* @__PURE__ */ React.createElement(Icon, { name: "popup-right-arrow", size: 12 }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-y-2 text-center text-[11px]" }, ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((d) => /* @__PURE__ */ React.createElement("span", { key: d, className: "font-semibold", style: { color: "var(--tpl-muted)" } }, d)), days.map((n2) => /* @__PURE__ */ React.createElement(
-      "span",
-      {
-        key: n2,
-        className: "grid h-7 place-items-center rounded-full text-xs",
-        style: n2 === 12 ? { background: "var(--tpl-accent)", color: "#fff", margin: "0 auto", width: 28 } : { color: "var(--tpl-text)" }
+
+  // frontend/src/templates/v1/views/bank/AccountsView.tsx
+  var TYPES = ["cash", "checking", "savings", "credit_card", "ewallet", "other"];
+  function AccountsView() {
+    const qc = useQueryClient();
+    const { data: accounts = [], isLoading } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+    const [name, setName] = (0, import_react20.useState)("");
+    const [type, setType] = (0, import_react20.useState)("cash");
+    const [currency, setCurrency] = (0, import_react20.useState)("VND");
+    const [opening, setOpening] = (0, import_react20.useState)(0);
+    const [err, setErr] = (0, import_react20.useState)(null);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
+    const create2 = useMutation({
+      mutationFn: () => createAccount({ name, type, currency, opening_balance: opening }),
+      onSuccess: () => {
+        setName("");
+        setOpening(0);
+        setErr(null);
+        invalidate();
       },
-      n2
-    ))));
-  }
-  function PagesWidget2() {
-    const pages = [
-      { name: "The Marina Bar", cat: "Restaurant \xB7 Bar" },
-      { name: "Tapronus Rock", cat: "Rock Band" },
-      { name: "Pixel Digital Design", cat: "Company" },
-      { name: "Thompson's Custom Clothing Boutique", cat: "Clothing Store" }
-    ];
-    return /* @__PURE__ */ React.createElement(WidgetCard2, { title: "Pages You May Like", more: true }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, pages.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.name, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: p.name, size: 38 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, p.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, p.cat)), /* @__PURE__ */ React.createElement(
-      "button",
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not create account")
+    });
+    const archive = useMutation({
+      mutationFn: (a) => updateAccount(a.id, { archived: a.archived }),
+      onSuccess: invalidate
+    });
+    const remove = useMutation({
+      mutationFn: (id2) => deleteAccount(id2),
+      onSuccess: invalidate,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not delete")
+    });
+    const active = accounts.filter((a) => !a.archived);
+    const archived = accounts.filter((a) => a.archived);
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("h1", { className: "mb-6 text-2xl font-bold" }, "Accounts"), /* @__PURE__ */ React.createElement(
+      "form",
       {
-        type: "button",
-        className: "ml-auto text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]",
-        "aria-label": "Like page"
-      },
-      /* @__PURE__ */ React.createElement(Icon, { name: "star-icon", size: 18 })
-    )))));
-  }
-  var TABS2 = [
-    { key: "status", label: "Status", icon: "status-icon" },
-    { key: "media", label: "Multimedia", icon: "multimedia-icon" },
-    { key: "blog", label: "Blog Post", icon: "blog-icon" }
-  ];
-  function Composer2({
-    displayName,
-    onPost
-  }) {
-    const [tab, setTab] = (0, import_react18.useState)("status");
-    const [text, setText] = (0, import_react18.useState)("");
-    function submit(e2) {
-      e2.preventDefault();
-      const t2 = text.trim();
-      if (!t2) return;
-      onPost(t2);
-      setText("");
-    }
-    return /* @__PURE__ */ React.createElement(Card2, { className: "overflow-hidden" }, /* @__PURE__ */ React.createElement("div", { className: "flex border-b", style: { borderColor: "var(--tpl-border)" } }, TABS2.map((t2) => /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        key: t2.key,
-        type: "button",
-        onClick: () => setTab(t2.key),
-        className: "flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition",
-        style: tab === t2.key ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" } : { color: "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(Icon, { name: t2.icon, size: 16 }),
-      /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline" }, t2.label)
-    ))), /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), /* @__PURE__ */ React.createElement(
-      "textarea",
-      {
-        value: text,
-        onChange: (e2) => setText(e2.target.value),
-        rows: 2,
-        placeholder: "Share what you are thinking here...",
-        className: "min-h-[3rem] w-full resize-none border-0 bg-transparent pt-2 text-sm outline-none placeholder:text-[var(--tpl-muted)]",
-        style: { color: "var(--tpl-text)" }
-      }
-    )), /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex items-center gap-1 border-t pt-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(IconBtn3, { label: "Add photos", icon: "camera-icon" }), /* @__PURE__ */ React.createElement(IconBtn3, { label: "Tag friends", icon: "computer-icon" }), /* @__PURE__ */ React.createElement(IconBtn3, { label: "Add location", icon: "small-pin-icon" }), /* @__PURE__ */ React.createElement("div", { className: "ml-auto flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
-        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-      },
-      "Preview"
-    ), /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "submit",
-        disabled: !text.trim(),
-        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-      },
-      "Post Status"
-    )))));
-  }
-  function PostCard({ post, onToggleLike }) {
-    return /* @__PURE__ */ React.createElement(Card2, { as: "article", className: "relative p-5" }, /* @__PURE__ */ React.createElement("div", { className: "absolute right-0 top-6 hidden translate-x-1/2 flex-col gap-2 sm:flex" }, /* @__PURE__ */ React.createElement(QuickFab, { label: "Award", icon: "trophy-icon" }), /* @__PURE__ */ React.createElement(QuickFab, { active: post.liked, onClick: onToggleLike, label: "Like", icon: "like-post-icon" }), /* @__PURE__ */ React.createElement(QuickFab, { label: "Comment", icon: "comments-post-icon" }), /* @__PURE__ */ React.createElement(QuickFab, { label: "Share", icon: "share-icon" })), /* @__PURE__ */ React.createElement("header", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: post.author, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm" }, /* @__PURE__ */ React.createElement("span", { className: "font-semibold", style: { color: "var(--tpl-heading)" } }, post.author), " ", post.action && /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, post.action)), /* @__PURE__ */ React.createElement("time", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, post.time)), /* @__PURE__ */ React.createElement("button", { type: "button", className: "ml-auto pr-8 text-[var(--tpl-muted)]", "aria-label": "Post options" }, /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 12 }))), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm leading-relaxed", style: { color: "var(--tpl-text)" } }, post.text), post.media && /* @__PURE__ */ React.createElement(VideoCard2, { media: post.media }), /* @__PURE__ */ React.createElement("footer", { className: "mt-4 flex items-center gap-3 text-sm" }, /* @__PURE__ */ React.createElement(
-      "span",
-      {
-        className: "inline-flex items-center gap-2",
-        style: { color: post.liked ? "var(--tpl-accent)" : "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(Icon, { name: "heart-icon", size: 16 }),
-      /* @__PURE__ */ React.createElement("span", null, post.likes)
-    ), /* @__PURE__ */ React.createElement(StackedAvatars2, { names: ["Jenny R", "Robert K", "Amy L", "Leo M"] }), /* @__PURE__ */ React.createElement("span", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, post.likedByLabel), /* @__PURE__ */ React.createElement("span", { className: "ml-auto inline-flex items-center gap-4", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { className: "inline-flex items-center gap-1.5" }, /* @__PURE__ */ React.createElement(Icon, { name: "speech-balloon-icon", size: 16 }), /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, post.comments)), /* @__PURE__ */ React.createElement("span", { className: "inline-flex items-center gap-1.5" }, /* @__PURE__ */ React.createElement(Icon, { name: "share-icon", size: 16 }), /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, post.shares)))));
-  }
-  function VideoCard2({ media }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex gap-4 overflow-hidden rounded-lg border", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "relative grid h-40 w-44 shrink-0 place-items-center",
-        style: { background: "linear-gradient(135deg,#c78a5b,#7c5240)" }
+        className: "mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-800 bg-gray-900 p-4",
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (name.trim()) create2.mutate();
+        }
       },
       /* @__PURE__ */ React.createElement(
-        "span",
+        "input",
         {
-          className: "grid h-14 w-14 place-items-center rounded-full text-white shadow",
-          style: { background: "var(--tpl-accent)" }
-        },
-        /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 20 })
-      )
-    ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 py-4 pr-4" }, /* @__PURE__ */ React.createElement("p", { className: "text-base font-semibold", style: { color: "var(--tpl-heading)" } }, media.title), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs leading-relaxed", style: { color: "var(--tpl-muted)" } }, media.desc), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-[11px] font-semibold tracking-wide", style: { color: "var(--tpl-muted)" } }, media.source)));
-  }
-  function BirthdayCard2() {
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "relative overflow-hidden rounded-xl p-5 text-white shadow-sm",
-        style: { background: "linear-gradient(150deg, #8a63d2, #6d4bb8)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          "aria-hidden": true,
-          className: "pointer-events-none absolute inset-0 opacity-20",
-          style: {
-            background: "radial-gradient(60% 60% at 85% 15%, rgba(255,255,255,0.5), transparent 60%),radial-gradient(50% 50% at 20% 90%, rgba(255,255,255,0.25), transparent 60%)"
-          }
+          className: "col-span-2 rounded-md border border-gray-700 bg-gray-800 px-3 py-2",
+          placeholder: "Account name (e.g. TCB, Cash, Momo)",
+          value: name,
+          onChange: (e2) => setName(e2.target.value)
         }
       ),
-      /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between" }, /* @__PURE__ */ React.createElement(Icon, { name: "cupcake-icon", size: 22 }), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Options" }, /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 12 }))), /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(Avatar, { name: "Marina Valentine", size: 44, className: "ring-2 ring-white/40" })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm text-white/80" }, "Today is"), /* @__PURE__ */ React.createElement("h3", { className: "text-2xl font-bold leading-tight" }, "Marina Valentine's Birthday!"), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm leading-relaxed text-white/80" }, "Leave her a message with your best wishes on her profile page!"))
-    );
+      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: type, onChange: (e2) => setType(e2.target.value) }, TYPES.map((t2) => /* @__PURE__ */ React.createElement("option", { key: t2, value: t2 }, t2.replace("_", " ")))),
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2 uppercase",
+          value: currency,
+          maxLength: 3,
+          onChange: (e2) => setCurrency(e2.target.value.toUpperCase())
+        }
+      ),
+      /* @__PURE__ */ React.createElement("label", { className: "col-span-2 text-sm text-gray-400" }, "Opening balance"),
+      /* @__PURE__ */ React.createElement("div", { className: "col-span-2" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: opening, onChange: setOpening })),
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "submit",
+          disabled: create2.isPending || !name.trim(),
+          className: "col-span-2 rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500 disabled:opacity-50"
+        },
+        "Add account"
+      ),
+      err && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-red-400" }, err)
+    ), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("ul", { className: "space-y-2" }, active.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium" }, a.name), /* @__PURE__ */ React.createElement("div", { className: "text-xs capitalize text-gray-400" }, a.type.replace("_", " "))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance, currency: a.currency, className: "font-semibold" }), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-gray-400 hover:text-white", onClick: () => archive.mutate({ id: a.id, archived: true }) }, "Archive"), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-red-400 hover:text-red-300", onClick: () => remove.mutate(a.id) }, "Delete")))), active.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "No accounts yet \u2014 add your first above.")), archived.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-8 text-sm font-semibold uppercase text-gray-500" }, "Archived"), /* @__PURE__ */ React.createElement("ul", { className: "space-y-2 opacity-60" }, archived.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 p-3" }, /* @__PURE__ */ React.createElement("span", null, a.name), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance, currency: a.currency }), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-gray-400 hover:text-white", onClick: () => archive.mutate({ id: a.id, archived: false }) }, "Unarchive"))))))));
   }
-  function FriendSuggestions2() {
-    const people = [
-      { name: "Francine Smith", meta: "8 Friends in Common" },
-      { name: "Hugh Wilson", meta: "6 Friends in Common" },
-      { name: "Karen Masters", meta: "6 Friends in Common" }
+
+  // frontend/src/templates/v1/views/bank/BudgetsView.tsx
+  init_define_import_meta_env();
+  var import_react21 = __toESM(require_react_shim());
+  function tree(categories) {
+    const expense = categories.filter((c) => c.kind === "expense");
+    const tops = expense.filter((c) => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name));
+    const out = [];
+    for (const p of tops) {
+      out.push(p);
+      out.push(...expense.filter((c) => c.parent_id === p.id).sort((a, b) => a.name.localeCompare(b.name)));
+    }
+    return out;
+  }
+  function BudgetsView() {
+    const qc = useQueryClient();
+    const [month, setMonth] = (0, import_react21.useState)(currentMonth());
+    const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const { data: budgets } = useQuery({ queryKey: ["bank", "budgets", month], queryFn: () => listBudgets(month) });
+    const rows = (0, import_react21.useMemo)(() => tree(categories), [categories]);
+    const budgetByCat = (0, import_react21.useMemo)(() => {
+      const m = /* @__PURE__ */ new Map();
+      budgets?.budgets.forEach((b) => m.set(b.category_id, { amount: b.amount, spent: b.spent }));
+      return m;
+    }, [budgets]);
+    const [edits, setEdits] = (0, import_react21.useState)({});
+    const save = useMutation({
+      mutationFn: (v) => setBudget({ category_id: v.category_id, month: `${month}`, amount: v.amount || null }),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["bank", "budgets", month] })
+    });
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "Budgets"), /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: month, onChange: (e2) => setMonth(e2.target.value) })), /* @__PURE__ */ React.createElement("ul", { className: "space-y-1" }, rows.map((c) => {
+      const existing = budgetByCat.get(c.id);
+      const draft = edits[c.id] ?? existing?.amount ?? 0;
+      const pct = existing && existing.amount > 0 ? Math.round(existing.spent / existing.amount * 100) : 0;
+      const over = pct > 100;
+      return /* @__PURE__ */ React.createElement("li", { key: c.id, className: `rounded-lg border border-gray-800 bg-gray-900 p-3 ${c.parent_id ? "ml-6" : ""}` }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("span", { className: "flex-1 text-sm" }, c.parent_id ? "\xB7 " : "", c.name), /* @__PURE__ */ React.createElement("div", { className: "w-40" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: draft, onChange: (v) => setEdits((s) => ({ ...s, [c.id]: v })) })), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          className: "rounded-md bg-blue-600 px-3 py-2 text-xs font-medium hover:bg-blue-500 disabled:opacity-50",
+          disabled: save.isPending || (edits[c.id] ?? existing?.amount ?? 0) === (existing?.amount ?? 0),
+          onClick: () => save.mutate({ category_id: c.id, amount: draft })
+        },
+        "Save"
+      )), existing && /* @__PURE__ */ React.createElement("div", { className: "mt-2" }, /* @__PURE__ */ React.createElement("div", { className: "h-2 overflow-hidden rounded-full bg-gray-700" }, /* @__PURE__ */ React.createElement("div", { className: `h-full ${over ? "bg-red-500" : "bg-blue-500"}`, style: { width: `${Math.min(pct, 100)}%` } })), /* @__PURE__ */ React.createElement("div", { className: "mt-1 flex justify-between text-[11px] text-gray-400" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: existing.spent }), " / ", /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: existing.amount })), /* @__PURE__ */ React.createElement("span", { className: over ? "text-red-400" : "" }, pct, "%"))));
+    })), /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-xs text-gray-500" }, "Set an amount and Save. Save with 0 to remove a budget."));
+  }
+
+  // frontend/src/templates/v1/views/bank/DashboardView.tsx
+  init_define_import_meta_env();
+  var import_react22 = __toESM(require_react_shim());
+  function byCurrency(accounts) {
+    var _a117;
+    const g = {};
+    for (const a of accounts) {
+      if (a.archived) continue;
+      (g[_a117 = a.currency] ?? (g[_a117] = [])).push(a);
+    }
+    return g;
+  }
+  function DashboardView() {
+    const [month, setMonth] = (0, import_react22.useState)(currentMonth());
+    const { data, isLoading } = useQuery({ queryKey: ["bank", "dashboard", month], queryFn: () => getDashboard(month) });
+    const groups = (0, import_react22.useMemo)(() => byCurrency(data?.accounts ?? []), [data]);
+    const budgetSet = (0, import_react22.useMemo)(() => new Set(data?.budgets.map((b) => b.category_id)), [data]);
+    const topBudgets = (data?.budgets ?? []).filter((b) => !(b.parent_id && budgetSet.has(b.parent_id)));
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-4xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "Ledger"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: month, onChange: (e2) => setMonth(e2.target.value) }), /* @__PURE__ */ React.createElement(Link, { href: "/bank/transactions", className: "rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium hover:bg-blue-500" }, "+ Add"))), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : /* @__PURE__ */ React.createElement("div", { className: "space-y-8" }, /* @__PURE__ */ React.createElement("section", null, Object.entries(groups).map(([cur, accts]) => {
+      const total = accts.reduce((s, a) => s + a.balance, 0);
+      return /* @__PURE__ */ React.createElement("div", { key: cur, className: "mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between text-sm text-gray-400" }, /* @__PURE__ */ React.createElement("span", null, "Balance (", cur, ")"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: total, className: "text-lg font-bold text-white" })), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800" }, accts.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex justify-between py-1.5 text-sm" }, /* @__PURE__ */ React.createElement("span", null, a.name), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance })))));
+    }), Object.keys(groups).length === 0 && /* @__PURE__ */ React.createElement(Link, { href: "/bank/accounts", className: "block rounded-lg border border-dashed border-gray-700 p-6 text-center text-gray-400 hover:bg-gray-900" }, "No accounts yet \u2014 add one to get started.")), /* @__PURE__ */ React.createElement("section", { className: "grid grid-cols-2 gap-4" }, /* @__PURE__ */ React.createElement("div", { className: "rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs uppercase text-gray-500" }, "Income"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data?.income ?? 0, className: "text-xl font-bold text-green-400" })), /* @__PURE__ */ React.createElement("div", { className: "rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs uppercase text-gray-500" }, "Expense"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data?.expense ?? 0, className: "text-xl font-bold text-red-400" }))), topBudgets.length > 0 && /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-semibold uppercase text-gray-500" }, "Budgets"), /* @__PURE__ */ React.createElement(Link, { href: "/bank/budgets", className: "text-xs text-blue-400 hover:underline" }, "Manage")), /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, topBudgets.map((b) => {
+      const pct = b.amount > 0 ? Math.round(b.spent / b.amount * 100) : 0;
+      const over = pct > 100;
+      return /* @__PURE__ */ React.createElement("li", { key: b.category_id }, /* @__PURE__ */ React.createElement("div", { className: "mb-1 flex justify-between text-sm" }, /* @__PURE__ */ React.createElement("span", null, b.name), /* @__PURE__ */ React.createElement("span", { className: over ? "text-red-400" : "text-gray-400" }, pct, "%")), /* @__PURE__ */ React.createElement("div", { className: "h-2 overflow-hidden rounded-full bg-gray-700" }, /* @__PURE__ */ React.createElement("div", { className: `h-full ${over ? "bg-red-500" : "bg-blue-500"}`, style: { width: `${Math.min(pct, 100)}%` } })));
+    }))), /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-semibold uppercase text-gray-500" }, "Recent"), /* @__PURE__ */ React.createElement(Link, { href: "/bank/transactions", className: "text-xs text-blue-400 hover:underline" }, "All")), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, (data?.recent ?? []).map((t2) => /* @__PURE__ */ React.createElement("li", { key: t2.id, className: "flex justify-between px-4 py-2 text-sm" }, /* @__PURE__ */ React.createElement("span", { className: "text-gray-300" }, t2.occurred_at, t2.is_transfer ? " \xB7 Transfer" : "", t2.note ? ` \xB7 ${t2.note}` : ""), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: t2.direction === "credit" ? t2.amount : -t2.amount, signed: true }))), (data?.recent ?? []).length === 0 && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-4 text-center text-gray-500" }, "No transactions yet.")))));
+  }
+
+  // frontend/src/templates/v1/views/bank/TransactionsView.tsx
+  init_define_import_meta_env();
+  var import_react23 = __toESM(require_react_shim());
+  function today() {
+    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  }
+  function TransactionsView() {
+    const qc = useQueryClient();
+    const { data: accounts = [] } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+    const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const [monthFilter, setMonthFilter] = (0, import_react23.useState)("");
+    const [accountFilter, setAccountFilter] = (0, import_react23.useState)("");
+    const list = useInfiniteQuery({
+      queryKey: ["bank", "transactions", { month: monthFilter, account: accountFilter }],
+      queryFn: ({ pageParam }) => listTransactions({ cursor: pageParam || void 0, month: monthFilter || void 0, account: accountFilter || void 0 }),
+      initialPageParam: "",
+      getNextPageParam: (last) => last.next_cursor || void 0
+    });
+    const active = accounts.filter((a) => !a.archived);
+    const [amount, setAmount] = (0, import_react23.useState)(0);
+    const [direction, setDirection] = (0, import_react23.useState)("debit");
+    const [accountId, setAccountId] = (0, import_react23.useState)("");
+    const [categoryId, setCategoryId] = (0, import_react23.useState)("");
+    const [date, setDate] = (0, import_react23.useState)(today());
+    const [note, setNote] = (0, import_react23.useState)("");
+    const [err, setErr] = (0, import_react23.useState)(null);
+    const kindForDir = direction === "debit" ? "expense" : "income";
+    const pickableCats = (0, import_react23.useMemo)(() => categories.filter((c) => c.kind === kindForDir), [categories, kindForDir]);
+    const accountName = (id2) => accounts.find((a) => a.id === id2)?.name ?? "\u2014";
+    const categoryName = (id2) => categories.find((c) => c.id === id2)?.name ?? null;
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
+    const add = useMutation({
+      mutationFn: () => createTransaction({
+        account_id: accountId || active[0]?.id || "",
+        category_id: categoryId || pickableCats[0]?.id || "",
+        amount,
+        direction,
+        occurred_at: date,
+        note: note || null
+      }),
+      onSuccess: () => {
+        setAmount(0);
+        setNote("");
+        setErr(null);
+        invalidate();
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not save")
+    });
+    const remove = useMutation({
+      mutationFn: (id2) => deleteTransaction(id2),
+      onSuccess: invalidate,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not delete")
+    });
+    const rows = list.data?.pages.flatMap((p) => p.transactions) ?? [];
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("h1", { className: "mb-6 text-2xl font-bold" }, "Transactions"), /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        className: "mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-800 bg-gray-900 p-4",
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (amount > 0) add.mutate();
+        }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "col-span-2 flex gap-2" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          className: `flex-1 rounded-md py-2 text-sm font-medium ${direction === "debit" ? "bg-red-600" : "bg-gray-800"}`,
+          onClick: () => {
+            setDirection("debit");
+            setCategoryId("");
+          }
+        },
+        "Expense"
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          className: `flex-1 rounded-md py-2 text-sm font-medium ${direction === "credit" ? "bg-green-600" : "bg-gray-800"}`,
+          onClick: () => {
+            setDirection("credit");
+            setCategoryId("");
+          }
+        },
+        "Income"
+      )),
+      /* @__PURE__ */ React.createElement("div", { className: "col-span-2" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: amount, onChange: setAmount, placeholder: "Amount" })),
+      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: accountId, onChange: (e2) => setAccountId(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, active[0] ? `Account: ${active[0].name}` : "No account"), active.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name))),
+      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: categoryId, onChange: (e2) => setCategoryId(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, pickableCats[0] ? `Category: ${pickableCats[0].name}` : "No category"), pickableCats.map((c) => /* @__PURE__ */ React.createElement("option", { key: c.id, value: c.id }, c.parent_id ? "\xB7 " : "", c.name))),
+      /* @__PURE__ */ React.createElement("input", { type: "date", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: date, onChange: (e2) => setDate(e2.target.value) }),
+      /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Note (optional)", value: note, onChange: (e2) => setNote(e2.target.value) }),
+      /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || amount <= 0 || active.length === 0, className: "col-span-2 rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500 disabled:opacity-50" }, "Add transaction"),
+      active.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-yellow-500" }, "Create an account first."),
+      err && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-red-400" }, err)
+    ), /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex gap-2" }, /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: monthFilter, onChange: (e2) => setMonthFilter(e2.target.value) }), /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: accountFilter, onChange: (e2) => setAccountFilter(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "All accounts"), accounts.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name)))), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, rows.map((t2) => /* @__PURE__ */ React.createElement("li", { key: t2.id, className: "flex items-center justify-between px-4 py-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 text-sm" }, /* @__PURE__ */ React.createElement("span", null, categoryName(t2.category_id) ?? (t2.is_transfer ? "Transfer" : "\u2014")), t2.is_transfer && /* @__PURE__ */ React.createElement("span", { className: "rounded bg-indigo-900 px-1.5 py-0.5 text-[10px] uppercase text-indigo-300" }, "transfer")), /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-500" }, t2.occurred_at, " \xB7 ", accountName(t2.account_id), t2.note ? ` \xB7 ${t2.note}` : "")), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: t2.direction === "credit" ? t2.amount : -t2.amount, signed: true, className: "text-sm font-medium" }), !t2.is_transfer && /* @__PURE__ */ React.createElement("button", { className: "text-xs text-red-400 hover:text-red-300", onClick: () => remove.mutate(t2.id) }, "\u2715")))), rows.length === 0 && !list.isLoading && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-6 text-center text-gray-500" }, "No transactions.")), list.hasNextPage && /* @__PURE__ */ React.createElement("button", { className: "mt-4 w-full rounded-md border border-gray-700 py-2 text-sm text-gray-300 hover:bg-gray-800", onClick: () => list.fetchNextPage(), disabled: list.isFetchingNextPage }, list.isFetchingNextPage ? "Loading\u2026" : "Load more"));
+  }
+
+  // frontend/src/templates/v1/views/calendar/CalendarView.tsx
+  init_define_import_meta_env();
+  var import_react24 = __toESM(require_react_shim());
+  var WEEKDAYS2 = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  var WEEKDAY_FULL = ["Ch\u1EE7 Nh\u1EADt", "Th\u1EE9 Hai", "Th\u1EE9 Ba", "Th\u1EE9 T\u01B0", "Th\u1EE9 N\u0103m", "Th\u1EE9 S\xE1u", "Th\u1EE9 B\u1EA3y"];
+  var MAX_PAGES = 12;
+  function CalendarView() {
+    const { data: tc } = useTimeConfig();
+    const qc = useQueryClient();
+    const [ym, setYm] = (0, import_react24.useState)(null);
+    const [selectedDay, setSelectedDay] = (0, import_react24.useState)(null);
+    const [noteTime, setNoteTime] = (0, import_react24.useState)("12:00");
+    const [bodyMd, setBodyMd] = (0, import_react24.useState)("");
+    const [mood, setMood] = (0, import_react24.useState)("");
+    const [formError, setFormError] = (0, import_react24.useState)(null);
+    const q = useInfiniteQuery({
+      queryKey: ["journal", "all"],
+      queryFn: ({ pageParam }) => listEntries({ cursor: pageParam }),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0
+    });
+    const entries = (0, import_react24.useMemo)(() => q.data?.pages.flatMap((p) => p.items) ?? [], [q.data]);
+    (0, import_react24.useEffect)(() => {
+      if (tc && !ym) {
+        const c = zonedYMD(tc.now, tc.timezone);
+        setYm({ year: c.year, month: c.month });
+      }
+    }, [tc, ym]);
+    (0, import_react24.useEffect)(() => {
+      if (!ym || !q.hasNextPage || q.isFetchingNextPage) return;
+      const oldest = entries[entries.length - 1];
+      const monthStart = Date.UTC(ym.year, ym.month, 1);
+      if ((!oldest || new Date(oldest.occurred_at).getTime() >= monthStart) && (q.data?.pages.length ?? 0) < MAX_PAGES) {
+        q.fetchNextPage();
+      }
+    }, [entries, ym, q]);
+    const lunarByDay = (0, import_react24.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      if (!ym) return map;
+      const dim = new Date(Date.UTC(ym.year, ym.month + 1, 0)).getUTCDate();
+      for (let d = 1; d <= dim; d += 1) map.set(d, solarToLunar(d, ym.month + 1, ym.year));
+      return map;
+    }, [ym]);
+    const byDay = (0, import_react24.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      if (!tc || !ym) return map;
+      for (const e2 of entries) {
+        const p = zonedYMD(new Date(e2.occurred_at), tc.timezone);
+        if (p.year === ym.year && p.month === ym.month) {
+          const list = map.get(p.day);
+          if (list) list.push(e2);
+          else map.set(p.day, [e2]);
+        }
+      }
+      return map;
+    }, [entries, tc, ym]);
+    const create2 = useMutation({
+      mutationFn: (input) => createEntry(input),
+      onSuccess: () => {
+        setBodyMd("");
+        setMood("");
+        setNoteTime("12:00");
+        setFormError(null);
+        qc.invalidateQueries({ queryKey: ["journal"] });
+        qc.invalidateQueries({ queryKey: ["stream"] });
+      },
+      onError: (err) => setFormError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ghi ch\xFA")
+    });
+    if (!tc || !ym) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i l\u1ECBch\u2026");
+    const { year, month } = ym;
+    const cfgTz = tc.timezone;
+    const today2 = zonedYMD(tc.now, cfgTz);
+    const isThisMonth = today2.year === year && today2.month === month;
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const firstDow = (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7;
+    const cells = [
+      ...Array.from({ length: firstDow }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
     ];
-    return /* @__PURE__ */ React.createElement(WidgetCard2, { title: "Friend Suggestions", more: true }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, people.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.name, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: p.name, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, p.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, p.meta)), /* @__PURE__ */ React.createElement(
+    const yearLunar = lunarByDay.get(1)?.year ?? year;
+    function shiftMonth(delta) {
+      setSelectedDay(null);
+      setYm((m) => {
+        if (!m) return m;
+        const d = new Date(Date.UTC(m.year, m.month + delta, 1));
+        return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+      });
+    }
+    function selectDay(day) {
+      setSelectedDay(day);
+      setNoteTime("12:00");
+      setBodyMd("");
+      setMood("");
+      setFormError(null);
+    }
+    function handleCreate() {
+      const body = bodyMd.trim();
+      if (!body || create2.isPending || selectedDay == null) return;
+      const mm = String(month + 1).padStart(2, "0");
+      const dd = String(selectedDay).padStart(2, "0");
+      const input = {
+        body_md: body,
+        occurred_at: fromDatetimeLocalInTz(`${year}-${mm}-${dd}T${noteTime}`, cfgTz)
+      };
+      const m = mood.trim();
+      if (m) input.mood = m;
+      create2.mutate(input);
+    }
+    const timeLabel = (iso) => new Intl.DateTimeFormat("en-GB", { timeZone: cfgTz, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+    const selLunar = selectedDay != null ? lunarByDay.get(selectedDay) : null;
+    const selEntries = selectedDay != null ? byDay.get(selectedDay) ?? [] : [];
+    const selWeekday = selectedDay != null ? WEEKDAY_FULL[new Date(Date.UTC(year, month, selectedDay)).getUTCDay()] : "";
+    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]" }, /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("header", { className: "mb-4 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\xC2m l\u1ECBch \xB7 n\u0103m ", canChiYear(yearLunar))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth(-1) }), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        className: "ml-auto grid h-8 w-8 place-items-center rounded-md text-white transition hover:opacity-90",
-        style: { background: "var(--tpl-blue)" },
-        "aria-label": `Add ${p.name}`
+        onClick: () => {
+          const c = zonedYMD(tc.now, cfgTz);
+          setSelectedDay(null);
+          setYm({ year: c.year, month: c.month });
+        },
+        className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
       },
-      /* @__PURE__ */ React.createElement(Icon, { name: "happy-face-icon", size: 16 })
-    )))));
-  }
-  function ActivityFeed2() {
-    const items = [
-      { who: "Marina Polson", what: /* @__PURE__ */ React.createElement(React.Fragment, null, "commented on Jason Mark's ", /* @__PURE__ */ React.createElement(A, null, "photo"), "."), time: "2 mins ago", icon: "comments-post-icon" },
-      { who: "Jake Parker", what: /* @__PURE__ */ React.createElement(React.Fragment, null, "liked Nicholas Grissom's ", /* @__PURE__ */ React.createElement(A, null, "status update"), "."), time: "5 mins ago", icon: "like-post-icon" },
-      { who: "Mary Jane Stark", what: /* @__PURE__ */ React.createElement(React.Fragment, null, "added 20 new photos to her ", /* @__PURE__ */ React.createElement(A, null, "gallery album"), "."), time: "12 mins ago", icon: "photos-icon" },
-      { who: "Nicholas Grissom", what: /* @__PURE__ */ React.createElement(React.Fragment, null, "updated his profile ", /* @__PURE__ */ React.createElement(A, null, "photo"), "."), time: "1 hour ago", icon: "happy-face-icon" }
-    ];
-    return /* @__PURE__ */ React.createElement(WidgetCard2, { title: "Activity Feed" }, /* @__PURE__ */ React.createElement("ul", { className: "space-y-4" }, items.map((it) => /* @__PURE__ */ React.createElement("li", { key: it.who, className: "flex items-start gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: it.who, size: 36 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm leading-snug", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("b", { style: { color: "var(--tpl-heading)" } }, it.who), " ", it.what), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, it.time)), /* @__PURE__ */ React.createElement("span", { className: "mt-1 shrink-0", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: it.icon, size: 16 }))))));
-  }
-  function Card2({
-    children,
-    className = "",
-    as: Tag = "div"
-  }) {
-    return /* @__PURE__ */ React.createElement(
-      Tag,
+      "H\xF4m nay"
+    ), /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth(1) }))), /* @__PURE__ */ React.createElement("div", { className: "mb-2 grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold", style: { color: "var(--tpl-muted)" } }, WEEKDAYS2.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, style: i === 6 ? { color: "var(--tpl-accent)" } : void 0 }, d))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-1.5" }, cells.map((day, i) => {
+      if (day === null) return /* @__PURE__ */ React.createElement("span", { key: `b${i}` });
+      const lunar = lunarByDay.get(day);
+      const hasNotes = (byDay.get(day)?.length ?? 0) > 0;
+      const isToday = isThisMonth && day === today2.day;
+      const isSelected = day === selectedDay;
+      const isMonthStart = lunar?.day === 1;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: day,
+          type: "button",
+          onClick: () => selectDay(day),
+          className: "relative flex aspect-square flex-col items-center justify-center rounded-xl border transition hover:border-[var(--tpl-accent)]",
+          style: {
+            borderColor: isSelected ? "var(--tpl-accent)" : "var(--tpl-border)",
+            background: isSelected ? "var(--tpl-surface-2)" : isToday ? "color-mix(in srgb, var(--tpl-accent) 12%, transparent)" : "transparent"
+          }
+        },
+        hasNotes && /* @__PURE__ */ React.createElement("span", { className: "absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full", style: { background: "var(--tpl-accent)" } }),
+        /* @__PURE__ */ React.createElement("span", { className: "text-base font-semibold leading-none", style: { color: isToday ? "var(--tpl-accent)" : "var(--tpl-heading)" } }, day),
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "mt-1 text-[10px] leading-none",
+            style: { color: isMonthStart ? "var(--tpl-accent)" : "var(--tpl-muted)", fontWeight: isMonthStart ? 700 : 400 }
+          },
+          isMonthStart ? `1/${lunar?.month}` : lunar?.day
+        )
+      );
+    }))), /* @__PURE__ */ React.createElement("aside", { className: "space-y-4" }, selectedDay == null || !selLunar ? /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-6 text-center text-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)", color: "var(--tpl-muted)" } }, "Ch\u1ECDn m\u1ED9t ng\xE0y \u0111\u1EC3 xem \xE2m l\u1ECBch v\xE0 th\xEAm ghi ch\xFA.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "overflow-hidden rounded-2xl border shadow-sm", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "p-4 text-white", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-blue))" } }, /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, selWeekday), /* @__PURE__ */ React.createElement("p", { className: "text-2xl font-bold leading-tight" }, selectedDay, " th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm text-white/90" }, "\xC2m l\u1ECBch: ", /* @__PURE__ */ React.createElement("b", null, selLunar.day, "/", selLunar.month, selLunar.leap ? " (nhu\u1EADn)" : ""), " \xB7 n\u0103m ", canChiYear(selLunar.year)), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "Ng\xE0y ", canChiDay(selectedDay, month + 1, year)))), /* @__PURE__ */ React.createElement(
+      "form",
       {
-        className: `rounded-xl shadow-sm ${className}`,
-        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          handleCreate();
+        },
+        className: "rounded-2xl border p-4 shadow-sm",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
       },
-      children
-    );
+      /* @__PURE__ */ React.createElement("label", { className: "mb-2 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, "Ghi ch\xFA m\u1EDBi"),
+      /* @__PURE__ */ React.createElement(
+        "textarea",
+        {
+          value: bodyMd,
+          onChange: (e2) => setBodyMd(e2.target.value),
+          rows: 3,
+          placeholder: "H\xF4m nay c\xF3 g\xEC \u0111\xE1ng nh\u1EDB?",
+          className: "w-full resize-none rounded-xl border bg-transparent p-3 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+        }
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }, title: "Gi\u1EDD" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": true }, "\u{1F551}"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "time",
+          value: noteTime,
+          onChange: (e2) => setNoteTime(e2.target.value),
+          "aria-label": "Gi\u1EDD",
+          className: "bg-transparent text-sm outline-none",
+          style: { color: "var(--tpl-text)" }
+        }
+      )), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "text",
+          value: mood,
+          onChange: (e2) => setMood(e2.target.value),
+          maxLength: 80,
+          placeholder: "T\xE2m tr\u1EA1ng (tu\u1EF3 ch\u1ECDn)",
+          "aria-label": "T\xE2m tr\u1EA1ng",
+          className: "min-w-0 flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+        }
+      )),
+      formError && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-3 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, formError),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex justify-end" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "submit",
+          disabled: !bodyMd.trim() || create2.isPending,
+          className: "rounded-xl px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+        },
+        create2.isPending ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u ghi ch\xFA"
+      ))
+    ), selEntries.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "px-1 text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ghi ch\xFA cho ng\xE0y n\xE0y.") : selEntries.map((e2) => /* @__PURE__ */ React.createElement("article", { key: e2.id, className: "rounded-2xl border p-4 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-1 flex items-center gap-2 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-1.5 py-0.5 font-semibold", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, timeLabel(e2.occurred_at)), e2.mood ? /* @__PURE__ */ React.createElement("span", null, "\xB7 ", e2.mood) : null), /* @__PURE__ */ React.createElement("p", { className: "whitespace-pre-wrap text-sm", style: { color: "var(--tpl-heading)" } }, e2.body_md))))));
   }
-  function WidgetCard2({
-    title,
-    more,
-    children
-  }) {
-    return /* @__PURE__ */ React.createElement(Card2, { className: "p-4" }, title && /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h3", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, title), more && /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 12 }))), children);
-  }
-  function A({ children }) {
-    return /* @__PURE__ */ React.createElement("a", { href: "#", className: "font-medium hover:underline", style: { color: "var(--tpl-accent)" } }, children);
-  }
-  function StackedAvatars2({ names }) {
-    return /* @__PURE__ */ React.createElement("span", { className: "flex" }, names.map((n2, i) => /* @__PURE__ */ React.createElement("span", { key: n2, className: "rounded-full ring-2 ring-white", style: { marginLeft: i ? -8 : 0 } }, /* @__PURE__ */ React.createElement(Avatar, { name: n2, size: 22 }))));
-  }
-  function IconBtn3({ label, icon }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        title: label,
-        "aria-label": label,
-        className: "grid h-9 w-9 place-items-center rounded-lg transition hover:bg-[var(--tpl-surface-2)]",
-        style: { color: "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 18 })
-    );
-  }
-  function QuickFab({
-    onClick,
-    active,
-    label,
-    icon
-  }) {
+  function NavBtn2({ label, glyph, onClick }) {
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick,
         "aria-label": label,
-        className: "grid h-[34px] w-[34px] place-items-center rounded-full text-white shadow-sm transition hover:opacity-90",
-        style: { background: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }
+        title: label,
+        className: "grid h-8 w-8 place-items-center rounded-lg border text-lg leading-none transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
       },
-      /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 16 })
+      glyph
+    );
+  }
+
+  // frontend/src/templates/v1/views/home/HomeView.tsx
+  init_define_import_meta_env();
+  var import_react25 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/stream.ts
+  init_define_import_meta_env();
+  async function getStream(cursor) {
+    const q = cursor ? `?cursor=${cursor}` : "";
+    const r2 = await api(`/api/v1/stream${q}`);
+    return { items: r2.items ?? [], next_cursor: r2.next_cursor };
+  }
+
+  // frontend/src/templates/v1/views/home/HomeView.tsx
+  var STREAM_KEY = ["stream"];
+  function HomeView() {
+    const displayName = useDisplayName();
+    const qc = useQueryClient();
+    const [bodyMd, setBodyMd] = (0, import_react25.useState)("");
+    const [composerError, setComposerError] = (0, import_react25.useState)(null);
+    const query = useInfiniteQuery({
+      queryKey: STREAM_KEY,
+      queryFn: ({ pageParam }) => getStream(pageParam),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0
+    });
+    const items = (0, import_react25.useMemo)(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+    const create2 = useMutation({
+      mutationFn: (input) => createEntry(input),
+      onMutate: async (input) => {
+        await qc.cancelQueries({ queryKey: STREAM_KEY });
+        const previous = qc.getQueryData(STREAM_KEY);
+        const optimistic = {
+          id: makeTempId(),
+          source_module: "journal",
+          event_type: "journal:entry_created",
+          occurred_at: input.occurred_at ?? (/* @__PURE__ */ new Date()).toISOString(),
+          body_md: input.body_md,
+          mood: null
+        };
+        qc.setQueryData(STREAM_KEY, (data) => prepend(data, optimistic));
+        return { previous };
+      },
+      onError: (err, input, ctx) => {
+        if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
+        setBodyMd(input.body_md);
+        setComposerError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not post");
+      },
+      onSuccess: () => {
+        setComposerError(null);
+        qc.invalidateQueries({ queryKey: STREAM_KEY });
+      }
+    });
+    function handleCreate() {
+      const body = bodyMd.trim();
+      if (!body || create2.isPending) return;
+      setComposerError(null);
+      setBodyMd("");
+      create2.mutate({ body_md: body });
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]" }, /* @__PURE__ */ React.createElement("div", { className: "hidden space-y-5 lg:block" }, /* @__PURE__ */ React.createElement(FinanceWidget, null), /* @__PURE__ */ React.createElement(ContinueWidget, null), /* @__PURE__ */ React.createElement(WeatherWidget, null), /* @__PURE__ */ React.createElement(CalendarWidget, null), /* @__PURE__ */ React.createElement(PagesWidget, null)), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 space-y-5" }, /* @__PURE__ */ React.createElement(
+      Composer,
+      {
+        displayName,
+        bodyMd,
+        onBodyMdChange: setBodyMd,
+        onSubmit: handleCreate,
+        submitting: create2.isPending,
+        error: composerError
+      }
+    ), query.isPending ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Loading your stream\u2026") : query.isError ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Couldn't load your stream.", " ", /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => query.refetch(), className: "underline" }, "Retry")) : items.length === 0 ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Your life-stream is empty \u2014 write your first note above.") : /* @__PURE__ */ React.createElement(React.Fragment, null, items.map((it) => /* @__PURE__ */ React.createElement(StreamItemCard, { key: it.id, item: it, displayName })), query.hasNextPage && /* @__PURE__ */ React.createElement("div", { className: "flex justify-center" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => query.fetchNextPage(),
+        disabled: query.isFetchingNextPage,
+        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      query.isFetchingNextPage ? "Loading\u2026" : "Load more"
+    )))), /* @__PURE__ */ React.createElement("aside", { className: "hidden space-y-5 2xl:block" }, /* @__PURE__ */ React.createElement(BirthdayCard, null), /* @__PURE__ */ React.createElement(FriendSuggestions, null), /* @__PURE__ */ React.createElement(ActivityFeed, null)));
+  }
+  function useDisplayName() {
+    const [name, setName] = (0, import_react25.useState)("You");
+    (0, import_react25.useEffect)(() => {
+      let alive = true;
+      fetch(`${baseURL2}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((me) => {
+        if (alive && me?.display_name) setName(me.display_name);
+      }).catch(() => {
+      });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return name;
+  }
+  function prepend(data, item) {
+    const first = data?.pages[0];
+    if (!data || !first) {
+      return { pages: [{ items: [item] }], pageParams: [void 0] };
+    }
+    return { ...data, pages: [{ ...first, items: [item, ...first.items] }, ...data.pages.slice(1)] };
+  }
+  var tempSeq = 0;
+  function makeTempId() {
+    tempSeq += 1;
+    return `temp-${tempSeq}`;
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
+  init_define_import_meta_env();
+  var import_react26 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/media-upload.ts
+  init_define_import_meta_env();
+  async function uploadImage(file, onProgress) {
+    const contentType = file.type || guessType(file.name);
+    if (!contentType.startsWith("image/")) throw new Error("Ch\u1EC9 ch\u1EA5p nh\u1EADn t\u1EC7p \u1EA3nh.");
+    const cr = await fetch(`${baseURL}/api/v1/assets`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, content_type: contentType, size_bytes: file.size })
+    });
+    if (!cr.ok) throw new Error("Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c phi\xEAn t\u1EA3i l\xEAn.");
+    const { asset } = await cr.json();
+    await putWithProgress(`${baseURL}/api/v1/assets/${asset.id}/source`, file, contentType, onProgress);
+    const co = await fetch(`${baseURL}/api/v1/assets/${asset.id}/complete`, { method: "POST", credentials: "include" });
+    if (!co.ok) throw new Error("Kh\xF4ng ho\xE0n t\u1EA5t \u0111\u01B0\u1EE3c t\u1EA3i l\xEAn.");
+    const done = await poll(asset.id);
+    if (done.status !== "ready") throw new Error(done.error || "X\u1EED l\xFD \u1EA3nh th\u1EA5t b\u1EA1i.");
+    return { assetId: done.id, width: done.width, height: done.height };
+  }
+  function guessType(name) {
+    const ext = name.toLowerCase().split(".").pop() ?? "";
+    return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" }[ext] ?? "application/octet-stream";
+  }
+  function putWithProgress(url, file, contentType, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", contentType);
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable && onProgress) onProgress(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i l\xEAn l\u1ED7i (${xhr.status}).`));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i l\xEAn."));
+      xhr.send(file);
+    });
+  }
+  async function poll(id2) {
+    for (let i = 0; i < 120; i += 1) {
+      const r2 = await fetch(`${baseURL}/api/v1/assets/${id2}`, { credentials: "include" });
+      if (r2.ok) {
+        const a = await r2.json();
+        if (a.status === "ready" || a.status === "failed") return a;
+      }
+      await new Promise((res) => setTimeout(res, 1500));
+    }
+    return { id: id2, status: "failed", width: null, height: null, error: "H\u1EBFt th\u1EDDi gian ch\u1EDD x\u1EED l\xFD \u1EA3nh." };
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/comic-import.ts
+  init_define_import_meta_env();
+  async function createImport(chapterId) {
+    return api(`/api/v1/chapters/${chapterId}/imports`, { method: "POST" });
+  }
+  async function createComicImport(comicId) {
+    return api(`/api/v1/comics/${comicId}/imports`, { method: "POST" });
+  }
+  async function getImport(importId) {
+    return api(`/api/v1/imports/${importId}`);
+  }
+  function runZipImport(chapterId, file, onProgress) {
+    return runImport(() => createImport(chapterId), file, onProgress);
+  }
+  function runComicZipImport(comicId, file, onProgress) {
+    return runImport(() => createComicImport(comicId), file, onProgress);
+  }
+  async function runImport(createJob, file, onProgress) {
+    const job = await createJob();
+    onProgress({ phase: "uploading", uploadPct: 0 });
+    await putZip(job.id, file, (pct) => onProgress({ phase: "uploading", uploadPct: pct }));
+    onProgress({ phase: "processing" });
+    let last = job;
+    for (let i = 0; i < 3600; i += 1) {
+      await sleep2(2e3);
+      last = await getImport(job.id);
+      onProgress({ phase: "processing", job: last });
+      if (last.status === "done" || last.status === "failed") return last;
+    }
+    return last;
+  }
+  function putZip(importId, file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", `${baseURL}/api/v1/imports/${importId}/zip`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", "application/zip");
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable) onProgress(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i zip l\u1ED7i (${xhr.status})${zipErrDetail(xhr.responseText)}.`));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i zip."));
+      xhr.send(file);
+    });
+  }
+  function zipErrDetail(body) {
+    try {
+      const detail = JSON.parse(body).detail;
+      return detail ? `: ${detail}` : "";
+    } catch {
+      return "";
+    }
+  }
+  var sleep2 = (ms2) => new Promise((r2) => setTimeout(r2, ms2));
+
+  // frontend/node_modules/portal-frontend/src/lib/comic-sync.ts
+  init_define_import_meta_env();
+  async function listSyncSources(comicId) {
+    const r2 = await api(`/api/v1/comics/${comicId}/sync-sources`);
+    return r2.sources ?? [];
+  }
+  async function createSyncSource(comicId, body) {
+    return api(`/api/v1/comics/${comicId}/sync-sources`, { method: "POST", body: JSON.stringify(body) });
+  }
+  async function triggerSync(sourceId) {
+    return api(`/api/v1/sync-sources/${sourceId}/sync`, { method: "POST" });
+  }
+  async function cancelSync(sourceId) {
+    return api(`/api/v1/sync-sources/${sourceId}/cancel`, { method: "POST" });
+  }
+  async function deleteSyncSource(sourceId) {
+    await api(`/api/v1/sync-sources/${sourceId}`, { method: "DELETE" });
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
+  function ComicDetailView({ id: id2 }) {
+    const { data: comic, isLoading } = useQuery({ queryKey: ["comic", id2], queryFn: () => getComic(id2) });
+    const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => api2("/api/v1/auth/me").catch(() => ({})) });
+    if (isLoading) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026");
+    if (!comic) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-heading)" } }, "Kh\xF4ng t\xECm th\u1EA5y truy\u1EC7n.");
+    const isOwner = !!me?.id && me.id === comic.owner_id;
+    return isOwner ? /* @__PURE__ */ React.createElement(OwnerManager, { id: id2, comic }) : /* @__PURE__ */ React.createElement(ReadView, { id: id2, comic });
+  }
+  function ReadView({ id: id2, comic }) {
+    const continueHref = comic.progress ? `/library/comic/${id2}/read/${comic.progress.chapter_id}` : comic.chapters[0] ? `/library/comic/${id2}/read/${comic.chapters[0].id}` : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-6" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("div", { className: "flex-1" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), comic.description && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "var(--tpl-muted)" } }, comic.description), continueHref && /* @__PURE__ */ React.createElement(Link, { href: continueHref, className: "mt-4 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, comic.progress ? "\u0110\u1ECDc ti\u1EBFp" : "B\u1EAFt \u0111\u1EA7u \u0111\u1ECDc"))), /* @__PURE__ */ React.createElement(ChapterList, { id: id2, chapters: comic.chapters }));
+  }
+  function ChapterList({ id: id2, chapters }) {
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-8 text-xs font-semibold uppercase tracking-wider", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0\u01A1ng"), /* @__PURE__ */ React.createElement("ul", { className: "overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement("li", { key: ch.id, className: "border-t first:border-t-0", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${ch.id}`, className: "flex justify-between px-4 py-3 text-sm transition hover:bg-[var(--tpl-surface-2)]" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, i + 1, ". ", ch.title), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, new Date(ch.created_at).toLocaleDateString("vi-VN"))))), chapters.length === 0 && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-4 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng n\xE0o.")));
+  }
+  function OwnerManager({ id: id2, comic }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "space-y-6", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Link, { href: "/library/comic", className: "mb-1 inline-flex items-center gap-1 text-sm font-medium transition hover:opacity-80", style: { color: "var(--tpl-muted)" } }, "\u2190 Danh s\xE1ch truy\u1EC7n"), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Qu\u1EA3n l\xFD truy\u1EC7n \xB7 ", comic.chapters.length, " ch\u01B0\u01A1ng")), comic.chapters[0] && /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${comic.chapters[0].id}`, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u0110\u1ECDc th\u1EED")), /* @__PURE__ */ React.createElement(SettingsCard, { id: id2, comic }), /* @__PURE__ */ React.createElement(SyncSourcesManager, { id: id2 }), /* @__PURE__ */ React.createElement(ChaptersManager, { id: id2, comic }));
+  }
+  function SyncSourcesManager({ id: id2 }) {
+    const qc = useQueryClient();
+    const [url, setUrl] = (0, import_react26.useState)("");
+    const [hint, setHint] = (0, import_react26.useState)("");
+    const [err, setErr] = (0, import_react26.useState)(null);
+    const sources = useQuery({
+      queryKey: ["sync-sources", id2],
+      queryFn: () => listSyncSources(id2),
+      refetchInterval: (q) => (q.state.data ?? []).some((s) => s.last_status === "syncing") ? 3e3 : false
+    });
+    const list = sources.data ?? [];
+    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : e2 instanceof Error ? e2.message : "C\xF3 l\u1ED7i x\u1EA3y ra");
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["sync-sources", id2] });
+    const add = useMutation({ mutationFn: () => createSyncSource(id2, { source_url: url.trim(), chapters_hint: hint.trim() }), onSuccess: () => {
+      setErr(null);
+      setUrl("");
+      setHint("");
+      invalidate();
+    }, onError: onErr });
+    const sync = useMutation({ mutationFn: (sid) => triggerSync(sid), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const cancel = useMutation({ mutationFn: (sid) => cancelSync(sid), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const del = useMutation({ mutationFn: (sid) => deleteSyncSource(sid), onSuccess: invalidate, onError: onErr });
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ngu\u1ED3n \u0111\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EF1 \u0111\u1ED9ng c\xE0o truy\u1EC7n t\u1EEB ngu\u1ED3n ngo\xE0i r\u1ED3i nh\u1EADp v\xE0o b\u1ED9 n\xE0y (ch\u1EA1y n\u1EC1n)."), err && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "mt-3 space-y-2" }, list.map((s) => /* @__PURE__ */ React.createElement(SyncSourceRow, { key: s.id, source: s, onSync: () => sync.mutate(s.id), onCancel: () => cancel.mutate(s.id), onDelete: () => del.mutate(s.id), busy: sync.isPending || del.isPending || cancel.isPending })), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ngu\u1ED3n n\xE0o \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex flex-col gap-2 sm:flex-row", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (url.trim()) add.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "URL trang truy\u1EC7n (vd https://truyenqqno.com/truyen-tranh/...)", value: url, onChange: (e2) => setUrl(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)] sm:w-44", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "Ch\u01B0\u01A1ng (tr\u1ED1ng = t\u1EA5t c\u1EA3, vd 1-50)", value: hint, onChange: (e2) => setHint(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !url.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ngu\u1ED3n")));
+  }
+  function SyncSourceRow({ source, onSync, onCancel, onDelete, busy }) {
+    const badge = {
+      idle: { label: "Ch\u01B0a ch\u1EA1y", color: "var(--tpl-muted)" },
+      syncing: { label: "\u0110ang c\xE0o\u2026", color: "#f59e0b" },
+      done: { label: "\u0110\xE3 c\xE0o xong", color: "#22c55e" },
+      failed: { label: "L\u1ED7i", color: "#ef4444" },
+      cancelled: { label: "\u0110\xE3 ng\u1EEBng", color: "var(--tpl-muted)" }
+    };
+    const b = badge[source.last_status];
+    const syncing = source.last_status === "syncing";
+    const pct = source.total_chapters > 0 ? Math.round(source.scraped_chapters / source.total_chapters * 100) : 0;
+    return /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3 rounded-lg border px-3 py-2", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("div", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, source.source_site || source.source_url), /* @__PURE__ */ React.createElement("a", { href: source.source_url, target: "_blank", rel: "noreferrer", className: "block truncate text-xs hover:underline", style: { color: "var(--tpl-muted)" } }, source.source_url), /* @__PURE__ */ React.createElement("div", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { style: { color: b.color } }, "\u25CF ", b.label), source.chapters_hint && /* @__PURE__ */ React.createElement("span", null, " \xB7 ch\u01B0\u01A1ng ", source.chapters_hint), source.total_chapters > 0 && (source.last_status === "syncing" ? /* @__PURE__ */ React.createElement("span", null, " \xB7 C\xE0o: ", source.scraped_chapters, "/", source.total_chapters, " ch\u01B0\u01A1ng (", pct, "%)") : /* @__PURE__ */ React.createElement("span", null, " \xB7 ", source.total_chapters, " ch\u01B0\u01A1ng")), source.last_error && /* @__PURE__ */ React.createElement("span", { style: { color: "#ef4444" } }, " \xB7 \u26A0 ", source.last_error))), /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 gap-2" }, syncing ? /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onCancel, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "#ef4444", color: "#ef4444" } }, "\u23F9 Ng\u1EEBng") : /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onSync, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u27F3 \u0110\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDelete, disabled: busy || syncing, className: "rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "X\xF3a")));
+  }
+  function SettingsCard({ id: id2, comic }) {
+    const qc = useQueryClient();
+    const router = useRouter();
+    const titleRef = (0, import_react26.useRef)(null);
+    const descRef = (0, import_react26.useRef)(null);
+    const coverInput = (0, import_react26.useRef)(null);
+    const [uploadingCover, setUploadingCover] = (0, import_react26.useState)(false);
+    const [err, setErr] = (0, import_react26.useState)(null);
+    const [saved, setSaved] = (0, import_react26.useState)(false);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "C\xF3 l\u1ED7i x\u1EA3y ra");
+    const save = useMutation({
+      mutationFn: () => updateComic(id2, { title: titleRef.current?.value.trim() || comic.title, description: descRef.current?.value.trim() || null }),
+      onSuccess: () => {
+        setErr(null);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+        invalidate();
+      },
+      onError: onErr
+    });
+    const setDir = useMutation({ mutationFn: (d) => updateComic(id2, { reading_direction: d }), onSuccess: invalidate, onError: onErr });
+    const pub = useMutation({ mutationFn: () => comic.status === "published" ? unpublishComic(id2) : publishComic(id2), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const del = useMutation({ mutationFn: () => deleteComic(id2), onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["comics"] });
+      router.push("/library/comic");
+    }, onError: onErr });
+    async function onCover(file) {
+      setErr(null);
+      setUploadingCover(true);
+      try {
+        const { assetId } = await uploadImage(file);
+        await updateComic(id2, { cover_asset_id: assetId });
+        invalidate();
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "Kh\xF4ng \u0111\u1EB7t \u0111\u01B0\u1EE3c b\xECa");
+      } finally {
+        setUploadingCover(false);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-5 sm:flex-row" }, /* @__PURE__ */ React.createElement("div", { className: "w-36 shrink-0" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => coverInput.current?.click(), disabled: uploadingCover, className: "mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, uploadingCover ? "\u0110ang t\u1EA3i\u2026" : "\u0110\u1ED5i b\xECa"), /* @__PURE__ */ React.createElement("input", { ref: coverInput, type: "file", accept: "image/*", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onCover(f);
+      e2.target.value = "";
+    } })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1 space-y-3" }, /* @__PURE__ */ React.createElement(Field3, { label: "T\xEAn truy\u1EC7n" }, /* @__PURE__ */ React.createElement("input", { ref: titleRef, defaultValue: comic.title, maxLength: 200, className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field3, { label: "M\xF4 t\u1EA3" }, /* @__PURE__ */ React.createElement("textarea", { ref: descRef, defaultValue: comic.description ?? "", rows: 2, className: "w-full resize-none rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field3, { label: "H\u01B0\u1EDBng \u0111\u1ECDc" }, /* @__PURE__ */ React.createElement(
+      Segmented,
+      {
+        value: comic.reading_direction,
+        onChange: (v) => setDir.mutate(v),
+        options: [{ v: "vertical", label: "Cu\u1ED9n d\u1ECDc" }, { v: "ltr", label: "Tr\xE1i \u2192 Ph\u1EA3i" }, { v: "rtl", label: "Ph\u1EA3i \u2192 Tr\xE1i (manga)" }]
+      }
+    )), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-2 pt-1" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => save.mutate(), disabled: save.isPending, className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, save.isPending ? "\u0110ang l\u01B0u\u2026" : saved ? "\u0110\xE3 l\u01B0u \u2713" : "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => pub.mutate(), disabled: pub.isPending, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, comic.status === "published" ? "G\u1EE1 xu\u1EA5t b\u1EA3n" : "Xu\u1EA5t b\u1EA3n"), /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.45)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p"), /* @__PURE__ */ React.createElement("div", { className: "ml-auto" }, /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1 truy\u1EC7n", confirmLabel: "Xo\xE1 th\u1EADt?", onConfirm: () => del.mutate() }))))));
+  }
+  function ChaptersManager({ id: id2, comic }) {
+    const qc = useQueryClient();
+    const [title, setTitle] = (0, import_react26.useState)("");
+    const zipRef = (0, import_react26.useRef)(null);
+    const [zip, setZip] = (0, import_react26.useState)(null);
+    const [note, setNote] = (0, import_react26.useState)(null);
+    const chapters = comic.chapters;
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const add = useMutation({ mutationFn: () => createChapter(id2, { title: title.trim(), sort_order: (chapters.length + 1) * 10 }), onSuccess: () => {
+      setTitle("");
+      invalidate();
+    } });
+    const reorder = useMutation({ mutationFn: (order) => reorderChapters(id2, order), onSuccess: invalidate });
+    const move = (idx, delta) => {
+      const ids = chapters.map((c) => c.id);
+      const j = idx + delta;
+      if (j < 0 || j >= ids.length) return;
+      const tmp = ids[idx];
+      ids[idx] = ids[j];
+      ids[j] = tmp;
+      reorder.mutate(ids);
+    };
+    async function onZip(file) {
+      setNote(null);
+      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
+      try {
+        const job = await runComicZipImport(id2, file, (p) => {
+          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i zip ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
+          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
+        });
+        qc.invalidateQueries({ queryKey: ["comic", id2] });
+        setNote(job.status === "done" ? `\u0110\xE3 nh\u1EADp ${job.succeeded} trang${job.failed ? `, ${job.failed} l\u1ED7i` : ""} (b\u1ED9 nhi\u1EC1u ch\u01B0\u01A1ng).` : `Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
+      } catch (e2) {
+        setNote(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
+      } finally {
+        setZip(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ch\u01B0\u01A1ng (", chapters.length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip, title: "ZIP c\xF3 c\xE1c th\u01B0 m\u1EE5c con = m\u1ED7i ch\u01B0\u01A1ng (ho\u1EB7c zip ph\u1EB3ng = 1 ch\u01B0\u01A1ng)", className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label} ${zip.total ? `${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp b\u1ED9 t\u1EEB ZIP"), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onZip(f);
+      e2.target.value = "";
+    } })), note && /* @__PURE__ */ React.createElement("p", { className: "mb-3 rounded-lg px-3 py-2 text-xs", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, note), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement(ChapterRow, { key: ch.id, id: id2, chapter: ch, index: i, total: chapters.length, onMove: move })), chapters.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi, ho\u1EB7c nh\u1EADp t\u1EEB ZIP.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex gap-2", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (title.trim()) add.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "T\xEAn ch\u01B0\u01A1ng m\u1EDBi", value: title, onChange: (e2) => setTitle(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ch\u01B0\u01A1ng")));
+  }
+  function ChapterRow({ id: id2, chapter, index, total, onMove }) {
+    const qc = useQueryClient();
+    const [open, setOpen] = (0, import_react26.useState)(false);
+    const [editing, setEditing] = (0, import_react26.useState)(false);
+    const [title, setTitle] = (0, import_react26.useState)(chapter.title);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const rename = useMutation({ mutationFn: () => updateChapter(chapter.id, { title: title.trim() }), onSuccess: () => {
+      setEditing(false);
+      invalidate();
+    } });
+    const del = useMutation({ mutationFn: () => deleteChapter(chapter.id), onSuccess: invalidate });
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-3 py-2" }, /* @__PURE__ */ React.createElement("span", { className: "w-6 shrink-0 text-center font-mono text-xs", style: { color: "var(--tpl-muted)" } }, index + 1), editing ? /* @__PURE__ */ React.createElement("form", { className: "flex flex-1 gap-2", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (title.trim()) rename.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: title, onChange: (e2) => setTitle(e2.target.value), className: "flex-1 rounded-md border bg-transparent px-2 py-1 text-sm outline-none", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } }), /* @__PURE__ */ React.createElement("button", { type: "submit", className: "text-xs font-semibold", style: { color: "var(--tpl-accent)" } }, "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+      setEditing(false);
+      setTitle(chapter.title);
+    }, className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Hu\u1EF7")) : (
+      // The title IS the read affordance: clicking a chapter goes straight into
+      // it. A real <Link>, so middle-click and "open in new tab" work. Expanding
+      // the page manager moved to its own ▸ button below — that is the rarer,
+      // editing-only action, so it should not own the primary click.
+      /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${chapter.id}`, title: `\u0110\u1ECDc: ${chapter.title}`, className: "flex-1 truncate text-left text-sm font-medium hover:underline", style: { color: "var(--tpl-heading)" } }, chapter.title)
+    ), /* @__PURE__ */ React.createElement(IconBtn3, { label: open ? "\u1EA8n danh s\xE1ch trang" : "Danh s\xE1ch trang", onClick: () => setOpen((o2) => !o2) }, open ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "L\xEAn", disabled: index === 0, onClick: () => onMove(index, -1) }, "\u2191"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "Xu\u1ED1ng", disabled: index === total - 1, onClick: () => onMove(index, 1) }, "\u2193"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "S\u1EEDa t\xEAn", onClick: () => {
+      setTitle(chapter.title);
+      setEditing(true);
+    } }, "\u270E"), /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1", confirmLabel: "Xo\xE1?", small: true, onConfirm: () => del.mutate() })), open && /* @__PURE__ */ React.createElement(PageManager, { id: id2, chapterId: chapter.id }));
+  }
+  function PageManager({ id: id2, chapterId }) {
+    const qc = useQueryClient();
+    const fileRef = (0, import_react26.useRef)(null);
+    const zipRef = (0, import_react26.useRef)(null);
+    const [uploading, setUploading] = (0, import_react26.useState)(null);
+    const [zip, setZip] = (0, import_react26.useState)(null);
+    const [err, setErr] = (0, import_react26.useState)(null);
+    const { data: pages } = useQuery({ queryKey: ["comic", id2, "pages", chapterId], queryFn: () => getChapterPages(chapterId) });
+    const list = pages ?? [];
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2, "pages", chapterId] });
+    const del = useMutation({ mutationFn: (pageId) => deletePage(pageId), onSuccess: invalidate });
+    const reorder = useMutation({ mutationFn: (order) => reorderPages(chapterId, order), onSuccess: invalidate });
+    const move = (idx, delta) => {
+      const ids = list.map((p) => p.page_id);
+      const j = idx + delta;
+      if (j < 0 || j >= ids.length) return;
+      const tmp = ids[idx];
+      ids[idx] = ids[j];
+      ids[j] = tmp;
+      reorder.mutate(ids);
+    };
+    async function onFiles(files) {
+      setErr(null);
+      const arr = Array.from(files);
+      setUploading({ done: 0, total: arr.length });
+      const created = [];
+      try {
+        for (let i = 0; i < arr.length; i += 1) {
+          const { assetId } = await uploadImage(arr[i]);
+          created.push({ asset_id: assetId, sort_order: (list.length + i + 1) * 10 });
+          setUploading({ done: i + 1, total: arr.length });
+        }
+        if (created.length) await createPages(chapterId, created);
+        invalidate();
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "T\u1EA3i trang th\u1EA5t b\u1EA1i");
+      } finally {
+        setUploading(null);
+      }
+    }
+    async function onZipImport(file) {
+      setErr(null);
+      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
+      try {
+        const job = await runZipImport(chapterId, file, (p) => {
+          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
+          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
+        });
+        invalidate();
+        if (job.status !== "done") setErr(`Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
+        else if (job.failed) setErr(`Nh\u1EADp xong: ${job.succeeded} trang, ${job.failed} l\u1ED7i.`);
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
+      } finally {
+        setZip(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "border-t px-3 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, list.length, " trang"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip || !!uploading, className: "rounded-lg border px-2.5 py-1 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label}${zip.total ? ` ${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp ZIP")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6" }, list.map((p, i) => /* @__PURE__ */ React.createElement("div", { key: p.page_id, className: "group relative overflow-hidden rounded-lg border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4]" }, /* @__PURE__ */ React.createElement("img", { src: variantURL(p.asset_id, "thumb"), alt: `Trang ${i + 1}`, className: "h-full w-full object-cover", onError: (e2) => {
+      e2.currentTarget.style.visibility = "hidden";
+    } })), /* @__PURE__ */ React.createElement("span", { className: "absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-mono text-white" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 opacity-0 transition group-hover:opacity-100" }, /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "L\xEAn", disabled: i === 0, onClick: () => move(i, -1), className: "text-xs text-white disabled:opacity-30" }, "\u2191"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xu\u1ED1ng", disabled: i === list.length - 1, onClick: () => move(i, 1), className: "text-xs text-white disabled:opacity-30" }, "\u2193"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xo\xE1 trang", onClick: () => del.mutate(p.page_id), className: "text-xs text-red-400" }, "\u2715")))), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => fileRef.current?.click(), disabled: !!uploading, className: "flex aspect-[3/4] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center transition hover:border-[var(--tpl-accent)] disabled:opacity-60", style: { borderColor: "var(--tpl-border)" } }, uploading ? /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i ", uploading.done, "/", uploading.total, "\u2026") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "text-xl", style: { color: "var(--tpl-accent)" } }, "+"), /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "Th\xEAm trang")))), /* @__PURE__ */ React.createElement("input", { ref: fileRef, type: "file", accept: "image/*", multiple: true, className: "hidden", onChange: (e2) => {
+      if (e2.target.files?.length) void onFiles(e2.target.files);
+      e2.target.value = "";
+    } }), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onZipImport(f);
+      e2.target.value = "";
+    } }), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 text-xs", style: { color: "#ef4444" } }, err));
+  }
+  function Cover({ assetId, title }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] w-full overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, assetId ? /* @__PURE__ */ React.createElement("img", { src: variantURL(assetId, "medium"), alt: title, className: "h-full w-full object-cover" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"));
+  }
+  function Field3({ label, children }) {
+    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement("span", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function Segmented({ value, options, onChange }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "inline-flex flex-wrap gap-1 rounded-lg p-1", style: { background: "var(--tpl-surface-2)" } }, options.map((o2) => /* @__PURE__ */ React.createElement("button", { key: o2.v, type: "button", onClick: () => onChange(o2.v), "aria-pressed": value === o2.v, className: "rounded-md px-3 py-1.5 text-xs font-semibold transition", style: value === o2.v ? { background: "var(--tpl-accent)", color: "#fff" } : { color: "var(--tpl-muted)" } }, o2.label)));
+  }
+  function IconBtn3({ children, label, onClick, disabled }) {
+    return /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": label, title: label, onClick, disabled, className: "grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-30", style: { color: "var(--tpl-muted)" } }, children);
+  }
+  function DangerConfirm({ label, confirmLabel, onConfirm, small }) {
+    const [armed, setArmed] = (0, import_react26.useState)(false);
+    const t2 = (0, import_react26.useRef)(null);
+    (0, import_react26.useEffect)(() => () => {
+      if (t2.current) clearTimeout(t2.current);
+    }, []);
+    const cls = small ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm";
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          if (armed) {
+            setArmed(false);
+            onConfirm();
+            return;
+          }
+          setArmed(true);
+          if (t2.current) clearTimeout(t2.current);
+          t2.current = setTimeout(() => setArmed(false), 3e3);
+        },
+        className: `rounded-lg font-semibold transition ${cls}`,
+        style: armed ? { background: "#ef4444", color: "#fff" } : { color: "#ef4444", border: "1px solid rgba(239,68,68,.4)" }
+      },
+      armed ? confirmLabel : label
     );
   }
 
   // frontend/src/templates/v1/views/library/comic/ComicIndexView.tsx
   init_define_import_meta_env();
+  var import_react27 = __toESM(require_react_shim());
   function ComicIndexView() {
-    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold" }, "Comics"), /* @__PURE__ */ React.createElement(
+    const qc = useQueryClient();
+    const router = useRouter();
+    const [tab, setTab] = (0, import_react27.useState)("all");
+    const [modalOpen, setModalOpen] = (0, import_react27.useState)(false);
+    const [title, setTitle] = (0, import_react27.useState)("");
+    const [err, setErr] = (0, import_react27.useState)(null);
+    const all = useQuery({ queryKey: ["comics", "published"], queryFn: () => listComics() });
+    const mine = useQuery({ queryKey: ["comics", "mine"], queryFn: () => listMyComics(), enabled: tab === "mine" });
+    const create2 = useMutation({
+      mutationFn: () => createComic({ title: title.trim() }),
+      onSuccess: (c) => {
+        setTitle("");
+        setModalOpen(false);
+        setErr(null);
+        qc.invalidateQueries({ queryKey: ["comics"] });
+        router.push(`/library/comic/${c.id}`);
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c truy\u1EC7n")
+    });
+    const active = tab === "all" ? all : mine;
+    const comics = tab === "all" ? all.data?.comics ?? [] : mine.data?.comics ?? [];
+    const loading = active.isLoading;
+    return /* @__PURE__ */ React.createElement("section", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold tracking-tight", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n tranh"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110\u1ECDc v\xE0 qu\u1EA3n l\xFD truy\u1EC7n tranh c\u1EE7a b\u1EA1n."), /* @__PURE__ */ React.createElement("div", { className: "mt-4 inline-flex gap-1 rounded-xl p-1", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "all", onClick: () => setTab("all") }, "Th\u01B0 vi\u1EC7n"), /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "mine", onClick: () => setTab("mine") }, "C\u1EE7a t\xF4i"))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, tab === "mine" && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+      setErr(null);
+      setModalOpen(true);
+    }, className: "group block text-left" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition group-hover:border-[var(--tpl-accent)]",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "grid h-11 w-11 place-items-center rounded-full text-2xl leading-none transition group-hover:scale-105", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, "+"),
+      /* @__PURE__ */ React.createElement("span", { className: "text-sm font-semibold transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-muted)" } }, "Th\xEAm truy\u1EC7n")
+    ), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n m\u1EDBi"), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EA1o b\u1EA3n nh\xE1p")), loading ? Array.from({ length: 4 }, (_, i) => /* @__PURE__ */ React.createElement(SkeletonCard, { key: `s${i}` })) : comics.map((c) => /* @__PURE__ */ React.createElement(ComicCard, { key: c.id, comic: c, showStatus: tab === "mine" }))), !loading && comics.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-sm", style: { color: "var(--tpl-muted)" } }, tab === "all" ? "Ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u0111\u01B0\u1EE3c xu\u1EA5t b\u1EA3n." : "B\u1EA1n ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u2014 b\u1EA5m \u201CTh\xEAm truy\u1EC7n\u201D \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u."), modalOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4", onClick: () => setModalOpen(false), role: "dialog", "aria-modal": "true", "aria-label": "T\u1EA1o truy\u1EC7n m\u1EDBi" }, /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        onClick: (e2) => e2.stopPropagation(),
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (title.trim()) create2.mutate();
+        },
+        className: "w-full max-w-md rounded-2xl p-5 shadow-xl",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("h2", { className: "text-base font-bold", style: { color: "var(--tpl-heading)" } }, "T\u1EA1o truy\u1EC7n m\u1EDBi"),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\u1EB7t t\xEAn truy\u1EC7n. B\u1EA1n s\u1EBD th\xEAm ch\u01B0\u01A1ng v\xE0 trang \u1EDF b\u01B0\u1EDBc sau."),
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          autoFocus: true,
+          className: "mt-4 w-full rounded-lg border bg-transparent px-3 py-2.5 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" },
+          placeholder: "T\xEAn truy\u1EC7n",
+          value: title,
+          maxLength: 200,
+          onChange: (e2) => setTitle(e2.target.value)
+        }
+      ),
+      err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => setModalOpen(false), className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "Hu\u1EF7"), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: create2.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, create2.isPending ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o truy\u1EC7n"))
+    )));
+  }
+  function TabBtn({ active, onClick, children }) {
+    return /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        className: "rounded-md px-3 py-1.5 text-sm font-medium",
-        style: {
-          background: "var(--tpl-accent)",
-          color: "var(--tpl-accent-contrast)"
+        onClick,
+        "aria-pressed": active,
+        className: "rounded-lg px-4 py-1.5 text-sm font-semibold transition",
+        style: active ? { background: "var(--tpl-surface)", color: "var(--tpl-heading)", boxShadow: "0 1px 2px rgba(0,0,0,.08)" } : { color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function ComicCard({ comic, showStatus }) {
+    return /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${comic.id}`, className: "group block" }, /* @__PURE__ */ React.createElement("div", { className: "relative aspect-[3/4] overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, comic.cover_asset_id ? /* @__PURE__ */ React.createElement("img", { src: variantURL(comic.cover_asset_id, "thumb"), alt: comic.title, className: "h-full w-full object-cover transition group-hover:scale-[1.02]" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"), showStatus && /* @__PURE__ */ React.createElement("span", { className: "absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.55)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p")), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, comic.chapter_count ?? 0, " ch\u01B0\u01A1ng"));
+  }
+  function SkeletonCard() {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] animate-pulse rounded-xl", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 h-3 w-2/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }));
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicReaderView.tsx
+  init_define_import_meta_env();
+  var import_react34 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/reader-settings.ts
+  init_define_import_meta_env();
+
+  // frontend/node_modules/zustand/esm/vanilla.mjs
+  init_define_import_meta_env();
+  var createStoreImpl = (createState) => {
+    let state;
+    const listeners = /* @__PURE__ */ new Set();
+    const setState = (partial, replace) => {
+      const nextState = typeof partial === "function" ? partial(state) : partial;
+      if (!Object.is(nextState, state)) {
+        const previousState = state;
+        state = (replace != null ? replace : typeof nextState !== "object" || nextState === null) ? nextState : Object.assign({}, state, nextState);
+        listeners.forEach((listener) => listener(state, previousState));
+      }
+    };
+    const getState = () => state;
+    const getInitialState = () => initialState;
+    const subscribe = (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    };
+    const api3 = { setState, getState, getInitialState, subscribe };
+    const initialState = state = createState(setState, getState, api3);
+    return api3;
+  };
+  var createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
+
+  // frontend/node_modules/zustand/esm/react.mjs
+  init_define_import_meta_env();
+  var import_react28 = __toESM(require_react_shim(), 1);
+  var identity = (arg) => arg;
+  function useStore(api3, selector = identity) {
+    const slice = import_react28.default.useSyncExternalStore(
+      api3.subscribe,
+      import_react28.default.useCallback(() => selector(api3.getState()), [api3, selector]),
+      import_react28.default.useCallback(() => selector(api3.getInitialState()), [api3, selector])
+    );
+    import_react28.default.useDebugValue(slice);
+    return slice;
+  }
+  var createImpl = (createState) => {
+    const api3 = createStore(createState);
+    const useBoundStore = (selector) => useStore(api3, selector);
+    Object.assign(useBoundStore, api3);
+    return useBoundStore;
+  };
+  var create = ((createState) => createState ? createImpl(createState) : createImpl);
+
+  // frontend/node_modules/zustand/esm/middleware.mjs
+  init_define_import_meta_env();
+  function createJSONStorage(getStorage, options) {
+    let storage;
+    try {
+      storage = getStorage();
+    } catch (e2) {
+      return;
+    }
+    const persistStorage = {
+      getItem: (name) => {
+        var _a117;
+        const parse = (str2) => {
+          if (str2 === null) {
+            return null;
+          }
+          return JSON.parse(str2, options == null ? void 0 : options.reviver);
+        };
+        const str = (_a117 = storage.getItem(name)) != null ? _a117 : null;
+        if (str instanceof Promise) {
+          return str.then(parse);
+        }
+        return parse(str);
+      },
+      setItem: (name, newValue) => storage.setItem(name, JSON.stringify(newValue, options == null ? void 0 : options.replacer)),
+      removeItem: (name) => storage.removeItem(name)
+    };
+    return persistStorage;
+  }
+  var toThenable = (fn) => (input) => {
+    try {
+      const result = fn(input);
+      if (result instanceof Promise) {
+        return result;
+      }
+      return {
+        then(onFulfilled) {
+          return toThenable(onFulfilled)(result);
+        },
+        catch(_onRejected) {
+          return this;
+        }
+      };
+    } catch (e2) {
+      return {
+        then(_onFulfilled) {
+          return this;
+        },
+        catch(onRejected) {
+          return toThenable(onRejected)(e2);
+        }
+      };
+    }
+  };
+  var persistImpl = (config, baseOptions) => (set, get, api3) => {
+    let options = {
+      storage: createJSONStorage(() => window.localStorage),
+      partialize: (state) => state,
+      version: 0,
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...persistedState
+      }),
+      ...baseOptions
+    };
+    let hasHydrated = false;
+    let hydrationVersion = 0;
+    const hydrationListeners = /* @__PURE__ */ new Set();
+    const finishHydrationListeners = /* @__PURE__ */ new Set();
+    let storage = options.storage;
+    if (!storage) {
+      return config(
+        (...args) => {
+          console.warn(
+            `[zustand persist middleware] Unable to update item '${options.name}', the given storage is currently unavailable.`
+          );
+          set(...args);
+        },
+        get,
+        api3
+      );
+    }
+    const setItem = () => {
+      const state = options.partialize({ ...get() });
+      return storage.setItem(options.name, {
+        state,
+        version: options.version
+      });
+    };
+    const savedSetState = api3.setState;
+    api3.setState = (state, replace) => {
+      savedSetState(state, replace);
+      return setItem();
+    };
+    const configResult = config(
+      (...args) => {
+        set(...args);
+        return setItem();
+      },
+      get,
+      api3
+    );
+    api3.getInitialState = () => configResult;
+    let stateFromStorage;
+    const hydrate = () => {
+      var _a117, _b5;
+      if (!storage) return;
+      const currentVersion = ++hydrationVersion;
+      hasHydrated = false;
+      hydrationListeners.forEach((cb) => {
+        var _a210;
+        return cb((_a210 = get()) != null ? _a210 : configResult);
+      });
+      const postRehydrationCallback = ((_b5 = options.onRehydrateStorage) == null ? void 0 : _b5.call(options, (_a117 = get()) != null ? _a117 : configResult)) || void 0;
+      return toThenable(storage.getItem.bind(storage))(options.name).then((deserializedStorageValue) => {
+        if (deserializedStorageValue) {
+          if (typeof deserializedStorageValue.version === "number" && deserializedStorageValue.version !== options.version) {
+            if (options.migrate) {
+              const migration = options.migrate(
+                deserializedStorageValue.state,
+                deserializedStorageValue.version
+              );
+              if (migration instanceof Promise) {
+                return migration.then((result) => [true, result]);
+              }
+              return [true, migration];
+            }
+            console.error(
+              `State loaded from storage couldn't be migrated since no migrate function was provided`
+            );
+          } else {
+            return [false, deserializedStorageValue.state];
+          }
+        }
+        return [false, void 0];
+      }).then((migrationResult) => {
+        var _a210;
+        if (currentVersion !== hydrationVersion) {
+          return;
+        }
+        const [migrated, migratedState] = migrationResult;
+        stateFromStorage = options.merge(
+          migratedState,
+          (_a210 = get()) != null ? _a210 : configResult
+        );
+        set(stateFromStorage, true);
+        if (migrated) {
+          return setItem();
+        }
+      }).then(() => {
+        if (currentVersion !== hydrationVersion) {
+          return;
+        }
+        postRehydrationCallback == null ? void 0 : postRehydrationCallback(get(), void 0);
+        stateFromStorage = get();
+        hasHydrated = true;
+        finishHydrationListeners.forEach((cb) => cb(stateFromStorage));
+      }).catch((e2) => {
+        if (currentVersion !== hydrationVersion) {
+          return;
+        }
+        postRehydrationCallback == null ? void 0 : postRehydrationCallback(void 0, e2);
+      });
+    };
+    api3.persist = {
+      setOptions: (newOptions) => {
+        options = {
+          ...options,
+          ...newOptions
+        };
+        if (newOptions.storage) {
+          storage = newOptions.storage;
         }
       },
-      "Add book"
-    )), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ React.createElement(
-      "div",
+      clearStorage: () => {
+        storage == null ? void 0 : storage.removeItem(options.name);
+      },
+      getOptions: () => options,
+      rehydrate: () => hydrate(),
+      hasHydrated: () => hasHydrated,
+      onHydrate: (cb) => {
+        hydrationListeners.add(cb);
+        return () => {
+          hydrationListeners.delete(cb);
+        };
+      },
+      onFinishHydration: (cb) => {
+        finishHydrationListeners.add(cb);
+        return () => {
+          finishHydrationListeners.delete(cb);
+        };
+      }
+    };
+    if (!options.skipHydration) {
+      hydrate();
+    }
+    return stateFromStorage || configResult;
+  };
+  var persist = persistImpl;
+
+  // frontend/node_modules/portal-frontend/src/lib/reader-settings.ts
+  var useReaderSettings = create()(
+    persist(
+      (set) => ({
+        mode: "webtoon",
+        // preserves the shipped P0.3 default
+        fit: "contain",
+        brightness: 100,
+        quality: "std",
+        direction: "auto",
+        setMode: (mode) => set({ mode }),
+        setFit: (fit) => set({ fit }),
+        setBrightness: (brightness) => set({ brightness }),
+        setQuality: (quality) => set({ quality }),
+        setDirection: (direction) => set({ direction })
+      }),
       {
-        key: i,
-        className: "aspect-[3/4] rounded-lg border",
-        style: {
-          borderColor: "var(--tpl-border)",
-          background: "var(--tpl-surface)"
+        name: "portal.reader.settings",
+        version: 2,
+        // v2 added `direction`
+        migrate: (persisted, version) => {
+          const s = persisted ?? {};
+          if (version < 2 && s.direction === void 0) s.direction = "auto";
+          return s;
+        },
+        // Guard SSR: the store is created at import time on the server too, where
+        // `localStorage` is undefined — hand persist a no-op storage there.
+        storage: createJSONStorage(
+          () => typeof window === "undefined" ? { getItem: () => null, setItem: () => {
+          }, removeItem: () => {
+          } } : window.localStorage
+        )
+      }
+    )
+  );
+  function qualityVariant(q) {
+    return q === "data" ? "thumb" : q === "hi" ? "poster" : "medium";
+  }
+  function effectiveDirection(override, work) {
+    if (override === "ltr" || override === "rtl") return override;
+    return work === "rtl" ? "rtl" : "ltr";
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/useReaderProgress.ts
+  init_define_import_meta_env();
+  var import_react29 = __toESM(require_react_shim());
+  var THROTTLE_MS = 1e4;
+  function useReaderProgress(comicId) {
+    const posRef = (0, import_react29.useRef)(null);
+    const lastSync = (0, import_react29.useRef)(0);
+    const flush = (0, import_react29.useCallback)(() => {
+      if (posRef.current) saveComicProgress(comicId, posRef.current.chapterId, posRef.current.pageId);
+    }, [comicId]);
+    const report = (0, import_react29.useCallback)(
+      (chapterId, pageId) => {
+        posRef.current = { chapterId, pageId };
+        const now = Date.now();
+        if (now - lastSync.current > THROTTLE_MS) {
+          lastSync.current = now;
+          flush();
+        }
+      },
+      [flush]
+    );
+    (0, import_react29.useEffect)(() => {
+      const onHide = () => flush();
+      const onVis = () => {
+        if (document.visibilityState === "hidden") flush();
+      };
+      window.addEventListener("pagehide", onHide);
+      document.addEventListener("visibilitychange", onVis);
+      return () => {
+        window.removeEventListener("pagehide", onHide);
+        document.removeEventListener("visibilitychange", onVis);
+      };
+    }, [flush]);
+    return { report };
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/usePagePreloader.ts
+  init_define_import_meta_env();
+  var import_react30 = __toESM(require_react_shim());
+  function usePagePreloader({
+    comicId,
+    pages,
+    index,
+    variant,
+    ahead = 4,
+    nextChapterId
+  }) {
+    (0, import_react30.useEffect)(() => {
+      if (typeof window === "undefined") return;
+      for (let i = index + 1; i <= index + ahead && i < pages.length; i += 1) {
+        const p = pages[i];
+        if (p) {
+          const img = new window.Image();
+          img.decoding = "async";
+          img.src = variantURL(p.asset_id, variant);
         }
       }
+    }, [pages, index, variant, ahead]);
+    const qc = useQueryClient();
+    (0, import_react30.useEffect)(() => {
+      if (!nextChapterId) return;
+      if (index >= pages.length - ahead) {
+        qc.prefetchQuery({
+          queryKey: ["comic", comicId, "pages", nextChapterId],
+          queryFn: () => getChapterPages(nextChapterId),
+          staleTime: 5 * 60 * 1e3
+        });
+      }
+    }, [nextChapterId, index, pages.length, ahead, qc, comicId]);
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/StripReader.tsx
+  init_define_import_meta_env();
+  var import_react31 = __toESM(require_react_shim());
+  var StripReader = (0, import_react31.forwardRef)(function StripReader2({ comicId, chapters, startChapterId, startPages, variant, initialPageId, scrollRef, onActive, onToggleChrome }, ref) {
+    const [segments, setSegments] = (0, import_react31.useState)([{ chapterId: startChapterId, pages: startPages }]);
+    const [failed, setFailed] = (0, import_react31.useState)(() => /* @__PURE__ */ new Set());
+    const els = (0, import_react31.useRef)({});
+    const loadingNext = (0, import_react31.useRef)(false);
+    const lastActive = (0, import_react31.useRef)(null);
+    const [didResume, setDidResume] = (0, import_react31.useState)(false);
+    const meta = (0, import_react31.useMemo)(() => {
+      const m = /* @__PURE__ */ new Map();
+      for (const seg of segments) seg.pages.forEach((p, i) => m.set(p.page_id, { chapterId: seg.chapterId, index: i, count: seg.pages.length }));
+      return m;
+    }, [segments]);
+    const flat = (0, import_react31.useMemo)(() => segments.flatMap((s) => s.pages), [segments]);
+    (0, import_react31.useImperativeHandle)(ref, () => ({
+      seek: (chapterId, index) => {
+        const seg = segments.find((s) => s.chapterId === chapterId);
+        const p = seg?.pages[index];
+        if (p && els.current[p.page_id]) els.current[p.page_id].scrollIntoView({ block: "start" });
+      }
+    }), [segments]);
+    (0, import_react31.useEffect)(() => {
+      if (didResume || flat.length === 0) return;
+      if (initialPageId && els.current[initialPageId]) els.current[initialPageId].scrollIntoView();
+      setDidResume(true);
+    }, [initialPageId, didResume, flat]);
+    const loadNext = (0, import_react31.useCallback)(async () => {
+      if (loadingNext.current) return;
+      const lastCh = segments[segments.length - 1]?.chapterId;
+      const idx = chapters.findIndex((c) => c.id === lastCh);
+      const next = idx >= 0 ? chapters[idx + 1] : void 0;
+      if (!next) return;
+      loadingNext.current = true;
+      try {
+        const pages = await getChapterPages(next.id);
+        setSegments((segs) => segs.some((s) => s.chapterId === next.id) ? segs : [...segs, { chapterId: next.id, pages }]);
+      } catch {
+      } finally {
+        loadingNext.current = false;
+      }
+    }, [segments, chapters]);
+    const onScroll = (0, import_react31.useCallback)(() => {
+      const sc = scrollRef.current;
+      if (!sc) return;
+      const mid = sc.scrollTop + sc.clientHeight / 2;
+      let cur = null;
+      for (const p of flat) {
+        const el = els.current[p.page_id];
+        if (el && el.offsetTop <= mid) cur = p.page_id;
+      }
+      if (cur && cur !== lastActive.current) {
+        lastActive.current = cur;
+        const info = meta.get(cur);
+        if (info) onActive({ chapterId: info.chapterId, pageId: cur, index: info.index, count: info.count });
+      }
+      if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1200) loadNext();
+    }, [flat, meta, onActive, loadNext, scrollRef]);
+    (0, import_react31.useEffect)(() => {
+      const sc = scrollRef.current;
+      if (!sc) return;
+      sc.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+      return () => sc.removeEventListener("scroll", onScroll);
+    }, [onScroll, scrollRef]);
+    const noMoreChapters = (() => {
+      const lastCh = segments[segments.length - 1]?.chapterId;
+      const idx = chapters.findIndex((c) => c.id === lastCh);
+      return idx < 0 || idx >= chapters.length - 1;
+    })();
+    return /* @__PURE__ */ React.createElement("div", { className: "mx-auto max-w-3xl", onClick: onToggleChrome }, segments.map((seg) => /* @__PURE__ */ React.createElement("div", { key: seg.chapterId }, seg.chapterId !== startChapterId && /* @__PURE__ */ React.createElement("div", { className: "py-6 text-center text-xs uppercase tracking-widest text-gray-600" }, chapters.find((c) => c.id === seg.chapterId)?.title ?? "Ch\u01B0\u01A1ng ti\u1EBFp theo"), seg.pages.map((p) => /* @__PURE__ */ React.createElement("div", { key: p.page_id, ref: (el) => {
+      els.current[p.page_id] = el;
+    }, className: "border-b border-gray-900" }, failed.has(p.page_id) ? /* @__PURE__ */ React.createElement("div", { className: "flex h-40 items-center justify-center text-gray-600" }, "\u26A0 Trang kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c") : /* @__PURE__ */ React.createElement(
+      "img",
+      {
+        src: variantURL(p.asset_id, variant),
+        width: p.width ?? void 0,
+        height: p.height ?? void 0,
+        alt: "",
+        loading: "lazy",
+        className: "w-full",
+        onError: () => setFailed((s) => {
+          const n2 = new Set(s);
+          n2.add(p.page_id);
+          return n2;
+        })
+      }
+    ))))), flat.length === 0 && /* @__PURE__ */ React.createElement("div", { className: "p-8 text-center text-gray-500" }, "This chapter has no pages yet."), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col items-center gap-3 py-10" }, noMoreChapters ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "H\u1EBFt truy\u1EC7n.") : /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600" }, "\u0110ang t\u1EA3i ch\u01B0\u01A1ng sau\u2026"), /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${comicId}`, className: "text-sm text-gray-400 hover:underline" }, "V\u1EC1 trang truy\u1EC7n")));
+  });
+
+  // frontend/src/templates/v1/views/library/comic/reader/PagedReader.tsx
+  init_define_import_meta_env();
+  var import_react33 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/views/library/comic/reader/useReducedMotion.ts
+  init_define_import_meta_env();
+  var import_react32 = __toESM(require_react_shim());
+  function useReducedMotion() {
+    const [reduced, setReduced] = (0, import_react32.useState)(false);
+    (0, import_react32.useEffect)(() => {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const update2 = () => setReduced(mq.matches);
+      update2();
+      mq.addEventListener("change", update2);
+      return () => mq.removeEventListener("change", update2);
+    }, []);
+    return reduced;
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/PagedReader.tsx
+  var MIN = 1;
+  var MAX = 4;
+  var zoomReducer = (z, a) => a === "reset" ? { scale: 1, x: 0, y: 0 } : { ...z, ...a };
+  function PagedReader({
+    pages,
+    index,
+    mode,
+    dir,
+    variant,
+    fit,
+    onPrev,
+    onNext,
+    onToggleChrome
+  }) {
+    let shown;
+    if (mode === "double") {
+      const base = index - index % 2;
+      shown = [pages[base], pages[base + 1]].filter(Boolean);
+      if (dir === "rtl") shown = [...shown].reverse();
+    } else {
+      shown = pages[index] ? [pages[index]] : [];
+    }
+    const shownKey = shown.map((p) => p.page_id).join("|");
+    const [zoom, dispatch] = (0, import_react33.useReducer)(zoomReducer, { scale: 1, x: 0, y: 0 });
+    const [failed, setFailed] = (0, import_react33.useState)(() => /* @__PURE__ */ new Set());
+    const containerRef = (0, import_react33.useRef)(null);
+    const reduceMotion = useReducedMotion();
+    (0, import_react33.useEffect)(() => dispatch("reset"), [shownKey, mode, fit]);
+    const zoomAround = (0, import_react33.useCallback)((factor, cx, cy) => {
+      dispatch(
+        (() => {
+          const el = containerRef.current;
+          if (!el) return {};
+          const r2 = el.getBoundingClientRect();
+          const scale = Math.min(MAX, Math.max(MIN, zoom.scale * factor));
+          if (scale === zoom.scale) return {};
+          const px = cx - r2.left - r2.width / 2;
+          const py = cy - r2.top - r2.height / 2;
+          const k = scale / zoom.scale;
+          const nx = scale === 1 ? 0 : px - (px - zoom.x) * k;
+          const ny = scale === 1 ? 0 : py - (py - zoom.y) * k;
+          return { scale, x: nx, y: ny };
+        })()
+      );
+    }, [zoom]);
+    const tapNav = (0, import_react33.useCallback)((clientX) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const r2 = el.getBoundingClientRect();
+      const third = (clientX - r2.left) / r2.width;
+      if (third < 0.34) (dir === "rtl" ? onNext : onPrev)();
+      else if (third > 0.66) (dir === "rtl" ? onPrev : onNext)();
+      else onToggleChrome();
+    }, [dir, onPrev, onNext, onToggleChrome]);
+    const drag = (0, import_react33.useRef)(null);
+    const onMouseDown = (e2) => {
+      if (zoom.scale > 1) drag.current = { x: e2.clientX - zoom.x, y: e2.clientY - zoom.y, moved: false };
+    };
+    const onMouseMove = (e2) => {
+      if (drag.current && zoom.scale > 1) {
+        drag.current.moved = true;
+        dispatch({ x: e2.clientX - drag.current.x, y: e2.clientY - drag.current.y });
+      }
+    };
+    const onMouseUp = () => {
+      drag.current = null;
+    };
+    const onClick = (e2) => {
+      if (zoom.scale === 1) tapNav(e2.clientX);
+    };
+    const onDoubleClick = (e2) => {
+      e2.preventDefault();
+      if (zoom.scale > 1) dispatch("reset");
+      else zoomAround(2.5, e2.clientX, e2.clientY);
+    };
+    const onWheel = (e2) => {
+      zoomAround(e2.deltaY < 0 ? 1.15 : 1 / 1.15, e2.clientX, e2.clientY);
+    };
+    const touch = (0, import_react33.useRef)({ x: 0, y: 0, t: 0, d0: 0, s0: 1, px: 0, py: 0, lastTap: 0 });
+    const onTouchStart = (e2) => {
+      const t2 = touch.current;
+      const a = e2.touches[0], b = e2.touches[1];
+      if (a && b) {
+        t2.d0 = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        t2.s0 = zoom.scale;
+        t2.px = (a.clientX + b.clientX) / 2;
+        t2.py = (a.clientY + b.clientY) / 2;
+      } else if (a) {
+        t2.x = a.clientX;
+        t2.y = a.clientY;
+        t2.t = Date.now();
+      }
+    };
+    const onTouchMove = (e2) => {
+      const t2 = touch.current;
+      const a = e2.touches[0], b = e2.touches[1];
+      if (a && b && t2.d0 > 0) {
+        const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        const scale = Math.min(MAX, Math.max(MIN, t2.s0 * (d / t2.d0)));
+        dispatch({ scale, x: scale === 1 ? 0 : zoom.x, y: scale === 1 ? 0 : zoom.y });
+      } else if (a && zoom.scale > 1) {
+        dispatch({ x: zoom.x + (a.clientX - t2.x), y: zoom.y + (a.clientY - t2.y) });
+        t2.x = a.clientX;
+        t2.y = a.clientY;
+      }
+    };
+    const onTouchEnd = (e2) => {
+      const t2 = touch.current;
+      if (e2.touches.length > 0) return;
+      const end = e2.changedTouches[0];
+      const ex = end?.clientX ?? t2.x, ey = end?.clientY ?? t2.y;
+      const dx = ex - t2.x, dy = ey - t2.y;
+      const dt = Date.now() - t2.t;
+      if (zoom.scale === 1 && Math.abs(dx) < 8 && Math.abs(dy) < 8 && dt < 250) {
+        const now = Date.now();
+        if (now - t2.lastTap < 300) {
+          t2.lastTap = 0;
+          zoomAround(2.5, ex, ey);
+        } else {
+          t2.lastTap = now;
+          tapNav(ex);
+        }
+      } else if (zoom.scale === 1 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        (dx < 0 ? dir === "rtl" ? onPrev : onNext : dir === "rtl" ? onNext : onPrev)();
+      }
+      t2.d0 = 0;
+    };
+    (0, import_react33.useEffect)(() => {
+      const onKey = (e2) => {
+        if (e2.key === "+" || e2.key === "=") {
+          e2.preventDefault();
+          const el = containerRef.current;
+          if (el) {
+            const r2 = el.getBoundingClientRect();
+            zoomAround(1.25, r2.left + r2.width / 2, r2.top + r2.height / 2);
+          }
+        } else if (e2.key === "-" || e2.key === "_") {
+          e2.preventDefault();
+          const el = containerRef.current;
+          if (el) {
+            const r2 = el.getBoundingClientRect();
+            zoomAround(1 / 1.25, r2.left + r2.width / 2, r2.top + r2.height / 2);
+          }
+        } else if (e2.key === "0") {
+          e2.preventDefault();
+          dispatch("reset");
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [zoomAround]);
+    const imgClass = fit === "width" && mode === "single" ? "w-full" : "max-h-full object-contain";
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        ref: containerRef,
+        className: "relative flex h-[100dvh] w-full touch-none select-none items-center justify-center overflow-hidden bg-black",
+        style: { cursor: zoom.scale > 1 ? "grab" : "default" },
+        onClick,
+        onDoubleClick,
+        onWheel,
+        onMouseDown,
+        onMouseMove,
+        onMouseUp,
+        onMouseLeave: onMouseUp,
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "flex h-full max-h-full items-center justify-center gap-0.5",
+          style: { transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`, transition: reduceMotion || drag.current || touch.current.d0 ? "none" : "transform .15s ease" }
+        },
+        shown.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "text-gray-500" }, "Ch\u01B0\u01A1ng n\xE0y ch\u01B0a c\xF3 trang.") : shown.map(
+          (p) => failed.has(p.page_id) ? /* @__PURE__ */ React.createElement("div", { key: p.page_id, className: "px-6 text-center text-gray-500" }, "\u26A0 Trang kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c") : /* @__PURE__ */ React.createElement(
+            "img",
+            {
+              key: p.page_id,
+              src: variantURL(p.asset_id, variant),
+              width: p.width ?? void 0,
+              height: p.height ?? void 0,
+              alt: "",
+              draggable: false,
+              decoding: "async",
+              className: `${imgClass} ${mode === "double" ? "max-w-[50%]" : "max-w-full"}`,
+              onError: () => setFailed((s) => {
+                const n2 = new Set(s);
+                n2.add(p.page_id);
+                return n2;
+              })
+            }
+          )
+        )
+      )
+    );
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/ReaderChrome.tsx
+  init_define_import_meta_env();
+  function ReaderChrome({
+    visible,
+    comicId,
+    title,
+    chapterLabel,
+    dir,
+    prevHref,
+    nextHref,
+    onOpenSettings,
+    onOpenChapters,
+    onOpenHelp,
+    slider
+  }) {
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("header", { className: `fixed inset-x-0 top-0 z-20 flex items-center gap-1.5 bg-black/80 px-3 py-2 text-white backdrop-blur transition-transform duration-200 motion-reduce:transition-none ${visible ? "" : "-translate-y-full"}` }, /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${comicId}`, "aria-label": "V\u1EC1 trang truy\u1EC7n", className: "shrink-0 rounded-md px-2 py-1 text-lg leading-none text-blue-400 hover:bg-white/10" }, "\u2039"), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1 leading-tight" }, /* @__PURE__ */ React.createElement("div", { className: "truncate text-sm font-semibold" }, title), /* @__PURE__ */ React.createElement("div", { className: "text-[11px] text-gray-400" }, chapterLabel, dir === "rtl" ? " \xB7 manga" : "")), /* @__PURE__ */ React.createElement(ChapBtn, { href: prevHref, label: "Ch\u01B0\u01A1ng tr\u01B0\u1EDBc", glyph: "\u2191" }), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onOpenChapters, "aria-label": "Danh s\xE1ch ch\u01B0\u01A1ng", className: "shrink-0 rounded-md px-2 py-1.5 text-sm leading-none text-gray-200 hover:bg-white/10" }, "\u2261"), /* @__PURE__ */ React.createElement(ChapBtn, { href: nextHref, label: "Ch\u01B0\u01A1ng sau", glyph: "\u2193" }), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onOpenHelp, "aria-label": "Ph\xEDm t\u1EAFt", className: "shrink-0 rounded-md px-2 py-1.5 text-sm leading-none text-gray-200 hover:bg-white/10" }, "?"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onOpenSettings, "aria-label": "C\xE0i \u0111\u1EB7t", className: "shrink-0 rounded-md px-2 py-1.5 text-lg leading-none text-gray-200 hover:bg-white/10" }, "\u2699")), slider && /* @__PURE__ */ React.createElement("footer", { className: `fixed inset-x-0 bottom-0 z-20 flex items-center gap-3 bg-black/80 px-4 py-3 text-white backdrop-blur transition-transform duration-200 motion-reduce:transition-none ${visible ? "" : "translate-y-full"}` }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "range",
+        min: 1,
+        max: Math.max(1, slider.total),
+        value: Math.min(slider.current, slider.total),
+        onChange: (e2) => slider.onSeek(Number(e2.target.value) - 1),
+        "aria-label": "Trang",
+        className: "min-w-0 flex-1 accent-blue-500",
+        style: { direction: dir === "rtl" ? "rtl" : "ltr" }
+      }
+    ), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 font-mono text-xs tabular-nums text-gray-300" }, String(Math.min(slider.current, slider.total)).padStart(2, "0"), " / ", String(slider.total).padStart(2, "0"))));
+  }
+  function ChapBtn({ href, label, glyph }) {
+    if (!href) return /* @__PURE__ */ React.createElement("span", { "aria-hidden": true, className: "shrink-0 px-2 py-1.5 text-sm leading-none text-gray-700" }, glyph);
+    return /* @__PURE__ */ React.createElement(Link, { href, "aria-label": label, title: label, className: "shrink-0 rounded-md px-2 py-1.5 text-sm leading-none text-gray-200 hover:bg-white/10" }, glyph);
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/ReaderSettings.tsx
+  init_define_import_meta_env();
+  function ReaderSettings({ open, onClose }) {
+    const { mode, fit, brightness, quality, direction, setMode, setFit, setBrightness, setQuality, setDirection } = useReaderSettings();
+    if (!open) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-30 flex items-end justify-center bg-black/60", onClick: onClose, role: "dialog", "aria-modal": "true", "aria-label": "C\xE0i \u0111\u1EB7t \u0111\u1ECDc" }, /* @__PURE__ */ React.createElement("div", { className: "w-full max-w-md rounded-t-2xl border-t border-white/10 bg-neutral-900 p-5 text-white", onClick: (e2) => e2.stopPropagation() }, /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-gray-400" }, "C\xE0i \u0111\u1EB7t \u0111\u1ECDc"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onClose, className: "rounded-md bg-blue-600 px-3 py-1 text-sm font-medium hover:bg-blue-500" }, "Xong")), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React.createElement(Row2, { label: "Ch\u1EBF \u0111\u1ED9" }, /* @__PURE__ */ React.createElement(Seg, { value: mode, onChange: (v) => setMode(v), options: [{ v: "webtoon", label: "Cu\u1ED9n d\u1ECDc" }, { v: "single", label: "Trang \u0111\u01A1n" }, { v: "double", label: "Trang \u0111\xF4i" }] })), /* @__PURE__ */ React.createElement(Row2, { label: "H\u01B0\u1EDBng \u0111\u1ECDc" }, /* @__PURE__ */ React.createElement(Seg, { value: direction, onChange: (v) => setDirection(v), options: [{ v: "auto", label: "T\u1EF1 \u0111\u1ED9ng" }, { v: "ltr", label: "Tr\xE1i\u2192Ph\u1EA3i" }, { v: "rtl", label: "Ph\u1EA3i\u2192Tr\xE1i" }] })), /* @__PURE__ */ React.createElement(Row2, { label: "Kh\xEDt trang" }, /* @__PURE__ */ React.createElement(Seg, { value: fit, onChange: (v) => setFit(v), options: [{ v: "contain", label: "V\u1EEBa m\xE0n" }, { v: "width", label: "V\u1EEBa ngang" }] })), /* @__PURE__ */ React.createElement(Row2, { label: "\u0110\u1ED9 s\xE1ng" }, /* @__PURE__ */ React.createElement("input", { type: "range", min: 45, max: 100, value: brightness, onChange: (e2) => setBrightness(Number(e2.target.value)), className: "w-40 accent-blue-500", "aria-label": "\u0110\u1ED9 s\xE1ng" })), /* @__PURE__ */ React.createElement(Row2, { label: "Ch\u1EA5t l\u01B0\u1EE3ng \u1EA3nh" }, /* @__PURE__ */ React.createElement(Seg, { value: quality, onChange: (v) => setQuality(v), options: [{ v: "data", label: "Ti\u1EBFt ki\u1EC7m" }, { v: "std", label: "Chu\u1EA9n" }, { v: "hi", label: "Cao" }] })))));
+  }
+  function Row2({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-sm font-medium text-gray-200" }, label), children);
+  }
+  function Seg({ value, options, onChange }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "inline-flex flex-wrap justify-end gap-1 rounded-lg bg-white/10 p-1" }, options.map((o2) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: o2.v,
+        type: "button",
+        onClick: () => onChange(o2.v),
+        "aria-pressed": value === o2.v,
+        className: `rounded-md px-3 py-1.5 text-xs font-semibold transition ${value === o2.v ? "bg-blue-600 text-white" : "text-gray-300 hover:text-white"}`
+      },
+      o2.label
+    )));
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/ChapterMenu.tsx
+  init_define_import_meta_env();
+  function ChapterMenu({
+    open,
+    onClose,
+    comicId,
+    chapters,
+    activeChapterId
+  }) {
+    if (!open) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-30 flex items-end justify-center bg-black/60", onClick: onClose, role: "dialog", "aria-modal": "true", "aria-label": "Danh s\xE1ch ch\u01B0\u01A1ng" }, /* @__PURE__ */ React.createElement("div", { className: "max-h-[70vh] w-full max-w-md overflow-y-auto rounded-t-2xl border-t border-white/10 bg-neutral-900 p-3 text-white", onClick: (e2) => e2.stopPropagation() }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between px-2 py-2" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-gray-400" }, "Ch\u01B0\u01A1ng (", chapters.length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onClose, className: "rounded-md px-2 py-1 text-sm text-gray-300 hover:bg-white/10" }, "\u0110\xF3ng")), /* @__PURE__ */ React.createElement("ul", null, chapters.map((ch, i) => {
+      const active = ch.id === activeChapterId;
+      return /* @__PURE__ */ React.createElement("li", { key: ch.id }, /* @__PURE__ */ React.createElement(
+        Link,
+        {
+          href: `/library/comic/${comicId}/read/${ch.id}`,
+          onClick: onClose,
+          "aria-current": active ? "true" : void 0,
+          className: `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${active ? "bg-blue-600/20 text-blue-300" : "text-gray-200 hover:bg-white/5"}`
+        },
+        /* @__PURE__ */ React.createElement("span", { className: "w-6 shrink-0 text-right font-mono text-xs text-gray-500" }, i + 1),
+        /* @__PURE__ */ React.createElement("span", { className: "truncate" }, ch.title),
+        active && /* @__PURE__ */ React.createElement("span", { className: "ml-auto text-xs" }, "\u0111ang \u0111\u1ECDc")
+      ));
+    }))));
+  }
+
+  // frontend/src/templates/v1/views/library/comic/reader/ReaderHelp.tsx
+  init_define_import_meta_env();
+  var ROWS = [
+    ["\u2190 / \u2192", "L\u1EADt trang (theo h\u01B0\u1EDBng \u0111\u1ECDc)"],
+    ["Space", "Trang sau"],
+    ["\u2191 / \u2193", "Cu\u1ED9n (ch\u1EBF \u0111\u1ED9 cu\u1ED9n d\u1ECDc)"],
+    ["+ / \u2212 / 0", "Ph\xF3ng to / thu nh\u1ECF / \u0111\u1EB7t l\u1EA1i"],
+    ["Ch\u1EA1m\u2011\u0111\xFAp \xB7 cu\u1ED9n chu\u1ED9t", "Ph\xF3ng to t\u1EA1i \u0111i\u1EC3m"],
+    ["[ / ]", "Ch\u01B0\u01A1ng tr\u01B0\u1EDBc / sau"],
+    ["F", "\u1EA8n/hi\u1EC7n thanh \u0111i\u1EC1u khi\u1EC3n"],
+    ["S", "C\xE0i \u0111\u1EB7t"],
+    ["C", "Danh s\xE1ch ch\u01B0\u01A1ng"],
+    ["?", "Tr\u1EE3 gi\xFAp n\xE0y"]
+  ];
+  function ReaderHelp({ open, onClose }) {
+    if (!open) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4", onClick: onClose, role: "dialog", "aria-modal": "true", "aria-label": "Ph\xEDm t\u1EAFt" }, /* @__PURE__ */ React.createElement("div", { className: "w-full max-w-sm rounded-2xl border border-white/10 bg-neutral-900 p-5 text-white", onClick: (e2) => e2.stopPropagation() }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-gray-400" }, "Ph\xEDm t\u1EAFt"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onClose, className: "rounded-md bg-blue-600 px-3 py-1 text-sm font-medium hover:bg-blue-500" }, "\u0110\xF3ng")), /* @__PURE__ */ React.createElement("dl", { className: "space-y-2" }, ROWS.map(([k, v]) => /* @__PURE__ */ React.createElement("div", { key: k, className: "flex items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("dt", { className: "shrink-0 rounded-md border border-white/15 bg-white/5 px-2 py-1 font-mono text-xs" }, k), /* @__PURE__ */ React.createElement("dd", { className: "text-right text-sm text-gray-300" }, v))))));
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicReaderView.tsx
+  var CHROME_HIDE_MS = 2500;
+  function ComicReaderView({ id: id2, chapterId }) {
+    const router = useRouter();
+    const { data: comic } = useQuery({ queryKey: ["comic", id2], queryFn: () => getComic(id2) });
+    const { data: pages, isLoading } = useQuery({ queryKey: ["comic", id2, "pages", chapterId], queryFn: () => getChapterPages(chapterId) });
+    const { mode, fit, brightness, quality, direction } = useReaderSettings();
+    const variant = qualityVariant(quality);
+    const dir = effectiveDirection(direction, comic?.reading_direction);
+    const { report } = useReaderProgress(id2);
+    const [mounted, setMounted] = (0, import_react34.useState)(false);
+    const [chromeVisible, setChromeVisible] = (0, import_react34.useState)(true);
+    const [settingsOpen, setSettingsOpen] = (0, import_react34.useState)(false);
+    const [chaptersOpen, setChaptersOpen] = (0, import_react34.useState)(false);
+    const [helpOpen, setHelpOpen] = (0, import_react34.useState)(false);
+    const [pagedIndex, setPagedIndex] = (0, import_react34.useState)(0);
+    const [didResume, setDidResume] = (0, import_react34.useState)(false);
+    const [active, setActive] = (0, import_react34.useState)(null);
+    const stripRef = (0, import_react34.useRef)(null);
+    const scrollRef = (0, import_react34.useRef)(null);
+    (0, import_react34.useEffect)(() => setMounted(true), []);
+    (0, import_react34.useEffect)(() => {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }, []);
+    (0, import_react34.useEffect)(() => {
+      setPagedIndex(0);
+      setDidResume(false);
+      setActive(null);
+    }, [chapterId]);
+    const chapters = (0, import_react34.useMemo)(() => comic?.chapters ?? [], [comic]);
+    const isWebtoon = mode === "webtoon";
+    const curChapterId = isWebtoon ? active?.chapterId ?? chapterId : chapterId;
+    const chIdx = chapters.findIndex((c) => c.id === curChapterId);
+    const prevHref = chIdx > 0 ? `/library/comic/${id2}/read/${chapters[chIdx - 1].id}` : null;
+    const nextHref = chIdx >= 0 && chIdx < chapters.length - 1 ? `/library/comic/${id2}/read/${chapters[chIdx + 1].id}` : null;
+    const nextChapterId = chIdx >= 0 && chIdx < chapters.length - 1 ? chapters[chIdx + 1].id : null;
+    const initialPageId = comic?.progress && comic.progress.chapter_id === chapterId ? comic.progress.page_id : null;
+    usePagePreloader({ comicId: id2, pages: pages ?? [], index: pagedIndex, variant, nextChapterId: mode === "webtoon" ? null : nextChapterId });
+    const toggleChrome = (0, import_react34.useCallback)(() => setChromeVisible((v) => !v), []);
+    const goPaged = (0, import_react34.useCallback)((delta) => {
+      if (!pages || pages.length === 0) return;
+      const step = mode === "double" ? 2 : 1;
+      let ni = pagedIndex + delta * step;
+      if (mode === "double") ni -= ni % 2;
+      if (ni < 0) {
+        if (prevHref) router.push(prevHref);
+        return;
+      }
+      if (ni >= pages.length) {
+        if (nextHref) router.push(nextHref);
+        return;
+      }
+      setPagedIndex(ni);
+      setChromeVisible(true);
+    }, [pages, pagedIndex, mode, prevHref, nextHref, router]);
+    (0, import_react34.useEffect)(() => {
+      if (didResume || !pages || isWebtoon) return;
+      if (initialPageId) {
+        const i = pages.findIndex((p) => p.page_id === initialPageId);
+        if (i >= 0) setPagedIndex(mode === "double" ? i - i % 2 : i);
+      }
+      setDidResume(true);
+    }, [pages, isWebtoon, initialPageId, didResume, mode]);
+    (0, import_react34.useEffect)(() => {
+      if (!isWebtoon && pages && pages[pagedIndex]) report(chapterId, pages[pagedIndex].page_id);
+    }, [isWebtoon, pages, pagedIndex, chapterId, report]);
+    const onWebtoonActive = (0, import_react34.useCallback)((pos) => {
+      setActive(pos);
+      report(pos.chapterId, pos.pageId);
+    }, [report]);
+    (0, import_react34.useEffect)(() => {
+      const onKey = (e2) => {
+        if (settingsOpen || chaptersOpen || helpOpen) {
+          if (e2.key === "Escape") {
+            setSettingsOpen(false);
+            setChaptersOpen(false);
+            setHelpOpen(false);
+          }
+          return;
+        }
+        switch (e2.key) {
+          case "f":
+          case "F":
+            e2.preventDefault();
+            toggleChrome();
+            return;
+          case "s":
+          case "S":
+            e2.preventDefault();
+            setSettingsOpen(true);
+            return;
+          case "c":
+          case "C":
+            e2.preventDefault();
+            setChaptersOpen(true);
+            return;
+          case "?":
+            e2.preventDefault();
+            setHelpOpen(true);
+            return;
+          case "[":
+            if (prevHref) {
+              e2.preventDefault();
+              router.push(prevHref);
+            }
+            return;
+          case "]":
+            if (nextHref) {
+              e2.preventDefault();
+              router.push(nextHref);
+            }
+            return;
+        }
+        if (isWebtoon) return;
+        if (e2.key === "ArrowRight") {
+          e2.preventDefault();
+          goPaged(dir === "rtl" ? -1 : 1);
+        } else if (e2.key === "ArrowLeft") {
+          e2.preventDefault();
+          goPaged(dir === "rtl" ? 1 : -1);
+        } else if (e2.key === " ") {
+          e2.preventDefault();
+          goPaged(1);
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [settingsOpen, chaptersOpen, helpOpen, isWebtoon, dir, goPaged, toggleChrome, prevHref, nextHref, router]);
+    (0, import_react34.useEffect)(() => {
+      if (isWebtoon || !chromeVisible || settingsOpen || chaptersOpen || helpOpen) return;
+      const t2 = setTimeout(() => setChromeVisible(false), CHROME_HIDE_MS);
+      return () => clearTimeout(t2);
+    }, [isWebtoon, chromeVisible, settingsOpen, chaptersOpen, helpOpen, pagedIndex]);
+    if (!mounted || isLoading) {
+      return /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black text-gray-400" }, "\u0110ang t\u1EA3i\u2026");
+    }
+    const title = comic?.title ?? "Comic";
+    const chapterLabel = chIdx >= 0 ? `Ch\u01B0\u01A1ng ${chIdx + 1}/${chapters.length}` : "";
+    const hasPages = !!pages && pages.length > 0;
+    const slider = isWebtoon ? active ? { current: active.index + 1, total: active.count, onSeek: (i) => stripRef.current?.seek(active.chapterId, i) } : void 0 : hasPages ? { current: pagedIndex + 1, total: pages.length, onSeek: (i) => setPagedIndex(mode === "double" ? i - i % 2 : i) } : void 0;
+    return /* @__PURE__ */ React.createElement("div", { ref: scrollRef, className: `fixed inset-0 z-50 bg-black text-white overscroll-contain ${isWebtoon ? "overflow-y-auto" : "overflow-hidden"}` }, /* @__PURE__ */ React.createElement(
+      ReaderChrome,
+      {
+        visible: chromeVisible,
+        comicId: id2,
+        title,
+        chapterLabel,
+        dir,
+        prevHref,
+        nextHref,
+        onOpenSettings: () => setSettingsOpen(true),
+        onOpenChapters: () => setChaptersOpen(true),
+        onOpenHelp: () => setHelpOpen(true),
+        slider
+      }
+    ), isWebtoon ? /* @__PURE__ */ React.createElement("div", { className: "pt-12" }, hasPages ? /* @__PURE__ */ React.createElement(
+      StripReader,
+      {
+        ref: stripRef,
+        comicId: id2,
+        chapters,
+        startChapterId: chapterId,
+        startPages: pages,
+        variant,
+        initialPageId,
+        scrollRef,
+        onActive: onWebtoonActive,
+        onToggleChrome: toggleChrome
+      }
+    ) : /* @__PURE__ */ React.createElement("div", { className: "flex min-h-screen items-center justify-center text-gray-500" }, "Ch\u01B0\u01A1ng n\xE0y ch\u01B0a c\xF3 trang.")) : hasPages ? /* @__PURE__ */ React.createElement(
+      PagedReader,
+      {
+        pages,
+        index: pagedIndex,
+        mode: mode === "double" ? "double" : "single",
+        dir,
+        variant,
+        fit,
+        onPrev: () => goPaged(-1),
+        onNext: () => goPaged(1),
+        onToggleChrome: toggleChrome
+      }
+    ) : /* @__PURE__ */ React.createElement("div", { className: "flex min-h-screen items-center justify-center text-gray-500" }, "Ch\u01B0\u01A1ng n\xE0y ch\u01B0a c\xF3 trang."), brightness < 100 && /* @__PURE__ */ React.createElement("div", { className: "pointer-events-none fixed inset-0 z-10 bg-black", style: { opacity: (100 - brightness) / 100 }, "aria-hidden": "true" }), /* @__PURE__ */ React.createElement(ReaderSettings, { open: settingsOpen, onClose: () => setSettingsOpen(false) }), /* @__PURE__ */ React.createElement(ChapterMenu, { open: chaptersOpen, onClose: () => setChaptersOpen(false), comicId: id2, chapters, activeChapterId: curChapterId }), /* @__PURE__ */ React.createElement(ReaderHelp, { open: helpOpen, onClose: () => setHelpOpen(false) }));
+  }
+
+  // frontend/src/templates/v1/views/library/ContinueRail.tsx
+  init_define_import_meta_env();
+
+  // frontend/src/lib/media-assets.ts
+  init_define_import_meta_env();
+  async function getContinueItems2(limit = 10) {
+    return api(`/api/v1/continue?limit=${limit}`);
+  }
+
+  // frontend/src/templates/v1/views/library/ContinueRail.tsx
+  function ContinueRail() {
+    const { data, isLoading } = useQuery({
+      queryKey: ["continue-items"],
+      queryFn: () => getContinueItems2(10)
+    });
+    if (isLoading) {
+      return /* @__PURE__ */ React.createElement("div", { className: "p-4" }, "Loading continue watching...");
+    }
+    if (!data || data.items.length === 0) {
+      return null;
+    }
+    return /* @__PURE__ */ React.createElement("section", { className: "mb-8" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xl font-semibold mb-4 text-white" }, "Continue Watching"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-4 overflow-x-auto pb-4 snap-x" }, data.items.map((item) => /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        key: item.ref_id,
+        href: item.href,
+        className: "flex-shrink-0 w-64 group snap-start relative rounded-lg overflow-hidden bg-gray-900 border border-gray-800"
+      },
+      item.poster_url ? /* @__PURE__ */ React.createElement(
+        "img",
+        {
+          src: item.poster_url,
+          alt: item.title,
+          className: "w-full h-36 object-cover"
+        }
+      ) : /* @__PURE__ */ React.createElement("div", { className: "w-full h-36 bg-gray-800 flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Icon, { name: "play", className: "w-8 h-8 text-gray-500" })),
+      /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-0 left-0 right-0 h-1 bg-gray-700" }, /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "h-full bg-blue-500",
+          style: { width: `${item.progress_pct}%` }
+        }
+      )),
+      /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white/20 p-3 rounded-full backdrop-blur-sm" }, /* @__PURE__ */ React.createElement(Icon, { name: "play", className: "w-6 h-6 text-white" }))),
+      /* @__PURE__ */ React.createElement("div", { className: "p-3" }, /* @__PURE__ */ React.createElement("h3", { className: "text-sm font-medium text-white truncate" }, item.title), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 mt-1 capitalize" }, item.module))
     ))));
   }
 
-  // frontend/src/templates/v1/views/library/novel/NovelDetailView.tsx
+  // frontend/src/templates/v1/views/library/media/MediaDetailView.tsx
   init_define_import_meta_env();
-  function NovelDetailView({ id: id2 }) {
-    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold" }, "Novel #", id2), /* @__PURE__ */ React.createElement("div", { className: "mt-6 grid gap-6 md:grid-cols-[12rem_1fr]" }, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "aspect-[3/4] rounded-lg border",
-        style: {
-          borderColor: "var(--tpl-border)",
-          background: "var(--tpl-surface)"
-        }
-      }
-    ), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Synopsis and chapter list go here."))));
-  }
-
-  // frontend/src/templates/v1/views/upload/UploadStudio.tsx
-  init_define_import_meta_env();
-  var import_react20 = __toESM(require_react_shim());
+  var import_react36 = __toESM(require_react_shim());
 
   // frontend/node_modules/@vidstack/react/prod/vidstack.js
   init_define_import_meta_env();
@@ -12028,7 +17869,7 @@ var PortalUI = (() => {
   };
 
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-DKRnfION.js
-  var React5 = __toESM(require_react_shim(), 1);
+  var React13 = __toESM(require_react_shim(), 1);
   function isVideoQualitySrc(src) {
     return !isString(src) && "width" in src && "height" in src && isNumber(src.width) && isNumber(src.height);
   }
@@ -12245,20 +18086,20 @@ var PortalUI = (() => {
     if (store.isLiveDVR() && store.liveDVRWindow() > 0 && clippedTime < store.seekableEnd() - store.liveDVRWindow()) return store.bufferedStart();
     return Math.min(Math.max(store.seekableStart() + 0.1, clippedTime), store.seekableEnd() - 0.1);
   }
-  var mediaContext = createContext2();
+  var mediaContext = createContext5();
   function useMediaContext() {
-    return useContext2(mediaContext);
+    return useContext5(mediaContext);
   }
   var GROUPED_LOG = /* @__PURE__ */ Symbol(0);
-  var _a32, _b2;
-  var GroupedLog = (_a32 = GROUPED_LOG, _b2 = class {
+  var _a43, _b2;
+  var GroupedLog = (_a43 = GROUPED_LOG, _b2 = class {
     constructor(logger, level, title, root2, parent) {
       __publicField(this, "logger");
       __publicField(this, "level");
       __publicField(this, "title");
       __publicField(this, "root");
       __publicField(this, "parent");
-      __publicField(this, _a32, true);
+      __publicField(this, _a43, true);
       __publicField(this, "logs", []);
       this.logger = logger;
       this.level = level;
@@ -12288,8 +18129,8 @@ var PortalUI = (() => {
       return this.logger.dispatch(this.level, this.root ?? this);
     }
   }, _b2);
-  var _target2, _player3, _prevTrackIndex, _logger, _MediaRemoteControl_instances, dispatchRequest_fn, noPlayerWarning_fn, _a33;
-  var MediaRemoteControl = (_a33 = class {
+  var _target2, _player3, _prevTrackIndex, _logger, _MediaRemoteControl_instances, dispatchRequest_fn, noPlayerWarning_fn, _a44;
+  var MediaRemoteControl = (_a44 = class {
     constructor(logger = void 0) {
       __privateAdd(this, _MediaRemoteControl_instances);
       __privateAdd(this, _target2, null);
@@ -12710,9 +18551,9 @@ var PortalUI = (() => {
     else __privateGet(this, _player3).canPlayQueue.enqueue(type, () => target?.dispatchEvent(request));
     else target?.dispatchEvent(request);
   }, noPlayerWarning_fn = function(method2) {
-  }, _a33);
-  var _data, _a34;
-  var LocalMediaStorage = (_a34 = class {
+  }, _a44);
+  var _data, _a45;
+  var LocalMediaStorage = (_a45 = class {
     constructor() {
       __publicField(this, "playerId", "vds-player");
       __publicField(this, "mediaId", null);
@@ -12815,14 +18656,14 @@ var PortalUI = (() => {
       const data = (__privateGet(this, _data).time ?? 0).toString();
       localStorage.setItem(this.mediaId, data);
     }
-  }, _data = new WeakMap(), _a34);
-  var _a35;
+  }, _data = new WeakMap(), _a45);
+  var _a46;
   var List = class extends EventsTarget {
     constructor() {
       super(...arguments);
       __publicField(this, "items", []);
       /** @internal */
-      __publicField(this, _a35, false);
+      __publicField(this, _a46, false);
     }
     get length() {
       return this.items.length;
@@ -12849,7 +18690,7 @@ var PortalUI = (() => {
     toArray() {
       return [...this.items];
     }
-    [(_a35 = ListSymbol.readonly, Symbol.iterator)]() {
+    [(_a46 = ListSymbol.readonly, Symbol.iterator)]() {
       return this.items.values();
     }
     /** @internal */
@@ -13047,8 +18888,8 @@ var PortalUI = (() => {
   function isHTMLElement2(el) {
     return el instanceof HTMLElement;
   }
-  var _display, _video6, _track, _tracks2, _NativeTextRenderer_instances, attachTrack_fn, createTrackElement_fn, copyCues_fn, onChange_fn, _a36;
-  var NativeTextRenderer = (_a36 = class {
+  var _display, _video6, _track, _tracks2, _NativeTextRenderer_instances, attachTrack_fn, createTrackElement_fn, copyCues_fn, onChange_fn, _a47;
+  var NativeTextRenderer = (_a47 = class {
     constructor() {
       __privateAdd(this, _NativeTextRenderer_instances);
       __publicField(this, "priority", 0);
@@ -13090,9 +18931,9 @@ var PortalUI = (() => {
       __privateSet(this, _track, null);
     }
   }, _display = new WeakMap(), _video6 = new WeakMap(), _track = new WeakMap(), _tracks2 = new WeakMap(), _NativeTextRenderer_instances = new WeakSet(), attachTrack_fn = function(track) {
-    var _a106;
+    var _a117;
     if (!__privateGet(this, _video6)) return;
-    const el = track[_a106 = TextTrackSymbol.native] ?? (track[_a106] = __privateMethod(this, _NativeTextRenderer_instances, createTrackElement_fn).call(this, track));
+    const el = track[_a117 = TextTrackSymbol.native] ?? (track[_a117] = __privateMethod(this, _NativeTextRenderer_instances, createTrackElement_fn).call(this, track));
     if (isHTMLElement2(el)) {
       __privateGet(this, _video6).append(el);
       el.track.mode = el.default ? "showing" : "disabled";
@@ -13122,9 +18963,9 @@ var PortalUI = (() => {
       if (isShowing) __privateMethod(this, _NativeTextRenderer_instances, copyCues_fn).call(this, track, native.track);
       track.setMode(isShowing ? "showing" : "disabled", event);
     }
-  }, _a36);
-  var _video7, _textTracks, _renderers, _media5, _nativeDisplay, _nativeRenderer, _customRenderer, _TextRenderers_instances, watchControls_fn, addNativeTrack_fn, removeNativeTrack_fn, onAddTrack_fn2, onRemoveTrack_fn, update_fn, detach_fn, _a37;
-  var TextRenderers = (_a37 = class {
+  }, _a47);
+  var _video7, _textTracks, _renderers, _media5, _nativeDisplay, _nativeRenderer, _customRenderer, _TextRenderers_instances, watchControls_fn, addNativeTrack_fn, removeNativeTrack_fn, onAddTrack_fn2, onRemoveTrack_fn, update_fn, detach_fn, _a48;
+  var TextRenderers = (_a48 = class {
     constructor(media) {
       __privateAdd(this, _TextRenderers_instances);
       __privateAdd(this, _video7, null);
@@ -13202,8 +19043,8 @@ var PortalUI = (() => {
     __privateSet(this, _nativeRenderer, null);
     __privateGet(this, _customRenderer)?.detach();
     __privateSet(this, _customRenderer, null);
-  }, _a37);
-  var _a38, _canLoad2, _defaults, _storage, _preferredLang, _selectTracks, _pendingRemoval, _onTrackModeChangeBind, _TextTrackList_instances, onTrackModeChange_fn, saveCaptionsTrack_fn, saveLang_fn, _b3;
+  }, _a48);
+  var _a49, _canLoad2, _defaults, _storage, _preferredLang, _selectTracks, _pendingRemoval, _onTrackModeChangeBind, _TextTrackList_instances, onTrackModeChange_fn, saveCaptionsTrack_fn, saveLang_fn, _b3;
   var TextTrackList = (_b3 = class extends List {
     constructor() {
       super();
@@ -13213,7 +19054,7 @@ var PortalUI = (() => {
       __privateAdd(this, _storage, null);
       __privateAdd(this, _preferredLang, null);
       /** @internal */
-      __publicField(this, _a38);
+      __publicField(this, _a49);
       __privateAdd(this, _selectTracks, functionDebounce(async () => {
         if (!__privateGet(this, _canLoad2)) return;
         if (!__privateGet(this, _preferredLang) && __privateGet(this, _storage)) __privateSet(this, _preferredLang, await __privateGet(this, _storage).getLang());
@@ -13283,7 +19124,7 @@ var PortalUI = (() => {
       return this.items.filter((track) => kinds.includes(track.kind));
     }
     /** @internal */
-    [(_a38 = TextTrackSymbol.crossOrigin, TextTrackSymbol.canLoad)]() {
+    [(_a49 = TextTrackSymbol.crossOrigin, TextTrackSymbol.canLoad)]() {
       if (__privateGet(this, _canLoad2)) return;
       for (const track of this.items) track[TextTrackSymbol.canLoad]();
       __privateSet(this, _canLoad2, true);
@@ -13309,7 +19150,7 @@ var PortalUI = (() => {
   }, saveLang_fn = function(lang) {
     __privateGet(this, _storage)?.setLang?.(__privateSet(this, _preferredLang, lang));
   }, _b3);
-  var _a39, _auto, _b4;
+  var _a50, _auto, _b4;
   var VideoQualityList = (_b4 = class extends SelectList {
     constructor() {
       super(...arguments);
@@ -13331,7 +19172,7 @@ var PortalUI = (() => {
       */
       __publicField(this, "switch", "current");
       /** @internal */
-      __publicField(this, _a39);
+      __publicField(this, _a50);
     }
     /**
     * Whether automatic quality selection is enabled.
@@ -13340,7 +19181,7 @@ var PortalUI = (() => {
       return __privateGet(this, _auto) || this.readonly;
     }
     /** @internal */
-    [(_a39 = QualitySymbol.enableAuto, ListSymbol.onUserSelect)]() {
+    [(_a50 = QualitySymbol.enableAuto, ListSymbol.onUserSelect)]() {
       this[QualitySymbol.setAuto](false);
     }
     /** @internal */
@@ -13411,8 +19252,8 @@ var PortalUI = (() => {
   ]);
   var BUTTON_SELECTORS = 'button, [role="button"]';
   var IGNORE_SELECTORS = 'input, textarea, select, [contenteditable], [role^="menuitem"], [role="timer"]';
-  var _media6, _MediaKeyboardController_instances, onTargetChange_fn, onKeyUp_fn, onKeyDown_fn, onPreventVideoKeys_fn, getMatchingMethod_fn, _seekTotal, calcSeekAmount_fn, _timeSlider, forwardTimeKeyboardEvent_fn, seeking_fn, _a40;
-  var MediaKeyboardController = (_a40 = class extends MediaPlayerController {
+  var _media6, _MediaKeyboardController_instances, onTargetChange_fn, onKeyUp_fn, onKeyDown_fn, onPreventVideoKeys_fn, getMatchingMethod_fn, _seekTotal, calcSeekAmount_fn, _timeSlider, forwardTimeKeyboardEvent_fn, seeking_fn, _a51;
+  var MediaKeyboardController = (_a51 = class extends MediaPlayerController {
     constructor(media) {
       super();
       __privateAdd(this, _MediaKeyboardController_instances);
@@ -13566,7 +19407,7 @@ var PortalUI = (() => {
     if (!__privateGet(this, _timeSlider)) __privateSet(this, _timeSlider, this.el.querySelector("[data-media-time-slider]"));
     if (__privateGet(this, _timeSlider)) __privateMethod(this, _MediaKeyboardController_instances, forwardTimeKeyboardEvent_fn).call(this, event, forward);
     else __privateGet(this, _media6).remote.seeking(__privateMethod(this, _MediaKeyboardController_instances, calcSeekAmount_fn).call(this, event, type), event);
-  }, _a40);
+  }, _a51);
   var SYMBOL_KEY_MAP = [
     "!",
     "@",
@@ -13586,8 +19427,8 @@ var PortalUI = (() => {
     for (const key2 of MODIFIER_KEYS) if (event[key2.toLowerCase() + "Key"]) return true;
     return false;
   }
-  var _shortcut, _a41;
-  var ARIAKeyShortcuts = (_a41 = class extends ViewController {
+  var _shortcut, _a52;
+  var ARIAKeyShortcuts = (_a52 = class extends ViewController {
     constructor(shortcut) {
       super();
       __privateAdd(this, _shortcut);
@@ -13608,9 +19449,9 @@ var PortalUI = (() => {
         el.setAttribute("aria-keyshortcuts", isArray(keys2) ? keys2.join(" ") : keys2);
       }
     }
-  }, _shortcut = new WeakMap(), _a41);
-  var _idleTimer, _pausedTracking, _hideOnMouseLeave, _isMouseOutside, _focusedItem, _canIdle, _MediaControls_instances, init_fn, watchMouse_fn, watchPaused_fn, onPlay_fn3, onPause_fn4, onEnd_fn, onMouseEnter_fn, onMouseLeave_fn, clearIdleTimer_fn, onStopIdle_fn, changeVisibility_fn, onChange_fn2, _a42;
-  var MediaControls = (_a42 = class extends MediaPlayerController {
+  }, _shortcut = new WeakMap(), _a52);
+  var _idleTimer, _pausedTracking, _hideOnMouseLeave, _isMouseOutside, _focusedItem, _canIdle, _MediaControls_instances, init_fn, watchMouse_fn, watchPaused_fn, onPlay_fn3, onPause_fn4, onEnd_fn, onMouseEnter_fn, onMouseLeave_fn, clearIdleTimer_fn, onStopIdle_fn, changeVisibility_fn, onChange_fn2, _a53;
+  var MediaControls = (_a53 = class extends MediaPlayerController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _MediaControls_instances);
@@ -13773,10 +19614,10 @@ var PortalUI = (() => {
       detail: visible,
       trigger
     });
-  }, _a42);
+  }, _a53);
   var CAN_FULLSCREEN = fscreen.fullscreenEnabled;
-  var _listening, _active, _FullscreenController_instances, onDisconnect_fn, onChange_fn3, onError_fn5, _a43;
-  var FullscreenController = (_a43 = class extends ViewController {
+  var _listening, _active, _FullscreenController_instances, onDisconnect_fn, onChange_fn3, onError_fn5, _a54;
+  var FullscreenController = (_a54 = class extends ViewController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _FullscreenController_instances);
@@ -13815,7 +19656,7 @@ var PortalUI = (() => {
       return fscreen.exitFullscreen();
     }
   }, _listening = new WeakMap(), _active = new WeakMap(), _FullscreenController_instances = new WeakSet(), onDisconnect_fn = function() {
-    if (CAN_FULLSCREEN) this.exit().catch(noop);
+    if (CAN_FULLSCREEN) this.exit().catch(noop3);
   }, onChange_fn3 = function(event) {
     const active = isFullscreen(this.el);
     if (active === __privateGet(this, _active)) return;
@@ -13832,7 +19673,7 @@ var PortalUI = (() => {
       trigger: event
     });
     __privateSet(this, _listening, false);
-  }, _a43);
+  }, _a54);
   function isFullscreen(host) {
     if (fscreen.fullscreenElement === host) return true;
     try {
@@ -13845,8 +19686,8 @@ var PortalUI = (() => {
     if (CAN_FULLSCREEN) return;
     throw Error("[vidstack] no fullscreen API");
   }
-  var _type, _locked, _currentLock, _a44, _ScreenOrientationController_instances, onDisconnect_fn2, onOrientationChange_fn, assertScreenOrientationAPI_fn, getScreenOrientation_fn;
-  var ScreenOrientationController = (_a44 = class extends ViewController {
+  var _type, _locked, _currentLock, _a55, _ScreenOrientationController_instances, onDisconnect_fn2, onOrientationChange_fn, assertScreenOrientationAPI_fn, getScreenOrientation_fn;
+  var ScreenOrientationController = (_a55 = class extends ViewController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _ScreenOrientationController_instances);
@@ -13894,7 +19735,7 @@ var PortalUI = (() => {
     * Whether the native Screen Orientation API is available.
     */
     get supported() {
-      return _a44.supported;
+      return _a55.supported;
     }
     onConnect() {
       if (this.supported) listenEvent(screen.orientation, "change", __privateMethod(this, _ScreenOrientationController_instances, onOrientationChange_fn).bind(this));
@@ -13957,7 +19798,7 @@ var PortalUI = (() => {
   }, /**
   * Whether the native Screen Orientation API is available.
   */
-  __publicField(_a44, "supported", canOrientScreen()), _a44);
+  __publicField(_a55, "supported", canOrientScreen()), _a55);
   var AudioProviderLoader = class {
     constructor() {
       __publicField(this, "name", "audio");
@@ -13992,34 +19833,34 @@ var PortalUI = (() => {
       return new (await Promise.resolve().then(() => (init_vidstack_CvezEmSQ(), vidstack_CvezEmSQ_exports)).then((n2) => n2.provider_exports$1)).VideoProvider(this.target, ctx);
     }
   };
-  var _a45;
-  var HLSProviderLoader = (_a45 = class extends VideoProviderLoader {
+  var _a56;
+  var HLSProviderLoader = (_a56 = class extends VideoProviderLoader {
     constructor() {
       super(...arguments);
       __publicField(this, "name", "hls");
     }
     canPlay(src) {
-      return _a45.supported && isHLSSrc(src);
+      return _a56.supported && isHLSSrc(src);
     }
     async load(context) {
       if (IS_SERVER2) throw Error("[vidstack] can not load hls provider server-side");
       return new (await Promise.resolve().then(() => (init_vidstack_DiaLSJYx(), vidstack_DiaLSJYx_exports))).HLSProvider(this.target, context);
     }
-  }, __publicField(_a45, "supported", isHLSSupported()), _a45);
-  var _a46;
-  var DASHProviderLoader = (_a46 = class extends VideoProviderLoader {
+  }, __publicField(_a56, "supported", isHLSSupported()), _a56);
+  var _a57;
+  var DASHProviderLoader = (_a57 = class extends VideoProviderLoader {
     constructor() {
       super(...arguments);
       __publicField(this, "name", "dash");
     }
     canPlay(src) {
-      return _a46.supported && isDASHSrc(src);
+      return _a57.supported && isDASHSrc(src);
     }
     async load(context) {
       if (IS_SERVER2) throw Error("[vidstack] can not load dash provider server-side");
       return new (await Promise.resolve().then(() => (init_vidstack_CvezEmSQ(), vidstack_CvezEmSQ_exports)).then((n2) => n2.provider_exports)).DASHProvider(this.target, context);
     }
-  }, __publicField(_a46, "supported", isDASHSupported()), _a46);
+  }, __publicField(_a57, "supported", isDASHSupported()), _a57);
   var VimeoProviderLoader = class {
     constructor() {
       __publicField(this, "name", "vimeo");
@@ -14182,8 +20023,8 @@ var PortalUI = (() => {
     keyShortcuts: MEDIA_KEY_SHORTCUTS,
     storage: null
   };
-  var _type2, _callback4, _a47;
-  var MediaLoadController = (_a47 = class extends MediaPlayerController {
+  var _type2, _callback4, _a58;
+  var MediaLoadController = (_a58 = class extends MediaPlayerController {
     constructor(type, callback) {
       super();
       __privateAdd(this, _type2);
@@ -14209,9 +20050,9 @@ var PortalUI = (() => {
         dispose2 = onDispose(() => observer.disconnect());
       }
     }
-  }, _type2 = new WeakMap(), _callback4 = new WeakMap(), _a47);
-  var _handle, _media7, _MediaPlayerDelegate_instances, attemptAutoplay_fn, _a48;
-  var MediaPlayerDelegate = (_a48 = class {
+  }, _type2 = new WeakMap(), _callback4 = new WeakMap(), _a58);
+  var _handle, _media7, _MediaPlayerDelegate_instances, attemptAutoplay_fn, _a59;
+  var MediaPlayerDelegate = (_a59 = class {
     constructor(handle, media) {
       __privateAdd(this, _MediaPlayerDelegate_instances);
       __privateAdd(this, _handle);
@@ -14276,9 +20117,9 @@ var PortalUI = (() => {
       await player.play(attemptEvent);
     } catch (error) {
     }
-  }, _a48);
-  var _queue, _a49;
-  var Queue = (_a49 = class {
+  }, _a59);
+  var _queue, _a60;
+  var Queue = (_a60 = class {
     constructor() {
       __privateAdd(this, _queue, /* @__PURE__ */ new Map());
     }
@@ -14315,9 +20156,9 @@ var PortalUI = (() => {
     clear() {
       __privateGet(this, _queue).clear();
     }
-  }, _queue = new WeakMap(), _a49);
-  var _serving, _pending, _queue2, _RequestQueue_instances, flush_fn, release_fn, _a50;
-  var RequestQueue = (_a50 = class {
+  }, _queue = new WeakMap(), _a60);
+  var _serving, _pending, _queue2, _RequestQueue_instances, flush_fn, release_fn, _a61;
+  var RequestQueue = (_a61 = class {
     constructor() {
       __privateAdd(this, _RequestQueue_instances);
       __privateAdd(this, _serving, false);
@@ -14396,7 +20237,7 @@ var PortalUI = (() => {
   }, release_fn = function() {
     __privateGet(this, _pending).resolve();
     __privateSet(this, _pending, deferredPromise());
-  }, _a50);
+  }, _a61);
   function ariaBool2(value) {
     return value ? "true" : "false";
   }
@@ -14407,8 +20248,8 @@ var PortalUI = (() => {
     if (typeof window === "undefined") return false;
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
-  var _stateMgr, _request, _media8, _fullscreen, _orientation, _$provider, _providerQueue, _MediaRequestManager_instances, attachLoadPlayListener_fn, watchProvider_fn, handleRequest_fn, handleLoadPlayStrategy_fn, _wasPIPActive, getFullscreenAdapter_fn, throwIfPIPNotSupported_fn, watchControlsDelayChange_fn, watchAudioGainSupport_fn, watchAirPlaySupport_fn, watchGoogleCastSupport_fn, watchFullscreenSupport_fn, watchPiPSupport_fn, _googleCastLoader, onFullscreenChange_fn, onFullscreenError_fn, onPictureInPictureError_fn, logError_fn, _a51;
-  var MediaRequestManager = (_a51 = class extends MediaPlayerController {
+  var _stateMgr, _request, _media8, _fullscreen, _orientation, _$provider, _providerQueue, _MediaRequestManager_instances, attachLoadPlayListener_fn, watchProvider_fn, handleRequest_fn, handleLoadPlayStrategy_fn, _wasPIPActive, getFullscreenAdapter_fn, throwIfPIPNotSupported_fn, watchControlsDelayChange_fn, watchAudioGainSupport_fn, watchAirPlaySupport_fn, watchGoogleCastSupport_fn, watchFullscreenSupport_fn, watchPiPSupport_fn, _googleCastLoader, onFullscreenChange_fn, onFullscreenError_fn, onPictureInPictureError_fn, logError_fn, _a62;
+  var MediaRequestManager = (_a62 = class extends MediaPlayerController {
     constructor(stateMgr, request, media) {
       super();
       __privateAdd(this, _MediaRequestManager_instances);
@@ -14919,7 +20760,7 @@ var PortalUI = (() => {
   }, onPictureInPictureError_fn = function(error, request) {
     __privateGet(this, _stateMgr).handle(this.createEvent("picture-in-picture-error", { detail: coerceToError(error) }));
   }, logError_fn = function(title, error, request) {
-  }, _a51);
+  }, _a62);
   function throwIfNotReadyForPlayback(provider, canPlay) {
     if (provider && canPlay) return;
     throw Error("[vidstack] media not ready");
@@ -14960,8 +20801,8 @@ var PortalUI = (() => {
     "seeked",
     "waiting"
   ]);
-  var _request2, _media9, _trackedEvents, _clipEnded, _playedIntervals, _playedInterval, _firingWaiting, _waitingTrigger, _isPlayingOnDisconnect, _MediaStateManager_instances, resumePlaybackOnConnect_fn, pausePlaybackOnDisconnect_fn, resetTracking_fn, satisfyRequest_fn, addTextTrackListeners_fn, addQualityListeners_fn, addAudioTrackListeners_fn, onTextTracksChange_fn, onTextTrackModeChange_fn, onAudioTracksChange_fn, onAudioTrackChange_fn, onQualitiesChange_fn2, onQualityChange_fn3, onAutoQualityChange_fn, _stopQualityResizeEffect, watchQualityResize_fn, stopWatchingQualityResize_fn, onCanSetQualityChange_fn, watchCanSetVolume_fn, onSourceQualitiesChange_fn, resetMediaState_fn, onCanPlayDetail_fn, resetPlaybackIfNeeded_fn, updatePlayed_fn, onEndPrecisionChange_fn, saveTime_fn, _fireWaiting, onEnded_fn3, stopWaiting_fn, _a52;
-  var MediaStateManager = (_a52 = class extends MediaPlayerController {
+  var _request2, _media9, _trackedEvents, _clipEnded, _playedIntervals, _playedInterval, _firingWaiting, _waitingTrigger, _isPlayingOnDisconnect, _MediaStateManager_instances, resumePlaybackOnConnect_fn, pausePlaybackOnDisconnect_fn, resetTracking_fn, satisfyRequest_fn, addTextTrackListeners_fn, addQualityListeners_fn, addAudioTrackListeners_fn, onTextTracksChange_fn, onTextTrackModeChange_fn, onAudioTracksChange_fn, onAudioTrackChange_fn, onQualitiesChange_fn2, onQualityChange_fn3, onAutoQualityChange_fn, _stopQualityResizeEffect, watchQualityResize_fn, stopWatchingQualityResize_fn, onCanSetQualityChange_fn, watchCanSetVolume_fn, onSourceQualitiesChange_fn, resetMediaState_fn, onCanPlayDetail_fn, resetPlaybackIfNeeded_fn, updatePlayed_fn, onEndPrecisionChange_fn, saveTime_fn, _fireWaiting, onEnded_fn3, stopWaiting_fn, _a63;
+  var MediaStateManager = (_a63 = class extends MediaPlayerController {
     constructor(request, media) {
       super();
       __privateAdd(this, _MediaStateManager_instances);
@@ -15471,8 +21312,8 @@ var PortalUI = (() => {
       } }));
     }));
   }, stopWatchingQualityResize_fn = function() {
-    var _a106;
-    (_a106 = __privateGet(this, _stopQualityResizeEffect)) == null ? void 0 : _a106.call(this);
+    var _a117;
+    (_a117 = __privateGet(this, _stopQualityResizeEffect)) == null ? void 0 : _a117.call(this);
     __privateSet(this, _stopQualityResizeEffect, null);
   }, onCanSetQualityChange_fn = function() {
     this.$state.canSetQuality.set(!__privateGet(this, _media9).qualities.readonly);
@@ -15575,9 +21416,9 @@ var PortalUI = (() => {
   }, stopWaiting_fn = function() {
     __privateGet(this, _fireWaiting).cancel();
     this.$state.waiting.set(false);
-  }, _a52);
-  var _MediaStateSync_instances, init_fn2, watchProvidedTypes_fn, watchLogLevel_fn, watchMetadata_fn, watchTitle_fn, watchAutoplay_fn, watchLoop_fn, watchControls_fn2, watchPoster_fn, watchCrossOrigin_fn, watchDuration_fn, watchPlaysInline_fn, watchClipStartTime_fn, watchClipEndTime_fn, watchLive_fn, watchLiveTolerance_fn, watchLiveEdge_fn, _a53;
-  var MediaStateSync = (_a53 = class extends MediaPlayerController {
+  }, _a63);
+  var _MediaStateSync_instances, init_fn2, watchProvidedTypes_fn, watchLogLevel_fn, watchMetadata_fn, watchTitle_fn, watchAutoplay_fn, watchLoop_fn, watchControls_fn2, watchPoster_fn, watchCrossOrigin_fn, watchDuration_fn, watchPlaysInline_fn, watchClipStartTime_fn, watchClipEndTime_fn, watchLive_fn, watchLiveTolerance_fn, watchLiveEdge_fn, _a64;
+  var MediaStateSync = (_a64 = class extends MediaPlayerController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _MediaStateSync_instances);
@@ -15675,7 +21516,7 @@ var PortalUI = (() => {
     this.$state.minLiveDVRWindow.set(this.$props.minLiveDVRWindow());
   }, watchLiveEdge_fn = function() {
     this.dispatch("live-edge-change", { detail: this.$state.liveEdge() });
-  }, _a53);
+  }, _a64);
   var actions = [
     "play",
     "pause",
@@ -15683,8 +21524,8 @@ var PortalUI = (() => {
     "seekbackward",
     "seekto"
   ];
-  var _NavigatorMediaSession_instances, onDisconnect_fn3, onMetadataChange_fn, onPlaybackStateChange_fn, handleAction_fn, _a54;
-  var NavigatorMediaSession = (_a54 = class extends MediaPlayerController {
+  var _NavigatorMediaSession_instances, onDisconnect_fn3, onMetadataChange_fn, onPlaybackStateChange_fn, handleAction_fn, _a65;
+  var NavigatorMediaSession = (_a65 = class extends MediaPlayerController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _NavigatorMediaSession_instances);
@@ -15726,7 +21567,7 @@ var PortalUI = (() => {
         });
         break;
     }
-  }, _a54);
+  }, _a65);
   var $keyboard = signal(false);
   if (!IS_SERVER2) {
     listenEvent(document, "pointerdown", () => {
@@ -15737,42 +21578,42 @@ var PortalUI = (() => {
       $keyboard.set(true);
     });
   }
-  var _focused, _FocusVisibleController_instances, onFocus_fn, onBlur_fn, onPointerEnter_fn, onPointerLeave_fn, _a55;
-  var FocusVisibleController = (_a55 = class extends ViewController {
+  var _focused2, _FocusVisibleController_instances, onFocus_fn, onBlur_fn, onPointerEnter_fn, onPointerLeave_fn, _a66;
+  var FocusVisibleController = (_a66 = class extends ViewController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _FocusVisibleController_instances);
-      __privateAdd(this, _focused, signal(false));
+      __privateAdd(this, _focused2, signal(false));
     }
     onConnect(el) {
       effect(() => {
         const events = new EventsController(el);
         if (!$keyboard()) {
-          __privateGet(this, _focused).set(false);
+          __privateGet(this, _focused2).set(false);
           updateFocusAttr(el, false);
           events.add("pointerenter", __privateMethod(this, _FocusVisibleController_instances, onPointerEnter_fn).bind(this)).add("pointerleave", __privateMethod(this, _FocusVisibleController_instances, onPointerLeave_fn).bind(this));
           return;
         }
         const active = document.activeElement === el;
-        __privateGet(this, _focused).set(active);
+        __privateGet(this, _focused2).set(active);
         updateFocusAttr(el, active);
         events.add("focus", __privateMethod(this, _FocusVisibleController_instances, onFocus_fn).bind(this)).add("blur", __privateMethod(this, _FocusVisibleController_instances, onBlur_fn).bind(this));
       });
     }
     focused() {
-      return __privateGet(this, _focused).call(this);
+      return __privateGet(this, _focused2).call(this);
     }
-  }, _focused = new WeakMap(), _FocusVisibleController_instances = new WeakSet(), onFocus_fn = function() {
-    __privateGet(this, _focused).set(true);
+  }, _focused2 = new WeakMap(), _FocusVisibleController_instances = new WeakSet(), onFocus_fn = function() {
+    __privateGet(this, _focused2).set(true);
     updateFocusAttr(this.el, true);
   }, onBlur_fn = function() {
-    __privateGet(this, _focused).set(false);
+    __privateGet(this, _focused2).set(false);
     updateFocusAttr(this.el, false);
   }, onPointerEnter_fn = function() {
     updateHoverAttr(this.el, true);
   }, onPointerLeave_fn = function() {
     updateHoverAttr(this.el, false);
-  }, _a55);
+  }, _a66);
   function updateFocusAttr(el, isFocused) {
     setAttribute(el, "data-focus", isFocused);
     setAttribute(el, "data-hocus", isFocused);
@@ -15781,8 +21622,8 @@ var PortalUI = (() => {
     setAttribute(el, "data-hocus", isHovering);
     setAttribute(el, "data-hover", isHovering);
   }
-  var _a56, _media10, _stateMgr2, _requestMgr, _MediaPlayer_instances, provider_get, props_get, _skipTitleUpdate, watchTitle_fn2, watchOrientation_fn, watchCanPlay_fn, setupMediaAttributes_fn, onFindPlayer_fn, onResize_fn, onPointerChange_fn, watchPaused_fn2, queuePausedUpdate_fn, watchMuted_fn, queueMutedUpdate_fn, watchCurrentTime_fn, queueCurrentTimeUpdate_fn, watchVolume_fn, queueVolumeUpdate_fn, watchPlaybackRate_fn, queuePlaybackRateUpdate_fn, watchPlaysInline_fn2, queuePlaysInlineUpdate_fn, watchStorage_fn, computeMediaId_fn;
-  var MediaPlayer = (_a56 = class extends Component2 {
+  var _a67, _media10, _stateMgr2, _requestMgr, _MediaPlayer_instances, provider_get, props_get, _skipTitleUpdate, watchTitle_fn2, watchOrientation_fn, watchCanPlay_fn, setupMediaAttributes_fn, onFindPlayer_fn, onResize_fn, onPointerChange_fn, watchPaused_fn2, queuePausedUpdate_fn, watchMuted_fn, queueMutedUpdate_fn, watchCurrentTime_fn, queueCurrentTimeUpdate_fn, watchVolume_fn, queueVolumeUpdate_fn, watchPlaybackRate_fn, queuePlaybackRateUpdate_fn, watchPlaysInline_fn2, queuePlaysInlineUpdate_fn, watchStorage_fn, computeMediaId_fn;
+  var MediaPlayer = (_a67 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _MediaPlayer_instances);
@@ -16094,8 +21935,8 @@ var PortalUI = (() => {
     if (this.$state.canPlay() && __privateGet(this, _MediaPlayer_instances, provider_get)) this.canPlayQueue.start();
     else this.canPlayQueue.stop();
   }, setupMediaAttributes_fn = function() {
-    if (_a56[MEDIA_ATTRIBUTES]) {
-      this.setAttributes(_a56[MEDIA_ATTRIBUTES]);
+    if (_a67[MEDIA_ATTRIBUTES]) {
+      this.setAttributes(_a67[MEDIA_ATTRIBUTES]);
       return;
     }
     const $attrs = {
@@ -16143,7 +21984,7 @@ var PortalUI = (() => {
       };
     }
     delete $attrs.title;
-    _a56[MEDIA_ATTRIBUTES] = $attrs;
+    _a67[MEDIA_ATTRIBUTES] = $attrs;
     this.setAttributes($attrs);
   }, onFindPlayer_fn = function(event) {
     event.detail(this);
@@ -16220,7 +22061,7 @@ var PortalUI = (() => {
   }, computeMediaId_fn = function() {
     const { clipStartTime, clipEndTime } = this.$props, { source } = this.$state, src = source();
     return src.src ? `${src.src}:${clipStartTime()}:${clipEndTime()}` : null;
-  }, __publicField(_a56, "props", mediaPlayerProps), __publicField(_a56, "state", mediaState), _a56);
+  }, __publicField(_a67, "props", mediaPlayerProps), __publicField(_a67, "state", mediaState), _a67);
   var mediaplayer__proto = MediaPlayer.prototype;
   prop(mediaplayer__proto, "canPlayQueue");
   prop(mediaplayer__proto, "remoteControl");
@@ -16277,8 +22118,8 @@ var PortalUI = (() => {
     return -1;
   }
   var sourceTypes = /* @__PURE__ */ new Map();
-  var _initialize, _loaders, _domSources, _media11, _loader, _SourceSelection_instances, onSourcesChange_fn, onSourceChange_fn, findNewSource_fn, notifySourceChange_fn, notifyLoaderChange_fn, onSetup_fn, onLoadSource_fn, onLoadPoster_fn, _a57;
-  var SourceSelection = (_a57 = class {
+  var _initialize, _loaders, _domSources, _media11, _loader, _SourceSelection_instances, onSourcesChange_fn, onSourceChange_fn, findNewSource_fn, notifySourceChange_fn, notifyLoaderChange_fn, onSetup_fn, onLoadSource_fn, onLoadPoster_fn, _a68;
+  var SourceSelection = (_a68 = class {
     constructor(domSources, media, loader, customLoaders = []) {
       __privateAdd(this, _SourceSelection_instances);
       __privateAdd(this, _initialize, false);
@@ -16421,13 +22262,13 @@ var PortalUI = (() => {
           signal: abort.signal
         }).then((streamType) => {
           __privateGet(this, _media11).notify("stream-type-change", streamType);
-        }).catch(noop);
+        }).catch(noop3);
       } else if (isDASHSrc(source)) resolveStreamTypeFromDASHManifest(source.src, {
         credentials: getRequestCredentials(crossOrigin),
         signal: abort.signal
       }).then((streamType) => {
         __privateGet(this, _media11).notify("stream-type-change", streamType);
-      }).catch(noop);
+      }).catch(noop3);
       else __privateGet(this, _media11).notify("stream-type-change", "on-demand");
       peek(() => {
         const preload = peek(__privateGet(this, _media11).$state.preload);
@@ -16452,7 +22293,7 @@ var PortalUI = (() => {
     return () => {
       abort.abort();
     };
-  }, _a57);
+  }, _a68);
   function normalizeSrc(src) {
     return (isArray(src) ? src : [src]).map((src2) => {
       if (isString(src2)) return {
@@ -16484,8 +22325,8 @@ var PortalUI = (() => {
   function isSameSrc(a, b) {
     return a?.src === b?.src && a?.type === b?.type;
   }
-  var _domTracks, _media12, _prevTracks, _Tracks_instances, onTracksChange_fn, _a58;
-  var Tracks = (_a58 = class {
+  var _domTracks, _media12, _prevTracks, _Tracks_instances, onTracksChange_fn, _a69;
+  var Tracks = (_a69 = class {
     constructor(domTracks, media) {
       __privateAdd(this, _Tracks_instances);
       __privateAdd(this, _domTracks);
@@ -16509,9 +22350,9 @@ var PortalUI = (() => {
       }
     }
     __privateSet(this, _prevTracks, newTracks);
-  }, _a58);
-  var _a59, _media13, _sources, _domSources2, _domTracks2, _loader2, _target3, _connected, _loadRafId, _MediaProvider_instances, runLoader_fn, destroyProvider_fn, onResize_fn2, onMutation_fn;
-  var MediaProvider = (_a59 = class extends Component2 {
+  }, _a69);
+  var _a70, _media13, _sources, _domSources2, _domTracks2, _loader2, _target3, _connected, _loadRafId, _MediaProvider_instances, runLoader_fn, destroyProvider_fn, onResize_fn2, onMutation_fn;
+  var MediaProvider = (_a70 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _MediaProvider_instances);
@@ -16630,11 +22471,11 @@ var PortalUI = (() => {
     __privateGet(this, _domSources2).set(sources);
     __privateGet(this, _domTracks2).set(tracks);
     tick();
-  }, __publicField(_a59, "props", { loaders: [] }), __publicField(_a59, "state", new State({ loader: null })), _a59);
+  }, __publicField(_a70, "props", { loaders: [] }), __publicField(_a70, "state", new State({ loader: null })), _a70);
   var mediaprovider__proto = MediaProvider.prototype;
   method(mediaprovider__proto, "load");
-  var _a60, _media14, _initializing, _MediaAnnouncer_instances, watchPaused_fn3, watchFullscreen_fn, watchPiP_fn, watchCaptions_fn, watchVolume_fn2, _startedSeekingAt, _seekTimer, watchSeeking_fn, translate_fn, watchLabel_fn, setLabel_fn;
-  var MediaAnnouncer = (_a60 = class extends Component2 {
+  var _a71, _media14, _initializing, _MediaAnnouncer_instances, watchPaused_fn3, watchFullscreen_fn, watchPiP_fn, watchCaptions_fn, watchVolume_fn2, _startedSeekingAt, _seekTimer, watchSeeking_fn, translate_fn, watchLabel_fn, setLabel_fn;
+  var MediaAnnouncer = (_a71 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _MediaAnnouncer_instances);
@@ -16710,12 +22551,12 @@ var PortalUI = (() => {
   }, setLabel_fn = function(word) {
     const { label } = this.$state;
     label.set(word);
-  }, __publicField(_a60, "props", { translations: null }), __publicField(_a60, "state", new State({
+  }, __publicField(_a71, "props", { translations: null }), __publicField(_a71, "state", new State({
     label: null,
     busy: false
-  })), _a60);
-  var _a61, _media15, _Controls_instances, hideControls_fn, watchProps_fn, isShowing_fn;
-  var Controls = (_a61 = class extends Component2 {
+  })), _a71);
+  var _a72, _media15, _Controls_instances, hideControls_fn, watchProps_fn, isShowing_fn;
+  var Controls = (_a72 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Controls_instances);
@@ -16760,17 +22601,17 @@ var PortalUI = (() => {
   }, isShowing_fn = function() {
     const { controlsVisible } = __privateGet(this, _media15).$state;
     return controlsVisible();
-  }, __publicField(_a61, "props", {
+  }, __publicField(_a72, "props", {
     hideDelay: 2e3,
     hideOnMouseLeave: false
-  }), _a61);
+  }), _a72);
   var ControlsGroup = class extends Component2 {
     onAttach(el) {
       if (!el.style.pointerEvents) setStyle(el, "pointer-events", "auto");
     }
   };
-  var _delegate, _Popper_instances, watchTrigger_fn, _showTimerId, _hideRafId, _stopAnimationEndListener, cancelShowing_fn, _a62;
-  var Popper = (_a62 = class extends ViewController {
+  var _delegate, _Popper_instances, watchTrigger_fn, _showTimerId, _hideRafId, _stopAnimationEndListener, cancelShowing_fn, _a73;
+  var Popper = (_a73 = class extends ViewController {
     constructor(delegate) {
       super();
       __privateAdd(this, _Popper_instances);
@@ -16782,16 +22623,16 @@ var PortalUI = (() => {
       effect(__privateMethod(this, _Popper_instances, watchTrigger_fn).bind(this));
     }
     onDestroy() {
-      var _a106;
-      (_a106 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a106.call(this);
+      var _a117;
+      (_a117 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a117.call(this);
       __privateSet(this, _stopAnimationEndListener, null);
     }
     show(trigger) {
-      var _a106;
+      var _a117;
       __privateMethod(this, _Popper_instances, cancelShowing_fn).call(this);
       window.cancelAnimationFrame(__privateGet(this, _hideRafId));
       __privateSet(this, _hideRafId, -1);
-      (_a106 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a106.call(this);
+      (_a117 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a117.call(this);
       __privateSet(this, _stopAnimationEndListener, null);
       __privateSet(this, _showTimerId, window.setTimeout(() => {
         __privateSet(this, _showTimerId, -1);
@@ -16804,7 +22645,7 @@ var PortalUI = (() => {
       __privateMethod(this, _Popper_instances, cancelShowing_fn).call(this);
       peek(() => __privateGet(this, _delegate).onChange(false, trigger));
       __privateSet(this, _hideRafId, requestAnimationFrame(() => {
-        var _a106;
+        var _a117;
         __privateMethod(this, _Popper_instances, cancelShowing_fn).call(this);
         __privateSet(this, _hideRafId, -1);
         const content = __privateGet(this, _delegate).content();
@@ -16814,7 +22655,7 @@ var PortalUI = (() => {
             __privateSet(this, _stopAnimationEndListener, null);
           };
           if (hasAnimation(content)) {
-            (_a106 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a106.call(this);
+            (_a117 = __privateGet(this, _stopAnimationEndListener)) == null ? void 0 : _a117.call(this);
             const stop = listenEvent(content, "animationend", onHide, { once: true });
             __privateSet(this, _stopAnimationEndListener, stop);
           } else onHide();
@@ -16832,11 +22673,11 @@ var PortalUI = (() => {
   }, _showTimerId = new WeakMap(), _hideRafId = new WeakMap(), _stopAnimationEndListener = new WeakMap(), cancelShowing_fn = function() {
     window.clearTimeout(__privateGet(this, _showTimerId));
     __privateSet(this, _showTimerId, -1);
-  }, _a62);
-  var tooltipContext = createContext2();
+  }, _a73);
+  var tooltipContext = createContext5();
   var id = 0;
-  var _a63, _id2, _trigger, _content, _showing, _Tooltip_instances, attachTrigger_fn, detachTrigger_fn, attachContent_fn, detachContent_fn, onShowingChange_fn;
-  var Tooltip = (_a63 = class extends Component2 {
+  var _a74, _id2, _trigger, _content, _showing, _Tooltip_instances, attachTrigger_fn, detachTrigger_fn, attachContent_fn, detachContent_fn, onShowingChange_fn;
+  var Tooltip = (_a74 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _Tooltip_instances);
@@ -16901,9 +22742,9 @@ var PortalUI = (() => {
       content
     ]) el && setAttribute(el, "data-visible", isShowing);
     __privateGet(this, _showing).set(isShowing);
-  }, __publicField(_a63, "props", { showDelay: 700 }), _a63);
-  var _TooltipTrigger_instances, attach_fn, getButton_fn, _a64;
-  var TooltipTrigger = (_a64 = class extends Component2 {
+  }, __publicField(_a74, "props", { showDelay: 700 }), _a74);
+  var _TooltipTrigger_instances, attach_fn, getButton_fn, _a75;
+  var TooltipTrigger = (_a75 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _TooltipTrigger_instances);
@@ -16913,7 +22754,7 @@ var PortalUI = (() => {
       onDispose(requestScopedAnimationFrame(() => {
         if (!this.connectScope) return;
         __privateMethod(this, _TooltipTrigger_instances, attach_fn).call(this);
-        const tooltip = useContext2(tooltipContext);
+        const tooltip = useContext5(tooltipContext);
         onDispose(() => {
           const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this);
           button && tooltip.detachTrigger(button);
@@ -16921,14 +22762,14 @@ var PortalUI = (() => {
       }));
     }
   }, _TooltipTrigger_instances = new WeakSet(), attach_fn = function() {
-    const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this), tooltip = useContext2(tooltipContext);
+    const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this), tooltip = useContext5(tooltipContext);
     button && tooltip.attachTrigger(button);
   }, getButton_fn = function() {
     const candidate = this.el.firstElementChild;
     return candidate?.localName === "button" || candidate?.getAttribute("role") === "button" ? candidate : this.el;
-  }, _a64);
-  var _a65, _TooltipContent_instances, attach_fn2, watchPlacement_fn, getTrigger_fn;
-  var TooltipContent = (_a65 = class extends Component2 {
+  }, _a75);
+  var _a76, _TooltipContent_instances, attach_fn2, watchPlacement_fn, getTrigger_fn;
+  var TooltipContent = (_a76 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _TooltipContent_instances);
@@ -16947,7 +22788,7 @@ var PortalUI = (() => {
     }
     onConnect(el) {
       __privateMethod(this, _TooltipContent_instances, attach_fn2).call(this, el);
-      const tooltip = useContext2(tooltipContext);
+      const tooltip = useContext5(tooltipContext);
       onDispose(() => tooltip.detachContent(el));
       onDispose(requestScopedAnimationFrame(() => {
         if (!this.connectScope) return;
@@ -16955,9 +22796,9 @@ var PortalUI = (() => {
       }));
     }
   }, _TooltipContent_instances = new WeakSet(), attach_fn2 = function(el) {
-    useContext2(tooltipContext).attachContent(el);
+    useContext5(tooltipContext).attachContent(el);
   }, watchPlacement_fn = function() {
-    const { showing } = useContext2(tooltipContext);
+    const { showing } = useContext5(tooltipContext);
     if (!showing()) return;
     const { placement, offset: mainOffset, alignOffset } = this.$props;
     return autoPlacement2(this.el, __privateMethod(this, _TooltipContent_instances, getTrigger_fn).call(this), placement(), {
@@ -16966,14 +22807,14 @@ var PortalUI = (() => {
       yOffset: mainOffset()
     });
   }, getTrigger_fn = function() {
-    return useContext2(tooltipContext).trigger();
-  }, __publicField(_a65, "props", {
+    return useContext5(tooltipContext).trigger();
+  }, __publicField(_a76, "props", {
     placement: "top center",
     offset: 0,
     alignOffset: 0
-  }), _a65);
-  var _a66, _delegate2, _ToggleButtonController_instances, isARIAPressed_fn, onPressed_fn, onMaybePress_fn, onInteraction_fn;
-  var ToggleButtonController = (_a66 = class extends ViewController {
+  }), _a76);
+  var _a77, _delegate2, _ToggleButtonController_instances, isARIAPressed_fn, onPressed_fn, onMaybePress_fn, onInteraction_fn;
+  var ToggleButtonController = (_a77 = class extends ViewController {
     constructor(delegate) {
       super();
       __privateAdd(this, _ToggleButtonController_instances);
@@ -17016,9 +22857,9 @@ var PortalUI = (() => {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
-  }, __publicField(_a66, "props", { disabled: false }), _a66);
-  var _a67, _pressed;
-  var ToggleButton = (_a67 = class extends Component2 {
+  }, __publicField(_a77, "props", { disabled: false }), _a77);
+  var _a78, _pressed;
+  var ToggleButton = (_a78 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _pressed, signal(false));
@@ -17030,14 +22871,14 @@ var PortalUI = (() => {
     get pressed() {
       return __privateGet(this, _pressed).call(this);
     }
-  }, _pressed = new WeakMap(), __publicField(_a67, "props", {
+  }, _pressed = new WeakMap(), __publicField(_a78, "props", {
     disabled: false,
     defaultPressed: false
-  }), _a67);
+  }), _a78);
   var togglebutton__proto = ToggleButton.prototype;
   prop(togglebutton__proto, "pressed");
-  var _a68, _media16, _AirPlayButton_instances, onPress_fn, isPressed_fn, getState_fn, getDefaultLabel_fn;
-  var AirPlayButton = (_a68 = class extends Component2 {
+  var _a79, _media16, _AirPlayButton_instances, onPress_fn, isPressed_fn, getState_fn, getDefaultLabel_fn;
+  var AirPlayButton = (_a79 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _AirPlayButton_instances);
@@ -17072,9 +22913,9 @@ var PortalUI = (() => {
   }, getDefaultLabel_fn = function() {
     const { remotePlaybackState } = __privateGet(this, _media16).$state;
     return `AirPlay ${remotePlaybackState()}`;
-  }, __publicField(_a68, "props", ToggleButtonController.props), _a68);
-  var _a69, _media17, _GoogleCastButton_instances, onPress_fn2, isPressed_fn2, getState_fn2, getDefaultLabel_fn2;
-  var GoogleCastButton = (_a69 = class extends Component2 {
+  }, __publicField(_a79, "props", ToggleButtonController.props), _a79);
+  var _a80, _media17, _GoogleCastButton_instances, onPress_fn2, isPressed_fn2, getState_fn2, getDefaultLabel_fn2;
+  var GoogleCastButton = (_a80 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _GoogleCastButton_instances);
@@ -17109,9 +22950,9 @@ var PortalUI = (() => {
   }, getDefaultLabel_fn2 = function() {
     const { remotePlaybackState } = __privateGet(this, _media17).$state;
     return `Google Cast ${remotePlaybackState()}`;
-  }, __publicField(_a69, "props", ToggleButtonController.props), _a69);
-  var _a70, _media18, _PlayButton_instances, onPress_fn3, isPressed_fn3;
-  var PlayButton = (_a70 = class extends Component2 {
+  }, __publicField(_a80, "props", ToggleButtonController.props), _a80);
+  var _a81, _media18, _PlayButton_instances, onPress_fn3, isPressed_fn3;
+  var PlayButton = (_a81 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _PlayButton_instances);
@@ -17140,9 +22981,9 @@ var PortalUI = (() => {
   }, isPressed_fn3 = function() {
     const { paused } = __privateGet(this, _media18).$state;
     return !paused();
-  }, __publicField(_a70, "props", ToggleButtonController.props), _a70);
-  var _a71, _media19, _CaptionButton_instances, onPress_fn4, isPressed_fn4, isHidden_fn;
-  var CaptionButton = (_a71 = class extends Component2 {
+  }, __publicField(_a81, "props", ToggleButtonController.props), _a81);
+  var _a82, _media19, _CaptionButton_instances, onPress_fn4, isPressed_fn4, isHidden_fn;
+  var CaptionButton = (_a82 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _CaptionButton_instances);
@@ -17173,9 +23014,9 @@ var PortalUI = (() => {
   }, isHidden_fn = function() {
     const { hasCaptions } = __privateGet(this, _media19).$state;
     return !hasCaptions();
-  }, __publicField(_a71, "props", ToggleButtonController.props), _a71);
-  var _a72, _media20, _FullscreenButton_instances, onPress_fn5, isPressed_fn5, isSupported_fn;
-  var FullscreenButton = (_a72 = class extends Component2 {
+  }, __publicField(_a82, "props", ToggleButtonController.props), _a82);
+  var _a83, _media20, _FullscreenButton_instances, onPress_fn5, isPressed_fn5, isSupported_fn;
+  var FullscreenButton = (_a83 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _FullscreenButton_instances);
@@ -17208,12 +23049,12 @@ var PortalUI = (() => {
   }, isSupported_fn = function() {
     const { canFullscreen: canFullscreen2 } = __privateGet(this, _media20).$state;
     return canFullscreen2();
-  }, __publicField(_a72, "props", {
+  }, __publicField(_a83, "props", {
     ...ToggleButtonController.props,
     target: "prefer-media"
-  }), _a72);
-  var _a73, _media21, _MuteButton_instances, onPress_fn6, isPressed_fn6, getState_fn3;
-  var MuteButton = (_a73 = class extends Component2 {
+  }), _a83);
+  var _a84, _media21, _MuteButton_instances, onPress_fn6, isPressed_fn6, getState_fn3;
+  var MuteButton = (_a84 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _MuteButton_instances);
@@ -17247,9 +23088,9 @@ var PortalUI = (() => {
     if (muted() || $volume === 0) return "muted";
     else if ($volume >= 0.5) return "high";
     else if ($volume < 0.5) return "low";
-  }, __publicField(_a73, "props", ToggleButtonController.props), _a73);
-  var _a74, _media22, _PIPButton_instances, onPress_fn7, isPressed_fn7, isSupported_fn2;
-  var PIPButton = (_a74 = class extends Component2 {
+  }, __publicField(_a84, "props", ToggleButtonController.props), _a84);
+  var _a85, _media22, _PIPButton_instances, onPress_fn7, isPressed_fn7, isSupported_fn2;
+  var PIPButton = (_a85 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _PIPButton_instances);
@@ -17282,9 +23123,9 @@ var PortalUI = (() => {
   }, isSupported_fn2 = function() {
     const { canPictureInPicture } = __privateGet(this, _media22).$state;
     return canPictureInPicture();
-  }, __publicField(_a74, "props", ToggleButtonController.props), _a74);
-  var _a75, _media23, _SeekButton_instances, isSupported_fn3, getDefaultLabel_fn3, onPress_fn8;
-  var SeekButton = (_a75 = class extends Component2 {
+  }, __publicField(_a85, "props", ToggleButtonController.props), _a85);
+  var _a86, _media23, _SeekButton_instances, isSupported_fn3, getDefaultLabel_fn3, onPress_fn8;
+  var SeekButton = (_a86 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _SeekButton_instances);
@@ -17322,12 +23163,12 @@ var PortalUI = (() => {
     if (disabled()) return;
     const { currentTime } = __privateGet(this, _media23).$state, seekTo = currentTime() + seconds();
     __privateGet(this, _media23).remote.seek(seekTo, event);
-  }, __publicField(_a75, "props", {
+  }, __publicField(_a86, "props", {
     disabled: false,
     seconds: 30
-  }), _a75);
-  var _a76, _media24, _LiveButton_instances, onPress_fn9;
-  var LiveButton = (_a76 = class extends Component2 {
+  }), _a86);
+  var _a87, _media24, _LiveButton_instances, onPress_fn9;
+  var LiveButton = (_a87 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _LiveButton_instances);
@@ -17357,7 +23198,7 @@ var PortalUI = (() => {
     const { disabled } = this.$props, { liveEdge } = __privateGet(this, _media24).$state;
     if (disabled() || liveEdge()) return;
     __privateGet(this, _media24).remote.seekToLiveEdge(event);
-  }, __publicField(_a76, "props", { disabled: false }), _a76);
+  }, __publicField(_a87, "props", { disabled: false }), _a87);
   var sliderState = new State({
     min: 0,
     max: 100,
@@ -17388,8 +23229,8 @@ var PortalUI = (() => {
     const range = max2 - min2, offset2 = value - min2;
     return range > 0 ? offset2 / range : 0;
   }
-  var _init, _observer, _IntersectionObserverController_instances, onDisconnect_fn4, _a77;
-  var IntersectionObserverController = (_a77 = class extends ViewController {
+  var _init, _observer, _IntersectionObserverController_instances, onDisconnect_fn4, _a88;
+  var IntersectionObserverController = (_a88 = class extends ViewController {
     constructor(init) {
       super();
       __privateAdd(this, _IntersectionObserverController_instances);
@@ -17410,9 +23251,9 @@ var PortalUI = (() => {
   onDisconnect_fn4 = function() {
     __privateGet(this, _observer)?.disconnect();
     __privateSet(this, _observer, void 0);
-  }, _a77);
-  var sliderContext = createContext2();
-  var sliderObserverContext = createContext2();
+  }, _a88);
+  var sliderContext = createContext5();
+  var sliderObserverContext = createContext5();
   function getClampedValue(min2, max2, value, step) {
     return clampNumber(min2, round(value, getNumberOfDecimalPlaces(step)), max2);
   }
@@ -17430,15 +23271,15 @@ var PortalUI = (() => {
     Down: -1,
     ArrowDown: -1
   };
-  var _delegate3, _media25, _observer2, _SliderEventsController_instances, watchSwipeGesture_fn, _provider3, _touch, _touchStartValue, resetTouchState_fn, onTouchStart_fn, onTouchMove_fn, attachEventListeners_fn, attachPointerListeners_fn, onFocus_fn2, updateValue_fn, updatePointerValue_fn, getPointerValue_fn, onPointerEnter_fn2, onPointerMove_fn, onPointerLeave_fn2, onPointerDown_fn, onStartDragging_fn, onStopDragging_fn, _lastDownKey, _repeatedKeys, onKeyDown_fn2, onKeyUp_fn2, calcJumpValue_fn, calcNewKeyValue_fn, onDocumentPointerUp_fn, onDocumentTouchMove_fn, _onDocumentPointerMove, _a78;
-  var SliderEventsController = (_a78 = class extends ViewController {
+  var _delegate3, _media25, _observer2, _SliderEventsController_instances, watchSwipeGesture_fn, _provider4, _touch, _touchStartValue, resetTouchState_fn, onTouchStart_fn, onTouchMove_fn, attachEventListeners_fn, attachPointerListeners_fn, onFocus_fn2, updateValue_fn, updatePointerValue_fn, getPointerValue_fn, onPointerEnter_fn2, onPointerMove_fn, onPointerLeave_fn2, onPointerDown_fn, onStartDragging_fn, onStopDragging_fn, _lastDownKey, _repeatedKeys, onKeyDown_fn2, onKeyUp_fn2, calcJumpValue_fn, calcNewKeyValue_fn, onDocumentPointerUp_fn, onDocumentTouchMove_fn, _onDocumentPointerMove, _a89;
+  var SliderEventsController = (_a89 = class extends ViewController {
     constructor(delegate, media) {
       super();
       __privateAdd(this, _SliderEventsController_instances);
       __privateAdd(this, _delegate3);
       __privateAdd(this, _media25);
       __privateAdd(this, _observer2);
-      __privateAdd(this, _provider3, null);
+      __privateAdd(this, _provider4, null);
       __privateAdd(this, _touch, null);
       __privateAdd(this, _touchStartValue, null);
       __privateAdd(this, _lastDownKey);
@@ -17450,7 +23291,7 @@ var PortalUI = (() => {
       __privateSet(this, _media25, media);
     }
     onSetup() {
-      if (hasProvidedContext(sliderObserverContext)) __privateSet(this, _observer2, useContext2(sliderObserverContext));
+      if (hasProvidedContext(sliderObserverContext)) __privateSet(this, _observer2, useContext5(sliderObserverContext));
     }
     onConnect(el) {
       effect(__privateMethod(this, _SliderEventsController_instances, attachEventListeners_fn).bind(this, el));
@@ -17460,17 +23301,17 @@ var PortalUI = (() => {
   }, _delegate3 = new WeakMap(), _media25 = new WeakMap(), _observer2 = new WeakMap(), _SliderEventsController_instances = new WeakSet(), watchSwipeGesture_fn = function() {
     const { pointer } = __privateGet(this, _media25).$state;
     if (pointer() !== "coarse" || !__privateGet(this, _delegate3).swipeGesture()) {
-      __privateSet(this, _provider3, null);
+      __privateSet(this, _provider4, null);
       __privateMethod(this, _SliderEventsController_instances, resetTouchState_fn).call(this);
       return;
     }
-    __privateSet(this, _provider3, __privateGet(this, _media25).player.el?.querySelector("media-provider,[data-media-provider]"));
-    if (!__privateGet(this, _provider3)) {
+    __privateSet(this, _provider4, __privateGet(this, _media25).player.el?.querySelector("media-provider,[data-media-provider]"));
+    if (!__privateGet(this, _provider4)) {
       __privateMethod(this, _SliderEventsController_instances, resetTouchState_fn).call(this);
       return;
     }
-    new EventsController(__privateGet(this, _provider3)).add("touchstart", __privateMethod(this, _SliderEventsController_instances, onTouchStart_fn).bind(this), { passive: true }).add("touchmove", __privateMethod(this, _SliderEventsController_instances, onTouchMove_fn).bind(this), { passive: false });
-  }, _provider3 = new WeakMap(), _touch = new WeakMap(), _touchStartValue = new WeakMap(), resetTouchState_fn = function() {
+    new EventsController(__privateGet(this, _provider4)).add("touchstart", __privateMethod(this, _SliderEventsController_instances, onTouchStart_fn).bind(this), { passive: true }).add("touchmove", __privateMethod(this, _SliderEventsController_instances, onTouchMove_fn).bind(this), { passive: false });
+  }, _provider4 = new WeakMap(), _touch = new WeakMap(), _touchStartValue = new WeakMap(), resetTouchState_fn = function() {
     __privateSet(this, _touch, null);
     __privateSet(this, _touchStartValue, null);
   }, onTouchStart_fn = function(event) {
@@ -17527,8 +23368,8 @@ var PortalUI = (() => {
     if (this.$props.orientation() === "vertical") {
       const { bottom: trackBottom, height: trackHeight } = rect;
       thumbPositionRate = (trackBottom - event.clientY) / trackHeight;
-    } else if (__privateGet(this, _touch) && isNumber(__privateGet(this, _touchStartValue)) && __privateGet(this, _provider3)) {
-      const { width } = __privateGet(this, _provider3).getBoundingClientRect(), rate = (event.clientX - __privateGet(this, _touch).clientX) / width, range = max2() - min2(), diff = range * Math.abs(rate);
+    } else if (__privateGet(this, _touch) && isNumber(__privateGet(this, _touchStartValue)) && __privateGet(this, _provider4)) {
+      const { width } = __privateGet(this, _provider4).getBoundingClientRect(), rate = (event.clientX - __privateGet(this, _touch).clientX) / width, range = max2() - min2(), diff = range * Math.abs(rate);
       thumbPositionRate = (rate < 0 ? __privateGet(this, _touchStartValue) - diff : __privateGet(this, _touchStartValue) + diff) / range;
     } else {
       if (__privateGet(this, _touch) && isNumber(__privateGet(this, _touchStartValue))) __privateMethod(this, _SliderEventsController_instances, resetTouchState_fn).call(this);
@@ -17619,10 +23460,10 @@ var PortalUI = (() => {
     __privateMethod(this, _SliderEventsController_instances, onStopDragging_fn).call(this, value, event);
   }, onDocumentTouchMove_fn = function(event) {
     event.preventDefault();
-  }, _onDocumentPointerMove = new WeakMap(), _a78);
-  var sliderValueFormatContext = createContext2(() => ({}));
-  var _a79, _media26, _delegate4, _isVisible, _isIntersecting, _SliderController_instances, onIntersectionChange_fn, watchHidden_fn, watchValue_fn, watchStep_fn, watchDisabled_fn, getARIADisabled_fn, setupAttrs_fn, watchCSSVars_fn, _updateSliderVars;
-  var SliderController = (_a79 = class extends ViewController {
+  }, _onDocumentPointerMove = new WeakMap(), _a89);
+  var sliderValueFormatContext = createContext5(() => ({}));
+  var _a90, _media26, _delegate4, _isVisible, _isIntersecting, _SliderController_instances, onIntersectionChange_fn, watchHidden_fn, watchValue_fn, watchStep_fn, watchDisabled_fn, getARIADisabled_fn, setupAttrs_fn, watchCSSVars_fn, _updateSliderVars;
+  var SliderController = (_a90 = class extends ViewController {
     constructor(delegate) {
       super();
       __privateAdd(this, _SliderController_instances);
@@ -17699,16 +23540,16 @@ var PortalUI = (() => {
   }, watchCSSVars_fn = function() {
     const { fillPercent, pointerPercent } = this.$state;
     __privateGet(this, _updateSliderVars).call(this, round(fillPercent(), 3), round(pointerPercent(), 3));
-  }, _updateSliderVars = new WeakMap(), __publicField(_a79, "props", {
+  }, _updateSliderVars = new WeakMap(), __publicField(_a90, "props", {
     hidden: false,
     disabled: false,
     step: 1,
     keyStep: 1,
     orientation: "horizontal",
     shiftKeyMultiplier: 5
-  }), _a79);
-  var _a80, _Slider_instances, getARIAValueNow_fn, getARIAValueText_fn, watchValue_fn2, watchMinMax_fn;
-  var Slider = (_a80 = class extends Component2 {
+  }), _a90);
+  var _a91, _Slider_instances, getARIAValueNow_fn, getARIAValueText_fn, watchValue_fn2, watchMinMax_fn;
+  var Slider = (_a91 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _Slider_instances);
@@ -17740,16 +23581,16 @@ var PortalUI = (() => {
     const { min: min2, max: max2 } = this.$props;
     this.$state.min.set(min2());
     this.$state.max.set(max2());
-  }, __publicField(_a80, "props", {
+  }, __publicField(_a91, "props", {
     ...SliderController.props,
     min: 0,
     max: 100,
     value: 0
-  }), __publicField(_a80, "state", sliderState), _a80);
+  }), __publicField(_a91, "state", sliderState), _a91);
   var cache = /* @__PURE__ */ new Map();
   var pending = /* @__PURE__ */ new Map();
-  var _media27, _src, _crossOrigin, _ThumbnailsLoader_instances, onLoadCues_fn, processImages_fn, processStoryboard_fn, processVTTCues_fn, resolveBaseUrl_fn, resolveURL_fn, resolveData_fn, onError_fn6, _a81;
-  var ThumbnailsLoader = (_a81 = class {
+  var _media27, _src, _crossOrigin, _ThumbnailsLoader_instances, onLoadCues_fn, processImages_fn, processStoryboard_fn, processVTTCues_fn, resolveBaseUrl_fn, resolveURL_fn, resolveData_fn, onError_fn6, _a92;
+  var ThumbnailsLoader = (_a92 = class {
     constructor(src, crossOrigin, media) {
       __privateAdd(this, _ThumbnailsLoader_instances);
       __privateAdd(this, _media27);
@@ -17762,7 +23603,7 @@ var PortalUI = (() => {
       effect(__privateMethod(this, _ThumbnailsLoader_instances, onLoadCues_fn).bind(this));
     }
     static create(src, crossOrigin) {
-      return new _a81(src, crossOrigin, useMediaContext());
+      return new _a92(src, crossOrigin, useMediaContext());
     }
   }, _media27 = new WeakMap(), _src = new WeakMap(), _crossOrigin = new WeakMap(), _ThumbnailsLoader_instances = new WeakSet(), onLoadCues_fn = function() {
     const { canLoad } = __privateGet(this, _media27).$state;
@@ -17837,13 +23678,13 @@ var PortalUI = (() => {
       this.$images.set([]);
     };
   }, processImages_fn = function(images) {
-    const baseURL = __privateMethod(this, _ThumbnailsLoader_instances, resolveBaseUrl_fn).call(this);
+    const baseURL3 = __privateMethod(this, _ThumbnailsLoader_instances, resolveBaseUrl_fn).call(this);
     return images.map((img, i) => {
       assert(img.url && isString(img.url), false);
       assert("startTime" in img && isNumber(img.startTime), false);
       return {
         ...img,
-        url: isString(img.url) ? __privateMethod(this, _ThumbnailsLoader_instances, resolveURL_fn).call(this, img.url, baseURL) : img.url
+        url: isString(img.url) ? __privateMethod(this, _ThumbnailsLoader_instances, resolveURL_fn).call(this, img.url, baseURL3) : img.url
       };
     });
   }, processStoryboard_fn = function(board) {
@@ -17868,11 +23709,11 @@ var PortalUI = (() => {
       assert("startTime" in cue && isNumber(cue.startTime), false);
       assert("text" in cue && isString(cue.text), false);
     }
-    const images = [], baseURL = __privateMethod(this, _ThumbnailsLoader_instances, resolveBaseUrl_fn).call(this);
+    const images = [], baseURL3 = __privateMethod(this, _ThumbnailsLoader_instances, resolveBaseUrl_fn).call(this);
     for (const cue of cues) {
       const [url, hash] = cue.text.split("#"), data = __privateMethod(this, _ThumbnailsLoader_instances, resolveData_fn).call(this, hash);
       images.push({
-        url: __privateMethod(this, _ThumbnailsLoader_instances, resolveURL_fn).call(this, url, baseURL),
+        url: __privateMethod(this, _ThumbnailsLoader_instances, resolveURL_fn).call(this, url, baseURL3),
         startTime: cue.startTime,
         endTime: cue.endTime,
         width: data?.w,
@@ -17885,11 +23726,11 @@ var PortalUI = (() => {
     }
     return images;
   }, resolveBaseUrl_fn = function() {
-    let baseURL = peek(__privateGet(this, _src));
-    if (!isString(baseURL) || !/^https?:/.test(baseURL)) return location.href;
-    return baseURL;
-  }, resolveURL_fn = function(src, baseURL) {
-    return /^https?:/.test(src) ? new URL(src) : new URL(src, baseURL);
+    let baseURL3 = peek(__privateGet(this, _src));
+    if (!isString(baseURL3) || !/^https?:/.test(baseURL3)) return location.href;
+    return baseURL3;
+  }, resolveURL_fn = function(src, baseURL3) {
+    return /^https?:/.test(src) ? new URL(src) : new URL(src, baseURL3);
   }, resolveData_fn = function(hash) {
     if (!hash) return {};
     const [hashProps, values] = hash.split("="), hashValues = values?.split(","), data = {};
@@ -17900,12 +23741,12 @@ var PortalUI = (() => {
     }
     return data;
   }, onError_fn6 = function(src, error) {
-  }, _a81);
+  }, _a92);
   var PRELOAD_SPRITE_BATCH_SIZE = 2;
   var MAX_PRELOADED_SPRITES = 32;
   var preloadedSprites = /* @__PURE__ */ new Map();
-  var _a82, _loader3, _styleResets, _Thumbnail_instances, watchImg_fn, watchCrossOrigin_fn2, onLoadStart_fn4, onLoaded_fn4, onError_fn7, isLoading_fn, hasError_fn, watchHidden_fn2, onFindActiveThumbnail_fn, onPreloadNextSprites_fn, resize_fn, style_fn, resetStyles_fn;
-  var Thumbnail = (_a82 = class extends Component2 {
+  var _a93, _loader3, _styleResets, _Thumbnail_instances, watchImg_fn, watchCrossOrigin_fn2, onLoadStart_fn4, onLoaded_fn4, onError_fn7, isLoading_fn, hasError_fn, watchHidden_fn2, onFindActiveThumbnail_fn, onPreloadNextSprites_fn, resize_fn, style_fn, resetStyles_fn;
+  var Thumbnail = (_a93 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Thumbnail_instances);
@@ -18018,11 +23859,11 @@ var PortalUI = (() => {
   }, resetStyles_fn = function() {
     for (const reset of __privateGet(this, _styleResets)) reset();
     __privateSet(this, _styleResets, []);
-  }, __publicField(_a82, "props", {
+  }, __publicField(_a93, "props", {
     src: null,
     time: 0,
     crossOrigin: null
-  }), __publicField(_a82, "state", new State({
+  }), __publicField(_a93, "state", new State({
     src: "",
     img: null,
     thumbnails: [],
@@ -18031,7 +23872,7 @@ var PortalUI = (() => {
     loading: false,
     error: null,
     hidden: false
-  })), _a82);
+  })), _a93);
   function preloadSprite(src, crossOrigin) {
     const key2 = `${src}::${crossOrigin}`;
     if (preloadedSprites.has(key2)) {
@@ -18050,22 +23891,22 @@ var PortalUI = (() => {
       preloadedSprites.delete(firstKey);
     }
   }
-  var _slider, _a83;
-  var SliderThumbnail = (_a83 = class extends Thumbnail {
+  var _slider, _a94;
+  var SliderThumbnail = (_a94 = class extends Thumbnail {
     constructor() {
       super(...arguments);
       __privateAdd(this, _slider);
     }
     onAttach(el) {
-      __privateSet(this, _slider, useState18(Slider.state));
+      __privateSet(this, _slider, useState34(Slider.state));
     }
     getTime() {
       const { duration, clipStartTime } = this.media.$state;
       return clipStartTime() + __privateGet(this, _slider).pointerRate() * duration();
     }
-  }, _slider = new WeakMap(), _a83);
-  var _a84, _media28, _slider2, _SliderVideo_instances, watchVideo_fn, watchSrc_fn2, watchCrossOrigin_fn3, isLoading_fn2, hasError_fn2, watchHidden_fn3, onSrcChange_fn, onCanPlay_fn2, onError_fn8, onUpdateTime_fn;
-  var SliderVideo = (_a84 = class extends Component2 {
+  }, _slider = new WeakMap(), _a94);
+  var _a95, _media28, _slider2, _SliderVideo_instances, watchVideo_fn, watchSrc_fn2, watchCrossOrigin_fn3, isLoading_fn2, hasError_fn2, watchHidden_fn3, onSrcChange_fn, onCanPlay_fn2, onError_fn8, onUpdateTime_fn;
+  var SliderVideo = (_a95 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _SliderVideo_instances);
@@ -18077,7 +23918,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media28, useMediaContext());
-      __privateSet(this, _slider2, useState18(Slider.state));
+      __privateSet(this, _slider2, useState34(Slider.state));
       __privateMethod(this, _SliderVideo_instances, watchCrossOrigin_fn3).call(this);
       this.setAttributes({
         "data-loading": __privateMethod(this, _SliderVideo_instances, isLoading_fn2).bind(this),
@@ -18132,21 +23973,21 @@ var PortalUI = (() => {
   }, onUpdateTime_fn = function() {
     const { video, canPlay } = this.$state, { duration } = __privateGet(this, _media28).$state, { pointerRate } = __privateGet(this, _slider2), media = video();
     if (canPlay() && media && Number.isFinite(duration()) && Number.isFinite(pointerRate())) media.currentTime = pointerRate() * duration();
-  }, __publicField(_a84, "props", {
+  }, __publicField(_a95, "props", {
     src: null,
     crossOrigin: null
-  }), __publicField(_a84, "state", new State({
+  }), __publicField(_a95, "state", new State({
     video: null,
     src: null,
     crossOrigin: null,
     canPlay: false,
     error: null,
     hidden: false
-  })), _a84);
+  })), _a95);
   var slidervideo__proto = SliderVideo.prototype;
   prop(slidervideo__proto, "video");
-  var _a85, _format, _text, _slider3;
-  var SliderValue = (_a85 = class extends Component2 {
+  var _a96, _format, _text, _slider3;
+  var SliderValue = (_a96 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _format);
@@ -18154,8 +23995,8 @@ var PortalUI = (() => {
       __privateAdd(this, _slider3);
     }
     onSetup() {
-      __privateSet(this, _slider3, useState18(Slider.state));
-      __privateSet(this, _format, useContext2(sliderValueFormatContext));
+      __privateSet(this, _slider3, useState34(Slider.state));
+      __privateSet(this, _format, useContext5(sliderValueFormatContext));
       __privateSet(this, _text, computed(this.getValueText.bind(this)));
     }
     /**
@@ -18175,7 +24016,7 @@ var PortalUI = (() => {
       });
       else return (__privateGet(this, _format).value?.(value) ?? value.toFixed(2)) + "";
     }
-  }, _format = new WeakMap(), _text = new WeakMap(), _slider3 = new WeakMap(), __publicField(_a85, "props", {
+  }, _format = new WeakMap(), _text = new WeakMap(), _slider3 = new WeakMap(), __publicField(_a96, "props", {
     type: "pointer",
     format: null,
     showHours: false,
@@ -18183,11 +24024,11 @@ var PortalUI = (() => {
     padHours: null,
     padMinutes: null,
     decimalPlaces: 2
-  }), _a85);
+  }), _a96);
   var slidervalue__proto = SliderValue.prototype;
   method(slidervalue__proto, "getValueText");
-  var _a86, _slider4, _updatePlacement;
-  var SliderPreview = (_a86 = class extends Component2 {
+  var _a97, _slider4, _updatePlacement;
+  var SliderPreview = (_a97 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _slider4);
@@ -18204,8 +24045,8 @@ var PortalUI = (() => {
       }));
     }
     onSetup() {
-      __privateSet(this, _slider4, useContext2(sliderContext));
-      const { active } = useState18(Slider.state);
+      __privateSet(this, _slider4, useContext5(sliderContext));
+      const { active } = useState34(Slider.state);
       this.setAttributes({ "data-visible": active });
     }
     onAttach(el) {
@@ -18225,10 +24066,10 @@ var PortalUI = (() => {
       resize.observe(el);
       onDispose(() => resize.disconnect());
     }
-  }, _slider4 = new WeakMap(), _updatePlacement = new WeakMap(), __publicField(_a86, "props", {
+  }, _slider4 = new WeakMap(), _updatePlacement = new WeakMap(), __publicField(_a97, "props", {
     offset: 0,
     noClamp: false
-  }), _a86);
+  }), _a97);
   function updateSliderPreviewPlacement(el, { clamp: clamp2, offset: offset2, orientation }) {
     const computedStyle = getComputedStyle(el), width = parseFloat(computedStyle.width), height = parseFloat(computedStyle.height), styles = {
       top: null,
@@ -18248,8 +24089,8 @@ var PortalUI = (() => {
     }
     Object.assign(el.style, styles);
   }
-  var _a87, _media29, _VolumeSlider_instances, getARIAValueNow_fn2, getARIAValueText_fn2, getARIAValueMax_fn, isDisabled_fn, watchVolume_fn3, _throttleVolumeChange, onVolumeChange_fn4, onValueChange_fn, onDragValueChange_fn;
-  var VolumeSlider = (_a87 = class extends Component2 {
+  var _a98, _media29, _VolumeSlider_instances, getARIAValueNow_fn2, getARIAValueText_fn2, getARIAValueMax_fn, isDisabled_fn, watchVolume_fn3, _throttleVolumeChange, onVolumeChange_fn4, onValueChange_fn, onDragValueChange_fn;
+  var VolumeSlider = (_a98 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _VolumeSlider_instances);
@@ -18317,13 +24158,13 @@ var PortalUI = (() => {
     __privateGet(this, _throttleVolumeChange).call(this, event);
   }, onDragValueChange_fn = function(event) {
     __privateGet(this, _throttleVolumeChange).call(this, event);
-  }, __publicField(_a87, "props", {
+  }, __publicField(_a98, "props", {
     ...SliderController.props,
     keyStep: 5,
     shiftKeyMultiplier: 2
-  }), __publicField(_a87, "state", sliderState), _a87);
-  var _a88, _media30, _AudioGainSlider_instances, getARIAValueNow_fn3, getARIAValueText_fn3, watchMinMax_fn2, watchAudioGain_fn, isDisabled_fn2, onAudioGainChange_fn, onValueChange_fn2, onDragValueChange_fn2;
-  var AudioGainSlider = (_a88 = class extends Component2 {
+  }), __publicField(_a98, "state", sliderState), _a98);
+  var _a99, _media30, _AudioGainSlider_instances, getARIAValueNow_fn3, getARIAValueText_fn3, watchMinMax_fn2, watchAudioGain_fn, isDisabled_fn2, onAudioGainChange_fn, onValueChange_fn2, onDragValueChange_fn2;
+  var AudioGainSlider = (_a99 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _AudioGainSlider_instances);
@@ -18386,16 +24227,16 @@ var PortalUI = (() => {
     __privateMethod(this, _AudioGainSlider_instances, onAudioGainChange_fn).call(this, event);
   }, onDragValueChange_fn2 = function(event) {
     __privateMethod(this, _AudioGainSlider_instances, onAudioGainChange_fn).call(this, event);
-  }, __publicField(_a88, "props", {
+  }, __publicField(_a99, "props", {
     ...SliderController.props,
     step: 25,
     keyStep: 25,
     shiftKeyMultiplier: 2,
     min: 0,
     max: 300
-  }), __publicField(_a88, "state", sliderState), _a88);
-  var _a89, _media31, _SpeedSlider_instances, getARIAValueNow_fn4, getARIAValueText_fn4, watchMinMax_fn3, watchPlaybackRate_fn2, roundValue_fn, isDisabled_fn3, _throttledSpeedChange, onPlaybackRateChange_fn, onValueChange_fn3, onDragValueChange_fn3;
-  var SpeedSlider = (_a89 = class extends Component2 {
+  }), __publicField(_a99, "state", sliderState), _a99);
+  var _a100, _media31, _SpeedSlider_instances, getARIAValueNow_fn4, getARIAValueText_fn4, watchMinMax_fn3, watchPlaybackRate_fn2, roundValue_fn, isDisabled_fn3, _throttledSpeedChange, onPlaybackRateChange_fn, onValueChange_fn3, onDragValueChange_fn3;
+  var SpeedSlider = (_a100 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _SpeedSlider_instances);
@@ -18456,16 +24297,16 @@ var PortalUI = (() => {
     __privateGet(this, _throttledSpeedChange).call(this, event);
   }, onDragValueChange_fn3 = function(event) {
     __privateGet(this, _throttledSpeedChange).call(this, event);
-  }, __publicField(_a89, "props", {
+  }, __publicField(_a100, "props", {
     ...SliderController.props,
     step: 0.25,
     keyStep: 0.25,
     shiftKeyMultiplier: 2,
     min: 0,
     max: 2
-  }), __publicField(_a89, "state", sliderState), _a89);
-  var _a90, _media32, _sortedQualities, _QualitySlider_instances, getARIAValueNow_fn5, getARIAValueText_fn5, watchMax_fn, watchQuality_fn, isDisabled_fn4, _throttledQualityChange, onQualityChange_fn4, onValueChange_fn4, onDragValueChange_fn4;
-  var QualitySlider = (_a90 = class extends Component2 {
+  }), __publicField(_a100, "state", sliderState), _a100);
+  var _a101, _media32, _sortedQualities, _QualitySlider_instances, getARIAValueNow_fn5, getARIAValueText_fn5, watchMax_fn, watchQuality_fn, isDisabled_fn4, _throttledQualityChange, onQualityChange_fn4, onValueChange_fn4, onDragValueChange_fn4;
+  var QualitySlider = (_a101 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _QualitySlider_instances);
@@ -18528,14 +24369,14 @@ var PortalUI = (() => {
     __privateGet(this, _throttledQualityChange).call(this, event);
   }, onDragValueChange_fn4 = function(event) {
     __privateGet(this, _throttledQualityChange).call(this, event);
-  }, __publicField(_a90, "props", {
+  }, __publicField(_a101, "props", {
     ...SliderController.props,
     step: 1,
     keyStep: 1,
     shiftKeyMultiplier: 1
-  }), __publicField(_a90, "state", sliderState), _a90);
-  var _a91, _media33, _dispatchSeeking, _chapter, _TimeSlider_instances, calcBufferedPercent_fn, hasChapters_fn, watchSeekingThrottle_fn, watchCurrentTime_fn2, watchPreviewing_fn, seeking_fn2, seek_fn, _playingBeforeDragStart, onDragStart_fn, onDragValueChange_fn5, onDragEnd_fn, onValueChange_fn5, getValue_fn, getStep_fn, getKeyStep_fn, roundValue_fn2, isDisabled_fn5, getARIAValueNow_fn6, getARIAValueText_fn6, percentToTime_fn, timeToPercent_fn, formatValue_fn, formatTime_fn;
-  var TimeSlider = (_a91 = class extends Component2 {
+  }), __publicField(_a101, "state", sliderState), _a101);
+  var _a102, _media33, _dispatchSeeking, _chapter, _TimeSlider_instances, calcBufferedPercent_fn, hasChapters_fn, watchSeekingThrottle_fn, watchCurrentTime_fn2, watchPreviewing_fn, seeking_fn2, seek_fn, _playingBeforeDragStart, onDragStart_fn, onDragValueChange_fn5, onDragEnd_fn, onValueChange_fn5, getValue_fn, getStep_fn, getKeyStep_fn, roundValue_fn2, isDisabled_fn5, getARIAValueNow_fn6, getARIAValueText_fn6, percentToTime_fn, timeToPercent_fn, formatValue_fn, formatTime_fn;
+  var TimeSlider = (_a102 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _TimeSlider_instances);
@@ -18597,7 +24438,7 @@ var PortalUI = (() => {
       this.dispatch("value-change", { detail: newValue });
     }
   }, watchPreviewing_fn = function() {
-    const player = __privateGet(this, _media33).player.el, { preview } = useContext2(sliderContext);
+    const player = __privateGet(this, _media33).player.el, { preview } = useContext5(sliderContext);
     player && preview() && setAttribute(player, "data-preview", this.$state.active());
   }, seeking_fn2 = function(time, event) {
     __privateGet(this, _media33).remote.seeking(time, event);
@@ -18664,7 +24505,7 @@ var PortalUI = (() => {
   }, formatTime_fn = function(percent, options) {
     const time = __privateMethod(this, _TimeSlider_instances, percentToTime_fn).call(this, percent), { live, duration } = __privateGet(this, _media33).$state, value = live() ? time - duration() : time;
     return Number.isFinite(time) ? `${value < 0 ? "-" : ""}${formatTime2(Math.abs(value), options)}` : "LIVE";
-  }, __publicField(_a91, "props", {
+  }, __publicField(_a102, "props", {
     ...SliderController.props,
     step: 0.1,
     keyStep: 5,
@@ -18672,9 +24513,9 @@ var PortalUI = (() => {
     pauseWhileDragging: false,
     noSwipeGesture: false,
     seekingRequestThrottle: 100
-  }), __publicField(_a91, "state", sliderState), _a91);
-  var _a92, _media34, _sliderState, _updateScope, _titleRef, _refs, _$track, _$cues, _activeIndex, _activePointerIndex, _bufferedIndex, _SliderChapters_instances, setTrack_fn, reset_fn5, watch_fn, watchUpdates_fn, watchContainerWidths_fn, watchFillPercent_fn, watchPointerPercent_fn, updateFillPercents_fn, updateFillPercent_fn, findActiveChapterIndex_fn, watchBufferedPercent_fn, _updateBufferedPercent, _bufferedPercent, calcMediaBufferedPercent_fn, getEndTime_fn, calcPercent_fn, fillGaps_fn, watchSource_fn, onTrackChange_fn2, watchMediaDuration_fn, _onCuesChange, onChapterTitleChange_fn, findParentSlider_fn, findChapterTitleRef_fn;
-  var SliderChapters = (_a92 = class extends Component2 {
+  }), __publicField(_a102, "state", sliderState), _a102);
+  var _a103, _media34, _sliderState, _updateScope, _titleRef, _refs, _$track, _$cues, _activeIndex, _activePointerIndex, _bufferedIndex, _SliderChapters_instances, setTrack_fn, reset_fn5, watch_fn, watchUpdates_fn, watchContainerWidths_fn, watchFillPercent_fn, watchPointerPercent_fn, updateFillPercents_fn, updateFillPercent_fn, findActiveChapterIndex_fn, watchBufferedPercent_fn, _updateBufferedPercent, _bufferedPercent, calcMediaBufferedPercent_fn, getEndTime_fn, calcPercent_fn, fillGaps_fn, watchSource_fn, onTrackChange_fn2, watchMediaDuration_fn, _onCuesChange, onChapterTitleChange_fn, findParentSlider_fn, findChapterTitleRef_fn;
+  var SliderChapters = (_a103 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _SliderChapters_instances);
@@ -18719,7 +24560,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media34, useMediaContext());
-      __privateSet(this, _sliderState, useState18(TimeSlider.state));
+      __privateSet(this, _sliderState, useState34(TimeSlider.state));
     }
     onAttach(el) {
       watchActiveTextTrack(__privateGet(this, _media34).textTracks, "chapters", __privateMethod(this, _SliderChapters_instances, setTrack_fn).bind(this));
@@ -18883,13 +24724,13 @@ var PortalUI = (() => {
   }, findChapterTitleRef_fn = function() {
     const slider = __privateMethod(this, _SliderChapters_instances, findParentSlider_fn).call(this);
     return slider ? slider.querySelector('[data-part="chapter-title"]') : null;
-  }, __publicField(_a92, "props", { disabled: false }), _a92);
+  }, __publicField(_a103, "props", { disabled: false }), _a103);
   var sliderchapters__proto = SliderChapters.prototype;
   prop(sliderchapters__proto, "cues");
   prop(sliderchapters__proto, "activeCue");
   prop(sliderchapters__proto, "activePointerCue");
   method(sliderchapters__proto, "setRefs");
-  var menuContext = createContext2();
+  var menuContext = createContext5();
   function scrollIntoView(el, options) {
     const scrolls = r(el, options);
     for (const { el: el2, top, left } of scrolls) el2.scroll({
@@ -18925,8 +24766,8 @@ var PortalUI = (() => {
     "Enter",
     " "
   ]);
-  var _index, _el, _elements, _delegate5, _MenuFocusController_instances, focusAt_fn, findActiveIndex_fn, onFocus_fn3, validateKeyEvent_fn, onKeyUp_fn3, onKeyDown_fn3, nextIndex_fn, getFocusableElements_fn, _a93;
-  var MenuFocusController = (_a93 = class {
+  var _index, _el, _elements, _delegate5, _MenuFocusController_instances, focusAt_fn, findActiveIndex_fn, onFocus_fn3, validateKeyEvent_fn, onKeyUp_fn3, onKeyDown_fn3, nextIndex_fn, getFocusableElements_fn, _a104;
+  var MenuFocusController = (_a104 = class {
     constructor(delegate) {
       __privateAdd(this, _MenuFocusController_instances);
       __privateAdd(this, _index, -1);
@@ -19038,7 +24879,7 @@ var PortalUI = (() => {
     };
     for (const el of focusableElements) if (isHTMLElement2(el) && el.offsetParent !== null && isElementParent(__privateGet(this, _el), el, is)) elements.push(el);
     return elements;
-  }, _a93);
+  }, _a104);
   function __decorate(decorators, target, key2, desc) {
     var c = arguments.length, r2 = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key2) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r2 = Reflect.decorate(decorators, target, key2, desc);
@@ -19046,8 +24887,8 @@ var PortalUI = (() => {
     return c > 3 && r2 && Object.defineProperty(target, key2, r2), r2;
   }
   var idCount = 0;
-  var _a94, _media35, _menuId, _menuButtonId, _expanded, _disabled, _trigger2, _content2, _parentMenu, _submenus, _menuObserver, _popper, _focus, _isSliderActive, _isTriggerDisabled, _transitionCallbacks, _Menu_instances, observeSliders_fn, watchExpanded_fn, attachMenuButton_fn, attachMenuItems_fn, attachObserver_fn, updateMenuItemsHidden_fn, disableMenuButton_fn, _wasKeyboardExpand, onExpandedChange_fn, updateFocus_fn, isExpanded_fn, isDisabled_fn6, disable_fn, onPointerUp_fn, onWindowPointerUp_fn, getCloseTarget_fn, toggleMediaControls_fn, addSubmenu_fn, _removeSubmenuBind, removeSubmenu_fn, _isSubmenuOpen, _onSubmenuOpenBind, onSubmenuOpen_fn, _onSubmenuCloseBind, onSubmenuClose_fn, _onResize, _isTransitionActive, onResizeTransition_fn;
-  var Menu = (_a94 = class extends Component2 {
+  var _a105, _media35, _menuId, _menuButtonId, _expanded, _disabled, _trigger2, _content2, _parentMenu, _submenus, _menuObserver, _popper, _focus, _isSliderActive, _isTriggerDisabled, _transitionCallbacks, _Menu_instances, observeSliders_fn, watchExpanded_fn, attachMenuButton_fn, attachMenuItems_fn, attachObserver_fn, updateMenuItemsHidden_fn, disableMenuButton_fn, _wasKeyboardExpand, onExpandedChange_fn, updateFocus_fn, isExpanded_fn, isDisabled_fn6, disable_fn, onPointerUp_fn, onWindowPointerUp_fn, getCloseTarget_fn, toggleMediaControls_fn, addSubmenu_fn, _removeSubmenuBind, removeSubmenu_fn, _isSubmenuOpen, _onSubmenuOpenBind, onSubmenuOpen_fn, _onSubmenuCloseBind, onSubmenuClose_fn, _onResize, _isTransitionActive, onResizeTransition_fn;
+  var Menu = (_a105 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _Menu_instances);
@@ -19134,7 +24975,7 @@ var PortalUI = (() => {
       __privateSet(this, _menuId, `media-menu-${currentIdCount}`);
       __privateSet(this, _menuButtonId, `media-menu-button-${currentIdCount}`);
       __privateSet(this, _focus, new MenuFocusController({ closeMenu: this.close.bind(this) }));
-      if (hasProvidedContext(menuContext)) __privateSet(this, _parentMenu, useContext2(menuContext));
+      if (hasProvidedContext(menuContext)) __privateSet(this, _parentMenu, useContext5(menuContext));
       __privateMethod(this, _Menu_instances, observeSliders_fn).call(this);
       this.setAttributes({
         "data-open": __privateGet(this, _expanded),
@@ -19193,7 +25034,7 @@ var PortalUI = (() => {
       tick();
     }
   }, _media35 = new WeakMap(), _menuId = new WeakMap(), _menuButtonId = new WeakMap(), _expanded = new WeakMap(), _disabled = new WeakMap(), _trigger2 = new WeakMap(), _content2 = new WeakMap(), _parentMenu = new WeakMap(), _submenus = new WeakMap(), _menuObserver = new WeakMap(), _popper = new WeakMap(), _focus = new WeakMap(), _isSliderActive = new WeakMap(), _isTriggerDisabled = new WeakMap(), _transitionCallbacks = new WeakMap(), _Menu_instances = new WeakSet(), observeSliders_fn = function() {
-    let sliderActiveTimer = -1, parentSliderObserver = hasProvidedContext(sliderObserverContext) ? useContext2(sliderObserverContext) : null;
+    let sliderActiveTimer = -1, parentSliderObserver = hasProvidedContext(sliderObserverContext) ? useContext5(sliderObserverContext) : null;
     provideContext(sliderObserverContext, {
       onDragStart: () => {
         parentSliderObserver?.onDragStart?.();
@@ -19369,14 +25210,14 @@ var PortalUI = (() => {
       if (__privateGet(this, _expanded).call(this)) __privateMethod(this, _Menu_instances, updateFocus_fn).call(this);
     }
     for (const callback of __privateGet(this, _transitionCallbacks)) callback(event);
-  }, __publicField(_a94, "props", { showDelay: 0 }), _a94);
+  }, __publicField(_a105, "props", { showDelay: 0 }), _a105);
   __decorate([prop], Menu.prototype, "triggerElement", null);
   __decorate([prop], Menu.prototype, "contentElement", null);
   __decorate([prop], Menu.prototype, "isSubmenu", null);
   __decorate([method], Menu.prototype, "open", null);
   __decorate([method], Menu.prototype, "close", null);
-  var _a95, _menu, _hintEl, _MenuButton_instances, watchDisabled_fn2, watchHintEl_fn, onMutation_fn2;
-  var MenuButton = (_a95 = class extends Component2 {
+  var _a106, _menu, _hintEl, _MenuButton_instances, watchDisabled_fn2, watchHintEl_fn, onMutation_fn2;
+  var MenuButton = (_a106 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _MenuButton_instances);
@@ -19388,7 +25229,7 @@ var PortalUI = (() => {
       return __privateGet(this, _menu)?.expanded() ?? false;
     }
     onSetup() {
-      __privateSet(this, _menu, useContext2(menuContext));
+      __privateSet(this, _menu, useContext5(menuContext));
     }
     onAttach(el) {
       __privateGet(this, _menu).attachMenuButton(this);
@@ -19421,14 +25262,14 @@ var PortalUI = (() => {
   }, onMutation_fn2 = function() {
     const hintEl = this.el?.querySelector('[data-part="hint"]');
     __privateGet(this, _hintEl).set(hintEl ?? null);
-  }, __publicField(_a95, "props", { disabled: false }), _a95);
+  }, __publicField(_a106, "props", { disabled: false }), _a106);
   var menubutton__proto = MenuButton.prototype;
   prop(menubutton__proto, "expanded");
   var MenuItem2 = class extends MenuButton {
   };
-  var menuPortalContext = createContext2();
-  var _a96, _menu2, _MenuItems_instances, watchPlacement_fn2, hide_fn, getButton_fn2;
-  var MenuItems = (_a96 = class extends Component2 {
+  var menuPortalContext = createContext5();
+  var _a107, _menu2, _MenuItems_instances, watchPlacement_fn2, hide_fn, getButton_fn2;
+  var MenuItems = (_a107 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _MenuItems_instances);
@@ -19438,10 +25279,10 @@ var PortalUI = (() => {
       this.setAttributes({ "data-placement": placement });
     }
     onAttach(el) {
-      __privateSet(this, _menu2, useContext2(menuContext));
+      __privateSet(this, _menu2, useContext5(menuContext));
       __privateGet(this, _menu2).attachMenuItems(this);
       if (hasProvidedContext(menuPortalContext)) {
-        const portal = useContext2(menuPortalContext);
+        const portal = useContext5(menuPortalContext);
         if (portal) {
           provideContext(menuPortalContext, null);
           portal.attach(el);
@@ -19476,14 +25317,14 @@ var PortalUI = (() => {
     this.el.style.display = "none";
   }, getButton_fn2 = function() {
     return __privateGet(this, _menu2).button();
-  }, __publicField(_a96, "props", {
+  }, __publicField(_a107, "props", {
     placement: null,
     offset: 0,
     alignOffset: 0
-  }), _a96);
-  var radioControllerContext = createContext2();
-  var _group, _value, _controller4, _RadioGroupController_instances, addRadio_fn, removeRadio_fn, _onChangeBind, onChange_fn4, findRadio_fn, _a97;
-  var RadioGroupController = (_a97 = class extends ViewController {
+  }), _a107);
+  var radioControllerContext = createContext5();
+  var _group, _value, _controller4, _RadioGroupController_instances, addRadio_fn, removeRadio_fn, _onChangeBind, onChange_fn4, findRadio_fn, _a108;
+  var RadioGroupController = (_a108 = class extends ViewController {
     constructor() {
       super(...arguments);
       __privateAdd(this, _RadioGroupController_instances);
@@ -19534,9 +25375,9 @@ var PortalUI = (() => {
   }, findRadio_fn = function(newValue) {
     for (const radio of __privateGet(this, _group)) if (newValue === peek(radio.value)) return radio;
     return null;
-  }, _a97);
-  var _a98, _controller5, _RadioGroup_instances, watchValue_fn3, onValueChange_fn6;
-  var RadioGroup = (_a98 = class extends Component2 {
+  }, _a108);
+  var _a109, _controller5, _RadioGroup_instances, watchValue_fn3, onValueChange_fn6;
+  var RadioGroup = (_a109 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _RadioGroup_instances);
@@ -19571,12 +25412,12 @@ var PortalUI = (() => {
       trigger
     });
     this.dispatch(event);
-  }, __publicField(_a98, "props", { value: "" }), _a98);
+  }, __publicField(_a109, "props", { value: "" }), _a109);
   var radiogroup__proto = RadioGroup.prototype;
   prop(radiogroup__proto, "values");
   prop(radiogroup__proto, "value");
-  var _a99, _checked, _controller6, _Radio_instances, onDisconnect_fn5, addToGroup_fn, watchValue_fn4, onPress_fn10, check_fn, onChange_fn5, onSelect_fn;
-  var Radio = (_a99 = class extends Component2 {
+  var _a110, _checked, _controller6, _Radio_instances, onDisconnect_fn5, addToGroup_fn, watchValue_fn4, onPress_fn10, check_fn, onChange_fn5, onSelect_fn;
+  var Radio = (_a110 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _Radio_instances);
@@ -19614,10 +25455,10 @@ var PortalUI = (() => {
     }
   }, _checked = new WeakMap(), _controller6 = new WeakMap(), _Radio_instances = new WeakSet(), onDisconnect_fn5 = function() {
     scoped(() => {
-      useContext2(radioControllerContext).remove(__privateGet(this, _controller6));
+      useContext5(radioControllerContext).remove(__privateGet(this, _controller6));
     }, this.connectScope);
   }, addToGroup_fn = function() {
-    useContext2(radioControllerContext).add(__privateGet(this, _controller6));
+    useContext5(radioControllerContext).add(__privateGet(this, _controller6));
   }, watchValue_fn4 = function() {
     const { value } = this.$props, newValue = value();
     if (peek(__privateGet(this, _checked))) __privateGet(this, _controller6).onCheck?.(newValue);
@@ -19637,16 +25478,16 @@ var PortalUI = (() => {
     });
   }, onSelect_fn = function(trigger) {
     this.dispatch("select", { trigger });
-  }, __publicField(_a99, "props", { value: "" }), _a99);
+  }, __publicField(_a110, "props", { value: "" }), _a110);
   var radio__proto = Radio.prototype;
   prop(radio__proto, "checked");
-  var _a100, _media36, _provider4, _touchStart, _Gesture_instances, attachListener_fn, _presses, _pressTimerId, acceptEvent_fn, onTouchStart_fn2, isTouchScroll_fn, handleEvent_fn, inBounds_fn, isTopLayer_fn, performAction_fn;
-  var Gesture = (_a100 = class extends Component2 {
+  var _a111, _media36, _provider5, _touchStart, _Gesture_instances, attachListener_fn, _presses, _pressTimerId, acceptEvent_fn, onTouchStart_fn2, isTouchScroll_fn, handleEvent_fn, inBounds_fn, isTopLayer_fn, performAction_fn;
+  var Gesture = (_a111 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Gesture_instances);
       __privateAdd(this, _media36);
-      __privateAdd(this, _provider4, null);
+      __privateAdd(this, _provider5, null);
       __privateAdd(this, _touchStart, null);
       __privateAdd(this, _presses, 0);
       __privateAdd(this, _pressTimerId, -1);
@@ -19664,20 +25505,20 @@ var PortalUI = (() => {
       el.style.setProperty("pointer-events", "none");
     }
     onConnect(el) {
-      __privateSet(this, _provider4, __privateGet(this, _media36).player.el?.querySelector("[data-media-provider]"));
+      __privateSet(this, _provider5, __privateGet(this, _media36).player.el?.querySelector("[data-media-provider]"));
       effect(__privateMethod(this, _Gesture_instances, attachListener_fn).bind(this));
     }
-  }, _media36 = new WeakMap(), _provider4 = new WeakMap(), _touchStart = new WeakMap(), _Gesture_instances = new WeakSet(), attachListener_fn = function() {
+  }, _media36 = new WeakMap(), _provider5 = new WeakMap(), _touchStart = new WeakMap(), _Gesture_instances = new WeakSet(), attachListener_fn = function() {
     let eventType = this.$props.event(), disabled = this.$props.disabled();
-    if (!__privateGet(this, _provider4) || !eventType || disabled) return;
+    if (!__privateGet(this, _provider5) || !eventType || disabled) return;
     if (/^dbl/.test(eventType)) eventType = eventType.split(/^dbl/)[1];
     if (eventType === "pointerup" || eventType === "pointerdown") {
       if (__privateGet(this, _media36).$state.pointer() === "coarse") {
-        if (eventType === "pointerup") listenEvent(__privateGet(this, _provider4), "touchstart", __privateMethod(this, _Gesture_instances, onTouchStart_fn2).bind(this), { passive: true });
+        if (eventType === "pointerup") listenEvent(__privateGet(this, _provider5), "touchstart", __privateMethod(this, _Gesture_instances, onTouchStart_fn2).bind(this), { passive: true });
         eventType = eventType === "pointerup" ? "touchend" : "touchstart";
       }
     }
-    listenEvent(__privateGet(this, _provider4), eventType, __privateMethod(this, _Gesture_instances, acceptEvent_fn).bind(this), { passive: false });
+    listenEvent(__privateGet(this, _provider5), eventType, __privateMethod(this, _Gesture_instances, acceptEvent_fn).bind(this), { passive: false });
   }, _presses = new WeakMap(), _pressTimerId = new WeakMap(), acceptEvent_fn = function(event) {
     if (this.$props.disabled() || isPointerEvent(event) && (event.button !== 0 || __privateGet(this, _media36).activeMenu) || isTouchEvent(event) && __privateGet(this, _media36).activeMenu || __privateMethod(this, _Gesture_instances, isTouchScroll_fn).call(this, event) || isTouchPinchEvent(event) || !__privateMethod(this, _Gesture_instances, inBounds_fn).call(this, event)) return;
     event.MEDIA_GESTURE = true;
@@ -19753,13 +25594,13 @@ var PortalUI = (() => {
       detail: action,
       trigger
     });
-  }, __publicField(_a100, "props", {
+  }, __publicField(_a111, "props", {
     disabled: false,
     event: void 0,
     action: void 0
-  }), _a100);
-  var _track2, _renderer, _events2, _CaptionsTextRenderer_instances, changeTrack_fn, _a101;
-  var CaptionsTextRenderer = (_a101 = class {
+  }), _a111);
+  var _track2, _renderer, _events2, _CaptionsTextRenderer_instances, changeTrack_fn, _a112;
+  var CaptionsTextRenderer = (_a112 = class {
     constructor(renderer) {
       __privateAdd(this, _CaptionsTextRenderer_instances);
       __publicField(this, "priority", 10);
@@ -19799,9 +25640,9 @@ var PortalUI = (() => {
       cues: [...track.cues],
       regions: [...track.regions]
     });
-  }, _a101);
-  var _a102, _media37, _Captions_instances, isHidden_fn2, watchViewType_fn, setupAudioView_fn, onTrackChange_fn3, onCueChange_fn, onUpdateTimedNodes_fn, setupVideoView_fn, watchTextDirection_fn, watchMediaTime_fn, listenToFontStyleChanges_fn, onFontStyleChange_fn, showExample_fn, _hideExampleTimer, hideExample_fn, removeExample_fn, createCueDisplayElement_fn, createCueElement_fn;
-  var Captions = (_a102 = class extends Component2 {
+  }, _a112);
+  var _a113, _media37, _Captions_instances, isHidden_fn2, watchViewType_fn, setupAudioView_fn, onTrackChange_fn3, onCueChange_fn, onUpdateTimedNodes_fn, setupVideoView_fn, watchTextDirection_fn, watchMediaTime_fn, listenToFontStyleChanges_fn, onFontStyleChange_fn, showExample_fn, _hideExampleTimer, hideExample_fn, removeExample_fn, createCueDisplayElement_fn, createCueElement_fn;
+  var Captions = (_a113 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Captions_instances);
@@ -19816,14 +25657,14 @@ var PortalUI = (() => {
       el.style.setProperty("pointer-events", "none");
     }
     onConnect(el) {
-      if (!_a102.lib()) Promise.resolve().then(() => (init_prod2(), prod_exports)).then((lib) => _a102.lib.set(lib));
+      if (!_a113.lib()) Promise.resolve().then(() => (init_prod2(), prod_exports)).then((lib) => _a113.lib.set(lib));
       effect(__privateMethod(this, _Captions_instances, watchViewType_fn).bind(this));
     }
   }, _media37 = new WeakMap(), _Captions_instances = new WeakSet(), isHidden_fn2 = function() {
     const { textTrack, remotePlaybackState, iOSControls } = __privateGet(this, _media37).$state, track = textTrack();
     return iOSControls() || remotePlaybackState() === "connected" || !track || !isTrackCaptionKind(track);
   }, watchViewType_fn = function() {
-    if (!_a102.lib()) return;
+    if (!_a113.lib()) return;
     const { viewType } = __privateGet(this, _media37).$state;
     if (viewType() === "audio") return __privateMethod(this, _Captions_instances, setupAudioView_fn).call(this);
     else return __privateMethod(this, _Captions_instances, setupVideoView_fn).call(this);
@@ -19842,7 +25683,7 @@ var PortalUI = (() => {
   }, onCueChange_fn = function() {
     this.el.textContent = "";
     if (__privateGet(this, _hideExampleTimer) >= 0) __privateMethod(this, _Captions_instances, removeExample_fn).call(this);
-    const { realCurrentTime, textTrack } = __privateGet(this, _media37).$state, { renderVTTCueString: renderVTTCueString2 } = _a102.lib(), time = peek(realCurrentTime), activeCues = peek(textTrack).activeCues;
+    const { realCurrentTime, textTrack } = __privateGet(this, _media37).$state, { renderVTTCueString: renderVTTCueString2 } = _a113.lib(), time = peek(realCurrentTime), activeCues = peek(textTrack).activeCues;
     for (const cue of activeCues) {
       const displayEl = __privateMethod(this, _Captions_instances, createCueDisplayElement_fn).call(this), cueEl = __privateMethod(this, _Captions_instances, createCueElement_fn).call(this);
       cueEl.innerHTML = renderVTTCueString2(cue, time);
@@ -19850,10 +25691,10 @@ var PortalUI = (() => {
       this.el.append(cueEl);
     }
   }, onUpdateTimedNodes_fn = function() {
-    const { realCurrentTime } = __privateGet(this, _media37).$state, { updateTimedVTTCueNodes: updateTimedVTTCueNodes2 } = _a102.lib();
+    const { realCurrentTime } = __privateGet(this, _media37).$state, { updateTimedVTTCueNodes: updateTimedVTTCueNodes2 } = _a113.lib();
     updateTimedVTTCueNodes2(this.el, realCurrentTime());
   }, setupVideoView_fn = function() {
-    const { CaptionsRenderer: CaptionsRenderer2 } = _a102.lib(), renderer = new CaptionsRenderer2(this.el), textRenderer = new CaptionsTextRenderer(renderer);
+    const { CaptionsRenderer: CaptionsRenderer2 } = _a113.lib(), renderer = new CaptionsRenderer2(this.el), textRenderer = new CaptionsTextRenderer(renderer);
     __privateGet(this, _media37).textRenderers.add(textRenderer);
     effect(__privateMethod(this, _Captions_instances, watchTextDirection_fn).bind(this, renderer));
     effect(__privateMethod(this, _Captions_instances, watchMediaTime_fn).bind(this, renderer));
@@ -19907,12 +25748,12 @@ var PortalUI = (() => {
     const el = document.createElement("div");
     setAttribute(el, "data-part", "cue");
     return el;
-  }, __publicField(_a102, "props", {
+  }, __publicField(_a113, "props", {
     textDir: "ltr",
     exampleText: "Captions look like this."
-  }), __publicField(_a102, "lib", signal(null)), _a102);
-  var _a103, _media38, _Poster_instances, hasError_fn3, onPreconnect_fn, watchHidden_fn4, isLoading_fn3, watchImg_fn2, _prevSrc, watchSrc_fn3, watchAlt_fn, watchCrossOrigin_fn4, onLoadStart_fn5, onLoad_fn, onError_fn9;
-  var Poster = (_a103 = class extends Component2 {
+  }), __publicField(_a113, "lib", signal(null)), _a113);
+  var _a114, _media38, _Poster_instances, hasError_fn3, onPreconnect_fn, watchHidden_fn4, isLoading_fn3, watchImg_fn2, _prevSrc, watchSrc_fn3, watchAlt_fn, watchCrossOrigin_fn4, onLoadStart_fn5, onLoad_fn, onError_fn9;
+  var Poster = (_a114 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Poster_instances);
@@ -19987,11 +25828,11 @@ var PortalUI = (() => {
     const { loading, error } = this.$state;
     loading.set(false);
     error.set(event);
-  }, __publicField(_a103, "props", {
+  }, __publicField(_a114, "props", {
     src: null,
     alt: null,
     crossOrigin: null
-  }), __publicField(_a103, "state", new State({
+  }), __publicField(_a114, "state", new State({
     img: null,
     src: null,
     alt: null,
@@ -19999,9 +25840,9 @@ var PortalUI = (() => {
     loading: true,
     error: null,
     hidden: false
-  })), _a103);
-  var _a104, _media39, _invert, _isVisible2, _isIntersecting2, _Time_instances, onIntersectionChange_fn2, watchHidden_fn5, watchToggle_fn, watchTime_fn, watchRole_fn, getSeconds_fn, shouldInvert_fn, onToggle_fn;
-  var Time = (_a104 = class extends Component2 {
+  })), _a114);
+  var _a115, _media39, _invert, _isVisible2, _isIntersecting2, _Time_instances, onIntersectionChange_fn2, watchHidden_fn5, watchToggle_fn, watchTime_fn, watchRole_fn, getSeconds_fn, shouldInvert_fn, onToggle_fn;
+  var Time = (_a115 = class extends Component2 {
     constructor() {
       super(...arguments);
       __privateAdd(this, _Time_instances);
@@ -20078,7 +25919,7 @@ var PortalUI = (() => {
       return;
     }
     __privateGet(this, _invert).set((v) => !v);
-  }, __publicField(_a104, "props", {
+  }, __publicField(_a115, "props", {
     type: "current",
     showHours: false,
     padHours: null,
@@ -20086,10 +25927,10 @@ var PortalUI = (() => {
     remainder: false,
     toggle: false,
     hidden: false
-  }), __publicField(_a104, "state", new State({
+  }), __publicField(_a115, "state", new State({
     timeText: "",
     hidden: false
-  })), _a104);
+  })), _a115);
   var MediaPlayerInstance = class extends MediaPlayer {
   };
   var MediaProviderInstance = class extends MediaProvider {
@@ -20170,44 +26011,44 @@ var PortalUI = (() => {
   };
   var TimeInstance = class extends Time {
   };
-  var Slot = React5.forwardRef((props, forwardedRef) => {
+  var Slot = React13.forwardRef((props, forwardedRef) => {
     const { children, ...slotProps } = props;
-    const childrenArray = React5.Children.toArray(children);
+    const childrenArray = React13.Children.toArray(children);
     const slottable = childrenArray.find(isSlottable);
     if (slottable) {
       const newElement = slottable.props.children;
       const newChildren = childrenArray.map((child) => {
         if (child === slottable) {
-          if (React5.Children.count(newElement) > 1) return React5.Children.only(null);
-          return React5.isValidElement(newElement) ? newElement.props.children : null;
+          if (React13.Children.count(newElement) > 1) return React13.Children.only(null);
+          return React13.isValidElement(newElement) ? newElement.props.children : null;
         } else return child;
       });
-      return /* @__PURE__ */ React5.createElement(SlotClone, {
+      return /* @__PURE__ */ React13.createElement(SlotClone, {
         ...slotProps,
         ref: forwardedRef
-      }, React5.isValidElement(newElement) ? React5.cloneElement(newElement, void 0, newChildren) : null);
+      }, React13.isValidElement(newElement) ? React13.cloneElement(newElement, void 0, newChildren) : null);
     }
-    return /* @__PURE__ */ React5.createElement(SlotClone, {
+    return /* @__PURE__ */ React13.createElement(SlotClone, {
       ...slotProps,
       ref: forwardedRef
     }, children);
   });
   Slot.displayName = "Slot";
-  var SlotClone = React5.forwardRef((props, forwardedRef) => {
+  var SlotClone = React13.forwardRef((props, forwardedRef) => {
     const { children, ...slotProps } = props;
-    if (React5.isValidElement(children)) {
+    if (React13.isValidElement(children)) {
       const childrenRef = getElementRef(children), props2 = mergeProps(slotProps, children.props);
-      if (children.type !== React5.Fragment) props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
-      return React5.cloneElement(children, props2);
+      if (children.type !== React13.Fragment) props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
+      return React13.cloneElement(children, props2);
     }
-    return React5.Children.count(children) > 1 ? React5.Children.only(null) : null;
+    return React13.Children.count(children) > 1 ? React13.Children.only(null) : null;
   });
   SlotClone.displayName = "SlotClone";
   var Slottable = ({ children }) => {
-    return /* @__PURE__ */ React5.createElement(React5.Fragment, null, children);
+    return /* @__PURE__ */ React13.createElement(React13.Fragment, null, children);
   };
   function isSlottable(child) {
-    return React5.isValidElement(child) && child.type === Slottable;
+    return React13.isValidElement(child) && child.type === Slottable;
   }
   function mergeProps(slotProps, childProps) {
     const overrideProps = { ...childProps };
@@ -20247,10 +26088,10 @@ var PortalUI = (() => {
     "video",
     "audio"
   ].reduce((primitives, node) => {
-    const Node2 = React5.forwardRef((props, forwardedRef) => {
+    const Node2 = React13.forwardRef((props, forwardedRef) => {
       const { asChild, ...primitiveProps } = props;
       const Comp = asChild ? Slot : node;
-      return /* @__PURE__ */ React5.createElement(Comp, {
+      return /* @__PURE__ */ React13.createElement(Comp, {
         ...primitiveProps,
         ref: forwardedRef
       });
@@ -20284,7 +26125,7 @@ var PortalUI = (() => {
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-BEp8cIq7.js
   init_define_import_meta_env();
   init_vidstack_B9fTkxQO();
-  var import_react19 = __toESM(require_react_shim(), 1);
+  var import_react35 = __toESM(require_react_shim(), 1);
   var sliderStateRecord = SliderInstance.state.record;
   var initialSliderStore = Object.keys(sliderStateRecord).reduce((store, prop2) => ({
     ...store,
@@ -20298,72 +26139,72 @@ var PortalUI = (() => {
   }
 
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-B7Z5edeb.js
-  var React6 = __toESM(require_react_shim(), 1);
+  var React14 = __toESM(require_react_shim(), 1);
   var import_react_dom = __toESM(require_react_dom_shim(), 1);
   function useMediaContext2() {
     return useReactContext(mediaContext);
   }
   var AirPlayButtonBridge = createReactComponent(AirPlayButtonInstance, { domEventsRegex: /^onMedia/ });
-  var AirPlayButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(AirPlayButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var AirPlayButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(AirPlayButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   AirPlayButton2.displayName = "AirPlayButton";
   var PlayButtonBridge = createReactComponent(PlayButtonInstance, { domEventsRegex: /^onMedia/ });
-  var PlayButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(PlayButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var PlayButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(PlayButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   PlayButton2.displayName = "PlayButton";
   var CaptionButtonBridge = createReactComponent(CaptionButtonInstance, { domEventsRegex: /^onMedia/ });
-  var CaptionButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(CaptionButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var CaptionButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(CaptionButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   CaptionButton2.displayName = "CaptionButton";
   var FullscreenButtonBridge = createReactComponent(FullscreenButtonInstance, { domEventsRegex: /^onMedia/ });
-  var FullscreenButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(FullscreenButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var FullscreenButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(FullscreenButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   FullscreenButton2.displayName = "FullscreenButton";
   var MuteButtonBridge = createReactComponent(MuteButtonInstance, { domEventsRegex: /^onMedia/ });
-  var MuteButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(MuteButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var MuteButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(MuteButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   MuteButton2.displayName = "MuteButton";
   var PIPButtonBridge = createReactComponent(PIPButtonInstance, { domEventsRegex: /^onMedia/ });
-  var PIPButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(PIPButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var PIPButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(PIPButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   PIPButton2.displayName = "PIPButton";
   var SeekButtonBridge = createReactComponent(SeekButtonInstance, { domEventsRegex: /^onMedia/ });
-  var SeekButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(SeekButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var SeekButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(SeekButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   SeekButton2.displayName = "SeekButton";
   var LiveButtonBridge = createReactComponent(LiveButtonInstance, { domEventsRegex: /^onMedia/ });
-  var LiveButton2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(LiveButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var LiveButton2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(LiveButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   LiveButton2.displayName = "LiveButton";
@@ -20376,51 +26217,51 @@ var PortalUI = (() => {
   ];
   var SliderValueBridge = createReactComponent(SliderValueInstance);
   var SliderBridge = createReactComponent(SliderInstance, { events: sliderCallbacks });
-  var Root$5 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(SliderBridge, {
+  var Root$5 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(SliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, props2, children));
   });
   Root$5.displayName = "Slider";
-  var Thumb = React6.forwardRef((props, forwardRef8) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Thumb = React14.forwardRef((props, forwardRef9) => /* @__PURE__ */ React14.createElement(Primitive.div, {
     ...props,
-    ref: forwardRef8
+    ref: forwardRef9
   }));
   Thumb.displayName = "SliderThumb";
-  var Track = React6.forwardRef((props, forwardRef8) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Track = React14.forwardRef((props, forwardRef9) => /* @__PURE__ */ React14.createElement(Primitive.div, {
     ...props,
-    ref: forwardRef8
+    ref: forwardRef9
   }));
   Track.displayName = "SliderTrack";
-  var TrackFill = React6.forwardRef((props, forwardRef8) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var TrackFill = React14.forwardRef((props, forwardRef9) => /* @__PURE__ */ React14.createElement(Primitive.div, {
     ...props,
-    ref: forwardRef8
+    ref: forwardRef9
   }));
   TrackFill.displayName = "SliderTrackFill";
   var PreviewBridge = createReactComponent(SliderPreviewInstance);
-  var Preview = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(PreviewBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Preview = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(PreviewBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Preview.displayName = "SliderPreview";
-  var Value = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(SliderValueBridge, props, (props2, instance) => {
+  var Value = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(SliderValueBridge, props, (props2, instance) => {
       const $text = useSignal(() => instance.getValueText(), instance);
-      return /* @__PURE__ */ React6.createElement(Primitive.div, {
+      return /* @__PURE__ */ React14.createElement(Primitive.div, {
         ...props2,
-        ref: forwardRef8
+        ref: forwardRef9
       }, $text, children);
     });
   });
   Value.displayName = "SliderValue";
-  var Steps = React6.forwardRef(({ children, ...props }, forwardRef8) => {
+  var Steps = React14.forwardRef(({ children, ...props }, forwardRef9) => {
     const $min = useSliderState("min"), $max = useSliderState("max"), $step = useSliderState("step"), steps = ($max - $min) / $step;
-    return /* @__PURE__ */ React6.createElement(Primitive.div, {
+    return /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, Array.from({ length: Math.floor(steps) + 1 }).map((_, step) => children(step)));
   });
   Steps.displayName = "SliderSteps";
@@ -20428,11 +26269,11 @@ var PortalUI = (() => {
     events: sliderCallbacks,
     domEventsRegex: /^onMedia/
   });
-  var Root$4 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(VolumeSliderBridge, {
+  var Root$4 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(VolumeSliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, props2, children));
   });
   Root$4.displayName = "VolumeSlider";
   function createVTTCue(startTime = 0, endTime = 0, text = "") {
@@ -20440,9 +26281,9 @@ var PortalUI = (() => {
       startTime,
       endTime,
       text,
-      addEventListener: noop,
-      removeEventListener: noop,
-      dispatchEvent: noop
+      addEventListener: noop3,
+      removeEventListener: noop3,
+      dispatchEvent: noop3
     };
     return new window.VTTCue(startTime, endTime, text);
   }
@@ -20452,53 +26293,53 @@ var PortalUI = (() => {
     return url.toString();
   }
   var ThumbnailBridge = createReactComponent(ThumbnailInstance);
-  var Root$3 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(ThumbnailBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Root$3 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(ThumbnailBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Root$3.displayName = "Thumbnail";
-  var Img = React6.forwardRef(({ children, ...props }, forwardRef8) => {
+  var Img = React14.forwardRef(({ children, ...props }, forwardRef9) => {
     const { src, img, crossOrigin } = useStateContext(ThumbnailInstance.state), $src = useSignal(src), $crossOrigin = useSignal(crossOrigin);
-    return /* @__PURE__ */ React6.createElement(Primitive.img, {
+    return /* @__PURE__ */ React14.createElement(Primitive.img, {
       crossOrigin: $crossOrigin,
       ...props,
       src: $src || void 0,
-      ref: composeRefs(img.set, forwardRef8)
+      ref: composeRefs(img.set, forwardRef9)
     }, children);
   });
   Img.displayName = "ThumbnailImg";
-  var TimeSliderContext = React6.createContext({ $chapters: signal(null) });
+  var TimeSliderContext = React14.createContext({ $chapters: signal(null) });
   TimeSliderContext.displayName = "TimeSliderContext";
   var TimeSliderBridge = createReactComponent(TimeSliderInstance, {
     events: sliderCallbacks,
     domEventsRegex: /^onMedia/
   });
-  var Root$2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    const $chapters = React6.useMemo(() => signal(null), []);
-    return /* @__PURE__ */ React6.createElement(TimeSliderContext.Provider, { value: { $chapters } }, /* @__PURE__ */ React6.createElement(TimeSliderBridge, {
+  var Root$2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    const $chapters = React14.useMemo(() => signal(null), []);
+    return /* @__PURE__ */ React14.createElement(TimeSliderContext.Provider, { value: { $chapters } }, /* @__PURE__ */ React14.createElement(TimeSliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, props2, children)));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, props2, children)));
   });
   Root$2.displayName = "TimeSlider";
   var SliderChaptersBridge = createReactComponent(SliderChaptersInstance);
-  var Chapters = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(SliderChaptersBridge, props, (props2, instance) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Chapters = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(SliderChaptersBridge, props, (props2, instance) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
-    }, /* @__PURE__ */ React6.createElement(ChapterTracks, { instance }, children)));
+      ref: composeRefs(props2.ref, forwardRef9)
+    }, /* @__PURE__ */ React14.createElement(ChapterTracks, { instance }, children)));
   });
   Chapters.displayName = "SliderChapters";
   function ChapterTracks({ instance, children }) {
-    const $cues = useSignal(() => instance.cues, instance), refs = React6.useRef([]), emptyCue = React6.useRef(null), { $chapters } = React6.useContext(TimeSliderContext);
+    const $cues = useSignal(() => instance.cues, instance), refs = React14.useRef([]), emptyCue = React14.useRef(null), { $chapters } = React14.useContext(TimeSliderContext);
     if (!emptyCue.current) emptyCue.current = createVTTCue();
-    React6.useEffect(() => {
+    React14.useEffect(() => {
       $chapters.set(instance);
       return () => void $chapters.set(null);
     }, [instance]);
-    React6.useEffect(() => {
+    React14.useEffect(() => {
       instance.setRefs(refs.current);
     }, [$cues]);
     return children($cues.length ? $cues : [emptyCue.current], (el) => {
@@ -20510,30 +26351,30 @@ var PortalUI = (() => {
     });
   }
   ChapterTracks.displayName = "SliderChapterTracks";
-  var ChapterTitle = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    const { $chapters } = React6.useContext(TimeSliderContext), [title, setTitle] = React6.useState();
-    React6.useEffect(() => {
+  var ChapterTitle = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    const { $chapters } = React14.useContext(TimeSliderContext), [title, setTitle] = React14.useState();
+    React14.useEffect(() => {
       return effect(() => {
         const chapters = $chapters();
         setTitle((chapters?.activePointerCue || chapters?.activeCue)?.text || "");
       });
     }, []);
-    return /* @__PURE__ */ React6.createElement(Primitive.div, {
+    return /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, title, children);
   });
   ChapterTitle.displayName = "SliderChapterTitle";
-  var Progress = React6.forwardRef((props, forwardRef8) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Progress = React14.forwardRef((props, forwardRef9) => /* @__PURE__ */ React14.createElement(Primitive.div, {
     ...props,
-    ref: forwardRef8
+    ref: forwardRef9
   }));
   Progress.displayName = "SliderProgress";
   var SliderThumbnailBridge = createReactComponent(SliderThumbnailInstance);
-  var ThumbnailRoot = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(SliderThumbnailBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var ThumbnailRoot = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(SliderThumbnailBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   ThumbnailRoot.displayName = "SliderThumbnail";
@@ -20542,17 +26383,17 @@ var PortalUI = (() => {
     Img
   };
   var VideoBridge = createReactComponent(SliderVideoInstance, { events: ["onCanPlay", "onError"] });
-  var Video = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(VideoBridge, props, (props2, instance) => /* @__PURE__ */ React6.createElement(VideoProvider2, {
+  var Video = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(VideoBridge, props, (props2, instance) => /* @__PURE__ */ React14.createElement(VideoProvider2, {
       ...props2,
       instance,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Video.displayName = "SliderVideo";
-  var VideoProvider2 = React6.forwardRef(({ instance, children, ...props }, forwardRef8) => {
+  var VideoProvider2 = React14.forwardRef(({ instance, children, ...props }, forwardRef9) => {
     const { canLoad } = useStateContext(mediaState), { src, video, crossOrigin } = instance.$state, $src = useSignal(src), $canLoad = useSignal(canLoad), $crossOrigin = useSignal(crossOrigin);
-    return /* @__PURE__ */ React6.createElement(Primitive.video, {
+    return /* @__PURE__ */ React14.createElement(Primitive.video, {
       style: { maxWidth: "unset" },
       ...props,
       src: $src || void 0,
@@ -20560,23 +26401,23 @@ var PortalUI = (() => {
       playsInline: true,
       preload: $canLoad ? "auto" : "none",
       crossOrigin: $crossOrigin || void 0,
-      ref: composeRefs(video.set, forwardRef8)
+      ref: composeRefs(video.set, forwardRef9)
     }, children);
   });
   VideoProvider2.displayName = "SliderVideoProvider";
   var RadioGroupBridge = createReactComponent(RadioGroupInstance, { events: ["onChange"] });
-  var Root$1 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(RadioGroupBridge, {
+  var Root$1 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(RadioGroupBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, props2, children));
   });
   Root$1.displayName = "RadioGroup";
   var ItemBridge$1 = createReactComponent(RadioInstance, { events: ["onChange", "onSelect"] });
-  var Item$1 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(ItemBridge$1, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Item$1 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(ItemBridge$1, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Item$1.displayName = "RadioItem";
@@ -20584,11 +26425,11 @@ var PortalUI = (() => {
     events: ["onOpen", "onClose"],
     domEventsRegex: /^onMedia/
   });
-  var Root = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(MenuBridge, {
+  var Root = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(MenuBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2, instance) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+      ref: forwardRef9
+    }, (props2, instance) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
       style: {
         display: !instance.isSubmenu ? "contents" : void 0,
@@ -20598,67 +26439,67 @@ var PortalUI = (() => {
   });
   Root.displayName = "Menu";
   var ButtonBridge = createReactComponent(MenuButtonInstance, { events: ["onSelect"] });
-  var Button = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(ButtonBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.button, {
+  var Button = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(ButtonBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Button.displayName = "MenuButton";
-  var Portal = React6.forwardRef(({ container = null, disabled = false, children, ...props }, forwardRef8) => {
+  var Portal = React14.forwardRef(({ container = null, disabled = false, children, ...props }, forwardRef9) => {
     let fullscreen = useMediaState("fullscreen"), shouldPortal = disabled === "fullscreen" ? !fullscreen : !disabled;
-    const target = React6.useMemo(() => {
+    const target = React14.useMemo(() => {
       if (IS_SERVER2) return null;
       return (isString(container) ? document.querySelector(container) : container) ?? document.body;
     }, [container]);
-    return !target || !shouldPortal ? children : (0, import_react_dom.createPortal)(/* @__PURE__ */ React6.createElement(Primitive.div, {
+    return !target || !shouldPortal ? children : (0, import_react_dom.createPortal)(/* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props,
       style: {
         display: "contents",
         ...props.style
       },
-      ref: forwardRef8
+      ref: forwardRef9
     }, children), target);
   });
   Portal.displayName = "MenuPortal";
   var ItemsBridge = createReactComponent(MenuItemsInstance);
-  var Items = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(ItemsBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Items = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(ItemsBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Items.displayName = "MenuItems";
   var ItemBridge = createReactComponent(MenuItemInstance);
-  var Item = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(ItemBridge, props, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, {
+  var Item = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(ItemBridge, props, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Item.displayName = "MenuItem";
   var GestureBridge = createReactComponent(GestureInstance, { events: ["onWillTrigger", "onTrigger"] });
-  var Gesture2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(GestureBridge, {
+  var Gesture2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(GestureBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React6.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React14.createElement(Primitive.div, props2, children));
   });
   Gesture2.displayName = "Gesture";
   var TimeBridge = createReactComponent(TimeInstance);
-  var Time2 = React6.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React6.createElement(TimeBridge, props, (props2, instance) => /* @__PURE__ */ React6.createElement(TimeText, {
+  var Time2 = React14.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React14.createElement(TimeBridge, props, (props2, instance) => /* @__PURE__ */ React14.createElement(TimeText, {
       ...props2,
       instance,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Time2.displayName = "Time";
-  var TimeText = React6.forwardRef(({ instance, children, ...props }, forwardRef8) => {
+  var TimeText = React14.forwardRef(({ instance, children, ...props }, forwardRef9) => {
     const { timeText } = instance.$state, $timeText = useSignal(timeText);
-    return /* @__PURE__ */ React6.createElement(Primitive.div, {
+    return /* @__PURE__ */ React14.createElement(Primitive.div, {
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, $timeText, children);
   });
   TimeText.displayName = "TimeText";
@@ -20668,7 +26509,7 @@ var PortalUI = (() => {
   function useAudioOptions() {
     const media = useMediaContext2(), { audioTracks, audioTrack } = media.$state, $audioTracks = useSignal(audioTracks);
     useSignal(audioTrack);
-    return React6.useMemo(() => {
+    return React14.useMemo(() => {
       const options = $audioTracks.map((track) => ({
         track,
         label: track.label,
@@ -20700,7 +26541,7 @@ var PortalUI = (() => {
   function useCaptionOptions({ off = true } = {}) {
     const media = useMediaContext2(), { textTracks, textTrack } = media.$state, $textTracks = useSignal(textTracks);
     useSignal(textTrack);
-    return React6.useMemo(() => {
+    return React14.useMemo(() => {
       const captionTracks = $textTracks.filter(isTrackCaptionKind), options = captionTracks.map((track) => ({
         track,
         label: track.label,
@@ -20745,7 +26586,7 @@ var PortalUI = (() => {
     useSignal(quality);
     useSignal(autoQuality);
     useSignal(canSetQuality);
-    return React6.useMemo(() => {
+    return React14.useMemo(() => {
       const options = sortVideoQualities($qualities, sort === "descending").map((q) => {
         return {
           quality: q,
@@ -20800,61 +26641,61 @@ var PortalUI = (() => {
   init_define_import_meta_env();
   init_vidstack_B9fTkxQO();
   init_vidstack_CvezEmSQ();
-  var React7 = __toESM(require_react_shim(), 1);
+  var React15 = __toESM(require_react_shim(), 1);
   var MediaAnnouncerBridge = createReactComponent(MediaAnnouncerInstance, { events: ["onChange"] });
-  var MediaAnnouncer2 = React7.forwardRef(({ style, children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(MediaAnnouncerBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, {
+  var MediaAnnouncer2 = React15.forwardRef(({ style, children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(MediaAnnouncerBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, {
       ...props2,
       style: {
         display: "contents",
         ...style
       },
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   MediaAnnouncer2.displayName = "MediaAnnouncer";
   var ControlsBridge = createReactComponent(ControlsInstance);
-  var Root$42 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(ControlsBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, {
+  var Root$42 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(ControlsBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Root$42.displayName = "Controls";
   var ControlsGroupBridge = createReactComponent(ControlsGroupInstance);
-  var Group = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(ControlsGroupBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, {
+  var Group = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(ControlsGroupBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Group.displayName = "ControlsGroup";
   var TooltipBridge = createReactComponent(TooltipInstance);
   function Root$32({ children, ...props }) {
-    return /* @__PURE__ */ React7.createElement(TooltipBridge, props, children);
+    return /* @__PURE__ */ React15.createElement(TooltipBridge, props, children);
   }
   Root$32.displayName = "Tooltip";
   var TriggerBridge = createReactComponent(TooltipTriggerInstance);
-  var Trigger2 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(TriggerBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.button, {
+  var Trigger2 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(TriggerBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Trigger2.displayName = "TooltipTrigger";
   var ContentBridge = createReactComponent(TooltipContentInstance);
-  var Content = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(ContentBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, {
+  var Content = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(ContentBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Content.displayName = "TooltipContent";
   var GoogleCastButtonBridge = createReactComponent(GoogleCastButtonInstance, { domEventsRegex: /^onMedia/ });
-  var GoogleCastButton2 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(GoogleCastButtonBridge, props, (props2) => /* @__PURE__ */ React7.createElement(Primitive.button, {
+  var GoogleCastButton2 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(GoogleCastButtonBridge, props, (props2) => /* @__PURE__ */ React15.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   GoogleCastButton2.displayName = "GoogleCastButton";
@@ -20862,35 +26703,35 @@ var PortalUI = (() => {
     events: sliderCallbacks,
     domEventsRegex: /^onMedia/
   });
-  var Root$22 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(AudioGainSliderBridge, {
+  var Root$22 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(AudioGainSliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, props2, children));
   });
   Root$22.displayName = "AudioGainSlider";
   var SpeedSliderBridge = createReactComponent(SpeedSliderInstance, {
     events: sliderCallbacks,
     domEventsRegex: /^onMedia/
   });
-  var Root$12 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(SpeedSliderBridge, {
+  var Root$12 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(SpeedSliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, props2, children));
   });
   Root$12.displayName = "SpeedSlider";
-  var Title = React7.forwardRef(({ children, ...props }, forwardRef8) => {
+  var Title = React15.forwardRef(({ children, ...props }, forwardRef9) => {
     const $title = useMediaState("title");
-    return /* @__PURE__ */ React7.createElement(Primitive.span, {
+    return /* @__PURE__ */ React15.createElement(Primitive.span, {
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, $title, children);
   });
   Title.displayName = "Title";
   function useActiveTextCues(track) {
-    const [activeCues, setActiveCues] = React7.useState([]);
-    React7.useEffect(() => {
+    const [activeCues, setActiveCues] = React15.useState([]);
+    React15.useEffect(() => {
       if (!track) {
         setActiveCues([]);
         return;
@@ -20904,8 +26745,8 @@ var PortalUI = (() => {
     return activeCues;
   }
   function useActiveTextTrack(kind) {
-    const media = useMediaContext2(), [track, setTrack] = React7.useState(null);
-    React7.useEffect(() => {
+    const media = useMediaContext2(), [track, setTrack] = React15.useState(null);
+    React15.useEffect(() => {
       return watchActiveTextTrack(media.textTracks, kind, setTrack);
     }, [media.textTracks, kind]);
     return track;
@@ -20913,24 +26754,24 @@ var PortalUI = (() => {
   function useChapterTitle() {
     return useActiveTextCues(useActiveTextTrack("chapters"))[0]?.text || "";
   }
-  var ChapterTitle2 = React7.forwardRef(({ defaultText = "", children, ...props }, forwardRef8) => {
+  var ChapterTitle2 = React15.forwardRef(({ defaultText = "", children, ...props }, forwardRef9) => {
     const $chapterTitle = useChapterTitle();
-    return /* @__PURE__ */ React7.createElement(Primitive.span, {
+    return /* @__PURE__ */ React15.createElement(Primitive.span, {
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, $chapterTitle || defaultText, children);
   });
   ChapterTitle2.displayName = "ChapterTitle";
   var CaptionsBridge = createReactComponent(CaptionsInstance);
-  var Captions2 = React7.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement(CaptionsBridge, {
+  var Captions2 = React15.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement(CaptionsBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React7.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React15.createElement(Primitive.div, props2, children));
   });
   Captions2.displayName = "Captions";
-  var Root2 = React7.forwardRef(({ size: size2 = 96, children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React7.createElement("svg", {
+  var Root2 = React15.forwardRef(({ size: size2 = 96, children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React15.createElement("svg", {
       width: size2,
       height: size2,
       fill: "none",
@@ -20938,10 +26779,10 @@ var PortalUI = (() => {
       "aria-hidden": "true",
       "data-part": "root",
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, children);
   });
-  var Track2 = React7.forwardRef(({ width = 8, children, ...props }, ref) => /* @__PURE__ */ React7.createElement("circle", {
+  var Track2 = React15.forwardRef(({ width = 8, children, ...props }, ref) => /* @__PURE__ */ React15.createElement("circle", {
     cx: "60",
     cy: "60",
     r: "54",
@@ -20951,7 +26792,7 @@ var PortalUI = (() => {
     ...props,
     ref
   }, children));
-  var TrackFill2 = React7.forwardRef(({ width = 8, fillPercent = 50, children, ...props }, ref) => /* @__PURE__ */ React7.createElement("circle", {
+  var TrackFill2 = React15.forwardRef(({ width = 8, fillPercent = 50, children, ...props }, ref) => /* @__PURE__ */ React15.createElement("circle", {
     cx: "60",
     cy: "60",
     r: "54",
@@ -20966,23 +26807,23 @@ var PortalUI = (() => {
   }, children));
   function createSignal(initialValue, deps = []) {
     const scope = useReactScope();
-    return React7.useMemo(() => scoped(() => signal(initialValue), scope), [scope, ...deps]);
+    return React15.useMemo(() => scoped(() => signal(initialValue), scope), [scope, ...deps]);
   }
   function createComputed(compute2, deps = []) {
     const scope = useReactScope();
-    return React7.useMemo(() => scoped(() => computed(compute2), scope), [scope, ...deps]);
+    return React15.useMemo(() => scoped(() => computed(compute2), scope), [scope, ...deps]);
   }
   function createEffect(compute2, deps = []) {
     const scope = useReactScope();
-    React7.useEffect(() => scoped(() => effect(compute2), scope), [scope, ...deps]);
+    React15.useEffect(() => scoped(() => effect(compute2), scope), [scope, ...deps]);
   }
   function useScoped(compute2) {
     const scope = useReactScope();
-    return React7.useMemo(() => scoped(compute2, scope), [scope]);
+    return React15.useMemo(() => scoped(compute2, scope), [scope]);
   }
   function useTextCues(track) {
-    const [cues, setCues] = React7.useState([]);
-    React7.useEffect(() => {
+    const [cues, setCues] = React15.useState([]);
+    React15.useEffect(() => {
       if (!track) return;
       function onCuesChange() {
         if (track) setCues([...track.cues]);
@@ -20999,7 +26840,7 @@ var PortalUI = (() => {
   function useChapterOptions() {
     const media = useMediaContext2(), track = useActiveTextTrack("chapters"), cues = useTextCues(track), $startTime = useSignal(media.$state.seekableStart), $endTime = useSignal(media.$state.seekableEnd);
     useActiveTextCues(track);
-    return React7.useMemo(() => {
+    return React15.useMemo(() => {
       const options = track ? cues.filter((cue) => cue.startTime <= $endTime && cue.endTime >= $startTime).map((cue, i) => {
         let currentRef = null, stopProgressEffect;
         return {
@@ -21046,10 +26887,10 @@ var PortalUI = (() => {
 
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-BUARUqHF.js
   init_define_import_meta_env();
-  var React8 = __toESM(require_react_shim(), 1);
-  var Icon2 = /* @__PURE__ */ React8.forwardRef((props, ref) => {
+  var React16 = __toESM(require_react_shim(), 1);
+  var Icon2 = /* @__PURE__ */ React16.forwardRef((props, ref) => {
     const { width, height, size: size2 = null, paths, ...restProps } = props;
-    return React8.createElement("svg", {
+    return React16.createElement("svg", {
       viewBox: "0 0 32 32",
       ...restProps,
       width: width ?? size2,
@@ -21065,7 +26906,7 @@ var PortalUI = (() => {
   Icon2.displayName = "VidstackIcon";
 
   // frontend/node_modules/@vidstack/react/prod/vidstack.js
-  var React9 = __toESM(require_react_shim(), 1);
+  var React17 = __toESM(require_react_shim(), 1);
   var DEFAULT_AUDIO_GAINS = [
     1,
     1.25,
@@ -21076,8 +26917,8 @@ var PortalUI = (() => {
     3,
     4
   ];
-  var _a105, _media40, _menu3, _controller7, _AudioGainRadioGroup_instances, watchValue_fn5, watchHintText_fn, watchControllerDisabled_fn, getValue_fn2, onValueChange_fn7;
-  var AudioGainRadioGroup = (_a105 = class extends Component2 {
+  var _a116, _media40, _menu3, _controller7, _AudioGainRadioGroup_instances, watchValue_fn5, watchHintText_fn, watchControllerDisabled_fn, getValue_fn2, onValueChange_fn7;
+  var AudioGainRadioGroup = (_a116 = class extends Component2 {
     constructor() {
       super();
       __privateAdd(this, _AudioGainRadioGroup_instances);
@@ -21096,7 +26937,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media40, useMediaContext());
-      if (hasProvidedContext(menuContext)) __privateSet(this, _menu3, useContext2(menuContext));
+      if (hasProvidedContext(menuContext)) __privateSet(this, _menu3, useContext5(menuContext));
     }
     onConnect(el) {
       effect(__privateMethod(this, _AudioGainRadioGroup_instances, watchValue_fn5).bind(this));
@@ -21128,10 +26969,10 @@ var PortalUI = (() => {
       detail: gain,
       trigger
     });
-  }, __publicField(_a105, "props", {
+  }, __publicField(_a116, "props", {
     normalLabel: "Disabled",
     gains: DEFAULT_AUDIO_GAINS
-  }), _a105);
+  }), _a116);
   var audiogainradiogroup__proto = AudioGainRadioGroup.prototype;
   prop(audiogainradiogroup__proto, "value");
   prop(audiogainradiogroup__proto, "disabled");
@@ -21200,26 +27041,26 @@ var PortalUI = (() => {
     eventsRegex: /^onHls/,
     domEventsRegex: /^onMedia/
   });
-  var MediaPlayer2 = React9.forwardRef(({ aspectRatio, children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React9.createElement(MediaPlayerBridge, {
+  var MediaPlayer2 = React17.forwardRef(({ aspectRatio, children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React17.createElement(MediaPlayerBridge, {
       ...props,
       src: props.src,
-      ref: forwardRef8,
+      ref: forwardRef9,
       style: {
         aspectRatio,
         ...props.style
       }
-    }, (props2) => /* @__PURE__ */ React9.createElement(Primitive.div, props2, children));
+    }, (props2) => /* @__PURE__ */ React17.createElement(Primitive.div, props2, children));
   });
   MediaPlayer2.displayName = "MediaPlayer";
   var MediaProviderBridge = createReactComponent(MediaProviderInstance);
-  var MediaProvider2 = React9.forwardRef(({ loaders = [], children, iframeProps, mediaProps, ...props }, forwardRef8) => {
-    const reactLoaders = React9.useMemo(() => loaders.map((Loader) => new Loader()), loaders);
-    return /* @__PURE__ */ React9.createElement(MediaProviderBridge, {
+  var MediaProvider2 = React17.forwardRef(({ loaders = [], children, iframeProps, mediaProps, ...props }, forwardRef9) => {
+    const reactLoaders = React17.useMemo(() => loaders.map((Loader) => new Loader()), loaders);
+    return /* @__PURE__ */ React17.createElement(MediaProviderBridge, {
       ...props,
       loaders: reactLoaders,
-      ref: forwardRef8
-    }, (props2, instance) => /* @__PURE__ */ React9.createElement("div", props2, /* @__PURE__ */ React9.createElement(MediaOutlet, {
+      ref: forwardRef9
+    }, (props2, instance) => /* @__PURE__ */ React17.createElement("div", props2, /* @__PURE__ */ React17.createElement(MediaOutlet, {
       provider: instance,
       mediaProps,
       iframeProps
@@ -21227,28 +27068,28 @@ var PortalUI = (() => {
   });
   MediaProvider2.displayName = "MediaProvider";
   function MediaOutlet({ provider, mediaProps, iframeProps }) {
-    const { sources, crossOrigin, poster, remotePlaybackInfo, nativeControls, viewType } = useStateContext(mediaState), { loader } = provider.$state, { $provider: $$provider, $providerSetup: $$providerSetup } = useMediaContext2(), $sources = useSignal(sources), $nativeControls = useSignal(nativeControls), $crossOrigin = useSignal(crossOrigin), $poster = useSignal(poster), $loader = useSignal(loader), $provider = useSignal($$provider), $providerSetup = useSignal($$providerSetup), $remoteInfo = useSignal(remotePlaybackInfo), $mediaType = $loader?.mediaType(), isAudioView = useSignal(viewType) === "audio", isYouTubeEmbed = $loader?.name === "youtube", isVimeoEmbed = $loader?.name === "vimeo", isEmbed = isYouTubeEmbed || isVimeoEmbed, isRemotion = $loader?.name === "remotion", isGoogleCast = $loader?.name === "google-cast", [googleCastIconPaths, setGoogleCastIconPaths] = React9.useState(""), [hasMounted, setHasMounted] = React9.useState(false);
-    const loadProviderRef = React9.useCallback((el) => {
+    const { sources, crossOrigin, poster, remotePlaybackInfo, nativeControls, viewType } = useStateContext(mediaState), { loader } = provider.$state, { $provider: $$provider, $providerSetup: $$providerSetup } = useMediaContext2(), $sources = useSignal(sources), $nativeControls = useSignal(nativeControls), $crossOrigin = useSignal(crossOrigin), $poster = useSignal(poster), $loader = useSignal(loader), $provider = useSignal($$provider), $providerSetup = useSignal($$providerSetup), $remoteInfo = useSignal(remotePlaybackInfo), $mediaType = $loader?.mediaType(), isAudioView = useSignal(viewType) === "audio", isYouTubeEmbed = $loader?.name === "youtube", isVimeoEmbed = $loader?.name === "vimeo", isEmbed = isYouTubeEmbed || isVimeoEmbed, isRemotion = $loader?.name === "remotion", isGoogleCast = $loader?.name === "google-cast", [googleCastIconPaths, setGoogleCastIconPaths] = React17.useState(""), [hasMounted, setHasMounted] = React17.useState(false);
+    const loadProviderRef = React17.useCallback((el) => {
       provider.load(el);
     }, [provider]);
-    React9.useEffect(() => {
+    React17.useEffect(() => {
       if (!isGoogleCast || googleCastIconPaths) return;
       Promise.resolve().then(() => (init_vidstack_B9fTkxQO(), vidstack_B9fTkxQO_exports)).then((n2) => n2.chromecast_exports).then((mod) => {
         setGoogleCastIconPaths(mod.default);
       });
     }, [isGoogleCast]);
-    React9.useLayoutEffect(() => {
+    React17.useLayoutEffect(() => {
       setHasMounted(true);
     }, []);
-    if (isGoogleCast) return /* @__PURE__ */ React9.createElement("div", {
+    if (isGoogleCast) return /* @__PURE__ */ React17.createElement("div", {
       className: "vds-google-cast",
       ref: loadProviderRef
-    }, /* @__PURE__ */ React9.createElement(Icon2, { paths: googleCastIconPaths }), $remoteInfo?.deviceName ? /* @__PURE__ */ React9.createElement("span", { className: "vds-google-cast-info" }, "Google Cast on", " ", /* @__PURE__ */ React9.createElement("span", { className: "vds-google-cast-device-name" }, $remoteInfo.deviceName)) : null);
-    if (isRemotion) return /* @__PURE__ */ React9.createElement("div", { "data-remotion-canvas": true }, /* @__PURE__ */ React9.createElement("div", {
+    }, /* @__PURE__ */ React17.createElement(Icon2, { paths: googleCastIconPaths }), $remoteInfo?.deviceName ? /* @__PURE__ */ React17.createElement("span", { className: "vds-google-cast-info" }, "Google Cast on", " ", /* @__PURE__ */ React17.createElement("span", { className: "vds-google-cast-device-name" }, $remoteInfo.deviceName)) : null);
+    if (isRemotion) return /* @__PURE__ */ React17.createElement("div", { "data-remotion-canvas": true }, /* @__PURE__ */ React17.createElement("div", {
       "data-remotion-container": true,
       ref: loadProviderRef
-    }, isRemotionProvider($provider) && $providerSetup ? React9.createElement($provider.render) : null));
-    return isEmbed ? React9.createElement(React9.Fragment, null, React9.createElement("iframe", {
+    }, isRemotionProvider($provider) && $providerSetup ? React17.createElement($provider.render) : null));
+    return isEmbed ? React17.createElement(React17.Fragment, null, React17.createElement("iframe", {
       ...iframeProps,
       className: (iframeProps?.className ? `${iframeProps.className} ` : "") + isYouTubeEmbed ? "vds-youtube" : "vds-vimeo",
       suppressHydrationWarning: true,
@@ -21256,13 +27097,13 @@ var PortalUI = (() => {
       "aria-hidden": "true",
       "data-no-controls": !$nativeControls ? "" : void 0,
       ref: loadProviderRef
-    }), !$nativeControls && !isAudioView ? React9.createElement("div", { className: "vds-blocker" }) : null) : $mediaType ? React9.createElement($mediaType === "audio" ? "audio" : "video", {
+    }), !$nativeControls && !isAudioView ? React17.createElement("div", { className: "vds-blocker" }) : null) : $mediaType ? React17.createElement($mediaType === "audio" ? "audio" : "video", {
       ...mediaProps,
       controls: $nativeControls ? true : null,
       crossOrigin: typeof $crossOrigin === "boolean" ? "" : $crossOrigin,
       poster: $mediaType === "video" && $nativeControls && $poster ? $poster : null,
       suppressHydrationWarning: true,
-      children: !hasMounted ? $sources.map(({ src, type }) => isString(src) ? /* @__PURE__ */ React9.createElement("source", {
+      children: !hasMounted ? $sources.map(({ src, type }) => isString(src) ? /* @__PURE__ */ React17.createElement("source", {
         src,
         type: type !== "?" ? type : void 0,
         key: src
@@ -21272,8 +27113,8 @@ var PortalUI = (() => {
   }
   MediaOutlet.displayName = "MediaOutlet";
   function createTextTrack(init) {
-    const media = useMediaContext2(), track = React9.useMemo(() => new TextTrack(init), Object.values(init));
-    React9.useEffect(() => {
+    const media = useMediaContext2(), track = React17.useMemo(() => new TextTrack(init), Object.values(init));
+    React17.useEffect(() => {
       media.textTracks.add(track);
       return () => void media.textTracks.remove(track);
     }, [track]);
@@ -21288,10 +27129,10 @@ var PortalUI = (() => {
   }
   Track3.displayName = "Track";
   var ToggleButtonBridge = createReactComponent(ToggleButtonInstance);
-  var ToggleButton2 = React9.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React9.createElement(ToggleButtonBridge, props, (props2) => /* @__PURE__ */ React9.createElement(Primitive.button, {
+  var ToggleButton2 = React17.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React17.createElement(ToggleButtonBridge, props, (props2) => /* @__PURE__ */ React17.createElement(Primitive.button, {
       ...props2,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   ToggleButton2.displayName = "ToggleButton";
@@ -21299,50 +27140,50 @@ var PortalUI = (() => {
     events: sliderCallbacks,
     domEventsRegex: /^onMedia/
   });
-  var Root$13 = React9.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React9.createElement(QualitySliderBridge, {
+  var Root$13 = React17.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React17.createElement(QualitySliderBridge, {
       ...props,
-      ref: forwardRef8
-    }, (props2) => /* @__PURE__ */ React9.createElement(Primitive.div, props2, children));
+      ref: forwardRef9
+    }, (props2) => /* @__PURE__ */ React17.createElement(Primitive.div, props2, children));
   });
   Root$13.displayName = "QualitySlider";
   var PosterBridge = createReactComponent(PosterInstance);
-  var Poster2 = React9.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React9.createElement(PosterBridge, {
-      src: props.asChild && React9.isValidElement(children) ? children.props.src : void 0,
+  var Poster2 = React17.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React17.createElement(PosterBridge, {
+      src: props.asChild && React17.isValidElement(children) ? children.props.src : void 0,
       ...props
-    }, (props2, instance) => /* @__PURE__ */ React9.createElement(PosterImg, {
+    }, (props2, instance) => /* @__PURE__ */ React17.createElement(PosterImg, {
       ...props2,
       instance,
-      ref: composeRefs(props2.ref, forwardRef8)
+      ref: composeRefs(props2.ref, forwardRef9)
     }, children));
   });
   Poster2.displayName = "Poster";
-  var PosterImg = React9.forwardRef(({ instance, children, ...props }, forwardRef8) => {
+  var PosterImg = React17.forwardRef(({ instance, children, ...props }, forwardRef9) => {
     const { src, img, alt, crossOrigin, hidden } = instance.$state, $src = useSignal(src), $alt = useSignal(alt), $crossOrigin = useSignal(crossOrigin), $hidden = useSignal(hidden);
-    return /* @__PURE__ */ React9.createElement(Primitive.img, {
+    return /* @__PURE__ */ React17.createElement(Primitive.img, {
       ...props,
       src: $src || void 0,
       alt: $alt || void 0,
       crossOrigin: $crossOrigin || void 0,
-      ref: composeRefs(img.set, forwardRef8),
+      ref: composeRefs(img.set, forwardRef9),
       style: { display: $hidden ? "none" : void 0 }
     }, children);
   });
   PosterImg.displayName = "PosterImg";
-  var Root3 = React9.forwardRef(({ children, ...props }, forwardRef8) => {
-    return /* @__PURE__ */ React9.createElement(Primitive.div, {
+  var Root3 = React17.forwardRef(({ children, ...props }, forwardRef9) => {
+    return /* @__PURE__ */ React17.createElement(Primitive.div, {
       translate: "yes",
       "aria-live": "off",
       "aria-atomic": "true",
       ...props,
-      ref: forwardRef8
+      ref: forwardRef9
     }, children);
   });
   Root3.displayName = "Caption";
-  var Text = React9.forwardRef((props, forwardRef8) => {
-    const textTrack = useMediaState("textTrack"), [activeCue, setActiveCue] = React9.useState();
-    React9.useEffect(() => {
+  var Text = React17.forwardRef((props, forwardRef9) => {
+    const textTrack = useMediaState("textTrack"), [activeCue, setActiveCue] = React17.useState();
+    React17.useEffect(() => {
       if (!textTrack) return;
       function onCueChange() {
         setActiveCue(textTrack?.activeCues[0]);
@@ -21353,11 +27194,11 @@ var PortalUI = (() => {
         setActiveCue(void 0);
       };
     }, [textTrack]);
-    return /* @__PURE__ */ React9.createElement(Primitive.span, {
+    return /* @__PURE__ */ React17.createElement(Primitive.span, {
       ...props,
       "data-part": "cue",
       dangerouslySetInnerHTML: { __html: activeCue?.text || "" },
-      ref: forwardRef8
+      ref: forwardRef9
     });
   });
   Text.displayName = "CaptionText";
@@ -21368,10 +27209,10 @@ var PortalUI = (() => {
   // frontend/node_modules/@vidstack/react/prod/player/vidstack-default-icons.js
   init_define_import_meta_env();
   init_vidstack_B9fTkxQO();
-  var React10 = __toESM(require_react_shim(), 1);
+  var React18 = __toESM(require_react_shim(), 1);
   function createIcon(paths) {
     function DefaultLayoutIcon(props) {
-      return /* @__PURE__ */ React10.createElement(Icon2, {
+      return /* @__PURE__ */ React18.createElement(Icon2, {
         paths,
         ...props
       });
@@ -21461,9 +27302,9 @@ var PortalUI = (() => {
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-D9ibjprz.js
   init_define_import_meta_env();
   init_vidstack_B9fTkxQO();
-  var React11 = __toESM(require_react_shim(), 1);
+  var React19 = __toESM(require_react_shim(), 1);
   function useResizeObserver(el, callback) {
-    React11.useEffect(() => {
+    React19.useEffect(() => {
       if (!el) return;
       callback();
       const observer = new ResizeObserver(animationFrameThrottle(callback));
@@ -21472,8 +27313,8 @@ var PortalUI = (() => {
     }, [el, callback]);
   }
   function useTransitionActive(el) {
-    const [isActive, setIsActive] = React11.useState(false);
-    React11.useEffect(() => {
+    const [isActive, setIsActive] = React19.useState(false);
+    React19.useEffect(() => {
       if (!el) return;
       const events = new EventsController(el).add("transitionstart", () => setIsActive(true)).add("transitionend", () => setIsActive(false));
       return () => events.abort();
@@ -21481,8 +27322,8 @@ var PortalUI = (() => {
     return isActive;
   }
   function useMouseEnter(el) {
-    const [isMouseEnter, setIsMouseEnter] = React11.useState(false);
-    React11.useEffect(() => {
+    const [isMouseEnter, setIsMouseEnter] = React19.useState(false);
+    React19.useEffect(() => {
       if (!el) return;
       const events = new EventsController(el).add("mouseenter", () => setIsMouseEnter(true)).add("mouseleave", () => setIsMouseEnter(false));
       return () => events.abort();
@@ -21490,8 +27331,8 @@ var PortalUI = (() => {
     return isMouseEnter;
   }
   function useFocusIn(el) {
-    const [isFocusIn, setIsFocusIn] = React11.useState(false);
-    React11.useEffect(() => {
+    const [isFocusIn, setIsFocusIn] = React19.useState(false);
+    React19.useEffect(() => {
       if (!el) return;
       const events = new EventsController(el).add("focusin", () => setIsFocusIn(true)).add("focusout", () => setIsFocusIn(false));
       return () => events.abort();
@@ -21499,14 +27340,14 @@ var PortalUI = (() => {
     return isFocusIn;
   }
   function useActive(el) {
-    const isMouseEnter = useMouseEnter(el), isFocusIn = useFocusIn(el), prevMouseEnter = React11.useRef(false);
+    const isMouseEnter = useMouseEnter(el), isFocusIn = useFocusIn(el), prevMouseEnter = React19.useRef(false);
     if (prevMouseEnter.current && !isMouseEnter && !isFocusIn) return false;
     prevMouseEnter.current = isMouseEnter;
     return isMouseEnter || isFocusIn;
   }
   function useColorSchemePreference() {
-    const [colorScheme, setColorScheme] = React11.useState("dark");
-    React11.useEffect(() => {
+    const [colorScheme, setColorScheme] = React19.useState("dark");
+    React19.useEffect(() => {
       const media = window.matchMedia("(prefers-color-scheme: light)");
       function onChange() {
         setColorScheme(media.matches ? "light" : "dark");
@@ -21518,7 +27359,7 @@ var PortalUI = (() => {
   }
   function useLayoutName(name) {
     const player = useMediaPlayer();
-    React11.useEffect(() => {
+    React19.useEffect(() => {
       if (!player) return;
       return effect(() => {
         const el = player.$el;
@@ -21529,12 +27370,12 @@ var PortalUI = (() => {
   }
 
   // frontend/node_modules/@vidstack/react/prod/player/vidstack-default-components.js
-  var React12 = __toESM(require_react_shim(), 1);
+  var React20 = __toESM(require_react_shim(), 1);
   var import_react_dom2 = __toESM(require_react_dom_shim(), 1);
-  var DefaultLayoutContext = React12.createContext({});
+  var DefaultLayoutContext = React20.createContext({});
   DefaultLayoutContext.displayName = "DefaultLayoutContext";
   function useDefaultLayoutContext() {
-    return React12.useContext(DefaultLayoutContext);
+    return React20.useContext(DefaultLayoutContext);
   }
   function useDefaultLayoutWord(word) {
     const { translations } = useDefaultLayoutContext();
@@ -21550,7 +27391,7 @@ var PortalUI = (() => {
     else return colorScheme;
   }
   function createDefaultMediaLayout({ type, smLayoutWhen, renderLayout }) {
-    const Layout = React12.forwardRef(({ children, className, disableTimeSlider = false, hideQualityBitrate = false, icons, colorScheme = "system", download = null, menuContainer = null, menuGroup = "bottom", noAudioGain = false, audioGains = {
+    const Layout = React20.forwardRef(({ children, className, disableTimeSlider = false, hideQualityBitrate = false, icons, colorScheme = "system", download = null, menuContainer = null, menuGroup = "bottom", noAudioGain = false, audioGains = {
       min: 0,
       max: 300,
       step: 25
@@ -21558,12 +27399,12 @@ var PortalUI = (() => {
       min: 0,
       max: 2,
       step: 0.25
-    }, seekStep = 10, showMenuDelay, showTooltipDelay = 700, sliderChaptersMinWidth = 325, slots, smallLayoutWhen = smLayoutWhen, thumbnails = null, translations, ...props }, forwardRef8) => {
+    }, seekStep = 10, showMenuDelay, showTooltipDelay = 700, sliderChaptersMinWidth = 325, slots, smallLayoutWhen = smLayoutWhen, thumbnails = null, translations, ...props }, forwardRef9) => {
       const media = useMediaContext2(), $load = useSignal(media.$props.load), $canLoad = useMediaState("canLoad"), $viewType = useMediaState("viewType"), $streamType = useMediaState("streamType"), $smallWhen = createComputed(() => {
         return isBoolean(smallLayoutWhen) ? smallLayoutWhen : smallLayoutWhen(media.player.state);
       }, [smallLayoutWhen]), userPrefersAnnouncements = createSignal(true), userPrefersKeyboardAnimations = createSignal(true), isMatch = $viewType === type, isSmallLayout = $smallWhen(), isForcedLayout = isBoolean(smallLayoutWhen), isLoadLayout = $load === "play" && !$canLoad, canRender = $canLoad || isForcedLayout || isLoadLayout, colorSchemeClass = useColorSchemeClass(colorScheme), layoutEl = createSignal(null);
       useSignal($smallWhen);
-      return /* @__PURE__ */ React12.createElement("div", {
+      return /* @__PURE__ */ React20.createElement("div", {
         ...props,
         className: `vds-${type}-layout` + (colorSchemeClass ? ` ${colorSchemeClass}` : "") + (className ? ` ${className}` : ""),
         "data-match": isMatch ? "" : null,
@@ -21571,8 +27412,8 @@ var PortalUI = (() => {
         "data-lg": !isSmallLayout ? "" : null,
         "data-size": isSmallLayout ? "sm" : "lg",
         "data-no-scrub-gesture": noScrubGesture ? "" : null,
-        ref: composeRefs(layoutEl.set, forwardRef8)
-      }, canRender && isMatch ? /* @__PURE__ */ React12.createElement(DefaultLayoutContext.Provider, { value: {
+        ref: composeRefs(layoutEl.set, forwardRef9)
+      }, canRender && isMatch ? /* @__PURE__ */ React20.createElement(DefaultLayoutContext.Provider, { value: {
         disableTimeSlider,
         hideQualityBitrate,
         icons,
@@ -21608,24 +27449,24 @@ var PortalUI = (() => {
     return Layout;
   }
   function useDefaultAudioLayoutSlots() {
-    return React12.useContext(DefaultLayoutContext).slots;
+    return React20.useContext(DefaultLayoutContext).slots;
   }
   function useDefaultVideoLayoutSlots() {
-    return React12.useContext(DefaultLayoutContext).slots;
+    return React20.useContext(DefaultLayoutContext).slots;
   }
   function slot(slots, name, defaultValue) {
     const slot2 = slots?.[name], capitalizedName = uppercaseFirstChar(name);
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, slots?.[`before${capitalizedName}`], isUndefined(slot2) ? defaultValue : slot2, slots?.[`after${capitalizedName}`]);
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, slots?.[`before${capitalizedName}`], isUndefined(slot2) ? defaultValue : slot2, slots?.[`after${capitalizedName}`]);
   }
   function DefaultAnnouncer() {
     const { userPrefersAnnouncements, translations } = useDefaultLayoutContext();
     if (!useSignal(userPrefersAnnouncements)) return null;
-    return /* @__PURE__ */ React12.createElement(MediaAnnouncer2, { translations });
+    return /* @__PURE__ */ React20.createElement(MediaAnnouncer2, { translations });
   }
   DefaultAnnouncer.displayName = "DefaultAnnouncer";
   function DefaultTooltip({ content, placement, children }) {
     const { showTooltipDelay } = useDefaultLayoutContext();
-    return /* @__PURE__ */ React12.createElement(Root$32, { showDelay: showTooltipDelay }, /* @__PURE__ */ React12.createElement(Trigger2, { asChild: true }, children), /* @__PURE__ */ React12.createElement(Content, {
+    return /* @__PURE__ */ React20.createElement(Root$32, { showDelay: showTooltipDelay }, /* @__PURE__ */ React20.createElement(Trigger2, { asChild: true }, children), /* @__PURE__ */ React20.createElement(Content, {
       className: "vds-tooltip-content",
       placement
     }, content));
@@ -21633,100 +27474,100 @@ var PortalUI = (() => {
   DefaultTooltip.displayName = "DefaultTooltip";
   function DefaultPlayButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), playText = useDefaultLayoutWord("Play"), pauseText = useDefaultLayoutWord("Pause"), $paused = useMediaState("paused"), $ended = useMediaState("ended");
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: $paused ? playText : pauseText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(PlayButton2, {
+    }, /* @__PURE__ */ React20.createElement(PlayButton2, {
       className: "vds-play-button vds-button",
       "aria-label": playText
-    }, $ended ? /* @__PURE__ */ React12.createElement(Icons.PlayButton.Replay, { className: "vds-icon" }) : $paused ? /* @__PURE__ */ React12.createElement(Icons.PlayButton.Play, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.PlayButton.Pause, { className: "vds-icon" })));
+    }, $ended ? /* @__PURE__ */ React20.createElement(Icons.PlayButton.Replay, { className: "vds-icon" }) : $paused ? /* @__PURE__ */ React20.createElement(Icons.PlayButton.Play, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.PlayButton.Pause, { className: "vds-icon" })));
   }
   DefaultPlayButton.displayName = "DefaultPlayButton";
-  var DefaultMuteButton = React12.forwardRef(({ tooltip }, forwardRef8) => {
+  var DefaultMuteButton = React20.forwardRef(({ tooltip }, forwardRef9) => {
     const { icons: Icons } = useDefaultLayoutContext(), muteText = useDefaultLayoutWord("Mute"), unmuteText = useDefaultLayoutWord("Unmute"), $muted = useMediaState("muted"), $volume = useMediaState("volume");
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: $muted ? unmuteText : muteText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(MuteButton2, {
+    }, /* @__PURE__ */ React20.createElement(MuteButton2, {
       className: "vds-mute-button vds-button",
       "aria-label": muteText,
-      ref: forwardRef8
-    }, $muted || $volume == 0 ? /* @__PURE__ */ React12.createElement(Icons.MuteButton.Mute, { className: "vds-icon" }) : $volume < 0.5 ? /* @__PURE__ */ React12.createElement(Icons.MuteButton.VolumeLow, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.MuteButton.VolumeHigh, { className: "vds-icon" })));
+      ref: forwardRef9
+    }, $muted || $volume == 0 ? /* @__PURE__ */ React20.createElement(Icons.MuteButton.Mute, { className: "vds-icon" }) : $volume < 0.5 ? /* @__PURE__ */ React20.createElement(Icons.MuteButton.VolumeLow, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.MuteButton.VolumeHigh, { className: "vds-icon" })));
   });
   DefaultMuteButton.displayName = "DefaultMuteButton";
   function DefaultCaptionButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), captionsText = useDefaultLayoutWord("Captions"), onText = useDefaultLayoutWord("Closed-Captions On"), offText = useDefaultLayoutWord("Closed-Captions Off"), $track = useMediaState("textTrack"), isOn = $track && isTrackCaptionKind($track);
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: isOn ? onText : offText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(CaptionButton2, {
+    }, /* @__PURE__ */ React20.createElement(CaptionButton2, {
       className: "vds-caption-button vds-button",
       "aria-label": captionsText
-    }, isOn ? /* @__PURE__ */ React12.createElement(Icons.CaptionButton.On, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.CaptionButton.Off, { className: "vds-icon" })));
+    }, isOn ? /* @__PURE__ */ React20.createElement(Icons.CaptionButton.On, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.CaptionButton.Off, { className: "vds-icon" })));
   }
   DefaultCaptionButton.displayName = "DefaultCaptionButton";
   function DefaultPIPButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), pipText = useDefaultLayoutWord("PiP"), enterText = useDefaultLayoutWord("Enter PiP"), exitText = useDefaultLayoutWord("Exit PiP"), $pip = useMediaState("pictureInPicture");
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: $pip ? exitText : enterText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(PIPButton2, {
+    }, /* @__PURE__ */ React20.createElement(PIPButton2, {
       className: "vds-pip-button vds-button",
       "aria-label": pipText
-    }, $pip ? /* @__PURE__ */ React12.createElement(Icons.PIPButton.Exit, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.PIPButton.Enter, { className: "vds-icon" })));
+    }, $pip ? /* @__PURE__ */ React20.createElement(Icons.PIPButton.Exit, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.PIPButton.Enter, { className: "vds-icon" })));
   }
   DefaultPIPButton.displayName = "DefaultPIPButton";
   function DefaultFullscreenButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), fullscreenText = useDefaultLayoutWord("Fullscreen"), enterText = useDefaultLayoutWord("Enter Fullscreen"), exitText = useDefaultLayoutWord("Exit Fullscreen"), $fullscreen = useMediaState("fullscreen");
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: $fullscreen ? exitText : enterText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(FullscreenButton2, {
+    }, /* @__PURE__ */ React20.createElement(FullscreenButton2, {
       className: "vds-fullscreen-button vds-button",
       "aria-label": fullscreenText
-    }, $fullscreen ? /* @__PURE__ */ React12.createElement(Icons.FullscreenButton.Exit, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.FullscreenButton.Enter, { className: "vds-icon" })));
+    }, $fullscreen ? /* @__PURE__ */ React20.createElement(Icons.FullscreenButton.Exit, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.FullscreenButton.Enter, { className: "vds-icon" })));
   }
   DefaultFullscreenButton.displayName = "DefaultFullscreenButton";
   function DefaultSeekButton({ backward, tooltip }) {
     const { icons: Icons, seekStep } = useDefaultLayoutContext(), seekForwardText = useDefaultLayoutWord("Seek Forward"), seekBackwardText = useDefaultLayoutWord("Seek Backward"), seconds = (backward ? -1 : 1) * seekStep, label = seconds >= 0 ? seekForwardText : seekBackwardText;
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: label,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(SeekButton2, {
+    }, /* @__PURE__ */ React20.createElement(SeekButton2, {
       className: "vds-seek-button vds-button",
       seconds,
       "aria-label": label
-    }, seconds >= 0 ? /* @__PURE__ */ React12.createElement(Icons.SeekButton.Forward, { className: "vds-icon" }) : /* @__PURE__ */ React12.createElement(Icons.SeekButton.Backward, { className: "vds-icon" })));
+    }, seconds >= 0 ? /* @__PURE__ */ React20.createElement(Icons.SeekButton.Forward, { className: "vds-icon" }) : /* @__PURE__ */ React20.createElement(Icons.SeekButton.Backward, { className: "vds-icon" })));
   }
   DefaultSeekButton.displayName = "DefaultSeekButton";
   function DefaultAirPlayButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), airPlayText = useDefaultLayoutWord("AirPlay"), $state = useMediaState("remotePlaybackState"), label = `${airPlayText} ${useDefaultLayoutWord(uppercaseFirstChar($state))}`, Icon3 = ($state === "connecting" ? Icons.AirPlayButton.Connecting : $state === "connected" ? Icons.AirPlayButton.Connected : null) ?? Icons.AirPlayButton.Default;
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: airPlayText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(AirPlayButton2, {
+    }, /* @__PURE__ */ React20.createElement(AirPlayButton2, {
       className: "vds-airplay-button vds-button",
       "aria-label": label
-    }, /* @__PURE__ */ React12.createElement(Icon3, { className: "vds-icon" })));
+    }, /* @__PURE__ */ React20.createElement(Icon3, { className: "vds-icon" })));
   }
   DefaultAirPlayButton.displayName = "DefaultAirPlayButton";
   function DefaultGoogleCastButton({ tooltip }) {
     const { icons: Icons } = useDefaultLayoutContext(), googleCastText = useDefaultLayoutWord("Google Cast"), $state = useMediaState("remotePlaybackState"), label = `${googleCastText} ${useDefaultLayoutWord(uppercaseFirstChar($state))}`, Icon3 = ($state === "connecting" ? Icons.GoogleCastButton.Connecting : $state === "connected" ? Icons.GoogleCastButton.Connected : null) ?? Icons.GoogleCastButton.Default;
-    return /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: googleCastText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(GoogleCastButton2, {
+    }, /* @__PURE__ */ React20.createElement(GoogleCastButton2, {
       className: "vds-google-cast-button vds-button",
       "aria-label": label
-    }, /* @__PURE__ */ React12.createElement(Icon3, { className: "vds-icon" })));
+    }, /* @__PURE__ */ React20.createElement(Icon3, { className: "vds-icon" })));
   }
   DefaultGoogleCastButton.displayName = "DefaultGoogleCastButton";
   function DefaultLiveButton() {
     const $live = useMediaState("live"), label = useDefaultLayoutWord("Skip To Live"), liveText = useDefaultLayoutWord("LIVE");
-    return $live ? /* @__PURE__ */ React12.createElement(LiveButton2, {
+    return $live ? /* @__PURE__ */ React20.createElement(LiveButton2, {
       className: "vds-live-button",
       "aria-label": label
-    }, /* @__PURE__ */ React12.createElement("span", { className: "vds-live-button-text" }, liveText)) : null;
+    }, /* @__PURE__ */ React20.createElement("span", { className: "vds-live-button-text" }, liveText)) : null;
   }
   DefaultLiveButton.displayName = "DefaultLiveButton";
   function DefaultDownloadButton() {
@@ -21735,37 +27576,37 @@ var PortalUI = (() => {
       src: $src,
       download
     }), downloadText = useDefaultLayoutWord("Download");
-    return isString(file?.url) ? /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    return isString(file?.url) ? /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: downloadText,
       placement: "top"
-    }, /* @__PURE__ */ React12.createElement("a", {
+    }, /* @__PURE__ */ React20.createElement("a", {
       role: "button",
       className: "vds-download-button vds-button",
       "aria-label": downloadText,
       href: appendParamsToURL2(file.url, { download: file.name }),
       download: file.name,
       target: "_blank"
-    }, Icons.DownloadButton ? /* @__PURE__ */ React12.createElement(Icons.DownloadButton.Default, { className: "vds-icon" }) : null)) : null;
+    }, Icons.DownloadButton ? /* @__PURE__ */ React20.createElement(Icons.DownloadButton.Default, { className: "vds-icon" }) : null)) : null;
   }
   DefaultDownloadButton.displayName = "DefaultDownloadButton";
   function DefaultCaptions() {
     const exampleText = useDefaultLayoutWord("Captions look like this");
-    return /* @__PURE__ */ React12.createElement(Captions2, {
+    return /* @__PURE__ */ React20.createElement(Captions2, {
       className: "vds-captions",
       exampleText
     });
   }
   DefaultCaptions.displayName = "DefaultCaptions";
   function DefaultControlsSpacer() {
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-controls-spacer" });
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-controls-spacer" });
   }
   DefaultControlsSpacer.displayName = "DefaultControlsSpacer";
   function useParentDialogEl() {
     const { layoutEl } = useDefaultLayoutContext(), $layoutEl = useSignal(layoutEl);
-    return React12.useMemo(() => $layoutEl?.closest("dialog"), [$layoutEl]);
+    return React20.useMemo(() => $layoutEl?.closest("dialog"), [$layoutEl]);
   }
   function DefaultChaptersMenu({ tooltip, placement, portalClass = "" }) {
-    const { showMenuDelay, noModal, isSmallLayout, icons: Icons, menuGroup, menuContainer, colorScheme } = useDefaultLayoutContext(), chaptersText = useDefaultLayoutWord("Chapters"), options = useChapterOptions(), disabled = !options.length, { thumbnails } = useDefaultLayoutContext(), $src = useMediaState("currentSrc"), $viewType = useMediaState("viewType"), $offset = !isSmallLayout && menuGroup === "bottom" && $viewType === "video" ? 26 : 0, $RemotionThumbnail = useSignal(RemotionThumbnail), colorSchemeClass = useColorSchemeClass(colorScheme), [isOpen, setIsOpen] = React12.useState(false), dialogEl = useParentDialogEl();
+    const { showMenuDelay, noModal, isSmallLayout, icons: Icons, menuGroup, menuContainer, colorScheme } = useDefaultLayoutContext(), chaptersText = useDefaultLayoutWord("Chapters"), options = useChapterOptions(), disabled = !options.length, { thumbnails } = useDefaultLayoutContext(), $src = useMediaState("currentSrc"), $viewType = useMediaState("viewType"), $offset = !isSmallLayout && menuGroup === "bottom" && $viewType === "video" ? 26 : 0, $RemotionThumbnail = useSignal(RemotionThumbnail), colorSchemeClass = useColorSchemeClass(colorScheme), [isOpen, setIsOpen] = React20.useState(false), dialogEl = useParentDialogEl();
     if (disabled) return null;
     function onOpen() {
       (0, import_react_dom2.flushSync)(() => {
@@ -21775,41 +27616,41 @@ var PortalUI = (() => {
     function onClose() {
       setIsOpen(false);
     }
-    const Content2 = /* @__PURE__ */ React12.createElement(Items, {
+    const Content2 = /* @__PURE__ */ React20.createElement(Items, {
       className: "vds-chapters-menu-items vds-menu-items",
       placement,
       offset: $offset
-    }, isOpen ? /* @__PURE__ */ React12.createElement(Root$1, {
+    }, isOpen ? /* @__PURE__ */ React20.createElement(Root$1, {
       className: "vds-chapters-radio-group vds-radio-group",
       value: options.selectedValue,
       "data-thumbnails": thumbnails ? "" : null
-    }, options.map(({ cue, label, value, startTimeText, durationText, select, setProgressVar }) => /* @__PURE__ */ React12.createElement(Item$1, {
+    }, options.map(({ cue, label, value, startTimeText, durationText, select, setProgressVar }) => /* @__PURE__ */ React20.createElement(Item$1, {
       className: "vds-chapter-radio vds-radio",
       value,
       key: value,
       onSelect: select,
       ref: setProgressVar
-    }, thumbnails ? /* @__PURE__ */ React12.createElement(Root$3, {
+    }, thumbnails ? /* @__PURE__ */ React20.createElement(Root$3, {
       src: thumbnails,
       className: "vds-thumbnail",
       time: cue.startTime
-    }, /* @__PURE__ */ React12.createElement(Img, null)) : $RemotionThumbnail && isRemotionSrc($src) ? /* @__PURE__ */ React12.createElement($RemotionThumbnail, {
+    }, /* @__PURE__ */ React20.createElement(Img, null)) : $RemotionThumbnail && isRemotionSrc($src) ? /* @__PURE__ */ React20.createElement($RemotionThumbnail, {
       className: "vds-thumbnail",
       frame: cue.startTime * $src.fps
-    }) : null, /* @__PURE__ */ React12.createElement("div", { className: "vds-chapter-radio-content" }, /* @__PURE__ */ React12.createElement("span", { className: "vds-chapter-radio-label" }, label), /* @__PURE__ */ React12.createElement("span", { className: "vds-chapter-radio-start-time" }, startTimeText), /* @__PURE__ */ React12.createElement("span", { className: "vds-chapter-radio-duration" }, durationText))))) : null);
-    return /* @__PURE__ */ React12.createElement(Root, {
+    }) : null, /* @__PURE__ */ React20.createElement("div", { className: "vds-chapter-radio-content" }, /* @__PURE__ */ React20.createElement("span", { className: "vds-chapter-radio-label" }, label), /* @__PURE__ */ React20.createElement("span", { className: "vds-chapter-radio-start-time" }, startTimeText), /* @__PURE__ */ React20.createElement("span", { className: "vds-chapter-radio-duration" }, durationText))))) : null);
+    return /* @__PURE__ */ React20.createElement(Root, {
       className: "vds-chapters-menu vds-menu",
       showDelay: showMenuDelay,
       onOpen,
       onClose
-    }, /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    }, /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: chaptersText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(Button, {
+    }, /* @__PURE__ */ React20.createElement(Button, {
       className: "vds-menu-button vds-button",
       disabled,
       "aria-label": chaptersText
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.Chapters, { className: "vds-icon" }))), noModal || !isSmallLayout ? Content2 : /* @__PURE__ */ React12.createElement(Portal, {
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.Chapters, { className: "vds-icon" }))), noModal || !isSmallLayout ? Content2 : /* @__PURE__ */ React20.createElement(Portal, {
       container: menuContainer ?? dialogEl,
       className: portalClass + (colorSchemeClass ? ` ${colorSchemeClass}` : ""),
       disabled: "fullscreen",
@@ -21977,45 +27818,45 @@ var PortalUI = (() => {
     }
   }
   function DefaultMenuSection({ label, value, children }) {
-    const id2 = React12.useId();
-    if (!label) return /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-section" }, /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-section-body" }, children));
-    return /* @__PURE__ */ React12.createElement("section", {
+    const id2 = React20.useId();
+    if (!label) return /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-section" }, /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-section-body" }, children));
+    return /* @__PURE__ */ React20.createElement("section", {
       className: "vds-menu-section",
       role: "group",
       "aria-labelledby": id2
-    }, /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-section-title" }, /* @__PURE__ */ React12.createElement("header", { id: id2 }, label), value ? /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-section-value" }, value) : null), /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-section-body" }, children));
+    }, /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-section-title" }, /* @__PURE__ */ React20.createElement("header", { id: id2 }, label), value ? /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-section-value" }, value) : null), /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-section-body" }, children));
   }
   DefaultMenuSection.displayName = "DefaultMenuSection";
   function DefaultMenuButton({ label, hint = "", Icon: Icon3, disabled = false }) {
-    const { icons: Icons } = React12.useContext(DefaultLayoutContext);
-    return /* @__PURE__ */ React12.createElement(Button, {
+    const { icons: Icons } = React20.useContext(DefaultLayoutContext);
+    return /* @__PURE__ */ React20.createElement(Button, {
       className: "vds-menu-item",
       disabled
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.ArrowLeft, { className: "vds-menu-close-icon vds-icon" }), Icon3 ? /* @__PURE__ */ React12.createElement(Icon3, { className: "vds-menu-item-icon vds-icon" }) : null, /* @__PURE__ */ React12.createElement("span", { className: "vds-menu-item-label" }, label), /* @__PURE__ */ React12.createElement("span", { className: "vds-menu-item-hint" }, hint), /* @__PURE__ */ React12.createElement(Icons.Menu.ArrowRight, { className: "vds-menu-open-icon vds-icon" }));
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.ArrowLeft, { className: "vds-menu-close-icon vds-icon" }), Icon3 ? /* @__PURE__ */ React20.createElement(Icon3, { className: "vds-menu-item-icon vds-icon" }) : null, /* @__PURE__ */ React20.createElement("span", { className: "vds-menu-item-label" }, label), /* @__PURE__ */ React20.createElement("span", { className: "vds-menu-item-hint" }, hint), /* @__PURE__ */ React20.createElement(Icons.Menu.ArrowRight, { className: "vds-menu-open-icon vds-icon" }));
   }
   DefaultMenuButton.displayName = "DefaultMenuButton";
   function DefaultMenuItem({ label, children }) {
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-item" }, /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-item-label" }, label), children);
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-item" }, /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-item-label" }, label), children);
   }
   DefaultMenuItem.displayName = "DefaultMenuItem";
   function DefaultMenuRadioGroup({ value, options, onChange }) {
     const { icons: Icons } = useDefaultLayoutContext();
-    return /* @__PURE__ */ React12.createElement(Root$1, {
+    return /* @__PURE__ */ React20.createElement(Root$1, {
       className: "vds-radio-group",
       value,
       onChange
-    }, options.map((option) => /* @__PURE__ */ React12.createElement(Item$1, {
+    }, options.map((option) => /* @__PURE__ */ React20.createElement(Item$1, {
       className: "vds-radio",
       value: option.value,
       key: option.value
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React12.createElement("span", {
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React20.createElement("span", {
       className: "vds-radio-label",
       "data-part": "label"
     }, option.label))));
   }
   DefaultMenuRadioGroup.displayName = "DefaultMenuRadioGroup";
   function createRadioOptions(entries) {
-    return React12.useMemo(() => isArray(entries) ? entries.map((entry) => ({
+    return React20.useMemo(() => isArray(entries) ? entries.map((entry) => ({
       label: entry,
       value: entry.toLowerCase()
     })) : Object.keys(entries).map((label) => ({
@@ -22024,20 +27865,20 @@ var PortalUI = (() => {
     })), [entries]);
   }
   function DefaultMenuSliderItem({ label, value, UpIcon, DownIcon, children, isMin, isMax }) {
-    const hasTitle = label || value, Content2 = /* @__PURE__ */ React12.createElement(React12.Fragment, null, DownIcon ? /* @__PURE__ */ React12.createElement(DownIcon, { className: "vds-icon down" }) : null, children, UpIcon ? /* @__PURE__ */ React12.createElement(UpIcon, { className: "vds-icon up" }) : null);
-    return /* @__PURE__ */ React12.createElement("div", {
+    const hasTitle = label || value, Content2 = /* @__PURE__ */ React20.createElement(React20.Fragment, null, DownIcon ? /* @__PURE__ */ React20.createElement(DownIcon, { className: "vds-icon down" }) : null, children, UpIcon ? /* @__PURE__ */ React20.createElement(UpIcon, { className: "vds-icon up" }) : null);
+    return /* @__PURE__ */ React20.createElement("div", {
       className: `vds-menu-item vds-menu-slider-item${hasTitle ? " group" : ""}`,
       "data-min": isMin ? "" : null,
       "data-max": isMax ? "" : null
-    }, hasTitle ? /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-slider-title" }, label ? /* @__PURE__ */ React12.createElement("div", null, label) : null, value ? /* @__PURE__ */ React12.createElement("div", null, value) : null), /* @__PURE__ */ React12.createElement("div", { className: "vds-menu-slider-body" }, Content2)) : Content2);
+    }, hasTitle ? /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-slider-title" }, label ? /* @__PURE__ */ React20.createElement("div", null, label) : null, value ? /* @__PURE__ */ React20.createElement("div", null, value) : null), /* @__PURE__ */ React20.createElement("div", { className: "vds-menu-slider-body" }, Content2)) : Content2);
   }
   DefaultMenuSliderItem.displayName = "DefaultMenuSliderItem";
   function DefaultSliderParts() {
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React12.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React12.createElement(Thumb, { className: "vds-slider-thumb" }));
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React20.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React20.createElement(Thumb, { className: "vds-slider-thumb" }));
   }
   DefaultSliderParts.displayName = "DefaultSliderParts";
   function DefaultSliderSteps() {
-    return /* @__PURE__ */ React12.createElement(Steps, { className: "vds-slider-steps" }, (step) => /* @__PURE__ */ React12.createElement("div", {
+    return /* @__PURE__ */ React20.createElement(Steps, { className: "vds-slider-steps" }, (step) => /* @__PURE__ */ React20.createElement("div", {
       className: "vds-slider-step",
       key: String(step)
     }));
@@ -22046,11 +27887,11 @@ var PortalUI = (() => {
   function DefaultFontMenu() {
     const label = useDefaultLayoutWord("Caption Styles"), $hasCaptions = useMediaState("hasCaptions"), fontSectionLabel = useDefaultLayoutWord("Font"), textSectionLabel = useDefaultLayoutWord("Text"), textBgSectionLabel = useDefaultLayoutWord("Text Background"), displayBgSectionLabel = useDefaultLayoutWord("Display Background");
     if (!$hasCaptions) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-font-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, { label }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-font-style-items vds-menu-items" }, /* @__PURE__ */ React12.createElement(DefaultMenuSection, { label: fontSectionLabel }, /* @__PURE__ */ React12.createElement(DefaultFontFamilyMenu, null), /* @__PURE__ */ React12.createElement(DefaultFontSizeSlider, null)), /* @__PURE__ */ React12.createElement(DefaultMenuSection, { label: textSectionLabel }, /* @__PURE__ */ React12.createElement(DefaultTextColorInput, null), /* @__PURE__ */ React12.createElement(DefaultTextShadowMenu, null), /* @__PURE__ */ React12.createElement(DefaultTextOpacitySlider, null)), /* @__PURE__ */ React12.createElement(DefaultMenuSection, { label: textBgSectionLabel }, /* @__PURE__ */ React12.createElement(DefaultTextBgInput, null), /* @__PURE__ */ React12.createElement(DefaultTextBgOpacitySlider, null)), /* @__PURE__ */ React12.createElement(DefaultMenuSection, { label: displayBgSectionLabel }, /* @__PURE__ */ React12.createElement(DefaultDisplayBgInput, null), /* @__PURE__ */ React12.createElement(DefaultDisplayBgOpacitySlider, null)), /* @__PURE__ */ React12.createElement(DefaultMenuSection, null, /* @__PURE__ */ React12.createElement(DefaultResetMenuItem, null))));
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-font-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, { label }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-font-style-items vds-menu-items" }, /* @__PURE__ */ React20.createElement(DefaultMenuSection, { label: fontSectionLabel }, /* @__PURE__ */ React20.createElement(DefaultFontFamilyMenu, null), /* @__PURE__ */ React20.createElement(DefaultFontSizeSlider, null)), /* @__PURE__ */ React20.createElement(DefaultMenuSection, { label: textSectionLabel }, /* @__PURE__ */ React20.createElement(DefaultTextColorInput, null), /* @__PURE__ */ React20.createElement(DefaultTextShadowMenu, null), /* @__PURE__ */ React20.createElement(DefaultTextOpacitySlider, null)), /* @__PURE__ */ React20.createElement(DefaultMenuSection, { label: textBgSectionLabel }, /* @__PURE__ */ React20.createElement(DefaultTextBgInput, null), /* @__PURE__ */ React20.createElement(DefaultTextBgOpacitySlider, null)), /* @__PURE__ */ React20.createElement(DefaultMenuSection, { label: displayBgSectionLabel }, /* @__PURE__ */ React20.createElement(DefaultDisplayBgInput, null), /* @__PURE__ */ React20.createElement(DefaultDisplayBgOpacitySlider, null)), /* @__PURE__ */ React20.createElement(DefaultMenuSection, null, /* @__PURE__ */ React20.createElement(DefaultResetMenuItem, null))));
   }
   DefaultFontMenu.displayName = "DefaultFontMenu";
   function DefaultFontFamilyMenu() {
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Family",
       type: "fontFamily",
       option: FONT_FAMILY_OPTION
@@ -22063,7 +27904,7 @@ var PortalUI = (() => {
       upIcon: Icons.Menu.FontSizeUp,
       downIcon: Icons.Menu.FontSizeDown
     };
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Size",
       type: "fontSize",
       option
@@ -22071,7 +27912,7 @@ var PortalUI = (() => {
   }
   DefaultFontSizeSlider.displayName = "DefaultFontSizeSlider";
   function DefaultTextColorInput() {
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Color",
       type: "textColor",
       option: FONT_COLOR_OPTION
@@ -22084,7 +27925,7 @@ var PortalUI = (() => {
       upIcon: Icons.Menu.OpacityUp,
       downIcon: Icons.Menu.OpacityDown
     };
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Opacity",
       type: "textOpacity",
       option
@@ -22092,7 +27933,7 @@ var PortalUI = (() => {
   }
   DefaultTextOpacitySlider.displayName = "DefaultTextOpacitySlider";
   function DefaultTextShadowMenu() {
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Shadow",
       type: "textShadow",
       option: FONT_TEXT_SHADOW_OPTION
@@ -22100,7 +27941,7 @@ var PortalUI = (() => {
   }
   DefaultTextShadowMenu.displayName = "DefaultTextShadowMenu";
   function DefaultTextBgInput() {
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Color",
       type: "textBg",
       option: FONT_COLOR_OPTION
@@ -22113,7 +27954,7 @@ var PortalUI = (() => {
       upIcon: Icons.Menu.OpacityUp,
       downIcon: Icons.Menu.OpacityDown
     };
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Opacity",
       type: "textBgOpacity",
       option
@@ -22121,7 +27962,7 @@ var PortalUI = (() => {
   }
   DefaultTextBgOpacitySlider.displayName = "DefaultTextBgOpacitySlider";
   function DefaultDisplayBgInput() {
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Color",
       type: "displayBg",
       option: FONT_COLOR_OPTION
@@ -22134,7 +27975,7 @@ var PortalUI = (() => {
       upIcon: Icons.Menu.OpacityUp,
       downIcon: Icons.Menu.OpacityDown
     };
-    return /* @__PURE__ */ React12.createElement(DefaultFontSetting, {
+    return /* @__PURE__ */ React20.createElement(DefaultFontSetting, {
       label: "Opacity",
       type: "displayBgOpacity",
       option
@@ -22143,10 +27984,10 @@ var PortalUI = (() => {
   DefaultDisplayBgOpacitySlider.displayName = "DefaultDisplayBgOpacitySlider";
   function DefaultFontSetting({ label, option, type }) {
     const player = useMediaPlayer(), $currentValue = FONT_SIGNALS[type], $value = useSignal($currentValue), translatedLabel = useDefaultLayoutWord(label);
-    const notify2 = React12.useCallback(() => {
+    const notify2 = React20.useCallback(() => {
       player?.dispatchEvent(new Event("vds-font-change"));
     }, [player]);
-    const onChange = React12.useCallback((newValue) => {
+    const onChange = React20.useCallback((newValue) => {
       $currentValue.set(newValue);
       notify2();
     }, [$currentValue, notify2]);
@@ -22154,7 +27995,7 @@ var PortalUI = (() => {
       let onColorChange = function(event) {
         onChange(event.target.value);
       };
-      return /* @__PURE__ */ React12.createElement(DefaultMenuItem, { label: translatedLabel }, /* @__PURE__ */ React12.createElement("input", {
+      return /* @__PURE__ */ React20.createElement(DefaultMenuItem, { label: translatedLabel }, /* @__PURE__ */ React20.createElement("input", {
         className: "vds-color-picker",
         type: "color",
         value: $value,
@@ -22166,14 +28007,14 @@ var PortalUI = (() => {
         onChange(value + "%");
       };
       const { min: min2, max: max2, step, upIcon, downIcon } = option;
-      return /* @__PURE__ */ React12.createElement(DefaultMenuSliderItem, {
+      return /* @__PURE__ */ React20.createElement(DefaultMenuSliderItem, {
         label: translatedLabel,
         value: $value,
         UpIcon: upIcon,
         DownIcon: downIcon,
         isMin: $value === min2 + "%",
         isMax: $value === max2 + "%"
-      }, /* @__PURE__ */ React12.createElement(Root$5, {
+      }, /* @__PURE__ */ React20.createElement(Root$5, {
         className: "vds-slider",
         min: min2,
         max: max2,
@@ -22183,9 +28024,9 @@ var PortalUI = (() => {
         "aria-label": translatedLabel,
         onValueChange: onSliderValueChange,
         onDragValueChange: onSliderValueChange
-      }, /* @__PURE__ */ React12.createElement(DefaultSliderParts, null), /* @__PURE__ */ React12.createElement(DefaultSliderSteps, null)));
+      }, /* @__PURE__ */ React20.createElement(DefaultSliderParts, null), /* @__PURE__ */ React20.createElement(DefaultSliderSteps, null)));
     }
-    if (option.type === "radio") return /* @__PURE__ */ React12.createElement(DefaultFontRadioGroup, {
+    if (option.type === "radio") return /* @__PURE__ */ React20.createElement(DefaultFontRadioGroup, {
       id: camelToKebabCase(type),
       label: translatedLabel,
       value: $value,
@@ -22196,13 +28037,13 @@ var PortalUI = (() => {
   }
   DefaultFontSetting.displayName = "DefaultFontSetting";
   function DefaultFontRadioGroup({ id: id2, label, value, values, onChange }) {
-    const radioOptions = createRadioOptions(values), { translations } = useDefaultLayoutContext(), hint = React12.useMemo(() => {
+    const radioOptions = createRadioOptions(values), { translations } = useDefaultLayoutContext(), hint = React20.useMemo(() => {
       return i18n(translations, radioOptions.find((radio) => radio.value === value)?.label || "");
     }, [value, radioOptions]);
-    return /* @__PURE__ */ React12.createElement(Root, { className: `vds-${id2}-menu vds-menu` }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: `vds-${id2}-menu vds-menu` }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       hint
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, /* @__PURE__ */ React12.createElement(DefaultMenuRadioGroup, {
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, /* @__PURE__ */ React20.createElement(DefaultMenuRadioGroup, {
       value,
       options: radioOptions,
       onChange
@@ -22211,21 +28052,21 @@ var PortalUI = (() => {
   DefaultFontRadioGroup.displayName = "DefaultFontRadioGroup";
   function DefaultResetMenuItem() {
     const resetText = useDefaultLayoutWord("Reset");
-    return /* @__PURE__ */ React12.createElement("button", {
+    return /* @__PURE__ */ React20.createElement("button", {
       className: "vds-menu-item",
       role: "menuitem",
       onClick: onFontReset
-    }, /* @__PURE__ */ React12.createElement("span", { className: "vds-menu-item-label" }, resetText));
+    }, /* @__PURE__ */ React20.createElement("span", { className: "vds-menu-item-label" }, resetText));
   }
   DefaultResetMenuItem.displayName = "DefaultResetMenuItem";
   function DefaultMenuCheckbox({ label, checked, storageKey, defaultChecked = false, onChange }) {
-    const [isChecked, setIsChecked] = React12.useState(defaultChecked), [isActive, setIsActive] = React12.useState(false);
-    React12.useEffect(() => {
+    const [isChecked, setIsChecked] = React20.useState(defaultChecked), [isActive, setIsActive] = React20.useState(false);
+    React20.useEffect(() => {
       const checked2 = !!((storageKey ? localStorage.getItem(storageKey) : null) ?? defaultChecked);
       setIsChecked(checked2);
       onChange?.(checked2);
     }, []);
-    React12.useEffect(() => {
+    React20.useEffect(() => {
       if (isBoolean(checked)) setIsChecked(checked);
     }, [checked]);
     function onPress2(event) {
@@ -22243,7 +28084,7 @@ var PortalUI = (() => {
     function onKeyDown(event) {
       if (isKeyboardClick(event.nativeEvent)) onPress2();
     }
-    return /* @__PURE__ */ React12.createElement("div", {
+    return /* @__PURE__ */ React20.createElement("div", {
       className: "vds-menu-checkbox",
       role: "menuitemcheckbox",
       tabIndex: 0,
@@ -22258,10 +28099,10 @@ var PortalUI = (() => {
   DefaultMenuCheckbox.displayName = "DefaultMenuCheckbox";
   function DefaultAccessibilityMenu({ slots }) {
     const label = useDefaultLayoutWord("Accessibility"), { icons: Icons } = useDefaultLayoutContext();
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-accessibility-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-accessibility-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       Icon: Icons.Menu.Accessibility
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, slot(slots, "accessibilityMenuItemsStart", null), /* @__PURE__ */ React12.createElement(DefaultMenuSection, null, /* @__PURE__ */ React12.createElement(DefaultAnnouncementsMenuCheckbox, null), /* @__PURE__ */ React12.createElement(DefaultKeyboardAnimationsMenuCheckbox, null)), /* @__PURE__ */ React12.createElement(DefaultMenuSection, null, /* @__PURE__ */ React12.createElement(DefaultFontMenu, null)), slot(slots, "accessibilityMenuItemsEnd", null)));
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, slot(slots, "accessibilityMenuItemsStart", null), /* @__PURE__ */ React20.createElement(DefaultMenuSection, null, /* @__PURE__ */ React20.createElement(DefaultAnnouncementsMenuCheckbox, null), /* @__PURE__ */ React20.createElement(DefaultKeyboardAnimationsMenuCheckbox, null)), /* @__PURE__ */ React20.createElement(DefaultMenuSection, null, /* @__PURE__ */ React20.createElement(DefaultFontMenu, null)), slot(slots, "accessibilityMenuItemsEnd", null)));
   }
   DefaultAccessibilityMenu.displayName = "DefaultAccessibilityMenu";
   function DefaultAnnouncementsMenuCheckbox() {
@@ -22269,7 +28110,7 @@ var PortalUI = (() => {
     function onChange(checked) {
       userPrefersAnnouncements.set(checked);
     }
-    return /* @__PURE__ */ React12.createElement(DefaultMenuItem, { label }, /* @__PURE__ */ React12.createElement(DefaultMenuCheckbox, {
+    return /* @__PURE__ */ React20.createElement(DefaultMenuItem, { label }, /* @__PURE__ */ React20.createElement(DefaultMenuCheckbox, {
       label,
       defaultChecked: true,
       storageKey: "vds-player::announcements",
@@ -22283,7 +28124,7 @@ var PortalUI = (() => {
     function onChange(checked) {
       userPrefersKeyboardAnimations.set(checked);
     }
-    return /* @__PURE__ */ React12.createElement(DefaultMenuItem, { label }, /* @__PURE__ */ React12.createElement(DefaultMenuCheckbox, {
+    return /* @__PURE__ */ React20.createElement(DefaultMenuItem, { label }, /* @__PURE__ */ React20.createElement(DefaultMenuCheckbox, {
       label,
       defaultChecked: true,
       storageKey: "vds-player::keyboard-animations",
@@ -22294,25 +28135,25 @@ var PortalUI = (() => {
   function DefaultAudioMenu({ slots }) {
     const label = useDefaultLayoutWord("Audio"), $canSetAudioGain = useMediaState("canSetAudioGain"), $audioTrack = useMediaState("audioTrack"), $audioTracks = useMediaState("audioTracks"), { noAudioGain, icons: Icons } = useDefaultLayoutContext(), hasGainSlider = $canSetAudioGain && !noAudioGain;
     if (!hasGainSlider && $audioTracks.length <= 1) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-audio-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-audio-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       hint: $audioTrack?.label,
       Icon: Icons.Menu.Audio
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, slot(slots, "audioMenuItemsStart", null), /* @__PURE__ */ React12.createElement(DefaultAudioTracksMenu, null), hasGainSlider ? /* @__PURE__ */ React12.createElement(DefaultAudioBoostMenuSection, null) : null, slot(slots, "audioMenuItemsEnd", null)));
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, slot(slots, "audioMenuItemsStart", null), /* @__PURE__ */ React20.createElement(DefaultAudioTracksMenu, null), hasGainSlider ? /* @__PURE__ */ React20.createElement(DefaultAudioBoostMenuSection, null) : null, slot(slots, "audioMenuItemsEnd", null)));
   }
   DefaultAudioMenu.displayName = "DefaultAudioMenu";
   function DefaultAudioBoostMenuSection() {
     const $audioGain = useMediaState("audioGain"), label = useDefaultLayoutWord("Boost"), value = Math.round((($audioGain ?? 1) - 1) * 100) + "%", $canSetAudioGain = useMediaState("canSetAudioGain"), { noAudioGain, icons: Icons } = useDefaultLayoutContext(), $disabled = !$canSetAudioGain || noAudioGain, min2 = useGainMin(), max2 = useGainMax();
     if ($disabled) return null;
-    return /* @__PURE__ */ React12.createElement(DefaultMenuSection, {
+    return /* @__PURE__ */ React20.createElement(DefaultMenuSection, {
       label,
       value
-    }, /* @__PURE__ */ React12.createElement(DefaultMenuSliderItem, {
+    }, /* @__PURE__ */ React20.createElement(DefaultMenuSliderItem, {
       UpIcon: Icons.Menu.AudioBoostUp,
       DownIcon: Icons.Menu.AudioBoostDown,
       isMin: (($audioGain ?? 1) - 1) * 100 <= min2,
       isMax: (($audioGain ?? 1) - 1) * 100 === max2
-    }, /* @__PURE__ */ React12.createElement(DefaultAudioGainSlider, null)));
+    }, /* @__PURE__ */ React20.createElement(DefaultAudioGainSlider, null)));
   }
   DefaultAudioBoostMenuSection.displayName = "DefaultAudioBoostMenuSection";
   function useGainMin() {
@@ -22329,94 +28170,94 @@ var PortalUI = (() => {
   }
   function DefaultAudioGainSlider() {
     const label = useDefaultLayoutWord("Audio Boost"), min2 = useGainMin(), max2 = useGainMax(), step = useGainStep();
-    return /* @__PURE__ */ React12.createElement(Root$22, {
+    return /* @__PURE__ */ React20.createElement(Root$22, {
       className: "vds-audio-gain-slider vds-slider",
       "aria-label": label,
       min: min2,
       max: max2,
       step,
       keyStep: step
-    }, /* @__PURE__ */ React12.createElement(DefaultSliderParts, null), /* @__PURE__ */ React12.createElement(DefaultSliderSteps, null));
+    }, /* @__PURE__ */ React20.createElement(DefaultSliderParts, null), /* @__PURE__ */ React20.createElement(DefaultSliderSteps, null));
   }
   DefaultAudioGainSlider.displayName = "DefaultAudioGainSlider";
   function DefaultAudioTracksMenu() {
     const { icons: Icons } = useDefaultLayoutContext(), label = useDefaultLayoutWord("Track"), defaultText = useDefaultLayoutWord("Default"), $track = useMediaState("audioTrack"), options = useAudioOptions();
     if (options.disabled) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-audio-track-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-audio-track-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       hint: $track?.label ?? defaultText,
       disabled: options.disabled,
       Icon: Icons.Menu.Audio
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, /* @__PURE__ */ React12.createElement(Root$1, {
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, /* @__PURE__ */ React20.createElement(Root$1, {
       className: "vds-audio-radio-group vds-radio-group",
       value: options.selectedValue
-    }, options.map(({ label: label2, value, select }) => /* @__PURE__ */ React12.createElement(Item$1, {
+    }, options.map(({ label: label2, value, select }) => /* @__PURE__ */ React20.createElement(Item$1, {
       className: "vds-audio-radio vds-radio",
       value,
       onSelect: select,
       key: value
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React12.createElement("span", { className: "vds-radio-label" }, label2))))));
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React20.createElement("span", { className: "vds-radio-label" }, label2))))));
   }
   DefaultAudioTracksMenu.displayName = "DefaultAudioTracksMenu";
   function DefaultCaptionMenu({ slots }) {
     const { icons: Icons } = useDefaultLayoutContext(), label = useDefaultLayoutWord("Captions"), offText = useDefaultLayoutWord("Off"), options = useCaptionOptions({ off: offText }), hint = options.selectedTrack?.label ?? offText;
     if (options.disabled) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-captions-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-captions-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       hint,
       disabled: options.disabled,
       Icon: Icons.Menu.Captions
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, slot(slots, "captionsMenuItemsStart", null), /* @__PURE__ */ React12.createElement(Root$1, {
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, slot(slots, "captionsMenuItemsStart", null), /* @__PURE__ */ React20.createElement(Root$1, {
       className: "vds-captions-radio-group vds-radio-group",
       value: options.selectedValue
-    }, options.map(({ label: label2, value, select }) => /* @__PURE__ */ React12.createElement(Item$1, {
+    }, options.map(({ label: label2, value, select }) => /* @__PURE__ */ React20.createElement(Item$1, {
       className: "vds-caption-radio vds-radio",
       value,
       onSelect: select,
       key: value
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React12.createElement("span", { className: "vds-radio-label" }, label2)))), slot(slots, "captionsMenuItemsEnd", null)));
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React20.createElement("span", { className: "vds-radio-label" }, label2)))), slot(slots, "captionsMenuItemsEnd", null)));
   }
   DefaultCaptionMenu.displayName = "DefaultCaptionMenu";
   function DefaultQualityMenu({ slots }) {
     const { hideQualityBitrate, icons: Icons } = useDefaultLayoutContext(), label = useDefaultLayoutWord("Quality"), autoText = useDefaultLayoutWord("Auto"), $canSetQuality = useMediaState("canSetQuality"), $qualities = useMediaState("qualities"), options = useVideoQualityOptions({ auto: autoText });
     if (!$canSetQuality || $qualities.length <= 1 || options.disabled) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-quality-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-quality-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       Icon: Icons.Menu.QualityUp
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, slot(slots, "qualityMenuItemsStart", null), /* @__PURE__ */ React12.createElement(Root$1, {
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, slot(slots, "qualityMenuItemsStart", null), /* @__PURE__ */ React20.createElement(Root$1, {
       className: "vds-quality-radio-group vds-radio-group",
       value: options.selectedValue
-    }, options.map(({ label: label2, value, bitrateText, select }) => /* @__PURE__ */ React12.createElement(Item$1, {
+    }, options.map(({ label: label2, value, bitrateText, select }) => /* @__PURE__ */ React20.createElement(Item$1, {
       className: "vds-quality-radio vds-radio",
       value,
       onSelect: select,
       key: value
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React12.createElement("span", { className: "vds-radio-label" }, label2), !hideQualityBitrate && bitrateText ? /* @__PURE__ */ React12.createElement("span", { className: "vds-radio-hint" }, bitrateText) : null))), slot(slots, "qualityMenuItemsEnd", null)));
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.RadioCheck, { className: "vds-icon" }), /* @__PURE__ */ React20.createElement("span", { className: "vds-radio-label" }, label2), !hideQualityBitrate && bitrateText ? /* @__PURE__ */ React20.createElement("span", { className: "vds-radio-hint" }, bitrateText) : null))), slot(slots, "qualityMenuItemsEnd", null)));
   }
   DefaultQualityMenu.displayName = "DefaultQualityMenu";
   function DefaultSpeedMenu({ slots }) {
     const { icons: Icons } = useDefaultLayoutContext(), $playbackRate = useMediaState("playbackRate"), $canSetPlaybackRate = useMediaState("canSetPlaybackRate"), label = useDefaultLayoutWord("Speed"), normalText = useDefaultLayoutWord("Normal"), min2 = useSpeedMin(), max2 = useSpeedMax(), step = useSpeedStep(), value = $playbackRate === 1 ? normalText : $playbackRate + "x";
     if (!$canSetPlaybackRate) return null;
-    return /* @__PURE__ */ React12.createElement(Root, { className: "vds-speed-menu vds-menu" }, /* @__PURE__ */ React12.createElement(DefaultMenuButton, {
+    return /* @__PURE__ */ React20.createElement(Root, { className: "vds-speed-menu vds-menu" }, /* @__PURE__ */ React20.createElement(DefaultMenuButton, {
       label,
       hint: value,
       Icon: Icons.Menu.SpeedUp
-    }), /* @__PURE__ */ React12.createElement(Items, { className: "vds-menu-items" }, slot(slots, "speedMenuItemsStart", null), /* @__PURE__ */ React12.createElement(DefaultMenuSection, {
+    }), /* @__PURE__ */ React20.createElement(Items, { className: "vds-menu-items" }, slot(slots, "speedMenuItemsStart", null), /* @__PURE__ */ React20.createElement(DefaultMenuSection, {
       label,
       value
-    }, /* @__PURE__ */ React12.createElement(DefaultMenuSliderItem, {
+    }, /* @__PURE__ */ React20.createElement(DefaultMenuSliderItem, {
       UpIcon: Icons.Menu.FontSizeUp,
       DownIcon: Icons.Menu.FontSizeDown,
       isMin: $playbackRate === min2,
       isMax: $playbackRate === max2
-    }, /* @__PURE__ */ React12.createElement(Root$12, {
+    }, /* @__PURE__ */ React20.createElement(Root$12, {
       className: "vds-speed-slider vds-slider",
       "aria-label": label,
       min: min2,
       max: max2,
       step,
       keyStep: step
-    }, /* @__PURE__ */ React12.createElement(DefaultSliderParts, null), /* @__PURE__ */ React12.createElement(DefaultSliderSteps, null)))), slot(slots, "speedMenuItemsEnd", null)));
+    }, /* @__PURE__ */ React20.createElement(DefaultSliderParts, null), /* @__PURE__ */ React20.createElement(DefaultSliderSteps, null)))), slot(slots, "speedMenuItemsEnd", null)));
   }
   DefaultSpeedMenu.displayName = "DefaultSpeedMenu";
   function useSpeedMin() {
@@ -22432,7 +28273,7 @@ var PortalUI = (() => {
     return (isArray(rates) ? rates[1] - rates[0] : rates?.step) || 0.25;
   }
   function DefaultSettingsMenu({ tooltip, placement, portalClass = "", slots }) {
-    const { showMenuDelay, icons: Icons, isSmallLayout, menuContainer, menuGroup, noModal, colorScheme } = useDefaultLayoutContext(), settingsText = useDefaultLayoutWord("Settings"), $viewType = useMediaState("viewType"), $offset = !isSmallLayout && menuGroup === "bottom" && $viewType === "video" ? 26 : 0, colorSchemeClass = useColorSchemeClass(colorScheme), [isOpen, setIsOpen] = React12.useState(false), dialogEl = useParentDialogEl();
+    const { showMenuDelay, icons: Icons, isSmallLayout, menuContainer, menuGroup, noModal, colorScheme } = useDefaultLayoutContext(), settingsText = useDefaultLayoutWord("Settings"), $viewType = useMediaState("viewType"), $offset = !isSmallLayout && menuGroup === "bottom" && $viewType === "video" ? 26 : 0, colorSchemeClass = useColorSchemeClass(colorScheme), [isOpen, setIsOpen] = React20.useState(false), dialogEl = useParentDialogEl();
     useScoped(updateFontCssVars);
     function onOpen() {
       (0, import_react_dom2.flushSync)(() => {
@@ -22442,23 +28283,23 @@ var PortalUI = (() => {
     function onClose() {
       setIsOpen(false);
     }
-    const Content2 = /* @__PURE__ */ React12.createElement(Items, {
+    const Content2 = /* @__PURE__ */ React20.createElement(Items, {
       className: "vds-settings-menu-items vds-menu-items",
       placement,
       offset: $offset
-    }, isOpen ? /* @__PURE__ */ React12.createElement(React12.Fragment, null, slot(slots, "settingsMenuItemsStart", null), slot(slots, "settingsMenuStartItems", null), /* @__PURE__ */ React12.createElement(DefaultSpeedMenu, { slots }), /* @__PURE__ */ React12.createElement(DefaultQualityMenu, { slots }), /* @__PURE__ */ React12.createElement(DefaultAccessibilityMenu, { slots }), /* @__PURE__ */ React12.createElement(DefaultAudioMenu, { slots }), /* @__PURE__ */ React12.createElement(DefaultCaptionMenu, { slots }), slot(slots, "settingsMenuEndItems", null), slot(slots, "settingsMenuItemsEnd", null)) : null);
-    return /* @__PURE__ */ React12.createElement(Root, {
+    }, isOpen ? /* @__PURE__ */ React20.createElement(React20.Fragment, null, slot(slots, "settingsMenuItemsStart", null), slot(slots, "settingsMenuStartItems", null), /* @__PURE__ */ React20.createElement(DefaultSpeedMenu, { slots }), /* @__PURE__ */ React20.createElement(DefaultQualityMenu, { slots }), /* @__PURE__ */ React20.createElement(DefaultAccessibilityMenu, { slots }), /* @__PURE__ */ React20.createElement(DefaultAudioMenu, { slots }), /* @__PURE__ */ React20.createElement(DefaultCaptionMenu, { slots }), slot(slots, "settingsMenuEndItems", null), slot(slots, "settingsMenuItemsEnd", null)) : null);
+    return /* @__PURE__ */ React20.createElement(Root, {
       className: "vds-settings-menu vds-menu",
       showDelay: showMenuDelay,
       onOpen,
       onClose
-    }, /* @__PURE__ */ React12.createElement(DefaultTooltip, {
+    }, /* @__PURE__ */ React20.createElement(DefaultTooltip, {
       content: settingsText,
       placement: tooltip
-    }, /* @__PURE__ */ React12.createElement(Button, {
+    }, /* @__PURE__ */ React20.createElement(Button, {
       className: "vds-menu-button vds-button",
       "aria-label": settingsText
-    }, /* @__PURE__ */ React12.createElement(Icons.Menu.Settings, { className: "vds-icon vds-rotate-icon" }))), noModal || !isSmallLayout ? Content2 : /* @__PURE__ */ React12.createElement(Portal, {
+    }, /* @__PURE__ */ React20.createElement(Icons.Menu.Settings, { className: "vds-icon vds-rotate-icon" }))), noModal || !isSmallLayout ? Content2 : /* @__PURE__ */ React20.createElement(Portal, {
       className: portalClass + (colorSchemeClass ? ` ${colorSchemeClass}` : ""),
       container: menuContainer ?? dialogEl,
       disabled: "fullscreen",
@@ -22470,72 +28311,72 @@ var PortalUI = (() => {
   }
   DefaultSettingsMenu.displayName = "DefaultSettingsMenu";
   function DefaultVolumePopup({ tooltip, orientation, slots }) {
-    const $pointer = useMediaState("pointer"), $muted = useMediaState("muted"), $canSetVolume = useMediaState("canSetVolume"), [rootEl, setRootEl] = React12.useState(null), isRootActive = useActive(rootEl), muteButton = slot(slots, "muteButton", /* @__PURE__ */ React12.createElement(DefaultMuteButton, { tooltip }));
+    const $pointer = useMediaState("pointer"), $muted = useMediaState("muted"), $canSetVolume = useMediaState("canSetVolume"), [rootEl, setRootEl] = React20.useState(null), isRootActive = useActive(rootEl), muteButton = slot(slots, "muteButton", /* @__PURE__ */ React20.createElement(DefaultMuteButton, { tooltip }));
     if (!$canSetVolume) return muteButton;
-    return $pointer === "coarse" && !$muted ? null : /* @__PURE__ */ React12.createElement("div", {
+    return $pointer === "coarse" && !$muted ? null : /* @__PURE__ */ React20.createElement("div", {
       className: "vds-volume",
       "data-active": isRootActive ? "" : null,
       ref: setRootEl
-    }, muteButton, /* @__PURE__ */ React12.createElement("div", { className: "vds-volume-popup" }, slot(slots, "volumeSlider", /* @__PURE__ */ React12.createElement(DefaultVolumeSlider, { orientation }))));
+    }, muteButton, /* @__PURE__ */ React20.createElement("div", { className: "vds-volume-popup" }, slot(slots, "volumeSlider", /* @__PURE__ */ React20.createElement(DefaultVolumeSlider, { orientation }))));
   }
   DefaultVolumePopup.displayName = "DefaultVolumePopup";
   function DefaultVolumeSlider(props) {
     const label = useDefaultLayoutWord("Volume");
-    return /* @__PURE__ */ React12.createElement(Root$4, {
+    return /* @__PURE__ */ React20.createElement(Root$4, {
       className: "vds-volume-slider vds-slider",
       "aria-label": label,
       ...props
-    }, /* @__PURE__ */ React12.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React12.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React12.createElement(Thumb, { className: "vds-slider-thumb" }), /* @__PURE__ */ React12.createElement(Preview, {
+    }, /* @__PURE__ */ React20.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React20.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React20.createElement(Thumb, { className: "vds-slider-thumb" }), /* @__PURE__ */ React20.createElement(Preview, {
       className: "vds-slider-preview",
       noClamp: true
-    }, /* @__PURE__ */ React12.createElement(Value, { className: "vds-slider-value" })));
+    }, /* @__PURE__ */ React20.createElement(Value, { className: "vds-slider-value" })));
   }
   DefaultVolumeSlider.displayName = "DefaultVolumeSlider";
   function DefaultTimeSlider() {
-    const [instance, setInstance] = React12.useState(null), [width, setWidth] = React12.useState(0), $src = useMediaState("currentSrc"), { thumbnails, sliderChaptersMinWidth, disableTimeSlider, seekStep, noScrubGesture } = useDefaultLayoutContext(), label = useDefaultLayoutWord("Seek"), $RemotionSliderThumbnail = useSignal(RemotionSliderThumbnail);
-    const onResize = React12.useCallback(() => {
+    const [instance, setInstance] = React20.useState(null), [width, setWidth] = React20.useState(0), $src = useMediaState("currentSrc"), { thumbnails, sliderChaptersMinWidth, disableTimeSlider, seekStep, noScrubGesture } = useDefaultLayoutContext(), label = useDefaultLayoutWord("Seek"), $RemotionSliderThumbnail = useSignal(RemotionSliderThumbnail);
+    const onResize = React20.useCallback(() => {
       const el = instance?.el;
       el && setWidth(el.clientWidth);
     }, [instance]);
     useResizeObserver(instance?.el, onResize);
-    return /* @__PURE__ */ React12.createElement(Root$2, {
+    return /* @__PURE__ */ React20.createElement(Root$2, {
       className: "vds-time-slider vds-slider",
       "aria-label": label,
       disabled: disableTimeSlider,
       noSwipeGesture: noScrubGesture,
       keyStep: seekStep,
       ref: setInstance
-    }, /* @__PURE__ */ React12.createElement(Chapters, {
+    }, /* @__PURE__ */ React20.createElement(Chapters, {
       className: "vds-slider-chapters",
       disabled: width < sliderChaptersMinWidth
-    }, (cues, forwardRef8) => cues.map((cue) => /* @__PURE__ */ React12.createElement("div", {
+    }, (cues, forwardRef9) => cues.map((cue) => /* @__PURE__ */ React20.createElement("div", {
       className: "vds-slider-chapter",
       key: cue.startTime,
-      ref: forwardRef8
-    }, /* @__PURE__ */ React12.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React12.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React12.createElement(Progress, { className: "vds-slider-progress vds-slider-track" })))), /* @__PURE__ */ React12.createElement(Thumb, { className: "vds-slider-thumb" }), /* @__PURE__ */ React12.createElement(Preview, { className: "vds-slider-preview" }, thumbnails ? /* @__PURE__ */ React12.createElement(Thumbnail2.Root, {
+      ref: forwardRef9
+    }, /* @__PURE__ */ React20.createElement(Track, { className: "vds-slider-track" }), /* @__PURE__ */ React20.createElement(TrackFill, { className: "vds-slider-track-fill vds-slider-track" }), /* @__PURE__ */ React20.createElement(Progress, { className: "vds-slider-progress vds-slider-track" })))), /* @__PURE__ */ React20.createElement(Thumb, { className: "vds-slider-thumb" }), /* @__PURE__ */ React20.createElement(Preview, { className: "vds-slider-preview" }, thumbnails ? /* @__PURE__ */ React20.createElement(Thumbnail2.Root, {
       src: thumbnails,
       className: "vds-slider-thumbnail vds-thumbnail"
-    }, /* @__PURE__ */ React12.createElement(Thumbnail2.Img, null)) : $RemotionSliderThumbnail && isRemotionSrc($src) ? /* @__PURE__ */ React12.createElement($RemotionSliderThumbnail, { className: "vds-slider-thumbnail vds-thumbnail" }) : null, /* @__PURE__ */ React12.createElement(ChapterTitle, { className: "vds-slider-chapter-title" }), /* @__PURE__ */ React12.createElement(Value, { className: "vds-slider-value" })));
+    }, /* @__PURE__ */ React20.createElement(Thumbnail2.Img, null)) : $RemotionSliderThumbnail && isRemotionSrc($src) ? /* @__PURE__ */ React20.createElement($RemotionSliderThumbnail, { className: "vds-slider-thumbnail vds-thumbnail" }) : null, /* @__PURE__ */ React20.createElement(ChapterTitle, { className: "vds-slider-chapter-title" }), /* @__PURE__ */ React20.createElement(Value, { className: "vds-slider-value" })));
   }
   DefaultTimeSlider.displayName = "DefaultTimeSlider";
   function DefaultTimeGroup({ slots }) {
     if (!useMediaState("duration")) return null;
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-time-group" }, slot(slots, "currentTime", /* @__PURE__ */ React12.createElement(Time2, {
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-time-group" }, slot(slots, "currentTime", /* @__PURE__ */ React20.createElement(Time2, {
       className: "vds-time",
       type: "current"
-    })), slot(slots, "timeDivider", /* @__PURE__ */ React12.createElement("div", { className: "vds-time-divider" }, "/")), slot(slots, "endTime", /* @__PURE__ */ React12.createElement(Time2, {
+    })), slot(slots, "timeDivider", /* @__PURE__ */ React20.createElement("div", { className: "vds-time-divider" }, "/")), slot(slots, "endTime", /* @__PURE__ */ React20.createElement(Time2, {
       className: "vds-time",
       type: "duration"
     })));
   }
   DefaultTimeGroup.displayName = "DefaultTimeGroup";
   function DefaultTimeInfo({ slots }) {
-    return useMediaState("live") ? slot(slots, "liveButton", /* @__PURE__ */ React12.createElement(DefaultLiveButton, null)) : /* @__PURE__ */ React12.createElement(DefaultTimeGroup, { slots });
+    return useMediaState("live") ? slot(slots, "liveButton", /* @__PURE__ */ React20.createElement(DefaultLiveButton, null)) : /* @__PURE__ */ React20.createElement(DefaultTimeGroup, { slots });
   }
   DefaultTimeInfo.displayName = "DefaultTimeInfo";
   function DefaultTimeInvert({ slots }) {
     const $live = useMediaState("live"), $duration = useMediaState("duration");
-    return $live ? slot(slots, "liveButton", /* @__PURE__ */ React12.createElement(DefaultLiveButton, null)) : slot(slots, "endTime", $duration ? /* @__PURE__ */ React12.createElement(Time2, {
+    return $live ? slot(slots, "liveButton", /* @__PURE__ */ React20.createElement(DefaultLiveButton, null)) : slot(slots, "endTime", $duration ? /* @__PURE__ */ React20.createElement(Time2, {
       className: "vds-time",
       type: "current",
       toggle: true,
@@ -22548,23 +28389,23 @@ var PortalUI = (() => {
     smLayoutWhen({ width }) {
       return width < 576;
     },
-    renderLayout: () => /* @__PURE__ */ React12.createElement(AudioLayout, null)
+    renderLayout: () => /* @__PURE__ */ React20.createElement(AudioLayout, null)
   });
   function DefaultAudioLayout(props) {
-    const [scrubbing, setScrubbing] = React12.useState(false), $pointer = useMediaState("pointer");
-    const onStartScrubbing = React12.useCallback((event) => {
+    const [scrubbing, setScrubbing] = React20.useState(false), $pointer = useMediaState("pointer");
+    const onStartScrubbing = React20.useCallback((event) => {
       const { target } = event;
       if (!!!(target instanceof HTMLElement && target.closest(".vds-time-slider"))) return;
       event.nativeEvent.stopImmediatePropagation();
       setScrubbing(true);
     }, []);
-    const onStopScrubbing = React12.useCallback(() => {
+    const onStopScrubbing = React20.useCallback(() => {
       setScrubbing(false);
     }, []);
-    React12.useEffect(() => {
+    React20.useEffect(() => {
       if (scrubbing) return listenEvent(window, "pointerdown", onStopScrubbing);
     }, [scrubbing, onStopScrubbing]);
-    return /* @__PURE__ */ React12.createElement(MediaLayout$1, {
+    return /* @__PURE__ */ React20.createElement(MediaLayout$1, {
       ...props,
       "data-scrubbing": scrubbing ? "" : null,
       onPointerDown: scrubbing ? (e2) => e2.stopPropagation() : void 0,
@@ -22575,23 +28416,23 @@ var PortalUI = (() => {
   function AudioLayout() {
     const slots = useDefaultAudioLayoutSlots();
     useLayoutName("audio");
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React12.createElement(DefaultCaptions, null), /* @__PURE__ */ React12.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "seekBackwardButton", /* @__PURE__ */ React12.createElement(DefaultSeekButton, {
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React20.createElement(DefaultCaptions, null), /* @__PURE__ */ React20.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "seekBackwardButton", /* @__PURE__ */ React20.createElement(DefaultSeekButton, {
       backward: true,
       tooltip: "top start"
-    })), slot(slots, "playButton", /* @__PURE__ */ React12.createElement(DefaultPlayButton, { tooltip: "top center" })), slot(slots, "seekForwardButton", /* @__PURE__ */ React12.createElement(DefaultSeekButton, { tooltip: "top center" })), /* @__PURE__ */ React12.createElement(DefaultAudioTitle, null), slot(slots, "timeSlider", /* @__PURE__ */ React12.createElement(DefaultTimeSlider, null)), /* @__PURE__ */ React12.createElement(DefaultTimeInvert, { slots }), /* @__PURE__ */ React12.createElement(DefaultVolumePopup, {
+    })), slot(slots, "playButton", /* @__PURE__ */ React20.createElement(DefaultPlayButton, { tooltip: "top center" })), slot(slots, "seekForwardButton", /* @__PURE__ */ React20.createElement(DefaultSeekButton, { tooltip: "top center" })), /* @__PURE__ */ React20.createElement(DefaultAudioTitle, null), slot(slots, "timeSlider", /* @__PURE__ */ React20.createElement(DefaultTimeSlider, null)), /* @__PURE__ */ React20.createElement(DefaultTimeInvert, { slots }), /* @__PURE__ */ React20.createElement(DefaultVolumePopup, {
       orientation: "vertical",
       tooltip: "top",
       slots
-    }), slot(slots, "captionButton", /* @__PURE__ */ React12.createElement(DefaultCaptionButton, { tooltip: "top center" })), slot(slots, "downloadButton", /* @__PURE__ */ React12.createElement(DefaultDownloadButton, null)), /* @__PURE__ */ React12.createElement(DefaultAudioMenus, { slots }))));
+    }), slot(slots, "captionButton", /* @__PURE__ */ React20.createElement(DefaultCaptionButton, { tooltip: "top center" })), slot(slots, "downloadButton", /* @__PURE__ */ React20.createElement(DefaultDownloadButton, null)), /* @__PURE__ */ React20.createElement(DefaultAudioMenus, { slots }))));
   }
   AudioLayout.displayName = "AudioLayout";
   function DefaultAudioMenus({ slots }) {
     const { isSmallLayout, noModal } = useDefaultLayoutContext(), placement = noModal ? "top end" : !isSmallLayout ? "top end" : null;
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, slot(slots, "chaptersMenu", /* @__PURE__ */ React12.createElement(DefaultChaptersMenu, {
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, slot(slots, "chaptersMenu", /* @__PURE__ */ React20.createElement(DefaultChaptersMenu, {
       tooltip: "top",
       placement,
       portalClass: "vds-audio-layout"
-    })), slot(slots, "settingsMenu", /* @__PURE__ */ React12.createElement(DefaultSettingsMenu, {
+    })), slot(slots, "settingsMenu", /* @__PURE__ */ React20.createElement(DefaultSettingsMenu, {
       tooltip: "top end",
       placement,
       portalClass: "vds-audio-layout",
@@ -22600,7 +28441,7 @@ var PortalUI = (() => {
   }
   DefaultAudioMenus.displayName = "DefaultAudioMenus";
   function DefaultAudioTitle() {
-    const [rootEl, setRootEl] = React12.useState(null), media = useMediaContext2(), { translations } = useDefaultLayoutContext(), [isTextOverflowing, setIsTextOverflowing] = React12.useState(false);
+    const [rootEl, setRootEl] = React20.useState(null), media = useMediaContext2(), { translations } = useDefaultLayoutContext(), [isTextOverflowing, setIsTextOverflowing] = React20.useState(false);
     const isContinued = createComputed(() => {
       const { started, currentTime } = media.$state;
       return started() || currentTime() > 0;
@@ -22611,48 +28452,48 @@ var PortalUI = (() => {
       return `${i18n(translations, ended() ? "Replay" : isContinued() ? "Continue" : "Play")}: ${title()}`;
     }));
     const chapterTitle = useChapterTitle(), $chapterTitle = useSignal(isContinued) ? chapterTitle : "", isTransitionActive = useTransitionActive(rootEl);
-    React12.useEffect(() => {
+    React20.useEffect(() => {
       if (isTransitionActive && document.activeElement === document.body) media.player.el?.focus({ preventScroll: true });
     }, []);
-    useResizeObserver(rootEl, React12.useCallback(() => {
+    useResizeObserver(rootEl, React20.useCallback(() => {
       const el = rootEl, isOverflowing = !!el && !isTransitionActive && el.clientWidth < el.children[0].clientWidth;
       if (el) toggleClass(el, "vds-marquee", isOverflowing);
       setIsTextOverflowing(isOverflowing);
     }, [rootEl, isTransitionActive]));
-    return $title ? /* @__PURE__ */ React12.createElement("span", {
+    return $title ? /* @__PURE__ */ React20.createElement("span", {
       className: "vds-title",
       title: $title,
       ref: setRootEl
-    }, /* @__PURE__ */ React12.createElement(AudioTitle, {
+    }, /* @__PURE__ */ React20.createElement(AudioTitle, {
       title: $title,
       chapterTitle: $chapterTitle
-    }), isTextOverflowing && !isTransitionActive ? /* @__PURE__ */ React12.createElement(AudioTitle, {
+    }), isTextOverflowing && !isTransitionActive ? /* @__PURE__ */ React20.createElement(AudioTitle, {
       title: $title,
       chapterTitle: $chapterTitle
-    }) : null) : /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null);
+    }) : null) : /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null);
   }
   DefaultAudioTitle.displayName = "DefaultAudioTitle";
   function AudioTitle({ title, chapterTitle }) {
     const slots = useDefaultAudioLayoutSlots();
-    return /* @__PURE__ */ React12.createElement("span", { className: "vds-title-text" }, slot(slots, "title", title), slot(slots, "chapterTitle", /* @__PURE__ */ React12.createElement("span", { className: "vds-chapter-title" }, chapterTitle)));
+    return /* @__PURE__ */ React20.createElement("span", { className: "vds-title-text" }, slot(slots, "title", title), slot(slots, "chapterTitle", /* @__PURE__ */ React20.createElement("span", { className: "vds-chapter-title" }, chapterTitle)));
   }
   AudioTitle.displayName = "AudioTitle";
-  var DefaultKeyboardDisplay = React12.forwardRef(({ icons: Icons, ...props }, forwardRef8) => {
-    const [visible, setVisible] = React12.useState(false), [Icon3, setIcon] = React12.useState(null), [count, setCount] = React12.useState(0), $lastKeyboardAction = useMediaState("lastKeyboardAction");
-    React12.useEffect(() => {
+  var DefaultKeyboardDisplay = React20.forwardRef(({ icons: Icons, ...props }, forwardRef9) => {
+    const [visible, setVisible] = React20.useState(false), [Icon3, setIcon] = React20.useState(null), [count, setCount] = React20.useState(0), $lastKeyboardAction = useMediaState("lastKeyboardAction");
+    React20.useEffect(() => {
       setCount((n2) => n2 + 1);
     }, [$lastKeyboardAction]);
-    const actionDataAttr = React12.useMemo(() => {
+    const actionDataAttr = React20.useMemo(() => {
       const action = $lastKeyboardAction?.action;
       return action && visible ? camelToKebabCase(action) : null;
     }, [visible, $lastKeyboardAction]);
-    const className = React12.useMemo(() => `vds-kb-action${!visible ? " hidden" : ""}${props.className ? ` ${props.className}` : ""}`, [visible]);
+    const className = React20.useMemo(() => `vds-kb-action${!visible ? " hidden" : ""}${props.className ? ` ${props.className}` : ""}`, [visible]);
     const $text = useSignal(createComputed(getText));
     createEffect(() => {
       const Icon4 = getIcon(Icons);
       setIcon(() => Icon4);
     }, [Icons]);
-    React12.useEffect(() => {
+    React20.useEffect(() => {
       setVisible(!!$lastKeyboardAction);
       const id2 = setTimeout(() => setVisible(false), 500);
       return () => {
@@ -22660,19 +28501,19 @@ var PortalUI = (() => {
         window.clearTimeout(id2);
       };
     }, [$lastKeyboardAction]);
-    return Icon3 ? /* @__PURE__ */ React12.createElement(Primitive.div, {
+    return Icon3 ? /* @__PURE__ */ React20.createElement(Primitive.div, {
       ...props,
       className,
       "data-action": actionDataAttr,
-      ref: forwardRef8
-    }, /* @__PURE__ */ React12.createElement("div", { className: "vds-kb-text-wrapper" }, /* @__PURE__ */ React12.createElement("div", { className: "vds-kb-text" }, $text)), /* @__PURE__ */ React12.createElement("div", {
+      ref: forwardRef9
+    }, /* @__PURE__ */ React20.createElement("div", { className: "vds-kb-text-wrapper" }, /* @__PURE__ */ React20.createElement("div", { className: "vds-kb-text" }, $text)), /* @__PURE__ */ React20.createElement("div", {
       className: "vds-kb-bezel",
       key: count
-    }, /* @__PURE__ */ React12.createElement("div", { className: "vds-kb-icon" }, /* @__PURE__ */ React12.createElement(Icon3, null)))) : null;
+    }, /* @__PURE__ */ React20.createElement("div", { className: "vds-kb-icon" }, /* @__PURE__ */ React20.createElement(Icon3, null)))) : null;
   });
   DefaultKeyboardDisplay.displayName = "DefaultKeyboardDisplay";
   function getText() {
-    const { $state } = useContext2(mediaContext), action = $state.lastKeyboardAction()?.action, audioGain = $state.audioGain() ?? 1;
+    const { $state } = useContext5(mediaContext), action = $state.lastKeyboardAction()?.action, audioGain = $state.audioGain() ?? 1;
     switch (action) {
       case "toggleMuted":
         return $state.muted() ? "0%" : getVolumeText($state.volume(), audioGain);
@@ -22687,7 +28528,7 @@ var PortalUI = (() => {
     return `${Math.round(volume * gain * 100)}%`;
   }
   function getIcon(Icons) {
-    const { $state } = useContext2(mediaContext);
+    const { $state } = useContext5(mediaContext);
     switch ($state.lastKeyboardAction()?.action) {
       case "togglePaused":
         return !$state.paused() ? Icons.Play : Icons.Pause;
@@ -22713,7 +28554,7 @@ var PortalUI = (() => {
   }
   function DefaultTitle() {
     const $started = useMediaState("started"), $title = useMediaState("title");
-    return useActiveTextTrack("chapters") && ($started || !$title) ? /* @__PURE__ */ React12.createElement(ChapterTitle2, { className: "vds-chapter-title" }) : /* @__PURE__ */ React12.createElement(Title, { className: "vds-chapter-title" });
+    return useActiveTextTrack("chapters") && ($started || !$title) ? /* @__PURE__ */ React20.createElement(ChapterTitle2, { className: "vds-chapter-title" }) : /* @__PURE__ */ React20.createElement(Title, { className: "vds-chapter-title" });
   }
   DefaultTitle.displayName = "DefaultTitle";
   var MediaLayout = createDefaultMediaLayout({
@@ -22722,16 +28563,16 @@ var PortalUI = (() => {
       return width < 576 || height < 380;
     },
     renderLayout(props) {
-      return /* @__PURE__ */ React12.createElement(VideoLayout, props);
+      return /* @__PURE__ */ React20.createElement(VideoLayout, props);
     }
   });
   function DefaultVideoLayout(props) {
-    return /* @__PURE__ */ React12.createElement(MediaLayout, props);
+    return /* @__PURE__ */ React20.createElement(MediaLayout, props);
   }
   DefaultVideoLayout.displayName = "DefaultVideoLayout";
   function VideoLayout({ streamType, isLoadLayout, isSmallLayout }) {
     useLayoutName("video");
-    return isLoadLayout ? /* @__PURE__ */ React12.createElement(DefaultVideoLoadLayout, null) : streamType === "unknown" ? /* @__PURE__ */ React12.createElement(DefaultBufferingIndicator, null) : isSmallLayout ? /* @__PURE__ */ React12.createElement(DefaultVideoSmallLayout, null) : /* @__PURE__ */ React12.createElement(DefaultVideoLargeLayout, null);
+    return isLoadLayout ? /* @__PURE__ */ React20.createElement(DefaultVideoLoadLayout, null) : streamType === "unknown" ? /* @__PURE__ */ React20.createElement(DefaultBufferingIndicator, null) : isSmallLayout ? /* @__PURE__ */ React20.createElement(DefaultVideoSmallLayout, null) : /* @__PURE__ */ React20.createElement(DefaultVideoLargeLayout, null);
   }
   VideoLayout.displayName = "VideoLayout";
   function DefaultVideoLargeLayout() {
@@ -22739,11 +28580,11 @@ var PortalUI = (() => {
       ...baseSlots,
       ...baseSlots?.largeLayout
     };
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React12.createElement(DefaultVideoGestures, null), /* @__PURE__ */ React12.createElement(DefaultVideoKeyboardDisplay, null), slot(slots, "bufferingIndicator", /* @__PURE__ */ React12.createElement(DefaultBufferingIndicator, null)), slot(slots, "captions", /* @__PURE__ */ React12.createElement(DefaultCaptions, null)), /* @__PURE__ */ React12.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "topControlsGroupStart", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupCenter", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupEnd", null), menuGroup === "top" && /* @__PURE__ */ React12.createElement(DefaultVideoMenus, { slots })), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "centerControlsGroupStart", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupCenter", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupEnd", null)), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "timeSlider", /* @__PURE__ */ React12.createElement(DefaultTimeSlider, null))), /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "playButton", /* @__PURE__ */ React12.createElement(DefaultPlayButton, { tooltip: "top start" })), /* @__PURE__ */ React12.createElement(DefaultVolumePopup, {
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React20.createElement(DefaultVideoGestures, null), /* @__PURE__ */ React20.createElement(DefaultVideoKeyboardDisplay, null), slot(slots, "bufferingIndicator", /* @__PURE__ */ React20.createElement(DefaultBufferingIndicator, null)), slot(slots, "captions", /* @__PURE__ */ React20.createElement(DefaultCaptions, null)), /* @__PURE__ */ React20.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "topControlsGroupStart", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupCenter", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupEnd", null), menuGroup === "top" && /* @__PURE__ */ React20.createElement(DefaultVideoMenus, { slots })), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "centerControlsGroupStart", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupCenter", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupEnd", null)), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "timeSlider", /* @__PURE__ */ React20.createElement(DefaultTimeSlider, null))), /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "playButton", /* @__PURE__ */ React20.createElement(DefaultPlayButton, { tooltip: "top start" })), /* @__PURE__ */ React20.createElement(DefaultVolumePopup, {
       orientation: "horizontal",
       tooltip: "top",
       slots
-    }), /* @__PURE__ */ React12.createElement(DefaultTimeInfo, { slots }), slot(slots, "chapterTitle", /* @__PURE__ */ React12.createElement(DefaultTitle, null)), slot(slots, "captionButton", /* @__PURE__ */ React12.createElement(DefaultCaptionButton, { tooltip: "top" })), menuGroup === "bottom" && /* @__PURE__ */ React12.createElement(DefaultVideoMenus, { slots }), slot(slots, "airPlayButton", /* @__PURE__ */ React12.createElement(DefaultAirPlayButton, { tooltip: "top" })), slot(slots, "googleCastButton", /* @__PURE__ */ React12.createElement(DefaultGoogleCastButton, { tooltip: "top" })), slot(slots, "downloadButton", /* @__PURE__ */ React12.createElement(DefaultDownloadButton, null)), slot(slots, "pipButton", /* @__PURE__ */ React12.createElement(DefaultPIPButton, { tooltip: "top" })), slot(slots, "fullscreenButton", /* @__PURE__ */ React12.createElement(DefaultFullscreenButton, { tooltip: "top end" })))));
+    }), /* @__PURE__ */ React20.createElement(DefaultTimeInfo, { slots }), slot(slots, "chapterTitle", /* @__PURE__ */ React20.createElement(DefaultTitle, null)), slot(slots, "captionButton", /* @__PURE__ */ React20.createElement(DefaultCaptionButton, { tooltip: "top" })), menuGroup === "bottom" && /* @__PURE__ */ React20.createElement(DefaultVideoMenus, { slots }), slot(slots, "airPlayButton", /* @__PURE__ */ React20.createElement(DefaultAirPlayButton, { tooltip: "top" })), slot(slots, "googleCastButton", /* @__PURE__ */ React20.createElement(DefaultGoogleCastButton, { tooltip: "top" })), slot(slots, "downloadButton", /* @__PURE__ */ React20.createElement(DefaultDownloadButton, null)), slot(slots, "pipButton", /* @__PURE__ */ React20.createElement(DefaultPIPButton, { tooltip: "top" })), slot(slots, "fullscreenButton", /* @__PURE__ */ React20.createElement(DefaultFullscreenButton, { tooltip: "top end" })))));
   }
   DefaultVideoLargeLayout.displayName = "DefaultVideoLargeLayout";
   function DefaultVideoSmallLayout() {
@@ -22751,19 +28592,19 @@ var PortalUI = (() => {
       ...baseSlots,
       ...baseSlots?.smallLayout
     };
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React12.createElement(DefaultVideoGestures, null), /* @__PURE__ */ React12.createElement(DefaultVideoKeyboardDisplay, null), slot(slots, "bufferingIndicator", /* @__PURE__ */ React12.createElement(DefaultBufferingIndicator, null)), slot(slots, "captions", /* @__PURE__ */ React12.createElement(DefaultCaptions, null)), /* @__PURE__ */ React12.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "topControlsGroupStart", null), slot(slots, "airPlayButton", /* @__PURE__ */ React12.createElement(DefaultAirPlayButton, { tooltip: "top start" })), slot(slots, "googleCastButton", /* @__PURE__ */ React12.createElement(DefaultGoogleCastButton, { tooltip: "top start" })), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupCenter", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "captionButton", /* @__PURE__ */ React12.createElement(DefaultCaptionButton, { tooltip: "bottom" })), slot(slots, "downloadButton", /* @__PURE__ */ React12.createElement(DefaultDownloadButton, null)), /* @__PURE__ */ React12.createElement(DefaultVideoMenus, { slots }), /* @__PURE__ */ React12.createElement(DefaultVolumePopup, {
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement(DefaultAnnouncer, null), /* @__PURE__ */ React20.createElement(DefaultVideoGestures, null), /* @__PURE__ */ React20.createElement(DefaultVideoKeyboardDisplay, null), slot(slots, "bufferingIndicator", /* @__PURE__ */ React20.createElement(DefaultBufferingIndicator, null)), slot(slots, "captions", /* @__PURE__ */ React20.createElement(DefaultCaptions, null)), /* @__PURE__ */ React20.createElement(Root$42, { className: "vds-controls" }, /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "topControlsGroupStart", null), slot(slots, "airPlayButton", /* @__PURE__ */ React20.createElement(DefaultAirPlayButton, { tooltip: "top start" })), slot(slots, "googleCastButton", /* @__PURE__ */ React20.createElement(DefaultGoogleCastButton, { tooltip: "top start" })), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "topControlsGroupCenter", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "captionButton", /* @__PURE__ */ React20.createElement(DefaultCaptionButton, { tooltip: "bottom" })), slot(slots, "downloadButton", /* @__PURE__ */ React20.createElement(DefaultDownloadButton, null)), /* @__PURE__ */ React20.createElement(DefaultVideoMenus, { slots }), /* @__PURE__ */ React20.createElement(DefaultVolumePopup, {
       orientation: "vertical",
       tooltip: "bottom end",
       slots
-    }), slot(slots, "topControlsGroupEnd", null)), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React12.createElement(Group, {
+    }), slot(slots, "topControlsGroupEnd", null)), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React20.createElement(Group, {
       className: "vds-controls-group",
       style: { pointerEvents: "none" }
-    }, slot(slots, "centerControlsGroupStart", null), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupCenter", null), slot(slots, "playButton", /* @__PURE__ */ React12.createElement(DefaultPlayButton, { tooltip: "top" })), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupEnd", null)), /* @__PURE__ */ React12.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, /* @__PURE__ */ React12.createElement(DefaultTimeInfo, { slots }), slot(slots, "chapterTitle", /* @__PURE__ */ React12.createElement(DefaultTitle, null)), slot(slots, "fullscreenButton", /* @__PURE__ */ React12.createElement(DefaultFullscreenButton, { tooltip: "top end" }))), /* @__PURE__ */ React12.createElement(Group, { className: "vds-controls-group" }, slot(slots, "timeSlider", /* @__PURE__ */ React12.createElement(DefaultTimeSlider, null)))), slot(slots, "startDuration", /* @__PURE__ */ React12.createElement(DefaultVideoStartDuration, null)));
+    }, slot(slots, "centerControlsGroupStart", null), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupCenter", null), slot(slots, "playButton", /* @__PURE__ */ React20.createElement(DefaultPlayButton, { tooltip: "top" })), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), slot(slots, "centerControlsGroupEnd", null)), /* @__PURE__ */ React20.createElement(DefaultControlsSpacer, null), /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, /* @__PURE__ */ React20.createElement(DefaultTimeInfo, { slots }), slot(slots, "chapterTitle", /* @__PURE__ */ React20.createElement(DefaultTitle, null)), slot(slots, "fullscreenButton", /* @__PURE__ */ React20.createElement(DefaultFullscreenButton, { tooltip: "top end" }))), /* @__PURE__ */ React20.createElement(Group, { className: "vds-controls-group" }, slot(slots, "timeSlider", /* @__PURE__ */ React20.createElement(DefaultTimeSlider, null)))), slot(slots, "startDuration", /* @__PURE__ */ React20.createElement(DefaultVideoStartDuration, null)));
   }
   DefaultVideoSmallLayout.displayName = "DefaultVideoSmallLayout";
   function DefaultVideoStartDuration() {
     if (useMediaState("duration") === 0) return null;
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-start-duration" }, /* @__PURE__ */ React12.createElement(Time2, {
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-start-duration" }, /* @__PURE__ */ React20.createElement(Time2, {
       className: "vds-time",
       type: "duration"
     }));
@@ -22772,23 +28613,23 @@ var PortalUI = (() => {
   function DefaultVideoGestures() {
     const { noGestures } = useDefaultLayoutContext();
     if (noGestures) return null;
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-gestures" }, /* @__PURE__ */ React12.createElement(Gesture2, {
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-gestures" }, /* @__PURE__ */ React20.createElement(Gesture2, {
       className: "vds-gesture",
       event: "pointerup",
       action: "toggle:paused"
-    }), /* @__PURE__ */ React12.createElement(Gesture2, {
+    }), /* @__PURE__ */ React20.createElement(Gesture2, {
       className: "vds-gesture",
       event: "pointerup",
       action: "toggle:controls"
-    }), /* @__PURE__ */ React12.createElement(Gesture2, {
+    }), /* @__PURE__ */ React20.createElement(Gesture2, {
       className: "vds-gesture",
       event: "dblpointerup",
       action: "toggle:fullscreen"
-    }), /* @__PURE__ */ React12.createElement(Gesture2, {
+    }), /* @__PURE__ */ React20.createElement(Gesture2, {
       className: "vds-gesture",
       event: "dblpointerup",
       action: "seek:-10"
-    }), /* @__PURE__ */ React12.createElement(Gesture2, {
+    }), /* @__PURE__ */ React20.createElement(Gesture2, {
       className: "vds-gesture",
       event: "dblpointerup",
       action: "seek:10"
@@ -22796,16 +28637,16 @@ var PortalUI = (() => {
   }
   DefaultVideoGestures.displayName = "DefaultVideoGestures";
   function DefaultBufferingIndicator() {
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-buffering-indicator" }, /* @__PURE__ */ React12.createElement(Root2, { className: "vds-buffering-spinner" }, /* @__PURE__ */ React12.createElement(Track2, { className: "vds-buffering-track" }), /* @__PURE__ */ React12.createElement(TrackFill2, { className: "vds-buffering-track-fill" })));
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-buffering-indicator" }, /* @__PURE__ */ React20.createElement(Root2, { className: "vds-buffering-spinner" }, /* @__PURE__ */ React20.createElement(Track2, { className: "vds-buffering-track" }), /* @__PURE__ */ React20.createElement(TrackFill2, { className: "vds-buffering-track-fill" })));
   }
   DefaultBufferingIndicator.displayName = "DefaultBufferingIndicator";
   function DefaultVideoMenus({ slots }) {
     const { isSmallLayout, noModal, menuGroup } = useDefaultLayoutContext(), side = menuGroup === "top" || isSmallLayout ? "bottom" : "top", tooltip = `${side} end`, placement = noModal ? `${side} end` : !isSmallLayout ? `${side} end` : null;
-    return /* @__PURE__ */ React12.createElement(React12.Fragment, null, slot(slots, "chaptersMenu", /* @__PURE__ */ React12.createElement(DefaultChaptersMenu, {
+    return /* @__PURE__ */ React20.createElement(React20.Fragment, null, slot(slots, "chaptersMenu", /* @__PURE__ */ React20.createElement(DefaultChaptersMenu, {
       tooltip,
       placement,
       portalClass: "vds-video-layout"
-    })), slot(slots, "settingsMenu", /* @__PURE__ */ React12.createElement(DefaultSettingsMenu, {
+    })), slot(slots, "settingsMenu", /* @__PURE__ */ React20.createElement(DefaultSettingsMenu, {
       tooltip,
       placement,
       portalClass: "vds-video-layout",
@@ -22818,31 +28659,585 @@ var PortalUI = (() => {
       ...baseSlots,
       ...baseSlots?.[isSmallLayout ? "smallLayout" : "largeLayout"]
     };
-    return /* @__PURE__ */ React12.createElement("div", { className: "vds-load-container" }, slot(slots, "bufferingIndicator", /* @__PURE__ */ React12.createElement(DefaultBufferingIndicator, null)), slot(slots, "loadButton", /* @__PURE__ */ React12.createElement(DefaultPlayButton, { tooltip: "top" })));
+    return /* @__PURE__ */ React20.createElement("div", { className: "vds-load-container" }, slot(slots, "bufferingIndicator", /* @__PURE__ */ React20.createElement(DefaultBufferingIndicator, null)), slot(slots, "loadButton", /* @__PURE__ */ React20.createElement(DefaultPlayButton, { tooltip: "top" })));
   }
   DefaultVideoLoadLayout.displayName = "DefaultVideoLoadLayout";
   function DefaultVideoKeyboardDisplay() {
     const { noKeyboardAnimations, icons, userPrefersKeyboardAnimations } = useDefaultLayoutContext(), $userPrefersKeyboardAnimations = useSignal(userPrefersKeyboardAnimations);
     if (noKeyboardAnimations || !$userPrefersKeyboardAnimations || !icons.KeyboardDisplay) return null;
-    return /* @__PURE__ */ React12.createElement(DefaultKeyboardDisplay, { icons: icons.KeyboardDisplay });
+    return /* @__PURE__ */ React20.createElement(DefaultKeyboardDisplay, { icons: icons.KeyboardDisplay });
   }
   DefaultVideoKeyboardDisplay.displayName = "DefaultVideoKeyboardDisplay";
 
+  // frontend/src/templates/v1/views/library/media/MediaDetailView.tsx
+  function sendProgressBeacon(assetId, positionMs) {
+    const url = `${baseURL2}/api/v1/assets/${assetId}/progress`;
+    const body = JSON.stringify({ position_ms: positionMs });
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon(url, blob);
+    } else {
+      fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body,
+        credentials: "include",
+        keepalive: true
+      }).catch(() => {
+      });
+    }
+  }
+  function putProgressFetch(assetId, positionMs) {
+    const url = `${baseURL2}/api/v1/assets/${assetId}/progress`;
+    fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ position_ms: positionMs }),
+      credentials: "include"
+    }).catch(() => {
+    });
+  }
+  function shouldResume(progress) {
+    if (!progress || progress.position_ms < 3e4) return false;
+    if (progress.progress_pct == null) return true;
+    return progress.progress_pct < 95;
+  }
+  var THROTTLE_MS2 = 1e4;
+  function MediaDetailView({ id: id2 }) {
+    const playerRef = (0, import_react36.useRef)(null);
+    const lastSyncRef = (0, import_react36.useRef)(0);
+    const lastTimeRef = (0, import_react36.useRef)(0);
+    const [ready, setReady] = (0, import_react36.useState)(false);
+    const [showStartOver, setShowStartOver] = (0, import_react36.useState)(false);
+    const [didSeek, setDidSeek] = (0, import_react36.useState)(false);
+    const { data: asset, isLoading: assetLoading } = useQuery({
+      queryKey: ["assets", id2],
+      queryFn: () => getAsset(id2)
+    });
+    const { data: progress, isLoading: progressLoading } = useQuery({
+      queryKey: ["assets", id2, "progress"],
+      queryFn: () => getPlaybackProgress(id2).catch(() => null)
+      // 404 is fine
+    });
+    (0, import_react36.useEffect)(() => {
+      if (!ready || !playerRef.current || didSeek) return;
+      if (shouldResume(progress)) {
+        playerRef.current.currentTime = progress.position_ms / 1e3;
+        setShowStartOver(true);
+      }
+      setDidSeek(true);
+    }, [ready, progress, didSeek]);
+    const sendFinalBeacon = (0, import_react36.useCallback)(() => {
+      const t2 = lastTimeRef.current;
+      if (t2 > 0) {
+        sendProgressBeacon(id2, Math.floor(t2 * 1e3));
+      }
+    }, [id2]);
+    (0, import_react36.useEffect)(() => {
+      const onVisChange = () => {
+        if (document.visibilityState === "hidden") sendFinalBeacon();
+      };
+      const onPageHide = () => sendFinalBeacon();
+      document.addEventListener("visibilitychange", onVisChange);
+      window.addEventListener("pagehide", onPageHide);
+      return () => {
+        document.removeEventListener("visibilitychange", onVisChange);
+        window.removeEventListener("pagehide", onPageHide);
+      };
+    }, [sendFinalBeacon]);
+    if (assetLoading || progressLoading)
+      return /* @__PURE__ */ React.createElement("div", { className: "p-4 text-white" }, "Loading\u2026");
+    if (!asset)
+      return /* @__PURE__ */ React.createElement("div", { className: "p-4 text-white" }, "Asset not found");
+    const handleTimeUpdate = () => {
+      const time = playerRef.current?.currentTime || 0;
+      lastTimeRef.current = time;
+      const now = Date.now();
+      if (now - lastSyncRef.current > THROTTLE_MS2) {
+        lastSyncRef.current = now;
+        putProgressFetch(id2, Math.floor(time * 1e3));
+      }
+    };
+    const handlePause = () => {
+      lastSyncRef.current = Date.now();
+      putProgressFetch(id2, Math.floor(lastTimeRef.current * 1e3));
+    };
+    const handleStartOver = () => {
+      if (playerRef.current) {
+        playerRef.current.currentTime = 0;
+        setShowStartOver(false);
+      }
+    };
+    return /* @__PURE__ */ React.createElement("main", { className: "min-h-screen bg-black relative" }, /* @__PURE__ */ React.createElement("header", { className: "absolute top-0 left-0 right-0 z-10 flex items-center p-4 bg-gradient-to-b from-black/60 to-transparent" }, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/library/media",
+        className: "p-2 rounded-full hover:bg-white/10 text-white"
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "arrow-left", className: "w-6 h-6" })
+    ), /* @__PURE__ */ React.createElement("h1", { className: "ml-4 text-white font-medium truncate" }, asset.title || asset.original_filename || "Untitled"), showStartOver && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: handleStartOver,
+        className: "ml-auto px-4 py-1.5 text-sm font-medium rounded-md bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors"
+      },
+      "Start over"
+    )), /* @__PURE__ */ React.createElement("div", { className: "w-full h-screen flex items-center justify-center" }, asset.kind === "video" || asset.kind === "audio" ? /* @__PURE__ */ React.createElement(
+      MediaPlayer2,
+      {
+        ref: playerRef,
+        src: asset.hls_url || "",
+        crossOrigin: true,
+        onCanPlay: () => setReady(true),
+        onTimeUpdate: handleTimeUpdate,
+        onPause: handlePause,
+        onEnded: handlePause,
+        className: "w-full h-full max-h-screen"
+      },
+      /* @__PURE__ */ React.createElement(MediaProvider2, null),
+      /* @__PURE__ */ React.createElement(DefaultVideoLayout, { icons: defaultLayoutIcons })
+    ) : /* @__PURE__ */ React.createElement(
+      "img",
+      {
+        src: `${baseURL2}/api/v1/assets/${id2}/original`,
+        alt: asset.title || "",
+        className: "max-w-full max-h-screen object-contain"
+      }
+    )));
+  }
+
+  // frontend/src/templates/v1/views/library/media/MediaIndexView.tsx
+  init_define_import_meta_env();
+  var import_react38 = __toESM(require_react_shim());
+  var KIND_OPTIONS = [
+    { value: "all", label: "All kinds" },
+    { value: "video", label: "Video" },
+    { value: "image", label: "Image" }
+  ];
+  var STATUS_OPTIONS = [
+    { value: "all", label: "All statuses" },
+    { value: "ready", label: "Ready" },
+    { value: "processing", label: "Processing" },
+    { value: "failed", label: "Failed" }
+  ];
+  var KIND_ICON = {
+    video: "play-icon",
+    image: "photos-icon",
+    audio: "multimedia-icon"
+  };
+  var KIND_LABEL = {
+    video: "Video",
+    image: "Image",
+    audio: "Audio"
+  };
+  var ASSETS_KEY = "assets";
+  function MediaIndexView() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const queryClient2 = useQueryClient();
+    const kind = searchParams.get("kind") ?? "all";
+    const status = searchParams.get("status") ?? "all";
+    const [viewer, setViewer] = (0, import_react38.useState)(null);
+    const [pendingDelete, setPendingDelete] = (0, import_react38.useState)(null);
+    const [deleteError, setDeleteError] = (0, import_react38.useState)(null);
+    function setFilter(next) {
+      const merged = { kind, status, ...next };
+      const params = new URLSearchParams(searchParams.toString());
+      if (merged.kind === "all") params.delete("kind");
+      else params.set("kind", merged.kind);
+      if (merged.status === "all") params.delete("status");
+      else params.set("status", merged.status);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    }
+    const query = useInfiniteQuery({
+      queryKey: [ASSETS_KEY, kind, status],
+      queryFn: ({ pageParam }) => listAssets({ kind, status, cursor: pageParam }),
+      initialPageParam: void 0,
+      getNextPageParam: (lastPage) => lastPage.next_cursor ?? void 0
+    });
+    const assets = (0, import_react38.useMemo)(
+      () => query.data?.pages.flatMap((page) => page.assets) ?? [],
+      [query.data]
+    );
+    const deleteMutation = useMutation({
+      mutationFn: (asset) => deleteAsset(asset.id),
+      onMutate: async (asset) => {
+        await queryClient2.cancelQueries({ queryKey: [ASSETS_KEY] });
+        const previous = queryClient2.getQueriesData({
+          queryKey: [ASSETS_KEY]
+        });
+        queryClient2.setQueriesData(
+          { queryKey: [ASSETS_KEY] },
+          (data) => data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              assets: page.assets.filter((a) => a.id !== asset.id)
+            }))
+          }
+        );
+        return { previous };
+      },
+      onError: (err, _asset, context) => {
+        context?.previous.forEach(([key2, data]) => queryClient2.setQueryData(key2, data));
+        setDeleteError(
+          err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not delete this asset."
+        );
+      },
+      onSuccess: (_data2, asset) => {
+        setPendingDelete(null);
+        setViewer((v) => v && v.asset.id === asset.id ? null : v);
+      }
+    });
+    function openDelete(asset) {
+      setDeleteError(null);
+      setPendingDelete(asset);
+    }
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Media"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-4" }, /* @__PURE__ */ React.createElement("div", { className: "w-36" }, /* @__PURE__ */ React.createElement(
+      SelectField,
+      {
+        label: "Kind",
+        value: kind,
+        onChange: (v) => setFilter({ kind: v }),
+        options: KIND_OPTIONS
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "w-36" }, /* @__PURE__ */ React.createElement(
+      SelectField,
+      {
+        label: "Status",
+        value: status,
+        onChange: (v) => setFilter({ status: v }),
+        options: STATUS_OPTIONS
+      }
+    )))), deleteError && /* @__PURE__ */ React.createElement(ErrorBanner2, null, deleteError), query.isPending ? /* @__PURE__ */ React.createElement(SkeletonGrid, null) : query.isError ? /* @__PURE__ */ React.createElement(QueryErrorState, { onRetry: () => query.refetch() }) : assets.length === 0 ? /* @__PURE__ */ React.createElement(EmptyState, null) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, assets.map((asset) => /* @__PURE__ */ React.createElement(
+      AssetCard,
+      {
+        key: asset.id,
+        asset,
+        onOpen: () => setViewer({ asset, mode: asset.kind === "image" ? "lightbox" : "player" }),
+        onDelete: () => openDelete(asset)
+      }
+    ))), query.hasNextPage && /* @__PURE__ */ React.createElement("div", { className: "mt-6 flex justify-center" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => query.fetchNextPage(),
+        disabled: query.isFetchingNextPage,
+        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      query.isFetchingNextPage ? "Loading\u2026" : "Load more"
+    ))), viewer && /* @__PURE__ */ React.createElement(
+      ViewerModal,
+      {
+        asset: viewer.asset,
+        mode: viewer.mode,
+        onClose: () => setViewer(null),
+        onDelete: () => openDelete(viewer.asset)
+      }
+    ), pendingDelete && /* @__PURE__ */ React.createElement(Modal, { open: true, onClose: () => setPendingDelete(null), title: "Delete asset?", width: 420 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-4 p-6" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-text)" } }, assetLabel(pendingDelete), " will be permanently deleted. This can't be undone."), /* @__PURE__ */ React.createElement("div", { className: "flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(BtnSecondary, { onClick: () => setPendingDelete(null) }, "Cancel"), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => deleteMutation.mutate(pendingDelete),
+        disabled: deleteMutation.isPending,
+        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "#ef4444" }
+      },
+      deleteMutation.isPending ? "Deleting\u2026" : "Delete"
+    )))));
+  }
+  function assetLabel(asset) {
+    return asset.title || asset.original_filename || `Asset ${asset.id.slice(0, 8)}`;
+  }
+  function AssetCard({
+    asset,
+    onOpen,
+    onDelete
+  }) {
+    const isFailed = asset.status === "failed";
+    const isReady = asset.status === "ready";
+    const label = assetLabel(asset);
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex flex-col overflow-hidden rounded-lg border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onOpen,
+          disabled: isFailed,
+          "aria-label": isFailed ? void 0 : `Open ${label}`,
+          className: "group relative aspect-video w-full overflow-hidden disabled:cursor-default",
+          style: { background: "var(--tpl-surface-2)" }
+        },
+        isReady ? /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            src: assetVariantURL(asset.id, "thumb"),
+            alt: label,
+            loading: "lazy",
+            className: "h-full w-full object-cover transition group-hover:scale-[1.03]"
+          }
+        ) : /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "flex h-full w-full items-center justify-center",
+            style: { color: "var(--tpl-muted)" }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: isFailed ? "close-icon" : KIND_ICON[asset.kind], size: 22 })
+        ),
+        /* @__PURE__ */ React.createElement("span", { className: "absolute left-2 top-2" }, /* @__PURE__ */ React.createElement(Pill, null, KIND_LABEL[asset.kind])),
+        /* @__PURE__ */ React.createElement("span", { className: "absolute right-2 top-2" }, /* @__PURE__ */ React.createElement(StatusPill, { status: asset.status }))
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "flex flex-1 flex-col gap-1 p-3" }, /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          className: "truncate text-sm font-semibold",
+          style: { color: "var(--tpl-heading)" },
+          title: label
+        },
+        label
+      ), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, new Date(asset.created_at).toLocaleDateString()), isFailed && asset.error && /* @__PURE__ */ React.createElement("p", { className: "mt-1 line-clamp-2 text-xs", style: { color: "#ef4444" }, title: asset.error }, asset.error), /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex items-center gap-3" }, !isFailed && /* @__PURE__ */ React.createElement(
+        "a",
+        {
+          href: assetOriginalURL(asset.id),
+          download: true,
+          className: "text-xs font-semibold transition hover:opacity-80",
+          style: { color: "var(--tpl-accent)" }
+        },
+        "Download original"
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onDelete,
+          "aria-label": `Delete ${label}`,
+          className: "ml-auto transition hover:text-[#ef4444]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 16 })
+      )))
+    );
+  }
+  function Pill({ children, color }) {
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        style: {
+          background: "rgba(0,0,0,.55)",
+          color: color ?? "#fff"
+        }
+      },
+      children
+    );
+  }
+  var STATUS_STYLE = {
+    ready: { label: "Ready", color: "#22c55e" },
+    processing: { label: "Processing", color: "#38a9ff" },
+    uploading: { label: "Uploading", color: "#38a9ff" },
+    failed: { label: "Failed", color: "#ef4444" }
+  };
+  function StatusPill({ status }) {
+    const s = STATUS_STYLE[status];
+    return /* @__PURE__ */ React.createElement(Pill, { color: s.color }, s.label);
+  }
+  function ViewerModal({
+    asset,
+    mode,
+    onClose,
+    onDelete
+  }) {
+    return /* @__PURE__ */ React.createElement(Modal, { open: true, onClose, title: assetLabel(asset), width: mode === "player" ? 880 : 720 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6" }, mode === "player" ? asset.hls_url ? /* @__PURE__ */ React.createElement(
+      MediaPlayer2,
+      {
+        className: "w-full overflow-hidden rounded-xl",
+        title: assetLabel(asset),
+        src: { src: asset.hls_url, type: "application/vnd.apple.mpegurl" },
+        playsInline: true
+      },
+      /* @__PURE__ */ React.createElement(MediaProvider2, null),
+      /* @__PURE__ */ React.createElement(DefaultVideoLayout, { icons: defaultLayoutIcons })
+    ) : /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "This video isn't ready to play yet.") : (
+      // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+      /* @__PURE__ */ React.createElement(
+        "img",
+        {
+          src: assetVariantURL(asset.id, "medium"),
+          alt: assetLabel(asset),
+          className: "max-h-[70vh] w-full rounded-lg object-contain",
+          style: { background: "var(--tpl-surface-2)" }
+        }
+      )
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement(
+      "a",
+      {
+        href: assetOriginalURL(asset.id),
+        download: true,
+        className: "text-sm font-semibold transition hover:opacity-80",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "Download original"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onDelete,
+        className: "flex items-center gap-1.5 text-sm font-semibold transition hover:opacity-80",
+        style: { color: "#ef4444" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 14 }),
+      "Delete"
+    ))));
+  }
+  function SkeletonGrid() {
+    return /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        key: i,
+        className: "aspect-[4/5] animate-pulse rounded-lg border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      }
+    )));
+  }
+  function EmptyState() {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex flex-col items-center gap-3 rounded-xl border border-dashed py-16 text-center",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "photos-icon", size: 28, style: { color: "var(--tpl-muted)" } }),
+      /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "No media yet."),
+      /* @__PURE__ */ React.createElement(
+        Link,
+        {
+          href: "/upload",
+          className: "rounded-md px-3 py-1.5 text-sm font-semibold",
+          style: { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" }
+        },
+        "Upload something"
+      )
+    );
+  }
+  function QueryErrorState({ onRetry }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Couldn't load your media."), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRetry,
+        className: "mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Retry"
+    ));
+  }
+  function ErrorBanner2({ children }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-4 rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+      },
+      children
+    );
+  }
+
+  // frontend/src/templates/v1/views/library/novel/NovelDetailView.tsx
+  init_define_import_meta_env();
+  function NovelDetailView({ id: id2 }) {
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold" }, "Novel #", id2), /* @__PURE__ */ React.createElement("div", { className: "mt-6 grid gap-6 md:grid-cols-[12rem_1fr]" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "aspect-[3/4] rounded-lg border",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-surface)"
+        }
+      }
+    ), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Synopsis and chapter list go here."))));
+  }
+
+  // frontend/src/templates/v1/views/people/PeopleIndexView.tsx
+  init_define_import_meta_env();
+  var import_react40 = __toESM(require_react_shim());
+  function PeopleIndexView() {
+    const qc = useQueryClient();
+    const { data, isLoading } = useQuery({ queryKey: ["people"], queryFn: () => listPeople() });
+    const { data: upcoming = [] } = useQuery({ queryKey: ["people", "upcoming"], queryFn: () => upcomingBirthdays(30) });
+    const [open, setOpen] = (0, import_react40.useState)(false);
+    const [name, setName] = (0, import_react40.useState)("");
+    const [relationship, setRelationship] = (0, import_react40.useState)("");
+    const [month, setMonth] = (0, import_react40.useState)("");
+    const [day, setDay] = (0, import_react40.useState)("");
+    const [year, setYear] = (0, import_react40.useState)("");
+    const [err, setErr] = (0, import_react40.useState)(null);
+    const create2 = useMutation({
+      mutationFn: () => {
+        let birthday = null;
+        if (month && day) birthday = { month: Number(month), day: Number(day), year: year ? Number(year) : null, calendar: "solar" };
+        return createPerson({ display_name: name, relationship: relationship || null, birthday });
+      },
+      onSuccess: () => {
+        setName("");
+        setRelationship("");
+        setMonth("");
+        setDay("");
+        setYear("");
+        setOpen(false);
+        setErr(null);
+        qc.invalidateQueries({ queryKey: ["people"] });
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not save")
+    });
+    const people = data?.people ?? [];
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "People"), /* @__PURE__ */ React.createElement("button", { className: "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-500", onClick: () => setOpen((o2) => !o2) }, "+ Add person")), upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 text-sm font-semibold uppercase text-gray-500" }, "Upcoming birthdays"), /* @__PURE__ */ React.createElement("ul", { className: "space-y-1 text-sm" }, upcoming.slice(0, 5).map((u) => /* @__PURE__ */ React.createElement("li", { key: u.person_id, className: "flex justify-between" }, /* @__PURE__ */ React.createElement("span", null, u.display_name, u.age_turning != null ? ` (turns ${u.age_turning})` : ""), /* @__PURE__ */ React.createElement("span", { className: "text-gray-400" }, u.days_until === 0 ? "today \u{1F382}" : `in ${u.days_until} day${u.days_until === 1 ? "" : "s"}`))))), open && /* @__PURE__ */ React.createElement("form", { className: "mb-6 grid grid-cols-3 gap-2 rounded-lg border border-gray-800 bg-gray-900 p-4", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (name.trim()) create2.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { className: "col-span-3 rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Name (e.g. M\u1EB9)", value: name, onChange: (e2) => setName(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "col-span-3 rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Relationship (e.g. m\u1EB9, b\u1EA1n \u0111\u1EA1i h\u1ECDc)", value: relationship, onChange: (e2) => setRelationship(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Day", inputMode: "numeric", value: day, onChange: (e2) => setDay(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Month", inputMode: "numeric", value: month, onChange: (e2) => setMonth(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Year (optional)", inputMode: "numeric", value: year, onChange: (e2) => setYear(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: create2.isPending || !name.trim(), className: "col-span-3 rounded-md bg-blue-600 py-2 text-sm font-medium disabled:opacity-50" }, "Add"), err && /* @__PURE__ */ React.createElement("p", { className: "col-span-3 text-sm text-red-400" }, err)), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : people.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "No people yet \u2014 add family and friends to track birthdays.") : /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, people.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.id }, /* @__PURE__ */ React.createElement(Link, { href: `/people/${p.id}`, className: "flex items-center justify-between px-4 py-3 hover:bg-gray-800" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium" }, p.display_name), p.relationship && /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-500" }, p.relationship)), p.birthday && /* @__PURE__ */ React.createElement("span", { className: "text-sm text-gray-400" }, "\u{1F382} ", formatBirthday(p.birthday)))))));
+  }
+
+  // frontend/src/templates/v1/views/people/PersonDetailView.tsx
+  init_define_import_meta_env();
+  function PersonDetailView({ id: id2 }) {
+    const qc = useQueryClient();
+    const router = useRouter();
+    const { data: person, isLoading } = useQuery({ queryKey: ["person", id2], queryFn: () => getPerson(id2) });
+    const remove = useMutation({
+      mutationFn: () => deletePerson(id2),
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ["people"] });
+        router.push("/people");
+      }
+    });
+    if (isLoading) return /* @__PURE__ */ React.createElement("div", { className: "p-6 text-gray-400" }, "Loading\u2026");
+    if (!person) return /* @__PURE__ */ React.createElement("div", { className: "p-6 text-white" }, "Person not found");
+    const contactEntries = Object.entries(person.contact ?? {});
+    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-2xl p-6 text-white" }, /* @__PURE__ */ React.createElement(Link, { href: "/people", className: "text-sm text-blue-400 hover:underline" }, "\u2190 People"), /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex items-start justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, person.display_name), person.relationship && /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-400" }, person.relationship)), /* @__PURE__ */ React.createElement("button", { className: "rounded-md border border-red-800 px-3 py-1.5 text-sm text-red-400 hover:bg-red-950", onClick: () => remove.mutate(), disabled: remove.isPending }, "Delete")), /* @__PURE__ */ React.createElement("dl", { className: "mt-6 space-y-3 rounded-lg border border-gray-800 bg-gray-900 p-4 text-sm" }, person.birthday && /* @__PURE__ */ React.createElement("div", { className: "flex justify-between" }, /* @__PURE__ */ React.createElement("dt", { className: "text-gray-500" }, "Birthday"), /* @__PURE__ */ React.createElement("dd", null, "\u{1F382} ", formatBirthday(person.birthday))), contactEntries.map(([k, v]) => /* @__PURE__ */ React.createElement("div", { key: k, className: "flex justify-between" }, /* @__PURE__ */ React.createElement("dt", { className: "capitalize text-gray-500" }, k), /* @__PURE__ */ React.createElement("dd", null, String(v)))), person.note_md && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", { className: "text-gray-500" }, "Notes"), /* @__PURE__ */ React.createElement("dd", { className: "mt-1 whitespace-pre-wrap text-gray-300" }, person.note_md)), !person.birthday && contactEntries.length === 0 && !person.note_md && /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "No details yet.")));
+  }
+
   // frontend/src/templates/v1/views/upload/UploadStudio.tsx
-  var API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
+  init_define_import_meta_env();
+  var import_react41 = __toESM(require_react_shim());
   function UploadStudio() {
-    const [phase, setPhase] = (0, import_react20.useState)("idle");
-    const [progress, setProgress] = (0, import_react20.useState)(0);
-    const [current, setCurrent] = (0, import_react20.useState)(null);
-    const [error, setError] = (0, import_react20.useState)(null);
-    const [library, setLibrary] = (0, import_react20.useState)([]);
-    const fileRef = (0, import_react20.useRef)(null);
-    (0, import_react20.useEffect)(() => {
+    const [phase, setPhase] = (0, import_react41.useState)("idle");
+    const [progress, setProgress] = (0, import_react41.useState)(0);
+    const [current, setCurrent] = (0, import_react41.useState)(null);
+    const [error, setError] = (0, import_react41.useState)(null);
+    const [library, setLibrary] = (0, import_react41.useState)([]);
+    const fileRef = (0, import_react41.useRef)(null);
+    (0, import_react41.useEffect)(() => {
       void refreshLibrary();
     }, []);
     async function refreshLibrary() {
       try {
-        const r2 = await fetch(`${API}/api/v1/assets`, { credentials: "include" });
+        const r2 = await fetch(`${baseURL2}/api/v1/assets`, { credentials: "include" });
         if (r2.ok) setLibrary((await r2.json()).assets ?? []);
       } catch {
       }
@@ -22853,7 +29248,7 @@ var PortalUI = (() => {
       setPhase("uploading");
       setProgress(0);
       try {
-        const cr = await fetch(`${API}/api/v1/assets`, {
+        const cr = await fetch(`${baseURL2}/api/v1/assets`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -22865,18 +29260,18 @@ var PortalUI = (() => {
         });
         if (!cr.ok) throw new Error("Could not start upload.");
         const { asset } = await cr.json();
-        await putWithProgress(
-          `${API}/api/v1/assets/${asset.id}/source`,
+        await putWithProgress2(
+          `${baseURL2}/api/v1/assets/${asset.id}/source`,
           file,
           setProgress
         );
-        const co = await fetch(`${API}/api/v1/assets/${asset.id}/complete`, {
+        const co = await fetch(`${baseURL2}/api/v1/assets/${asset.id}/complete`, {
           method: "POST",
           credentials: "include"
         });
         if (!co.ok) throw new Error("Could not finalise upload.");
         setPhase("processing");
-        const done = await poll(asset.id);
+        const done = await poll2(asset.id);
         if (done.status !== "ready") throw new Error(done.error || "Transcode failed.");
         setCurrent(done);
         setPhase("ready");
@@ -22893,7 +29288,7 @@ var PortalUI = (() => {
       setProgress(0);
       if (fileRef.current) fileRef.current.value = "";
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "mx-auto max-w-3xl space-y-5" }, /* @__PURE__ */ React.createElement(Card3, null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Upload a video"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "Pick an MP4. It uploads, transcodes to HLS on the worker, then plays back here."), phase === "idle" || phase === "error" ? /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "mx-auto max-w-3xl space-y-5" }, /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Upload a video"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "Pick an MP4. It uploads, transcodes to HLS on the worker, then plays back here."), phase === "idle" || phase === "error" ? /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -22915,7 +29310,7 @@ var PortalUI = (() => {
           if (f) void onFile(f);
         }
       }
-    ), error && /* @__PURE__ */ React.createElement("p", { className: "mt-3 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" } }, error)) : phase === "uploading" ? /* @__PURE__ */ React.createElement(Progress2, { label: `Uploading\u2026 ${progress}%`, value: progress }) : phase === "processing" ? /* @__PURE__ */ React.createElement(Progress2, { label: "Transcoding to HLS\u2026", indeterminate: true }) : current && /* @__PURE__ */ React.createElement("div", { className: "mt-4 space-y-3" }, /* @__PURE__ */ React.createElement(Player, { src: current.hls_url }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", null, current.width, "\xD7", current.height, " \xB7 ", Math.round((current.duration_ms ?? 0) / 1e3), "s \xB7", " ", (current.size_bytes / 1024 / 1024).toFixed(1), " MB"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: reset, className: "font-semibold", style: { color: "var(--tpl-accent)" } }, "Upload another")))), library.length > 0 && /* @__PURE__ */ React.createElement(Card3, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Your uploads"), /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, library.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center gap-3 py-2.5" }, /* @__PURE__ */ React.createElement("span", { className: "grid h-8 w-8 place-items-center rounded-md", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 14 })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm", style: { color: "var(--tpl-heading)" } }, a.id.slice(0, 8), " \xB7 ", a.mime_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, a.status, a.width ? ` \xB7 ${a.width}\xD7${a.height}` : "")), a.status === "ready" && a.hls_url && /* @__PURE__ */ React.createElement(
+    ), error && /* @__PURE__ */ React.createElement("p", { className: "mt-3 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" } }, error)) : phase === "uploading" ? /* @__PURE__ */ React.createElement(Progress2, { label: `Uploading\u2026 ${progress}%`, value: progress }) : phase === "processing" ? /* @__PURE__ */ React.createElement(Progress2, { label: "Transcoding to HLS\u2026", indeterminate: true }) : current && /* @__PURE__ */ React.createElement("div", { className: "mt-4 space-y-3" }, /* @__PURE__ */ React.createElement(Player, { src: current.hls_url }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", null, current.width, "\xD7", current.height, " \xB7 ", Math.round((current.duration_ms ?? 0) / 1e3), "s \xB7", " ", (current.size_bytes / 1024 / 1024).toFixed(1), " MB"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: reset, className: "font-semibold", style: { color: "var(--tpl-accent)" } }, "Upload another")))), library.length > 0 && /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Your uploads"), /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, library.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center gap-3 py-2.5" }, /* @__PURE__ */ React.createElement("span", { className: "grid h-8 w-8 place-items-center rounded-md", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 14 })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm", style: { color: "var(--tpl-heading)" } }, a.id.slice(0, 8), " \xB7 ", a.mime_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, a.status, a.width ? ` \xB7 ${a.width}\xD7${a.height}` : "")), a.status === "ready" && a.hls_url && /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -22956,10 +29351,10 @@ var PortalUI = (() => {
       }
     )));
   }
-  function Card3({ children }) {
+  function Card2({ children }) {
     return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl p-5 shadow-sm", style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" } }, children);
   }
-  function putWithProgress(url, file, onProgress) {
+  function putWithProgress2(url, file, onProgress) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url);
@@ -22973,9 +29368,9 @@ var PortalUI = (() => {
       xhr.send(file);
     });
   }
-  async function poll(id2) {
+  async function poll2(id2) {
     for (let i = 0; i < 120; i++) {
-      const r2 = await fetch(`${API}/api/v1/assets/${id2}`, { credentials: "include" });
+      const r2 = await fetch(`${baseURL2}/api/v1/assets/${id2}`, { credentials: "include" });
       if (r2.ok) {
         const a = await r2.json();
         if (a.status === "ready" || a.status === "failed") return a;
@@ -22983,6 +29378,23 @@ var PortalUI = (() => {
       await new Promise((res) => setTimeout(res, 1500));
     }
     return { status: "failed", error: "Timed out waiting for transcode." };
+  }
+
+  // frontend/src/templates/v1/views/weather/WeatherView.tsx
+  init_define_import_meta_env();
+  function WeatherView() {
+    const { status, data } = useGeoWeather();
+    if (status === "loading") {
+      return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang l\u1EA5y th\u1EDDi ti\u1EBFt\u2026");
+    }
+    if (status !== "ok" || !data) {
+      return /* @__PURE__ */ React.createElement("div", { className: "max-w-md rounded-2xl border p-6 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "weather-partly-sunny-icon", size: 28 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-base font-bold", style: { color: "var(--tpl-heading)" } }, "Th\u1EDDi ti\u1EBFt"), /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "H\xE3y b\u1EADt quy\u1EC1n \u0111\u1ECBnh v\u1ECB trong tr\xECnh duy\u1EC7t \u0111\u1EC3 xem th\u1EDDi ti\u1EBFt theo v\u1ECB tr\xED c\u1EE7a b\u1EA1n."))));
+    }
+    const { now, hourly, daily, place } = data;
+    return /* @__PURE__ */ React.createElement("div", { className: "max-w-3xl space-y-5" }, /* @__PURE__ */ React.createElement("div", { className: "overflow-hidden rounded-2xl border shadow-sm", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "p-6 text-white", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-blue))" } }, /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, place ? `Th\u1EDDi ti\u1EBFt \xB7 ${place}` : "Th\u1EDDi ti\u1EBFt t\u1EA1i v\u1ECB tr\xED c\u1EE7a b\u1EA1n"), /* @__PURE__ */ React.createElement("div", { className: "mt-1 flex items-start justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-5xl font-bold leading-none" }, now.temp, "\xB0"), /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-lg font-semibold" }, now.label), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-white/85" }, "C\u1EA3m gi\xE1c nh\u01B0 ", now.feels, "\xB0 \xB7 ", now.high, "\xB0 / ", now.low, "\xB0")), /* @__PURE__ */ React.createElement(Icon, { name: now.icon, size: 72 }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3", style: { background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement(Metric, { label: "\u0110\u1ED9 \u1EA9m", value: `${now.humidity}%` }), /* @__PURE__ */ React.createElement(Metric, { label: "Gi\xF3", value: `${now.wind} km/h`, border: true }), /* @__PURE__ */ React.createElement(Metric, { label: "Kh\u1EA3 n\u0103ng m\u01B0a", value: `${now.rain}%`, border: true }))), /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-4 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Theo gi\u1EDD"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-5 overflow-x-auto pb-1" }, hourly.map((h, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "flex min-w-[2.75rem] flex-col items-center gap-1.5" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, h.time), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement(Icon, { name: h.icon, size: 22 })), /* @__PURE__ */ React.createElement("span", { className: "text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, h.temp, "\xB0"))))), /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-4 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h2", { className: "mb-1 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "7 ng\xE0y t\u1EDBi"), /* @__PURE__ */ React.createElement("ul", null, daily.map((d, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "flex items-center gap-3 border-t py-2.5 first:border-t-0", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("span", { className: "w-16 text-sm font-medium", style: { color: "var(--tpl-heading)" } }, d.dow), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement(Icon, { name: d.icon, size: 22 })), /* @__PURE__ */ React.createElement("span", { className: "flex-1 truncate text-sm", style: { color: "var(--tpl-muted)" } }, d.label), /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-accent)" } }, "\u{1F4A7} ", d.rain, "%"), /* @__PURE__ */ React.createElement("span", { className: "w-20 text-right text-sm", style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement("b", null, d.high, "\xB0"), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, d.low, "\xB0")))))));
+  }
+  function Metric({ label, value, border }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "px-4 py-3 text-center", style: border ? { borderLeft: "1px solid var(--tpl-border)" } : void 0 }, /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, label), /* @__PURE__ */ React.createElement("p", { className: "text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, value));
   }
   return __toCommonJS(bundle_entry_exports);
 })();

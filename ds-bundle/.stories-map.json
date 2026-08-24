@@ -1,11 +1,12 @@
 {
   "global": "PortalUI",
   "pkg": "portal-frontend",
-  "pkgDir": "/Users/kirito/data/git/ops/repo/portal/frontend/node_modules/portal-frontend",
+  "pkgDir": "D:\\lamnx\\Workspaces\\git\\github\\portal\\frontend\\node_modules\\portal-frontend",
   "extraEntries": [
     "./.ds-shims/ds-provider.tsx"
   ],
   "exported": [
+    "AccountsView",
     "ActivityFeed",
     "AddBook",
     "AudioPlayer",
@@ -15,17 +16,28 @@
     "BadgeCard",
     "BirthdayCard",
     "BlogCard",
+    "BudgetsView",
+    "CalendarView",
     "CalendarWidget",
+    "ChapterMenu",
     "ChatResponsive",
     "ChoseFromMyPhoto",
+    "ComicDetailView",
     "ComicIndexView",
+    "ComicReaderView",
     "CommentForm",
     "CommentItem",
     "CommentThread",
     "Composer",
+    "ContinueRail",
+    "ContinueWidget",
     "ControlBlockButtons",
     "DSProvider",
+    "DSQuerySeed",
+    "DashboardView",
+    "EntryCard",
     "EventItem",
+    "FinanceWidget",
     "FormField",
     "FriendCard",
     "FriendRequestItem",
@@ -38,27 +50,41 @@
     "LoginView",
     "MasterBase",
     "MasterPublic",
+    "MediaDetailView",
+    "MediaIndexView",
     "MessagesMenu",
+    "MoneyDisplay",
+    "MoneyInput",
     "NotificationsMenu",
     "NovelDetailView",
+    "PagedReader",
     "PagesWidget",
+    "PeopleIndexView",
+    "PersonDetailView",
     "PersonalInfoWidget",
     "PlaylistWidget",
     "Post",
     "PostControlButtons",
     "ProfileHeader",
     "ReactionBar",
+    "ReaderChrome",
+    "ReaderHelp",
+    "ReaderSettings",
     "RegisterView",
     "SelectField",
     "SidebarCenter",
     "SidebarLeft",
     "SidebarRight",
+    "StreamItemCard",
+    "StripReader",
     "TagSelect",
     "ToggleRow",
     "TopMenu",
     "TrackItem",
+    "TransactionsView",
     "UpdateHeaderPhoto",
     "UploadStudio",
+    "WeatherView",
     "WeatherWidget",
     "WidgetCard"
   ],
@@ -66,6 +92,14 @@
   "keyRecipe": 7,
   "cfgSliceGlobal": "916c262b56b52973e7b58fa7d11b59be38192a40ed5034322deee368143dcb34",
   "components": [
+    {
+      "name": "AccountsView",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
     {
       "name": "ActivityFeed",
       "group": "widget",
@@ -139,8 +173,32 @@
       "stories": []
     },
     {
+      "name": "BudgetsView",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CalendarView",
+      "group": "calendar",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "CalendarWidget",
       "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ChapterMenu",
+      "group": "reader",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
@@ -163,10 +221,26 @@
       "stories": []
     },
     {
+      "name": "ComicDetailView",
+      "group": "comic",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "ComicIndexView",
       "group": "comic",
       "srcSha": null,
       "sourceKey": "582b840c438cec6e",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ComicReaderView",
+      "group": "comic",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -198,7 +272,23 @@
       "name": "Composer",
       "group": "general",
       "srcSha": null,
-      "sourceKey": "845c482f70f94d85",
+      "sourceKey": "ebd6e45e686ddcb9",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ContinueRail",
+      "group": "library",
+      "srcSha": null,
+      "sourceKey": "b4c3712e45994bdd",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ContinueWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -211,8 +301,32 @@
       "stories": []
     },
     {
+      "name": "DashboardView",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "EntryCard",
+      "group": "journal",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "EventItem",
       "group": "social",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "FinanceWidget",
+      "group": "widget",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
@@ -315,10 +429,42 @@
       "stories": []
     },
     {
+      "name": "MediaDetailView",
+      "group": "media",
+      "srcSha": null,
+      "sourceKey": "5df6c16d7a7591f8",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MediaIndexView",
+      "group": "media",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "MessagesMenu",
       "group": "general",
       "srcSha": null,
       "sourceKey": "6f8f98cb5aa98274",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MoneyDisplay",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "ab0cab4acb4c9d24",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MoneyInput",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -339,8 +485,24 @@
       "stories": []
     },
     {
+      "name": "PagedReader",
+      "group": "reader",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "PagesWidget",
       "group": "widget",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PeopleIndexView",
+      "group": "people",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
@@ -351,6 +513,14 @@
       "group": "widget",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "PersonDetailView",
+      "group": "people",
+      "srcSha": null,
+      "sourceKey": "f483c599ee2d26fc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -395,6 +565,30 @@
       "stories": []
     },
     {
+      "name": "ReaderChrome",
+      "group": "reader",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ReaderHelp",
+      "group": "reader",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ReaderSettings",
+      "group": "reader",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "RegisterView",
       "group": "auth",
       "srcSha": null,
@@ -435,6 +629,22 @@
       "stories": []
     },
     {
+      "name": "StreamItemCard",
+      "group": "stream",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "StripReader",
+      "group": "reader",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "TagSelect",
       "group": "form",
       "srcSha": null,
@@ -467,6 +677,14 @@
       "stories": []
     },
     {
+      "name": "TransactionsView",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "UpdateHeaderPhoto",
       "group": "popup",
       "srcSha": null,
@@ -479,6 +697,14 @@
       "group": "upload",
       "srcSha": null,
       "sourceKey": "1f42ab0a69fce8e5",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "WeatherView",
+      "group": "weather",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },

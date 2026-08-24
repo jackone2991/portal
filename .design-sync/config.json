@@ -18,6 +18,17 @@
     "BtnSecondary": null,
     "Card": null
   },
+  "overrides": {
+    "CommentItem": { "cardMode": "column" },
+    "MasterBase": { "cardMode": "single", "primaryStory": "App" },
+    "SidebarCenter": { "cardMode": "column" },
+    "ReactionBar": { "cardMode": "column" },
+    "HelloPreloader": { "cardMode": "single", "primaryStory": "Overlay" },
+    "AddBook": { "cardMode": "single", "primaryStory": "Dialog" },
+    "ChatResponsive": { "cardMode": "single", "primaryStory": "Chat" },
+    "ChoseFromMyPhoto": { "cardMode": "single", "primaryStory": "Dialog" },
+    "UpdateHeaderPhoto": { "cardMode": "single", "primaryStory": "Dialog" }
+  },
   "readmeHeader": ".design-sync/conventions.md",
   "dtsPropsFor": {
     "Avatar": "name: string; size?: number; className?: string;",
@@ -29,6 +40,10 @@
     "MessagesMenu": "open: boolean; onToggle: () => void;",
     "NotificationsMenu": "open: boolean; onToggle: () => void;",
     "SidebarLeft": "collapsed: boolean; onToggle: () => void;",
-    "SidebarRight": "collapsed: boolean; onToggle: () => void;"
+    "SidebarRight": "collapsed: boolean; onToggle: () => void;",
+    "MoneyDisplay": "amount: number; currency?: string; className?: string; /** Colour negative red / positive green and show an explicit + sign. */ signed?: boolean;",
+    "MoneyInput": "value: number; onChange: (minor: number) => void; placeholder?: string; className?: string; id?: string;",
+    "PersonDetailView": "id: string;",
+    "MediaDetailView": "id: string;"
   }
 }

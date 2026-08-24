@@ -2,6 +2,7 @@
   {
     "sheet": 1,
     "components": [
+      "AccountsView",
       "ActivityFeed",
       "AddBook",
       "AudioPlayer",
@@ -11,23 +12,38 @@
       "BadgeCard",
       "BirthdayCard",
       "BlogCard",
+      "BudgetsView",
+      "CalendarView",
       "CalendarWidget",
+      "ChapterMenu",
       "ChatResponsive",
-      "ChoseFromMyPhoto",
-      "ComicIndexView",
-      "CommentForm",
-      "CommentItem",
-      "CommentThread"
+      "ChoseFromMyPhoto"
     ]
   },
   {
     "sheet": 2,
     "components": [
+      "ComicDetailView",
+      "ComicIndexView",
+      "ComicReaderView",
+      "CommentForm",
+      "CommentItem",
+      "CommentThread",
       "Composer",
+      "ContinueRail",
+      "ContinueWidget",
       "ControlBlockButtons",
+      "DashboardView",
+      "EntryCard",
       "EventItem",
+      "FinanceWidget",
       "FormField",
-      "FriendCard",
+      "FriendCard"
+    ]
+  },
+  {
+    "sheet": 3,
+    "components": [
       "FriendRequestItem",
       "FriendRequestsMenu",
       "FriendSuggestions",
@@ -38,37 +54,51 @@
       "LoginView",
       "MasterBase",
       "MasterPublic",
-      "MessagesMenu"
-    ]
-  },
-  {
-    "sheet": 3,
-    "components": [
-      "NotificationsMenu",
-      "NovelDetailView",
-      "PagesWidget",
-      "PersonalInfoWidget",
-      "PlaylistWidget",
-      "Post",
-      "PostControlButtons",
-      "ProfileHeader",
-      "ReactionBar",
-      "RegisterView",
-      "SelectField",
-      "SidebarCenter",
-      "SidebarLeft",
-      "SidebarRight",
-      "TagSelect",
-      "ToggleRow"
+      "MediaDetailView",
+      "MediaIndexView",
+      "MessagesMenu",
+      "MoneyDisplay",
+      "MoneyInput",
+      "NotificationsMenu"
     ]
   },
   {
     "sheet": 4,
     "components": [
+      "NovelDetailView",
+      "PagedReader",
+      "PagesWidget",
+      "PeopleIndexView",
+      "PersonalInfoWidget",
+      "PersonDetailView",
+      "PlaylistWidget",
+      "Post",
+      "PostControlButtons",
+      "ProfileHeader",
+      "ReactionBar",
+      "ReaderChrome",
+      "ReaderHelp",
+      "ReaderSettings",
+      "RegisterView",
+      "SelectField"
+    ]
+  },
+  {
+    "sheet": 5,
+    "components": [
+      "SidebarCenter",
+      "SidebarLeft",
+      "SidebarRight",
+      "StreamItemCard",
+      "StripReader",
+      "TagSelect",
+      "ToggleRow",
       "TopMenu",
       "TrackItem",
+      "TransactionsView",
       "UpdateHeaderPhoto",
       "UploadStudio",
+      "WeatherView",
       "WeatherWidget",
       "WidgetCard"
     ]

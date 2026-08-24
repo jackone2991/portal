@@ -64,8 +64,20 @@ for its API and examples. `<Icon name>` values are Olympus sprite ids —
 
 - **`MasterBase`** = app shell (header + left nav + content + right rail);
   **`MasterPublic`** = auth/public shell — both take `children`.
-- **`*View`** components (`HomeView`, `LoginView`, `RegisterView`, `AuthLanding`,
-  `ComicIndexView`, `NovelDetailView`, `UploadStudio`) are self-contained screens;
-  `AuthForm` takes `defaultTab?: "login" | "register"`.
+- **`*View`** components are self-contained screens — compose them as the single
+  child of a master shell, don't rebuild their internals:
+  - *social / auth*: `HomeView`, `LoginView`, `RegisterView`, `AuthLanding`
+    (`AuthForm` takes `defaultTab?: "login" | "register"`), `UploadStudio`
+  - *library*: `ComicIndexView`, `ComicDetailView`, `ComicReaderView`,
+    `NovelDetailView`, `MediaIndexView`, `MediaDetailView`, `ContinueRail`
+  - *life OS*: `DashboardView`, `TransactionsView`, `AccountsView`, `BudgetsView`
+    (bank) · `CalendarView` · `WeatherView` · `PeopleIndexView`, `PersonDetailView`
+- **Screens fetch their own data** via TanStack Query (`D-32`) — most take only an
+  `id`, not the record. Mount them under a `QueryClientProvider`; with no API
+  reachable they render their real empty / "not found" state rather than failing.
+- **Money is integer minor units on the wire** (`D-41`). Render it with
+  `MoneyDisplay` (`amount`, optional `currency`, `signed` for +/- ledger colour)
+  and take it with `MoneyInput` (`value`, `onChange(minor)`) — never format VND
+  by hand.
 - Dropdowns (`FriendRequestsMenu`, `MessagesMenu`, `NotificationsMenu`) take
   `open` + `onToggle`; frame them against a `--tpl-header`-dark bar.

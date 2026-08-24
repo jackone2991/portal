@@ -6,7 +6,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 64858,
+    "pngBytes": 51810,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -32,7 +32,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 227010,
+    "pngBytes": 220883,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -57,7 +57,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 226918,
+    "pngBytes": 220577,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -82,7 +82,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 225288,
+    "pngBytes": 217385,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -101,13 +101,13 @@
     ]
   },
   {
-    "name": "BlogCard",
-    "group": "blog",
-    "rel": "components/blog/BlogCard/BlogCard.html",
+    "name": "AccountsView",
+    "group": "bank",
+    "rel": "components/bank/AccountsView/AccountsView.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 49091,
+    "pngBytes": 14839,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -117,12 +117,162 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 494,
+    "maxHeight": 428,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Accountscashcheckingsavingscredit cardewalletotherOpening balanceAdd accountNo accounts yet — add your first above."
+    ]
+  },
+  {
+    "name": "BudgetsView",
+    "group": "bank",
+    "rel": "components/bank/BudgetsView/BudgetsView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 8382,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 122,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "BudgetsSet an amount and Save. Save with 0 to remove a budget."
+    ]
+  },
+  {
+    "name": "DashboardView",
+    "group": "bank",
+    "rel": "components/bank/DashboardView/DashboardView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 17048,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 408,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Ledger+ AddNo accounts yet — add one to get started.Income0Expense0RecentAllNo transactions yet."
+    ]
+  },
+  {
+    "name": "TransactionsView",
+    "group": "bank",
+    "rel": "components/bank/TransactionsView/TransactionsView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 19869,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 576,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "TransactionsExpenseIncomeNo accountNo categoryAdd transactionCreate an account first.All accountsNo transactions."
+    ]
+  },
+  {
+    "name": "BlogCard",
+    "group": "blog",
+    "rel": "components/blog/BlogCard/BlogCard.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 49322,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 471,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
       "TravelThe Majestic CanyonWe hiked the north rim at dawn and watched the light pour into a mile of red sandstone.MVby Marina Valentine·March 4, 202424831"
+    ]
+  },
+  {
+    "name": "CalendarView",
+    "group": "calendar",
+    "rel": "components/calendar/CalendarView/CalendarView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 32782,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 751,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Tháng 8, 2026Âm lịch · năm Bính Ngọ‹Hôm nay›T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Chọn một ngày để xem âm lịch và thêm ghi chú."
+    ]
+  },
+  {
+    "name": "ComicDetailView",
+    "group": "comic",
+    "rel": "components/comic/ComicDetailView/ComicDetailView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 6221,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 24,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Không tìm thấy truyện."
     ]
   },
   {
@@ -132,7 +282,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 10158,
+    "pngBytes": 14635,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -142,12 +292,37 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 386,
+    "maxHeight": 236,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "ComicsAdd book"
+      "Truyện tranhĐọc và quản lý truyện tranh của bạn.Thư việnCủa tôiChưa có truyện nào được xuất bản."
+    ]
+  },
+  {
+    "name": "ComicReaderView",
+    "group": "comic",
+    "rel": "components/comic/ComicReaderView/ComicReaderView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13649,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "comic\n      ComicReaderView\n      Preview not yet authored. The component is fully importable — its API is in ComicReaderView.d.ts and usage in ComicReaderView.prompt.md."
     ]
   },
   {
@@ -157,7 +332,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 15322,
+    "pngBytes": 14525,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -182,7 +357,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 46505,
+    "pngBytes": 38494,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -195,14 +370,7 @@
     "maxHeight": 333,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "wide",
-    "gridOverflowCells": [
-      "Single",
-      "WithReply"
-    ],
-    "suggestedOverride": {
-      "cardMode": "column"
-    },
+    "gridOverflow": null,
     "texts": [
       "PAPriya Anand37 minutes agoSaving this for the crew screening notes. Can we get a breakdown of the gimbal move at 6:12? It reads almost like a crane shot.8Reply",
       "DMDiego Morales1 hour agoThe colour grade on the rooftop scene is unreal — those teal shadows are doing so much work.12ReplyMVMarina Valentine48 minutes agoThank you! We pushed the anamorphic bloom further than the test reel — glad it landed.4Reply"
@@ -215,7 +383,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 54055,
+    "pngBytes": 38441,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -225,7 +393,7 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 509,
+    "maxHeight": 510,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
@@ -240,7 +408,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 19298,
+    "pngBytes": 14731,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -266,7 +434,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 11879,
+    "pngBytes": 9793,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -291,7 +459,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 18020,
+    "pngBytes": 16679,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -317,7 +485,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 5474,
+    "pngBytes": 5484,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -342,7 +510,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 34683,
+    "pngBytes": 32544,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -368,7 +536,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 21848,
+    "pngBytes": 58871,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -378,12 +546,15 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 222,
+    "maxHeight": 314,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "StatusMultimediaBlog PostMVPreviewPost Status"
+      "StatusMultimediaBlog PostMVVừa đọc xong chương mới của Vạn Cổ Thần Đế — nhịp truyện nhanh hơn hẳn arc trước.Post StatusPreview",
+      "StatusMultimediaBlog PostMVPost StatusPreview",
+      "StatusMultimediaBlog PostMVĐang đăng ghi chú này…Posting…Preview",
+      "StatusMultimediaBlog PostKhông đăng được — thử lại sau.MVGhi chú không gửi được.Post StatusPreview"
     ]
   },
   {
@@ -393,7 +564,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 47366,
+    "pngBytes": 41633,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -418,7 +589,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 23033,
+    "pngBytes": 26029,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -428,7 +599,7 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 198,
+    "maxHeight": 182,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
@@ -444,7 +615,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 37387,
+    "pngBytes": 30781,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -463,13 +634,65 @@
     ]
   },
   {
+    "name": "MoneyDisplay",
+    "group": "general",
+    "rel": "components/general/MoneyDisplay/MoneyDisplay.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 22700,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 154,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Số dư1.500.000Hạn mức12.000.000Bằng không0",
+      "Lương tháng 8+24.000.000Tiền chợ-320.000Không đổi0",
+      "Tài khoản chính8.750.000VNDTiết kiệm150.000.000VND"
+    ]
+  },
+  {
+    "name": "MoneyInput",
+    "group": "general",
+    "rel": "components/general/MoneyInput/MoneyInput.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 5348,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 42,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      ""
+    ]
+  },
+  {
     "name": "NotificationsMenu",
     "group": "general",
     "rel": "components/general/NotificationsMenu/NotificationsMenu.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 44120,
+    "pngBytes": 18302,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -484,7 +707,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "4NotificationsMark as readSettingsMBMathilda Brinker commented on your photo.2 mins agoNGNicholas Grissom liked your status update.5 mins agoSHSarah Hetfield started following you.12 mins agoJPJake Parker shared your post.1 hour agoCheck all your Notifications"
+      "NotificationsMark as readSettingsCouldn't load notifications.Check all your Notifications"
     ]
   },
   {
@@ -494,7 +717,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 92184,
+    "pngBytes": 70340,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -504,7 +727,7 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 400,
+    "maxHeight": 399,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
@@ -520,7 +743,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 20114,
+    "pngBytes": 18395,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -535,7 +758,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "PortalNewsfeedFind Friends424GuestMemberG"
+      "PortalNewsfeedFind Friends42GuestMemberG"
     ]
   },
   {
@@ -545,7 +768,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 218657,
+    "pngBytes": 41397,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -555,12 +778,62 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 1022,
+    "maxHeight": 610,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "64°58°76°Partly SunnyReal Feel: 67°   Chance of Rain: 49%SUN60°MON58°TUE67°WED70°THU58°FRI68°SAT65°Saturday, March 26thSan Francisco, CAMayMONTUEWEDTHUFRISATSUN12345678910111213141516171819202122232425262728293031Pages You May LikeTMThe Marina BarRestaurant · BarTRTapronus RockRock BandPDPixel Digital DesignCompanyTCThompson's Custom Clothing BoutiqueClothing StoreStatusMultimediaBlog PostYPreviewPost StatusMVMarina Valentine shared a linkMarch 4 at 2:05pmHey Cindi, you should really check out this new song by Iron Maid. The next time they come to the city we should totally go!Iron Maid - ChillGrovesLorem ipsum dolor sit amet, consectetur ipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...YOUTUBE.COM18JRRKALLMJenny, Robert and 18 more liked this016EDElaine Dreyfuss 9 hours agoLorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempo incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris consequat.24JRRKALLMYou, Elaine and 22 more liked this1724JSJames Spiegel 38 mins agoSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium der doloremque laudantium, totam rem aperiam.12JRRKALLMNicholas, Diana and 10 more liked this35MVToday isMarina Valentine's Birthday!Leave her a message with your best wishes on her profile page!Friend SuggestionsFSFrancine Smith8 Friends in CommonHWHugh Wilson6 Friends in CommonKMKaren Masters6 Friends in CommonActivity FeedMPMarina Polson commented on Jason Mark's photo.2 mins agoJPJake Parker liked Nicholas Grissom's status update.5 mins agoMJMary Jane Stark added 20 new photos to her gallery album.12 mins agoNGNicholas Grissom updated his profile photo.1 hour ago"
+      "Thời tiếtBật định vị để xem thời tiết«‹Tháng 8, 2026›»T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Mở Lịch Âm Dương →DiscoverNothing published yet — browse the library.StatusMultimediaBlog PostYPost StatusPreviewCouldn't load your stream. RetryPeopleNo people yet — add someone to your registry.Recent activityYou're all caught up."
+    ]
+  },
+  {
+    "name": "EntryCard",
+    "group": "journal",
+    "rel": "components/journal/EntryCard/EntryCard.html",
+    "errs": 1,
+    "caught": 0,
+    "firstErr": "TypeError: Cannot read properties of undefined (reading 'updated_at')",
+    "pngBytes": 12029,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "journal\n      EntryCard\n      Preview not yet authored. The component is fully importable — its API is in EntryCard.d.ts and usage in EntryCard.prompt.md."
+    ]
+  },
+  {
+    "name": "ContinueRail",
+    "group": "library",
+    "rel": "components/library/ContinueRail/ContinueRail.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 16315,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 334,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Continue WatchingDune: Part TwomovieVạn Cổ Thần Đế — Chương 412comicBản Tình Ca Mùa Đôngmusic"
     ]
   },
   {
@@ -570,7 +843,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 111302,
+    "pngBytes": 86768,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -583,15 +856,9 @@
     "maxHeight": 640,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "App"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
-      "#hellopreloader{display:none !important}\n.mb-wrap{position:relative;width:850px;height:640px;overflow:hidden}\n.mb-wrap header{position:absolute !important}\n.mb-wrap aside{display:flex !important;position:absolute !important;height:568px !important}\n.mb-wrap main{padding-left:var(--tpl-sidebar-w) !important;padding-right:var(--tpl-rightbar-w) !important;min-height:640px}\nPortalNewsfeedFind Friends424GuestMemberGCollapse MenuNewsfeedUpload VideoFav Pages FeedFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!Close FriendsSettingsCSCarol SummersOnlineMBMathilda BrinkerAt work!MMMichael MaximoffAwayRHRachel HowlettOfflineNKNina KravizOnlineMy FamilySettingsSHSarah HetfieldOnlineUncategorizedSettingsBPBruce PetersonOnlineCGChris GreysonAwayNGNicholas GrisomInvisibleJSJames SpiegelAwayDJDiana JonesOnlineOlympus ChatNewsfeedLatest from people you followCarol Summers2 hours agoJust uploaded a new travel vlog — transcoding to HLS now. Playback in a minute!Nina Kraviz added 3 tracks to a playlist"
+      "#hellopreloader{display:none !important}\n.mb-wrap{position:relative;width:850px;height:640px;overflow:hidden}\n.mb-wrap header{position:absolute !important}\n.mb-wrap aside{display:flex !important;position:absolute !important;height:568px !important}\n.mb-wrap main{padding-left:var(--tpl-sidebar-w) !important;padding-right:var(--tpl-rightbar-w) !important;min-height:640px}\nPortalNewsfeedFind Friends42GuestMemberGCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!Close FriendsSettingsCSCarol SummersOnlineMBMathilda BrinkerAt work!MMMichael MaximoffAwayRHRachel HowlettOfflineNKNina KravizOnlineMy FamilySettingsSHSarah HetfieldOnlineUncategorizedSettingsBPBruce PetersonOnlineCGChris GreysonAwayNGNicholas GrisomInvisibleJSJames SpiegelAwayDJDiana JonesOnlineOlympus ChatNewsfeedLatest from people you followCarol Summers2 hours agoJust uploaded a new travel vlog — transcoding to HLS now. Playback in a minute!Nina Kraviz added 3 tracks to a playlist"
     ]
   },
   {
@@ -601,7 +868,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 30123,
+    "pngBytes": 26873,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -620,13 +887,63 @@
     ]
   },
   {
+    "name": "MediaDetailView",
+    "group": "media",
+    "rel": "components/media/MediaDetailView/MediaDetailView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 14844,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 800,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Chuyến đi Đà Lạt 2026"
+    ]
+  },
+  {
+    "name": "MediaIndexView",
+    "group": "media",
+    "rel": "components/media/MediaIndexView/MediaIndexView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 11350,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 237,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "MediaKindAll kindsVideoImageStatusAll statusesReadyProcessingFailedCouldn't load your media.Retry"
+    ]
+  },
+  {
     "name": "SidebarCenter",
     "group": "menu",
     "rel": "components/menu/SidebarCenter/SidebarCenter.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 20263,
+    "pngBytes": 18541,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -639,15 +956,9 @@
     "maxHeight": 72,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "wide",
-    "gridOverflowCells": [
-      "Header"
-    ],
-    "suggestedOverride": {
-      "cardMode": "column"
-    },
+    "gridOverflow": null,
     "texts": [
-      ".sc-wrap header{position:static !important}PortalNewsfeedFind Friends424GuestMemberG"
+      ".sc-wrap header{position:static !important}PortalNewsfeedFind Friends42GuestMemberG"
     ]
   },
   {
@@ -657,7 +968,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 46166,
+    "pngBytes": 38484,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -673,7 +984,7 @@
     "gridOverflow": null,
     "texts": [
       ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}",
-      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCollapse MenuNewsfeedUpload VideoFav Pages FeedFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!"
+      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!"
     ]
   },
   {
@@ -683,7 +994,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 71624,
+    "pngBytes": 64423,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -709,7 +1020,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 15218,
+    "pngBytes": 13884,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -734,7 +1045,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 36563,
+    "pngBytes": 28703,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -759,7 +1070,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 21941,
+    "pngBytes": 18444,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -784,7 +1095,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13145,
+    "pngBytes": 11109,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -809,7 +1120,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 9714,
+    "pngBytes": 9837,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -834,7 +1145,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 8083,
+    "pngBytes": 5901,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -847,15 +1158,60 @@
     "maxHeight": 240,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "Overlay"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
       "Loading …"
+    ]
+  },
+  {
+    "name": "PeopleIndexView",
+    "group": "people",
+    "rel": "components/people/PeopleIndexView/PeopleIndexView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 9086,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 128,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "People+ Add personNo people yet — add family and friends to track birthdays."
+    ]
+  },
+  {
+    "name": "PersonDetailView",
+    "group": "people",
+    "rel": "components/people/PersonDetailView/PersonDetailView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 25958,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 334,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "← PeopleNguyễn Thu HàChị gáiDeleteBirthday🎂 17/04/1993phone0912 345 678emailha.nguyen@example.comNotesThích cà phê sữa đá. Hẹn cà phê mỗi sáng chủ nhật.",
+      "← PeopleTrần Minh QuânDeleteNo details yet."
     ]
   },
   {
@@ -865,7 +1221,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 33594,
+    "pngBytes": 27486,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -878,13 +1234,7 @@
     "maxHeight": 560,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "Dialog"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
       "Add BookTitleAuthorCategoryComicNovelMangaLight NovelShort StoryDescriptionUpload a cover imageCancelAdd Book"
     ]
@@ -896,7 +1246,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 44812,
+    "pngBytes": 34221,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -909,13 +1259,7 @@
     "maxHeight": 440,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "Chat"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
       "MVMarina ValentineOnlineMVHey! Are we still on for the show this weekend?Yesterday at 8:10pmYAbsolutely — got the tickets this morning 🎸Yesterday at 8:12pmMVAmazing. Iron Maid is going to be incredible live.Yesterday at 8:13pmYCan’t wait. I’ll pick you up at 7.Yesterday at 8:15pm"
     ]
@@ -927,7 +1271,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 89418,
+    "pngBytes": 126905,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -940,13 +1284,7 @@
     "maxHeight": 600,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "Dialog"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
       "Choose from My PhotosPhotosAlbumsCancelConfirm Photo"
     ]
@@ -958,7 +1296,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 27816,
+    "pngBytes": 22761,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -971,13 +1309,7 @@
     "maxHeight": 360,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "escape",
-    "gridOverflowCells": [
-      "Dialog"
-    ],
-    "suggestedOverride": {
-      "cardMode": "single"
-    },
+    "gridOverflow": null,
     "texts": [
       "Update Header PhotoUpload PhotoBrowse your computer.Choose from My PhotosChoose from your uploaded photos"
     ]
@@ -989,7 +1321,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 27819,
+    "pngBytes": 20601,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1014,7 +1346,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 17386,
+    "pngBytes": 18047,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1024,17 +1356,10 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 114,
+    "maxHeight": 113,
     "variantsIdentical": false,
     "bad": false,
-    "gridOverflow": "wide",
-    "gridOverflowCells": [
-      "Default",
-      "Liked"
-    ],
-    "suggestedOverride": {
-      "cardMode": "column"
-    },
+    "gridOverflow": null,
     "texts": [
       "3ARAnselm and 2 more liked this10",
       "128MVDMPAMarina and 127 more liked this247"
@@ -1047,7 +1372,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 15850,
+    "pngBytes": 17247,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1073,7 +1398,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 73064,
+    "pngBytes": 87042,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1093,13 +1418,163 @@
     ]
   },
   {
+    "name": "ChapterMenu",
+    "group": "reader",
+    "rel": "components/reader/ChapterMenu/ChapterMenu.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 12854,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      ChapterMenu\n      Preview not yet authored. The component is fully importable — its API is in ChapterMenu.d.ts and usage in ChapterMenu.prompt.md."
+    ]
+  },
+  {
+    "name": "PagedReader",
+    "group": "reader",
+    "rel": "components/reader/PagedReader/PagedReader.html",
+    "errs": 1,
+    "caught": 0,
+    "firstErr": "TypeError: Cannot read properties of undefined (reading 'undefined')",
+    "pngBytes": 12889,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      PagedReader\n      Preview not yet authored. The component is fully importable — its API is in PagedReader.d.ts and usage in PagedReader.prompt.md."
+    ]
+  },
+  {
+    "name": "ReaderChrome",
+    "group": "reader",
+    "rel": "components/reader/ReaderChrome/ReaderChrome.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 12728,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      ReaderChrome\n      Preview not yet authored. The component is fully importable — its API is in ReaderChrome.d.ts and usage in ReaderChrome.prompt.md."
+    ]
+  },
+  {
+    "name": "ReaderHelp",
+    "group": "reader",
+    "rel": "components/reader/ReaderHelp/ReaderHelp.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 12003,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      ReaderHelp\n      Preview not yet authored. The component is fully importable — its API is in ReaderHelp.d.ts and usage in ReaderHelp.prompt.md."
+    ]
+  },
+  {
+    "name": "ReaderSettings",
+    "group": "reader",
+    "rel": "components/reader/ReaderSettings/ReaderSettings.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13195,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      ReaderSettings\n      Preview not yet authored. The component is fully importable — its API is in ReaderSettings.d.ts and usage in ReaderSettings.prompt.md."
+    ]
+  },
+  {
+    "name": "StripReader",
+    "group": "reader",
+    "rel": "components/reader/StripReader/StripReader.html",
+    "errs": 1,
+    "caught": 0,
+    "firstErr": "TypeError: Cannot read properties of undefined (reading 'forEach')",
+    "pngBytes": 12576,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "reader\n      StripReader\n      Preview not yet authored. The component is fully importable — its API is in StripReader.d.ts and usage in StripReader.prompt.md."
+    ]
+  },
+  {
     "name": "BadgeCard",
     "group": "social",
     "rel": "components/social/BadgeCard/BadgeCard.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 7635,
+    "pngBytes": 7639,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1124,7 +1599,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 7359,
+    "pngBytes": 7496,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1149,7 +1624,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 33321,
+    "pngBytes": 30610,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1174,7 +1649,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 16228,
+    "pngBytes": 15157,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1193,13 +1668,38 @@
     ]
   },
   {
+    "name": "StreamItemCard",
+    "group": "stream",
+    "rel": "components/stream/StreamItemCard/StreamItemCard.html",
+    "errs": 1,
+    "caught": 0,
+    "firstErr": "TypeError: Cannot read properties of undefined (reading 'occurred_at')",
+    "pngBytes": 13295,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "stream\n      StreamItemCard\n      Preview not yet authored. The component is fully importable — its API is in StreamItemCard.d.ts and usage in StreamItemCard.prompt.md."
+    ]
+  },
+  {
     "name": "UploadStudio",
     "group": "upload",
     "rel": "components/upload/UploadStudio/UploadStudio.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 20487,
+    "pngBytes": 17017,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1218,13 +1718,13 @@
     ]
   },
   {
-    "name": "ActivityFeed",
-    "group": "widget",
-    "rel": "components/widget/ActivityFeed/ActivityFeed.html",
+    "name": "WeatherView",
+    "group": "weather",
+    "rel": "components/weather/WeatherView/WeatherView.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 42398,
+    "pngBytes": 11804,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1234,12 +1734,37 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 263,
+    "maxHeight": 114,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Activity FeedMPMarina Polson commented on Jason Mark's photo.2 mins agoJPJake Parker liked Nicholas Grissom's status update.5 mins agoMJMary Jane Stark added 20 new photos to her gallery album.12 mins agoNGNicholas Grissom updated his profile photo.1 hour ago"
+      "Thời tiếtHãy bật quyền định vị trong trình duyệt để xem thời tiết theo vị trí của bạn."
+    ]
+  },
+  {
+    "name": "ActivityFeed",
+    "group": "widget",
+    "rel": "components/widget/ActivityFeed/ActivityFeed.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 7654,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 90,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Recent activityYou're all caught up."
     ]
   },
   {
@@ -1249,7 +1774,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 124989,
+    "pngBytes": 12783,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1258,13 +1783,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": false,
-    "maxHeight": 219,
+    "fallbackCard": true,
+    "maxHeight": 162,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "MVToday isMarina Valentine's Birthday!Leave her a message with your best wishes on her profile page!"
+      "widget\n      BirthdayCard\n      Preview not yet authored. The component is fully importable — its API is in BirthdayCard.d.ts and usage in BirthdayCard.prompt.md."
     ]
   },
   {
@@ -1274,7 +1799,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 17609,
+    "pngBytes": 25930,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1283,13 +1808,63 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": false,
-    "maxHeight": 267,
+    "fallbackCard": true,
+    "maxHeight": 346,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "MayMONTUEWEDTHUFRISATSUN12345678910111213141516171819202122232425262728293031"
+      "widget\n      CalendarWidget\n      Preview not yet authored. The component is fully importable — its API is in CalendarWidget.d.ts and usage in CalendarWidget.prompt.md.\n    \n  «‹Tháng 8, 2026›»T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Mở Lịch Âm Dương →"
+    ]
+  },
+  {
+    "name": "ContinueWidget",
+    "group": "widget",
+    "rel": "components/widget/ContinueWidget/ContinueWidget.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13553,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "widget\n      ContinueWidget\n      Preview not yet authored. The component is fully importable — its API is in ContinueWidget.d.ts and usage in ContinueWidget.prompt.md."
+    ]
+  },
+  {
+    "name": "FinanceWidget",
+    "group": "widget",
+    "rel": "components/widget/FinanceWidget/FinanceWidget.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13059,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "widget\n      FinanceWidget\n      Preview not yet authored. The component is fully importable — its API is in FinanceWidget.d.ts and usage in FinanceWidget.prompt.md."
     ]
   },
   {
@@ -1299,7 +1874,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 26545,
+    "pngBytes": 8105,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1309,12 +1884,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 210,
+    "maxHeight": 90,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Friend SuggestionsFSFrancine Smith8 Friends in CommonHWHugh Wilson6 Friends in CommonKMKaren Masters6 Friends in Common"
+      "PeopleNo people yet — add someone to your registry."
     ]
   },
   {
@@ -1324,7 +1899,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 33296,
+    "pngBytes": 8075,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1334,12 +1909,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 254,
+    "maxHeight": 90,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Pages You May LikeTMThe Marina BarRestaurant · BarTRTapronus RockRock BandPDPixel Digital DesignCompanyTCThompson's Custom Clothing BoutiqueClothing Store"
+      "DiscoverNothing published yet — browse the library."
     ]
   },
   {
@@ -1349,7 +1924,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 23726,
+    "pngBytes": 15519,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1374,7 +1949,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 120551,
+    "pngBytes": 8481,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1384,12 +1959,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 292,
+    "maxHeight": 70,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "64°58°76°Partly SunnyReal Feel: 67°   Chance of Rain: 49%SUN60°MON58°TUE67°WED70°THU58°FRI68°SAT65°Saturday, March 26thSan Francisco, CA"
+      "Thời tiếtBật định vị để xem thời tiết"
     ]
   },
   {
@@ -1399,7 +1974,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 5433,
+    "pngBytes": 5458,
     "blank": false,
     "rootEmpty": false,
     "thin": false,

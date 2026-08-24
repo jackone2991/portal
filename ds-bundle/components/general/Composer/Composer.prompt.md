@@ -2,12 +2,60 @@ Composer from portal-frontend. Use via `window.PortalUI.Composer` (bundle loaded
 
 ## Examples
 
-### CreatePost
+### Empty
 
 ```jsx
-() => (
-  <div data-template="v1" style={{ background: "#f5f6fa", padding: 16, maxWidth: 640 }}>
-    <Composer displayName="Marina Valentine" onPost={() => {}} />
-  </div>
-)
+() =>
+  frame(
+    <Composer
+      displayName="Marina Valentine"
+      bodyMd=""
+      onBodyMdChange={() => {}}
+      onSubmit={() => {}}
+    />,
+  )
+```
+
+### Drafting
+
+```jsx
+() =>
+  frame(
+    <Composer
+      displayName="Marina Valentine"
+      bodyMd="Vừa đọc xong chương mới của Vạn Cổ Thần Đế — nhịp truyện nhanh hơn hẳn arc trước."
+      onBodyMdChange={() => {}}
+      onSubmit={() => {}}
+    />,
+  )
+```
+
+### Submitting
+
+```jsx
+() =>
+  frame(
+    <Composer
+      displayName="Marina Valentine"
+      bodyMd="Đang đăng ghi chú này…"
+      onBodyMdChange={() => {}}
+      onSubmit={() => {}}
+      submitting
+    />,
+  )
+```
+
+### WithError
+
+```jsx
+() =>
+  frame(
+    <Composer
+      displayName="Marina Valentine"
+      bodyMd="Ghi chú không gửi được."
+      onBodyMdChange={() => {}}
+      onSubmit={() => {}}
+      error="Không đăng được — thử lại sau."
+    />,
+  )
 ```

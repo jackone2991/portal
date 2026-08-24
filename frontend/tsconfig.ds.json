@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "next/link": ["./.ds-shims/next-link.tsx"]
+      "next/link": ["./.ds-shims/next-link.tsx"],
+      "next/navigation": ["./.ds-shims/next-navigation.tsx"]
     }
   }
 }

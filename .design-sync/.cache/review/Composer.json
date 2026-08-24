@@ -1,13 +1,19 @@
 {
-  "gradeKey": "8ca7fc53812b8bee",
-  "sourceKey": "845c482f70f94d85",
+  "gradeKey": "de48e05a68f982e8",
+  "sourceKey": "ebd6e45e686ddcb9",
   "keyRecipe": 7,
   "cells": [
-    "CreatePost"
+    "Drafting",
+    "Empty",
+    "Submitting",
+    "WithError"
   ],
   "pendingGrade": false,
   "shots": [
-    "CreatePost"
+    "Drafting",
+    "Empty",
+    "Submitting",
+    "WithError"
   ],
   "pageErrs": []
 }
