@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 type Handler struct {
@@ -47,7 +47,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		Contact      json.RawMessage `json:"contact"`
 		NoteMd       *string         `json:"note_md"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	p, err := h.svc.CreatePerson(r.Context(), CreatePersonInput{
@@ -58,7 +58,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writePeopleErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, personJSON(p))
+	server.JSON(w, http.StatusCreated, personJSON(p))
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	res, err := h.svc.ListPeople(r.Context(), uid, r.URL.Query().Get("cursor"), atoiSafe(r.URL.Query().Get("limit")))
+	res, err := h.svc.ListPeople(r.Context(), uid, r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")))
 	if err != nil {
 		writePeopleErr(w, err)
 		return
@@ -79,7 +79,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		out["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, out)
+	server.JSON(w, http.StatusOK, out)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		writePeopleErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, personJSON(p))
+	server.JSON(w, http.StatusOK, personJSON(p))
 }
 
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		Contact      json.RawMessage `json:"contact"`
 		NoteMd       json.RawMessage `json:"note_md"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	in := UpdatePersonInput{UserID: uid, ID: id, DisplayName: body.DisplayName, Contact: json.RawMessage(body.Contact)}
@@ -126,7 +126,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		if string(body.Birthday) != "null" {
 			var b birthdayReq
 			if err := json.Unmarshal(body.Birthday, &b); err != nil {
-				badReq(w, "invalid birthday")
+				server.BadRequest(w, "invalid birthday")
 				return
 			}
 			in.Birthday = b.toDomain()
@@ -137,7 +137,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		writePeopleErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, personJSON(p))
+	server.JSON(w, http.StatusOK, personJSON(p))
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +161,7 @@ func (h *Handler) Upcoming(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	days := atoiSafe(r.URL.Query().Get("days"))
+	days := server.AtoiSafe(r.URL.Query().Get("days"))
 	if days == 0 {
 		days = 14
 	}
@@ -181,7 +181,7 @@ func (h *Handler) Upcoming(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, m)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"upcoming": out})
+	server.JSON(w, http.StatusOK, map[string]any{"upcoming": out})
 }
 
 // ── JSON ───────────────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ func personJSON(p Person) map[string]any {
 func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return uuid.Nil, false
 	}
 	return uid, true
@@ -217,18 +217,10 @@ func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool)
 func parseID(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, "people/person-not-found", "Not Found", "person not found")
+		server.Problem(w, http.StatusNotFound, "people/person-not-found", "Not Found", "person not found")
 		return uuid.Nil, false
 	}
 	return id, true
-}
-
-func decode(w http.ResponseWriter, r *http.Request, v any) bool {
-	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(v); err != nil {
-		badReq(w, "invalid JSON body")
-		return false
-	}
-	return true
 }
 
 // optStr interprets an optional JSON field: absent → (nil,false); null → (nil,true,clear); "x" → (&x,true).
@@ -253,49 +245,17 @@ func uuidPtrJSON(p *uuid.UUID) any {
 	return p.String()
 }
 
-func badReq(w http.ResponseWriter, detail string) {
-	writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", detail)
-}
-
-func atoiSafe(s string) int {
-	n := 0
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0
-		}
-		n = n*10 + int(c-'0')
-		if n > 1_000_000 {
-			return 1_000_000
-		}
-	}
-	return n
-}
-
 func writePeopleErr(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, "people/person-not-found", "Not Found", "person not found")
+		server.Problem(w, http.StatusNotFound, "people/person-not-found", "Not Found", "person not found")
 	case errors.Is(err, ErrInvalidBirthday):
-		writeProblem(w, http.StatusUnprocessableEntity, "people/invalid-birthday", "Invalid birthday", "month and day must be a real date; year (if given) 1900..now")
+		server.Problem(w, http.StatusUnprocessableEntity, "people/invalid-birthday", "Invalid birthday", "month and day must be a real date; year (if given) 1900..now")
 	case errors.Is(err, ErrValidation):
-		writeProblem(w, http.StatusUnprocessableEntity, "people/validation", "Validation error", "the request is invalid")
+		server.Problem(w, http.StatusUnprocessableEntity, "people/validation", "Validation error", "the request is invalid")
 	case errors.Is(err, ErrBadCursor):
-		writeProblem(w, http.StatusBadRequest, "people/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
+		server.Problem(w, http.StatusBadRequest, "people/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
 	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{"type": typ, "title": title, "status": status, "detail": detail})
 }

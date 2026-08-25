@@ -53,6 +53,10 @@ const (
 type ProcessImagePayload struct {
 	AssetID   string `json:"asset_id"`
 	SourceKey string `json:"source_key"`
+	// OwnerUserID lets the worker open the asset owner's tenant scope before it
+	// writes. Without it the variant INSERT cannot resolve tenant_id once the app
+	// runs as portal_app (ADR-07).
+	OwnerUserID string `json:"owner_user_id"`
 }
 
 // NewProcessImageTask enqueues onto the "image" queue, served by its own pool
@@ -72,11 +76,12 @@ func NewProcessImageTask(p ProcessImagePayload) (*asynq.Task, error) {
 type ImageProcessor struct {
 	store storage.Storage
 	repo  Repo
-	pub   Publisher // optional: emits media:asset_ready
+	pub   Publisher   // optional: emits media:asset_ready
+	run_  RunInTenant // optional: nil on the api side, supplied by cmd/worker
 }
 
-func NewImageProcessor(store storage.Storage, repo Repo, pub Publisher) *ImageProcessor {
-	return &ImageProcessor{store: store, repo: repo, pub: pub}
+func NewImageProcessor(store storage.Storage, repo Repo, pub Publisher, run RunInTenant) *ImageProcessor {
+	return &ImageProcessor{store: store, repo: repo, pub: pub, run_: run}
 }
 
 // Handle is the Asynq handler. On failure it marks the asset failed and returns
@@ -94,7 +99,9 @@ func (ip *ImageProcessor) Handle(ctx context.Context, task *asynq.Task) error {
 	log.Info().Str("asset", p.AssetID).Str("src", p.SourceKey).Msg("process_image: start")
 	if err := ip.run(ctx, id, p); err != nil {
 		log.Error().Err(err).Str("asset", p.AssetID).Msg("process_image: failed")
-		_ = ip.repo.MarkFailed(ctx, id, truncate(err.Error(), 500))
+		_ = inTenant(ctx, ip.run_, TaskTypeProcessImage, p.OwnerUserID, func(ctx context.Context) error {
+			return ip.repo.MarkFailed(ctx, id, truncate(err.Error(), 500))
+		})
 		return nil
 	}
 	log.Info().Str("asset", p.AssetID).Msg("process_image: ready")
@@ -137,6 +144,14 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 		{"thumb", thumbMaxWidth},
 		{"medium", mediumMaxWidth},
 	}
+	// Encode and upload first, with NO transaction open: a WebP encode takes
+	// seconds and must not pin a connection or hold a snapshot that long.
+	type variantRow struct {
+		name, key string
+		w, h      int
+		size      int64
+	}
+	rows := make([]variantRow, 0, len(variants))
 	for _, v := range variants {
 		outPath := filepath.Join(dir, v.name+".webp")
 		if err := encodeWebP(ctx, src, outPath, v.maxW); err != nil {
@@ -148,16 +163,28 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 			return fmt.Errorf("upload %s: %w", v.name, err)
 		}
 		vw, vh := scaledDims(w, h, v.maxW)
-		if err := ip.repo.InsertVariant(ctx, id, v.name, key, vw, vh, size); err != nil {
-			return fmt.Errorf("insert variant %s: %w", v.name, err)
-		}
+		rows = append(rows, variantRow{name: v.name, key: key, w: vw, h: vh, size: size})
 	}
 
-	// 4. mark ready with the SOURCE dimensions (not a variant's)
-	if err := ip.repo.MarkImageReady(ctx, id, w, h); err != nil {
+	// 4. persist: both variant rows plus the ready flag in ONE tenant-scoped
+	// transaction (ADR-07 increment 1b). Atomicity is a bonus the old
+	// insert-as-you-go loop did not have — a failure between the two variants
+	// used to leave a half-processed asset behind.
+	if err := inTenant(ctx, ip.run_, TaskTypeProcessImage, p.OwnerUserID, func(ctx context.Context) error {
+		for _, v := range rows {
+			if err := ip.repo.InsertVariant(ctx, id, v.name, v.key, v.w, v.h, v.size); err != nil {
+				return fmt.Errorf("insert variant %s: %w", v.name, err)
+			}
+		}
+		// mark ready with the SOURCE dimensions (not a variant's)
+		if err := ip.repo.MarkImageReady(ctx, id, w, h); err != nil {
+			return err
+		}
+		emitAssetReady(ctx, ip.pub, ip.repo, id)
+		return nil
+	}); err != nil {
 		return err
 	}
-	emitAssetReady(ctx, ip.pub, ip.repo, id)
 	return nil
 }
 

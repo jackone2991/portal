@@ -26,6 +26,8 @@ const posterMaxWidth = 640
 type ThumbnailPayload struct {
 	AssetID   string `json:"asset_id"`
 	SourceKey string `json:"source_key"`
+	// OwnerUserID scopes the poster-variant INSERT (ADR-07) — see worker.inTenant.
+	OwnerUserID string `json:"owner_user_id"`
 }
 
 func NewThumbnailTask(p ThumbnailPayload) (*asynq.Task, error) {
@@ -40,10 +42,11 @@ func NewThumbnailTask(p ThumbnailPayload) (*asynq.Task, error) {
 type Thumbnailer struct {
 	store storage.Storage
 	repo  Repo
+	run_  RunInTenant // optional: nil on the api side, supplied by cmd/worker
 }
 
-func NewThumbnailer(store storage.Storage, repo Repo) *Thumbnailer {
-	return &Thumbnailer{store: store, repo: repo}
+func NewThumbnailer(store storage.Storage, repo Repo, run RunInTenant) *Thumbnailer {
+	return &Thumbnailer{store: store, repo: repo, run_: run}
 }
 
 // Handle generates a `poster` variant. Poster failure NEVER fails the (already
@@ -113,7 +116,11 @@ func (th *Thumbnailer) run(ctx context.Context, id uuid.UUID, p ThumbnailPayload
 	if _, w, h := probe(ctx, out); w != nil && h != nil {
 		pw, ph = *w, *h
 	}
-	return th.repo.InsertVariant(ctx, id, "poster", key, pw, ph, size)
+	// The poster row lands in media_asset_variants, a tenant-scoped table, so it
+	// needs the owner's scope for tenant_id's DEFAULT to resolve (ADR-07).
+	return inTenant(ctx, th.run_, TaskTypeThumbnail, p.OwnerUserID, func(ctx context.Context) error {
+		return th.repo.InsertVariant(ctx, id, "poster", key, pw, ph, size)
+	})
 }
 
 func (th *Thumbnailer) download(ctx context.Context, key, dst string) error {

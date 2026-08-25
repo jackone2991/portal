@@ -28,6 +28,12 @@ type Deps struct {
 	// RunInUserTenant (worker only) scopes the birthday-notice INSERT to the
 	// person's owner org (ADR-07 1b). nil on the API side.
 	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+	// ForEachTenant (worker only) runs the daily birthday scan once per tenant,
+	// each in its own scope. The scan reads people_persons, an RLS table: under
+	// portal_app an unscoped scan sees zero rows and silently does nothing, so
+	// the iteration is what keeps it working after the ADR-07 cutover. Nil ⇒ run
+	// once unscoped (the pre-cutover behaviour).
+	ForEachTenant func(ctx context.Context, fn func(context.Context) error) error
 
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -75,7 +81,12 @@ func (m *Module) MountHTTP(r chi.Router) {
 // the schedule (people:scan_birthdays) to the shared scheduler.
 func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(peopleapi.TaskScanBirthdays, func(ctx context.Context, _ *asynq.Task) error {
-		return m.svc.ScanBirthdays(ctx, time.Now())
+		now := time.Now()
+		scan := func(ctx context.Context) error { return m.svc.ScanBirthdays(ctx, now) }
+		if m.deps.ForEachTenant == nil {
+			return scan(ctx)
+		}
+		return m.deps.ForEachTenant(ctx, scan)
 	})
 }
 

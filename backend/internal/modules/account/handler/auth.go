@@ -31,6 +31,7 @@ import (
 	"github.com/portal/backend/internal/modules/account/middleware"
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	"github.com/portal/backend/internal/platform/audit"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Brute-force guard on /auth/login. A fixed(ish) window per IP and per account;
@@ -220,7 +221,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// No session is issued: the user is sent back to /login to sign in with the
 	// account they just created (product decision). 201 + the email so the
 	// frontend can prefill the login form.
-	writeJSON(w, http.StatusCreated, map[string]any{
+	server.JSON(w, http.StatusCreated, map[string]any{
 		"status": "registered",
 		"email":  user.Email,
 	})
@@ -259,7 +260,7 @@ func (h *AuthHandler) completeSession(w http.ResponseWriter, r *http.Request, us
 		UserAgent: r.UserAgent(),
 	})
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	server.JSON(w, http.StatusOK, map[string]any{
 		"access_token": access,
 		"expires_in":   int(h.AccessTTL.Seconds()),
 		"token_type":   "Bearer",
@@ -328,7 +329,7 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		UserAgent: r.UserAgent(),
 	})
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	server.JSON(w, http.StatusOK, map[string]any{
 		"access_token": access,
 		"expires_in":   int(h.AccessTTL.Seconds()),
 		"token_type":   "Bearer",
@@ -390,7 +391,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	server.JSON(w, http.StatusOK, map[string]any{
 		"id":           id.UserID,
 		"email":        id.Email,
 		"display_name": id.DisplayName,

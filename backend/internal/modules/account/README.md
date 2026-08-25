@@ -44,7 +44,14 @@ See [api/api.go](api/api.go). Other modules MUST NOT reach into `auth`, `rbac`, 
 
 ## Open work
 
-- TOTP enrolment + step-up flow (see [authoration.md §2.4](../../../../doc/en/authoration.md)).
-- Policy + Group features (see [archivetech.md §3.1-3.3](../../../../doc/en/archivetech.md)).
-
-*(The Phase 0 wiring — `cmd/api/main.go` construction, repository adapters, `MountHTTP` — is done; see [MILESTONE_CHECKS.md](../../../../MILESTONE_CHECKS.md).)*
+- **Brute-force protection on `/auth/login`.** ADR-06 assigned this to Portal
+  when Authentik was dropped. `internal/platform/middleware/ratelimit.go` is
+  written and has **zero importers** — `cmd/api` supplies no limiter. For an
+  internet-facing single-VPS deployment this is the highest-severity security
+  gap in the tree.
+- **TOTP enrolment + step-up flow** (D-27/D-28). Deliberately deferred: the
+  decisions gate MFA on *real-bank* credentials, which are themselves deferred —
+  the manual ledger holds none.
+- **`api/` package is dead.** `account/api` has zero cross-module importers and
+  its `HasPermission` is an unconditional `return false`. The real cross-module
+  seam is the injected-function pattern the wiring layer builds.

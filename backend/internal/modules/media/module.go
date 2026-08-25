@@ -33,8 +33,14 @@ type Deps struct {
 	// must not import account/rbac. Nil ⇒ the DELETE route is not mounted.
 	DeleteMiddleware func(http.Handler) http.Handler
 	CurrentUser      func(context.Context) (uuid.UUID, bool)
-	PublicBase       string        // public API base for HLS URLs, e.g. https://api.portal.localhost
-	UploadTTL        time.Duration // presigned-PUT validity
+	// RunInUserTenant (worker only) scopes every worker write to a tenant-scoped
+	// table — media_asset_variants and assets — to the asset owner's personal
+	// org. This is ADR-07 increment 1b, the prerequisite the 0020 migration's
+	// ⚠️ gate names. cmd/api leaves it nil: its requests are already inside a
+	// RequireTenant transaction.
+	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+	PublicBase      string        // public API base for HLS URLs, e.g. https://api.portal.localhost
+	UploadTTL       time.Duration // presigned-PUT validity
 }
 
 type Module struct {
@@ -67,9 +73,9 @@ func New(d Deps) (*Module, error) {
 		deps:           d,
 		svc:            svc,
 		handler:        &Handler{svc: svc, currentUser: d.CurrentUser},
-		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events),
-		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events),
-		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo),
+		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events, worker.RunInTenant(d.RunInUserTenant)),
+		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events, worker.RunInTenant(d.RunInUserTenant)),
+		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo, worker.RunInTenant(d.RunInUserTenant)),
 		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.IngestImage),
 	}, nil
 }

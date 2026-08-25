@@ -2,7 +2,6 @@ package notify
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 const (
@@ -367,26 +367,17 @@ func (s *Service) recordEmailSent(ctx context.Context) {
 // ── cursor helpers (keyset "<created_at>|<id>", base64url) ──────────
 
 func encodeCursor(n Notification) string {
-	raw := n.CreatedAt.UTC().Format(time.RFC3339Nano) + "|" + n.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(n.CreatedAt.UTC().Format(time.RFC3339Nano), n.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("notify: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

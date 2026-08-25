@@ -2,8 +2,6 @@ package people
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"math"
 	"sort"
 	"strings"
@@ -14,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	peopleapi "github.com/portal/backend/internal/modules/people/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Service holds the people business logic. loc is the instance-default timezone
@@ -256,21 +255,9 @@ func validName(s string) bool {
 
 // cursor "<display_name>|<id>", base64url.
 func encodeCursor(p Person) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(p.DisplayName + "|" + p.ID.String()))
+	return server.EncodeCursor(p.DisplayName, p.ID)
 }
 
 func decodeCursor(s string) (string, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil {
-		return "", uuid.Nil, err
-	}
-	i := strings.LastIndex(string(b), "|")
-	if i < 0 {
-		return "", uuid.Nil, errors.New("people: malformed cursor")
-	}
-	id, err := uuid.Parse(string(b)[i+1:])
-	if err != nil {
-		return "", uuid.Nil, err
-	}
-	return string(b)[:i], id, nil
+	return server.DecodeCursor(s)
 }

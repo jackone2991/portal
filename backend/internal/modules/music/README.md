@@ -17,6 +17,11 @@ Owns: tracks, albums, artists, playlists for the music vertical.
 
 ## Open work
 
-- Migration `0007_music_init.up.sql`
-- CRUD + permissions (`music:read`, `music:write:own`, `music:publish`, `music:delete:any`)
-- Audio transcode profile (lossless original → AAC + Opus variants)
+The migration is `0022_music_core` (not `0007_music_init`) and CRUD +
+permissions are live. Genuinely open:
+
+- **No frontend.** There is no `/tracks` route in the Next.js app; the three
+  `components/music/*` files have zero importers.
+- **Audio transcode profile** — audio uploads are stored and served as-is;
+  media's pipeline transcodes video and images only.
+- **No SPEC.**

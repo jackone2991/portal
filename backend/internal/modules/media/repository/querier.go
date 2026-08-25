@@ -31,6 +31,15 @@ type Querier interface {
 	// own storage object; this table holds only derived artifacts (SPEC-01 §6).
 	// Upsert so a re-run of the worker (retry / re-process) replaces the row and its
 	// storage key instead of colliding on the (asset_id, variant) unique constraint.
+	//
+	// tenant_id is OMITTED deliberately: the column's DEFAULT is
+	// current_setting('app.current_tenant')::uuid, so it resolves from the enclosing
+	// tenant scope. This used to read `(SELECT tenant_id FROM assets WHERE id = $1)`,
+	// which worked only because the app connects as a superuser that bypasses RLS —
+	// under portal_app the assets policy filters that subquery to zero rows, the
+	// subquery yields NULL, and the NOT NULL constraint kills every variant insert.
+	// The caller (worker.inTenant) is what makes the DEFAULT resolvable; a write
+	// outside a tenant scope now fails loudly rather than writing a wrong tenant.
 	InsertVariant(ctx context.Context, arg InsertVariantParams) (MediaAssetVariant, error)
 	// P0.3 janitor: upload sessions the browser never completed (>24h).
 	ListAbandonedUploads(ctx context.Context) ([]Asset, error)

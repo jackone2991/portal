@@ -57,9 +57,13 @@ Source: `template-main/portal/resources/views/v1/` (Crumina "Olympus" theme).
 
 ## Notes / deferred
 
-- **Auth is OIDC** (Authentik) — there is no local password login. `AuthForm`
-  keeps the email/password fields as visual scaffold only; the real entry point
-  is the SSO button → `/api/v1/auth/login`. See `CLAUDE.md` "Account module".
+- **Auth is Portal-owned local password auth** ([ADR-06](../../../docs/adr/06-local-auth-model.md)),
+  corrected 2026-08-25 — this bullet used to say OIDC/Authentik, which was
+  retired before any of this template shipped. There is no IdP and no SSO
+  button: `views/auth/AuthForm.tsx` POSTs email+password to
+  `/api/v1/auth/{login|register}` and the fields are fully wired. Errors come
+  back as RFC 7807 and are rendered through `problemDisplayMessage`.
+  See `CLAUDE.md` "Account module".
 - **Popups** and the **SVG sprite** are placeholders; port the Blade markup /
   icon `<symbol>`s when those features are built.
 - Many views are skeletons — the product **v1 scope cut**

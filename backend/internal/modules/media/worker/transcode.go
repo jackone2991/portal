@@ -29,6 +29,9 @@ type TranscodePayload struct {
 	SourceKey string   `json:"source_key"` // storage key of the uploaded original
 	OutputKey string   `json:"output_key"` // storage prefix for the HLS output
 	Variants  []string `json:"variants,omitempty"`
+	// OwnerUserID lets the worker open the asset owner's tenant scope before it
+	// writes (ADR-07) — see worker.inTenant.
+	OwnerUserID string `json:"owner_user_id"`
 }
 
 // NewTranscodeTask enqueues onto the "heavy" queue so a second, low-concurrency
@@ -105,12 +108,13 @@ func emitAssetReady(ctx context.Context, pub Publisher, repo Repo, id uuid.UUID)
 type Transcoder struct {
 	store   storage.Storage
 	repo    Repo
-	enqueue Enqueuer  // optional: enqueues the poster task after ready
-	pub     Publisher // optional: emits media:asset_ready
+	enqueue Enqueuer    // optional: enqueues the poster task after ready
+	pub     Publisher   // optional: emits media:asset_ready
+	run_    RunInTenant // optional: nil on the api side, supplied by cmd/worker
 }
 
-func NewTranscoder(store storage.Storage, repo Repo, enqueue Enqueuer, pub Publisher) *Transcoder {
-	return &Transcoder{store: store, repo: repo, enqueue: enqueue, pub: pub}
+func NewTranscoder(store storage.Storage, repo Repo, enqueue Enqueuer, pub Publisher, run RunInTenant) *Transcoder {
+	return &Transcoder{store: store, repo: repo, enqueue: enqueue, pub: pub, run_: run}
 }
 
 // Handle is the Asynq handler. On failure it marks the asset failed and returns
@@ -184,8 +188,11 @@ func (t *Transcoder) run(ctx context.Context, id uuid.UUID, p TranscodePayload) 
 		}
 	}
 
-	// 5. mark ready
-	if err := t.repo.MarkReady(ctx, id, p.OutputKey, durMs, width, height); err != nil {
+	// 5. mark ready — inside the owner's tenant scope, like every worker write
+	// to a tenant-scoped table (ADR-07 increment 1b).
+	if err := inTenant(ctx, t.run_, TaskTypeTranscode, p.OwnerUserID, func(ctx context.Context) error {
+		return t.repo.MarkReady(ctx, id, p.OutputKey, durMs, width, height)
+	}); err != nil {
 		return err
 	}
 
@@ -193,15 +200,19 @@ func (t *Transcoder) run(ctx context.Context, id uuid.UUID, p TranscodePayload) 
 	// on the weighted server, never hogging the heavy queue. Best-effort — a
 	// missing poster never fails the (already-ready) video.
 	if t.enqueue != nil {
-		if task, err := NewThumbnailTask(ThumbnailPayload{AssetID: id.String(), SourceKey: p.SourceKey}); err != nil {
+		if task, err := NewThumbnailTask(ThumbnailPayload{AssetID: id.String(), SourceKey: p.SourceKey, OwnerUserID: p.OwnerUserID}); err != nil {
 			log.Warn().Err(err).Str("asset", p.AssetID).Msg("transcode: build poster task failed")
 		} else if _, err := t.enqueue.Enqueue(task); err != nil {
 			log.Warn().Err(err).Str("asset", p.AssetID).Msg("transcode: enqueue poster failed")
 		}
 	}
 
-	// 7. announce readiness (SPEC-01 P1.2). No consumer is required for v1.
-	emitAssetReady(ctx, t.pub, t.repo, id)
+	// 7. announce readiness (SPEC-01 P1.2). LoadAssetMeta is itself a read of a
+	// tenant-scoped table, so it needs the scope too.
+	_ = inTenant(ctx, t.run_, TaskTypeTranscode, p.OwnerUserID, func(ctx context.Context) error {
+		emitAssetReady(ctx, t.pub, t.repo, id)
+		return nil
+	})
 	return nil
 }
 

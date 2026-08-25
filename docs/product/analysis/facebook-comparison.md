@@ -1,6 +1,6 @@
 # Portal vs. Facebook — Feature Comparison
 
-**Last verified:** 2026-07-06 — reflects the closed v1 demo loop (local password auth + upload→HLS→playback); see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) for the living status tracker.
+**Last verified:** 2026-07-06 — reflects the closed v1 demo loop (local password auth + upload→HLS→playback); **This document is ARCHIVED.** It predates [ADR-08](../../adr/08-life-os-pivot.md)'s life-OS pivot, and several of its "missing" claims (image pipeline, notifications backend, birthdays) are now false. `vision.md` + the SPECs are the live yardstick.
 
 How Portal's social surface compares to Facebook, feature-area by feature-area.
 Companion to [missing-features.md](missing-features.md) (which compares against

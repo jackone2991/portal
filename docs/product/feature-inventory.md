@@ -1,6 +1,6 @@
 # Portal — Feature List
 
-> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout ([MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) is the living tracker). v1 scope is the hard cut in [ADR-01](architecture/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](architecture/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
+> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout (there is no tracker file — `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; verify against the code). v1 scope is the hard cut in [ADR-01](architecture/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](architecture/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
 
 Derived from [CLAUDE.md](../../CLAUDE.md) (architecture + module split) and [template-main/social/](../../template-main/social/) (visual/UX reference for the social layer). Each feature is mapped to the backend module that should own it ([backend/MODULES.md](../../backend/MODULES.md) rules apply: cross-module access goes through `api/` only).
 

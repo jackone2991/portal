@@ -80,7 +80,7 @@ The account module ([backend/internal/modules/account/](backend/internal/modules
 
 ### Identity flow
 1. **Local password auth.** No IdP in the login path. `POST /api/v1/auth/login {email, password}` looks the user up by email, verifies the password against `users.password_hash` (Argon2id, constant-time), checks `disabled_at`, and on success issues the tokens below and sets the cookies. `POST /api/v1/auth/register {email, password, display_name}` creates the account (or admin-provisioned). There is **no** `/auth/callback`, `state`, or `nonce` anymore.
-2. **Two tokens:** short-lived JWT access token (5min, HS256, rotating `kid` keys) + long-lived random refresh token (256-bit, SHA-256-hashed at rest, 30d). *(Unchanged from the OIDC design.)*
+2. **Two tokens:** short-lived JWT access token (5min, HS256, rotating `kid` keys) + long-lived random refresh token (256-bit, SHA-256-hashed at rest, **24h** — `REFRESH_TTL`, `platform/config`; the "30d" in the original ADR-06 narrative was never the shipped default). *(Unchanged from the OIDC design.)*
 3. **Cookies:** `portal_access` (Path=/, SameSite=Strict) and `portal_refresh` (Path=/api/v1/auth, SameSite=Strict) — both `HttpOnly Secure`. API clients use `Authorization: Bearer` headers instead.
 4. **New responsibilities Portal now owns** (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, password reset (needs the notification module — specced in [SPEC-04](docs/product/specs/SPEC-04-notification-module.md); admin/CLI until then), and — later — MFA/step-up and "Login with Google". See ADR-06 §"New responsibilities".
 

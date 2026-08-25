@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // RFC 7807 Problem type URIs (SPEC-01 §7).
@@ -55,7 +56,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "internal", "could not create upload session")
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{
+	server.JSON(w, http.StatusCreated, map[string]any{
 		"asset":  h.assetJSON(sess.Asset, ""),
 		"upload": map[string]any{"url": sess.URL, "method": sess.Method, "headers": sess.Headers},
 	})
@@ -70,14 +71,14 @@ func (h *Handler) Complete(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	if err := h.svc.CompleteUpload(r.Context(), uid, id); err != nil {
 		writeMediaProblem(w, err)
 		return
 	}
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "processing"})
+	server.JSON(w, http.StatusAccepted, map[string]any{"status": "processing"})
 }
 
 // PUT /assets/{id}/source — API-proxied upload of the original (dev path).
@@ -117,7 +118,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		writeMediaErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, h.assetJSON(asset, hls))
+	server.JSON(w, http.StatusOK, h.assetJSON(asset, hls))
 }
 
 // GET /assets — list the caller's assets (?kind=&status=&cursor=&limit=).
@@ -157,7 +158,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		body["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, body)
+	server.JSON(w, http.StatusOK, body)
 }
 
 // DELETE /assets/{id} — delete an asset + all its storage objects (P0.3).
@@ -165,15 +166,15 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	if err := h.svc.DeleteAsset(r.Context(), id); err != nil {
 		if errors.Is(err, ErrNotFound) {
-			writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+			server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 			return
 		}
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not delete asset")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not delete asset")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -188,7 +189,7 @@ func (h *Handler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	pos, pct, completedAt, updatedAt, err := h.svc.GetProgress(r.Context(), uid, id)
@@ -206,7 +207,7 @@ func (h *Handler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp["completed_at"] = nil
 	}
-	writeJSON(w, http.StatusOK, resp)
+	server.JSON(w, http.StatusOK, resp)
 }
 
 // PUT /assets/{id}/progress — save playback progress.
@@ -218,7 +219,7 @@ func (h *Handler) PutProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	var body struct {
@@ -248,7 +249,7 @@ func (h *Handler) DownloadOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	rc, ct, filename, err := h.svc.DownloadOriginal(r.Context(), uid, id)
@@ -267,13 +268,13 @@ func (h *Handler) DownloadOriginal(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ServeVariant(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	variant := chi.URLParam(r, "variant")
 	rc, ct, err := h.svc.ServeVariant(r.Context(), id, variant)
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "variant not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "variant not found")
 		return
 	}
 	defer rc.Close()
@@ -344,19 +345,19 @@ func writeMediaProblem(w http.ResponseWriter, err error) {
 	var ufe *UnsupportedFormatError
 	switch {
 	case errors.As(err, &ufe):
-		writeProblem(w, http.StatusUnprocessableEntity, probUnsupportedFormat, "Unsupported media format", ufe.Detail)
+		server.Problem(w, http.StatusUnprocessableEntity, probUnsupportedFormat, "Unsupported media format", ufe.Detail)
 	case errors.Is(err, ErrFileTooLarge):
-		writeProblem(w, http.StatusRequestEntityTooLarge, probFileTooLarge, "File too large", "the uploaded file exceeds the 50 MB limit")
+		server.Problem(w, http.StatusRequestEntityTooLarge, probFileTooLarge, "File too large", "the uploaded file exceeds the 50 MB limit")
 	case errors.Is(err, ErrNotReady):
-		writeProblem(w, http.StatusConflict, probAssetNotReady, "Asset not ready", "the asset upload is not complete")
+		server.Problem(w, http.StatusConflict, probAssetNotReady, "Asset not ready", "the asset upload is not complete")
 	case errors.Is(err, ErrForbidden):
-		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+		server.Problem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
 	case errors.Is(err, ErrNotPlayable):
-		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
+		server.Problem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "unexpected error")
 	}
 }
 
@@ -364,26 +365,14 @@ func writeMediaProblem(w http.ResponseWriter, err error) {
 func writeProgressProblem(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrNotPlayable):
-		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
+		server.Problem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
 	case errors.Is(err, ErrForbidden):
-		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+		server.Problem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not process progress")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not process progress")
 	}
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   typ,
-		"title":  title,
-		"status": status,
-		"detail": detail,
-	})
 }
 
 // writeMediaErr is the legacy JSON error shape kept for the untouched handlers
@@ -401,13 +390,9 @@ func writeMediaErr(w http.ResponseWriter, err error) {
 	}
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
+// writeErr answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
-	writeJSON(w, status, map[string]string{"code": code, "message": msg})
+	server.Problem(w, status, server.ProblemType("media", code), http.StatusText(status), msg)
 }

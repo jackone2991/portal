@@ -13,7 +13,12 @@ Owns: long-form written stories with chapters, authors, reading progress, bookma
 
 ## Open work
 
-- Migration `0008_story_init.up.sql`
-- CRUD + permissions (`stories:read`, `stories:write:own`, `stories:publish`, `stories:delete:any`)
-- Postgres FTS on `tsvector` with Vietnamese `unaccent` configuration
-- Chapter pagination + per-chapter reading-progress tracking
+The migration is `0023_story_core` (not `0008_story_init`) and CRUD + chapters +
+reorder are live. Genuinely open:
+
+- **No frontend.** `views/library/novel/NovelDetailView.tsx` is a 26-line static
+  placeholder and the index route it links to does not exist.
+- **Reading progress** — comic has `comic_reading_progress`; story has no
+  equivalent.
+- **Search** — Postgres FTS + `unaccent` (D-2). Not started in any module.
+- **No SPEC.**

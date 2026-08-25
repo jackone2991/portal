@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Handler is the journal HTTP surface. currentUser reads the authenticated user
@@ -33,12 +34,12 @@ type entryReq struct {
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
 	var body entryReq
 	if err := decodeJSON(r, &body); err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
 		return
 	}
 	if body.BodyMd == nil {
@@ -56,19 +57,19 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, entryJSON(entry))
+	server.JSON(w, http.StatusCreated, entryJSON(entry))
 }
 
 // GET /journal/entries?cursor=&limit= — list the caller's entries.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
 	limit := 0
 	if n := r.URL.Query().Get("limit"); n != "" {
-		limit = atoiSafe(n)
+		limit = server.AtoiSafe(n)
 	}
 	res, err := h.svc.List(r.Context(), uid, r.URL.Query().Get("cursor"), limit)
 	if err != nil {
@@ -83,14 +84,14 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		out["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, out)
+	server.JSON(w, http.StatusOK, out)
 }
 
 // GET /journal/entries/{id} — fetch one entry (owner-scoped).
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -103,14 +104,14 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, entryJSON(entry))
+	server.JSON(w, http.StatusOK, entryJSON(entry))
 }
 
 // PATCH /journal/entries/{id} — partial update.
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -120,7 +121,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 	var body entryReq
 	if err := decodeJSON(r, &body); err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
 		return
 	}
 	entry, err := h.svc.Patch(r.Context(), PatchParams{
@@ -135,14 +136,14 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, entryJSON(entry))
+	server.JSON(w, http.StatusOK, entryJSON(entry))
 }
 
 // DELETE /journal/entries/{id} — idempotent delete.
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -161,10 +162,10 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return
 	}
-	res, err := h.svc.Stream(r.Context(), uid, r.URL.Query().Get("cursor"), atoiSafe(r.URL.Query().Get("limit")))
+	res, err := h.svc.Stream(r.Context(), uid, r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")))
 	if err != nil {
 		writeJournalErr(w, err)
 		return
@@ -192,7 +193,7 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		out["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, out)
+	server.JSON(w, http.StatusOK, out)
 }
 
 // ── helpers ─────────────────────────────────────────────────────────
@@ -217,50 +218,20 @@ func entryJSON(e Entry) map[string]any {
 func writeJournalErr(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrEntryNotFound):
-		writeProblem(w, http.StatusNotFound, "journal/entry-not-found", "Not Found", "journal entry not found")
+		server.Problem(w, http.StatusNotFound, "journal/entry-not-found", "Not Found", "journal entry not found")
 	case errors.Is(err, ErrInvalidBody):
-		writeProblem(w, http.StatusUnprocessableEntity, "journal/invalid-body", "Invalid body", "body_md must be 1–20000 characters")
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-body", "Invalid body", "body_md must be 1–20000 characters")
 	case errors.Is(err, ErrInvalidMood):
-		writeProblem(w, http.StatusUnprocessableEntity, "journal/invalid-mood", "Invalid mood", "mood must be 1–80 non-blank characters")
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-mood", "Invalid mood", "mood must be 1–80 non-blank characters")
 	case errors.Is(err, ErrInvalidAsset):
-		writeProblem(w, http.StatusUnprocessableEntity, "journal/invalid-asset", "Invalid asset", "asset_ids are not accepted until photo attachments ship (P1.5)")
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-asset", "Invalid asset", "asset_ids are not accepted until photo attachments ship (P1.5)")
 	case errors.Is(err, ErrBadCursor):
-		writeProblem(w, http.StatusBadRequest, "journal/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
+		server.Problem(w, http.StatusBadRequest, "journal/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
 	}
 }
 
 func decodeJSON(r *http.Request, v any) error {
 	return json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(v)
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type": typ, "title": title, "status": status, "detail": detail,
-	})
-}
-
-func atoiSafe(s string) int {
-	n := 0
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0
-		}
-		n = n*10 + int(c-'0')
-		if n > 1_000_000 {
-			return 1_000_000
-		}
-	}
-	return n
 }

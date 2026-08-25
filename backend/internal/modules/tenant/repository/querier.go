@@ -23,6 +23,12 @@ type Querier interface {
 	GetOrganizationBySlug(ctx context.Context, slug string) (Organization, error)
 	GetPersonalOrgForUser(ctx context.Context, ownerID pgtype.UUID) (Organization, error)
 	IsMember(ctx context.Context, arg IsMemberParams) (bool, error)
+	// ListAllOrganizationIDs returns every tenant, for the worker's cross-tenant
+	// periodic sweeps. `organizations` is deliberately NOT an RLS-protected table
+	// (ADR-07: the tenant registry itself must be readable to resolve a scope), so
+	// this stays correct after the portal_app cutover — which is what lets a sweep
+	// iterate tenants instead of needing BYPASSRLS.
+	ListAllOrganizationIDs(ctx context.Context) ([]pgtype.UUID, error)
 	ListOrganizationsForUser(ctx context.Context, userID pgtype.UUID) ([]Organization, error)
 }
 

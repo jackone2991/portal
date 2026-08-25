@@ -108,3 +108,16 @@ func uuidFrom(p pgtype.UUID) uuid.UUID {
 	}
 	return uuid.UUID(p.Bytes)
 }
+
+// ListAllIDs returns every organization id, oldest first.
+func (a *Adapter) ListAllIDs(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := a.q.ListAllOrganizationIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]uuid.UUID, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, uuidFrom(r))
+	}
+	return out, nil
+}

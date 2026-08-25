@@ -329,3 +329,45 @@ func (s *Service) insertSystem(ctx context.Context, payload []byte, userStr, mod
 		return s.repo.InsertStreamItem(ctx, user, module, eventType, ref, payload, occurredAt)
 	})
 }
+
+// ══ Catalogue verticals (movie / music / story) ═════════════════════════════
+//
+// Publishing a movie, a track or a story produces a life-stream card, exactly
+// as publishing a comic chapter does. Until 2026-08-25 these three events were
+// emitted with no subscriber at all, so the stream was blind to three of the
+// four verticals.
+//
+// Each keys its card on the work's own id, so a later delete can remove it by
+// the same (source, event, ref_id) tuple the insert used.
+
+func (s *Service) OnMoviePublished(ctx context.Context, payload []byte) error {
+	return s.onWorkPublished(ctx, payload, "movie", "movie:published", "movie_id")
+}
+
+func (s *Service) OnTrackPublished(ctx context.Context, payload []byte) error {
+	return s.onWorkPublished(ctx, payload, "music", "music:track_published", "track_id")
+}
+
+func (s *Service) OnStoryPublished(ctx context.Context, payload []byte) error {
+	return s.onWorkPublished(ctx, payload, "story", "story:published", "story_id")
+}
+
+// onWorkPublished is the shared projection for the three catalogue verticals.
+// They differ only in the source label, the event name, and which key carries
+// the work id — the projection itself is identical, so it lives once.
+//
+// A payload that cannot be read is dropped rather than retried: a malformed
+// event will never become well-formed, and a poisoned stream consumer would
+// stall every later card behind it.
+func (s *Service) onWorkPublished(ctx context.Context, payload []byte, source, event, idKey string) error {
+	var p map[string]any
+	if err := json.Unmarshal(payload, &p); err != nil {
+		return nil
+	}
+	id, _ := p[idKey].(string)
+	owner, _ := p["owner_user_id"].(string)
+	if id == "" || owner == "" {
+		return nil
+	}
+	return s.insertSystem(ctx, payload, owner, source, event, id, time.Now())
+}

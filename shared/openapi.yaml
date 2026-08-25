@@ -39,6 +39,8 @@ tags:
   - name: stories
   - name: comic
   - name: comic-internal
+  - name: tenant
+  - name: platform
 
 paths:
   /healthz:
@@ -1729,6 +1731,641 @@ paths:
                   next_cursor: { type: string, nullable: true }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+
+  # ══ Catalogue verticals — movie / music / story ═══════════════════════════
+  # These three mirror /comics in shape (list · mine · create · get · patch ·
+  # delete · publish · unpublish). They were live but unspecced until
+  # 2026-08-25; the CI drift gate only guards what the spec already declares,
+  # so a route that was never written down could not be caught.
+
+  /movies:
+    get:
+      tags: [movies]
+      summary: List published movies
+      operationId: listMovies
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of published movies
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MovieList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [movies]
+      summary: Create a movie (draft)
+      operationId: createMovie
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MovieCreate" }
+      responses:
+        "201":
+          description: The created movie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Movie" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /movies/mine:
+    get:
+      tags: [movies]
+      summary: List the caller's own movies, drafts included
+      operationId: listMyMovies
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of the caller's movies
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MovieList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /movies/{id}:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    get:
+      tags: [movies]
+      summary: Get one movie (published, or any of the caller's own)
+      operationId: getMovie
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The movie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Movie" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [movies]
+      summary: Update a movie
+      operationId: updateMovie
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MoviePatch" }
+      responses:
+        "200":
+          description: The updated movie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Movie" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [movies]
+      summary: Delete a movie
+      operationId: deleteMovie
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /movies/{id}/publish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [movies]
+      summary: Publish a movie
+      operationId: publishMovie
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The published movie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Movie" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /movies/{id}/unpublish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [movies]
+      summary: Return a movie to draft
+      operationId: unpublishMovie
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The unpublished movie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Movie" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tracks:
+    get:
+      tags: [music]
+      summary: List published tracks
+      operationId: listTracks
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of published tracks
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrackList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [music]
+      summary: Create a track (draft)
+      operationId: createTrack
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrackCreate" }
+      responses:
+        "201":
+          description: The created track
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Track" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /tracks/mine:
+    get:
+      tags: [music]
+      summary: List the caller's own tracks, drafts included
+      operationId: listMyTracks
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of the caller's tracks
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrackList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /tracks/{id}:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    get:
+      tags: [music]
+      summary: Get one track (published, or any of the caller's own)
+      operationId: getTrack
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The track
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Track" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [music]
+      summary: Update a track
+      operationId: updateTrack
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrackPatch" }
+      responses:
+        "200":
+          description: The updated track
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Track" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [music]
+      summary: Delete a track
+      operationId: deleteTrack
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /tracks/{id}/publish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [music]
+      summary: Publish a track
+      operationId: publishTrack
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The published track
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Track" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /tracks/{id}/unpublish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [music]
+      summary: Return a track to draft
+      operationId: unpublishTrack
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The unpublished track
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Track" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /stories:
+    get:
+      tags: [stories]
+      summary: List published stories
+      operationId: listStories
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of published stories
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [stories]
+      summary: Create a story (draft)
+      operationId: createStory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoryCreate" }
+      responses:
+        "201":
+          description: The created story
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Story" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /stories/mine:
+    get:
+      tags: [stories]
+      summary: List the caller's own stories, drafts included
+      operationId: listMyStories
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: A cursor page of the caller's stories
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /stories/{id}:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    get:
+      tags: [stories]
+      summary: Get one story with its chapter summaries
+      description: |
+        Chapter summaries omit `body_md`. The reader payload with bodies is
+        `GET /stories/{id}/chapters`.
+      operationId: getStory
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The story
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [stories]
+      summary: Update a story
+      operationId: updateStory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoryPatch" }
+      responses:
+        "200":
+          description: The updated story
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Story" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [stories]
+      summary: Delete a story
+      operationId: deleteStory
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /stories/{id}/publish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [stories]
+      summary: Publish a story
+      operationId: publishStory
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The published story
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Story" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /stories/{id}/unpublish:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [stories]
+      summary: Return a story to draft
+      operationId: unpublishStory
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The unpublished story
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Story" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /stories/{id}/chapters:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    get:
+      tags: [stories]
+      summary: The reader payload — chapters WITH bodies (published-or-owner)
+      operationId: listStoryChapters
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The story's chapters in reading order
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [chapters]
+                properties:
+                  chapters: { type: array, items: { $ref: "#/components/schemas/StoryChapter" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [stories]
+      summary: Add a chapter to a story
+      operationId: createStoryChapter
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoryChapterCreate" }
+      responses:
+        "201":
+          description: The created chapter
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryChapter" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /stories/{id}/chapters:order:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    put:
+      tags: [stories]
+      summary: Reorder a story's chapters
+      description: |
+        The body is the complete ordered id list. The server renumbers
+        `sort_order` from the array position — a partial list is not a partial
+        reorder, it is a truncation.
+      operationId: reorderStoryChapters
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReorderRequest" }
+      responses:
+        "204": { description: Reordered }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /story-chapters/{id}:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    patch:
+      tags: [stories]
+      summary: Update a story chapter
+      operationId: updateStoryChapter
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoryChapterPatch" }
+      responses:
+        "200":
+          description: The updated chapter
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryChapter" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      tags: [stories]
+      summary: Delete a story chapter
+      operationId: deleteStoryChapter
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ══ Comic zip import (SPEC-02 P1.7) ═══════════════════════════════════════
+  # Live since the P1.7 increment, unspecced until 2026-08-25.
+
+  /comics/{id}/imports:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [comic]
+      summary: Start a whole-comic (multi-chapter) zip import
+      description: |
+        Allocates an import job and returns an `upload_ref` to PUT the zip to.
+        Chapter structure is taken from the zip's top-level directories; a
+        chapter's `sort_order` is parsed from its NAME, never from arrival
+        order — see `chapterSortOrder` in the comic module.
+      operationId: createComicImport
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: The created import job
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportJob" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /chapters/{id}/imports:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    post:
+      tags: [comic]
+      summary: Start a single-chapter zip import
+      description: Every image in the zip becomes a page of this chapter, ordered naturally by filename.
+      operationId: createChapterImport
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: The created import job
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportJob" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+  /imports/{id}:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    get:
+      tags: [comic]
+      summary: Poll an import job
+      description: |
+        `status` walks `pending → uploaded → running → done | failed`. `report`
+        carries a per-entry result once the job has run.
+      operationId: getImport
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The import job
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportJob" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /imports/{id}/zip:
+    parameters: [{ $ref: "#/components/parameters/AssetID" }]
+    put:
+      tags: [comic]
+      summary: Upload the import zip
+      description: |
+        Raw `application/zip` body, capped server-side. Completing the upload
+        enqueues `comic:import_zip` on the default queue — deliberately NOT the
+        heavy pool, because the job polls the asset statuses its own
+        `media:process_image` tasks produce and must not occupy a slot they need.
+      operationId: uploadImportZip
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/zip:
+            schema: { type: string, format: binary }
+      responses:
+        "202":
+          description: Accepted — the import job is queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportJob" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/UnprocessableEntity" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  # ══ Tenancy + platform ════════════════════════════════════════════════════
+
+  /me/organizations:
+    get:
+      tags: [tenant]
+      summary: The tenants the caller belongs to
+      description: |
+        At v1 every user has exactly one `personal` organization, created on
+        first tenant resolution. Multi-org membership is ADR-07 step 5 and is
+        deliberately deferred — see docs/guides/rls-cutover.md.
+      operationId: listMyOrganizations
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: The caller's organizations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [organizations]
+                properties:
+                  organizations: { type: array, items: { $ref: "#/components/schemas/Organization" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /time:
+    get:
+      tags: [platform]
+      summary: Server clock and the app display timezone
+      description: |
+        The single source of truth for "now" in the UI. The frontend's date
+        helpers read it rather than the browser clock so a wrong client clock
+        cannot shift a journal entry into the wrong day. Unauthenticated.
+      operationId: getServerTime
+      responses:
+        "200":
+          description: The current server time
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [now, timezone]
+                properties:
+                  now: { type: string, format: date-time, description: "Server time, UTC, RFC3339." }
+                  timezone: { type: string, description: "IANA zone for ALL date display, e.g. Asia/Ho_Chi_Minh (APP_TIMEZONE)." }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2631,3 +3268,211 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    # ══ Catalogue verticals ═══════════════════════════════════════════════
+    # movie / music / story share the comic shape: an owner, a title, optional
+    # media asset refs, and a draft→published status.
+
+    Movie:
+      type: object
+      required: [id, owner_id, title, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        video_asset_id: { type: string, format: uuid, nullable: true, description: A ready video asset you own. }
+        poster_asset_id: { type: string, format: uuid, nullable: true, description: A ready image asset you own. }
+        release_year: { type: integer, nullable: true }
+        status: { type: string, enum: [draft, published] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    MovieList:
+      type: object
+      required: [movies]
+      properties:
+        movies: { type: array, items: { $ref: "#/components/schemas/Movie" } }
+        next_cursor: { type: string, nullable: true }
+    MovieCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        video_asset_id: { type: string, format: uuid, nullable: true }
+        poster_asset_id: { type: string, format: uuid, nullable: true }
+        release_year: { type: integer, nullable: true }
+    MoviePatch:
+      type: object
+      description: |
+        Absent means unchanged; an explicit `null` clears the field. That
+        three-state distinction is why the asset ids are not simply nullable
+        strings on the wire.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        video_asset_id: { type: string, format: uuid, nullable: true }
+        poster_asset_id: { type: string, format: uuid, nullable: true }
+        release_year: { type: integer, nullable: true }
+
+    Track:
+      type: object
+      required: [id, owner_id, title, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        title: { type: string }
+        artist: { type: string, nullable: true }
+        album: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        audio_asset_id: { type: string, format: uuid, nullable: true, description: A ready audio asset you own. }
+        cover_asset_id: { type: string, format: uuid, nullable: true, description: A ready image asset you own. }
+        status: { type: string, enum: [draft, published] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TrackList:
+      type: object
+      required: [tracks]
+      properties:
+        tracks: { type: array, items: { $ref: "#/components/schemas/Track" } }
+        next_cursor: { type: string, nullable: true }
+    TrackCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        artist: { type: string, nullable: true }
+        album: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        audio_asset_id: { type: string, format: uuid, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+    TrackPatch:
+      type: object
+      description: Absent means unchanged; an explicit `null` clears the field.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        artist: { type: string, nullable: true }
+        album: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        audio_asset_id: { type: string, format: uuid, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+
+    Story:
+      type: object
+      required: [id, owner_id, title, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+        status: { type: string, enum: [draft, published] }
+        chapter_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    StoryDetail:
+      allOf:
+        - $ref: "#/components/schemas/Story"
+        - type: object
+          properties:
+            chapters:
+              type: array
+              description: Chapter summaries — id, title and sort_order only, never `body_md`.
+              items: { $ref: "#/components/schemas/StoryChapterSummary" }
+    StoryList:
+      type: object
+      required: [stories]
+      properties:
+        stories: { type: array, items: { $ref: "#/components/schemas/Story" } }
+        next_cursor: { type: string, nullable: true }
+    StoryCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+    StoryPatch:
+      type: object
+      description: Absent means unchanged; an explicit `null` clears the field.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, nullable: true }
+        cover_asset_id: { type: string, format: uuid, nullable: true }
+    StoryChapter:
+      type: object
+      required: [id, story_id, title, body_md, sort_order, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        story_id: { type: string, format: uuid }
+        title: { type: string }
+        body_md: { type: string, description: "Markdown. Capped at 4 MiB — four times the platform default, because a chapter is prose." }
+        sort_order: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    StoryChapterSummary:
+      type: object
+      required: [id, title, sort_order]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        sort_order: { type: integer }
+    StoryChapterCreate:
+      type: object
+      required: [title, body_md, sort_order]
+      properties:
+        title: { type: string }
+        body_md: { type: string }
+        sort_order: { type: integer }
+    StoryChapterPatch:
+      type: object
+      properties:
+        title: { type: string }
+        body_md: { type: string }
+
+    # ══ Comic zip import (SPEC-02 P1.7) ═══════════════════════════════════
+
+    ImportJob:
+      type: object
+      required: [id, status, total, succeeded, failed, report, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        comic_id: { type: string, format: uuid, nullable: true, description: Set for a whole-comic import. }
+        chapter_id: { type: string, format: uuid, nullable: true, description: Set for a single-chapter import. }
+        status: { type: string, enum: [pending, uploaded, running, done, failed] }
+        total: { type: integer, description: Entries the zip was found to contain. }
+        succeeded: { type: integer }
+        failed: { type: integer }
+        upload_ref: { type: string, nullable: true, description: "Present while status is `pending` — PUT the zip to /imports/{id}/zip." }
+        error: { type: string, nullable: true }
+        report:
+          type: array
+          description: Per-entry outcome, populated once the job has run.
+          items:
+            type: object
+            required: [name, ok]
+            properties:
+              name: { type: string }
+              ok: { type: boolean }
+              error: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    # ══ Tenancy ═══════════════════════════════════════════════════════════
+
+    Organization:
+      type: object
+      required: [id, kind, slug, name, owner_id]
+      properties:
+        id: { type: string, format: uuid }
+        kind:
+          type: string
+          enum: [org, household, personal]
+          description: |
+            `personal` is the synthetic per-user tenant every account gets at
+            first tenant resolution. `org` and `household` exist in the schema
+            from day one (D-24) but have no creation endpoint yet.
+        slug: { type: string }
+        name: { type: string }
+        owner_id: { type: string, format: uuid }
+

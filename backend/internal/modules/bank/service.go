@@ -2,8 +2,6 @@ package bank
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -12,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	bankapi "github.com/portal/backend/internal/modules/bank/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 const (
@@ -592,26 +591,17 @@ func transferState(legs []Transaction) (from, to uuid.UUID, amount int64, occurr
 
 // keyset cursor "<occurred_at date>|<id>", base64url.
 func encodeCursor(t Transaction) string {
-	raw := t.OccurredAt.UTC().Format(dateLayout) + "|" + t.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(t.OccurredAt.UTC().Format(dateLayout), t.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("bank: malformed cursor")
-	}
-	at, err := time.Parse(dateLayout, parts[0])
+	at, err := time.Parse(dateLayout, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

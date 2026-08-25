@@ -158,6 +158,24 @@ type ComicReadingProgress struct {
 	TenantID  pgtype.UUID        `json:"tenant_id"`
 }
 
+type ComicSyncSource struct {
+	ID              pgtype.UUID        `json:"id"`
+	ComicID         pgtype.UUID        `json:"comic_id"`
+	OwnerUserID     pgtype.UUID        `json:"owner_user_id"`
+	SourceUrl       string             `json:"source_url"`
+	SourceSite      string             `json:"source_site"`
+	ChaptersHint    string             `json:"chapters_hint"`
+	LastStatus      string             `json:"last_status"`
+	LastImportID    pgtype.UUID        `json:"last_import_id"`
+	LastError       *string            `json:"last_error"`
+	LastSyncedAt    pgtype.Timestamptz `json:"last_synced_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	TenantID        pgtype.UUID        `json:"tenant_id"`
+	TotalChapters   int32              `json:"total_chapters"`
+	ScrapedChapters int32              `json:"scraped_chapters"`
+}
+
 type JournalEntry struct {
 	ID         pgtype.UUID        `json:"id"`
 	UserID     pgtype.UUID        `json:"user_id"`

@@ -42,3 +42,11 @@ RETURNING id, kind, slug, name, owner_id, created_at, updated_at;
 INSERT INTO organization_memberships (org_id, user_id, role)
 VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
+
+-- ListAllOrganizationIDs returns every tenant, for the worker's cross-tenant
+-- periodic sweeps. `organizations` is deliberately NOT an RLS-protected table
+-- (ADR-07: the tenant registry itself must be readable to resolve a scope), so
+-- this stays correct after the portal_app cutover — which is what lets a sweep
+-- iterate tenants instead of needing BYPASSRLS.
+-- name: ListAllOrganizationIDs :many
+SELECT id FROM organizations ORDER BY created_at;

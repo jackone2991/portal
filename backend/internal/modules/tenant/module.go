@@ -19,6 +19,7 @@ import (
 	tenantapi "github.com/portal/backend/internal/modules/tenant/api"
 	tenantmw "github.com/portal/backend/internal/modules/tenant/middleware"
 	platformdb "github.com/portal/backend/internal/platform/db"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Deps for the tenant module.
@@ -84,8 +85,9 @@ func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
 
 func (m *Module) API() tenantapi.API { return m.publicAPI }
 
+// writeErr answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_, _ = w.Write([]byte(`{"code":"` + code + `","message":"` + msg + `"}`))
+	server.Problem(w, status, server.ProblemType("tenant", code), http.StatusText(status), msg)
 }

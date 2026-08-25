@@ -237,6 +237,13 @@ func run() error {
 	mediaEvents.Subscribe(media.EventAssetDeleted, movieapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	mediaEvents.Subscribe(media.EventAssetDeleted, musicapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	mediaEvents.Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted, asynq.Queue("default"))
+
+	// Catalogue verticals → life stream. Emitted since the verticals landed but
+	// unsubscribed until 2026-08-25: publishing a movie produced no card while
+	// publishing a comic chapter did.
+	mediaEvents.Subscribe(movieapi.EventMoviePublished, journalapi.TaskStreamMoviePublished, asynq.Queue("default"))
+	mediaEvents.Subscribe(musicapi.EventTrackPublished, journalapi.TaskStreamTrackPublished, asynq.Queue("default"))
+	mediaEvents.Subscribe(storyapi.EventStoryPublished, journalapi.TaskStreamStoryPublished, asynq.Queue("default"))
 	mediaEvents.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
 	// media:playback_completed (progress→100%) → stream projection.
 	mediaEvents.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { baseURL as API_BASE } from "@/lib/api-client";
+import { problemDisplayMessage } from "@/lib/problems";
 
 type Tab = "login" | "register";
 
@@ -77,14 +78,15 @@ async function postAuth(path: string, payload: Record<string, unknown>) {
     body: JSON.stringify(payload),
   });
   if (res.ok) return null;
-  let msg = "Something went wrong. Please try again.";
+  // The auth endpoints answer with RFC 7807 like every other module — the old
+  // {code, message} body they used to return is retired. problemDisplayMessage
+  // reads `detail` and falls back to the shared catalog, so this path no longer
+  // carries its own copy of the fallback string.
   try {
-    const body = (await res.json()) as { message?: string };
-    if (body.message) msg = body.message;
+    return problemDisplayMessage(await res.json());
   } catch {
-    /* non-JSON error body */
+    return problemDisplayMessage(undefined); // non-JSON error body
   }
-  return msg;
 }
 
 function LoginForm({

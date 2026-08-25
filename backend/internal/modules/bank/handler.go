@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Handler is the bank HTTP surface. currentUser reads the authenticated user
@@ -36,7 +36,7 @@ func (h *Handler) ListAccounts(w http.ResponseWriter, r *http.Request) {
 	for _, a := range accts {
 		out = append(out, accountJSON(a))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"accounts": out})
+	server.JSON(w, http.StatusOK, map[string]any{"accounts": out})
 }
 
 func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +50,7 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		Currency       string `json:"currency"`
 		OpeningBalance int64  `json:"opening_balance"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	acct, err := h.svc.CreateAccount(r.Context(), CreateAccountInput{
@@ -61,7 +61,7 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, accountJSON(acct))
+	server.JSON(w, http.StatusCreated, accountJSON(acct))
 }
 
 func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +78,7 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		Archived *bool   `json:"archived"`
 		Currency *string `json:"currency"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	acct, err := h.svc.UpdateAccount(r.Context(), UpdateAccountInput{
@@ -88,7 +88,7 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, accountJSON(acct))
+	server.JSON(w, http.StatusOK, accountJSON(acct))
 }
 
 func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +123,7 @@ func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	for _, c := range cats {
 		out = append(out, categoryJSON(c))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"categories": out})
+	server.JSON(w, http.StatusOK, map[string]any{"categories": out})
 }
 
 func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
@@ -136,12 +136,12 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		Kind     string          `json:"kind"`
 		ParentID json.RawMessage `json:"parent_id"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	parent, _, perr := parseOptUUID(body.ParentID)
 	if perr {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid parent_id")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid parent_id")
 		return
 	}
 	cat, err := h.svc.CreateCategory(r.Context(), CreateCategoryInput{
@@ -151,7 +151,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, categoryJSON(cat))
+	server.JSON(w, http.StatusCreated, categoryJSON(cat))
 }
 
 func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
@@ -167,12 +167,12 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		Name     *string         `json:"name"`
 		ParentID json.RawMessage `json:"parent_id"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	parent, present, perr := parseOptUUID(body.ParentID)
 	if perr {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid parent_id")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid parent_id")
 		return
 	}
 	cat, err := h.svc.UpdateCategory(r.Context(), UpdateCategoryInput{
@@ -182,7 +182,7 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, categoryJSON(cat))
+	server.JSON(w, http.StatusOK, categoryJSON(cat))
 }
 
 func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
@@ -198,7 +198,7 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	if raw := r.URL.Query().Get("reassign_to"); raw != "" {
 		rid, err := uuid.Parse(raw)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid reassign_to")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid reassign_to")
 			return
 		}
 		reassignTo = &rid
@@ -218,11 +218,11 @@ func (h *Handler) ListTransactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	in := TxListInput{UserID: uid, Limit: atoiSafe(q.Get("limit"))}
+	in := TxListInput{UserID: uid, Limit: server.AtoiSafe(q.Get("limit"))}
 	if v := q.Get("account"); v != "" {
 		id, err := uuid.Parse(v)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account filter")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account filter")
 			return
 		}
 		in.AccountID = &id
@@ -230,7 +230,7 @@ func (h *Handler) ListTransactions(w http.ResponseWriter, r *http.Request) {
 	if v := q.Get("category"); v != "" {
 		id, err := uuid.Parse(v)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category filter")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category filter")
 			return
 		}
 		in.CategoryID = &id
@@ -238,7 +238,7 @@ func (h *Handler) ListTransactions(w http.ResponseWriter, r *http.Request) {
 	if v := q.Get("month"); v != "" {
 		m, err := parseMonth(v)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month filter")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month filter")
 			return
 		}
 		in.Month = &m
@@ -256,7 +256,7 @@ func (h *Handler) ListTransactions(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		out["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, out)
+	server.JSON(w, http.StatusOK, out)
 }
 
 func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +272,7 @@ func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		OccurredAt string      `json:"occurred_at"`
 		Note       *string     `json:"note"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	amount, ok := parseAmount(w, body.Amount)
@@ -281,21 +281,21 @@ func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	accountID, err := uuid.Parse(body.AccountID)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account_id")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account_id")
 		return
 	}
 	var categoryID *uuid.UUID
 	if body.CategoryID != "" {
 		cid, err := uuid.Parse(body.CategoryID)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
 			return
 		}
 		categoryID = &cid
 	}
 	occurred, err := parseDateDefault(body.OccurredAt)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at (want YYYY-MM-DD)")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at (want YYYY-MM-DD)")
 		return
 	}
 	tx, err := h.svc.CreateTransaction(r.Context(), CreateTransactionInput{
@@ -306,7 +306,7 @@ func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, transactionJSON(tx))
+	server.JSON(w, http.StatusCreated, transactionJSON(tx))
 }
 
 func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
@@ -326,7 +326,7 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 		OccurredAt *string      `json:"occurred_at"`
 		Note       *string      `json:"note"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	amount, ok := parseOptAmount(w, body.Amount)
@@ -337,7 +337,7 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	if body.AccountID != nil {
 		aid, err := uuid.Parse(*body.AccountID)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account_id")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid account_id")
 			return
 		}
 		in.AccountID = &aid
@@ -345,7 +345,7 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	if body.CategoryID != nil {
 		cid, err := uuid.Parse(*body.CategoryID)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
 			return
 		}
 		in.CategoryID = &cid
@@ -353,7 +353,7 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	if body.OccurredAt != nil {
 		d, err := parseDate(*body.OccurredAt)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
 			return
 		}
 		in.OccurredAt = &d
@@ -363,7 +363,7 @@ func (h *Handler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, transactionJSON(tx))
+	server.JSON(w, http.StatusOK, transactionJSON(tx))
 }
 
 func (h *Handler) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
@@ -396,7 +396,7 @@ func (h *Handler) CreateTransfer(w http.ResponseWriter, r *http.Request) {
 		OccurredAt  string      `json:"occurred_at"`
 		Note        *string     `json:"note"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	amount, ok := parseAmount(w, body.Amount)
@@ -405,17 +405,17 @@ func (h *Handler) CreateTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 	from, err := uuid.Parse(body.FromAccount)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid from_account")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid from_account")
 		return
 	}
 	to, err := uuid.Parse(body.ToAccount)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid to_account")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid to_account")
 		return
 	}
 	occurred, err := parseDateDefault(body.OccurredAt)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
 		return
 	}
 	legs, err := h.svc.CreateTransfer(r.Context(), TransferParams{
@@ -425,7 +425,7 @@ func (h *Handler) CreateTransfer(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, transferJSON(legs))
+	server.JSON(w, http.StatusCreated, transferJSON(legs))
 }
 
 func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
@@ -444,7 +444,7 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 		OccurredAt  *string      `json:"occurred_at"`
 		Note        *string      `json:"note"`
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	amount, ok := parseOptAmount(w, body.Amount)
@@ -455,7 +455,7 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 	if body.FromAccount != nil {
 		id, err := uuid.Parse(*body.FromAccount)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid from_account")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid from_account")
 			return
 		}
 		p.FromAccount = &id
@@ -463,7 +463,7 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 	if body.ToAccount != nil {
 		id, err := uuid.Parse(*body.ToAccount)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid to_account")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid to_account")
 			return
 		}
 		p.ToAccount = &id
@@ -471,7 +471,7 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 	if body.OccurredAt != nil {
 		d, err := parseDate(*body.OccurredAt)
 		if err != nil {
-			writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
+			server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid occurred_at")
 			return
 		}
 		p.OccurredAt = &d
@@ -481,7 +481,7 @@ func (h *Handler) UpdateTransfer(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, transferJSON(legs))
+	server.JSON(w, http.StatusOK, transferJSON(legs))
 }
 
 func (h *Handler) DeleteTransfer(w http.ResponseWriter, r *http.Request) {
@@ -509,7 +509,7 @@ func (h *Handler) ListBudgets(w http.ResponseWriter, r *http.Request) {
 	}
 	month, err := monthParam(r)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month")
 		return
 	}
 	budgets, err := h.svc.ListBudgets(r.Context(), uid, month)
@@ -521,7 +521,7 @@ func (h *Handler) ListBudgets(w http.ResponseWriter, r *http.Request) {
 	for _, b := range budgets {
 		out = append(out, budgetJSON(b))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"month": month.Format("2006-01"), "budgets": out})
+	server.JSON(w, http.StatusOK, map[string]any{"month": month.Format("2006-01"), "budgets": out})
 }
 
 func (h *Handler) SetBudget(w http.ResponseWriter, r *http.Request) {
@@ -534,7 +534,7 @@ func (h *Handler) SetBudget(w http.ResponseWriter, r *http.Request) {
 		Month      string       `json:"month"`
 		Amount     *json.Number `json:"amount"` // 0 or null deletes
 	}
-	if !decode(w, r, &body) {
+	if !server.Decode(w, r, &body) {
 		return
 	}
 	amountPtr, ok := parseOptAmount(w, body.Amount)
@@ -543,12 +543,12 @@ func (h *Handler) SetBudget(w http.ResponseWriter, r *http.Request) {
 	}
 	categoryID, err := uuid.Parse(body.CategoryID)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid category_id")
 		return
 	}
 	month, err := parseMonth(body.Month)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month (want YYYY-MM)")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month (want YYYY-MM)")
 		return
 	}
 	var amount int64
@@ -571,7 +571,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 	month, err := monthParam(r)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month")
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month")
 		return
 	}
 	dash, err := h.svc.Dashboard(r.Context(), uid, month)
@@ -579,7 +579,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		writeBankErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, dashboardJSON(dash))
+	server.JSON(w, http.StatusOK, dashboardJSON(dash))
 }
 
 // ── JSON shapes ───────────────────────────────────────────────────────
@@ -674,7 +674,7 @@ func dashboardJSON(d Dashboard) map[string]any {
 func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return uuid.Nil, false
 	}
 	return uid, true
@@ -683,7 +683,7 @@ func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool)
 func parseID(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, "bank/not-found", "Not Found", "resource not found")
+		server.Problem(w, http.StatusNotFound, "bank/not-found", "Not Found", "resource not found")
 		return uuid.Nil, false
 	}
 	return id, true
@@ -692,18 +692,10 @@ func parseID(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 func parseTransferID(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	id, err := uuid.Parse(chi.URLParam(r, "transfer_id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, "bank/not-found", "Not Found", "transfer not found")
+		server.Problem(w, http.StatusNotFound, "bank/not-found", "Not Found", "transfer not found")
 		return uuid.Nil, false
 	}
 	return id, true
-}
-
-func decode(w http.ResponseWriter, r *http.Request, v any) bool {
-	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(v); err != nil {
-		writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
-		return false
-	}
-	return true
 }
 
 // parseAmount converts a required JSON amount (integer minor units — SPEC-03) to
@@ -788,68 +780,38 @@ func uuidPtrJSON(p *uuid.UUID) any {
 	return p.String()
 }
 
-func atoiSafe(s string) int {
-	n := 0
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0
-		}
-		n = n*10 + int(c-'0')
-		if n > 1_000_000 {
-			return 1_000_000
-		}
-	}
-	return n
-}
-
 // writeBankErr maps a service error to its RFC 7807 Problem (SPEC-03 §7).
 func writeBankErr(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrAccountNotFound), errors.Is(err, ErrCategoryNotFound), errors.Is(err, ErrTransactionNotFound):
-		writeProblem(w, http.StatusNotFound, "bank/not-found", "Not Found", "resource not found")
+		server.Problem(w, http.StatusNotFound, "bank/not-found", "Not Found", "resource not found")
 	case errors.Is(err, ErrAccountNotEmpty):
-		writeProblem(w, http.StatusConflict, "bank/account-not-empty", "Account not empty", "archive the account instead of deleting it")
+		server.Problem(w, http.StatusConflict, "bank/account-not-empty", "Account not empty", "archive the account instead of deleting it")
 	case errors.Is(err, ErrAccountNotMutable):
-		writeProblem(w, http.StatusConflict, "bank/account-not-mutable", "Account not mutable", "currency is immutable once the account has transactions")
+		server.Problem(w, http.StatusConflict, "bank/account-not-mutable", "Account not mutable", "currency is immutable once the account has transactions")
 	case errors.Is(err, ErrIsTransferLeg):
-		writeProblem(w, http.StatusConflict, "bank/is-transfer-leg", "Transfer leg", "edit or delete this via /bank/transfers/{transfer_id}")
+		server.Problem(w, http.StatusConflict, "bank/is-transfer-leg", "Transfer leg", "edit or delete this via /bank/transfers/{transfer_id}")
 	case errors.Is(err, ErrCategoryInUse):
-		writeProblem(w, http.StatusConflict, "bank/category-in-use", "Category in use", "reassign its transactions with ?reassign_to= before deleting")
+		server.Problem(w, http.StatusConflict, "bank/category-in-use", "Category in use", "reassign its transactions with ?reassign_to= before deleting")
 	case errors.Is(err, ErrSameAccountTransfer):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/same-account-transfer", "Same-account transfer", "from and to accounts must differ")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/same-account-transfer", "Same-account transfer", "from and to accounts must differ")
 	case errors.Is(err, ErrCurrencyMismatch):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/currency-mismatch", "Currency mismatch", "cross-currency transfers are not supported")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/currency-mismatch", "Currency mismatch", "cross-currency transfers are not supported")
 	case errors.Is(err, ErrCategoryKindMismatch):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/category-kind-mismatch", "Category kind mismatch", "the target category is a different kind")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/category-kind-mismatch", "Category kind mismatch", "the target category is a different kind")
 	case errors.Is(err, ErrDirectionKindMismatch):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/direction-kind-mismatch", "Direction/kind mismatch", "a debit needs an expense category, a credit an income category")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/direction-kind-mismatch", "Direction/kind mismatch", "a debit needs an expense category, a credit an income category")
 	case errors.Is(err, ErrInvalidAmount):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/invalid-amount", "Invalid amount", "amount must be a positive integer (minor units)")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/invalid-amount", "Invalid amount", "amount must be a positive integer (minor units)")
 	case errors.Is(err, ErrInvalidCategoryParent):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/invalid-category-parent", "Invalid category parent", "parent must be a top-level category of the same kind, and the category must have no children")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/invalid-category-parent", "Invalid category parent", "parent must be a top-level category of the same kind, and the category must have no children")
 	case errors.Is(err, ErrCategoryImmutable):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/category-immutable", "Category immutable", "kind cannot be changed after creation")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/category-immutable", "Category immutable", "kind cannot be changed after creation")
 	case errors.Is(err, ErrValidation):
-		writeProblem(w, http.StatusUnprocessableEntity, "bank/validation", "Validation error", "the request is invalid")
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/validation", "Validation error", "the request is invalid")
 	case errors.Is(err, ErrBadCursor):
-		writeProblem(w, http.StatusBadRequest, "bank/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
+		server.Problem(w, http.StatusBadRequest, "bank/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
 	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type": typ, "title": title, "status": status, "detail": detail,
-	})
 }

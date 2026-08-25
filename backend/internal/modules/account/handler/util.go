@@ -2,21 +2,16 @@ package handler
 
 import (
 	"crypto/subtle"
-	"encoding/json"
+	"github.com/portal/backend/internal/platform/server"
 	"net"
 	"net/http"
 )
 
-// writeJSON serialises v with no-store cache semantics.
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
+// writeError answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
 func writeError(w http.ResponseWriter, status int, code, msg string) {
-	writeJSON(w, status, map[string]string{"code": code, "message": msg})
+	server.Problem(w, status, server.ProblemType("account", code), http.StatusText(status), msg)
 }
 
 // subtleEqual is a constant-time string compare, returning true on match.

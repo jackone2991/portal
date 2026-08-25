@@ -1,7 +1,7 @@
 package ops
 
 import (
-	"encoding/json"
+	"github.com/portal/backend/internal/platform/server"
 	"net/http"
 	"time"
 )
@@ -17,10 +17,10 @@ type Handler struct {
 func (h *Handler) Status(w http.ResponseWriter, r *http.Request) {
 	res, err := h.svc.Status(r.Context())
 	if err != nil {
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "could not read ops status")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "could not read ops status")
 		return
 	}
-	writeJSON(w, http.StatusOK, statusJSON(res))
+	server.JSON(w, http.StatusOK, statusJSON(res))
 }
 
 // ── JSON shaping ─────────────────────────────────────────────────────
@@ -70,19 +70,3 @@ func runJSON(r BackupRun) map[string]any {
 }
 
 // ── HTTP helpers (match journal's shape) ─────────────────────────────
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type": typ, "title": title, "status": status, "detail": detail,
-	})
-}

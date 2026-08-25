@@ -9,7 +9,7 @@ RSC rendering decision tree ([D-33]). The prose spec is
 ## Stack
 
 Next.js 15 (App Router, RSC) · TypeScript · Tailwind v4 · TanStack Query · Zustand
-· React Hook Form · Vidstack (HLS). Presentation lives in a version-switched
+· React Hook Form *(NOT INSTALLED — not in package.json, zero imports; every form hand-rolls `useState`. Either add the dependency or drop this row.)* · Vidstack (HLS). Presentation lives in a version-switched
 `src/templates/v{N}/` tree selected by `NEXT_PUBLIC_TEMPLATE_VERSION` via
 `templates/registry.ts` — read [src/templates/README.md](src/templates/README.md)
 before adding a page or cutting a `v2`.

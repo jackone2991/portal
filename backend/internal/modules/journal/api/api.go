@@ -35,6 +35,9 @@ const (
 	TaskStreamBirthday          = "journal:stream_birthday"
 	TaskStreamComicPublished    = "journal:stream_comic_published"
 	TaskStreamComicDeleted      = "journal:stream_comic_deleted"
+	TaskStreamMoviePublished    = "journal:stream_movie_published"
+	TaskStreamTrackPublished    = "journal:stream_track_published"
+	TaskStreamStoryPublished    = "journal:stream_story_published"
 )
 
 // EntryCreatedEvent is the journal:entry_created payload (events.md): ids +

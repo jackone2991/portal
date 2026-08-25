@@ -1,5 +1,21 @@
 # Missing Features — Gap Analysis / Backlog
 
+> **⚠️ ARCHIVED — do not plan from this file (2026-08-25).**
+>
+> This gap analysis predates [ADR-08](../adr/08-life-os-pivot.md)'s life-OS pivot
+> and several rows are now inverted: §1 claims brute-force lockout works (it does
+> not — the limiter has zero importers), §2 calls the thumbnail worker a stub (it
+> is real), §4 calls movie/music/story/comic "just `module.go` + an `api/` stub"
+> (all four are full verticals), and §10 says Bank is deferred pending MFA (SPEC-03
+> shipped it). Its "Suggested next order (P1)" is pre-pivot and should not be
+> followed.
+>
+> Live yardsticks: [vision.md](vision.md) + `specs/`. Current state and a
+> sequenced next-order list:
+> [analysis/remaining-work-2026-08-25.md](analysis/remaining-work-2026-08-25.md).
+
+
+
 **Last verified:** 2026-07-06 — snapshot taken after the v1 demo loop closed; see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) for the living status tracker.
 
 What is built today vs. what the spec ([feature.md](feature.md)) describes. This is

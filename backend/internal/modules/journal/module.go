@@ -96,6 +96,9 @@ func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	reg(journalapi.TaskStreamBirthday, m.svc.OnBirthdayUpcoming)
 	reg(journalapi.TaskStreamComicPublished, m.svc.OnComicPublished)
 	reg(journalapi.TaskStreamComicDeleted, m.svc.OnComicDeleted)
+	reg(journalapi.TaskStreamMoviePublished, m.svc.OnMoviePublished)
+	reg(journalapi.TaskStreamTrackPublished, m.svc.OnTrackPublished)
+	reg(journalapi.TaskStreamStoryPublished, m.svc.OnStoryPublished)
 }
 
 func (m *Module) perm(code string) func(http.Handler) http.Handler {

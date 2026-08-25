@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -115,8 +115,10 @@ func run() error {
 	}
 	defer pool.Close()
 	// tdb wraps the pool with tenant-scoping helpers; conn is the context-aware
-	// DBTX handed to every repository. The worker's periodic sweeps run without a
-	// tenant tx today (cross-tenant) — that moves to cmd/sysjobs in a later increment.
+	// DBTX handed to every repository. Every worker path that touches an RLS
+	// table is now scoped: per-user writes through runInUserTenant, cross-tenant
+	// periodic sweeps through forEachTenant (one committed scope per tenant).
+	// That is what makes the portal_app cutover safe without cmd/sysjobs.
 	tdb := platformdb.New(pool)
 	conn := tdb.Conn()
 
@@ -175,6 +177,10 @@ func run() error {
 		Repo:     mediarepo.NewAdapter(conn),
 		Enqueuer: asynqClient,
 		Events:   publisher,
+		// ADR-07 increment 1b: the transcode/image/poster workers write to
+		// media_asset_variants and assets, both tenant-scoped. This is the last
+		// of the four worker write paths the 0020 migration's ⚠️ gate names.
+		RunInUserTenant: runInUserTenant,
 	})
 	if err != nil {
 		return fmt.Errorf("media module: %w", err)
@@ -227,10 +233,10 @@ func run() error {
 	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
 	comicMod, err := comic.New(comic.Deps{
 		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
-		Media:       mediaMod.API(),   // P1.7: IngestImage + GetAsset for the zip import
-		Storage:     store,            // P1.7: read/delete the uploaded zip
-		Enqueuer:    asynqClient,      // (unused on the worker side, but harmless)
-		RunInTenant: runInUserTenant,  // P1.7: per-image committed tenant tx
+		Media:       mediaMod.API(),  // P1.7: IngestImage + GetAsset for the zip import
+		Storage:     store,           // P1.7: read/delete the uploaded zip
+		Enqueuer:    asynqClient,     // (unused on the worker side, but harmless)
+		RunInTenant: runInUserTenant, // P1.7: per-image committed tenant tx
 	})
 	if err != nil {
 		return fmt.Errorf("comic module: %w", err)
@@ -255,7 +261,14 @@ func run() error {
 	}
 
 	// ── People module (worker side: daily birthday scan, P0.4) ──────
-	peopleMod, err := people.New(people.Deps{Repo: peoplerepo.NewAdapter(conn), Events: publisher, RunInUserTenant: runInUserTenant})
+	peopleMod, err := people.New(people.Deps{
+		Repo:            peoplerepo.NewAdapter(conn),
+		Events:          publisher,
+		RunInUserTenant: runInUserTenant,
+		ForEachTenant: func(ctx context.Context, fn func(context.Context) error) error {
+			return forEachTenant(ctx, tenantStore, tdb, peopleapi.TaskScanBirthdays, fn)
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("people module: %w", err)
 	}
@@ -286,6 +299,13 @@ func run() error {
 	publisher.Subscribe(media.EventAssetDeleted, movieapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	publisher.Subscribe(media.EventAssetDeleted, musicapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	publisher.Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted, asynq.Queue("default"))
+
+	// Catalogue verticals → life stream. Emitted since the verticals landed but
+	// unsubscribed until 2026-08-25: publishing a movie produced no card while
+	// publishing a comic chapter did.
+	publisher.Subscribe(movieapi.EventMoviePublished, journalapi.TaskStreamMoviePublished, asynq.Queue("default"))
+	publisher.Subscribe(musicapi.EventTrackPublished, journalapi.TaskStreamTrackPublished, asynq.Queue("default"))
+	publisher.Subscribe(storyapi.EventStoryPublished, journalapi.TaskStreamStoryPublished, asynq.Queue("default"))
 
 	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
 	// and subscribes to every producer. media:asset_deleted now fans out to TWO
@@ -349,7 +369,7 @@ func run() error {
 		return notifyMod.PurgeOld(ctx)
 	})
 	lightMux.HandleFunc(mediaworker.TaskTypePurgeOrphans, func(ctx context.Context, _ *asynq.Task) error {
-		return mediaMod.PurgeOrphans(ctx)
+		return forEachTenant(ctx, tenantStore, tdb, "media:purge_orphans", mediaMod.PurgeOrphans)
 	})
 	// The account module isn't constructed in the worker (its request-path deps —
 	// JWT issuer, RBAC — are irrelevant to a maintenance sweep), so the
@@ -414,8 +434,64 @@ func run() error {
 
 	<-sigCtx.Done()
 	log.Info().Msg("worker shutting down")
+	// All three servers must be drained. imageSrv was missing here, so on SIGTERM
+	// its in-flight media:process_image tasks were killed mid-decode — during a
+	// comic zip import that is IMAGE_CONCURRENCY pages lost per restart, which
+	// surfaces later as a silently incomplete chapter.
 	scheduler.Shutdown()
 	heavySrv.Shutdown()
+	imageSrv.Shutdown()
 	lightSrv.Shutdown()
+	return nil
+}
+
+// forEachTenant runs fn once per tenant, each inside its own committed tenant
+// scope.
+//
+// The periodic sweeps (media:purge_orphans, people:scan_birthdays) are
+// cross-tenant by nature. Before the portal_app cutover they ran unscoped and
+// saw every row because the superuser bypasses RLS; after it, an unscoped sweep
+// sees NOTHING and silently does nothing — a regression with no error to notice.
+// Iterating tenants keeps them correct without a BYPASSRLS role, which is what
+// lets ADR-07 step 7 (cmd/sysjobs + internal/sysrepository) stay deferred.
+//
+// `organizations` is not an RLS table, so listing tenants works under either
+// role. One tenant's failure is logged and the sweep continues: a single bad
+// scope must not stop the janitor for everyone else.
+func forEachTenant(
+	ctx context.Context,
+	store *tenantrepo.Adapter,
+	tdb *platformdb.DB,
+	task string,
+	fn func(context.Context) error,
+) error {
+	orgs, err := store.ListAllIDs(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: list tenants: %w", task, err)
+	}
+	var failed int
+	for _, org := range orgs {
+		tx, err := tdb.BeginTenantScope(ctx, org)
+		if err != nil {
+			failed++
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: begin tenant scope failed")
+			continue
+		}
+		scoped := platformdb.WithTx(ctx, tx)
+		if err := fn(scoped); err != nil {
+			failed++
+			_ = tx.Rollback(scoped)
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: tenant failed")
+			continue
+		}
+		if err := tx.Commit(scoped); err != nil {
+			failed++
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: commit failed")
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("%s: %d of %d tenants failed", task, failed, len(orgs))
+	}
+	log.Info().Str("task", task).Int("tenants", len(orgs)).Msg("sweep complete")
 	return nil
 }

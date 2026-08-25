@@ -1,5 +1,25 @@
 # Traceability Matrix — Requirements ↔ Test Cases
 
+> **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
+>
+> Every `TC-` id in this matrix is a **document row, not a test**. `grep _test.go
+> docs/testing/*.md` returns nothing: no row here names a Go or TypeScript test
+> that exists. The Cov column reads 100 % ✅ across all 47 rows with no ⚠️ or ✖,
+> and the Result column is entirely empty — that is what an unexecuted plan looks
+> like, not what coverage looks like.
+>
+> The real test inventory is **20 `_test.go` files** under `backend/`. Run
+> `cd backend && go test ./...`. What they actually cover, and what no test can
+> reach, is in
+> [../product/analysis/remaining-work-2026-08-25.md](../product/analysis/remaining-work-2026-08-25.md).
+>
+> Two structural gaps this matrix does not show: the frontend has **zero** test
+> files, and until 2026-08-25 the backend had **zero** `httptest` — no test had
+> ever asserted a status code or a response body. That is now two suites
+> (`platform/server`, `tenant/middleware`) rather than none.
+
+
+
 Maps every spec requirement (`Px.y`) and cross-cutting convention (`CC-n`) to the
 test cases that cover it. **Coverage gate:** every `P0` requirement must map to
 ≥1 test case; a `P0` with no case is a coverage defect. Update the **Result**

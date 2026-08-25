@@ -5,8 +5,17 @@
 -- name: InsertVariant :one
 -- Upsert so a re-run of the worker (retry / re-process) replaces the row and its
 -- storage key instead of colliding on the (asset_id, variant) unique constraint.
-INSERT INTO media_asset_variants (asset_id, tenant_id, variant, storage_key, width, height, size_bytes)
-VALUES ($1, (SELECT tenant_id FROM assets WHERE id = $1), $2, $3, $4, $5, $6)
+--
+-- tenant_id is OMITTED deliberately: the column's DEFAULT is
+-- current_setting('app.current_tenant')::uuid, so it resolves from the enclosing
+-- tenant scope. This used to read `(SELECT tenant_id FROM assets WHERE id = $1)`,
+-- which worked only because the app connects as a superuser that bypasses RLS —
+-- under portal_app the assets policy filters that subquery to zero rows, the
+-- subquery yields NULL, and the NOT NULL constraint kills every variant insert.
+-- The caller (worker.inTenant) is what makes the DEFAULT resolvable; a write
+-- outside a tenant scope now fails loudly rather than writing a wrong tenant.
+INSERT INTO media_asset_variants (asset_id, variant, storage_key, width, height, size_bytes)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (asset_id, variant) DO UPDATE
 SET storage_key = EXCLUDED.storage_key,
     width       = EXCLUDED.width,

@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 type Handler struct {
@@ -23,7 +23,7 @@ func (h *Handler) ListStories(w http.ResponseWriter, r *http.Request) {
 	if _, ok := h.auth(w, r); !ok {
 		return
 	}
-	res, err := h.svc.ListPublished(r.Context(), r.URL.Query().Get("cursor"), atoiSafe(r.URL.Query().Get("limit")))
+	res, err := h.svc.ListPublished(r.Context(), r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")))
 	if err != nil {
 		writeStoryErr(w, err)
 		return
@@ -36,7 +36,7 @@ func (h *Handler) ListMine(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	res, err := h.svc.ListOwn(r.Context(), uid, r.URL.Query().Get("cursor"), atoiSafe(r.URL.Query().Get("limit")))
+	res, err := h.svc.ListOwn(r.Context(), uid, r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")))
 	if err != nil {
 		writeStoryErr(w, err)
 		return
@@ -59,7 +59,7 @@ func (h *Handler) CreateStory(w http.ResponseWriter, r *http.Request) {
 	}
 	cover, perr := parseOptID(body.CoverAssetID)
 	if perr {
-		badReq(w, "invalid cover_asset_id")
+		server.BadRequest(w, "invalid cover_asset_id")
 		return
 	}
 	st, err := h.svc.CreateStory(r.Context(), CreateStoryInput{OwnerID: uid, Title: body.Title, Description: body.Description, CoverAssetID: cover})
@@ -67,7 +67,7 @@ func (h *Handler) CreateStory(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, storyJSON(st))
+	server.JSON(w, http.StatusCreated, storyJSON(st))
 }
 
 func (h *Handler) GetStory(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +88,7 @@ func (h *Handler) GetStory(w http.ResponseWriter, r *http.Request) {
 	m := storyJSON(st)
 	m["chapter_count"] = len(chapters)
 	m["chapters"] = chapterSummaries(chapters)
-	writeJSON(w, http.StatusOK, m)
+	server.JSON(w, http.StatusOK, m)
 }
 
 func (h *Handler) UpdateStory(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +106,7 @@ func (h *Handler) UpdateStory(w http.ResponseWriter, r *http.Request) {
 	}
 	cover, setCover, perr := parseRawOptID(body.CoverAssetID)
 	if perr {
-		badReq(w, "invalid cover_asset_id")
+		server.BadRequest(w, "invalid cover_asset_id")
 		return
 	}
 	st, err := h.svc.UpdateStory(r.Context(), UpdateStoryInput{ID: id, Title: body.Title, Description: body.Description, SetCover: setCover, CoverAssetID: cover})
@@ -114,7 +114,7 @@ func (h *Handler) UpdateStory(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, storyJSON(st))
+	server.JSON(w, http.StatusOK, storyJSON(st))
 }
 
 func (h *Handler) DeleteStory(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (h *Handler) Publish(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, storyJSON(st))
+	server.JSON(w, http.StatusOK, storyJSON(st))
 }
 
 func (h *Handler) Unpublish(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (h *Handler) Unpublish(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, storyJSON(st))
+	server.JSON(w, http.StatusOK, storyJSON(st))
 }
 
 // ══ Chapters ═════════════════════════════════════════════════════════════
@@ -175,7 +175,7 @@ func (h *Handler) CreateChapter(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, chapterJSON(c))
+	server.JSON(w, http.StatusCreated, chapterJSON(c))
 }
 
 // Chapters is the reader payload: the story's chapters with bodies (published-or-owner).
@@ -197,7 +197,7 @@ func (h *Handler) Chapters(w http.ResponseWriter, r *http.Request) {
 	for _, c := range chapters {
 		out = append(out, chapterJSON(c))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"chapters": out})
+	server.JSON(w, http.StatusOK, map[string]any{"chapters": out})
 }
 
 func (h *Handler) ReorderChapters(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +233,7 @@ func (h *Handler) UpdateChapter(w http.ResponseWriter, r *http.Request) {
 		writeStoryErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, chapterJSON(c))
+	server.JSON(w, http.StatusOK, chapterJSON(c))
 }
 
 func (h *Handler) DeleteChapter(w http.ResponseWriter, r *http.Request) {
@@ -287,7 +287,7 @@ func writeStoryList(w http.ResponseWriter, res ListResult) {
 	if res.NextCursor != "" {
 		out["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, out)
+	server.JSON(w, http.StatusOK, out)
 }
 
 // ── request/response helpers ──────────────────────────────────────────
@@ -295,7 +295,7 @@ func writeStoryList(w http.ResponseWriter, res ListResult) {
 func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	uid, ok := h.currentUser(r.Context())
 	if !ok {
-		writeProblem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
+		server.Problem(w, http.StatusUnauthorized, "about:blank", "Unauthorized", "authentication required")
 		return uuid.Nil, false
 	}
 	return uid, true
@@ -304,18 +304,18 @@ func (h *Handler) auth(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool)
 func parseID(w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, bool) {
 	id, err := uuid.Parse(chi.URLParam(r, name))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, "story/not-found", "Not Found", "not found")
+		server.Problem(w, http.StatusNotFound, "story/not-found", "Not Found", "not found")
 		return uuid.Nil, false
 	}
 	return id, true
 }
 
+// storyBodyLimit is four times the platform default: a chapter body is prose,
+// not a form, so the 1 MiB cap the other modules take would reject a long one.
+const storyBodyLimit = 4 << 20
+
 func decode(w http.ResponseWriter, r *http.Request, v any) bool {
-	if err := json.NewDecoder(io.LimitReader(r.Body, 4<<20)).Decode(v); err != nil {
-		badReq(w, "invalid JSON body")
-		return false
-	}
-	return true
+	return server.DecodeLimit(w, r, v, storyBodyLimit)
 }
 
 func decodeOrder(w http.ResponseWriter, r *http.Request) ([]uuid.UUID, bool) {
@@ -329,7 +329,7 @@ func decodeOrder(w http.ResponseWriter, r *http.Request) ([]uuid.UUID, bool) {
 	for _, s := range body.Order {
 		id, err := uuid.Parse(s)
 		if err != nil {
-			badReq(w, "invalid id in order")
+			server.BadRequest(w, "invalid id in order")
 			return nil, false
 		}
 		ids = append(ids, id)
@@ -373,24 +373,6 @@ func uuidPtrJSON(p *uuid.UUID) any {
 	return p.String()
 }
 
-func badReq(w http.ResponseWriter, detail string) {
-	writeProblem(w, http.StatusBadRequest, "about:blank", "Bad Request", detail)
-}
-
-func atoiSafe(s string) int {
-	n := 0
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0
-		}
-		n = n*10 + int(c-'0')
-		if n > 1_000_000 {
-			return 1_000_000
-		}
-	}
-	return n
-}
-
 func writeStoryErr(w http.ResponseWriter, err error) {
 	var np *NotPublishableError
 	switch {
@@ -403,28 +385,14 @@ func writeStoryErr(w http.ResponseWriter, err error) {
 			"detail": "a story needs at least one chapter, each with a non-empty body", "chapters": np.Chapters,
 		})
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, "story/not-found", "Not Found", "not found")
+		server.Problem(w, http.StatusNotFound, "story/not-found", "Not Found", "not found")
 	case errors.Is(err, ErrInvalidCoverAsset):
-		writeProblem(w, http.StatusUnprocessableEntity, "story/invalid-cover-asset", "Invalid cover asset", "cover must be a ready image asset you own")
+		server.Problem(w, http.StatusUnprocessableEntity, "story/invalid-cover-asset", "Invalid cover asset", "cover must be a ready image asset you own")
 	case errors.Is(err, ErrValidation):
-		writeProblem(w, http.StatusUnprocessableEntity, "story/validation", "Validation error", "the request is invalid")
+		server.Problem(w, http.StatusUnprocessableEntity, "story/validation", "Validation error", "the request is invalid")
 	case errors.Is(err, ErrBadCursor):
-		writeProblem(w, http.StatusBadRequest, "story/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
+		server.Problem(w, http.StatusBadRequest, "story/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
 	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{"type": typ, "title": title, "status": status, "detail": detail})
 }

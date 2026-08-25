@@ -1,6 +1,22 @@
 # ADR-07: Multi-tenancy & Row-Level Security model (Phase 1 — deferred from v1)
 
-**Status:** Proposed — **deferred**. Phase 1, NOT in v1 scope ([ADR-01](./01-v1-scope-cut.md)). This is a design/plan to execute when Phase 1 starts; **no code lands until then.**
+**Status:** **Accepted — steps 1–4 and 8 executed 2026-08-25; steps 5–7 deferred.**
+
+> **Update (2026-08-25) — this ADR is no longer a plan.** The status line below
+> used to read *"Proposed — deferred … no code lands until then"* and the Context
+> asserted *"there is no `tenant_id` column anywhere today"*. Both were false:
+> migrations `0018`–`0030` shipped the whole schema and the `tenant` module has
+> been live for weeks. As of 2026-08-25 the runtime is cut over too — the app
+> connects as `portal_app`, so RLS is **enforced, not inert**, and the isolation
+> test this ADR demands at step 8 exists and passes (8/8). See
+> [docs/guides/rls-cutover.md](../guides/rls-cutover.md).
+>
+> **Steps 5–7 stay deferred on purpose** at one user with one personal org:
+> `switch-tenant` / `/admin/organizations`, per-tenant `user_roles`, the
+> `/t/{org}` URL contract, and `cmd/sysjobs`. `forEachTenant` in `cmd/worker`
+> removed the need for a BYPASSRLS role, which is what made step 7 skippable.
+> Read the unchecked boxes in the implementation plan below as *scope*, not as
+> failure.
 **Date:** 2026-07-07
 **Deciders:** kirito
 **Relates:** [ADR-01](./01-v1-scope-cut.md) (v1 cut) · [ADR-02](./02-rbac-model-reconciliation.md) (RBAC) · [ADR-03](./03-single-vps-topology.md) (single-VPS / PgBouncer) · [feature.md §2 + §18 Phase 1](../feature.md) · [D-23] [D-24] [D-25]
