@@ -10,6 +10,8 @@ import { ComicReaderView } from "./views/library/comic/ComicReaderView";
 import { NovelDetailView } from "./views/library/novel/NovelDetailView";
 import { MediaIndexView } from "./views/library/media/MediaIndexView";
 import { MediaDetailView } from "./views/library/media/MediaDetailView";
+import { MusicIndexView } from "./views/library/music/MusicIndexView";
+import { MusicDetailView } from "./views/library/music/MusicDetailView";
 import { DashboardView as BankDashboardView } from "./views/bank/DashboardView";
 import { TransactionsView as BankTransactionsView } from "./views/bank/TransactionsView";
 import { AccountsView as BankAccountsView } from "./views/bank/AccountsView";
@@ -40,6 +42,8 @@ export const v1: TemplateManifest = {
     libraryNovelDetail: NovelDetailView,
     libraryMedia: MediaIndexView,
     libraryMediaDetail: MediaDetailView,
+    libraryMusic: MusicIndexView,
+    libraryMusicDetail: MusicDetailView,
     bankDashboard: BankDashboardView,
     bankTransactions: BankTransactionsView,
     bankAccounts: BankAccountsView,

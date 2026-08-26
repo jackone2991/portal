@@ -1,6 +1,6 @@
 {
   "shape": "package",
-  "styleSha": "593e90cf6bb114fe134031e0a16b7c5138041f095ea0554b7b30c61d064a3836",
+  "styleSha": "ae7ba3cc47610bc431a2e106e57a5571ac726516957dd766e0ef7431e681ddc6",
   "renderHashes": {
     "AccountsView": "58af75654135d243",
     "ActivityFeed": "129263f1469896ba",
@@ -164,7 +164,7 @@
     "WidgetCard": "0695ba4618ca2bcc"
   },
   "keyRecipe": 7,
-  "scriptsSha": "e0316766f3bdd146",
+  "scriptsSha": "eac254b8881d12fd",
   "sourceHashes": {
     "components/bank/AccountsView/AccountsView.jsx": "301e6665fc51",
     "components/bank/AccountsView/AccountsView.d.ts": "f3ea75294ad2",
@@ -405,5 +405,5 @@
     "components/widget/WidgetCard/WidgetCard.prompt.md": "c73ea6104733"
   },
   "auxSha": "6d6352e9ec0646d3",
-  "bundleSha12": "eb0ebfb92c3b"
+  "bundleSha12": "2294132f5e78"
 }

@@ -14004,6 +14004,58 @@ var PortalUI = (() => {
   // frontend/src/templates/v1/views/auth/AuthForm.tsx
   init_define_import_meta_env();
   var import_react19 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/problems.ts
+  init_define_import_meta_env();
+  var PROBLEM_MESSAGES = {
+    "media/unsupported-format": "This file format isn't supported. Try converting it and uploading again.",
+    "media/file-too-large": "This file is too large to upload.",
+    "media/asset-not-found": "This asset doesn't exist or was already removed.",
+    "media/asset-not-ready": "This asset is still being uploaded \u2014 try again in a moment.",
+    "journal/entry-not-found": "This entry doesn't exist or was already removed.",
+    "journal/invalid-body": "Entries need 1-20,000 characters of text.",
+    "journal/invalid-mood": "Mood can't be blank \u2014 leave it empty or add a word.",
+    "journal/invalid-asset": "Photo attachments aren't supported yet.",
+    "bank/not-found": "This item doesn't exist or was already removed.",
+    "bank/account-not-empty": "This account has transactions \u2014 archive it instead of deleting.",
+    "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
+    "bank/is-transfer-leg": "This is part of a transfer \u2014 edit or delete it from the transfer instead.",
+    "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
+    "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
+    "bank/category-immutable": "A category's kind can't be changed after it's created.",
+    "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
+    "bank/same-account-transfer": "Pick two different accounts for a transfer.",
+    "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
+    "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
+    "bank/invalid-amount": "Enter an amount greater than zero.",
+    "bank/validation": "Please check the form and try again.",
+    "bank/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "comic/not-found": "This comic doesn't exist or was already removed.",
+    "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
+    "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
+    "comic/invalid-progress-target": "Couldn't save your place on this comic.",
+    "comic/not-publishable": "Every chapter needs at least one page before publishing.",
+    "comic/validation": "Please check the form and try again.",
+    "comic/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "people/person-not-found": "This person doesn't exist or was already removed.",
+    "people/invalid-birthday": "Enter a real date \u2014 day and month together, year optional.",
+    "people/validation": "Please check the form and try again.",
+    "people/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "stream/invalid-cursor": "Couldn't load more of your stream \u2014 please refresh."
+  };
+  var FALLBACK_MESSAGE = "Something went wrong. Please try again.";
+  function problemMessage(type) {
+    if (type && type in PROBLEM_MESSAGES) {
+      return PROBLEM_MESSAGES[type];
+    }
+    return FALLBACK_MESSAGE;
+  }
+  function problemDisplayMessage(body) {
+    const problem = body;
+    return problem?.detail || problemMessage(problem?.type);
+  }
+
+  // frontend/src/templates/v1/views/auth/AuthForm.tsx
   function AuthForm({ defaultTab = "login" }) {
     const [tab, setTab] = (0, import_react19.useState)(defaultTab);
     const [notice, setNotice] = (0, import_react19.useState)(null);
@@ -14055,13 +14107,11 @@ var PortalUI = (() => {
       body: JSON.stringify(payload)
     });
     if (res.ok) return null;
-    let msg = "Something went wrong. Please try again.";
     try {
-      const body = await res.json();
-      if (body.message) msg = body.message;
+      return problemDisplayMessage(await res.json());
     } catch {
+      return problemDisplayMessage(void 0);
     }
-    return msg;
   }
   function LoginForm({
     onSwitch,
@@ -14401,58 +14451,6 @@ var PortalUI = (() => {
   // frontend/src/templates/v1/views/bank/AccountsView.tsx
   init_define_import_meta_env();
   var import_react20 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/src/lib/problems.ts
-  init_define_import_meta_env();
-  var PROBLEM_MESSAGES = {
-    "media/unsupported-format": "This file format isn't supported. Try converting it and uploading again.",
-    "media/file-too-large": "This file is too large to upload.",
-    "media/asset-not-found": "This asset doesn't exist or was already removed.",
-    "media/asset-not-ready": "This asset is still being uploaded \u2014 try again in a moment.",
-    "journal/entry-not-found": "This entry doesn't exist or was already removed.",
-    "journal/invalid-body": "Entries need 1-20,000 characters of text.",
-    "journal/invalid-mood": "Mood can't be blank \u2014 leave it empty or add a word.",
-    "journal/invalid-asset": "Photo attachments aren't supported yet.",
-    "bank/not-found": "This item doesn't exist or was already removed.",
-    "bank/account-not-empty": "This account has transactions \u2014 archive it instead of deleting.",
-    "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
-    "bank/is-transfer-leg": "This is part of a transfer \u2014 edit or delete it from the transfer instead.",
-    "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
-    "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
-    "bank/category-immutable": "A category's kind can't be changed after it's created.",
-    "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
-    "bank/same-account-transfer": "Pick two different accounts for a transfer.",
-    "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
-    "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
-    "bank/invalid-amount": "Enter an amount greater than zero.",
-    "bank/validation": "Please check the form and try again.",
-    "bank/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "comic/not-found": "This comic doesn't exist or was already removed.",
-    "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
-    "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
-    "comic/invalid-progress-target": "Couldn't save your place on this comic.",
-    "comic/not-publishable": "Every chapter needs at least one page before publishing.",
-    "comic/validation": "Please check the form and try again.",
-    "comic/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "people/person-not-found": "This person doesn't exist or was already removed.",
-    "people/invalid-birthday": "Enter a real date \u2014 day and month together, year optional.",
-    "people/validation": "Please check the form and try again.",
-    "people/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "stream/invalid-cursor": "Couldn't load more of your stream \u2014 please refresh."
-  };
-  var FALLBACK_MESSAGE = "Something went wrong. Please try again.";
-  function problemMessage(type) {
-    if (type && type in PROBLEM_MESSAGES) {
-      return PROBLEM_MESSAGES[type];
-    }
-    return FALLBACK_MESSAGE;
-  }
-  function problemDisplayMessage(body) {
-    const problem = body;
-    return problem?.detail || problemMessage(problem?.type);
-  }
-
-  // frontend/src/templates/v1/views/bank/AccountsView.tsx
   var TYPES = ["cash", "checking", "savings", "credit_card", "ewallet", "other"];
   function AccountsView() {
     const qc = useQueryClient();

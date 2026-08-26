@@ -7,6 +7,7 @@ import { StreamItemCard } from "../../components/stream/StreamItemCard";
 import { BirthdayCard } from "../../components/widget/BirthdayCard";
 import { FinanceWidget } from "../../components/widget/FinanceWidget";
 import { ContinueWidget } from "../../components/widget/ContinueWidget";
+import { MusicWidget } from "../../components/widget/MusicWidget";
 import { WeatherWidget } from "../../components/widget/WeatherWidget";
 import { CalendarWidget } from "../../components/widget/CalendarWidget";
 import { PagesWidget } from "../../components/widget/PagesWidget";
@@ -83,6 +84,7 @@ export function HomeView() {
       <div className="hidden space-y-5 lg:block">
         <FinanceWidget />
         <ContinueWidget />
+        <MusicWidget />
         <WeatherWidget />
         <CalendarWidget />
         <PagesWidget />

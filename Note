@@ -10,3 +10,93 @@ https://javascript.plainenglish.io/learning-isnt-the-key-to-becoming-a-top-devel
 https://medium.com/codex/top-5-chrome-extensions-every-developer-must-have-now-f4d80d66a221
 
 claude --resume 4096cc30-ecc4-4ef4-99b3-ad8479c6cc0a
+
+
+================================================================================
+DOMAIN & TÀI KHOẢN  (cập nhật 2026-08-26)
+================================================================================
+
+⚠️  FILE NÀY ĐƯỢC GIT THEO DÕI và push lên git@github.com:jackone2991/portal.git
+    → KHÔNG ghi mật khẩu / khoá thật vào đây.
+    Mọi giá trị bí mật nằm trong `.env` (đã gitignore). Dưới đây chỉ ghi
+    TÊN ĐĂNG NHẬP và TÊN BIẾN chứa mật khẩu, không ghi giá trị.
+
+
+── DOMAIN ──────────────────────────────────────────────────────────────────────
+
+Tất cả sinh ra từ APP_DOMAIN=portal.localhost (Traefik route theo biến này).
+Cần chạy `make certs` (mkcert) để có HTTPS tin cậy cho *.portal.localhost.
+
+  https://portal.localhost              Frontend (Next.js)         ← đăng nhập ở đây
+  https://api.portal.localhost          API (Go, chi)
+  https://traefik.portal.localhost      Traefik dashboard          không có auth
+  https://minio.portal.localhost        MinIO console (dev)
+  https://mail.portal.localhost         Mailpit — đọc mail dev (reset mật khẩu…)
+    http://127.0.0.1:8099
+Truy cập trực tiếp / qua LAN (không qua Traefik):
+  http://localhost:3000                 Frontend dev
+  http://localhost:8080                 API dev
+  http://192.168.1.53:3000              Frontend từ điện thoại trong LAN
+  (api-client.ts tự đổi sang <host>:8080 khi hostname != portal.localhost)
+
+Đường dẫn đặc biệt:
+  /admin/queues                         Asynqmon — cần quyền `queues:read` (role admin)
+  KHÔNG có /swagger/index.html          dự án không có Swagger UI; spec chỉ là file
+                                        shared/openapi.yaml (OpenAPI 3.1, ADR-10)
+
+CORS_ALLOWED_ORIGINS hiện cho phép:
+  https://portal.localhost, http://localhost:3000, http://192.168.1.53:3000
+
+
+── TÀI KHOẢN ỨNG DỤNG ──────────────────────────────────────────────────────────
+
+KHÔNG có tài khoản seed sẵn. Không migration nào tạo user — phải tự đăng ký.
+
+  Đăng ký:  POST /api/v1/auth/register  {email, password, display_name}
+  Đăng nhập: POST /api/v1/auth/login    {email, password}
+
+Portal tự giữ mật khẩu (Argon2id trong users.password_hash) — không có IdP,
+không SSO, không Authentik (ADR-06 đã thay thế thiết kế OIDC cũ).
+
+Token: access JWT 5 phút (cookie portal_access) + refresh 24h (portal_refresh).
+
+Role tự động khi đăng ký: `user`
+  → gán tại backend/internal/modules/account/handler/auth.go:207
+    h.Users.AssignRoleByCode(ctx, user.ID, "user")
+
+Cây role (con kế thừa toàn bộ quyền của cha), seed ở migration 0003_account_rbac:
+  guest → user → creator → editor → moderator → admin → superadmin
+
+Hệ quả cần biết:
+  - `user` CHỈ đọc được (movies:read / music:read / comics:read / stories:read).
+  - Muốn tạo nội dung (tab "Của tôi", thêm truyện/bài hát) phải là `creator`
+    trở lên — vì POST /tracks và GET /tracks/mine cần `music:write:own`.
+  - Muốn vào /admin/queues phải là `admin` (quyền queues:read, seed ở 0012).
+
+Nâng quyền: chưa có UI. Phải INSERT thủ công vào bảng `user_roles`
+(user_id, role_id, granted_by, expires_at) — xem query/rbac.sql:91.
+Sau khi đổi role nhớ bump users.token_version để cache quyền hết hạn ngay
+(khoá cache là rbac:perms:<userID>:v<N>).
+
+
+── TÀI KHOẢN DỊCH VỤ (mật khẩu xem .env, KHÔNG chép vào đây) ───────────────────
+
+  Dịch vụ              User đăng nhập   Biến chứa mật khẩu
+  ───────────────────  ───────────────  ─────────────────────────────────
+  Postgres (app)       portal_app       DATABASE_URL         ← role RLS, NOSUPERUSER
+  Postgres (owner)     portal           POSTGRES_PASSWORD / BACKUP_DATABASE_URL
+  MinIO console        portal           MINIO_ROOT_PASSWORD
+  MinIO/S3 API         S3_ACCESS_KEY    S3_SECRET_KEY
+  Mailpit              —                không cần đăng nhập
+  Traefik dashboard    —                không có auth (chỉ nên mở ở local)
+
+Postgres chạy trên HOST (PG 18), không nằm trong docker-compose:
+  host.docker.internal:5432, db `portal`
+  (service postgres/pgbouncer trong docker-compose.yml đã bị comment)
+
+⚠️  DATABASE_URL đang trỏ user `portal_app` (đã cutover RLS 2026-08-25).
+    Muốn rollback thì đổi lại thành `portal` — xem docs/guides/rls-cutover.md.
+⚠️  POSTGRES_HOST=postgres trong .env là giá trị cũ còn sót, không còn dùng;
+    đường kết nối thật lấy từ DATABASE_URL.
+⚠️  COOKIE_SECURE=false đang bật để test bằng điện thoại qua http trong LAN.
+    KHÔNG được để giá trị này khi lên production.

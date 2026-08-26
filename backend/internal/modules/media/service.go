@@ -76,9 +76,17 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	ext := pickExt(filename, contentType)
 	sourceKey := fmt.Sprintf("uploads/%s/original%s", id, ext)
 
+	// `video` is the fallback, not a guess we are confident in: browsers send an
+	// empty content type often enough that defaulting anywhere else would break
+	// the original upload path. `audio` matters because the music vertical
+	// streams the stored original — an audio file misfiled as video would be fed
+	// to the HLS encoder and never show up under ?kind=audio.
 	kind := "video"
-	if strings.HasPrefix(contentType, "image/") {
+	switch {
+	case strings.HasPrefix(contentType, "image/"):
 		kind = "image"
+	case strings.HasPrefix(contentType, "audio/"):
+		kind = "audio"
 	}
 
 	asset, err := s.repo.CreateAsset(ctx, CreateAssetInput{
@@ -180,10 +188,47 @@ func (s *Service) CompleteUpload(ctx context.Context, ownerID, assetID uuid.UUID
 		return err
 	}
 
-	if asset.Kind == "image" {
+	switch asset.Kind {
+	case "image":
 		return s.completeImage(ctx, asset, size)
+	case "audio":
+		return s.completeAudio(ctx, asset, size)
 	}
 	return s.completeVideo(ctx, asset)
+}
+
+// completeAudio marks an audio upload ready as-is — there is no transcode step.
+// The music vertical plays the stored original through GET /assets/{id}/original,
+// so a second encoded copy would cost disk and CPU and buy nothing; `hlsURL`
+// already returns "" for any non-video kind, so no playback URL is implied.
+//
+// The size re-check mirrors completeImage (belt-and-braces behind the presign
+// policy), and `media:asset_ready` is emitted here rather than from a worker
+// because no worker ever sees this asset — without it, audio uploads would be
+// the one kind that silently produces no notification and no life-stream card.
+func (s *Service) completeAudio(ctx context.Context, asset Asset, size int64) error {
+	if size > maxUploadBytes {
+		_ = s.store.Delete(ctx, asset.SourceKey)
+		_ = s.repo.MarkFailed(ctx, asset.ID, "file too large: exceeds the 50 MB limit")
+		return ErrFileTooLarge
+	}
+	// No output prefix, and no probed dimensions — duration is reported by the
+	// browser's own media element at playback time.
+	if err := s.repo.MarkReady(ctx, asset.ID, "", nil, nil, nil); err != nil {
+		return err
+	}
+	if s.events != nil {
+		if err := s.events.Publish(ctx, "media:asset_ready", map[string]any{
+			"asset_id":      asset.ID.String(),
+			"kind":          asset.Kind,
+			"owner_user_id": asset.OwnerID.String(),
+			"title":         asset.Title,
+			"origin":        asset.Origin,
+		}); err != nil {
+			log.Warn().Err(err).Str("asset", asset.ID.String()).Msg("asset_ready: publish failed")
+		}
+	}
+	return nil
 }
 
 func (s *Service) completeImage(ctx context.Context, asset Asset, size int64) error {

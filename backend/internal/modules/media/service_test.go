@@ -918,3 +918,63 @@ func TestContinueItemsPredicate(t *testing.T) {
 		t.Fatalf("limit=0 should default, got %d items", len(got))
 	}
 }
+
+func TestCreateUploadSessionAudioKind(t *testing.T) {
+	svc, _, _, _, _ := newSvc()
+	sess, err := svc.CreateUploadSession(context.Background(), uuid.New(), "song.mp3", "audio/mpeg", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Before the music vertical, audio/* fell through to the video default and
+	// was fed to the HLS transcoder — and never matched a ?kind=audio filter.
+	if sess.Asset.Kind != "audio" {
+		t.Fatalf("kind = %q, want audio", sess.Asset.Kind)
+	}
+}
+
+func TestCompleteUploadAudioReadyWithoutTranscode(t *testing.T) {
+	svc, repo, store, enq, pub := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+
+	sess, _ := svc.CreateUploadSession(ctx, owner, "song.mp3", "audio/mpeg", 1)
+	id := sess.Asset.ID
+	store.obj[sess.Asset.SourceKey] = []byte("ID3")
+
+	if err := svc.CompleteUpload(ctx, owner, id); err != nil {
+		t.Fatal(err)
+	}
+	// Audio is played from the stored original, so it is ready immediately —
+	// no processing limbo, and nothing queued on the heavy transcode pool.
+	if repo.m[id].Status != StatusReady {
+		t.Fatalf("status = %v, want ready", repo.m[id].Status)
+	}
+	if len(enq.tasks) != 0 {
+		t.Fatalf("enqueued %d task(s), want 0", len(enq.tasks))
+	}
+	if repo.m[id].OutputPrefix != "" {
+		t.Fatalf("output prefix = %q, want empty (no HLS for audio)", repo.m[id].OutputPrefix)
+	}
+	// No worker ever sees this asset, so the service must emit asset_ready
+	// itself or audio would be the one kind producing no notification/stream card.
+	if len(pub.events) != 1 || pub.events[0] != "media:asset_ready" {
+		t.Fatalf("events = %v, want [media:asset_ready]", pub.events)
+	}
+}
+
+func TestCompleteUploadAudioTooLarge(t *testing.T) {
+	svc, repo, store, _, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+
+	sess, _ := svc.CreateUploadSession(ctx, owner, "big.wav", "audio/wav", 1)
+	id := sess.Asset.ID
+	store.obj[sess.Asset.SourceKey] = make([]byte, maxUploadBytes+1)
+
+	if err := svc.CompleteUpload(ctx, owner, id); !errors.Is(err, ErrFileTooLarge) {
+		t.Fatalf("err = %v, want ErrFileTooLarge", err)
+	}
+	if repo.m[id].Status != StatusFailed {
+		t.Fatalf("status = %v, want failed", repo.m[id].Status)
+	}
+}

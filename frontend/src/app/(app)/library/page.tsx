@@ -34,6 +34,13 @@ export default function LibraryPage() {
             <h3 className="text-lg font-medium text-white">Comics</h3>
             <p className="text-sm text-gray-400 mt-2">Read comics</p>
           </Link>
+          <Link
+            href={"/library/music" as Route}
+            className="p-6 bg-gray-900 rounded-lg border border-gray-800 hover:bg-gray-800 transition-colors text-center"
+          >
+            <h3 className="text-lg font-medium text-white">Music</h3>
+            <p className="text-sm text-gray-400 mt-2">Listen to tracks</p>
+          </Link>
         </div>
       </section>
     </main>

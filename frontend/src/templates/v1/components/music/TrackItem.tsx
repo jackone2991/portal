@@ -23,13 +23,20 @@ export function TrackItem({
   title,
   artist,
   duration,
+  coverUrl,
   playing = false,
   onPlay,
 }: {
   index: number;
   title: string;
   artist: string;
-  duration: string;
+  /**
+   * Optional: a track's length is NOT on the wire (it lives on the linked audio
+   * asset), so real rows usually omit it and the column simply collapses.
+   */
+  duration?: string;
+  /** Real cover art; falls back to the deterministic seeded gradient. */
+  coverUrl?: string | null;
   playing?: boolean;
   onPlay?: () => void;
 }) {
@@ -49,6 +56,10 @@ export function TrackItem({
         className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-md"
         style={{ background: seedGradient(title + artist) }}
       >
+        {coverUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        )}
         <span
           className={`grid h-full w-full place-items-center bg-black/35 text-white transition ${
             playing ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -70,9 +81,11 @@ export function TrackItem({
         </p>
       </div>
 
-      <time className="shrink-0 text-xs tabular-nums" style={{ color: "var(--tpl-muted)" }}>
-        {duration}
-      </time>
+      {duration && (
+        <time className="shrink-0 text-xs tabular-nums" style={{ color: "var(--tpl-muted)" }}>
+          {duration}
+        </time>
+      )}
 
       <button
         type="button"

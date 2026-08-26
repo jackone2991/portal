@@ -19,7 +19,7 @@ const ITEMS: { icon: string; label: string; href?: Route; active?: boolean }[] =
   { icon: "happy-faces-icon", label: "People", href: "/people" as Route },
   { icon: "albums-icon", label: "Commic", href: "/library/comic" },
   { icon: "happy-faces-icon", label: "Friend Groups" },
-  { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" as Route },
+  { icon: "headphones-icon", label: "Music & Playlists", href: "/library/music" as Route },
   { icon: "weather-icon", label: "Weather App", href: "/weather" as Route },
   { icon: "calendar-icon", label: "Calendar and Events", href: "/calendar" as Route },
   { icon: "badge-icon", label: "Community Badges" },

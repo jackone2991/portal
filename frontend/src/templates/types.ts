@@ -48,6 +48,10 @@ export interface TemplateManifest {
     libraryMedia: ComponentType;
     /** SPEC-07 P0.4 — media player with resume. */
     libraryMediaDetail: ComponentType<{ id: string }>;
+    /** Music vertical — track catalogue ("Thư viện" / "Của tôi"). */
+    libraryMusic: ComponentType;
+    /** Music vertical — one track: metadata, edit, publish, play. */
+    libraryMusicDetail: ComponentType<{ id: string }>;
     /** SPEC-03 §8 — personal ledger (bank): dashboard, transactions, accounts, budgets. */
     bankDashboard: ComponentType;
     bankTransactions: ComponentType;

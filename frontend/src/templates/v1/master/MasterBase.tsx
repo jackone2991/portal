@@ -12,6 +12,8 @@ import { SvgSprite } from "../components/footers/SvgSprite";
 import { UpdateHeaderPhoto } from "../components/popup/UpdateHeaderPhoto";
 import { ChoseFromMyPhoto } from "../components/popup/ChoseFromMyPhoto";
 import { ChatResponsive } from "../components/popup/ChatResponsive";
+import { MusicPlayerProvider } from "../components/music/MusicPlayerProvider";
+import { NowPlayingBar, NowPlayingSpacer } from "../components/music/NowPlayingBar";
 
 /**
  * Authenticated app shell — port of `master/master-base.blade.php` (Olympus).
@@ -35,6 +37,7 @@ export function MasterBase({ children }: ShellProps) {
   } as CSSProperties;
 
   return (
+    <MusicPlayerProvider>
     <div data-template="v1" className="min-h-screen" style={rootStyle}>
       <HelloPreloader />
       <SessionKeeper />
@@ -50,15 +53,20 @@ export function MasterBase({ children }: ShellProps) {
         className="min-h-screen transition-[padding] duration-200 xl:pl-[var(--tpl-sidebar-cur)] xl:pr-[var(--tpl-rightbar-cur)]"
         style={{ paddingTop: "var(--tpl-header-h)", color: "var(--tpl-text)" }}
       >
-        <div className="mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5">{children}</div>
+        <div className="mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5">
+          {children}
+          <NowPlayingSpacer />
+        </div>
       </main>
 
       {/* floating + modals */}
+      <NowPlayingBar />
       <GoToTop />
       <UpdateHeaderPhoto />
       <ChoseFromMyPhoto />
       <ChatResponsive />
       <SvgSprite />
     </div>
+    </MusicPlayerProvider>
   );
 }
