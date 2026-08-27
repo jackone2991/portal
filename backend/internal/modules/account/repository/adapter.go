@@ -247,9 +247,11 @@ func (a *Adapter) WriteAuditEvent(ctx context.Context, in audit.WriteEventInput)
 		Action:     in.Action,
 		TargetKind: in.TargetKind,
 		TargetID:   in.TargetID,
-		Metadata:   in.Metadata,
-		Ip:         ipToAddr(in.IP),
-		UserAgent:  strPtrOrNil(in.UserAgent),
+		// string, not []byte: the query casts $8::text::jsonb precisely so pgx
+		// sends this as text under QueryExecModeExec (see the query comment).
+		Metadata:  string(in.Metadata),
+		Ip:        ipToAddr(in.IP),
+		UserAgent: strPtrOrNil(in.UserAgent),
 	})
 }
 

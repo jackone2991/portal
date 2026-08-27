@@ -351,19 +351,31 @@ func (a *Adapter) StartImport(ctx context.Context, id uuid.UUID, total int) erro
 }
 
 // UpdateImportProgress / FinishImport pass the report json as TEXT (not []byte):
-// under QueryExecModeExec pgx encodes []byte as bytea, which a jsonb column rejects.
+// under QueryExecModeExec pgx encodes []byte as bytea, which a jsonb column
+// rejects. The queries now cast ::text::jsonb so sqlc types the param as string,
+// which is why these can use the generated methods instead of raw SQL.
 func (a *Adapter) UpdateImportProgress(ctx context.Context, id uuid.UUID, succeeded, failed int, report []comic.ImportFileResult) error {
-	b, _ := json.Marshal(report)
-	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET succeeded=$2, failed=$3, report=$4::jsonb, updated_at=now() WHERE id=$1`,
-		pgUUID(id), int32(succeeded), int32(failed), string(b))
-	return err
+	return a.q.UpdateImportProgress(ctx, UpdateImportProgressParams{
+		ID: pgUUID(id), Succeeded: int32(succeeded), Failed: int32(failed), Report: reportText(report),
+	})
 }
 
 func (a *Adapter) FinishImport(ctx context.Context, id uuid.UUID, status string, succeeded, failed int, report []comic.ImportFileResult, errMsg *string) error {
-	b, _ := json.Marshal(report)
-	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET status=$2, succeeded=$3, failed=$4, report=$5::jsonb, error=$6, updated_at=now() WHERE id=$1`,
-		pgUUID(id), status, int32(succeeded), int32(failed), string(b), errMsg)
-	return err
+	return a.q.FinishImport(ctx, FinishImportParams{
+		ID: pgUUID(id), Status: status, Succeeded: int32(succeeded), Failed: int32(failed),
+		Report: reportText(report), Error: errMsg,
+	})
+}
+
+// reportText marshals the per-file results for the jsonb column. A marshal
+// failure degrades to an empty array rather than losing the whole progress
+// write — the report is diagnostic, the counters are not.
+func reportText(report []comic.ImportFileResult) string {
+	b, err := json.Marshal(report)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
 }
 
 // ── sync sources (P1.8) — raw queries (no sqlc for this table) ─────────

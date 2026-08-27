@@ -133,15 +133,17 @@ func toNotification(r Notification) notify.Notification {
 	}
 }
 
-func marshalData(m map[string]any) []byte {
+// marshalData returns a string, not []byte: under QueryExecModeExec pgx sends a
+// []byte as bytea, which the jsonb column rejects (SQLSTATE 22P02).
+func marshalData(m map[string]any) string {
 	if len(m) == 0 {
-		return []byte("{}")
+		return "{}"
 	}
 	b, err := json.Marshal(m)
 	if err != nil {
-		return []byte("{}")
+		return "{}"
 	}
-	return b
+	return string(b)
 }
 
 func unmarshalData(b []byte) map[string]any {

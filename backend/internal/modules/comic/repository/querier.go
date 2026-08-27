@@ -56,8 +56,11 @@ type Querier interface {
 	UpdateChapterOrder(ctx context.Context, arg UpdateChapterOrderParams) error
 	UpdateComic(ctx context.Context, arg UpdateComicParams) (Comic, error)
 	UpdateComicStatus(ctx context.Context, arg UpdateComicStatusParams) (Comic, error)
-	// report is cast ::jsonb — under QueryExecModeExec pgx sends []byte untyped, so the
-	// explicit cast is what makes Postgres parse it as json (same as the journal stream).
+	// report is cast text->jsonb so sqlc types the param as a Go string. The pool runs
+	// QueryExecModeExec (platform/db): pgx derives the wire OID from the Go type, so a
+	// []byte goes out as bytea and the jsonb column rejects it (SQLSTATE 22P02). The
+	// cast in SQL is not what saves this — a bare ::jsonb with a []byte param still
+	// fails; the cast exists to make sqlc emit `string`.
 	UpdateImportProgress(ctx context.Context, arg UpdateImportProgressParams) error
 	UpdatePageOrder(ctx context.Context, arg UpdatePageOrderParams) error
 	// ══ Reading progress (P0.4) ═════════════════════════════════════════════

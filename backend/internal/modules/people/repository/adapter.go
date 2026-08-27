@@ -36,7 +36,7 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 		p.BirthCalendar = in.Birthday.Calendar
 	}
 	if len(in.Contact) > 0 {
-		p.Contact = []byte(in.Contact)
+		p.Contact = contactText(in.Contact) // text, not []byte — see contactText
 	}
 	row, err := a.q.CreatePerson(ctx, p)
 	if err != nil {
@@ -79,7 +79,7 @@ func (a *Adapter) UpdatePerson(ctx context.Context, in people.UpdatePersonInput)
 		UserID:          pgUUID(in.UserID),
 	}
 	if len(in.Contact) > 0 {
-		p.Contact = []byte(in.Contact)
+		p.Contact = contactText(in.Contact) // text, not []byte — see contactText
 	}
 	if in.SetBirthday && in.Birthday != nil {
 		p.BirthMonth = i32p(in.Birthday.Month)
@@ -214,4 +214,12 @@ func i32ToIntP(p *int32) *int {
 	}
 	x := int(*p)
 	return &x
+}
+
+// contactText hands the contact json to pgx as text. Under QueryExecModeExec pgx
+// picks the wire OID from the Go type, so a []byte would go out as bytea and the
+// jsonb column would reject it with SQLSTATE 22P02.
+func contactText(c json.RawMessage) *string {
+	s := string(c)
+	return &s
 }

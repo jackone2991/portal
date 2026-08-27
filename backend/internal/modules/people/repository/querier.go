@@ -17,6 +17,11 @@ type Querier interface {
 	// Owner-scoped. Birthday is month/day + optional year; the notices table is the
 	// daily scan's outbox/dedup (P0.4).
 	// ══ Persons ═════════════════════════════════════════════════════════════
+	// jsonb params are cast text->jsonb so sqlc types them as Go strings. The pool
+	// runs QueryExecModeExec (platform/db): pgx picks the wire OID from the Go type
+	// without describing params, so a []byte goes out as bytea and the jsonb column
+	// rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
+	// the Go param type does; the cast is here to make sqlc emit `string`.
 	CreatePerson(ctx context.Context, arg CreatePersonParams) (PeoplePerson, error)
 	// On a birthday edit/clear, drop current + future notices so a corrected date
 	// can fire fresh this year (P0.2). Past years' history stays.

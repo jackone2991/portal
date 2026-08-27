@@ -26,13 +26,16 @@ SET status = 'processing', total = $2, updated_at = now()
 WHERE id = $1;
 
 -- name: UpdateImportProgress :exec
--- report is cast ::jsonb — under QueryExecModeExec pgx sends []byte untyped, so the
--- explicit cast is what makes Postgres parse it as json (same as the journal stream).
+-- report is cast text->jsonb so sqlc types the param as a Go string. The pool runs
+-- QueryExecModeExec (platform/db): pgx derives the wire OID from the Go type, so a
+-- []byte goes out as bytea and the jsonb column rejects it (SQLSTATE 22P02). The
+-- cast in SQL is not what saves this — a bare ::jsonb with a []byte param still
+-- fails; the cast exists to make sqlc emit `string`.
 UPDATE comic_imports
-SET succeeded = $2, failed = $3, report = sqlc.arg('report')::jsonb, updated_at = now()
+SET succeeded = $2, failed = $3, report = sqlc.arg('report')::text::jsonb, updated_at = now()
 WHERE id = $1;
 
 -- name: FinishImport :exec
 UPDATE comic_imports
-SET status = $2, succeeded = $3, failed = $4, report = sqlc.arg('report')::jsonb, error = sqlc.narg('error'), updated_at = now()
+SET status = $2, succeeded = $3, failed = $4, report = sqlc.arg('report')::text::jsonb, error = sqlc.narg('error'), updated_at = now()
 WHERE id = $1;

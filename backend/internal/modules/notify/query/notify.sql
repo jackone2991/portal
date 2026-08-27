@@ -1,6 +1,11 @@
 -- notify module queries (SPEC-04). sqlc input only — regenerate with `make sqlc`;
 -- never hand-edit the *.sql.go output.
 
+-- jsonb params are cast text->jsonb so sqlc types them as Go strings. The pool
+-- runs QueryExecModeExec (platform/db): pgx picks the wire OID from the Go type
+-- without describing params, so a []byte goes out as bytea and the jsonb column
+-- rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
+-- the Go param type does; the cast is here to make sqlc emit `string`.
 -- name: InsertNotification :one
 -- Insert an in-app notification. When @dedup_key is present the partial unique
 -- index (user_id, type, dedup_key) WHERE dedup_key IS NOT NULL makes a redelivered
@@ -8,7 +13,7 @@
 -- "conflict" (inserted=false) so channel fan-out is skipped too. A NULL dedup_key
 -- never conflicts (the index excludes it) and always inserts.
 INSERT INTO notifications (user_id, type, title, body, data, dedup_key)
-VALUES ($1, $2, $3, sqlc.narg('body'), $4, sqlc.narg('dedup_key'))
+VALUES ($1, $2, $3, sqlc.narg('body'), sqlc.arg('data')::text::jsonb, sqlc.narg('dedup_key'))
 ON CONFLICT (user_id, type, dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING
 RETURNING *;
 

@@ -17,6 +17,11 @@ type Querier interface {
 	GetNotificationPreference(ctx context.Context, arg GetNotificationPreferenceParams) (GetNotificationPreferenceRow, error)
 	// notify module queries (SPEC-04). sqlc input only — regenerate with `make sqlc`;
 	// never hand-edit the *.sql.go output.
+	// jsonb params are cast text->jsonb so sqlc types them as Go strings. The pool
+	// runs QueryExecModeExec (platform/db): pgx picks the wire OID from the Go type
+	// without describing params, so a []byte goes out as bytea and the jsonb column
+	// rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
+	// the Go param type does; the cast is here to make sqlc emit `string`.
 	// Insert an in-app notification. When @dedup_key is present the partial unique
 	// index (user_id, type, dedup_key) WHERE dedup_key IS NOT NULL makes a redelivered
 	// dispatch a no-op: DO NOTHING returns zero rows, which the adapter reads as

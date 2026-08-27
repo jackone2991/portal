@@ -4,12 +4,17 @@
 
 -- ══ Persons ═════════════════════════════════════════════════════════════
 
+-- jsonb params are cast text->jsonb so sqlc types them as Go strings. The pool
+-- runs QueryExecModeExec (platform/db): pgx picks the wire OID from the Go type
+-- without describing params, so a []byte goes out as bytea and the jsonb column
+-- rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
+-- the Go param type does; the cast is here to make sqlc emit `string`.
 -- name: CreatePerson :one
 INSERT INTO people_persons (
     user_id, display_name, relationship, birth_month, birth_day, birth_year, birth_calendar, contact, note_md
 ) VALUES (
     $1, $2, sqlc.narg('relationship'), sqlc.narg('birth_month'), sqlc.narg('birth_day'),
-    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::jsonb, '{}'::jsonb), sqlc.narg('note_md')
+    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::text::jsonb, '{}'::jsonb), sqlc.narg('note_md')
 )
 RETURNING *;
 
@@ -33,7 +38,7 @@ UPDATE people_persons SET
     display_name   = COALESCE(sqlc.narg('display_name'), display_name),
     relationship   = CASE WHEN @set_relationship::boolean THEN sqlc.narg('relationship') ELSE relationship END,
     note_md        = CASE WHEN @set_note::boolean THEN sqlc.narg('note_md') ELSE note_md END,
-    contact        = COALESCE(sqlc.narg('contact'), contact),
+    contact        = COALESCE(sqlc.narg('contact')::text::jsonb, contact),
     birth_month    = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_month') ELSE birth_month END,
     birth_day      = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_day') ELSE birth_day END,
     birth_year     = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_year') ELSE birth_year END,

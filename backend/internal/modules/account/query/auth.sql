@@ -101,9 +101,13 @@ WHERE expires_at < now() - INTERVAL '30 days';
 -- ── Audit log ─────────────────────────────────────────────────────
 
 -- name: WriteAuditEvent :exec
+-- metadata is cast text->jsonb so sqlc types the param as a Go string. The pool
+-- runs QueryExecModeExec (platform/db), where pgx picks the wire OID from the Go
+-- type without describing params: a []byte goes out as bytea, which a jsonb
+-- column rejects with SQLSTATE 22P02. Sending text lets Postgres parse the JSON.
 INSERT INTO audit_log (
     actor_id, actor_kind, action, target_kind, target_id, metadata, ip, user_agent
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+) VALUES ($1, $2, $3, $4, $5, sqlc.arg('metadata')::text::jsonb, $6, $7);
 
 -- name: ListAuditEvents :many
 SELECT * FROM audit_log

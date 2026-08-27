@@ -75,6 +75,10 @@ type Querier interface {
 	SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
 	// ── Audit log ─────────────────────────────────────────────────────
+	// metadata is cast text->jsonb so sqlc types the param as a Go string. The pool
+	// runs QueryExecModeExec (platform/db), where pgx picks the wire OID from the Go
+	// type without describing params: a []byte goes out as bytea, which a jsonb
+	// column rejects with SQLSTATE 22P02. Sending text lets Postgres parse the JSON.
 	WriteAuditEvent(ctx context.Context, arg WriteAuditEventParams) error
 }
 
