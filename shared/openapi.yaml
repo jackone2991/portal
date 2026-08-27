@@ -23,9 +23,14 @@ info:
     the OIDC/Authentik login + `/auth/callback` flow was removed.
 
 servers:
-  - url: https://api.portal.localhost
+  # Every path below is written WITHOUT the `/api/v1` prefix, so the prefix
+  # belongs here — `cmd/api` mounts the whole surface under `r.Route("/api/v1")`.
+  # (`/healthz` is additionally exposed at the root for container probes; the
+  # `/api/v1` copy is the same handler.) Getting this wrong makes "Try it out"
+  # in any spec viewer hit a 404 on everything.
+  - url: https://api.portal.localhost/api/v1
     description: Local dev (via Traefik)
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api/v1
     description: Direct (no proxy)
 
 tags:
