@@ -15,6 +15,15 @@ type Querier interface {
 	// CreatePersonalOrg is idempotent: the unique partial index
 	// organizations_personal_owner_idx (0018) makes a concurrent second call a
 	// no-op (ON CONFLICT DO NOTHING → zero rows → caller re-fetches).
+	//
+	// $1 is pinned ::uuid in BOTH uses on purpose. The pool runs QueryExecModeExec
+	// (platform/db), so pgx does not describe parameters and Postgres has to infer
+	// $1's type from the statement itself. A bare `$1::text` for the slug pinned the
+	// inference to text, and the same $1 then hit the uuid `owner_id` column —
+	// `column "owner_id" is of type uuid but expression is of type text`
+	// (SQLSTATE 42804), which made every first request by a new user 500 with
+	// "could not resolve tenant". Casting uuid->text for the slug keeps one
+	// unambiguous param type.
 	CreatePersonalOrg(ctx context.Context, arg CreatePersonalOrgParams) (Organization, error)
 	// Tenant control-plane queries (ADR-07 Phase 1). These tables are NOT
 	// tenant-scoped (no RLS), so they run on the pool directly during tenant
