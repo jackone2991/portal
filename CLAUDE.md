@@ -112,7 +112,7 @@ A child inherits **every** ancestor's permissions. Effective permission set is t
 Never check permissions ad-hoc. Always go through `rbac.Engine.Authorize` / `rbac.Engine.AuthorizeOwnerOr`, or the middleware wrappers `RequirePermission` / `RequireOwnerOrPermission` / `RequireRole` from [backend/internal/modules/account/middleware/](backend/internal/modules/account/middleware/). Direct slice scans in handlers are the wrong layer.
 
 ### Audit log is best-effort, never blocking
-[backend/internal/modules/account/audit/logger.go](backend/internal/modules/account/audit/logger.go) logs and swallows errors — a DB hiccup must not abort the user request. If audit reliability becomes load-bearing, route through Asynq with a dedicated queue. Don't make handlers depend on the return value.
+[backend/internal/platform/audit/logger.go](backend/internal/platform/audit/logger.go) logs and swallows errors — a DB hiccup must not abort the user request. If audit reliability becomes load-bearing, route through Asynq with a dedicated queue. Don't make handlers depend on the return value.
 
 ## Current status
 

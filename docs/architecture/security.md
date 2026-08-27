@@ -375,7 +375,7 @@ This same pattern (`requireStepUp`) wraps every other destructive op:
 
 ### 5.1 Audit  *([BUILT] core; UI [PLANNED])*
 
-Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/modules/account/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
+Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/platform/audit/logger.go). Action codes are dotted `<module>.<resource>.<action>`, e.g. `account.session.login`, `account.role.granted` — the legacy `auth.*`/`rbac.*`/`user.*` codes were renamed per [D-25]; the constants in that file are canonical. **Failures are loud but non-blocking** for the user request.
 
 Add for multi-tenancy: every audit row carries `organization_id` (NULL for system events). Migration delta:
 

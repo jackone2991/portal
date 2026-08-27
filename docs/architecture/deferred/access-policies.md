@@ -254,7 +254,7 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Append-only audit log table | [BUILT] | Migration 0002 |
-| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/modules/account/audit/logger.go) |
+| Audit logger best-effort writes | [BUILT] | [audit/logger.go](../../backend/internal/platform/audit/logger.go) |
 | Audit viewer UI (table + filters) | [PLANNED] | Restricted to `audit:read` |
 | Export audit range (CSV/JSON) | [PLANNED] | Async job — large ranges shouldn't tie up the API |
 | Retention policy & archival to cold storage | [PLANNED] | Cloudflare R2 archive bucket |

@@ -536,7 +536,7 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Realtime** (SSE + WebSocket, Dragonfly pub/sub backplane) — `internal/platform/realtime/` ○. [D-3]
 - **Mail** (SMTP) — `internal/platform/mail/` ○. [D-4]
 - **Observability** (OTel SDK, Prometheus `/metrics`, Sentry/GlitchTip init) — `internal/platform/observability/` ○. [D-8]
-- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ○ *(table shipped as migration `0005_platform_audit`; the Go package move `account/audit` → `platform/audit` is still pending)*. [D-25]
+- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ● *(table shipped as migration `0005_platform_audit`; the Go package move `account/audit` → `platform/audit` is done — the stale duplicate under `account/` was deleted 2026-08-27)*. [D-25]
 - **Middleware** — rate limit ✓ (`ratelimit.go`), request ID, logging, recovery, **tenant URL-prefix resolver** [D-23].
 - **Reverse proxy** — Traefik v3 routes via `docker-compose.yml` labels.
 
