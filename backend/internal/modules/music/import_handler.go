@@ -135,3 +135,48 @@ func nilIfBlank(s string) any {
 	}
 	return s
 }
+
+// ── enrichment ─────────────────────────────────────────────────────────────
+
+// POST /tracks/{id}/enrich — fill in cover art and any missing tags.
+//
+// 202, not 200: the work happens on the worker (ffmpeg extraction plus a wait
+// for the image pipeline). Poll the track; `cover_asset_id` appears when it is
+// done. Deliberately a separate call from the import so a bulk import stays fast.
+func (h *Handler) EnrichTrack(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		server.NotFound(w, server.ProblemType("music", "not_found"), "track not found")
+		return
+	}
+	if err := h.svc.EnqueueEnrich(r.Context(), id, uid); err != nil {
+		writeMusicErr(w, err)
+		return
+	}
+	server.JSON(w, http.StatusAccepted, map[string]any{"queued": 1})
+}
+
+// POST /tracks/imports/{id}/enrich — the same, for every track a job created.
+//
+// One call instead of N: after importing three hundred tracks, asking the client
+// to fire three hundred requests would be a worse API than the import it follows.
+func (h *Handler) EnrichImport(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	id, ok := h.importID(w, r)
+	if !ok {
+		return
+	}
+	queued, err := h.svc.EnqueueEnrichForImport(r.Context(), id, uid)
+	if err != nil {
+		writeMusicErr(w, err)
+		return
+	}
+	server.JSON(w, http.StatusAccepted, map[string]any{"queued": queued})
+}

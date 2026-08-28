@@ -123,6 +123,9 @@ type MediaAPI interface {
 	// Ingest runs the same three-step pipeline a browser upload does. Only the
 	// worker side wires it; the API server never imports.
 	Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+	// OpenOriginal re-reads an uploaded file. The enrichment pass needs it to
+	// pull the cover art out of an audio asset after the import committed.
+	OpenOriginal(ctx context.Context, ownerID, assetID uuid.UUID) (io.ReadCloser, string, error)
 }
 
 // Storage is the object store the zip lands in. API side puts, worker side gets

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/portal/backend/internal/modules/people"
@@ -44,6 +45,14 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 	}
 	row, err := a.q.CreatePerson(ctx, p)
 	if err != nil {
+		// 0035's people_persons_linked_user_idx: this portal account is already
+		// in the caller's registry. Adding the same suggestion twice is a
+		// duplicate, not a server fault — the migration promises it is a no-op
+		// at the database, and this is what makes that true for the client.
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return people.Person{}, people.ErrDuplicate
+		}
 		return people.Person{}, err
 	}
 	return toPerson(row), nil

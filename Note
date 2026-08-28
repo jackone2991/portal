@@ -51,6 +51,11 @@ Truy cập trực tiếp / qua LAN (không qua Traefik):
                                         cả nghệ sĩ + album). Zip: tối đa 4 GB /
                                         2000 bài / 512 MB mỗi tệp; ảnh bìa và tệp
                                         lạ bị bỏ qua, không tính lỗi.
+                                        Ảnh bìa nhúng KHÔNG lấy lúc nhập (chậm) —
+                                        nhập xong bấm "Lấy ảnh bìa & thông tin còn
+                                        thiếu" (POST /tracks/imports/{id}/enrich,
+                                        hoặc /tracks/{id}/enrich cho 1 bài). Chỉ
+                                        điền chỗ trống, không ghi đè thứ đã có.
   /admin/layout                         Sửa menu trái + widget trang chủ
                                         (cần `system:settings:write`, role admin có sẵn)
                                         Menu: thêm/sửa/xoá/đổi thứ tự/ẩn thoải mái —

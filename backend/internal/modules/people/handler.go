@@ -270,6 +270,8 @@ func writePeopleErr(w http.ResponseWriter, err error) {
 		server.Problem(w, http.StatusUnprocessableEntity, "people/invalid-birthday", "Invalid birthday", "month and day must be a real date; year (if given) 1900..now")
 	case errors.Is(err, ErrValidation):
 		server.Problem(w, http.StatusUnprocessableEntity, "people/validation", "Validation error", "the request is invalid")
+	case errors.Is(err, ErrDuplicate):
+		server.Problem(w, http.StatusConflict, "people/already-in-registry", "Conflict", "this account is already in your registry")
 	case errors.Is(err, ErrBadCursor):
 		server.Problem(w, http.StatusBadRequest, "people/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:

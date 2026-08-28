@@ -13,7 +13,10 @@ var (
 	ErrNotFound        = errors.New("people: person not found")
 	ErrInvalidBirthday = errors.New("people: invalid birthday")
 	ErrValidation      = errors.New("people: validation error")
-	ErrBadCursor       = errors.New("people: invalid cursor")
+	// ErrDuplicate is the 0035 unique on (user_id, linked_user_id): this portal
+	// account is already in the caller's registry.
+	ErrDuplicate = errors.New("people: already in your registry")
+	ErrBadCursor = errors.New("people: invalid cursor")
 )
 
 const (

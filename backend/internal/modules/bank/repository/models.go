@@ -266,18 +266,25 @@ type MusicImport struct {
 }
 
 type MusicTrack struct {
-	ID           pgtype.UUID        `json:"id"`
-	OwnerUserID  pgtype.UUID        `json:"owner_user_id"`
-	TenantID     pgtype.UUID        `json:"tenant_id"`
-	Title        string             `json:"title"`
-	Artist       *string            `json:"artist"`
-	Album        *string            `json:"album"`
-	Description  *string            `json:"description"`
-	AudioAssetID pgtype.UUID        `json:"audio_asset_id"`
-	CoverAssetID pgtype.UUID        `json:"cover_asset_id"`
-	Status       string             `json:"status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	OwnerUserID   pgtype.UUID        `json:"owner_user_id"`
+	TenantID      pgtype.UUID        `json:"tenant_id"`
+	Title         string             `json:"title"`
+	Artist        *string            `json:"artist"`
+	Album         *string            `json:"album"`
+	Description   *string            `json:"description"`
+	AudioAssetID  pgtype.UUID        `json:"audio_asset_id"`
+	CoverAssetID  pgtype.UUID        `json:"cover_asset_id"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ReleaseYear   *int32             `json:"release_year"`
+	Genre         *string            `json:"genre"`
+	MbRecordingID pgtype.UUID        `json:"mb_recording_id"`
+	MbReleaseID   pgtype.UUID        `json:"mb_release_id"`
+	LookupStatus  string             `json:"lookup_status"`
+	LookupNote    *string            `json:"lookup_note"`
+	LookupAt      pgtype.Timestamptz `json:"lookup_at"`
 }
 
 type Notification struct {

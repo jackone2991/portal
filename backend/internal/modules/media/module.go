@@ -84,7 +84,7 @@ func New(d Deps) (*Module, error) {
 		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events, worker.RunInTenant(d.RunInUserTenant)),
 		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events, worker.RunInTenant(d.RunInUserTenant)),
 		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo, worker.RunInTenant(d.RunInUserTenant)),
-		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.Ingest),
+		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.Ingest, svc.DownloadOriginal),
 	}, nil
 }
 

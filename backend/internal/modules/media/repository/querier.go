@@ -59,10 +59,15 @@ type Querier interface {
 	MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) error
 	// P0.3 soft-delete tombstone: excluded from listings until the purge removes it.
 	SetAssetStatusDeleting(ctx context.Context, id pgtype.UUID) error
-	// Flip an asset between 'private' and 'public' (0032). No owner predicate here
-	// on purpose: the UPDATE policy already restricts this to the owner or a tenant
-	// admin, so a row the caller may not touch simply does not exist for them and
-	// this returns no rows.
+	// Flip an asset between 'private' and 'public' (0032).
+	//
+	// The owner predicate is belt AND braces. The 0032 UPDATE policy already
+	// restricts this to the owner or a tenant admin — but FORCE RLS is inert while
+	// DATABASE_URL runs as the superuser `portal`, which is still what .env.example
+	// ships (see its "RLS cutover" section). This is the one write that can make a
+	// private file world-readable; it must not depend on a deployment flag being
+	// flipped. Tenant admins lose the ability to publish someone else's asset here,
+	// which is the right trade for a statement this sharp.
 	SetAssetVisibility(ctx context.Context, arg SetAssetVisibilityParams) (Asset, error)
 	UpsertPlaybackProgress(ctx context.Context, arg UpsertPlaybackProgressParams) error
 }

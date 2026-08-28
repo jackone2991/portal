@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/google/uuid"
@@ -169,4 +170,89 @@ var errNotImplementedInFake = errors.New("music: import not implemented in this 
 // asset references, so the fake declines rather than pretends.
 func (f *fakeMedia) Ingest(context.Context, uuid.UUID, string, string, []byte) (uuid.UUID, error) {
 	return uuid.Nil, errNotImplementedInFake
+}
+
+// MediaAPI also gained OpenOriginal, for the enrichment pass that re-reads an
+// audio file to pull the cover art out of it.
+func (f *fakeMedia) OpenOriginal(context.Context, uuid.UUID, uuid.UUID) (io.ReadCloser, string, error) {
+	return nil, "", errNotImplementedInFake
+}
+
+/* ── enrichment ───────────────────────────────────────────────────── */
+
+// Enrichment runs long after the import, so anything already on the track may be
+// something the user typed. Overwriting it with whatever the file's tags happen
+// to say would be worse than adding nothing at all.
+
+func str(s string) *string { return &s }
+
+func TestEnrichPatchFillsOnlyEmptyFields(t *testing.T) {
+	cover := uuid.New()
+	tags := map[string]string{"artist": "From Tags", "album": "Tag Album"}
+
+	// Everything already set: nothing to do, and above all nothing to replace.
+	full := Track{ID: uuid.New(), Artist: str("Typed"), Album: str("Typed Album"), CoverAssetID: &cover}
+	if _, changed := enrichPatch(full, tags, &cover); changed {
+		t.Error("enrichPatch reported a change on a fully populated track")
+	}
+
+	// Empty artist gets filled; a set album is left alone.
+	partial := Track{ID: uuid.New(), Album: str("Typed Album")}
+	patch, changed := enrichPatch(partial, tags, nil)
+	if !changed {
+		t.Fatal("enrichPatch = no change, want the empty artist filled")
+	}
+	if !patch.SetArtist || patch.Artist == nil || *patch.Artist != "From Tags" {
+		t.Errorf("artist not filled from tags: %+v", patch)
+	}
+	if patch.SetAlbum {
+		t.Error("album was overwritten — enrichment must never replace an existing value")
+	}
+}
+
+// An empty string counts as empty, not as a value worth preserving: a track
+// whose artist is "" is one nobody has filled in.
+func TestEnrichPatchTreatsBlankAsMissing(t *testing.T) {
+	patch, changed := enrichPatch(
+		Track{ID: uuid.New(), Artist: str("")},
+		map[string]string{"artist": "From Tags"},
+		nil,
+	)
+	if !changed || !patch.SetArtist {
+		t.Errorf("blank artist not treated as missing: %+v", patch)
+	}
+}
+
+func TestEnrichPatchAttachesACoverOnlyWhenThereIsNone(t *testing.T) {
+	existing, found := uuid.New(), uuid.New()
+
+	patch, changed := enrichPatch(Track{ID: uuid.New()}, nil, &found)
+	if !changed || !patch.SetCover || patch.CoverAssetID == nil || *patch.CoverAssetID != found {
+		t.Errorf("cover not attached to a track without one: %+v", patch)
+	}
+
+	if _, changed := enrichPatch(Track{ID: uuid.New(), CoverAssetID: &existing}, nil, &found); changed {
+		t.Error("an existing cover was replaced")
+	}
+}
+
+// A file with no art and no tags leaves the track exactly as it was — the common
+// case, and it must not produce a pointless write.
+func TestEnrichPatchIsANoOpWithNothingToAdd(t *testing.T) {
+	if _, changed := enrichPatch(Track{ID: uuid.New()}, nil, nil); changed {
+		t.Error("enrichPatch reported a change with no tags and no cover")
+	}
+}
+
+func TestCoverMimeMatchesTheExtractedExtension(t *testing.T) {
+	for ext, want := range map[string]string{
+		".jpg":  "image/jpeg",
+		".png":  "image/png",
+		".webp": "image/webp",
+		"":      "image/jpeg", // ffmpeg's default for an attached picture
+	} {
+		if got := coverMime(ext); got != want {
+			t.Errorf("coverMime(%q) = %q, want %q", ext, got, want)
+		}
+	}
 }

@@ -74,6 +74,10 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.DeleteTrackMW)).Delete("/{id}", m.handler.DeleteTrack)
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/publish", m.handler.Publish)
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/unpublish", m.handler.Unpublish)
+		// Enrichment is a write to the caller's own track, gated like editing it.
+		if m.deps.Enqueuer != nil {
+			r.With(m.guard(m.deps.WriteTrackMW)).Post("/{id}/enrich", m.handler.EnrichTrack)
+		}
 
 		// Bulk zip import (0038). Mounted only where storage + queue exist, so a
 		// binary without them has no dead routes. Everything is owner-scoped in
@@ -86,6 +90,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 				r.Get("/", m.handler.ListImports)
 				r.Get("/{id}", m.handler.GetImport)
 				r.Put("/{id}/upload", m.handler.UploadImportZip)
+				r.Post("/{id}/enrich", m.handler.EnrichImport)
 			})
 		}
 	})
@@ -94,6 +99,24 @@ func (m *Module) MountHTTP(r chi.Router) {
 func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(musicapi.TaskOnAssetDeleted, m.handleAssetDeleted)
 	mux.HandleFunc(musicapi.TaskImportZip, m.handleImportZip)
+	mux.HandleFunc(musicapi.TaskEnrichTrack, m.handleEnrichTrack)
+}
+
+// handleEnrichTrack is the music:enrich_track worker task (0038).
+func (m *Module) handleEnrichTrack(ctx context.Context, t *asynq.Task) error {
+	var p musicapi.EnrichTrackPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		return nil
+	}
+	trackID, err := uuid.Parse(p.TrackID)
+	if err != nil {
+		return nil
+	}
+	ownerID, err := uuid.Parse(p.OwnerID)
+	if err != nil {
+		return nil
+	}
+	return m.svc.EnrichTrack(ctx, trackID, ownerID)
 }
 
 // handleImportZip is the music:import_zip worker task (0038).

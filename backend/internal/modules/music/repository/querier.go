@@ -32,6 +32,14 @@ type Querier interface {
 	ListMusicImports(ctx context.Context, arg ListMusicImportsParams) ([]ListMusicImportsRow, error)
 	ListOwnTracks(ctx context.Context, arg ListOwnTracksParams) ([]MusicTrack, error)
 	ListPublishedTracks(ctx context.Context, arg ListPublishedTracksParams) ([]MusicTrack, error)
+	// Tracks the owner has never had looked up. Drives the "look up everything"
+	// action without making the client enumerate its own library.
+	ListTracksNeedingLookup(ctx context.Context, arg ListTracksNeedingLookupParams) ([]MusicTrack, error)
+	// ── Catalogue lookup (0039) ───────────────────────────────────────
+	// Written by the music:lookup_track worker, never by a user. Kept out of
+	// UpdateTrack because these are system fields with their own audit trail
+	// (lookup_status / lookup_note / lookup_at) and no place on an edit form.
+	MarkTrackLookupPending(ctx context.Context, id pgtype.UUID) error
 	// ══ media:asset_deleted consumer ══════════════════════════════════════════
 	// NullAudioByAsset also unpublishes: a published track with no audio is broken.
 	NullAudioByAsset(ctx context.Context, audioAssetID pgtype.UUID) error
@@ -40,6 +48,10 @@ type Querier interface {
 	// picked the job up yet — the client showing "đang xử lý" before anything is
 	// running would be a lie it has to take back.
 	SetMusicImportUpload(ctx context.Context, arg SetMusicImportUploadParams) (SetMusicImportUploadRow, error)
+	// COALESCE on every value field: the lookup FILLS GAPS and never overwrites.
+	// Doing it in SQL rather than in Go keeps the rule true even if a caller passes
+	// a value for a field the track already has.
+	SetTrackLookupResult(ctx context.Context, arg SetTrackLookupResultParams) (MusicTrack, error)
 	StartMusicImport(ctx context.Context, arg StartMusicImportParams) error
 	UpdateTrack(ctx context.Context, arg UpdateTrackParams) (MusicTrack, error)
 	UpdateTrackStatus(ctx context.Context, arg UpdateTrackStatusParams) (MusicTrack, error)

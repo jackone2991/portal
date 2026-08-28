@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
 import {
   createTrack,
+  enrichImport,
   getImport,
   importInFlight,
   importZip,
@@ -297,6 +298,10 @@ function ZipPanel({
 }) {
   const [pct, setPct] = useState<number | null>(null);
   const [job, setJob] = useState<MusicImport | null>(null);
+  // Enrichment is fire-and-forget: the tracks already exist and are playable, so
+  // this only reports that the second pass was asked for. Its results arrive by
+  // covers appearing on the tracks, not through this dialog.
+  const [enriching, setEnriching] = useState<"idle" | "queued" | "working">("idle");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Poll while the worker is unpacking. Cleared on unmount so closing the dialog
@@ -321,9 +326,21 @@ function ZipPanel({
     };
   }, [job, onImported]);
 
+  async function enrich(id: string) {
+    setEnriching("working");
+    try {
+      await enrichImport(id);
+      setEnriching("queued");
+    } catch (e) {
+      setEnriching("idle");
+      onError(message(e, "Không gửi được yêu cầu lấy ảnh bìa."));
+    }
+  }
+
   async function upload(file: File) {
     onError(null);
     setJob(null);
+    setEnriching("idle");
     setPct(0);
     try {
       setJob(await importZip(file, setPct));
@@ -366,13 +383,28 @@ function ZipPanel({
         </Empty>
       )}
 
-      {job && <ImportProgress job={job} />}
+      {job && (
+        <ImportProgress
+          job={job}
+          enriching={enriching}
+          onEnrich={() => void enrich(job.id)}
+        />
+      )}
     </>
   );
 }
 
-function ImportProgress({ job }: { job: MusicImport }) {
+function ImportProgress({
+  job,
+  enriching,
+  onEnrich,
+}: {
+  job: MusicImport;
+  enriching: "idle" | "queued" | "working";
+  onEnrich: () => void;
+}) {
   const pct = job.total > 0 ? Math.round(((job.succeeded + job.failed) / job.total) * 100) : 0;
+  const finished = !importInFlight(job) && job.succeeded > 0;
 
   return (
     <div>
@@ -409,6 +441,38 @@ function ImportProgress({ job }: { job: MusicImport }) {
             {job.succeeded} bài đã nhập{job.failed > 0 ? `, ${job.failed} tệp lỗi` : ""}. Có thể
             đóng cửa sổ này — nhạc đã nằm trong thư viện.
           </p>
+        )}
+
+        {/* The second pass is offered, not automatic: it is slower than the
+            import that just finished and the tracks are already usable without
+            it, so it should be the user's call rather than a wait they did not
+            ask for. */}
+        {finished && (
+          <div className="mt-3">
+            {enriching === "queued" ? (
+              <p className="text-xs" style={{ color: "var(--tpl-muted)" }}>
+                Đã gửi yêu cầu — ảnh bìa và thông tin còn thiếu sẽ hiện dần trong
+                thư viện, không cần mở cửa sổ này.
+              </p>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onEnrich}
+                  disabled={enriching === "working"}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50"
+                  style={{ borderColor: "var(--tpl-accent)", color: "var(--tpl-accent)" }}
+                >
+                  {enriching === "working" ? "Đang gửi…" : "Lấy ảnh bìa & thông tin còn thiếu"}
+                </button>
+                <p className="mt-1.5 text-xs" style={{ color: "var(--tpl-muted)" }}>
+                  Đọc ảnh bìa nhúng trong từng tệp nhạc và điền nghệ sĩ / album
+                  còn trống. Chạy nền, chậm hơn bước nhập nên tách riêng; những gì
+                  bạn đã tự sửa sẽ không bị ghi đè.
+                </p>
+              </>
+            )}
+          </div>
         )}
       </div>
 

@@ -12,6 +12,12 @@ const (
 	// Owned by music; the worker registers it, the API only enqueues.
 	TaskImportZip = "music:import_zip"
 
+	// TaskEnrichTrack fills in what lives inside the audio file — embedded cover
+	// art and any missing tags — after the track already exists (0038). Split
+	// from the import because the cover half is slow: an ffmpeg extraction, a
+	// second asset ingest, and a wait for the image pipeline.
+	TaskEnrichTrack = "music:enrich_track"
+
 	// EventTrackPublished is emitted on a track publish (emit-only).
 	EventTrackPublished = "music:track_published"
 )
@@ -40,4 +46,12 @@ type TrackPublishedEvent struct {
 type ImportZipPayload struct {
 	ImportID string `json:"import_id"`
 	OwnerID  string `json:"owner_id"`
+}
+
+// EnrichTrackPayload is the music:enrich_track task body. OwnerID rides along
+// for the same reason ImportZipPayload carries it: the worker has no request
+// tenant and cannot read an RLS-fenced table to find out.
+type EnrichTrackPayload struct {
+	TrackID string `json:"track_id"`
+	OwnerID string `json:"owner_id"`
 }

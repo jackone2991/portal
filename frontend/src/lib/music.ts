@@ -257,6 +257,27 @@ function uploadErrorMessage(xhr: XMLHttpRequest): string {
   return `Tải lên thất bại (${xhr.status}).`;
 }
 
+/**
+ * Ask the server to fill in cover art and any missing tags for every track an
+ * import created — a second pass, because the cover half is slow (an ffmpeg
+ * extraction plus a wait for the image pipeline) and the import is meant to be
+ * fast. Resolves with how many tracks were queued.
+ *
+ * Enrichment only fills gaps: it never overwrites a title, artist, album or
+ * cover that already has a value.
+ */
+export async function enrichImport(importId: string): Promise<number> {
+  const r = await api<{ queued: number }>(`/api/v1/tracks/imports/${importId}/enrich`, {
+    method: "POST",
+  });
+  return r.queued;
+}
+
+/** The same, for one track. Works for any track with an audio file. */
+export async function enrichTrack(trackId: string): Promise<void> {
+  await api<{ queued: number }>(`/api/v1/tracks/${trackId}/enrich`, { method: "POST" });
+}
+
 /** True while the job still has work left, i.e. the client should keep polling. */
 export function importInFlight(job: MusicImport): boolean {
   return job.status === "pending" || job.status === "uploaded" || job.status === "processing";

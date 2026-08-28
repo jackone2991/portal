@@ -2856,6 +2856,47 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /tracks/imports/{id}/enrich:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [music]
+      summary: Fill in cover art and missing tags for everything an import created
+      description: |
+        A second pass over the tracks the job produced, queued as one task each.
+
+        It is separate from the import on purpose. Cover art is the expensive
+        half — an ffmpeg extraction, a second asset ingest, then a wait for the
+        image pipeline, since a cover that is not `ready` is refused — and doing
+        it inline would turn "your 300 tracks are in" into "your 300 tracks are
+        still importing", for a picture nobody is looking at yet.
+
+        Enrichment only **fills gaps**: a title, artist, album or cover that
+        already has a value is never overwritten, because by the time this runs
+        the user may have typed one.
+
+        Answers **202** with how many tracks were queued. Watch the tracks
+        themselves for the result — `cover_asset_id` appears when one finishes.
+      operationId: enrichMusicImport
+      responses:
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued]
+                properties:
+                  queued:
+                    type: integer
+                    description: Tracks scheduled. Zero when the job created none.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /tracks/{id}:
     parameters: [{ $ref: "#/components/parameters/AssetID" }]
     get:
@@ -2902,6 +2943,47 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /tracks/{id}/enrich:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [music]
+      summary: Fill in this track's cover art and missing tags
+      description: |
+        Re-reads the track's audio file and takes what is embedded in it: the
+        attached cover picture, and artist/album if the track has none.
+
+        Works for any track with an audio file, not only imported ones — a
+        single upload has the same tags inside it. Owner, or `music:write:any`.
+
+        Only **fills gaps**; an existing cover, artist or album is left alone.
+        Answers **202** — the extraction and the image pipeline run on the
+        worker. Poll the track: `cover_asset_id` appears when it is done, and
+        stays null when the file simply has no picture in it, which is not an
+        error.
+      operationId: enrichTrack
+      responses:
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued]
+                properties:
+                  queued: { type: integer, enum: [1] }
+        "400":
+          description: The track has no audio file to read (`music/validation`)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /tracks/{id}/publish:
     parameters: [{ $ref: "#/components/parameters/AssetID" }]
     post:

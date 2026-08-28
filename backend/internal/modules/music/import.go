@@ -388,12 +388,7 @@ func (s *Service) probeTags(ctx context.Context, name string, data []byte) track
 		return meta
 	}
 
-	// Tag keys vary by container and by tagger: mp3 gives TITLE/title, mp4 gives
-	// title, Vorbis gives TITLE. Lower-case everything and take the first hit.
-	tags := make(map[string]string, len(probe.Format.Tags))
-	for k, v := range probe.Format.Tags {
-		tags[strings.ToLower(k)] = strings.TrimSpace(v)
-	}
+	tags := lowerTags(probe.Format.Tags)
 	if t := firstTag(tags, "title"); t != "" {
 		meta.Title = t
 	}
@@ -404,6 +399,17 @@ func (s *Service) probeTags(ctx context.Context, name string, data []byte) track
 		meta.Album = al
 	}
 	return meta
+}
+
+// lowerTags normalises tag keys. They vary by container and by tagger — mp3
+// gives TITLE or title, mp4 gives title, Vorbis gives TITLE — so every lookup
+// downstream would otherwise have to try several spellings.
+func lowerTags(in map[string]string) map[string]string {
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[strings.ToLower(k)] = strings.TrimSpace(v)
+	}
+	return out
 }
 
 func firstTag(tags map[string]string, keys ...string) string {

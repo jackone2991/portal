@@ -463,11 +463,12 @@ func (s *Service) AssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, erro
 
 // HLSObject streams a file (manifest or segment) from an asset's HLS output.
 // Public (playback is unauthenticated for v1); path is sanitised against traversal.
-// SetVisibility flips an asset between private and public (0032). The write is
-// authorised by the UPDATE policy, not here: a caller who may not touch the row
-// gets ErrNotFound from the repository, indistinguishable from a missing id.
-func (s *Service) SetVisibility(ctx context.Context, id uuid.UUID, visibility string) (Asset, error) {
-	return s.repo.SetAssetVisibility(ctx, id, visibility)
+// SetVisibility flips an asset between private and public (0032). Authorised
+// twice over — by the UPDATE policy and by the statement's own owner predicate —
+// because this is the write that can publish a private file. A caller who may
+// not touch the row gets ErrNotFound, indistinguishable from a missing id.
+func (s *Service) SetVisibility(ctx context.Context, ownerID, id uuid.UUID, visibility string) (Asset, error) {
+	return s.repo.SetAssetVisibility(ctx, ownerID, id, visibility)
 }
 
 // Content is one stored object plus what the caller needs to cache it safely.

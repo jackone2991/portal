@@ -1983,6 +1983,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracks/imports/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fill in cover art and missing tags for everything an import created
+         * @description A second pass over the tracks the job produced, queued as one task each.
+         *
+         *     It is separate from the import on purpose. Cover art is the expensive
+         *     half — an ffmpeg extraction, a second asset ingest, then a wait for the
+         *     image pipeline, since a cover that is not `ready` is refused — and doing
+         *     it inline would turn "your 300 tracks are in" into "your 300 tracks are
+         *     still importing", for a picture nobody is looking at yet.
+         *
+         *     Enrichment only **fills gaps**: a title, artist, album or cover that
+         *     already has a value is never overwritten, because by the time this runs
+         *     the user may have typed one.
+         *
+         *     Answers **202** with how many tracks were queued. Watch the tracks
+         *     themselves for the result — `cover_asset_id` appears when one finishes.
+         */
+        post: operations["enrichMusicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracks/{id}": {
         parameters: {
             query?: never;
@@ -2002,6 +2037,38 @@ export interface paths {
         head?: never;
         /** Update a track */
         patch: operations["updateTrack"];
+        trace?: never;
+    };
+    "/tracks/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fill in this track's cover art and missing tags
+         * @description Re-reads the track's audio file and takes what is embedded in it: the
+         *     attached cover picture, and artist/album if the track has none.
+         *
+         *     Works for any track with an audio file, not only imported ones — a
+         *     single upload has the same tags inside it. Owner, or `music:write:any`.
+         *
+         *     Only **fills gaps**; an existing cover, artist or album is left alone.
+         *     Answers **202** — the extraction and the image pipeline run on the
+         *     worker. Poll the track: `cover_asset_id` appears when it is done, and
+         *     stays null when the file simply has no picture in it, which is not an
+         *     error.
+         */
+        post: operations["enrichTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tracks/{id}/publish": {
@@ -7225,6 +7292,34 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    enrichMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Tracks scheduled. Zero when the job created none. */
+                        queued: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     getTrack: {
         parameters: {
             query?: never;
@@ -7301,6 +7396,43 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    enrichTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {integer} */
+                        queued: 1;
+                    };
+                };
+            };
+            /** @description The track has no audio file to read (`music/validation`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     publishTrack: {

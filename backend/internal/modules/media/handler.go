@@ -398,16 +398,37 @@ func writeErr(w http.ResponseWriter, status int, code, msg string) {
 	server.Problem(w, status, server.ProblemType("media", code), http.StatusText(status), msg)
 }
 
-// cacheControl keeps a private asset out of shared caches. Variants and HLS
-// segments are immutable either way, so the only axis is who may store them:
-// a proxy that cached a private rendition would hand it to the next caller and
-// undo the row-level policies entirely.
+// cacheControl decides who may store a rendition, and for how long.
+//
+// `private` keeps someone else's file out of shared caches: a proxy that cached
+// it would hand it to the next caller and undo the row-level policies entirely.
+//
+// There is deliberately no `immutable`, and no year-long max-age, even though
+// the BYTES never change. What can change is who may read them: an owner can
+// flip an asset back to private at any time, and the URL does not change with
+// it. `immutable` would tell every browser that already holds the file not to
+// revalidate for a year, so un-sharing would not reach the people it most needs
+// to. The ceilings below bound that gap instead.
 func cacheControl(public bool, maxAge int) string {
-	scope := "private"
 	if public {
-		scope = "public"
+		return fmt.Sprintf("public, max-age=%d", minInt(maxAge, publicCacheSeconds))
 	}
-	return fmt.Sprintf("%s, max-age=%d, immutable", scope, maxAge)
+	return fmt.Sprintf("private, max-age=%d", minInt(maxAge, privateCacheSeconds))
+}
+
+const (
+	// A day for public renditions: long enough that a comic chapter is not
+	// re-fetched page by page, short enough that un-sharing means something.
+	publicCacheSeconds = 86400
+	// Ten minutes for private ones, which one browser re-fetches anyway.
+	privateCacheSeconds = 600
+)
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // Patch updates the mutable parts of an asset. Today that is `visibility`, the
@@ -421,7 +442,8 @@ func cacheControl(public bool, maxAge int) string {
 // missing id gets, which is what keeps the endpoint from confirming that an
 // asset exists.
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
-	if _, ok := h.currentUser(r.Context()); !ok {
+	uid, ok := h.currentUser(r.Context())
+	if !ok {
 		server.Unauthorized(w)
 		return
 	}
@@ -450,7 +472,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	asset, err := h.svc.SetVisibility(r.Context(), id, *body.Visibility)
+	asset, err := h.svc.SetVisibility(r.Context(), uid, id, *body.Visibility)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "no such asset")

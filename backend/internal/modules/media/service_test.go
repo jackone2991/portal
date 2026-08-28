@@ -79,9 +79,12 @@ func (r *fakeRepo) GetAssetOwner(_ context.Context, id uuid.UUID) (uuid.UUID, er
 // The real ACL lives in the 0032 UPDATE policy, which no in-memory fake can
 // model; the RLS suite in platform/db is what proves it. This fake only has to
 // keep the visibility value consistent so Content.Public is exercised.
-func (r *fakeRepo) SetAssetVisibility(_ context.Context, id uuid.UUID, visibility string) (Asset, error) {
+func (r *fakeRepo) SetAssetVisibility(_ context.Context, ownerID, id uuid.UUID, visibility string) (Asset, error) {
 	a, ok := r.m[id]
-	if !ok {
+	// The owner predicate is part of the statement now, not just the policy, so
+	// the fake enforces it too — otherwise the test would pass against a
+	// repository that had quietly dropped it.
+	if !ok || (a.OwnerID != uuid.Nil && a.OwnerID != ownerID) {
 		return Asset{}, ErrNotFound
 	}
 	a.Visibility = visibility

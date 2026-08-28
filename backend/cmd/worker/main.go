@@ -256,6 +256,7 @@ func run() error {
 		Repo:        musicrepo.NewAdapter(conn),
 		Media:       mediaMod.API(),
 		Storage:     store,
+		Enqueuer:    asynqClient,
 		RunInTenant: runInUserTenant,
 	})
 	if err != nil {

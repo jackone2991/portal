@@ -58,3 +58,41 @@ UPDATE music_tracks SET audio_asset_id = NULL, status = 'draft', updated_at = no
 
 -- name: NullTrackCoverByAsset :exec
 UPDATE music_tracks SET cover_asset_id = NULL, updated_at = now() WHERE cover_asset_id = $1;
+
+-- ── Catalogue lookup (0039) ───────────────────────────────────────
+-- Written by the music:lookup_track worker, never by a user. Kept out of
+-- UpdateTrack because these are system fields with their own audit trail
+-- (lookup_status / lookup_note / lookup_at) and no place on an edit form.
+
+-- name: MarkTrackLookupPending :exec
+UPDATE music_tracks
+SET lookup_status = 'pending', updated_at = now()
+WHERE id = $1;
+
+-- name: SetTrackLookupResult :one
+-- COALESCE on every value field: the lookup FILLS GAPS and never overwrites.
+-- Doing it in SQL rather than in Go keeps the rule true even if a caller passes
+-- a value for a field the track already has.
+UPDATE music_tracks
+SET release_year    = COALESCE(release_year, sqlc.narg('release_year')),
+    genre           = COALESCE(genre, sqlc.narg('genre')),
+    cover_asset_id  = COALESCE(cover_asset_id, sqlc.narg('cover_asset_id')),
+    artist          = COALESCE(NULLIF(artist, ''), sqlc.narg('artist')),
+    album           = COALESCE(NULLIF(album, ''), sqlc.narg('album')),
+    mb_recording_id = COALESCE(mb_recording_id, sqlc.narg('mb_recording_id')),
+    mb_release_id   = COALESCE(mb_release_id, sqlc.narg('mb_release_id')),
+    lookup_status   = sqlc.arg('lookup_status')::text,
+    lookup_note     = sqlc.narg('lookup_note'),
+    lookup_at       = now(),
+    updated_at      = now()
+WHERE id = sqlc.arg('id')
+RETURNING *;
+
+-- name: ListTracksNeedingLookup :many
+-- Tracks the owner has never had looked up. Drives the "look up everything"
+-- action without making the client enumerate its own library.
+SELECT * FROM music_tracks
+WHERE owner_user_id = $1
+  AND lookup_status = 'none'
+ORDER BY created_at
+LIMIT $2;
