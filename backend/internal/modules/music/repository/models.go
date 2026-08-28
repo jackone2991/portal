@@ -265,6 +265,24 @@ type MusicImport struct {
 	TenantID    pgtype.UUID        `json:"tenant_id"`
 }
 
+type MusicPlaylist struct {
+	ID          pgtype.UUID        `json:"id"`
+	OwnerUserID pgtype.UUID        `json:"owner_user_id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	TenantID    pgtype.UUID        `json:"tenant_id"`
+}
+
+type MusicPlaylistTrack struct {
+	PlaylistID pgtype.UUID        `json:"playlist_id"`
+	TrackID    pgtype.UUID        `json:"track_id"`
+	Position   int32              `json:"position"`
+	AddedAt    pgtype.Timestamptz `json:"added_at"`
+	TenantID   pgtype.UUID        `json:"tenant_id"`
+}
+
 type MusicTrack struct {
 	ID            pgtype.UUID        `json:"id"`
 	OwnerUserID   pgtype.UUID        `json:"owner_user_id"`

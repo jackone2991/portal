@@ -18,6 +18,10 @@ INSERT INTO people_persons (
     sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::text::jsonb, '{}'::jsonb), sqlc.narg('note_md'),
     COALESCE(sqlc.narg('circle'), 'other'), sqlc.narg('linked_user_id')
 )
+-- ON CONFLICT rather than letting 0035's (user_id, linked_user_id) unique raise:
+-- a violation aborts the request's tenant transaction, so the 409 the handler
+-- writes would be replaced by a 500 at COMMIT. No rows means already added.
+ON CONFLICT (user_id, linked_user_id) WHERE linked_user_id IS NOT NULL DO NOTHING
 RETURNING *;
 
 -- name: GetPerson :one

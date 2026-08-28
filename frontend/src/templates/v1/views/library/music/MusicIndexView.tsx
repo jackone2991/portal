@@ -1,26 +1,38 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Icon } from "../../../components/ui/Icon";
 import { BulkImportModal } from "./BulkImportModal";
 import { useMusicPlayerOptional } from "../../../components/music/MusicPlayerProvider";
 import { ApiError } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
 import { listAssets } from "@/lib/media-assets";
+import { useInfiniteScroll } from "@/lib/use-infinite-scroll";
 import {
+  addTracksToPlaylist,
+  bulkSetTrackStatus,
+  createPlaylist,
   createTrack,
   deleteTrack,
+  fetchAllTracks,
   isPlayable,
   listMyTracks,
+  listPlaylists,
   listTracks,
   publishTrack,
   trackArtist,
   trackCoverURL,
   unpublishTrack,
   uploadAudioAsset,
+  type Playlist,
   type Track,
 } from "@/lib/music";
 
@@ -33,12 +45,32 @@ import {
  * play affordance wants to sit on the left where the eye already is. Clicking any
  * row queues the WHOLE visible list from that point, through the app-wide
  * `MusicPlayerProvider`, so playback continues as the user navigates away.
+ *
+ * Both tabs paginate with `useInfiniteQuery`. The API has always been
+ * keyset-paginated (30 a page, cursor on `next_cursor`) but this view used a
+ * plain `useQuery` and threw the cursor away, so a library of any size looked
+ * like exactly 30 tracks with nothing to say otherwise.
+ *
+ * Pages load on scroll, not on a button — a "load more" click every 30 rows is
+ * a poor way to walk a few hundred tracks. `useInfiniteScroll` watches a
+ * sentinel below the list and fetches ahead of the fold.
+ *
+ * "Phát tất cả" therefore cannot queue `tracks` — that is only the pages fetched
+ * so far. It walks the cursor to the end first (see `fetchAllTracks`), because a
+ * button that says "all" and plays the first 30 is worse than one that takes a
+ * moment.
  */
 export function MusicIndexView() {
   const qc = useQueryClient();
   const player = useMusicPlayerOptional();
 
   const [tab, setTab] = useState<"all" | "mine">("all");
+
+  // Bulk selection lives on the "Của tôi" tab only: the published catalogue has
+  // nothing you can do to a selection. Keyed by track id so it survives paging.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkNote, setBulkNote] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -50,14 +82,18 @@ export function MusicIndexView() {
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const all = useQuery({
+  const all = useInfiniteQuery({
     queryKey: ["tracks", "published"],
-    queryFn: () => listTracks(),
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) => listTracks(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
     retry: retryUnlessClientError,
   });
-  const mine = useQuery({
+  const mine = useInfiniteQuery({
     queryKey: ["tracks", "mine"],
-    queryFn: () => listMyTracks(),
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) => listMyTracks(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
     enabled: tab === "mine",
     retry: retryUnlessClientError,
   });
@@ -140,10 +176,119 @@ export function MusicIndexView() {
 
   // The same 403 that drives ErrorState also hides "Thêm bài hát": offering a
   // create button to an account that cannot create only produces a second error.
+  const playlists = useQuery({
+    queryKey: ["playlists"],
+    queryFn: listPlaylists,
+    enabled: tab === "mine",
+  });
+
+  function clearSelection() {
+    setSelected(new Set());
+    setBulkError(null);
+    setBulkNote(null);
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setBulkNote(null);
+  }
+
+  // Every bulk action reports what actually happened rather than assuming: a
+  // selection can contain tracks already published, or already in the playlist.
+  function afterBulk(note: string) {
+    setBulkError(null);
+    setBulkNote(note);
+    clearSelectionKeepNote(note);
+    qc.invalidateQueries({ queryKey: ["tracks"] });
+    qc.invalidateQueries({ queryKey: ["playlists"] });
+  }
+
+  function clearSelectionKeepNote(note: string) {
+    setSelected(new Set());
+    setBulkNote(note);
+  }
+
+  function onBulkError(e: unknown, fallback: string) {
+    setBulkNote(null);
+    setBulkError(e instanceof ApiError ? problemDisplayMessage(e.body) : fallback);
+  }
+
+  const bulkStatus = useMutation({
+    mutationFn: ({ ids, status }: { ids: string[]; status: "published" | "draft" }) =>
+      bulkSetTrackStatus(ids, status),
+    onSuccess: (r, v) =>
+      afterBulk(
+        v.status === "published"
+          ? `Đã đăng ${r.changed}/${r.requested} bài.`
+          : `Đã gỡ ${r.changed}/${r.requested} bài.`,
+      ),
+    onError: (e) => onBulkError(e, "Không đổi được trạng thái."),
+  });
+
+  const addToPlaylist = useMutation({
+    mutationFn: ({ playlistID, ids }: { playlistID: string; ids: string[] }) =>
+      addTracksToPlaylist(playlistID, ids),
+    onSuccess: (r) =>
+      afterBulk(
+        r.added === r.requested
+          ? `Đã thêm ${r.added} bài vào playlist.`
+          : `Đã thêm ${r.added}/${r.requested} bài — số còn lại đã có sẵn trong playlist.`,
+      ),
+    onError: (e) => onBulkError(e, "Không thêm được vào playlist."),
+  });
+
+  const newPlaylist = useMutation({
+    mutationFn: ({ name, ids }: { name: string; ids: string[] }) =>
+      createPlaylist(name).then((p) =>
+        addTracksToPlaylist(p.id, ids).then((r) => ({ ...r, name: p.name })),
+      ),
+    onSuccess: (r) => afterBulk(`Đã tạo “${r.name}” với ${r.added} bài.`),
+    onError: (e) => onBulkError(e, "Không tạo được playlist."),
+  });
+
   const mineForbidden = mine.error instanceof ApiError && mine.error.status === 403;
   const active = tab === "all" ? all : mine;
-  const tracks = tab === "all" ? all.data?.tracks ?? [] : mine.data?.tracks ?? [];
-  const playable = tracks.filter(isPlayable);
+  const tracks = useMemo(
+    () => active.data?.pages.flatMap((p) => p.tracks) ?? [],
+    [active.data],
+  );
+  const playable = useMemo(() => tracks.filter(isPlayable), [tracks]);
+
+  /**
+   * Queue the whole scope, not just the pages on screen.
+   *
+   * Runs as a mutation rather than a query so the button gets a real pending
+   * state: the walk is sequential (each page needs the previous cursor), so on a
+   * large library it is visibly not instant and a dead-looking button would read
+   * as another broken control.
+   */
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: () => active.fetchNextPage(),
+    hasMore: active.hasNextPage,
+    isLoading: active.isFetchingNextPage,
+  });
+
+  const playAll = useMutation({
+    mutationFn: () => fetchAllTracks(tab === "mine" ? "mine" : "published"),
+    onMutate: () => setRowErr(null),
+    onSuccess: ({ tracks: fetched, truncated }) => {
+      const queue = fetched.filter(isPlayable);
+      if (queue.length === 0) {
+        setRowErr("Không có bài hát nào đã gắn tệp âm thanh để phát.");
+        return;
+      }
+      player?.playQueue(queue, 0);
+      if (truncated) {
+        setRowErr(`Danh sách quá dài — đã xếp hàng ${queue.length} bài đầu tiên.`);
+      }
+    },
+    onError: (e) => setRowErr(rowMessage(e, "Không tải được toàn bộ danh sách.")),
+  });
 
   return (
     <section>
@@ -164,13 +309,13 @@ export function MusicIndexView() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => player?.playQueue(playable, 0)}
-          disabled={playable.length === 0}
+          onClick={() => playAll.mutate()}
+          disabled={playable.length === 0 || playAll.isPending}
           className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
           style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
         >
           <Icon name="music-play-icon-big" size={14} />
-          Phát tất cả
+          {playAll.isPending ? "Đang xếp hàng…" : "Phát tất cả"}
         </button>
 
         {tab === "mine" && !mineForbidden && (
@@ -208,6 +353,23 @@ export function MusicIndexView() {
       ) : tracks.length === 0 ? (
         <EmptyState mine={tab === "mine"} />
       ) : (
+        <>
+        {tab === "mine" && (
+          <SelectionBar
+            total={tracks.length}
+            selected={selected}
+            playlists={playlists.data ?? []}
+            busy={bulkStatus.isPending || addToPlaylist.isPending || newPlaylist.isPending}
+            note={bulkNote}
+            error={bulkError}
+            onSelectAll={() => setSelected(new Set(tracks.map((t) => t.id)))}
+            onClear={clearSelection}
+            onPublish={() => bulkStatus.mutate({ ids: [...selected], status: "published" })}
+            onUnpublish={() => bulkStatus.mutate({ ids: [...selected], status: "draft" })}
+            onAddTo={(playlistID) => addToPlaylist.mutate({ playlistID, ids: [...selected] })}
+            onCreateWith={(name) => newPlaylist.mutate({ name, ids: [...selected] })}
+          />
+        )}
         <ul
           className="divide-y overflow-hidden rounded-xl border"
           style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }}
@@ -218,6 +380,9 @@ export function MusicIndexView() {
               track={t}
               index={i + 1}
               showStatus={tab === "mine"}
+              selectable={tab === "mine"}
+              selected={selected.has(t.id)}
+              onToggleSelect={() => toggleSelected(t.id)}
               current={player?.isCurrent(t.id) ?? false}
               playing={(player?.isCurrent(t.id) ?? false) && (player?.playing ?? false)}
               onPlay={() => {
@@ -234,6 +399,27 @@ export function MusicIndexView() {
             />
           ))}
         </ul>
+        </>
+      )}
+
+      {tracks.length > 0 && (
+        <>
+          {/* The scroll sentinel. Empty and zero-height by design: it exists to
+              be intersected, and any padding of its own would show up as a gap
+              under the last row. */}
+          <div ref={sentinelRef} aria-hidden />
+
+          <div className="mt-4 flex flex-col items-center gap-2" aria-live="polite">
+            {active.isFetchingNextPage && <RowSkeleton />}
+            <p className="text-xs" style={{ color: "var(--tpl-muted)" }}>
+              {/* "30" on its own reads as the whole library; the trailing "+" is
+                  the only signal that there is more behind it. */}
+              {active.hasNextPage
+                ? `Đang hiển thị ${tracks.length}+ bài hát`
+                : `${tracks.length} bài hát`}
+            </p>
+          </div>
+        </>
       )}
 
       {bulkOpen && (
@@ -363,10 +549,197 @@ function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
+/**
+ * The bulk toolbar for the "Của tôi" tab.
+ *
+ * It is always present once there is anything to select — a toolbar that appears
+ * only after the first tick is a feature nobody discovers. With nothing selected
+ * it offers "select all"; with a selection it offers what you can do to it, and
+ * says how many rows that is so a stray click on "all" is visible before it is
+ * acted on.
+ */
+function SelectionBar({
+  total,
+  selected,
+  playlists,
+  busy,
+  note,
+  error,
+  onSelectAll,
+  onClear,
+  onPublish,
+  onUnpublish,
+  onAddTo,
+  onCreateWith,
+}: {
+  total: number;
+  selected: Set<string>;
+  playlists: Playlist[];
+  busy: boolean;
+  note: string | null;
+  error: string | null;
+  onSelectAll: () => void;
+  onClear: () => void;
+  onPublish: () => void;
+  onUnpublish: () => void;
+  onAddTo: (playlistID: string) => void;
+  onCreateWith: (name: string) => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  const [newName, setNewName] = useState("");
+  const count = selected.size;
+  const allSelected = total > 0 && count === total;
+
+  return (
+    <div
+      className="mb-3 rounded-xl border px-3 py-2.5"
+      style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }}
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex shrink-0 items-center gap-2 text-sm" style={{ color: "var(--tpl-text)" }}>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={() => (allSelected ? onClear() : onSelectAll())}
+            aria-label="Chọn tất cả bài đang hiển thị"
+            className="h-4 w-4 accent-[var(--tpl-accent)]"
+          />
+          {count > 0 ? `Đã chọn ${count}` : `Chọn tất cả (${total})`}
+        </label>
+
+        {count > 0 && (
+          <>
+            <BulkBtn onClick={onPublish} disabled={busy} primary>
+              Đăng
+            </BulkBtn>
+            <BulkBtn onClick={onUnpublish} disabled={busy}>
+              Gỡ
+            </BulkBtn>
+
+            <div className="relative">
+              <BulkBtn onClick={() => setPicking((v) => !v)} disabled={busy}>
+                Thêm vào playlist ▾
+              </BulkBtn>
+              {picking && (
+                <div
+                  className="absolute left-0 top-9 z-20 w-64 rounded-lg py-1 shadow-lg"
+                  style={{ background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }}
+                >
+                  {playlists.length === 0 && (
+                    <p className="px-3 py-2 text-xs" style={{ color: "var(--tpl-muted)" }}>
+                      Chưa có playlist nào.
+                    </p>
+                  )}
+                  {playlists.map((pl) => (
+                    <button
+                      key={pl.id}
+                      type="button"
+                      onClick={() => {
+                        setPicking(false);
+                        onAddTo(pl.id);
+                      }}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-[var(--tpl-surface-2)]"
+                      style={{ color: "var(--tpl-text)" }}
+                    >
+                      <span className="truncate">{pl.name}</span>
+                      <span className="ml-2 shrink-0 text-xs" style={{ color: "var(--tpl-muted)" }}>
+                        {pl.track_count}
+                      </span>
+                    </button>
+                  ))}
+                  <div className="mt-1 border-t px-2 pt-2" style={{ borderColor: "var(--tpl-border)" }}>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const name = newName.trim();
+                        if (!name) return;
+                        setNewName("");
+                        setPicking(false);
+                        onCreateWith(name);
+                      }}
+                      className="flex gap-1"
+                    >
+                      <input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Playlist mới…"
+                        className="min-w-0 flex-1 rounded-md border bg-transparent px-2 py-1 text-xs outline-none"
+                        style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newName.trim()}
+                        className="rounded-md px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                        style={{ background: "var(--tpl-accent)" }}
+                      >
+                        Tạo
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClear}
+              className="text-xs font-semibold transition hover:opacity-80"
+              style={{ color: "var(--tpl-muted)" }}
+            >
+              Bỏ chọn
+            </button>
+          </>
+        )}
+      </div>
+
+      {(note || error) && (
+        <p
+          className="mt-2 text-xs"
+          role={error ? "alert" : undefined}
+          style={{ color: error ? "#ef4444" : "var(--tpl-muted)" }}
+        >
+          {error ?? note}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BulkBtn({
+  children,
+  onClick,
+  disabled,
+  primary,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-50"
+      style={
+        primary
+          ? { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))", color: "#fff" }
+          : { border: "1px solid var(--tpl-border)", color: "var(--tpl-muted)" }
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
 function TrackRow({
   track,
   index,
   showStatus,
+  selectable,
+  selected,
+  onToggleSelect,
   current,
   playing,
   onPlay,
@@ -377,6 +750,9 @@ function TrackRow({
   track: Track;
   index: number;
   showStatus: boolean;
+  selectable: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
   current: boolean;
   playing: boolean;
   onPlay: () => void;
@@ -392,12 +768,22 @@ function TrackRow({
       className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-[var(--tpl-surface-2)]"
       style={{ borderColor: "var(--tpl-border)" }}
     >
-      <span
-        className="w-5 shrink-0 text-center text-xs tabular-nums"
-        style={{ color: current ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
-      >
-        {index}
-      </span>
+      {selectable ? (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          aria-label={`Chọn ${track.title}`}
+          className="h-4 w-4 shrink-0 accent-[var(--tpl-accent)]"
+        />
+      ) : (
+        <span
+          className="w-5 shrink-0 text-center text-xs tabular-nums"
+          style={{ color: current ? "var(--tpl-accent)" : "var(--tpl-muted)" }}
+        >
+          {index}
+        </span>
+      )}
 
       <button
         type="button"
@@ -549,6 +935,22 @@ function Banner({ children, onDismiss }: { children: ReactNode; onDismiss?: () =
         </button>
       )}
     </p>
+  );
+}
+
+/** Shown under the list while the next page is in flight. */
+function RowSkeleton() {
+  return (
+    <div className="flex w-full items-center gap-3 px-3 py-2">
+      <div
+        className="h-10 w-10 shrink-0 animate-pulse rounded-md"
+        style={{ background: "var(--tpl-surface-2)" }}
+      />
+      <div className="flex-1 space-y-1.5">
+        <div className="h-3 w-1/3 animate-pulse rounded" style={{ background: "var(--tpl-surface-2)" }} />
+        <div className="h-2.5 w-1/5 animate-pulse rounded" style={{ background: "var(--tpl-surface-2)" }} />
+      </div>
+    </div>
   );
 }
 

@@ -11,26 +11,50 @@ import (
 )
 
 type Querier interface {
+	// Idempotent: adding a track already in the playlist leaves its position alone,
+	// so re-running a bulk add does not shuffle the order. :execrows because the
+	// caller reports how many landed — counting attempts instead of insertions
+	// would claim "added 3" for a re-run that added nothing.
+	AddPlaylistTrack(ctx context.Context, arg AddPlaylistTrackParams) (int64, error)
 	// Bulk track import jobs (0038). The client creates a job, PUTs the zip, then
 	// polls this row for status + the per-file report.
 	CreateMusicImport(ctx context.Context, ownerUserID pgtype.UUID) (CreateMusicImportRow, error)
+	// music playlist queries (0041). sqlc input only.
+	//
+	// Every statement is owner-scoped in its own predicate as well as fenced by the
+	// 0041 tenant policies: a playlist is one person's selection, and inside a
+	// shared org the tenant fence alone would not say so.
+	// ON CONFLICT rather than letting the unique raise. A constraint violation
+	// aborts the surrounding transaction, and every request runs inside one
+	// (RequireTenant) — so the handler would map 23505 to a clean 409 and then the
+	// middleware would fail to COMMIT and replace it with a 500. No rows returned
+	// means the name is taken.
+	CreatePlaylist(ctx context.Context, arg CreatePlaylistParams) (MusicPlaylist, error)
 	// music module queries. sqlc input only. Owner-scoped mutations; published-or-
 	// owner reads. Asset ids validated via mediaapi (no cross-module FK), reaped via
 	// media:asset_deleted. tenant_id is filled by its column DEFAULT (RequireTenant
 	// sets app.current_tenant) — never inserted here.
 	CreateTrack(ctx context.Context, arg CreateTrackParams) (MusicTrack, error)
+	DeletePlaylist(ctx context.Context, arg DeletePlaylistParams) (pgtype.UUID, error)
 	DeleteTrack(ctx context.Context, id pgtype.UUID) error
 	// report is cast text->jsonb so sqlc types the param as a Go string: the pool runs
 	// QueryExecModeExec, where pgx picks the wire OID from the Go type without
 	// describing params, and a []byte goes out as bytea which jsonb rejects (22P02).
 	FinishMusicImport(ctx context.Context, arg FinishMusicImportParams) error
 	GetMusicImport(ctx context.Context, id pgtype.UUID) (GetMusicImportRow, error)
+	GetPlaylist(ctx context.Context, arg GetPlaylistParams) (MusicPlaylist, error)
 	GetTrack(ctx context.Context, id pgtype.UUID) (MusicTrack, error)
 	GetTrackOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	// Recent jobs for the owner, so the UI can show an import that is still running
 	// after a page reload.
 	ListMusicImports(ctx context.Context, arg ListMusicImportsParams) ([]ListMusicImportsRow, error)
 	ListOwnTracks(ctx context.Context, arg ListOwnTracksParams) ([]MusicTrack, error)
+	// The tracks of one playlist, in playlist order. Joins music_tracks, which this
+	// module owns — not a cross-module join.
+	ListPlaylistTracks(ctx context.Context, playlistID pgtype.UUID) ([]ListPlaylistTracksRow, error)
+	// With the track count, because a playlist list that does not say how big each
+	// one is makes you open every one to find out.
+	ListPlaylists(ctx context.Context, ownerUserID pgtype.UUID) ([]ListPlaylistsRow, error)
 	ListPublishedTracks(ctx context.Context, arg ListPublishedTracksParams) ([]MusicTrack, error)
 	// Tracks the owner has never had looked up. Drives the "look up everything"
 	// action without making the client enumerate its own library.
@@ -40,10 +64,22 @@ type Querier interface {
 	// UpdateTrack because these are system fields with their own audit trail
 	// (lookup_status / lookup_note / lookup_at) and no place on an edit form.
 	MarkTrackLookupPending(ctx context.Context, id pgtype.UUID) error
+	// Append position. Sparse numbering means adding never renumbers what is there.
+	NextPlaylistPosition(ctx context.Context, playlistID pgtype.UUID) (int32, error)
 	// ══ media:asset_deleted consumer ══════════════════════════════════════════
 	// NullAudioByAsset also unpublishes: a published track with no audio is broken.
 	NullAudioByAsset(ctx context.Context, audioAssetID pgtype.UUID) error
 	NullTrackCoverByAsset(ctx context.Context, coverAssetID pgtype.UUID) error
+	// Which of these track ids the caller actually owns. A bulk add filters through
+	// this first, so a crafted id list cannot pull someone else's track into a
+	// playlist even where RLS is inert.
+	OwnedTrackIDs(ctx context.Context, arg OwnedTrackIDsParams) ([]pgtype.UUID, error)
+	// Rename cannot use ON CONFLICT, so it looks first. A race would still abort the
+	// transaction, but a rename colliding in the microseconds after this check is a
+	// different order of rare than typing a name you already used.
+	PlaylistNameTaken(ctx context.Context, arg PlaylistNameTakenParams) (bool, error)
+	RemovePlaylistTrack(ctx context.Context, arg RemovePlaylistTrackParams) error
+	RenamePlaylist(ctx context.Context, arg RenamePlaylistParams) (MusicPlaylist, error)
 	// Marks the zip stored. `uploaded` (not `processing`) because the worker has not
 	// picked the job up yet — the client showing "đang xử lý" before anything is
 	// running would be a lie it has to take back.

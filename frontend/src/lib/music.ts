@@ -23,6 +23,20 @@ export interface Track {
   status: TrackStatus;
   created_at: string;
   updated_at: string;
+
+  /* Catalogue lookup (0039) — what the audio file cannot contain. */
+  release_year: number | null;
+  genre: string | null;
+  mb_recording_id: string | null;
+  mb_release_id: string | null;
+  /**
+   * `no_match` is an ORDINARY outcome — most libraries contain something
+   * MusicBrainz has never heard of — so it must not be shown as a failure.
+   * `failed` is the one that means something went wrong.
+   */
+  lookup_status: "none" | "pending" | "matched" | "no_match" | "failed";
+  lookup_note: string | null;
+  lookup_at: string | null;
 }
 
 export interface TracksPage {
@@ -64,16 +78,58 @@ export function trackArtist(t: Track): string {
 
 /* ── reads ────────────────────────────────────────────────────────── */
 
-export async function listTracks(cursor?: string): Promise<TracksPage> {
-  const q = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  const r = await api<TracksPage>(`/api/v1/tracks${q}`);
+/**
+ * The server's ceiling on `?limit` (`maxLimit` in `music/types.go`). Anything
+ * above it is silently ignored and you get the 30-row default back instead — so
+ * the "fetch the whole library" walk below asks for exactly this and no more.
+ */
+export const TRACKS_MAX_PAGE = 50;
+
+function tracksQuery(cursor?: string, limit?: number): string {
+  const p = new URLSearchParams();
+  if (cursor) p.set("cursor", cursor);
+  if (limit) p.set("limit", String(limit));
+  const q = p.toString();
+  return q ? `?${q}` : "";
+}
+
+export async function listTracks(cursor?: string, limit?: number): Promise<TracksPage> {
+  const r = await api<TracksPage>(`/api/v1/tracks${tracksQuery(cursor, limit)}`);
   return { tracks: r.tracks ?? [], next_cursor: r.next_cursor };
 }
 
-export async function listMyTracks(cursor?: string): Promise<TracksPage> {
-  const q = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  const r = await api<TracksPage>(`/api/v1/tracks/mine${q}`);
+export async function listMyTracks(cursor?: string, limit?: number): Promise<TracksPage> {
+  const r = await api<TracksPage>(`/api/v1/tracks/mine${tracksQuery(cursor, limit)}`);
   return { tracks: r.tracks ?? [], next_cursor: r.next_cursor };
+}
+
+/**
+ * Every track in a scope, by walking the cursor to exhaustion.
+ *
+ * This exists for "Phát tất cả", which has to mean *all* — queueing only the
+ * rows that happen to be on screen turns the button into a lie the moment the
+ * list is paginated, and the user has no way to tell that it stopped at 30.
+ *
+ * Bounded by `maxTracks` because "play all" on a 50k-row library is not a
+ * request anyone means literally, and an unbounded walk would hammer the API
+ * while the page sits frozen. The caller is told when the cap was hit
+ * (`truncated`) so it can say so rather than silently dropping the tail.
+ */
+export async function fetchAllTracks(
+  scope: "published" | "mine",
+  maxTracks = 1000,
+): Promise<{ tracks: Track[]; truncated: boolean }> {
+  const page = scope === "mine" ? listMyTracks : listTracks;
+  const tracks: Track[] = [];
+  let cursor: string | undefined;
+
+  for (;;) {
+    const r = await page(cursor, TRACKS_MAX_PAGE);
+    tracks.push(...r.tracks);
+    cursor = r.next_cursor ?? undefined;
+    if (!cursor) return { tracks, truncated: false };
+    if (tracks.length >= maxTracks) return { tracks: tracks.slice(0, maxTracks), truncated: true };
+  }
 }
 
 export async function getTrack(id: string): Promise<Track> {
@@ -324,4 +380,99 @@ export function metaFromFilename(filename: string): FilenameMeta {
 function stripTrackNumber(stem: string): string {
   const m = /^(\d{1,3})\s*([.\-_])\s*(.+)$/.exec(stem);
   return m && m[3] ? m[3].trim() : stem;
+}
+
+/**
+ * Ask MusicBrainz for what the files cannot say — release year, genre, and a
+ * Cover Art Archive cover — for every track an import created.
+ *
+ * The only outbound third-party call in the app, and off unless an operator
+ * enabled it: a 503 here means exactly that, and `problemDisplayMessage` carries
+ * the reason. Throttled server-side to one request per second, so a few hundred
+ * tracks take minutes; it is a background sweep, not an interactive call.
+ *
+ * `skipped` is non-zero when the per-sweep cap truncated the batch — surfaced
+ * rather than swallowed, because a sweep that quietly covered half a library
+ * would read as having covered all of it.
+ */
+export function lookupImport(importId: string): Promise<{ queued: number; skipped: number }> {
+  return api<{ queued: number; skipped: number }>(
+    `/api/v1/tracks/imports/${importId}/lookup`,
+    { method: "POST" },
+  );
+}
+
+/** The same, for one track. */
+export async function lookupTrack(trackId: string): Promise<void> {
+  await api<{ queued: number }>(`/api/v1/tracks/${trackId}/lookup`, { method: "POST" });
+}
+
+/* ── Playlists + bulk actions (migration 0041) ───────────────────── */
+
+/**
+ * One playlist: an owner's ordered selection of their own tracks. `tracks` is
+ * present only on the single-playlist read.
+ */
+export interface Playlist {
+  id: string;
+  name: string;
+  description: string | null;
+  track_count: number;
+  created_at: string;
+  updated_at: string;
+  tracks?: Track[];
+}
+
+export async function listPlaylists(): Promise<Playlist[]> {
+  const r = await api<{ playlists?: Playlist[] }>("/api/v1/playlists");
+  return r.playlists ?? [];
+}
+
+export async function getPlaylist(id: string): Promise<Playlist> {
+  return api<Playlist>(`/api/v1/playlists/${id}`);
+}
+
+export async function createPlaylist(name: string, description?: string): Promise<Playlist> {
+  return api<Playlist>("/api/v1/playlists", {
+    method: "POST",
+    body: JSON.stringify({ name, description: description ?? null }),
+  });
+}
+
+export async function deletePlaylist(id: string): Promise<void> {
+  await api<void>(`/api/v1/playlists/${id}`, { method: "DELETE" });
+}
+
+/**
+ * Add a whole selection at once. Returns how many actually landed: tracks
+ * already in the playlist are skipped, so "added" can be lower than what you
+ * sent, and the UI should say so rather than claim everything worked.
+ */
+export async function addTracksToPlaylist(
+  playlistID: string,
+  trackIDs: string[],
+): Promise<{ added: number; requested: number }> {
+  return api<{ added: number; requested: number }>(`/api/v1/playlists/${playlistID}/tracks`, {
+    method: "POST",
+    body: JSON.stringify({ track_ids: trackIDs }),
+  });
+}
+
+export async function removeTrackFromPlaylist(playlistID: string, trackID: string): Promise<void> {
+  await api<void>(`/api/v1/playlists/${playlistID}/tracks/${trackID}`, { method: "DELETE" });
+}
+
+/**
+ * Publish or unpublish many tracks in one request. The per-track route would
+ * mean one HTTP call per row, which for an imported library of hundreds is both
+ * slow and a burst the API has no reason to absorb.
+ */
+export async function bulkSetTrackStatus(
+  trackIDs: string[],
+  status: "published" | "draft",
+): Promise<{ changed: number; requested: number }> {
+  return api<{ changed: number; requested: number }>("/api/v1/tracks/bulk-status", {
+    method: "POST",
+    body: JSON.stringify({ track_ids: trackIDs, status }),
+  });
 }

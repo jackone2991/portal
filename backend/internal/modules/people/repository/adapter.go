@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/portal/backend/internal/modules/people"
@@ -45,12 +44,12 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 	}
 	row, err := a.q.CreatePerson(ctx, p)
 	if err != nil {
-		// 0035's people_persons_linked_user_idx: this portal account is already
-		// in the caller's registry. Adding the same suggestion twice is a
-		// duplicate, not a server fault — the migration promises it is a no-op
-		// at the database, and this is what makes that true for the client.
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		// The INSERT is ON CONFLICT DO NOTHING on 0035's
+		// people_persons_linked_user_idx, so an account already in the registry
+		// comes back as "no rows". Letting the unique raise instead would abort
+		// the request's tenant transaction and turn this 409 into a 500 at
+		// COMMIT — the middleware discards a success it cannot commit.
+		if errors.Is(err, pgx.ErrNoRows) {
 			return people.Person{}, people.ErrDuplicate
 		}
 		return people.Person{}, err

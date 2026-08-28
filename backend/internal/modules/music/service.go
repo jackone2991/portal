@@ -29,6 +29,14 @@ type Service struct {
 	// runInTenant opens a committed tenant scope for a user. The worker has no
 	// request tenant, and every table the import touches is RLS-fenced.
 	runInTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
+	// Playlists (0041). Same adapter as repo; a separate field so the playlist
+	// feature stays in its own files. Nil ⇒ the playlist routes are not wired.
+	playlists PlaylistRepository
+
+	// mb is the MusicBrainz / Cover Art Archive client (0039). Nil, or present
+	// but not `active`, means outbound lookups are off — which is the default.
+	mb *MBClient
 }
 
 type ListResult struct {

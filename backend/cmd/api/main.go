@@ -606,9 +606,11 @@ func run() error {
 	var musicMod *music.Module
 	byTrack := ownerExtractor(music.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return musicMod.OwnerByTrack(ctx, id) })
 	musicMod, err = music.New(music.Deps{
-		Repo:   musicrepo.NewAdapter(conn),
-		Media:  mediaMod.API(),
-		Events: mediaEvents,
+		Repo: musicrepo.NewAdapter(conn),
+		// Same adapter, second interface: playlists (0041) live in their own files.
+		Playlists: musicrepo.NewAdapter(conn),
+		Media:     mediaMod.API(),
+		Events:    mediaEvents,
 		// Bulk zip import (0038): the API stores the archive and enqueues; the
 		// unpacking happens in cmd/worker, which is where ffprobe and the tenant
 		// scoping live.
