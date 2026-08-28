@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { ShellProps } from "@/templates/types";
+import { useShellLayout } from "@/lib/shell-layout";
 import { HelloPreloader } from "../partials/HelloPreloader";
 import { GoToTop } from "../partials/GoToTop";
 import { SessionKeeper } from "../partials/SessionKeeper";
@@ -27,8 +28,15 @@ import { NowPlayingBar, NowPlayingSpacer } from "../components/music/NowPlayingB
  * content padding both read — so everything shifts in lockstep.
  */
 export function MasterBase({ children }: ShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const { menuCollapsed, peopleCollapsed, toggleMenu, togglePeople } = useShellLayout();
+
+  // The persisted value only exists in the browser, so the first client render
+  // has to match the server's (both panels open) or React logs a hydration
+  // mismatch. Adopt the stored preference on the next tick instead.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const collapsed = hydrated && menuCollapsed;
+  const rightCollapsed = hydrated && peopleCollapsed;
 
   const rootStyle = {
     background: "var(--tpl-bg)",
@@ -45,8 +53,8 @@ export function MasterBase({ children }: ShellProps) {
 
       {/* chrome */}
       <SidebarCenter />
-      <SidebarLeft collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <SidebarRight collapsed={rightCollapsed} onToggle={() => setRightCollapsed((c) => !c)} />
+      <SidebarLeft collapsed={collapsed} onToggle={toggleMenu} />
+      <SidebarRight collapsed={rightCollapsed} onToggle={togglePeople} />
 
       {/* content */}
       <main

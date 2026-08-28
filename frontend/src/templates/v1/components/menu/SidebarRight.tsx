@@ -268,17 +268,33 @@ export function SidebarRight({
             className="flex items-center gap-2 border-t px-3 py-3"
             style={{ borderColor: "var(--tpl-border)" }}
           >
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search people..."
-              className="min-w-0 flex-1 rounded-md border bg-transparent px-3 py-1.5 text-sm outline-none focus:border-[var(--tpl-accent)]"
-              style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
-            />
+            {/* The clear control lives INSIDE the field. The collapse X beside it
+                reads as "clear the search" otherwise — two buttons a few pixels
+                apart, one of which quietly does something else. */}
+            <span className="relative min-w-0 flex-1">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search people..."
+                className="w-full rounded-md border bg-transparent py-1.5 pl-3 pr-7 text-sm outline-none focus:border-[var(--tpl-accent)]"
+                style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
+              />
+              {q !== "" && (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  aria-label="Clear search"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]"
+                >
+                  <Icon name="close-icon" size={10} />
+                </button>
+              )}
+            </span>
             <button
               type="button"
               onClick={onToggle}
-              className="text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]"
+              title="Collapse people panel"
+              className="shrink-0 text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]"
               aria-label="Collapse people panel"
             >
               <Icon name="close-icon" size={16} />
