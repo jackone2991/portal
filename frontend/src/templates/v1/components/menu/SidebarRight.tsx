@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { listPeople, listSuggestions, type Person, type PersonCircle } from "@/lib/people";
+import { listConnections } from "@/lib/social";
 import { assetVariantURL } from "@/lib/media-assets";
 
 /**
@@ -25,6 +26,12 @@ import { assetVariantURL } from "@/lib/media-assets";
  *                               something to offer instead of a blank rail
  *
  * Each heading carries a Settings link to the page that manages that section.
+ *
+ * The dots are the reference's presence dots, repurposed. Portal has no presence
+ * system — nobody is "online" — but it does now know whether you are connected
+ * to an account, whether they are waiting on your answer, or whether you are
+ * waiting on theirs. That is real, it is the thing you would act on, and it maps
+ * onto the same four colours. A dot here never claims someone is at their desk.
  *
  * Everything the data cannot support is gone rather than faked: no status dots,
  * no per-group "Settings", no row menu, no chat bar. What replaces the chat bar
@@ -69,9 +76,68 @@ export function SidebarRight({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `match` is derived from q
   }, [people, q]);
 
-  const suggestions = (suggestQuery.data ?? []).filter((s) => match(s.display_name));
+  const rawSuggestions = (suggestQuery.data ?? []).filter((s) => match(s.display_name));
+
+  // One map from account id to how you stand with them. The three query keys are
+  // the same ones the header's request menu uses, so TanStack serves both from
+  // one fetch rather than doubling the traffic on every page.
+  const accepted = useQuery({ queryKey: ["connections", "accepted"], queryFn: () => listConnections("accepted"), staleTime: 60_000 });
+  const incoming = useQuery({ queryKey: ["connections", "incoming"], queryFn: () => listConnections("incoming"), staleTime: 60_000 });
+  const outgoing = useQuery({ queryKey: ["connections", "outgoing"], queryFn: () => listConnections("outgoing"), staleTime: 60_000 });
+
+  const linkState = useMemo(() => {
+    const m = new Map<string, LinkState>();
+    for (const c of outgoing.data ?? []) m.set(c.user_id, "asked");
+    for (const c of incoming.data ?? []) m.set(c.user_id, "asking");
+    for (const c of accepted.data ?? []) m.set(c.user_id, "connected");
+    return m;
+  }, [accepted.data, incoming.data, outgoing.data]);
+
+  /**
+   * The third section is the catch-all — Olympus called it "Uncategorized" —
+   * so it holds everyone the first two do not: the people you are connected to
+   * but have not filed into a circle, the requests pending either way, and then
+   * the accounts you have no link with at all.
+   *
+   * Before this it held suggestions only, and suggestions are by definition the
+   * accounts with NO relationship. Anyone you connected to was subtracted from
+   * it and appeared nowhere else, so a connection made the person vanish from
+   * the rail and the status dot had nothing to attach to.
+   */
+  const filed = useMemo(() => {
+    const ids = new Set<string>();
+    for (const p of [...circles.close_friend, ...circles.family]) {
+      if (p.linked_user_id) ids.add(p.linked_user_id);
+    }
+    return ids;
+  }, [circles]);
+
+  const others = useMemo(() => {
+    const seen = new Set<string>();
+    const out: RailEntry[] = [];
+    const push = (userID: string, name: string, state?: LinkState) => {
+      if (!userID || seen.has(userID) || filed.has(userID) || !match(name)) return;
+      seen.add(userID);
+      out.push({ userID, name, state });
+    };
+    // Order is the order you would act in: settled, then asking you, then
+    // waiting on them, then strangers.
+    for (const c of accepted.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "connected");
+    for (const c of incoming.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "asking");
+    for (const c of outgoing.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "asked");
+    for (const sug of rawSuggestions) push(sug.user_id, sug.display_name);
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match` is derived from q
+  }, [accepted.data, incoming.data, outgoing.data, rawSuggestions, filed, q]);
+
   const hasAnything =
-    circles.close_friend.length > 0 || circles.family.length > 0 || suggestions.length > 0;
+    circles.close_friend.length > 0 || circles.family.length > 0 || others.length > 0;
+
+  // The collapsed rail is the same three sections flattened into one strip: a
+  // narrower view of the panel, not a different list. It used to show only
+  // registry people, so an empty registry left a blank column even when there
+  // were accounts to meet.
+  const railPeople = [...circles.close_friend, ...circles.family];
 
   return (
     <aside
@@ -87,14 +153,28 @@ export function SidebarRight({
         <>
           <div className="flex-1 overflow-y-auto py-4">
             <div className="flex flex-col items-center gap-2.5">
-              {people.map((p) => (
+              {railPeople.map((p) => (
                 <Link
                   key={p.id}
                   href={`/people/${p.id}` as Route}
-                  title={p.display_name}
+                  title={`${p.display_name}${stateLabel(linkState.get(p.linked_user_id ?? ""))}`}
                   aria-label={p.display_name}
+                  className="relative"
                 >
                   <PersonAvatar person={p} size={40} />
+                  <StatusDot state={linkState.get(p.linked_user_id ?? "")} />
+                </Link>
+              ))}
+              {others.map((o) => (
+                <Link
+                  key={o.userID}
+                  href={othersHref(o.state)}
+                  title={`${o.name}${stateLabel(o.state)}`}
+                  aria-label={o.name}
+                  className="relative"
+                >
+                  <Avatar name={o.name} size={40} />
+                  <StatusDot state={o.state} />
                 </Link>
               ))}
             </div>
@@ -129,7 +209,7 @@ export function SidebarRight({
                   empty="No one in this circle yet."
                 >
                   {circles.close_friend.map((p) => (
-                    <PersonRow key={p.id} person={p} />
+                    <PersonRow key={p.id} person={p} state={linkState.get(p.linked_user_id ?? "")} />
                   ))}
                 </Section>
 
@@ -139,7 +219,7 @@ export function SidebarRight({
                   empty="No one in this circle yet."
                 >
                   {circles.family.map((p) => (
-                    <PersonRow key={p.id} person={p} />
+                    <PersonRow key={p.id} person={p} state={linkState.get(p.linked_user_id ?? "")} />
                   ))}
                 </Section>
 
@@ -152,18 +232,22 @@ export function SidebarRight({
                       : "No other accounts on this Portal yet."
                   }
                 >
-                  {suggestions.map((sug) => (
-                    <li key={sug.user_id}>
+                  {others.map((o) => (
+                    <li key={o.userID}>
                       <Link
-                        href={"/people?circle=suggestions" as Route}
+                        href={othersHref(o.state)}
+                        title={`${o.name}${stateLabel(o.state)}`}
                         className="flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
                       >
-                        <Avatar name={sug.display_name} size={38} />
+                        <span className="relative shrink-0">
+                          <Avatar name={o.name} size={38} />
+                          <StatusDot state={o.state} />
+                        </span>
                         <p
                           className="min-w-0 flex-1 truncate text-sm font-semibold"
                           style={{ color: "var(--tpl-heading)" }}
                         >
-                          {sug.display_name}
+                          {o.name}
                         </p>
                       </Link>
                     </li>
@@ -262,14 +346,18 @@ function Section({
   );
 }
 
-function PersonRow({ person }: { person: Person }) {
+function PersonRow({ person, state }: { person: Person; state?: LinkState }) {
   return (
     <li>
       <Link
         href={`/people/${person.id}` as Route}
         className="flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
+        title={`${person.display_name}${stateLabel(state)}`}
       >
-        <PersonAvatar person={person} size={38} />
+        <span className="relative shrink-0">
+          <PersonAvatar person={person} size={38} />
+          <StatusDot state={state} />
+        </span>
         <p
           className="min-w-0 flex-1 truncate text-sm font-semibold"
           style={{ color: "var(--tpl-heading)" }}
@@ -279,6 +367,53 @@ function PersonRow({ person }: { person: Person }) {
       </Link>
     </li>
   );
+}
+
+/** One row of the catch-all section: an account, and how you stand with it. */
+interface RailEntry {
+  userID: string;
+  name: string;
+  state?: LinkState;
+}
+
+/**
+ * How you stand with an account. Undefined means no relationship at all, which
+ * draws no dot — an absent dot says "nothing between you yet", which is exactly
+ * what a suggestion is.
+ */
+type LinkState = "connected" | "asking" | "asked";
+
+/** A pending row belongs on the requests tab; everything else on suggestions. */
+function othersHref(state?: LinkState): Route {
+  return (state === "asking" || state === "asked"
+    ? "/people?circle=requests"
+    : "/people?circle=suggestions") as Route;
+}
+
+const STATE: Record<LinkState, { color: string; label: string }> = {
+  // Teal reads as "settled" in this palette, and a connection is the settled state.
+  connected: { color: "var(--tpl-status-online)", label: "connected" },
+  // Accent, because this one is the only state that needs you to do something.
+  asking: { color: "var(--tpl-accent)", label: "wants to connect" },
+  // Amber for waiting on them.
+  asked: { color: "var(--tpl-status-away)", label: "request sent" },
+};
+
+function StatusDot({ state }: { state?: LinkState }) {
+  if (!state) return null;
+  const s = STATE[state];
+  return (
+    <span
+      className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white"
+      style={{ background: s.color }}
+      aria-hidden
+    />
+  );
+}
+
+/** Tooltip suffix, so the dot's meaning is never left to colour alone. */
+function stateLabel(state?: LinkState): string {
+  return state ? ` — ${STATE[state].label}` : "";
 }
 
 /**
