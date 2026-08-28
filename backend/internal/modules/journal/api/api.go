@@ -26,15 +26,12 @@ const EventEntryCreated = "journal:entry_created"
 // subscribes one task per source event via the platform/events fan-out — a
 // distinct task per event since the payload carries no event discriminator.
 const (
-	TaskStreamAssetReady        = "journal:stream_asset_ready"
 	TaskStreamPlaybackCompleted = "journal:stream_playback_completed"
 	TaskStreamAssetDeleted      = "journal:stream_asset_deleted"
 	TaskStreamBankCreated       = "journal:stream_bank_created"
 	TaskStreamBankUpdated       = "journal:stream_bank_updated"
 	TaskStreamBankDeleted       = "journal:stream_bank_deleted"
 	TaskStreamBirthday          = "journal:stream_birthday"
-	TaskStreamComicPublished    = "journal:stream_comic_published"
-	TaskStreamComicDeleted      = "journal:stream_comic_deleted"
 	TaskStreamMoviePublished    = "journal:stream_movie_published"
 	TaskStreamTrackPublished    = "journal:stream_track_published"
 	TaskStreamStoryPublished    = "journal:stream_story_published"

@@ -59,6 +59,11 @@ type Querier interface {
 	MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) error
 	// P0.3 soft-delete tombstone: excluded from listings until the purge removes it.
 	SetAssetStatusDeleting(ctx context.Context, id pgtype.UUID) error
+	// Flip an asset between 'private' and 'public' (0032). No owner predicate here
+	// on purpose: the UPDATE policy already restricts this to the owner or a tenant
+	// admin, so a row the caller may not touch simply does not exist for them and
+	// this returns no rows.
+	SetAssetVisibility(ctx context.Context, arg SetAssetVisibilityParams) (Asset, error)
 	UpsertPlaybackProgress(ctx context.Context, arg UpsertPlaybackProgressParams) error
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -268,6 +269,117 @@ func (s *Service) OnAssetReady(ctx context.Context, task *asynq.Task) error {
 		},
 	}
 	return s.dispatchIntent(ctx, intent)
+}
+
+type connectionEvent struct {
+	ConnectionID  string `json:"connection_id"`
+	RequesterID   string `json:"requester_id"`
+	AddresseeID   string `json:"addressee_id"`
+	RequesterName string `json:"requester_name"`
+	AddresseeName string `json:"addressee_name"`
+}
+
+// OnConnectionRequested tells the person being asked. The requester already
+// knows what they did, so only the addressee hears about it.
+func (s *Service) OnConnectionRequested(ctx context.Context, task *asynq.Task) error {
+	return s.connectionNotice(ctx, task, false)
+}
+
+// OnConnectionAccepted closes the loop for the person who asked.
+func (s *Service) OnConnectionAccepted(ctx context.Context, task *asynq.Task) error {
+	return s.connectionNotice(ctx, task, true)
+}
+
+// connectionNotice is both handlers: the only differences are who is told and
+// what it says. dedup_key is the connection id plus the phase, so a redelivered
+// task is a no-op while request-then-accept still produces two entries.
+func (s *Service) connectionNotice(ctx context.Context, task *asynq.Task, accepted bool) error {
+	var ev connectionEvent
+	if err := json.Unmarshal(task.Payload(), &ev); err != nil {
+		log.Error().Err(err).Msg("notify: undecodable connection payload")
+		return fmt.Errorf("notify: undecodable connection payload: %w", asynq.SkipRetry)
+	}
+
+	recipientID, otherName, typ, phase := ev.AddresseeID, ev.RequesterName, notifyapi.TypeConnectionRequested, "requested"
+	if accepted {
+		recipientID, otherName, typ, phase = ev.RequesterID, ev.AddresseeName, notifyapi.TypeConnectionAccepted, "accepted"
+	}
+	recipient, err := uuid.Parse(recipientID)
+	if err != nil || recipient == uuid.Nil {
+		log.Error().Str("recipient", recipientID).Msg("notify: bad connection recipient id")
+		return fmt.Errorf("notify: bad connection recipient id: %w", asynq.SkipRetry)
+	}
+	if strings.TrimSpace(otherName) == "" {
+		otherName = "Someone"
+	}
+
+	title := otherName + " wants to connect with you"
+	if accepted {
+		title = otherName + " accepted your connection request"
+	}
+	return s.dispatchIntent(ctx, notifyapi.NotificationIntent{
+		UserID:   recipient,
+		Type:     typ,
+		Title:    title,
+		DedupKey: ev.ConnectionID + ":" + phase,
+		Data: map[string]any{
+			"connection_id": ev.ConnectionID,
+			"href":          "/people?circle=requests",
+		},
+	})
+}
+
+type comicPublishedEvent struct {
+	ComicID      string `json:"comic_id"`
+	OwnerUserID  string `json:"owner_user_id"`
+	Title        string `json:"title"`
+	ChapterCount int    `json:"chapter_count"`
+}
+
+// OnComicPublished is the notify:on_comic_published handler — one bell entry per
+// publish, carrying the chapter count rather than one entry per chapter. The
+// chapter count is in the dedup key on purpose: re-publishing an unchanged comic
+// is silent, while publishing it again after a sync brought new chapters is
+// worth hearing about once more.
+func (s *Service) OnComicPublished(ctx context.Context, task *asynq.Task) error {
+	var ev comicPublishedEvent
+	if err := json.Unmarshal(task.Payload(), &ev); err != nil {
+		log.Error().Err(err).Msg("notify:on_comic_published: undecodable payload")
+		return fmt.Errorf("notify:on_comic_published: undecodable payload: %w", asynq.SkipRetry)
+	}
+	ownerID, err := uuid.Parse(ev.OwnerUserID)
+	if err != nil || ownerID == uuid.Nil {
+		log.Error().Str("owner", ev.OwnerUserID).Msg("notify:on_comic_published: bad owner id")
+		return fmt.Errorf("notify:on_comic_published: bad owner id: %w", asynq.SkipRetry)
+	}
+
+	intent := notifyapi.NotificationIntent{
+		UserID:   ownerID,
+		Type:     notifyapi.TypeComicPublished,
+		Title:    comicPublishedTitle(ev.Title, ev.ChapterCount),
+		DedupKey: ev.ComicID + ":" + strconv.Itoa(ev.ChapterCount),
+		Data: map[string]any{
+			"comic_id":      ev.ComicID,
+			"chapter_count": ev.ChapterCount,
+			"href":          "/library/comic/" + ev.ComicID,
+		},
+	}
+	return s.dispatchIntent(ctx, intent)
+}
+
+func comicPublishedTitle(title string, chapters int) string {
+	name := strings.TrimSpace(title)
+	if name == "" {
+		name = "A comic"
+	}
+	switch {
+	case chapters <= 0:
+		return name + " is published"
+	case chapters == 1:
+		return name + " is published — 1 chapter"
+	default:
+		return name + " is published — " + strconv.Itoa(chapters) + " chapters"
+	}
 }
 
 func assetReadyTitle(title, kind string) string {

@@ -46,11 +46,48 @@ const (
 	ActionRBACPermGranted = "account.permission.granted" // role grant
 	ActionRBACPermRevoked = "account.permission.revoked"
 
+	// rbac — whole-set edits from the admin console. The granted/revoked pairs
+	// above describe a single grant; these describe a checkbox row saved at once,
+	// and carry before/after in metadata so the diff is recoverable.
+	ActionRBACRolesReplaced = "account.user.roles_changed"
+	ActionRBACPermsReplaced = "account.role.permissions_changed"
+
 	// users
+	ActionUserCreated  = "account.user.created" // admin-provisioned, not self-registered
+	ActionUserUpdated  = "account.user.updated" // email / display name / admin password set
 	ActionUserDisabled = "account.user.disabled"
 	ActionUserEnabled  = "account.user.enabled"
-	ActionUserDeleted  = "account.user.deleted"
+	// ActionUserDeleted records a HARD delete. Every FK to users cascades, so the
+	// row is the only trace left of the account's content — keep the email and
+	// roles in the metadata, because nothing else survives to be looked up.
+	ActionUserDeleted = "account.user.deleted"
+
+	// layout — the shell's navigation and dashboard composition (migration 0035).
+	// Whole-set saves, so the metadata records the size rather than a diff; the
+	// previous arrangement is not reconstructible from here, only the fact and
+	// the author of the change.
+	ActionLayoutMenuSaved    = "layout.menu.saved"
+	ActionLayoutWidgetsSaved = "layout.widgets.saved"
+
+	// registration approval (migration 0031). A registration is inert until one
+	// of these lands, so they are the record of who let an account in.
+	ActionUserApproved        = "account.user.approved"
+	ActionUserRejected        = "account.user.rejected"
+	ActionUserApprovalRevoked = "account.user.approval_revoked"
+	ActionUserPendingAttempt  = "account.session.pending_attempt"
 )
+
+// ApprovalAction maps an approval state to its audit action.
+func ApprovalAction(status string) string {
+	switch status {
+	case "approved":
+		return ActionUserApproved
+	case "rejected":
+		return ActionUserRejected
+	default:
+		return ActionUserApprovalRevoked
+	}
+}
 
 // EventStore is implemented by the sqlc-generated repo.
 type EventStore interface {

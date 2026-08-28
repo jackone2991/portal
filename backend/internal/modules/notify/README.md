@@ -43,10 +43,18 @@ New types slot in with zero schema change. Live producers today:
 | `media.asset_ready` | media consumer (P0.4) | yes | yes | in_app (email if opted in) |
 | `account.password_reset` | account forgot-password (P0.3) | **no** | **no** | email only (override) |
 | `account.security_alert` | account refresh-reuse (P1.4) | yes | **no** | email + in_app |
+| `account.registration_pending` | account register → everyone holding `users:approve` (0031) | yes | yes | email + in_app (override) |
 
 Non-mutable types ignore the `muted` switch (a user who muted resets must still
 recover). `account.password_reset` never writes an in-app row — the reset link
 rides the email task only (persisting it would defeat hashed-at-rest).
+
+`account.registration_pending` is the one MUTABLE type that still overrides the
+email-off default. The recipient is being told that somebody *else* is blocked
+until they act, and a bell badge only reaches an approver who is already signed
+in — so the channel override ships on. An approver who disagrees mutes the type,
+which silences both channels; turning email off alone will not work for this
+type, because an override can only turn a channel on.
 
 Future (design-only): `social.*`, `bank:budget_exceeded`, `people:birthday_*`,
 `media:playback_completed` — register against the same store when their backends

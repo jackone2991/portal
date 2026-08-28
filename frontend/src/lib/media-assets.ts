@@ -33,6 +33,14 @@ export type AssetStatusFilter = "all" | "ready" | "processing" | "failed";
 /** SPEC-01 §7 asset variants — grid/pickers use `thumb`, never the original. */
 export type AssetVariant = "thumb" | "medium" | "poster";
 
+/**
+ * Who may read an asset (migration `0032_media_asset_acl`). `private` is the
+ * owner (plus admins of the owning tenant); `public` is anyone, session or not.
+ * Enforced by row-level security, so a caller who may not read an asset gets a
+ * 404 — never a 403.
+ */
+export type AssetVisibility = "private" | "public";
+
 export interface MediaAsset {
   id: string;
   status: AssetStatus;
@@ -47,6 +55,12 @@ export interface MediaAsset {
   hls_url?: string;
   /** Present when `status` is `failed` (wire key is `error`, not `error_message`). */
   error?: string;
+  /**
+   * Optional so an older API build (which does not send it) reads as undefined
+   * rather than as a wrong value — every call site treats absent as `private`,
+   * which is the safe direction to be wrong in.
+   */
+  visibility?: AssetVisibility;
   /** SPEC-01 §6 addition (`title` column) — optional until the backend lands it. */
   title?: string;
   /** SPEC-01 §6 addition (`original_filename` column). */
@@ -82,6 +96,24 @@ export async function listAssets(
   if (params.cursor) q.set("cursor", params.cursor);
   const qs = q.toString();
   return api<ListAssetsPage>(`/api/v1/assets${qs ? `?${qs}` : ""}`);
+}
+
+/**
+ * `PATCH /api/v1/assets/{id}` — flip an asset between private and public.
+ *
+ * Restricted to the owner (or a tenant admin) by the 0032 UPDATE policy, not by
+ * a check in the handler: someone else's asset answers 404, the same as a
+ * missing id, so the endpoint never confirms that an asset exists.
+ */
+export async function setAssetVisibility(
+  id: string,
+  visibility: AssetVisibility,
+): Promise<MediaAsset> {
+  const r = await api<{ asset: MediaAsset }>(`/api/v1/assets/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ visibility }),
+  });
+  return r.asset;
 }
 
 /** `DELETE /api/v1/assets/{id}` — owner, or `assets:delete:any`. 204; idempotent 404. */

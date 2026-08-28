@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/portal/backend/internal/modules/account/auth"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // AuthSnapshotFetcher loads the user record fields relevant to access
@@ -29,7 +30,16 @@ type UserAuthSnapshot struct {
 	DisplayName  string
 	TokenVersion int
 	Disabled     bool
+	// ApprovalStatus is "pending" | "approved" | "rejected" (migration 0031).
+	// Checked on every request, not only at login, so that revoking somebody's
+	// approval ends their session immediately instead of at token expiry.
+	ApprovalStatus string
 }
+
+// ApprovalApproved is the only approval state that may hold a session. Declared
+// here rather than imported from handler because middleware must not depend on
+// the handler package — handler already imports middleware.
+const ApprovalApproved = "approved"
 
 // AccessCookieName is the HttpOnly Secure SameSite=Strict cookie that holds
 // the access token for browser clients. API clients send Authorization headers.
@@ -47,6 +57,15 @@ func RequireAuth(verifier *auth.Verifier, fetcher AuthSnapshotFetcher) func(http
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id, err := authenticate(r, verifier, fetcher)
 			if err != nil {
+				// An unapproved account is the one failure mode worth naming: the
+				// caller has already proved who they are, so saying so leaks
+				// nothing, and a bare 401 would send the frontend to the login
+				// screen where signing in again cannot possibly help.
+				if errors.Is(err, auth.ErrUserNotApproved) {
+					writeJSONError(w, http.StatusForbidden, "account_not_approved",
+						"this account is awaiting approval")
+					return
+				}
 				writeJSONError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
 				return
 			}
@@ -96,6 +115,9 @@ func authenticate(r *http.Request, verifier *auth.Verifier, fetcher AuthSnapshot
 	if snap.Disabled {
 		return nil, auth.ErrUserDisabled
 	}
+	if snap.ApprovalStatus != "" && snap.ApprovalStatus != ApprovalApproved {
+		return nil, auth.ErrUserNotApproved
+	}
 	if snap.TokenVersion != claims.TokenVersion {
 		return nil, auth.ErrTokenRevoked
 	}
@@ -130,11 +152,15 @@ func extractToken(r *http.Request) (string, bool) {
 
 // writeJSONError is shared by middleware error paths. Defined here to avoid
 // a circular import on the handler package.
+//
+// It answers with RFC 7807, like every handler does. These middleware 401/403s
+// were the last place still writing the legacy {code, message} body, and they
+// are the most-hit error path in the API — so the frontend's
+// problemDisplayMessage found no `detail` and fell back to a generic string on
+// every auth failure. `code` carries through as the problem type, which keeps
+// the existing vocabulary and drops the hand-concatenated JSON.
 func writeJSONError(w http.ResponseWriter, status int, code, msg string) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_, _ = w.Write([]byte(`{"code":"` + code + `","message":"` + msg + `"}`))
+	server.Problem(w, status, server.ProblemType("account", code), http.StatusText(status), msg)
 }
 
 // errorMatches is a small helper used by tests; kept exported in case other

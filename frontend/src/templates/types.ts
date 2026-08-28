@@ -64,5 +64,11 @@ export interface TemplateManifest {
     calendar: ComponentType;
     /** Weather — current + hourly + 7-day (Open-Meteo, geolocation). */
     weather: ComponentType;
+    /** Admin console — user directory + registration approval queue. */
+    adminUsers: ComponentType;
+    /** Admin console — role hierarchy and the role x permission matrix. */
+    adminRoles: ComponentType;
+    /** Admin console — shell navigation menu + dashboard widget placement. */
+    adminLayout: ComponentType;
   };
 }

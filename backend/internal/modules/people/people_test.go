@@ -166,6 +166,7 @@ type notice struct {
 type fakePeople struct {
 	persons map[uuid.UUID]*fakePerson
 	notices map[string]*notice
+	linked  []uuid.UUID
 }
 
 func newFakePeople() *fakePeople {
@@ -216,6 +217,11 @@ func (r *fakePeople) GetPerson(_ context.Context, _, _ uuid.UUID) (Person, error
 	return Person{}, ErrNotFound
 }
 func (r *fakePeople) ListPeople(_ context.Context, _ ListInput) ([]Person, error) { return nil, nil }
+
+// linked is what Suggestions subtracts; the tests below set it directly.
+func (r *fakePeople) ListLinkedUserIDs(_ context.Context, _ uuid.UUID) ([]uuid.UUID, error) {
+	return r.linked, nil
+}
 func (r *fakePeople) UpdatePerson(_ context.Context, _ UpdatePersonInput) (Person, error) {
 	return Person{}, nil
 }
@@ -284,4 +290,39 @@ func (e *fakeEvents) Publish(_ context.Context, _ string, _ any) error {
 	}
 	e.count++
 	return nil
+}
+
+// ── suggestions (0035) ──────────────────────────────────────────────────
+
+func TestSuggestionsSubtractsAlreadyAdded(t *testing.T) {
+	added, fresh := uuid.New(), uuid.New()
+	repo := newFakePeople()
+	repo.linked = []uuid.UUID{added}
+	svc := &Service{
+		repo: repo,
+		directory: func(_ context.Context, _ uuid.UUID, _ int) ([]DirectoryUser, error) {
+			return []DirectoryUser{
+				{ID: added, DisplayName: "Already in my registry"},
+				{ID: fresh, DisplayName: "Someone new"},
+			}, nil
+		},
+	}
+
+	got, err := svc.Suggestions(context.Background(), uuid.New(), 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].UserID != fresh {
+		t.Fatalf("suggestions = %+v, want only the account not yet added", got)
+	}
+}
+
+// No directory wired (a worker, a test harness) must mean "no suggestions",
+// never an error that breaks the page the rail sits on.
+func TestSuggestionsWithoutDirectory(t *testing.T) {
+	svc := &Service{repo: newFakePeople()}
+	got, err := svc.Suggestions(context.Background(), uuid.New(), 10)
+	if err != nil || len(got) != 0 {
+		t.Fatalf("got (%v, %v), want (empty, nil)", got, err)
+	}
 }

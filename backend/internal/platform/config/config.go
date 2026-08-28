@@ -51,9 +51,22 @@ type Config struct {
 	CookieSecure bool   `env:"COOKIE_SECURE"   envDefault:"true"`
 	PostLoginURL string `env:"POST_LOGIN_URL"  envDefault:"/"`
 
+	// BootstrapSuperadminEmail names the account that must hold `superadmin` and
+	// an approved registration. Re-asserted on every API start, and a no-op once
+	// it is true — see bootstrapSuperadmin in cmd/api.
+	//
+	// It exists because migration 0031 turned registration into an approve-first
+	// flow: an install with no superadmin has nobody who can approve anyone, and
+	// the first-account rule in /auth/register only rescues an empty database.
+	// Empty (the default) disables the bootstrap entirely.
+	BootstrapSuperadminEmail string `env:"BOOTSTRAP_SUPERADMIN_EMAIL" envDefault:""`
+
 	// Password reset (SPEC-04 P0.3). PasswordResetURL is the reset-link base the
 	// email points at; the raw token is appended as ?token=.
-	PasswordResetURL string        `env:"PASSWORD_RESET_URL" envDefault:"https://portal.localhost/reset-password"`
+	PasswordResetURL string `env:"PASSWORD_RESET_URL" envDefault:"https://portal.localhost/reset-password"`
+	// ApprovalQueueURL is where the "someone is waiting for approval"
+	// notification points. Empty just drops the link from the message.
+	ApprovalQueueURL string        `env:"APPROVAL_QUEUE_URL" envDefault:"https://portal.localhost/admin/users?status=pending"`
 	PasswordResetTTL time.Duration `env:"PASSWORD_RESET_TTL" envDefault:"1h"`
 
 	// Notification email channel (SPEC-04 P0.3). Dev = Mailpit (no auth). An

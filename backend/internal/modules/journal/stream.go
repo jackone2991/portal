@@ -22,6 +22,7 @@ type StreamCard struct {
 	ID           uuid.UUID
 	SourceModule string
 	EventType    string
+	RefID        uuid.UUID
 	OccurredAt   time.Time
 	BodyMd       *string
 	Mood         *string
@@ -66,7 +67,7 @@ func (s *Service) Stream(ctx context.Context, userID uuid.UUID, cursor string, l
 }
 
 func toCard(r StreamItem) StreamCard {
-	c := StreamCard{ID: r.ID, SourceModule: r.SourceModule, EventType: r.EventType, OccurredAt: r.OccurredAt, Payload: r.Payload}
+	c := StreamCard{ID: r.ID, SourceModule: r.SourceModule, EventType: r.EventType, RefID: r.RefID, OccurredAt: r.OccurredAt, Payload: r.Payload}
 	if r.SourceModule == "journal" {
 		c.BodyMd, c.Mood = r.BodyMd, r.Mood
 		return c
@@ -93,12 +94,10 @@ func renderSystem(eventType string, refID uuid.UUID, payload json.RawMessage) (t
 		return 0
 	}
 	switch eventType {
-	case "media:asset_ready":
-		t := str("title")
-		if t == "" {
-			t = "A file"
-		}
-		return t + " is ready", "/library/media"
+	// No "media:asset_ready" case: that event is not projected into the stream
+	// (see cmd/worker's subscription list). Rows written before it was removed
+	// were deleted by migration 0033; anything left falls through to the generic
+	// default rather than being resurrected here.
 	case "media:playback_completed":
 		t := str("title")
 		if t == "" {
@@ -114,12 +113,20 @@ func renderSystem(eventType string, refID uuid.UUID, payload json.RawMessage) (t
 			return fmt.Sprintf("Income %s", formatVND(amt)), "/bank/transactions"
 		}
 		return fmt.Sprintf("Spent %s", formatVND(amt)), "/bank/transactions"
-	case "comic:chapter_published":
+	case "music:track_published":
+		// Without this case the card fell through to `default`, which renders the
+		// raw event name ("music:track_published") and no link — so publishing from
+		// the music library put an unreadable, dead row on the home stream.
+		// `movie:published` and `story:published` still land in that default.
 		t := str("title")
 		if t == "" {
-			t = "A chapter"
+			t = "A track"
 		}
-		return t + " published", "/library/comic"
+		href := "/library/music"
+		if id := str("track_id"); id != "" {
+			href += "/" + id
+		}
+		return t + " published", href
 	case "people:birthday_upcoming":
 		name := str("display_name")
 		days := num("days_until")
@@ -161,21 +168,6 @@ func formatVND(minor int64) string {
 }
 
 // ══ system-event ingest (P0.1b) — called by the consumer task handlers ══
-
-func (s *Service) OnAssetReady(ctx context.Context, payload []byte) error {
-	var p struct {
-		AssetID     string `json:"asset_id"`
-		OwnerUserID string `json:"owner_user_id"`
-		Origin      string `json:"origin"`
-	}
-	if err := json.Unmarshal(payload, &p); err != nil {
-		return nil
-	}
-	if p.Origin == "import" {
-		return nil // zip-import flood guard
-	}
-	return s.insertSystem(ctx, payload, p.OwnerUserID, "media", "media:asset_ready", p.AssetID, time.Now())
-}
 
 func (s *Service) OnPlaybackCompleted(ctx context.Context, payload []byte) error {
 	var p struct {
@@ -227,35 +219,6 @@ func (s *Service) OnBirthdayUpcoming(ctx context.Context, payload []byte) error 
 		return nil
 	}
 	return s.insertSystem(ctx, payload, p.UserID, "people", "people:birthday_upcoming", p.NoticeID, time.Now())
-}
-
-func (s *Service) OnComicPublished(ctx context.Context, payload []byte) error {
-	var p struct {
-		ChapterID   string `json:"chapter_id"`
-		OwnerUserID string `json:"owner_user_id"`
-	}
-	if err := json.Unmarshal(payload, &p); err != nil {
-		return nil
-	}
-	return s.insertSystem(ctx, payload, p.OwnerUserID, "comic", "comic:chapter_published", p.ChapterID, time.Now())
-}
-
-// OnComicDeleted removes the published-chapter card when a chapter (or a whole
-// comic, one event per chapter) is deleted — SPEC-02 P1.9 / SPEC-06 P0.1. Keyed
-// on chapter_id, the same ref the published card used. Idempotent: a delete for
-// a chapter that was never published (or already removed) is a no-op.
-func (s *Service) OnComicDeleted(ctx context.Context, payload []byte) error {
-	var p struct {
-		ChapterID string `json:"chapter_id"`
-	}
-	if err := json.Unmarshal(payload, &p); err != nil {
-		return nil
-	}
-	chID, err := uuid.Parse(p.ChapterID)
-	if err != nil {
-		return nil
-	}
-	return s.repo.DeleteStreamItem(ctx, "comic", "comic:chapter_published", chID)
 }
 
 // bankUpsert projects a bank:transaction_* create/update. Transfers collapse to

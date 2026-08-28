@@ -174,3 +174,133 @@ export async function uploadAudioAsset(
   await api<unknown>(`/api/v1/assets/${assetId}/complete`, { method: "POST" });
   return assetId;
 }
+
+/* ── bulk import ──────────────────────────────────────────────────── */
+
+export type MusicImportStatus = "pending" | "uploaded" | "processing" | "done" | "failed";
+
+export interface MusicImportReportEntry {
+  name: string;
+  ok: boolean;
+  track_id?: string;
+  title?: string;
+  error?: string;
+}
+
+export interface MusicImport {
+  id: string;
+  status: MusicImportStatus;
+  total: number;
+  succeeded: number;
+  /** Entries that failed. Does not stop the job — the report says which. */
+  failed: number;
+  report: MusicImportReportEntry[];
+  /** Job-level failure. Null unless `status` is "failed". */
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function getImport(id: string): Promise<MusicImport> {
+  return api<MusicImport>(`/api/v1/tracks/imports/${id}`);
+}
+
+/**
+ * Upload a zip of audio files and start the import.
+ *
+ * Two requests on purpose: the job id has to exist before a multi-gigabyte body
+ * starts moving, so a dropped connection leaves a job to retry against rather
+ * than an orphaned upload. Returns the job; poll `getImport` for progress.
+ *
+ * `onProgress` reports 0-100 for the byte transfer only — unpacking happens on
+ * the worker afterwards and is reported through the job's counters.
+ */
+export async function importZip(
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<MusicImport> {
+  const job = await api<MusicImport>("/api/v1/tracks/imports", { method: "POST" });
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", `${baseURL}/api/v1/tracks/imports/${job.id}/upload`);
+    xhr.withCredentials = true; // session cookie, cross-subdomain
+    xhr.setRequestHeader("Content-Type", "application/zip");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(uploadErrorMessage(xhr)));
+    xhr.onerror = () => reject(new Error("Lỗi mạng khi tải lên."));
+    xhr.send(file);
+  });
+
+  return getImport(job.id);
+}
+
+/**
+ * Pull the RFC 7807 `detail` out of an XHR failure.
+ *
+ * The import limits (4 GiB, 2000 entries) are enforced server-side, so the
+ * message that matters — "tệp zip 5.2 GB vượt giới hạn 4.0 GB" — arrives in the
+ * body. A bare status code would send the user guessing.
+ */
+function uploadErrorMessage(xhr: XMLHttpRequest): string {
+  try {
+    const body = JSON.parse(xhr.responseText) as { detail?: string };
+    if (body.detail) return body.detail;
+  } catch {
+    // non-JSON body; fall through
+  }
+  return `Tải lên thất bại (${xhr.status}).`;
+}
+
+/** True while the job still has work left, i.e. the client should keep polling. */
+export function importInFlight(job: MusicImport): boolean {
+  return job.status === "pending" || job.status === "uploaded" || job.status === "processing";
+}
+
+/* ── filename metadata ────────────────────────────────────────────── */
+
+export interface FilenameMeta {
+  title: string;
+  artist?: string;
+}
+
+/**
+ * Guess title and artist from a filename.
+ *
+ * A deliberate port of `titleFromFilename` in
+ * `backend/internal/modules/music/import.go`, kept in step with it. The zip
+ * importer reads embedded tags with ffprobe and only falls back to this; the
+ * browser has no ffprobe, so for a multi-file upload this IS the metadata. Two
+ * paths producing different names for the same file is the kind of difference
+ * nobody can explain to a user, so at minimum they agree on the filename rules.
+ *
+ * The remaining, honest gap: a multi-file upload cannot see embedded tags. A
+ * file whose ID3 says "Bản Tình Ca" imports as "tagged-one" here and as
+ * "Bản Tình Ca" through the zip.
+ */
+export function metaFromFilename(filename: string): FilenameMeta {
+  const stem = stripTrackNumber(filename.replace(/\.[^.]+$/, "").trim());
+  const parts = stem.split(" - ").map((p) => p.trim());
+
+  if (parts.length <= 1) return { title: parts[0] || stem };
+  // Only the FIRST separator splits artist from title — a dash inside the title
+  // is common ("Paranoid - Android") and splitting on all of them truncates it.
+  return { artist: parts[0], title: parts.slice(1).join(" - ") };
+}
+
+/**
+ * Drop a leading position marker ("01 - ", "1. ", "003_").
+ *
+ * The number must be followed by a real separator, never a bare space: "01 Creep"
+ * and "99 Luftballons" are the same shape, and renaming "99 Luftballons" to
+ * "Luftballons" is a worse failure than leaving a track number in a title.
+ */
+function stripTrackNumber(stem: string): string {
+  const m = /^(\d{1,3})\s*([.\-_])\s*(.+)$/.exec(stem);
+  return m && m[3] ? m[3].trim() : stem;
+}

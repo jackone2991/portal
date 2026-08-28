@@ -24,8 +24,12 @@ WHERE id = $1;
 
 -- name: GetUserAuthSnapshot :one
 -- Minimal projection used by JWT middleware on each request to validate
--- token_version + disabled state. Indexed PK lookup.
-SELECT id, email, display_name, role, token_version, disabled_at
+-- token_version + disabled + approval state. Indexed PK lookup.
+--
+-- approval_status is read here, not just at login, so that revoking an approval
+-- ends the session at once: the middleware re-reads this row on every request,
+-- which is the same channel disabled_at has always used.
+SELECT id, email, display_name, role, token_version, disabled_at, approval_status
 FROM users
 WHERE id = $1;
 

@@ -43,7 +43,27 @@ export type ProblemType =
   | "people/invalid-birthday"
   | "people/validation"
   | "people/invalid-cursor"
-  | "stream/invalid-cursor";
+  | "stream/invalid-cursor"
+  | "platform/rate-limited"
+  | "account/account-pending"
+  | "account/account-rejected"
+  | "account/account-disabled"
+  | "account/account-not-approved"
+  | "account/self-target"
+  | "account/escalation"
+  | "account/unknown-role"
+  | "account/unknown-permission"
+  | "account/role-protected"
+  | "account/role-in-use"
+  | "account/role-cycle"
+  | "account/role-exists"
+  | "account/invalid-email"
+  | "account/password-policy"
+  | "account/email-taken"
+  | "account/confirmation-mismatch"
+  | "account/last-approver"
+  | "layout/validation"
+  | "layout/unknown-widget";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -82,6 +102,47 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "people/validation": "Please check the form and try again.",
   "people/invalid-cursor": "Couldn't load the next page — please refresh.",
   "stream/invalid-cursor": "Couldn't load more of your stream — please refresh.",
+  // Emitted by the IP rate limiter on the auth perimeter (login/register/refresh),
+  // which used to answer with the legacy {code, message} body — so this 429 fell
+  // through to the generic fallback instead of telling the user to wait.
+  "platform/rate-limited": "Too many attempts. Wait a moment and try again.",
+
+  // Registration approval (migration 0031). The server sends a `detail` on all
+  // of these — a rejection even carries the reviewer's note — so these entries
+  // are the floor, used only if `detail` is ever missing.
+  "account/account-pending":
+    "This account is waiting for an administrator to approve it.",
+  "account/account-rejected": "This registration was not approved.",
+  "account/account-disabled": "This account is disabled.",
+  "account/account-not-approved":
+    "This account is no longer approved. Sign in again to see why.",
+
+  // Admin console guardrails.
+  "account/self-target": "You can't apply this to your own account.",
+  "account/escalation":
+    "You can't grant or revoke something you don't hold yourself.",
+  "account/unknown-role": "No such role.",
+  "account/unknown-permission": "No such permission.",
+  "account/role-protected": "System roles can't be edited or deleted.",
+  "account/role-in-use":
+    "This role is still in use — move its users or child roles off it first.",
+  "account/role-cycle": "That parent would create a loop in the role hierarchy.",
+  "account/role-exists": "A role with that code already exists.",
+
+  // User create / edit / delete.
+  "account/invalid-email": "Enter a valid email address.",
+  "account/password-policy": "The password must be at least 8 characters.",
+  "account/email-taken": "An account with this email already exists.",
+  "account/confirmation-mismatch":
+    "Type the account's email address to confirm this deletion.",
+  "account/last-approver":
+    "This is the last account that can approve registrations — give another account that permission first.",
+
+  // Shell layout. The server names the offending row in `detail`, which
+  // problemDisplayMessage prefers — these are only the floor.
+  "layout/validation": "Check the menu entries and try again.",
+  "layout/unknown-widget":
+    "That widget doesn't exist in this build — the widget list comes from the code, not the database.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";

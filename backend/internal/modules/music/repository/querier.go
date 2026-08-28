@@ -11,20 +11,36 @@ import (
 )
 
 type Querier interface {
+	// Bulk track import jobs (0038). The client creates a job, PUTs the zip, then
+	// polls this row for status + the per-file report.
+	CreateMusicImport(ctx context.Context, ownerUserID pgtype.UUID) (CreateMusicImportRow, error)
 	// music module queries. sqlc input only. Owner-scoped mutations; published-or-
 	// owner reads. Asset ids validated via mediaapi (no cross-module FK), reaped via
 	// media:asset_deleted. tenant_id is filled by its column DEFAULT (RequireTenant
 	// sets app.current_tenant) — never inserted here.
 	CreateTrack(ctx context.Context, arg CreateTrackParams) (MusicTrack, error)
 	DeleteTrack(ctx context.Context, id pgtype.UUID) error
+	// report is cast text->jsonb so sqlc types the param as a Go string: the pool runs
+	// QueryExecModeExec, where pgx picks the wire OID from the Go type without
+	// describing params, and a []byte goes out as bytea which jsonb rejects (22P02).
+	FinishMusicImport(ctx context.Context, arg FinishMusicImportParams) error
+	GetMusicImport(ctx context.Context, id pgtype.UUID) (GetMusicImportRow, error)
 	GetTrack(ctx context.Context, id pgtype.UUID) (MusicTrack, error)
 	GetTrackOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	// Recent jobs for the owner, so the UI can show an import that is still running
+	// after a page reload.
+	ListMusicImports(ctx context.Context, arg ListMusicImportsParams) ([]ListMusicImportsRow, error)
 	ListOwnTracks(ctx context.Context, arg ListOwnTracksParams) ([]MusicTrack, error)
 	ListPublishedTracks(ctx context.Context, arg ListPublishedTracksParams) ([]MusicTrack, error)
 	// ══ media:asset_deleted consumer ══════════════════════════════════════════
 	// NullAudioByAsset also unpublishes: a published track with no audio is broken.
 	NullAudioByAsset(ctx context.Context, audioAssetID pgtype.UUID) error
 	NullTrackCoverByAsset(ctx context.Context, coverAssetID pgtype.UUID) error
+	// Marks the zip stored. `uploaded` (not `processing`) because the worker has not
+	// picked the job up yet — the client showing "đang xử lý" before anything is
+	// running would be a lie it has to take back.
+	SetMusicImportUpload(ctx context.Context, arg SetMusicImportUploadParams) (SetMusicImportUploadRow, error)
+	StartMusicImport(ctx context.Context, arg StartMusicImportParams) error
 	UpdateTrack(ctx context.Context, arg UpdateTrackParams) (MusicTrack, error)
 	UpdateTrackStatus(ctx context.Context, arg UpdateTrackStatusParams) (MusicTrack, error)
 }

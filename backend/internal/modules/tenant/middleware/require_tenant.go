@@ -23,14 +23,15 @@ import (
 // depends on account internals — the wiring layer builds it from auth.FromContext.
 type CurrentUser func(ctx context.Context) (userID uuid.UUID, displayName string, ok bool)
 
-// TenantScoper opens a transaction with app.current_tenant pinned to orgID.
+// TenantScoper opens a transaction with the actor pinned on it (tenant, user,
+// admin flag — see platformdb.Scope).
 //
 // *platformdb.DB satisfies it structurally, so wiring is unchanged; the seam
 // exists so the commit/rollback decisions below can be tested without a
 // Postgres connection. Two adapters: the real pool, and the fake in
 // require_tenant_test.go.
 type TenantScoper interface {
-	BeginTenantScope(ctx context.Context, orgID uuid.UUID) (pgx.Tx, error)
+	BeginScope(ctx context.Context, s platformdb.Scope) (pgx.Tx, error)
 }
 
 // maxBufferedResponse caps the body held back while a mutating request's
@@ -61,21 +62,56 @@ const maxBufferedResponse = 4 << 20 // 4 MiB
 // fails to commit has lost nothing, so there is no reason to buffer a large
 // download or an HLS segment behind it.
 func RequireTenant(db TenantScoper, store tenantapi.Store, currentUser CurrentUser) func(http.Handler) http.Handler {
+	return scoped(db, store, currentUser, true)
+}
+
+// OptionalTenant is RequireTenant for endpoints that serve anonymous callers
+// too — today the media module's variant/HLS routes, which must keep serving
+// assets marked public without a session.
+//
+// An anonymous request runs with NO transaction and therefore no GUCs, so the
+// media policies (0032) reduce to "public rows only". That is the whole point:
+// the route is not trusted to filter, the database is.
+//
+// A request that carries a valid identity gets the same tenant-scoped
+// transaction RequireTenant opens, so the caller also sees their own private
+// media. A request whose tenant cannot be resolved is served anonymously rather
+// than failed — it degrades to public-only, which is the safe direction.
+func OptionalTenant(db TenantScoper, store tenantapi.Store, currentUser CurrentUser) func(http.Handler) http.Handler {
+	return scoped(db, store, currentUser, false)
+}
+
+func scoped(db TenantScoper, store tenantapi.Store, currentUser CurrentUser, required bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			uid, displayName, ok := currentUser(r.Context())
 			if !ok {
-				server.Unauthorized(w)
+				if required {
+					server.Unauthorized(w)
+					return
+				}
+				next.ServeHTTP(w, r) // anonymous: public rows only
 				return
 			}
 			org, err := store.GetOrCreatePersonalOrg(r.Context(), uid, displayName)
 			if err != nil || org == nil {
 				slog.Error("tenant: could not resolve personal org", "user_id", uid, "err", err)
+				if !required {
+					next.ServeHTTP(w, r) // degrade to public-only, never to a 500 on an image
+					return
+				}
 				server.Problem(w, http.StatusInternalServerError, "about:blank",
 					"Internal Server Error", "could not resolve tenant")
 				return
 			}
-			tx, err := db.BeginTenantScope(r.Context(), org.ID)
+			// Admin = owner of the tenant. For a personal org that is always the
+			// caller, so nothing changes for single-user tenants; in a shared org
+			// it is what lets the owner administer members' media (0032).
+			tx, err := db.BeginScope(r.Context(), platformdb.Scope{
+				OrgID:  org.ID,
+				UserID: uid,
+				Admin:  org.OwnerID == uid,
+			})
 			if err != nil {
 				slog.Error("tenant: could not open tenant scope", "user_id", uid, "org_id", org.ID, "err", err)
 				server.Problem(w, http.StatusInternalServerError, "about:blank",

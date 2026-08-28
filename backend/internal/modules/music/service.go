@@ -19,6 +19,16 @@ type Service struct {
 	repo   Repository
 	media  MediaAPI
 	events EventPublisher // optional: music:track_published on publish
+
+	// Zip import (0038). The API side sets store + enqueue; the worker side sets
+	// store as well (it reads the zip back). Nil on either means the import
+	// routes/tasks are simply not wired, which is how a binary that should not
+	// import declines to.
+	store   Storage
+	enqueue Enqueuer
+	// runInTenant opens a committed tenant scope for a user. The worker has no
+	// request tenant, and every table the import touches is RLS-fenced.
+	runInTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
 }
 
 type ListResult struct {

@@ -49,6 +49,13 @@ func (m *Module) RequireTenant() func(http.Handler) http.Handler {
 	return tenantmw.RequireTenant(m.deps.DB, m.deps.Store, m.deps.CurrentUser)
 }
 
+// OptionalTenant is RequireTenant that lets anonymous requests through unscoped.
+// For routes that serve both the public and the signed-in caller — the media
+// variant/HLS proxies. See tenantmw.OptionalTenant.
+func (m *Module) OptionalTenant() func(http.Handler) http.Handler {
+	return tenantmw.OptionalTenant(m.deps.DB, m.deps.Store, m.deps.CurrentUser)
+}
+
 // MountHTTP wires GET /me/organizations (the caller's orgs). It runs through
 // RequireAuth → RequireTenant, exercising the full BeginTenantScope path.
 func (m *Module) MountHTTP(r chi.Router) {

@@ -272,15 +272,15 @@ func (h *Handler) ServeVariant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	variant := chi.URLParam(r, "variant")
-	rc, ct, err := h.svc.ServeVariant(r.Context(), id, variant)
+	c, err := h.svc.ServeVariant(r.Context(), id, variant)
 	if err != nil {
 		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "variant not found")
 		return
 	}
-	defer rc.Close()
-	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-	_, _ = io.Copy(w, rc)
+	defer c.Body.Close()
+	w.Header().Set("Content-Type", c.ContentType)
+	w.Header().Set("Cache-Control", cacheControl(c.Public, 31536000))
+	_, _ = io.Copy(w, c.Body)
 }
 
 // GET /assets/{id}/hls/* — PUBLIC HLS proxy (manifest + segments).
@@ -291,15 +291,15 @@ func (h *Handler) HLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sub := chi.URLParam(r, "*")
-	rc, ct, err := h.svc.HLSObject(r.Context(), id, sub)
+	c, err := h.svc.HLSObject(r.Context(), id, sub)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	defer rc.Close()
-	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "public, max-age=30")
-	_, _ = io.Copy(w, rc)
+	defer c.Body.Close()
+	w.Header().Set("Content-Type", c.ContentType)
+	w.Header().Set("Cache-Control", cacheControl(c.Public, 30))
+	_, _ = io.Copy(w, c.Body)
 }
 
 // ── helpers ─────────────────────────────────────────────────────────
@@ -317,6 +317,7 @@ func (h *Handler) assetJSON(a Asset, hlsURL string) map[string]any {
 		"title":             a.Title,
 		"original_filename": a.OriginalFilename,
 		"origin":            a.Origin,
+		"visibility":        a.Visibility,
 		"created_at":        a.CreatedAt.Format(time.RFC3339),
 	}
 	if hlsURL != "" {
@@ -395,4 +396,68 @@ func writeMediaErr(w http.ResponseWriter, err error) {
 // every existing call site keeps its vocabulary and gains the standard shape.
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
 	server.Problem(w, status, server.ProblemType("media", code), http.StatusText(status), msg)
+}
+
+// cacheControl keeps a private asset out of shared caches. Variants and HLS
+// segments are immutable either way, so the only axis is who may store them:
+// a proxy that cached a private rendition would hand it to the next caller and
+// undo the row-level policies entirely.
+func cacheControl(public bool, maxAge int) string {
+	scope := "private"
+	if public {
+		scope = "public"
+	}
+	return fmt.Sprintf("%s, max-age=%d, immutable", scope, maxAge)
+}
+
+// Patch updates the mutable parts of an asset. Today that is `visibility`, the
+// switch between "only I can see this" and "anyone with the link can".
+//
+// PATCH /assets/{id}  {"visibility":"public"|"private"}
+//
+// Ownership is not checked here. The 0032 UPDATE policy restricts the statement
+// to the owner or a tenant admin, so someone else's asset simply does not exist
+// for this UPDATE and the repository reports ErrNotFound — the same answer a
+// missing id gets, which is what keeps the endpoint from confirming that an
+// asset exists.
+func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
+	if _, ok := h.currentUser(r.Context()); !ok {
+		server.Unauthorized(w)
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		return
+	}
+
+	var body struct {
+		Visibility *string `json:"visibility"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&body); err != nil {
+		server.BadRequest(w, "invalid JSON body")
+		return
+	}
+	if body.Visibility == nil {
+		server.BadRequest(w, "nothing to update")
+		return
+	}
+	switch *body.Visibility {
+	case VisibilityPrivate, VisibilityPublic:
+	default:
+		server.Problem(w, http.StatusUnprocessableEntity, server.ProblemType("media", "invalid_visibility"),
+			"Unprocessable Entity", "visibility must be \"private\" or \"public\"")
+		return
+	}
+
+	asset, err := h.svc.SetVisibility(r.Context(), id, *body.Visibility)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "no such asset")
+			return
+		}
+		server.Internal(w)
+		return
+	}
+	server.JSON(w, http.StatusOK, map[string]any{"asset": h.assetJSON(asset, h.svc.hlsURL(asset))})
 }

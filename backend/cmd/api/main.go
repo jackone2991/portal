@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 
 	"github.com/portal/backend/internal/modules/account"
 	"github.com/portal/backend/internal/modules/account/auth"
+	"github.com/portal/backend/internal/modules/account/handler"
 	accountmw "github.com/portal/backend/internal/modules/account/middleware"
 	accountrepo "github.com/portal/backend/internal/modules/account/repository"
 	"github.com/portal/backend/internal/modules/bank"
@@ -40,6 +42,8 @@ import (
 	"github.com/portal/backend/internal/modules/journal"
 	journalapi "github.com/portal/backend/internal/modules/journal/api"
 	journalrepo "github.com/portal/backend/internal/modules/journal/repository"
+	"github.com/portal/backend/internal/modules/layout"
+	layoutrepo "github.com/portal/backend/internal/modules/layout/repository"
 	"github.com/portal/backend/internal/modules/media"
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	mediarepo "github.com/portal/backend/internal/modules/media/repository"
@@ -56,6 +60,9 @@ import (
 	opsrepo "github.com/portal/backend/internal/modules/ops/repository"
 	"github.com/portal/backend/internal/modules/people"
 	peoplerepo "github.com/portal/backend/internal/modules/people/repository"
+	"github.com/portal/backend/internal/modules/social"
+	socialapi "github.com/portal/backend/internal/modules/social/api"
+	socialrepo "github.com/portal/backend/internal/modules/social/repository"
 	"github.com/portal/backend/internal/modules/story"
 	storyapi "github.com/portal/backend/internal/modules/story/api"
 	storyrepo "github.com/portal/backend/internal/modules/story/repository"
@@ -64,6 +71,7 @@ import (
 	"github.com/portal/backend/internal/platform/config"
 	platformdb "github.com/portal/backend/internal/platform/db"
 	"github.com/portal/backend/internal/platform/events"
+	"github.com/portal/backend/internal/platform/server"
 	"github.com/portal/backend/internal/platform/storage"
 )
 
@@ -166,6 +174,7 @@ func run() error {
 		SnapshotFetcher: adapter,
 		PermFetcher:     adapter,
 		Users:           adapter,
+		Admin:           adapter,
 		AuditStore:      adapter,
 		APIUsers:        adapter,
 		CacheTTL:        cfg.PermissionCacheTTL,
@@ -178,9 +187,21 @@ func run() error {
 		ResetTokens:      resetMgr,
 		Dispatch:         dispatchNotify,
 		PasswordResetURL: cfg.PasswordResetURL,
+		ApprovalQueueURL: cfg.ApprovalQueueURL,
 	})
 	if err != nil {
 		return fmt.Errorf("account module: %w", err)
+	}
+
+	// Superadmin bootstrap. Migration 0031 leaves an EXISTING install with no
+	// superadmin at all — its backfill approves everyone already present but
+	// promotes nobody, because guessing which of them should hold unrestricted
+	// access is not the migration's call. Registration's first-run rule only
+	// covers a virgin database. So an operator names the account here, and every
+	// startup re-asserts it: idempotent, greppable in the log, and it also
+	// re-approves the account if somebody managed to lock it out.
+	if err := bootstrapSuperadmin(ctx, adapter, cfg.BootstrapSuperadminEmail); err != nil {
+		log.Error().Err(err).Msg("superadmin bootstrap failed; continuing")
 	}
 
 	// ── Tenant module + tenant-scoping middleware (ADR-07 Phase 1) ──
@@ -209,6 +230,16 @@ func run() error {
 	// Domain modules receive this in their RequireAuth slot — no module changes.
 	authTenant := func(next http.Handler) http.Handler {
 		return requireAuth(tenantMod.RequireTenant()(next))
+	}
+	// optionalAuthTenant is the same pair, neither of which rejects an anonymous
+	// caller: identity is attached when the request carries one, and only then is
+	// a tenant scope opened. The media variant/HLS routes use it so a signed-in
+	// caller sees their own media while everyone else still gets the assets
+	// marked public — the filtering itself is the 0032 policies' job, not the
+	// middleware's.
+	optionalAuth := accountmw.OptionalAuth(verifier, adapter)
+	optionalAuthTenant := func(next http.Handler) http.Handler {
+		return optionalAuth(tenantMod.OptionalTenant()(next))
 	}
 
 	// ── Media module ────────────────────────────────────────────────
@@ -251,10 +282,14 @@ func run() error {
 	mediaEvents.Subscribe(bankapi.EventTransactionCreated, journalapi.TaskStreamBankCreated, asynq.Queue("default"))
 	mediaEvents.Subscribe(bankapi.EventTransactionUpdated, journalapi.TaskStreamBankUpdated, asynq.Queue("default"))
 	mediaEvents.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
-	// comic:chapter_published → life-stream projection.
-	mediaEvents.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
-	// comic:chapter_deleted → remove the published-chapter stream card (per chapter on chapter/comic delete).
-	mediaEvents.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
+	// comic:published → one bell notification per publish. Chapters are no longer
+	// projected into the life-stream: a publish emits one event per chapter, so a
+	// long-running title buried the feed under its own table of contents.
+	mediaEvents.Subscribe(comicapi.EventComicPublished, notifyapi.TaskOnComicPublished, asynq.Queue("default"))
+	// social:connection_* → the bell. Nothing is projected into the life-stream:
+	// a connection is an event between two people, not a card in either's day.
+	mediaEvents.Subscribe(socialapi.EventConnectionRequested, notifyapi.TaskOnConnectionRequested, asynq.Queue("default"))
+	mediaEvents.Subscribe(socialapi.EventConnectionAccepted, notifyapi.TaskOnConnectionAccepted, asynq.Queue("default"))
 
 	// ownerExtractor builds the {id}-keyed owner lookups every owner-or-elevated
 	// guard runs on. notFound is the owning module's "no such row" sentinel, and it
@@ -293,6 +328,7 @@ func run() error {
 		Enqueuer:         asynqClient,
 		Events:           mediaEvents,
 		RequireAuth:      authTenant,
+		OptionalAuth:     optionalAuthTenant,
 		DeleteMiddleware: deleteMW,
 		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
 			id, ok := auth.FromContext(ctx)
@@ -363,6 +399,26 @@ func run() error {
 		return fmt.Errorf("ops module: %w", err)
 	}
 
+	// ── Layout module (shell navigation + dashboard widgets) ────────
+	// Global config, NOT tenant-scoped, so it takes plain requireAuth rather than
+	// authTenant — there is no per-tenant row to fence. It gets the raw pool
+	// because its whole-set saves run in their own transaction.
+	//
+	// Perms is account's public API: /layout filters per caller server-side, so
+	// an admin-only entry never reaches a bundle that anyone can read.
+	layoutMod, err := layout.New(layout.Deps{
+		Repo:        layoutrepo.NewAdapter(pool),
+		Perms:       accountMod.API(),
+		Audit:       accountMod.Logger(),
+		RequireAuth: requireAuth,
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(accountMod.Engine(), code)
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("layout module: %w", err)
+	}
+
 	// ── Bank module (personal ledger: /bank/*) ──────────────────────
 	bankMod, err := bank.New(bank.Deps{
 		Repo:        bankrepo.NewAdapter(conn, tdb.RunInTx),
@@ -409,7 +465,10 @@ func run() error {
 		if org == nil {
 			return fmt.Errorf("api: no personal org for user %s", userID)
 		}
-		tx, terr := tdb.BeginTenantScope(ctx, org.ID)
+		// The user is known here, so scope to them rather than to the whole
+		// tenant: this path writes on their behalf and must not gain tenant-wide
+		// media access it never needs (0032).
+		tx, terr := tdb.BeginScope(ctx, platformdb.Scope{OrgID: org.ID, UserID: userID})
 		if terr != nil {
 			return terr
 		}
@@ -454,10 +513,49 @@ func run() error {
 	}
 
 	// ── People module (SPEC-08: /people, contacts + birthdays) ──────
+	// ── Social module (connections between accounts, 0037) ──────────
+	socialMod, err := social.New(social.Deps{
+		Repo:        socialrepo.NewAdapter(conn),
+		Events:      mediaEvents,
+		RequireAuth: authTenant,
+		RequirePermission: func(code string) func(http.Handler) http.Handler {
+			return accountmw.RequirePermission(engine, code)
+		},
+		// social stores ids and resolves names through account's api/ package —
+		// it may not join `users` (MODULES.md).
+		Names: func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error) {
+			return accountMod.API().GetUserNames(ctx, ids)
+		},
+		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
+			id, ok := auth.FromContext(ctx)
+			if !ok || id.IsAnonymous() {
+				return uuid.Nil, false
+			}
+			return id.UserID, true
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("social module: %w", err)
+	}
+
 	peopleMod, err := people.New(people.Deps{
 		Repo:        peoplerepo.NewAdapter(conn),
 		Events:      mediaEvents,
 		RequireAuth: authTenant,
+		// "People you may know" reads the account roster through account's api/
+		// package — people never touches the users table itself.
+		Connected: socialMod.API().CounterpartIDs,
+		Directory: func(ctx context.Context, exclude uuid.UUID, limit int) ([]people.DirectoryUser, error) {
+			roster, derr := accountMod.API().ListDirectory(ctx, exclude, limit)
+			if derr != nil {
+				return nil, derr
+			}
+			out := make([]people.DirectoryUser, 0, len(roster))
+			for _, u := range roster {
+				out = append(out, people.DirectoryUser{ID: u.ID, DisplayName: u.DisplayName})
+			}
+			return out, nil
+		},
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
 		},
@@ -506,9 +604,14 @@ func run() error {
 	var musicMod *music.Module
 	byTrack := ownerExtractor(music.ErrNotFound, func(ctx context.Context, id uuid.UUID) (uuid.UUID, error) { return musicMod.OwnerByTrack(ctx, id) })
 	musicMod, err = music.New(music.Deps{
-		Repo:        musicrepo.NewAdapter(conn),
-		Media:       mediaMod.API(),
-		Events:      mediaEvents,
+		Repo:   musicrepo.NewAdapter(conn),
+		Media:  mediaMod.API(),
+		Events: mediaEvents,
+		// Bulk zip import (0038): the API stores the archive and enqueues; the
+		// unpacking happens in cmd/worker, which is where ffprobe and the tenant
+		// scoping live.
+		Storage:     store,
+		Enqueuer:    asynqClient,
 		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)
@@ -592,9 +695,11 @@ func run() error {
 		notifyMod.MountHTTP(r)
 		journalMod.MountHTTP(r)
 		opsMod.MountHTTP(r)
+		layoutMod.MountHTTP(r)
 		bankMod.MountHTTP(r)
 		comicMod.MountHTTP(r)
 		peopleMod.MountHTTP(r)
+		socialMod.MountHTTP(r)
 		movieMod.MountHTTP(r)
 		musicMod.MountHTTP(r)
 		storyMod.MountHTTP(r)
@@ -685,9 +790,7 @@ func handleContinue(mediaMod *media.Module) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uid, ok := auth.FromContext(r.Context())
 		if !ok || uid.IsAnonymous() {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{"code":"unauthorized","message":"authentication required"}`))
+			server.Unauthorized(w)
 			return
 		}
 
@@ -705,9 +808,7 @@ func handleContinue(mediaMod *media.Module) http.HandlerFunc {
 		items, err := mediaMod.API().Continue(r.Context(), uid.UserID, limit)
 		if err != nil {
 			log.Error().Err(err).Msg("continue aggregator: media module error")
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"code":"internal","message":"could not fetch continue items"}`))
+			server.Internal(w)
 			return
 		}
 
@@ -719,4 +820,63 @@ func handleContinue(mediaMod *media.Module) http.HandlerFunc {
 		b, _ := json.Marshal(map[string]any{"items": items})
 		w.Write(b)
 	}
+}
+
+// bootstrapSuperadmin makes sure the named account can actually administer the
+// install: approved, enabled and holding `superadmin`.
+//
+// Every step is conditional. Re-asserting unconditionally would bump
+// token_version on each restart, and that is the RBAC cache key — every API
+// restart would flush the permission cache for the one account most likely to
+// be mid-session. So it reads first and only writes what is missing, which also
+// makes an unset or already-correct value completely silent.
+func bootstrapSuperadmin(ctx context.Context, adapter *accountrepo.Adapter, email string) error {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if email == "" {
+		return nil
+	}
+
+	user, err := adapter.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, handler.ErrUserNotFound) {
+			// Not an error: the operator may have set this before the account
+			// exists. Say so loudly and move on — the next start will apply it.
+			log.Warn().Str("email", email).
+				Msg("BOOTSTRAP_SUPERADMIN_EMAIL names no account yet; register it, then restart the api")
+			return nil
+		}
+		return err
+	}
+
+	roles, err := adapter.ListUserRoleCodes(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+	hasRole := false
+	for _, c := range roles {
+		if c == handler.SuperadminRole {
+			hasRole = true
+			break
+		}
+	}
+
+	if !hasRole {
+		if err := adapter.AssignRoleByCode(ctx, user.ID, handler.SuperadminRole); err != nil {
+			return err
+		}
+		log.Info().Str("email", email).Msg("bootstrap: granted superadmin")
+	}
+	if user.ApprovalStatus != handler.ApprovalApproved {
+		if err := adapter.MarkApproved(ctx, user.ID, nil); err != nil {
+			return err
+		}
+		log.Info().Str("email", email).Msg("bootstrap: approved account")
+	}
+	if !hasRole {
+		// The grant changed their effective permissions; re-key the cache.
+		if _, err := adapter.BumpUserTokenVersion(ctx, user.ID); err != nil {
+			return err
+		}
+	}
+	return nil
 }

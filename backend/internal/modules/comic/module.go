@@ -27,7 +27,7 @@ type Deps struct {
 	Events EventPublisher
 
 	// P1.7 zip import. API side sets Storage + Enqueuer; worker side additionally
-	// sets RunInTenant (+ a Media whose IngestImage is wired).
+	// sets RunInTenant (+ a Media whose Ingest is wired).
 	Storage     ObjectStore
 	Enqueuer    Enqueuer
 	RunInTenant RunInTenant

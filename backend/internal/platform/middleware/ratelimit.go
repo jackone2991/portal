@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // IPRateLimiter is a token-bucket limiter keyed by client IP. Use it on the
@@ -18,9 +20,9 @@ import (
 // For a multi-instance deployment behind Traefik, use the equivalent
 // Traefik middleware OR replace this with a Redis-backed token bucket.
 type IPRateLimiter struct {
-	rate   rate.Limit
-	burst  int
-	mu     sync.Mutex
+	rate    rate.Limit
+	burst   int
+	mu      sync.Mutex
 	buckets map[string]*ipBucket
 	idleTTL time.Duration
 }
@@ -113,10 +115,10 @@ func trimSpace(s string) string {
 	return s
 }
 
-// writeJSONError emits a compact {code,message} JSON error. code/message come
-// from trusted constants at the call sites, so no escaping is needed here.
+// writeJSONError emits an RFC 7807 problem. The compact {code,message} body
+// this used to write is retired (ADR-10). `rate_limited` is not a generic
+// transport code, so it survives as the problem type "platform/rate-limited" —
+// which is what lets a client tell a throttle apart from any other 429.
 func writeJSONError(w http.ResponseWriter, status int, code, msg string) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_, _ = w.Write([]byte(`{"code":"` + code + `","message":"` + msg + `"}`))
+	server.Problem(w, status, server.ProblemType("platform", code), http.StatusText(status), msg)
 }

@@ -11,10 +11,12 @@
 -- the Go param type does; the cast is here to make sqlc emit `string`.
 -- name: CreatePerson :one
 INSERT INTO people_persons (
-    user_id, display_name, relationship, birth_month, birth_day, birth_year, birth_calendar, contact, note_md
+    user_id, display_name, relationship, birth_month, birth_day, birth_year, birth_calendar, contact, note_md,
+    circle, linked_user_id
 ) VALUES (
     $1, $2, sqlc.narg('relationship'), sqlc.narg('birth_month'), sqlc.narg('birth_day'),
-    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::text::jsonb, '{}'::jsonb), sqlc.narg('note_md')
+    sqlc.narg('birth_year'), COALESCE(sqlc.narg('birth_calendar'), 'solar'), COALESCE(sqlc.narg('contact')::text::jsonb, '{}'::jsonb), sqlc.narg('note_md'),
+    COALESCE(sqlc.narg('circle'), 'other'), sqlc.narg('linked_user_id')
 )
 RETURNING *;
 
@@ -22,8 +24,11 @@ RETURNING *;
 SELECT * FROM people_persons WHERE id = $1 AND user_id = $2;
 
 -- name: ListPeople :many
+-- circle is an optional filter: NULL means every circle (the People page's
+-- default), a value means one section (what a section's manage link opens).
 SELECT * FROM people_persons
 WHERE user_id = @user_id
+  AND (sqlc.narg('circle')::text IS NULL OR circle = sqlc.narg('circle')::text)
   AND ( @cursor_name::text IS NULL
         OR display_name > @cursor_name::text
         OR (display_name = @cursor_name::text AND id > @cursor_id::uuid) )
@@ -39,6 +44,7 @@ UPDATE people_persons SET
     relationship   = CASE WHEN @set_relationship::boolean THEN sqlc.narg('relationship') ELSE relationship END,
     note_md        = CASE WHEN @set_note::boolean THEN sqlc.narg('note_md') ELSE note_md END,
     contact        = COALESCE(sqlc.narg('contact')::text::jsonb, contact),
+    circle         = COALESCE(sqlc.narg('circle'), circle),
     birth_month    = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_month') ELSE birth_month END,
     birth_day      = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_day') ELSE birth_day END,
     birth_year     = CASE WHEN @set_birthday::boolean THEN sqlc.narg('birth_year') ELSE birth_year END,
@@ -46,6 +52,12 @@ UPDATE people_persons SET
     updated_at     = now()
 WHERE id = @id AND user_id = @user_id
 RETURNING *;
+
+-- name: ListLinkedUserIDs :many
+-- Portal accounts already in the caller's registry. The suggestion list
+-- subtracts these, so someone you added stops being suggested.
+SELECT linked_user_id FROM people_persons
+WHERE user_id = $1 AND linked_user_id IS NOT NULL;
 
 -- name: DeletePerson :one
 DELETE FROM people_persons WHERE id = $1 AND user_id = $2 RETURNING id;

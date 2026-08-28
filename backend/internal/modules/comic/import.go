@@ -448,7 +448,7 @@ func (s *Service) RunImport(ctx context.Context, importID uuid.UUID) error {
 			for t := range tasks {
 				var assetID uuid.UUID
 				ierr := s.runInTenant(ctx, owner, func(ctx context.Context) error {
-					id, e2 := s.media.IngestImage(ctx, owner, path.Base(t.name), mimeByExt(t.name), t.data)
+					id, e2 := s.media.Ingest(ctx, owner, path.Base(t.name), mimeByExt(t.name), t.data)
 					assetID = id
 					return e2
 				})

@@ -73,10 +73,14 @@ type API interface {
 	// Continue returns the active media progress items for the caller.
 	Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
 
-	// IngestImage ingests raw image bytes as a media asset (same pipeline as a
-	// browser upload) and returns the new asset id. Used by the comic zip-import
-	// worker; run it inside a tenant-scoped ctx (SPEC-02 P1.7).
-	IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+	// Ingest stores raw bytes as a media asset — the same three-step pipeline a
+	// browser upload runs (session → source → complete) — and returns the new
+	// asset id. `contentType` is what decides the asset KIND, so this one method
+	// serves the comic zip-import (images) and the music zip-import (audio); it
+	// was called IngestImage until music needed it, which was only ever a name.
+	//
+	// Run it inside a tenant-scoped ctx (SPEC-02 P1.7).
+	Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
 }
 
 type Impl struct {
@@ -95,9 +99,9 @@ func NewImpl(
 	return &Impl{continueFn: continueFn, getAssetFn: getAssetFn, statusesFn: statusesFn, ingestFn: ingestFn}
 }
 
-// IngestImage delegates to the media service (nil-safe: returns an error if the
+// Ingest delegates to the media service (nil-safe: returns an error if the
 // module was built without an ingest function).
-func (a *Impl) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+func (a *Impl) Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
 	if a.ingestFn == nil {
 		return uuid.Nil, errors.New("media: ingest not available")
 	}

@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar } from "../ui/Avatar";
+import {
+  acceptConnection,
+  listConnections,
+  removeConnection,
+  type Connection,
+} from "@/lib/social";
 import { Icon } from "../ui/Icon";
 import {
   listNotifications,
@@ -134,76 +140,87 @@ const rowBorder = { borderColor: "var(--tpl-border)" };
 
 /* ── Friend Requests ───────────────────────────────────────────── */
 
-type Req = { id: number; name: string; sub: string; info?: boolean };
-
-const FRIEND_REQUESTS: Req[] = [
-  { id: 1, name: "Tamara Romanoff", sub: "Mutual Friend: Sarah Hetfield" },
-  { id: 2, name: "Tony Stevens", sub: "4 Friends in Common" },
-  { id: 3, name: "Green Goo", sub: "8 Friends in Common" },
-  { id: 4, name: "Mary Jane Stark", sub: "", info: true },
-];
-
+/**
+ * The header's friend-request menu, on real connections (migration 0037).
+ *
+ * It used to hold four invented people with invented "4 Friends in Common"
+ * lines and a badge that counted them. Both the count and the rows are now the
+ * pending requests actually addressed to the caller, and Accept/Decline are the
+ * real endpoints — a badge that shows 4 when nobody has asked is worse than no
+ * badge at all.
+ *
+ * "Friends in Common" is gone rather than faked: with one connection table and
+ * no graph traversal there is no honest number to put there yet.
+ */
 export function FriendRequestsMenu({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const [items, setItems] = useState(FRIEND_REQUESTS);
-  const remove = (id: number) => setItems((x) => x.filter((i) => i.id !== id));
+  const qc = useQueryClient();
+
+  const requests = useQuery({
+    queryKey: ["connections", "incoming"],
+    queryFn: () => listConnections("incoming"),
+    // The badge has to be right before the menu is opened, so this one polls in
+    // the background rather than waiting for a click.
+    refetchInterval: 60_000,
+  });
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["connections"] });
+    qc.invalidateQueries({ queryKey: ["people"] }); // the rail's sections move too
+  };
+  const accept = useMutation({ mutationFn: (id: string) => acceptConnection(id), onSuccess: refresh });
+  const decline = useMutation({ mutationFn: (id: string) => removeConnection(id), onSuccess: refresh });
+  const busy = accept.isPending || decline.isPending;
+
+  const items: Connection[] = requests.data ?? [];
 
   return (
     <div className="relative">
-      <Trigger icon="happy-face-icon" tone="var(--tpl-blue-2)" badge={items.length} label="Friend requests" open={open} onToggle={onToggle} />
+      <Trigger
+        icon="happy-face-icon"
+        tone="var(--tpl-blue-2)"
+        badge={items.length}
+        label="Friend requests"
+        open={open}
+        onToggle={onToggle}
+      />
       {open && (
         <DropdownCard
           title="Friend Requests"
-          actions={
-            <>
-              <ActionLink>Settings</ActionLink>
-              <ActionLink>Find Friends</ActionLink>
-            </>
-          }
-          footer="Check all your Events"
+          actions={<ActionLink>Settings</ActionLink>}
+          footer="Manage all your people"
         >
           {items.length === 0 && <Empty>No new friend requests</Empty>}
-          {items.map((r) =>
-            r.info ? (
-              <li key={r.id} className="flex items-center gap-3 border-b px-4 py-3" style={rowBorder}>
-                <Avatar name={r.name} size={40} />
-                <p className="min-w-0 flex-1 text-sm" style={{ color: "var(--tpl-text)" }}>
-                  You and <b style={{ color: "var(--tpl-heading)" }}>{r.name}</b> just became friends. Write on{" "}
-                  <InlineLink tone="var(--tpl-blue)">her wall</InlineLink>.
-                </p>
-                <IconBtn onClick={() => remove(r.id)} label="Dismiss" icon="happy-face-icon" />
-              </li>
-            ) : (
-              <li key={r.id} className="flex items-center gap-3 border-b px-4 py-3" style={rowBorder}>
-                <Avatar name={r.name} size={40} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold" style={{ color: "var(--tpl-heading)" }}>
-                    {r.name}
-                  </p>
-                  <p className="truncate text-xs" style={{ color: "var(--tpl-muted)" }}>
-                    {r.sub}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => remove(r.id)}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-white transition hover:opacity-90"
-                  style={{ background: "var(--tpl-blue)" }}
-                  aria-label={`Accept ${r.name}`}
-                >
-                  <Icon name="happy-face-icon" size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(r.id)}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-md transition hover:bg-black/5"
-                  style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" }}
-                  aria-label={`Decline ${r.name}`}
-                >
-                  <Icon name="little-delete" size={12} />
-                </button>
-              </li>
-            ),
-          )}
+          {items.map((r) => (
+            <li key={r.id} className="flex items-center gap-3 border-b px-4 py-3" style={rowBorder}>
+              <Avatar name={r.display_name ?? "?"} size={40} />
+              <p
+                className="min-w-0 flex-1 truncate text-sm font-semibold"
+                style={{ color: "var(--tpl-heading)" }}
+              >
+                {r.display_name}
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => accept.mutate(r.id)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-white transition hover:opacity-90 disabled:opacity-50"
+                style={{ background: "var(--tpl-blue)" }}
+                aria-label={`Accept ${r.display_name}`}
+              >
+                <Icon name="check-icon" size={14} />
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => decline.mutate(r.id)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md transition hover:bg-black/5 disabled:opacity-50"
+                style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" }}
+                aria-label={`Decline ${r.display_name}`}
+              >
+                <Icon name="little-delete" size={12} />
+              </button>
+            </li>
+          ))}
         </DropdownCard>
       )}
     </div>

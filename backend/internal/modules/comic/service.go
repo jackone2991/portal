@@ -21,7 +21,7 @@ type Service struct {
 	events EventPublisher // optional: comic:chapter_published on publish (P1.9)
 
 	// zip-import (P1.7) — nil on the API side except store/enqueue; the worker
-	// side fills store + media.IngestImage + runInTenant.
+	// side fills store + media.Ingest + runInTenant.
 	store       ObjectStore
 	enqueue     Enqueuer
 	runInTenant RunInTenant
@@ -155,11 +155,15 @@ func (s *Service) Publish(ctx context.Context, id uuid.UUID) (Comic, error) {
 	return c, nil
 }
 
-// emitChaptersPublished fires comic:chapter_published once per chapter after a
-// publish (SPEC-02 P1.9 — life-stream producer #2; the journal stream projection
-// keys on chapter_id). Emit-only and best-effort: a nil publisher or a publish
-// error never fails the already-committed publish. Redelivery/re-publish is
-// idempotent downstream via the stream's (source, event, ref_id) unique.
+// emitChaptersPublished fires ONE comic:published after a publish, carrying the
+// chapter count (SPEC-02 P1.9). Emit-only and best-effort: a nil publisher or a
+// publish error never fails the already-committed publish.
+//
+// This used to emit one event per chapter. Every consumer then had to defend
+// itself against a 500-event burst from a single click, and the one consumer
+// that existed — the life-stream projection — did not, which is how 2,516
+// chapter cards ended up burying a feed with ten posts in it. One publish is one
+// thing that happened; the count is the part a reader cares about.
 func (s *Service) emitChaptersPublished(ctx context.Context, c Comic) {
 	if s.events == nil {
 		return
@@ -169,16 +173,14 @@ func (s *Service) emitChaptersPublished(ctx context.Context, c Comic) {
 		log.Warn().Err(err).Str("comic", c.ID.String()).Msg("comic: list chapters for publish event failed")
 		return
 	}
-	for _, ch := range chapters {
-		ev := comicapi.ChapterPublishedEvent{
-			ComicID:     c.ID.String(),
-			ChapterID:   ch.ID.String(),
-			OwnerUserID: c.OwnerID.String(),
-			Title:       ch.Title,
-		}
-		if err := s.events.Publish(ctx, comicapi.EventChapterPublished, ev); err != nil {
-			log.Warn().Err(err).Str("chapter", ch.ID.String()).Msg("comic: chapter_published publish failed")
-		}
+	ev := comicapi.ComicPublishedEvent{
+		ComicID:      c.ID.String(),
+		OwnerUserID:  c.OwnerID.String(),
+		Title:        c.Title,
+		ChapterCount: len(chapters),
+	}
+	if err := s.events.Publish(ctx, comicapi.EventComicPublished, ev); err != nil {
+		log.Warn().Err(err).Str("comic", c.ID.String()).Msg("comic: published event failed")
 	}
 }
 

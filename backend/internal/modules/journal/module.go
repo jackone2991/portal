@@ -87,15 +87,12 @@ func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	reg := func(task string, fn func(context.Context, []byte) error) {
 		mux.HandleFunc(task, func(ctx context.Context, t *asynq.Task) error { return fn(ctx, t.Payload()) })
 	}
-	reg(journalapi.TaskStreamAssetReady, m.svc.OnAssetReady)
 	reg(journalapi.TaskStreamPlaybackCompleted, m.svc.OnPlaybackCompleted)
 	reg(journalapi.TaskStreamAssetDeleted, m.svc.OnAssetDeleted)
 	reg(journalapi.TaskStreamBankCreated, m.svc.OnBankCreated)
 	reg(journalapi.TaskStreamBankUpdated, m.svc.OnBankUpdated)
 	reg(journalapi.TaskStreamBankDeleted, m.svc.OnBankDeleted)
 	reg(journalapi.TaskStreamBirthday, m.svc.OnBirthdayUpcoming)
-	reg(journalapi.TaskStreamComicPublished, m.svc.OnComicPublished)
-	reg(journalapi.TaskStreamComicDeleted, m.svc.OnComicDeleted)
 	reg(journalapi.TaskStreamMoviePublished, m.svc.OnMoviePublished)
 	reg(journalapi.TaskStreamTrackPublished, m.svc.OnTrackPublished)
 	reg(journalapi.TaskStreamStoryPublished, m.svc.OnStoryPublished)

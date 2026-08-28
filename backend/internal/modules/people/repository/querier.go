@@ -31,6 +31,11 @@ type Querier interface {
 	// ══ Birthday notices — outbox/dedup (P0.4) ══════════════════════════════
 	// Reserve the (person, year, threshold) slot; a conflict means it already fired.
 	InsertNotice(ctx context.Context, arg InsertNoticeParams) error
+	// Portal accounts already in the caller's registry. The suggestion list
+	// subtracts these, so someone you added stops being suggested.
+	ListLinkedUserIDs(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error)
+	// circle is an optional filter: NULL means every circle (the People page's
+	// default), a value means one section (what a section's manage link opens).
 	ListPeople(ctx context.Context, arg ListPeopleParams) ([]PeoplePerson, error)
 	// The caller's people that have a (solar) birthday — for the upcoming endpoint.
 	ListSolarBirthdays(ctx context.Context, userID pgtype.UUID) ([]ListSolarBirthdaysRow, error)

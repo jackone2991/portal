@@ -39,8 +39,26 @@ type Person struct {
 	Contact       json.RawMessage
 	NoteMd        *string
 	AvatarAssetID *uuid.UUID
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	// Circle is the closed set the right-rail sections read; Relationship stays
+	// the free text you actually wrote about this person (0035).
+	Circle string
+	// LinkedUserID is the portal account this entry stands for, when it stands
+	// for one. Nil for everyone who has no account here — the common case.
+	LinkedUserID *uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+// The circles a person can be filed under (0035).
+const (
+	CircleCloseFriend = "close_friend"
+	CircleFamily      = "family"
+	CircleOther       = "other"
+)
+
+// ValidCircle reports whether c is one of the three circles.
+func ValidCircle(c string) bool {
+	return c == CircleCloseFriend || c == CircleFamily || c == CircleOther
 }
 
 // UpcomingBirthday is one row of the upcoming-birthdays response (P0.3).
@@ -61,6 +79,8 @@ type CreatePersonInput struct {
 	Birthday     *Birthday
 	Contact      json.RawMessage
 	NoteMd       *string
+	Circle       *string
+	LinkedUserID *uuid.UUID
 }
 
 // UpdatePersonInput carries presence flags so a PATCH can clear fields. When
@@ -76,6 +96,7 @@ type UpdatePersonInput struct {
 	Contact         json.RawMessage
 	SetBirthday     bool
 	Birthday        *Birthday
+	Circle          *string
 }
 
 type ListInput struct {
@@ -83,6 +104,8 @@ type ListInput struct {
 	CursorName string
 	CursorID   uuid.UUID
 	Limit      int
+	// Circle filters to one section; empty means every circle.
+	Circle string
 }
 
 // SolarBirthday is a person with a resolvable (solar) birthday — the scan and
@@ -111,6 +134,9 @@ type Repository interface {
 	CreatePerson(ctx context.Context, in CreatePersonInput) (Person, error)
 	GetPerson(ctx context.Context, userID, id uuid.UUID) (Person, error)
 	ListPeople(ctx context.Context, in ListInput) ([]Person, error)
+	// ListLinkedUserIDs returns the portal accounts already in this user's
+	// registry — what the suggestion list subtracts.
+	ListLinkedUserIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 	UpdatePerson(ctx context.Context, in UpdatePersonInput) (Person, error)
 	DeletePerson(ctx context.Context, userID, id uuid.UUID) error
 	ListSolarBirthdays(ctx context.Context, userID uuid.UUID) ([]SolarBirthday, error)

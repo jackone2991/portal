@@ -28,6 +28,10 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 		DisplayName:  in.DisplayName,
 		Relationship: in.Relationship,
 		NoteMd:       in.NoteMd,
+		Circle:       in.Circle,
+	}
+	if in.LinkedUserID != nil {
+		p.LinkedUserID = pgUUID(*in.LinkedUserID)
 	}
 	if in.Birthday != nil {
 		p.BirthMonth = i32p(in.Birthday.Month)
@@ -45,6 +49,20 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 	return toPerson(row), nil
 }
 
+func (a *Adapter) ListLinkedUserIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := a.q.ListLinkedUserIDs(ctx, pgUUID(userID))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]uuid.UUID, 0, len(rows))
+	for _, r := range rows {
+		if id := uuidPtr(r); id != nil {
+			out = append(out, *id)
+		}
+	}
+	return out, nil
+}
+
 func (a *Adapter) GetPerson(ctx context.Context, userID, id uuid.UUID) (people.Person, error) {
 	row, err := a.q.GetPerson(ctx, GetPersonParams{ID: pgUUID(id), UserID: pgUUID(userID)})
 	if err != nil {
@@ -54,9 +72,13 @@ func (a *Adapter) GetPerson(ctx context.Context, userID, id uuid.UUID) (people.P
 }
 
 func (a *Adapter) ListPeople(ctx context.Context, in people.ListInput) ([]people.Person, error) {
-	rows, err := a.q.ListPeople(ctx, ListPeopleParams{
+	q := ListPeopleParams{
 		UserID: pgUUID(in.UserID), CursorName: in.CursorName, CursorID: pgUUID(in.CursorID), Lim: int32(in.Limit),
-	})
+	}
+	if in.Circle != "" {
+		q.Circle = &in.Circle
+	}
+	rows, err := a.q.ListPeople(ctx, q)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +97,7 @@ func (a *Adapter) UpdatePerson(ctx context.Context, in people.UpdatePersonInput)
 		SetNote:         in.SetNote,
 		NoteMd:          in.NoteMd,
 		SetBirthday:     in.SetBirthday,
+		Circle:          in.Circle,
 		ID:              pgUUID(in.ID),
 		UserID:          pgUUID(in.UserID),
 	}
@@ -173,6 +196,7 @@ func toPerson(r PeoplePerson) people.Person {
 	p := people.Person{
 		ID: uuidFrom(r.ID), DisplayName: r.DisplayName, Relationship: r.Relationship,
 		Contact: json.RawMessage(r.Contact), NoteMd: r.NoteMd, AvatarAssetID: uuidPtr(r.AvatarAssetID),
+		Circle: r.Circle, LinkedUserID: uuidPtr(r.LinkedUserID),
 		CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time,
 	}
 	if r.BirthMonth != nil && r.BirthDay != nil {

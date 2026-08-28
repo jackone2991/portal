@@ -18,13 +18,16 @@ const (
 	// status and must not occupy a heavy slot its own process_image tasks need).
 	TaskImportZip = "comic:import_zip"
 
-	// P1.9 life-stream events. chapter_published is emitted per chapter on a
-	// comic publish (consumed by the journal stream projection, keyed on
-	// chapter_id). chapter_deleted's stream-removal consumer is deferred; the
-	// published card's href is generic (/library/comic) so a later delete leaves
-	// no 404 — an accepted residual until the removal consumer lands.
-	EventChapterPublished = "comic:chapter_published"
-	EventChapterDeleted   = "comic:chapter_deleted"
+	// P1.9 events. chapter_deleted is emitted per chapter on a chapter/comic
+	// delete, for consumers that track chapters individually.
+	//
+	// comic:published is the ONE event a publish emits for the reader-facing
+	// story: this comic was published, with N chapters. The former per-chapter
+	// chapter_published fan-out is gone — its only consumer was the life-stream
+	// projection, and one card per chapter turned a 500-chapter title into 500
+	// feed entries. A person wants to hear about the comic, once.
+	EventComicPublished = "comic:published"
+	EventChapterDeleted = "comic:chapter_deleted"
 )
 
 // AssetDeletedPayload mirrors the media:asset_deleted event body consumed at P0.6.
@@ -38,13 +41,14 @@ type ImportZipPayload struct {
 	ImportID string `json:"import_id"`
 }
 
-// ChapterPublishedEvent is the comic:chapter_published body (P1.9). The journal
-// stream consumer reads chapter_id + owner_user_id and renders "<title> published".
-type ChapterPublishedEvent struct {
-	ComicID     string `json:"comic_id"`
-	ChapterID   string `json:"chapter_id"`
-	OwnerUserID string `json:"owner_user_id"`
-	Title       string `json:"title"`
+// ComicPublishedEvent is the comic:published body. ChapterCount is what makes a
+// re-publish worth telling anyone about — it is part of the notification's dedup
+// key, so publishing the same comic twice is silent unless chapters were added.
+type ComicPublishedEvent struct {
+	ComicID      string `json:"comic_id"`
+	OwnerUserID  string `json:"owner_user_id"`
+	Title        string `json:"title"`
+	ChapterCount int    `json:"chapter_count"`
 }
 
 // ChapterDeletedEvent is the comic:chapter_deleted body (P1.9), emitted per

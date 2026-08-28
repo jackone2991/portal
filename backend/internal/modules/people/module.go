@@ -24,6 +24,13 @@ type Deps struct {
 	Repo     Repository
 	Events   EventPublisher
 	Timezone string
+	// Directory backs GET /people/suggestions. cmd/api passes a closure over
+	// accountapi.ListDirectory; nil leaves the endpoint answering an empty list.
+	Directory DirectoryFunc
+	// Connected lists accounts the caller already has a social connection or a
+	// pending request with. Suggestions subtract them, so the list stops offering
+	// someone you have already asked. Wired from socialapi.CounterpartIDs.
+	Connected ConnectedFunc
 
 	// RunInUserTenant (worker only) scopes the birthday-notice INSERT to the
 	// person's owner org (ADR-07 1b). nil on the API side.
@@ -59,7 +66,7 @@ func New(d Deps) (*Module, error) {
 		log.Warn().Str("tz", tz).Msg("people: timezone load failed, using UTC")
 		loc = time.UTC
 	}
-	svc := &Service{repo: d.Repo, events: d.Events, loc: loc, runInUserTenant: d.RunInUserTenant}
+	svc := &Service{repo: d.Repo, events: d.Events, loc: loc, runInUserTenant: d.RunInUserTenant, directory: d.Directory, connected: d.Connected}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -71,6 +78,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.perm("people:read:own")).Get("/", m.handler.List)
 		r.With(m.perm("people:write:own")).Post("/", m.handler.Create)
 		r.With(m.perm("people:read:own")).Get("/upcoming-birthdays", m.handler.Upcoming)
+		r.With(m.perm("people:read:own")).Get("/suggestions", m.handler.Suggestions)
 		r.With(m.perm("people:read:own")).Get("/{id}", m.handler.Get)
 		r.With(m.perm("people:write:own")).Patch("/{id}", m.handler.Patch)
 		r.With(m.perm("people:delete:own")).Delete("/{id}", m.handler.Delete)

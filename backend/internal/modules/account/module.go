@@ -18,6 +18,7 @@ package account
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -37,6 +38,8 @@ import (
 // The same repository adapter that implements SnapshotFetcher provides it.
 type APIUserFetcher interface {
 	GetUserSummaryByID(ctx context.Context, id uuid.UUID) (*accountapi.UserSummary, error)
+	ListUserDirectory(ctx context.Context, exclude uuid.UUID, limit int) ([]accountapi.UserSummary, error)
+	GetUsersByIDs(ctx context.Context, ids []uuid.UUID) ([]accountapi.UserSummary, error)
 }
 
 // Deps are the cross-cutting infrastructure dependencies the account module
@@ -49,6 +52,7 @@ type Deps struct {
 	SnapshotFetcher accountmw.AuthSnapshotFetcher
 	PermFetcher     rbac.PermissionFetcher
 	Users           handler.UserStore
+	Admin           handler.AdminStore
 	AuditStore      audit.EventStore
 	APIUsers        APIUserFetcher
 	CacheTTL        time.Duration
@@ -65,6 +69,9 @@ type Deps struct {
 	ResetTokens      *auth.ResetManager
 	Dispatch         func(ctx context.Context, intent notifyapi.NotificationIntent) error
 	PasswordResetURL string
+	// ApprovalQueueURL is the link carried by the registration-pending
+	// notification (migration 0031). Empty omits it.
+	ApprovalQueueURL string
 }
 
 // Module is the runtime handle for the account domain.
@@ -73,6 +80,7 @@ type Module struct {
 	engine    *rbac.Engine
 	logger    *audit.Logger
 	handler   *handler.AuthHandler
+	admin     *handler.AdminHandler
 	publicAPI accountapi.API
 }
 
@@ -106,6 +114,26 @@ func New(d Deps) (*Module, error) {
 		ResetTokens:      d.ResetTokens,
 		Dispatch:         d.Dispatch,
 		PasswordResetURL: d.PasswordResetURL,
+		ApprovalQueueURL: d.ApprovalQueueURL,
+
+		// /auth/me reports the caller's effective permissions so the UI can hide
+		// what the API would refuse. account is the one module allowed to reach
+		// its own rbac package, so the closure is built here rather than passed in.
+		Perms: func(ctx context.Context, userID uuid.UUID, tokenVersion int) ([]string, error) {
+			set, err := engine.Effective(ctx, rbac.Principal{UserID: userID, TokenVersion: tokenVersion})
+			if err != nil {
+				return nil, err
+			}
+			return set.Codes(), nil
+		},
+	}
+
+	// The admin console is mounted only when a store is wired. A binary that
+	// does not pass one (a worker, a test harness) simply has no /admin routes,
+	// rather than routes that panic on first use.
+	var adminH *handler.AdminHandler
+	if d.Admin != nil {
+		adminH = &handler.AdminHandler{Store: d.Admin, Engine: engine, Audit: logger}
 	}
 
 	return &Module{
@@ -113,6 +141,7 @@ func New(d Deps) (*Module, error) {
 		engine:    engine,
 		logger:    logger,
 		handler:   h,
+		admin:     adminH,
 		publicAPI: accountapi.NewImpl(engine, d.APIUsers),
 	}, nil
 }
@@ -137,6 +166,68 @@ func (m *Module) MountHTTP(r chi.Router) {
 			r.Post("/logout", m.handler.Logout)
 			r.Post("/logout-all", m.handler.LogoutAll)
 			r.Get("/me", m.handler.Me)
+		})
+	})
+
+	m.mountAdmin(r)
+}
+
+// mountAdmin wires the console under /admin. Every route is authenticated and
+// then permission-gated; the map below IS the authorization policy for this
+// surface, so read it as the spec rather than looking for checks inside the
+// handlers.
+//
+//	users:read:any    — see the directory and the approval queue
+//	users:approve     — approve / reject / revoke a registration  (superadmin only
+//	                    by default: migration 0031 grants it to no role, and
+//	                    superadmin reaches it through the '*' wildcard)
+//	users:write:any   — create an account, edit one, disable / enable it
+//	users:delete:any  — delete an account permanently (cascades: see DeleteUser)
+//	rbac:role:assign  — change which roles a user holds
+//	rbac:role:read    — read roles, permissions and the matrix
+//	rbac:role:write   — create / edit / delete roles and edit the matrix
+//
+// account is the one module allowed to reach into its own rbac package, so it
+// builds this middleware itself instead of taking it from cmd/api.
+func (m *Module) mountAdmin(r chi.Router) {
+	if m.admin == nil {
+		return
+	}
+	perm := func(code string) func(http.Handler) http.Handler {
+		return accountmw.RequirePermission(m.engine, code)
+	}
+
+	r.Route("/admin", func(r chi.Router) {
+		r.Use(accountmw.RequireAuth(m.deps.Verifier, m.deps.SnapshotFetcher))
+
+		r.Group(func(r chi.Router) {
+			r.Use(perm("users:read:any"))
+			r.Get("/users", m.admin.ListUsers)
+			r.Get("/users/{id}", m.admin.GetUser)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(perm("users:approve"))
+			r.Post("/users/{id}/approve", m.admin.Approve)
+			r.Post("/users/{id}/reject", m.admin.Reject)
+			r.Post("/users/{id}/revoke-approval", m.admin.RevokeApproval)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(perm("users:write:any"))
+			r.Post("/users", m.admin.CreateUser)
+			r.Patch("/users/{id}", m.admin.UpdateUser)
+			r.Post("/users/{id}/disable", m.admin.SetDisabled(true))
+			r.Post("/users/{id}/enable", m.admin.SetDisabled(false))
+		})
+		r.With(perm("users:delete:any")).Delete("/users/{id}", m.admin.DeleteUser)
+		r.With(perm("rbac:role:assign")).Put("/users/{id}/roles", m.admin.SetUserRoles)
+
+		r.With(perm("rbac:role:read")).Get("/permission-matrix", m.admin.PermissionMatrix)
+		r.Group(func(r chi.Router) {
+			r.Use(perm("rbac:role:write"))
+			r.Post("/roles", m.admin.CreateRole)
+			r.Patch("/roles/{id}", m.admin.UpdateRole)
+			r.Delete("/roles/{id}", m.admin.DeleteRole)
+			r.Put("/roles/{id}/permissions", m.admin.SetRolePermissions)
 		})
 	})
 }

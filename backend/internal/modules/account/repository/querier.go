@@ -13,10 +13,33 @@ import (
 type Querier interface {
 	// ── User ↔ Role assignment ────────────────────────────────────────
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
+	// Invalidates the RBAC permission cache for these users, which is namespaced by
+	// token_version (rbac:perms:<userID>:v<N>) — so the bump IS the invalidation and
+	// `Invalidate` never has to be called by hand.
+	//
+	// It is not a logout. Only the ACCESS token stops verifying; the refresh cookie
+	// is untouched, so the browser's next silent refresh mints a token at the new
+	// version and the user keeps their session with the new permissions applied.
+	BumpTokenVersionForUsers(ctx context.Context, ids []pgtype.UUID) error
 	// ── User lifecycle (auth-related) ─────────────────────────────────
 	// Invalidates all outstanding access tokens for this user (forced logout-all).
 	// Refresh tokens are NOT touched here; revoke them separately when needed.
 	BumpUserTokenVersion(ctx context.Context, id pgtype.UUID) (int32, error)
+	// Used once, at registration, to detect a first-run install. See
+	// handler/auth.go: the founding account approves itself and takes superadmin,
+	// because otherwise a fresh deployment has nobody who can ever approve anyone.
+	CountUsers(ctx context.Context) (int64, error)
+	// Total for the same filter as ListUsersAdmin, so the grid can page.
+	CountUsersAdmin(ctx context.Context, arg CountUsersAdminParams) (int64, error)
+	// Drives the queue badge ("3 chờ duyệt") without fetching the rows.
+	CountUsersByApprovalStatus(ctx context.Context) ([]CountUsersByApprovalStatusRow, error)
+	// ── Admin-provisioned accounts ────────────────────────────────────
+	// Admin-provisioned account. Unlike CreateLocalUser (self-registration) the
+	// approval state is decided by the caller: a creator who can approve gets a
+	// usable account immediately, one who cannot gets a pending row that still has
+	// to go through the queue. Without that the create form would be a way around
+	// the approval gate for anyone holding `users:write:any`.
+	CreateAdminUser(ctx context.Context, arg CreateAdminUserParams) (pgtype.UUID, error)
 	// Registration. password_hash is an Argon2id PHC string; oidc_subject stays NULL.
 	CreateLocalUser(ctx context.Context, arg CreateLocalUserParams) (User, error)
 	// Password-reset tokens (SPEC-04 P0.3). Account-owned; mirrors the refresh-token
@@ -28,6 +51,11 @@ type Querier interface {
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
 	DeleteRole(ctx context.Context, id pgtype.UUID) error
+	// HARD delete. Every content table's FK to users is ON DELETE CASCADE, so this
+	// also removes the account's assets, comics, movies, tracks, stories, ledger,
+	// journal entries, people and organizations. There is no undo and the database
+	// will not object — the confirmation lives in the handler, not here.
+	DeleteUser(ctx context.Context, id pgtype.UUID) (int64, error)
 	DisableUser(ctx context.Context, id pgtype.UUID) error
 	EnableUser(ctx context.Context, id pgtype.UUID) error
 	// Returns the union of permissions granted (directly or via ancestor roles)
@@ -40,21 +68,73 @@ type Querier interface {
 	GetRoleAncestors(ctx context.Context, id pgtype.UUID) ([]GetRoleAncestorsRow, error)
 	GetRoleByCode(ctx context.Context, code string) (Role, error)
 	GetRoleByID(ctx context.Context, id pgtype.UUID) (Role, error)
+	GetUserAdmin(ctx context.Context, id pgtype.UUID) (GetUserAdminRow, error)
 	// Minimal projection used by JWT middleware on each request to validate
-	// token_version + disabled state. Indexed PK lookup.
+	// token_version + disabled + approval state. Indexed PK lookup.
+	//
+	// approval_status is read here, not just at login, so that revoking an approval
+	// ends the session at once: the middleware re-reads this row on every request,
+	// which is the same channel disabled_at has always used.
 	GetUserAuthSnapshot(ctx context.Context, id pgtype.UUID) (GetUserAuthSnapshotRow, error)
 	// Primary login lookup (ADR-06 local auth). Email is UNIQUE.
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
+	// Batch name lookup for other modules (social resolves the other party in a
+	// connection this way, because it may not join `users` itself).
+	GetUsersByIDs(ctx context.Context, ids []pgtype.UUID) ([]GetUsersByIDsRow, error)
 	GrantPermissionToRole(ctx context.Context, arg GrantPermissionToRoleParams) error
 	ListActiveRefreshTokensForUser(ctx context.Context, userID pgtype.UUID) ([]ListActiveRefreshTokensForUserRow, error)
+	// Every (role, permission) grant in one shot. The matrix is a dense grid, so
+	// fetching it per-role would be one round trip per row for no reason.
+	ListAllRolePermissions(ctx context.Context) ([]ListAllRolePermissionsRow, error)
 	ListAuditEvents(ctx context.Context, arg ListAuditEventsParams) ([]AuditLog, error)
+	// ── Who can approve a registration ────────────────────────────────
+	// (user_id, permission code) for every account that could act on `resource`,
+	// with the role hierarchy already walked — the same union GetEffectivePermissions
+	// computes for one user, done for everybody at once.
+	//
+	// The WHERE is a PREFILTER, not the decision. Matching `users:approve` means
+	// honouring the scope and wildcard rules in rbac/permission.go, which is not
+	// something to re-implement in SQL; this narrows the rows to codes whose first
+	// segment could possibly match, and the caller applies the real matcher.
+	//
+	// Disabled and non-approved accounts are excluded here rather than by the
+	// caller: someone who cannot sign in cannot act on a queue, and mailing them
+	// would be noise.
+	ListPermissionHoldersByResource(ctx context.Context, resource string) ([]ListPermissionHoldersByResourceRow, error)
 	// ── Permissions ───────────────────────────────────────────────────
 	ListPermissions(ctx context.Context) ([]Permission, error)
 	ListRolePermissions(ctx context.Context, roleID pgtype.UUID) ([]Permission, error)
 	// ── Roles ─────────────────────────────────────────────────────────
 	ListRoles(ctx context.Context) ([]Role, error)
+	// ── Role / permission matrix ──────────────────────────────────────
+	// Roles plus their parent's CODE (not just the id) and how many users hold each,
+	// which is what the matrix header and the delete guard both need.
+	ListRolesAdmin(ctx context.Context) ([]ListRolesAdminRow, error)
+	// Other accounts on this instance: approved, not disabled, not the caller. The
+	// roster behind "people you may know". Ids and names only — a directory, not a
+	// profile dump.
+	//
+	// approval_status comes from migration 0031: an account nobody has approved yet
+	// must not be suggested as someone you might know.
+	ListUserDirectory(ctx context.Context, arg ListUserDirectoryParams) ([]ListUserDirectoryRow, error)
+	// Everyone whose effective permissions change when this role's grants change:
+	// holders of the role itself AND holders of any role that inherits from it. A
+	// plain `WHERE role_id = $1` would miss the descendants, so revoking something
+	// from `creator` would leave every `editor` still holding it until the cache
+	// expired.
+	ListUserIDsAffectedByRole(ctx context.Context, id pgtype.UUID) ([]pgtype.UUID, error)
 	ListUserRoles(ctx context.Context, userID pgtype.UUID) ([]Role, error)
+	// Admin console reads/writes: the user directory, the approval queue, and the
+	// role/permission matrix. Everything here is behind users:read:any /
+	// users:approve / rbac:role:* — see handler/admin.go for the route→permission map.
+	// ── User directory ────────────────────────────────────────────────
+	// One row per user with their role codes folded in, so the directory renders
+	// without an N+1 walk of user_roles. Both filters are optional: pass NULL for
+	// `status` to span every approval state, and an empty `q` to skip the search.
+	// Expired role grants are excluded here exactly as they are in ListUserRoles —
+	// a lapsed grant must not show as a live badge.
+	ListUsersAdmin(ctx context.Context, arg ListUsersAdminParams) ([]ListUsersAdminRow, error)
 	ListUsersByRole(ctx context.Context, arg ListUsersByRoleParams) ([]User, error)
 	// Idempotent consume: COALESCE keeps the first used_at stamp.
 	MarkPasswordResetTokenUsed(ctx context.Context, id pgtype.UUID) error
@@ -63,6 +143,15 @@ type Querier interface {
 	PurgeExpiredPasswordResetTokens(ctx context.Context) error
 	// Run from a periodic job. Anything past expiry + grace can be hard-deleted.
 	PurgeExpiredRefreshTokens(ctx context.Context) error
+	// Same atomic-set shape as ReplaceUserRoles: the matrix saves a whole row of
+	// checkboxes, and a partially applied row is a security hole, not a glitch.
+	ReplaceRolePermissions(ctx context.Context, arg ReplaceRolePermissionsParams) error
+	// ── Role assignment (bulk set) ────────────────────────────────────
+	// Sets a user's roles to exactly `codes`, in one statement, so the grid's "save
+	// roles" is atomic instead of a diff of grants and revokes that can half-apply.
+	// Unknown codes are silently dropped by the join — the handler validates first
+	// so that cannot happen from the UI.
+	ReplaceUserRoles(ctx context.Context, arg ReplaceUserRolesParams) error
 	RevokeAllRefreshTokensForUser(ctx context.Context, arg RevokeAllRefreshTokensForUserParams) error
 	RevokePermissionFromRole(ctx context.Context, arg RevokePermissionFromRoleParams) error
 	RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) error
@@ -70,9 +159,21 @@ type Querier interface {
 	// revoking every link. Used on suspected token theft (reuse detection).
 	RevokeRefreshTokenChain(ctx context.Context, arg RevokeRefreshTokenChainParams) error
 	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error
+	// ── Approval decisions ────────────────────────────────────────────
+	// Records the decision and bumps token_version unconditionally.
+	//
+	// The bump is the whole point on a rejection or a revocation: RequireAuth
+	// re-reads this row on every request, so any session the user already holds
+	// dies on their next call rather than lingering for the rest of the access-token
+	// TTL. On an approval it is harmless — a pending user has no session to lose.
+	SetUserApproval(ctx context.Context, arg SetUserApprovalParams) (SetUserApprovalRow, error)
 	// Change-password / admin reset. Pair with BumpUserTokenVersion to force a
 	// re-login everywhere after a credential change.
 	SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error
+	// Profile edit. Email is included because it is the login identifier and the
+	// only way to fix a typo that locks somebody out; the UNIQUE index is what
+	// rejects a collision, surfaced as 409.
+	UpdateAdminUser(ctx context.Context, arg UpdateAdminUserParams) (pgtype.UUID, error)
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
 	// ── Audit log ─────────────────────────────────────────────────────
 	// metadata is cast text->jsonb so sqlc types the param as a Go string. The pool

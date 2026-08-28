@@ -233,7 +233,7 @@ func run() error {
 	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
 	comicMod, err := comic.New(comic.Deps{
 		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
-		Media:       mediaMod.API(),  // P1.7: IngestImage + GetAsset for the zip import
+		Media:       mediaMod.API(),  // P1.7: Ingest + GetAsset for the zip import
 		Storage:     store,           // P1.7: read/delete the uploaded zip
 		Enqueuer:    asynqClient,     // (unused on the worker side, but harmless)
 		RunInTenant: runInUserTenant, // P1.7: per-image committed tenant tx
@@ -248,7 +248,16 @@ func run() error {
 		return fmt.Errorf("movie module: %w", err)
 	}
 
-	musicMod, err := music.New(music.Deps{Repo: musicrepo.NewAdapter(conn)})
+	// Music worker side: the media:asset_deleted consumer, plus the bulk zip
+	// import (0038) — Media.Ingest turns each entry into an audio asset, Storage
+	// reads the archive back, and RunInTenant opens the owner's tenant scope,
+	// without which every RLS-fenced read in the import errors outright.
+	musicMod, err := music.New(music.Deps{
+		Repo:        musicrepo.NewAdapter(conn),
+		Media:       mediaMod.API(),
+		Storage:     store,
+		RunInTenant: runInUserTenant,
+	})
 	if err != nil {
 		return fmt.Errorf("music module: %w", err)
 	}
@@ -293,6 +302,8 @@ func run() error {
 	// so the transcode's ready-transition actually reaches notify. The consumer
 	// task lands on the weight-1 "default" queue served by the light server below.
 	publisher.Subscribe(mediaworker.EventAssetReady, notifyapi.TaskOnAssetReady, asynq.Queue("default"))
+	// One bell entry per comic publish, not per chapter (see the note below).
+	publisher.Subscribe(comicapi.EventComicPublished, notifyapi.TaskOnComicPublished, asynq.Queue("default"))
 	// media:asset_deleted → comic:on_asset_deleted (SPEC-02 P0.6): reap dangling
 	// page/cover references when an asset is hard-deleted media-side.
 	publisher.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
@@ -310,15 +321,24 @@ func run() error {
 	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
 	// and subscribes to every producer. media:asset_deleted now fans out to TWO
 	// consumers (comic reap + stream removal): the platform/events multi-consumer path.
-	publisher.Subscribe(mediaworker.EventAssetReady, journalapi.TaskStreamAssetReady, asynq.Queue("default"))
+	// media:asset_ready is deliberately NOT projected into the life-stream. It is
+	// a pipeline confirmation ("your file finished processing"), and it already
+	// has a channel: notify:on_asset_ready, subscribed above. Projecting it too
+	// put one card in the feed per processed file — 182k of them, one per
+	// imported comic page, burying every real post. The `origin == "import"`
+	// flood guard that was meant to prevent this never fired: the import path
+	// creates assets with origin 'upload'.
 	publisher.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
 	publisher.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionCreated, journalapi.TaskStreamBankCreated, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionUpdated, journalapi.TaskStreamBankUpdated, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
 	publisher.Subscribe(peopleapi.EventBirthdayUpcoming, journalapi.TaskStreamBirthday, asynq.Queue("default"))
-	publisher.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
-	publisher.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
+	// Chapters are NOT projected into the life-stream. Publishing a comic emits
+	// one event per chapter — a 500-chapter title produced 500 feed cards, and
+	// 2,516 rows had piled up against 10 real posts. What a person wants to hear
+	// is "this comic got new chapters", once, which is comic:published below.
+	// The chapter-deleted subscription went with it: there is no card to remove.
 
 	// ── Heavy server: serialize the expensive decodes (P0.1 OOM guard) ──
 	// Its own low-concurrency pool consumes ONLY the "heavy" queue — queue
@@ -361,7 +381,7 @@ func run() error {
 	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
 	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
 	movieMod.RegisterTasks(lightMux)   // movie:on_asset_deleted (media:asset_deleted consumer)
-	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted (media:asset_deleted consumer)
+	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted + music:import_zip (0038)
 	storyMod.RegisterTasks(lightMux)   // story:on_asset_deleted (media:asset_deleted consumer)
 	peopleMod.RegisterTasks(lightMux)  // people:scan_birthdays (daily birthday scan, P0.4)
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)

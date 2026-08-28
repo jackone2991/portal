@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	tenantapi "github.com/portal/backend/internal/modules/tenant/api"
+	platformdb "github.com/portal/backend/internal/platform/db"
 )
 
 // ══ fakes ═══════════════════════════════════════════════════════════════════
@@ -40,13 +41,14 @@ func (t *fakeTx) Rollback(context.Context) error {
 }
 
 type fakeScoper struct {
-	tx       *fakeTx
-	beginErr error
-	orgSeen  uuid.UUID
+	tx        *fakeTx
+	beginErr  error
+	orgSeen   uuid.UUID
+	scopeSeen platformdb.Scope
 }
 
-func (s *fakeScoper) BeginTenantScope(_ context.Context, orgID uuid.UUID) (pgx.Tx, error) {
-	s.orgSeen = orgID
+func (s *fakeScoper) BeginScope(_ context.Context, sc platformdb.Scope) (pgx.Tx, error) {
+	s.orgSeen, s.scopeSeen = sc.OrgID, sc
 	if s.beginErr != nil {
 		return nil, s.beginErr
 	}

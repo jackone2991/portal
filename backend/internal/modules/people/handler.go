@@ -46,14 +46,28 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		Birthday     *birthdayReq    `json:"birthday"`
 		Contact      json.RawMessage `json:"contact"`
 		NoteMd       *string         `json:"note_md"`
+		Circle       *string         `json:"circle"`
+		// LinkedUserID records that this entry IS a portal account — set when the
+		// person was added from a suggestion, so they stop being suggested.
+		LinkedUserID *string `json:"linked_user_id"`
 	}
 	if !server.Decode(w, r, &body) {
 		return
 	}
-	p, err := h.svc.CreatePerson(r.Context(), CreatePersonInput{
+	in := CreatePersonInput{
 		UserID: uid, DisplayName: body.DisplayName, Relationship: body.Relationship,
 		Birthday: body.Birthday.toDomain(), Contact: json.RawMessage(body.Contact), NoteMd: body.NoteMd,
-	})
+		Circle: body.Circle,
+	}
+	if body.LinkedUserID != nil && *body.LinkedUserID != "" {
+		linked, perr := uuid.Parse(*body.LinkedUserID)
+		if perr != nil {
+			server.BadRequest(w, "invalid linked_user_id")
+			return
+		}
+		in.LinkedUserID = &linked
+	}
+	p, err := h.svc.CreatePerson(r.Context(), in)
 	if err != nil {
 		writePeopleErr(w, err)
 		return
@@ -66,7 +80,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	res, err := h.svc.ListPeople(r.Context(), uid, r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")))
+	res, err := h.svc.ListPeople(r.Context(), uid, r.URL.Query().Get("cursor"), server.AtoiSafe(r.URL.Query().Get("limit")), r.URL.Query().Get("circle"))
 	if err != nil {
 		writePeopleErr(w, err)
 		return
@@ -114,11 +128,12 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		Birthday     json.RawMessage `json:"birthday"`
 		Contact      json.RawMessage `json:"contact"`
 		NoteMd       json.RawMessage `json:"note_md"`
+		Circle       *string         `json:"circle"`
 	}
 	if !server.Decode(w, r, &body) {
 		return
 	}
-	in := UpdatePersonInput{UserID: uid, ID: id, DisplayName: body.DisplayName, Contact: json.RawMessage(body.Contact)}
+	in := UpdatePersonInput{UserID: uid, ID: id, DisplayName: body.DisplayName, Contact: json.RawMessage(body.Contact), Circle: body.Circle}
 	in.Relationship, in.SetRelationship = optStr(body.Relationship)
 	in.NoteMd, in.SetNote = optStr(body.NoteMd)
 	if len(body.Birthday) > 0 {
@@ -199,6 +214,8 @@ func personJSON(p Person) map[string]any {
 		"id": p.ID, "display_name": p.DisplayName, "relationship": p.Relationship,
 		"birthday": bday, "contact": contact, "note_md": p.NoteMd,
 		"avatar_asset_id": uuidPtrJSON(p.AvatarAssetID),
+		"circle":          p.Circle,
+		"linked_user_id":  uuidPtrJSON(p.LinkedUserID),
 		"created_at":      p.CreatedAt.Format(time.RFC3339), "updated_at": p.UpdatedAt.Format(time.RFC3339),
 	}
 }
@@ -258,4 +275,27 @@ func writePeopleErr(w http.ResponseWriter, err error) {
 	default:
 		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal Server Error", "unexpected error")
 	}
+}
+
+// Suggestions is GET /people/suggestions — "people you may know": accounts on
+// this instance the caller has not added to their registry yet.
+//
+// This is the one people endpoint whose data comes from another module. It
+// reaches account through its api/ package and subtracts locally; there is no
+// join across the boundary.
+func (h *Handler) Suggestions(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	items, err := h.svc.Suggestions(r.Context(), uid, server.AtoiSafe(r.URL.Query().Get("limit")))
+	if err != nil {
+		writePeopleErr(w, err)
+		return
+	}
+	out := make([]any, 0, len(items))
+	for _, s := range items {
+		out = append(out, map[string]any{"user_id": s.UserID, "display_name": s.DisplayName})
+	}
+	server.JSON(w, http.StatusOK, map[string]any{"suggestions": out})
 }

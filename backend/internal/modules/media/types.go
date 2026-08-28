@@ -59,8 +59,17 @@ type Asset struct {
 	Title            string
 	OriginalFilename string
 	Origin           string
+	Visibility       string
 	CreatedAt        time.Time
 }
+
+// Asset visibility (0032). Private is the default and the only value the upload
+// path ever writes; public is an explicit act by the owner, and it is what lets
+// an asset be read with no session at all.
+const (
+	VisibilityPrivate = "private"
+	VisibilityPublic  = "public"
+)
 
 // Variant is a derived, metadata-stripped artifact (thumb/medium/poster).
 type Variant struct {
@@ -106,6 +115,10 @@ type Repository interface {
 	GetAsset(ctx context.Context, id uuid.UUID) (Asset, error)
 	GetAssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error)
 	GetAssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	// SetAssetVisibility flips private/public. The 0032 UPDATE policy is what
+	// restricts it to the owner or a tenant admin — there is no ownership check
+	// in Go, deliberately: one enforcement point, in the database.
+	SetAssetVisibility(ctx context.Context, id uuid.UUID, visibility string) (Asset, error)
 	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Asset, error)
 	ListByOwnerCursor(ctx context.Context, in ListCursorInput) ([]Asset, error)
 	ListForPurge(ctx context.Context) ([]Asset, error)

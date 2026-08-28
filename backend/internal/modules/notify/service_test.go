@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -282,5 +283,50 @@ func TestOnAssetReady(t *testing.T) {
 	}
 	if href, _ := repo.rows[0].Data["href"].(string); href == "" {
 		t.Fatalf("missing data.href click-through, data = %v", repo.rows[0].Data)
+	}
+}
+
+// One publish, one bell entry — regardless of how many chapters it carries. The
+// old per-chapter fan-out is exactly what this replaces, so the count-in-title
+// and the count-in-dedup-key are the two things worth pinning.
+func TestOnComicPublished(t *testing.T) {
+	svc, repo, _ := newDispatchSvc()
+	owner := uuid.New()
+	comic := uuid.New().String()
+
+	mk := func(chapters int) *asynq.Task {
+		body, _ := json.Marshal(comicPublishedEvent{
+			ComicID: comic, OwnerUserID: owner.String(), Title: "Dungeon Meshi", ChapterCount: chapters,
+		})
+		return asynq.NewTask(notifyapi.TaskOnComicPublished, body)
+	}
+
+	if err := svc.OnComicPublished(context.Background(), mk(500)); err != nil {
+		t.Fatalf("publish: %v", err)
+	}
+	if len(repo.rows) != 1 || repo.rows[0].UserID != owner {
+		t.Fatalf("rows = %+v, want exactly 1 for the owner", repo.rows)
+	}
+	if repo.rows[0].Type != notifyapi.TypeComicPublished {
+		t.Fatalf("type = %q", repo.rows[0].Type)
+	}
+	if !strings.Contains(repo.rows[0].Title, "500 chapters") {
+		t.Fatalf("title = %q, want the chapter count in it", repo.rows[0].Title)
+	}
+
+	// Re-publishing unchanged is silent...
+	if err := svc.OnComicPublished(context.Background(), mk(500)); err != nil {
+		t.Fatalf("republish: %v", err)
+	}
+	if len(repo.rows) != 1 {
+		t.Fatalf("unchanged re-publish produced %d rows, want 1 (dedup)", len(repo.rows))
+	}
+
+	// ...but a sync that brought new chapters is worth saying once more.
+	if err := svc.OnComicPublished(context.Background(), mk(512)); err != nil {
+		t.Fatalf("republish with new chapters: %v", err)
+	}
+	if len(repo.rows) != 2 {
+		t.Fatalf("republish with 12 new chapters produced %d rows, want 2", len(repo.rows))
 	}
 }

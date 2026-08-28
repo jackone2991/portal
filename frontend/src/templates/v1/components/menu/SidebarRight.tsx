@@ -1,56 +1,39 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import type { Route } from "next";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
+import { listPeople, listSuggestions, type Person, type PersonCircle } from "@/lib/people";
+import { assetVariantURL } from "@/lib/media-assets";
 
 /**
- * Right fixed sidebar — port of `components/menu/sidebarRight.blade.php` (Olympus):
- * grouped friend lists with presence status, a live "Search Friends" filter, a
- * settings/collapse footer, and the "Olympus Chat" launcher. Collapses to a thin
- * avatar rail (width driven by --tpl-rightbar-cur so the content reflows).
+ * Right fixed sidebar — port of `components/menu/sidebarRight.blade.php`
+ * (Olympus), rebuilt on the people registry (SPEC-08).
+ *
+ * The reference is a friends list with presence dots and a chat launcher. Portal
+ * has neither a social graph nor presence nor chat, so the port used to ship
+ * eleven invented people with invented ONLINE/AWAY states. What Portal does have
+ * is the people registry, so that is what the rail lists — in three fixed
+ * sections:
+ *
+ *   Close Friends / My Family   the two circles (migration 0035)
+ *   Có thể bạn biết             accounts on this instance not yet in the
+ *                               registry, so an empty registry still has
+ *                               something to offer instead of a blank rail
+ *
+ * Each heading carries a Settings link to the page that manages that section.
+ *
+ * Everything the data cannot support is gone rather than faked: no status dots,
+ * no per-group "Settings", no row menu, no chat bar. What replaces the chat bar
+ * is a link to the page that can actually add someone.
+ *
+ * Failure-isolated: this renders in the shell of every authenticated page, so a
+ * failing or empty query collapses to a quiet empty state, never to a broken
+ * layout.
  */
-
-type Status = "online" | "work" | "away" | "offline" | "invisible";
-
-const STATUS: Record<Status, { label: string; varName: string }> = {
-  online: { label: "Online", varName: "--tpl-status-online" },
-  work: { label: "At work!", varName: "--tpl-status-work" },
-  away: { label: "Away", varName: "--tpl-status-away" },
-  offline: { label: "Offline", varName: "--tpl-status-offline" },
-  invisible: { label: "Invisible", varName: "--tpl-status-invisible" },
-};
-
-type Friend = { name: string; status: Status };
-type Group = { title: string; friends: Friend[] };
-
-const GROUPS: Group[] = [
-  {
-    title: "Close Friends",
-    friends: [
-      { name: "Carol Summers", status: "online" },
-      { name: "Mathilda Brinker", status: "work" },
-      { name: "Michael Maximoff", status: "away" },
-      { name: "Rachel Howlett", status: "offline" },
-      { name: "Nina Kraviz", status: "online" },
-    ],
-  },
-  {
-    title: "My Family",
-    friends: [{ name: "Sarah Hetfield", status: "online" }],
-  },
-  {
-    title: "Uncategorized",
-    friends: [
-      { name: "Bruce Peterson", status: "online" },
-      { name: "Chris Greyson", status: "away" },
-      { name: "Nicholas Grisom", status: "invisible" },
-      { name: "James Spiegel", status: "away" },
-      { name: "Diana Jones", status: "online" },
-    ],
-  },
-];
-
 export function SidebarRight({
   collapsed,
   onToggle,
@@ -60,16 +43,35 @@ export function SidebarRight({
 }) {
   const [q, setQ] = useState("");
 
-  const groups = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return GROUPS;
-    return GROUPS.map((g) => ({
-      ...g,
-      friends: g.friends.filter((f) => f.name.toLowerCase().includes(needle)),
-    })).filter((g) => g.friends.length > 0);
-  }, [q]);
+  const query = useQuery({
+    queryKey: ["people", "rail"],
+    queryFn: () => listPeople(),
+    staleTime: 60_000, // the rail is on every page; don't refetch on each nav
+  });
 
-  const allFriends = useMemo(() => GROUPS.flatMap((g) => g.friends), []);
+  const people = useMemo(() => query.data?.people ?? [], [query.data]);
+
+  // Suggestions are only worth fetching when the rail is open, and they are the
+  // section that makes an empty registry useful rather than blank.
+  const suggestQuery = useQuery({
+    queryKey: ["people", "suggestions"],
+    queryFn: listSuggestions,
+    enabled: !collapsed,
+    staleTime: 300_000,
+  });
+
+  const needle = q.trim().toLowerCase();
+  const match = (name: string) => !needle || name.toLowerCase().includes(needle);
+
+  const circles = useMemo(() => {
+    const pick = (c: PersonCircle) => people.filter((p) => p.circle === c && match(p.display_name));
+    return { close_friend: pick("close_friend"), family: pick("family") };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `match` is derived from q
+  }, [people, q]);
+
+  const suggestions = (suggestQuery.data ?? []).filter((s) => match(s.display_name));
+  const hasAnything =
+    circles.close_friend.length > 0 || circles.family.length > 0 || suggestions.length > 0;
 
   return (
     <aside
@@ -85,11 +87,15 @@ export function SidebarRight({
         <>
           <div className="flex-1 overflow-y-auto py-4">
             <div className="flex flex-col items-center gap-2.5">
-              {allFriends.map((f, i) => (
-                <button key={`${f.name}-${i}`} type="button" title={f.name} className="relative" aria-label={f.name}>
-                  <Avatar name={f.name} size={40} />
-                  <StatusDot status={f.status} ring />
-                </button>
+              {people.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/people/${p.id}` as Route}
+                  title={p.display_name}
+                  aria-label={p.display_name}
+                >
+                  <PersonAvatar person={p} size={40} />
+                </Link>
               ))}
             </div>
           </div>
@@ -98,7 +104,7 @@ export function SidebarRight({
             onClick={onToggle}
             className="grid h-11 place-items-center border-t text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]"
             style={{ borderColor: "var(--tpl-border)" }}
-            aria-label="Expand friends panel"
+            aria-label="Expand people panel"
           >
             <Icon name="popup-left-arrow" size={14} />
           </button>
@@ -107,96 +113,194 @@ export function SidebarRight({
         /* ── expanded: grouped lists ── */
         <>
           <div className="flex-1 overflow-y-auto">
-            {groups.map((g) => (
-              <div key={g.title}>
-                <div
-                  className="flex items-center justify-between px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wide"
-                  style={{ color: "var(--tpl-accent)" }}
+            {query.isPending ? (
+              <p className="px-4 py-6 text-sm" style={{ color: "var(--tpl-muted)" }}>
+                Loading people…
+              </p>
+            ) : query.isError ? (
+              <p className="px-4 py-6 text-sm" style={{ color: "var(--tpl-muted)" }}>
+                Couldn&apos;t load your people.
+              </p>
+            ) : (
+              <>
+                <Section
+                  title="Close Friends"
+                  manageHref="/people?circle=close_friend"
+                  empty="No one in this circle yet."
                 >
-                  <span>{g.title}</span>
-                  <button type="button" className="text-[var(--tpl-muted)] hover:text-[var(--tpl-heading)]">
-                    Settings
-                  </button>
-                </div>
-                <ul>
-                  {g.friends.map((f, i) => (
-                    <li
-                      key={`${f.name}-${i}`}
-                      className="group flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
-                    >
-                      <span className="relative shrink-0">
-                        <Avatar name={f.name} size={38} />
-                        <StatusDot status={f.status} ring />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold" style={{ color: "var(--tpl-heading)" }}>
-                          {f.name}
-                        </p>
-                        <p className="truncate text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--tpl-muted)" }}>
-                          {STATUS[f.status].label}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="text-[var(--tpl-muted)] opacity-0 transition group-hover:opacity-100"
-                        aria-label="Friend options"
+                  {circles.close_friend.map((p) => (
+                    <PersonRow key={p.id} person={p} />
+                  ))}
+                </Section>
+
+                <Section
+                  title="My Family"
+                  manageHref="/people?circle=family"
+                  empty="No one in this circle yet."
+                >
+                  {circles.family.map((p) => (
+                    <PersonRow key={p.id} person={p} />
+                  ))}
+                </Section>
+
+                <Section
+                  title="Có thể bạn biết"
+                  manageHref="/people?circle=suggestions"
+                  empty={
+                    suggestQuery.isPending
+                      ? "Looking for people…"
+                      : "No other accounts on this Portal yet."
+                  }
+                >
+                  {suggestions.map((sug) => (
+                    <li key={sug.user_id}>
+                      <Link
+                        href={"/people?circle=suggestions" as Route}
+                        className="flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
                       >
-                        <Icon name="three-dots-icon" size={16} />
-                      </button>
+                        <Avatar name={sug.display_name} size={38} />
+                        <p
+                          className="min-w-0 flex-1 truncate text-sm font-semibold"
+                          style={{ color: "var(--tpl-heading)" }}
+                        >
+                          {sug.display_name}
+                        </p>
+                      </Link>
                     </li>
                   ))}
-                </ul>
-              </div>
-            ))}
-            {groups.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm" style={{ color: "var(--tpl-muted)" }}>
-                No friends match “{q}”.
-              </p>
+                </Section>
+
+                {!hasAnything && needle !== "" && (
+                  <p className="px-4 py-6 text-center text-sm" style={{ color: "var(--tpl-muted)" }}>
+                    No one matches “{q}”.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
-          {/* search + actions */}
-          <div className="flex items-center gap-2 border-t px-3 py-3" style={{ borderColor: "var(--tpl-border)" }}>
+          {/* search + collapse */}
+          <div
+            className="flex items-center gap-2 border-t px-3 py-3"
+            style={{ borderColor: "var(--tpl-border)" }}
+          >
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Friends..."
+              placeholder="Search people..."
               className="min-w-0 flex-1 rounded-md border bg-transparent px-3 py-1.5 text-sm outline-none focus:border-[var(--tpl-accent)]"
               style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
             />
-            <button type="button" className="text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]" aria-label="Friend settings">
-              <Icon name="settings-v2-icon" size={18} />
-            </button>
             <button
               type="button"
               onClick={onToggle}
               className="text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]"
-              aria-label="Collapse friends panel"
+              aria-label="Collapse people panel"
             >
               <Icon name="close-icon" size={16} />
             </button>
           </div>
 
-          {/* Olympus chat bar */}
-          <button
-            type="button"
+          {/* Where the Olympus chat launcher was: the one action this panel can
+              actually perform. */}
+          <Link
+            href={"/people" as Route}
             className="flex items-center justify-between px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:opacity-95"
-            style={{ background: "#7c5ac2" }}
+            style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
           >
-            <span>Olympus Chat</span>
-            <Icon name="chat---messages-icon" size={20} />
-          </button>
+            <span>People</span>
+            <Icon name="happy-faces-icon" size={20} />
+          </Link>
         </>
       )}
     </aside>
   );
 }
 
-function StatusDot({ status, ring }: { status: Status; ring?: boolean }) {
+/**
+ * One rail section: heading, a Settings link to the page that manages exactly
+ * this section, and either its rows or a one-line reason there are none. The
+ * empty line matters — a section that vanishes when empty makes the rail look
+ * broken rather than new.
+ */
+function Section({
+  title,
+  manageHref,
+  empty,
+  children,
+}: {
+  title: string;
+  manageHref: string;
+  empty: string;
+  children: React.ReactNode[];
+}) {
   return (
-    <span
-      className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${ring ? "border-2 border-white" : ""}`}
-      style={{ background: `var(${STATUS[status].varName})` }}
-    />
+    <div>
+      <div className="flex items-center justify-between px-4 pb-1 pt-4">
+        <span
+          className="text-[11px] font-bold uppercase tracking-wide"
+          style={{ color: "var(--tpl-accent)" }}
+        >
+          {title}
+        </span>
+        <Link
+          href={manageHref as Route}
+          className="text-[11px] font-semibold uppercase tracking-wide transition hover:text-[var(--tpl-accent)]"
+          style={{ color: "var(--tpl-muted)" }}
+        >
+          Settings
+        </Link>
+      </div>
+      {children.length === 0 ? (
+        <p className="px-4 py-2 text-xs" style={{ color: "var(--tpl-muted)" }}>
+          {empty}
+        </p>
+      ) : (
+        <ul>{children}</ul>
+      )}
+    </div>
   );
+}
+
+function PersonRow({ person }: { person: Person }) {
+  return (
+    <li>
+      <Link
+        href={`/people/${person.id}` as Route}
+        className="flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
+      >
+        <PersonAvatar person={person} size={38} />
+        <p
+          className="min-w-0 flex-1 truncate text-sm font-semibold"
+          style={{ color: "var(--tpl-heading)" }}
+        >
+          {person.display_name}
+        </p>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * A person's avatar: their uploaded image when they have one, initials
+ * otherwise. The variant URL can 404 (a deleted asset, or one that never
+ * finished processing), so a failure falls back to initials rather than leaving
+ * a broken image in the shell of every page.
+ */
+function PersonAvatar({ person, size }: { person: Person; size: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (person.avatar_asset_id && !failed) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
+      <img
+        src={assetVariantURL(person.avatar_asset_id, "thumb")}
+        alt={person.display_name}
+        onError={() => setFailed(true)}
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return <Avatar name={person.display_name} size={size} />;
 }

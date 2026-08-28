@@ -6,6 +6,9 @@ export interface StreamItem {
   id: string;
   source_module: string; // journal | media | bank | comic | people
   event_type: string;
+  /** Id of the projected record — the journal entry id for journal items, which
+   * is the handle the post options menu needs to edit or delete the post. */
+  ref_id: string;
   occurred_at: string;
   // journal items
   body_md?: string | null;

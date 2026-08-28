@@ -54,9 +54,20 @@ func (e *Engine) Authorize(ctx context.Context, p Principal, required Permission
 	return nil
 }
 
+// Effective returns the principal's resolved permission set.
+//
+// Handlers normally must not touch this — `Authorize` is the decision point and
+// a raw set invites ad-hoc slice scans. It exists for the one decision that is
+// about the ACTOR'S OWN authority rather than about a resource: the admin
+// console refuses to grant a permission the grantor does not themselves hold,
+// which needs the grantor's whole set, not a yes/no on one code.
+func (e *Engine) Effective(ctx context.Context, p Principal) (Set, error) {
+	return e.loader.LoadEffective(ctx, p.UserID, p.TokenVersion)
+}
+
 // AuthorizeOwnerOr permits the call if either:
-//   1. the principal owns the resource (ownerID == principal), or
-//   2. the principal has the elevated permission (e.g. ":any" variant).
+//  1. the principal owns the resource (ownerID == principal), or
+//  2. the principal has the elevated permission (e.g. ":any" variant).
 //
 // This is the canonical pattern for endpoints like DELETE /assets/{id}:
 // owners can delete their own; admins (with assets:delete:any) can delete any.

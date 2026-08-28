@@ -24,6 +24,14 @@ type Deps struct {
 	Media  MediaAPI
 	Events EventPublisher
 
+	// Zip import (0038). API side: Storage + Enqueuer mount the import routes.
+	// Worker side: Storage + a Media whose Ingest is wired run the task.
+	Storage  Storage
+	Enqueuer Enqueuer
+	// RunInTenant is worker-side only: the import runs outside any request, so it
+	// opens the owner's tenant scope itself.
+	RunInTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
 	CurrentUser       func(context.Context) (uuid.UUID, bool)
@@ -43,7 +51,10 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("music: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events}
+	svc := &Service{
+		repo: d.Repo, media: d.Media, events: d.Events,
+		store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant,
+	}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -63,11 +74,43 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.DeleteTrackMW)).Delete("/{id}", m.handler.DeleteTrack)
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/publish", m.handler.Publish)
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/unpublish", m.handler.Unpublish)
+
+		// Bulk zip import (0038). Mounted only where storage + queue exist, so a
+		// binary without them has no dead routes. Everything is owner-scoped in
+		// the handler — an import creates tracks for the caller and nobody else,
+		// so `music:write:own` is the whole gate.
+		if m.deps.Storage != nil && m.deps.Enqueuer != nil {
+			r.Route("/imports", func(r chi.Router) {
+				r.Use(m.perm("music:write:own"))
+				r.Post("/", m.handler.CreateImport)
+				r.Get("/", m.handler.ListImports)
+				r.Get("/{id}", m.handler.GetImport)
+				r.Put("/{id}/upload", m.handler.UploadImportZip)
+			})
+		}
 	})
 }
 
 func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(musicapi.TaskOnAssetDeleted, m.handleAssetDeleted)
+	mux.HandleFunc(musicapi.TaskImportZip, m.handleImportZip)
+}
+
+// handleImportZip is the music:import_zip worker task (0038).
+func (m *Module) handleImportZip(ctx context.Context, t *asynq.Task) error {
+	var p musicapi.ImportZipPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		return nil // a payload that cannot parse will never parse; retrying is noise
+	}
+	importID, err := uuid.Parse(p.ImportID)
+	if err != nil {
+		return nil
+	}
+	ownerID, err := uuid.Parse(p.OwnerID)
+	if err != nil {
+		return nil
+	}
+	return m.svc.RunImport(ctx, importID, ownerID)
 }
 
 func (m *Module) handleAssetDeleted(ctx context.Context, t *asynq.Task) error {

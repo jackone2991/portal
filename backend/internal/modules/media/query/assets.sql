@@ -90,3 +90,13 @@ WHERE id = $1;
 
 -- name: DeleteAsset :exec
 DELETE FROM assets WHERE id = $1;
+
+-- name: SetAssetVisibility :one
+-- Flip an asset between 'private' and 'public' (0032). No owner predicate here
+-- on purpose: the UPDATE policy already restricts this to the owner or a tenant
+-- admin, so a row the caller may not touch simply does not exist for them and
+-- this returns no rows.
+UPDATE assets
+SET visibility = $2, updated_at = now()
+WHERE id = $1
+RETURNING *;

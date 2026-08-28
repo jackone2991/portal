@@ -55,6 +55,19 @@ linters:
         #
         #    NEW MODULE <N>: copy a block below, scope `files` to internal/modules/<N>/**,
         #    and `allow` <N> (own) + every OTHER module's /api package.
+        # layout — shell navigation + dashboard widgets (0035). It reads account's
+        # api/ for the per-caller permission filter and nothing else.
+        module-layout-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/layout/**"
+          allow:
+            - github.com/portal/backend/internal/modules/layout
+            - github.com/portal/backend/internal/modules/account/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "layout may only reach another module through its api/ package (backend/MODULES.md)."
+
         module-account-isolation:
           list-mode: lax
           files:
@@ -195,6 +208,19 @@ linters:
             - pkg: github.com/portal/backend/internal/modules
               desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
 
+        module-social-isolation:
+          list-mode: lax
+          files:
+            - "**/internal/modules/social/**"
+          allow:
+            - github.com/portal/backend/internal/modules/social
+            - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/notify/api
+            - github.com/portal/backend/internal/modules/people/api
+          deny:
+            - pkg: github.com/portal/backend/internal/modules
+              desc: "Cross-module access only through the other module's api/ package (MODULES.md)."
+
         module-people-isolation:
           list-mode: lax
           files:
@@ -202,6 +228,7 @@ linters:
           allow:
             - github.com/portal/backend/internal/modules/people
             - github.com/portal/backend/internal/modules/account/api
+            - github.com/portal/backend/internal/modules/social/api
             - github.com/portal/backend/internal/modules/media/api
             - github.com/portal/backend/internal/modules/notify/api
             - github.com/portal/backend/internal/modules/journal/api

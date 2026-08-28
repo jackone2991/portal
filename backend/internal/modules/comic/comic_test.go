@@ -29,7 +29,7 @@ func (m *fakeMedia) AssetStatuses(_ context.Context, ids []uuid.UUID) (map[uuid.
 	}
 	return out, nil
 }
-func (m *fakeMedia) IngestImage(_ context.Context, owner uuid.UUID, _, _ string, _ []byte) (uuid.UUID, error) {
+func (m *fakeMedia) Ingest(_ context.Context, owner uuid.UUID, _, _ string, _ []byte) (uuid.UUID, error) {
 	return m.put(owner, mediaapi.KindImage, mediaapi.StatusReady), nil
 }
 func (m *fakeMedia) put(owner uuid.UUID, kind mediaapi.AssetKind, status mediaapi.AssetStatus) uuid.UUID {

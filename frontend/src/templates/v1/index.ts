@@ -20,6 +20,9 @@ import { PeopleIndexView } from "./views/people/PeopleIndexView";
 import { PersonDetailView } from "./views/people/PersonDetailView";
 import { CalendarView } from "./views/calendar/CalendarView";
 import { WeatherView } from "./views/weather/WeatherView";
+import { AdminUsersView } from "./views/admin/AdminUsersView";
+import { AdminRolesView } from "./views/admin/AdminRolesView";
+import { AdminLayoutView } from "./views/admin/AdminLayoutView";
 
 /**
  * Template "v1" — React/Next.js port of the Crumina "Olympus" social theme at
@@ -52,5 +55,8 @@ export const v1: TemplateManifest = {
     peopleDetail: PersonDetailView,
     calendar: CalendarView,
     weather: WeatherView,
+    adminUsers: AdminUsersView,
+    adminRoles: AdminRolesView,
+    adminLayout: AdminLayoutView,
   },
 };

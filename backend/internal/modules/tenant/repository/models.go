@@ -29,6 +29,7 @@ type Asset struct {
 	OriginalFilename *string            `json:"original_filename"`
 	Origin           string             `json:"origin"`
 	TenantID         pgtype.UUID        `json:"tenant_id"`
+	Visibility       string             `json:"visibility"`
 }
 
 type AuditLog struct {
@@ -188,6 +189,32 @@ type JournalEntry struct {
 	TenantID   pgtype.UUID        `json:"tenant_id"`
 }
 
+type LayoutMenuItem struct {
+	ID         pgtype.UUID        `json:"id"`
+	Key        string             `json:"key"`
+	Label      string             `json:"label"`
+	Icon       string             `json:"icon"`
+	Href       *string            `json:"href"`
+	Permission *string            `json:"permission"`
+	Position   int32              `json:"position"`
+	Visible    bool               `json:"visible"`
+	IsSystem   bool               `json:"is_system"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type LayoutWidget struct {
+	ID         pgtype.UUID        `json:"id"`
+	Key        string             `json:"key"`
+	Label      string             `json:"label"`
+	Slot       string             `json:"slot"`
+	Permission *string            `json:"permission"`
+	Position   int32              `json:"position"`
+	Visible    bool               `json:"visible"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
 type MediaAssetVariant struct {
 	ID         pgtype.UUID        `json:"id"`
 	AssetID    pgtype.UUID        `json:"asset_id"`
@@ -221,6 +248,21 @@ type Movie struct {
 	Status        string             `json:"status"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MusicImport struct {
+	ID          pgtype.UUID        `json:"id"`
+	OwnerUserID pgtype.UUID        `json:"owner_user_id"`
+	Status      string             `json:"status"`
+	UploadRef   *string            `json:"upload_ref"`
+	Total       int32              `json:"total"`
+	Succeeded   int32              `json:"succeeded"`
+	Failed      int32              `json:"failed"`
+	Report      []byte             `json:"report"`
+	Error       *string            `json:"error"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	TenantID    pgtype.UUID        `json:"tenant_id"`
 }
 
 type MusicTrack struct {
@@ -320,6 +362,8 @@ type PeoplePerson struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 	TenantID      pgtype.UUID        `json:"tenant_id"`
+	Circle        string             `json:"circle"`
+	LinkedUserID  pgtype.UUID        `json:"linked_user_id"`
 }
 
 type Permission struct {
@@ -359,6 +403,15 @@ type RolePermission struct {
 	PermissionID pgtype.UUID        `json:"permission_id"`
 	GrantedAt    pgtype.Timestamptz `json:"granted_at"`
 	GrantedBy    pgtype.UUID        `json:"granted_by"`
+}
+
+type SocialConnection struct {
+	ID          pgtype.UUID        `json:"id"`
+	RequesterID pgtype.UUID        `json:"requester_id"`
+	AddresseeID pgtype.UUID        `json:"addressee_id"`
+	Status      string             `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	RespondedAt pgtype.Timestamptz `json:"responded_at"`
 }
 
 type Story struct {
@@ -410,6 +463,10 @@ type User struct {
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	PasswordHash      *string            `json:"password_hash"`
 	PasswordUpdatedAt pgtype.Timestamptz `json:"password_updated_at"`
+	ApprovalStatus    string             `json:"approval_status"`
+	ApprovalNote      *string            `json:"approval_note"`
+	ApprovedAt        pgtype.Timestamptz `json:"approved_at"`
+	ApprovedBy        pgtype.UUID        `json:"approved_by"`
 }
 
 type UserRole struct {

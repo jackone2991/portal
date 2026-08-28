@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "../../../components/ui/Icon";
+import { BulkImportModal } from "./BulkImportModal";
 import { useMusicPlayerOptional } from "../../../components/music/MusicPlayerProvider";
 import { ApiError } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
@@ -39,6 +40,7 @@ export function MusicIndexView() {
 
   const [tab, setTab] = useState<"all" | "mine">("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [album, setAlbum] = useState("");
@@ -48,11 +50,16 @@ export function MusicIndexView() {
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const all = useQuery({ queryKey: ["tracks", "published"], queryFn: () => listTracks() });
+  const all = useQuery({
+    queryKey: ["tracks", "published"],
+    queryFn: () => listTracks(),
+    retry: retryUnlessClientError,
+  });
   const mine = useQuery({
     queryKey: ["tracks", "mine"],
     queryFn: () => listMyTracks(),
     enabled: tab === "mine",
+    retry: retryUnlessClientError,
   });
 
   // Ready audio assets the user can attach. Fetched only while the modal is open —
@@ -131,6 +138,9 @@ export function MusicIndexView() {
     }),
   };
 
+  // The same 403 that drives ErrorState also hides "Thêm bài hát": offering a
+  // create button to an account that cannot create only produces a second error.
+  const mineForbidden = mine.error instanceof ApiError && mine.error.status === 403;
   const active = tab === "all" ? all : mine;
   const tracks = tab === "all" ? all.data?.tracks ?? [] : mine.data?.tracks ?? [];
   const playable = tracks.filter(isPlayable);
@@ -163,7 +173,7 @@ export function MusicIndexView() {
           Phát tất cả
         </button>
 
-        {tab === "mine" && (
+        {tab === "mine" && !mineForbidden && (
           <button
             type="button"
             onClick={() => {
@@ -176,6 +186,17 @@ export function MusicIndexView() {
             Thêm bài hát
           </button>
         )}
+
+        {tab === "mine" && !mineForbidden && (
+          <button
+            type="button"
+            onClick={() => setBulkOpen(true)}
+            className="rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+            style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+          >
+            Nhập nhiều bài
+          </button>
+        )}
       </div>
 
       {rowErr && <Banner onDismiss={() => setRowErr(null)}>{rowErr}</Banner>}
@@ -183,7 +204,7 @@ export function MusicIndexView() {
       {active.isPending ? (
         <SkeletonList />
       ) : active.isError ? (
-        <ErrorState onRetry={() => active.refetch()} />
+        <ErrorState error={active.error} onRetry={() => active.refetch()} />
       ) : tracks.length === 0 ? (
         <EmptyState mine={tab === "mine"} />
       ) : (
@@ -213,6 +234,13 @@ export function MusicIndexView() {
             />
           ))}
         </ul>
+      )}
+
+      {bulkOpen && (
+        <BulkImportModal
+          onClose={() => setBulkOpen(false)}
+          onImported={() => qc.invalidateQueries({ queryKey: ["tracks"] })}
+        />
       )}
 
       {modalOpen && (
@@ -559,20 +587,41 @@ function EmptyState({ mine }: { mine: boolean }) {
   );
 }
 
-function ErrorState({ onRetry }: { onRetry: () => void }) {
+/**
+ * "Của tôi" needs `music:write:own`, which the default `user` role does not
+ * carry — so a 403 here is an ordinary state, not a fault. It gets its own copy
+ * and no retry button: the request cannot start succeeding on its own, and the
+ * generic "couldn't load / try again" pair invited a loop that never ends.
+ */
+function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const forbidden = error instanceof ApiError && error.status === 403;
+
   return (
     <div className="rounded-xl border py-12 text-center" style={{ borderColor: "var(--tpl-border)" }}>
       <p className="text-sm" style={{ color: "var(--tpl-muted)" }}>
-        Không tải được danh sách nhạc.
+        {forbidden
+          ? "Tài khoản của bạn chưa có quyền đăng nhạc — cần vai trò “creator” trở lên."
+          : "Không tải được danh sách nhạc."}
       </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
-        style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
-      >
-        Thử lại
-      </button>
+      {!forbidden && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+          style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+        >
+          Thử lại
+        </button>
+      )}
     </div>
   );
+}
+
+/**
+ * A 4xx is the server's final answer — retrying a 403 or a 404 just burns three
+ * more round trips before the same error lands. Only 5xx/network faults retry.
+ */
+function retryUnlessClientError(failureCount: number, error: unknown): boolean {
+  if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false;
+  return failureCount < 3;
 }

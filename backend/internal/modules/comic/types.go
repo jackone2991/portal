@@ -237,7 +237,7 @@ type ScraperClient interface {
 type MediaAPI interface {
 	GetAsset(ctx context.Context, id uuid.UUID) (*mediaapi.Asset, error)
 	AssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]mediaapi.AssetStatus, error)
-	IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+	Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
 }
 
 // ObjectStore is the slice of platform/storage the import flow needs (the zip is

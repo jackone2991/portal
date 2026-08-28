@@ -111,11 +111,11 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	return &UploadSession{Asset: asset, URL: pre.URL, Method: pre.Method, Headers: pre.Headers}, nil
 }
 
-// IngestImage ingests raw image bytes as a media asset, running the same pipeline
+// Ingest stores raw bytes as a media asset, running the same pipeline
 // as a browser upload (create → store → complete, which enqueues process_image).
 // Returns the new asset id. Callers (e.g. the comic zip-import worker) run this
 // inside a tenant-scoped ctx so the asset + its variants land in the right tenant.
-func (s *Service) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+func (s *Service) Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
 	sess, err := s.CreateUploadSession(ctx, ownerID, filename, contentType, int64(len(data)))
 	if err != nil {
 		return uuid.Nil, err
@@ -398,33 +398,33 @@ func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (
 // ServeVariant streams a derived variant object (WebP). Public/unauthenticated,
 // like /hls/* — variants carry no EXIF/GPS (all metadata stripped). Missing or
 // deleting assets, and unknown variant names, resolve to ErrNotFound.
-func (s *Service) ServeVariant(ctx context.Context, id uuid.UUID, variant string) (io.ReadCloser, string, error) {
+func (s *Service) ServeVariant(ctx context.Context, id uuid.UUID, variant string) (Content, error) {
 	switch variant {
 	case "thumb", "medium", "poster":
 	default:
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 
 	asset, err := s.repo.GetAsset(ctx, id)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
 	if asset.Status == StatusDeleting {
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 
 	v, err := s.repo.GetVariant(ctx, id, variant)
 	if err != nil {
-		return nil, "", err // ErrNotFound if absent
+		return Content{}, err // ErrNotFound if absent
 	}
 	rc, err := s.store.Get(ctx, v.StorageKey)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, "", ErrNotFound
+			return Content{}, ErrNotFound
 		}
-		return nil, "", err
+		return Content{}, err
 	}
-	return rc, "image/webp", nil
+	return Content{Body: rc, ContentType: "image/webp", Public: asset.Visibility == VisibilityPublic}, nil
 }
 
 // PurgeOrphans is the hourly janitor body (P0.3): re-purge tombstoned assets past
@@ -463,24 +463,43 @@ func (s *Service) AssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, erro
 
 // HLSObject streams a file (manifest or segment) from an asset's HLS output.
 // Public (playback is unauthenticated for v1); path is sanitised against traversal.
-func (s *Service) HLSObject(ctx context.Context, assetID uuid.UUID, sub string) (io.ReadCloser, string, error) {
+// SetVisibility flips an asset between private and public (0032). The write is
+// authorised by the UPDATE policy, not here: a caller who may not touch the row
+// gets ErrNotFound from the repository, indistinguishable from a missing id.
+func (s *Service) SetVisibility(ctx context.Context, id uuid.UUID, visibility string) (Asset, error) {
+	return s.repo.SetAssetVisibility(ctx, id, visibility)
+}
+
+// Content is one stored object plus what the caller needs to cache it safely.
+//
+// Public mirrors the owning asset's visibility. It is the only thing that may
+// put a media response in a SHARED cache: a private asset served with
+// "Cache-Control: public" could be handed by a proxy to someone the RLS
+// policies just went to the trouble of excluding.
+type Content struct {
+	Body        io.ReadCloser
+	ContentType string
+	Public      bool
+}
+
+func (s *Service) HLSObject(ctx context.Context, assetID uuid.UUID, sub string) (Content, error) {
 	asset, err := s.repo.GetAsset(ctx, assetID)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
 	if asset.Status != StatusReady || asset.OutputPrefix == "" {
-		return nil, "", ErrNotReady
+		return Content{}, ErrNotReady
 	}
 	clean := path.Clean("/" + sub) // collapse .. and leading slashes
 	if clean == "/" || strings.Contains(clean, "..") {
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 	key := asset.OutputPrefix + clean // clean starts with "/"
 	rc, err := s.store.Get(ctx, key)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
-	return rc, contentTypeFor(sub), nil
+	return Content{Body: rc, ContentType: contentTypeFor(sub), Public: asset.Visibility == VisibilityPublic}, nil
 }
 
 // ── purge internals ─────────────────────────────────────────────────

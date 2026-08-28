@@ -176,6 +176,7 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 			"id":            c.ID,
 			"source_module": c.SourceModule,
 			"event_type":    c.EventType,
+			"ref_id":        c.RefID,
 			"occurred_at":   c.OccurredAt.Format(time.RFC3339),
 		}
 		if c.SourceModule == "journal" {

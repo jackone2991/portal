@@ -9,7 +9,7 @@ https://medium.com/@cosmeescobedo/how-to-find-the-slowest-query-in-your-laravel-
 https://javascript.plainenglish.io/learning-isnt-the-key-to-becoming-a-top-developer-it-s-all-about-building-things-f59ba305bac
 https://medium.com/codex/top-5-chrome-extensions-every-developer-must-have-now-f4d80d66a221
 
-claude --resume 4096cc30-ecc4-4ef4-99b3-ad8479c6cc0a
+claude --resume 2b08524c-7840-495e-995c-05999aa7fb74
 
 
 ================================================================================
@@ -40,6 +40,26 @@ Truy cập trực tiếp / qua LAN (không qua Traefik):
   (api-client.ts tự đổi sang <host>:8080 khi hostname != portal.localhost)
 
 Đường dẫn đặc biệt:
+  /admin/users                          Quản trị người dùng + hàng đợi phê duyệt
+                                        đọc: `users:read:any` · duyệt: `users:approve`
+                                        thêm/sửa/khoá: `users:write:any` · xoá: `users:delete:any`
+  /admin/roles                          Ma trận vai trò × quyền (cần `rbac:role:read`)
+  /library/music                        Nhạc — nút "Nhập nhiều bài" có 2 cách:
+                                        chọn nhiều tệp (trình duyệt tải từng tệp,
+                                        tên lấy từ TÊN TỆP) hoặc tải .zip (worker
+                                        giải nén, đọc THẺ nhạc bằng ffprobe nên có
+                                        cả nghệ sĩ + album). Zip: tối đa 4 GB /
+                                        2000 bài / 512 MB mỗi tệp; ảnh bìa và tệp
+                                        lạ bị bỏ qua, không tính lỗi.
+  /admin/layout                         Sửa menu trái + widget trang chủ
+                                        (cần `system:settings:write`, role admin có sẵn)
+                                        Menu: thêm/sửa/xoá/đổi thứ tự/ẩn thoải mái —
+                                        trừ đúng 1 dòng `admin-layout` (lối vào chính
+                                        màn này) không xoá được, chặn ở SQL chứ không
+                                        chỉ ẩn nút. Widget: chỉ đổi được vị trí/cột/
+                                        nhãn/quyền/ẩn-hiện, KHÔNG thêm/xoá được vì mỗi
+                                        widget là một component trong mã nguồn
+                                        (frontend .../components/widget/registry.ts).
   /admin/queues                         Asynqmon — cần quyền `queues:read` (role admin)
   KHÔNG có /swagger/index.html          dự án không có Swagger UI; spec chỉ là file
                                         shared/openapi.yaml (OpenAPI 3.1, ADR-10)
@@ -54,6 +74,31 @@ KHÔNG có tài khoản seed sẵn. Không migration nào tạo user — phải 
 
   Đăng ký:  POST /api/v1/auth/register  {email, password, display_name}
   Đăng nhập: POST /api/v1/auth/login    {email, password}
+
+⚠️  ĐĂNG KÝ PHẢI ĐƯỢC PHÊ DUYỆT (migration 0031). Tài khoản mới ở trạng thái
+    `pending`: mật khẩu đúng vẫn bị /auth/login trả 403 `account/account-pending`
+    cho tới khi ai đó có quyền `users:approve` bấm Duyệt ở /admin/users.
+    `users:approve` KHÔNG được gán cho role nào — chỉ `superadmin` có (qua `*`).
+
+    Ba trạng thái: pending → approved | rejected. Gỡ duyệt một tài khoản đang
+    đăng nhập sẽ cắt phiên ngay lập tức (token_version bump; middleware đọc
+    approval_status mỗi request, /auth/refresh cũng chặn).
+
+    Khi có người đăng ký, MỌI tài khoản có `users:approve` (mặc định = superadmin,
+    đang bật + đã duyệt) nhận thông báo: chuông trong app + email (Mailpit ở dev),
+    kèm link thẳng tới /admin/users?status=pending. Ai không muốn thì Mute loại
+    `account.registration_pending` trong tuỳ chọn thông báo.
+
+    ⚠️  RBAC hiện KHÔNG chia theo tenant — bảng roles/user_roles/permissions không
+        có org_id, `organization_memberships.role` là nhãn riêng ('owner') không
+        liên quan. Nên "superadmin của tenant" chưa tồn tại: fan-out là toàn hệ
+        thống. Muốn chia theo tenant thì phải thêm org_id vào user_roles trước.
+
+    Ai duyệt được trên máy này?
+      - DB trống hoàn toàn → người đăng ký ĐẦU TIÊN tự được duyệt + nhận superadmin.
+      - DB đã có user (trường hợp máy này) → đặt BOOTSTRAP_SUPERADMIN_EMAIL trong
+        .env rồi restart api; mỗi lần khởi động api sẽ cấp superadmin + duyệt cho
+        email đó, và im lặng nếu đã đúng. Hiện đang trỏ admin@portal.localhost.
 
 Portal tự giữ mật khẩu (Argon2id trong users.password_hash) — không có IdP,
 không SSO, không Authentik (ADR-06 đã thay thế thiết kế OIDC cũ).
@@ -73,10 +118,36 @@ Hệ quả cần biết:
     trở lên — vì POST /tracks và GET /tracks/mine cần `music:write:own`.
   - Muốn vào /admin/queues phải là `admin` (quyền queues:read, seed ở 0012).
 
-Nâng quyền: chưa có UI. Phải INSERT thủ công vào bảng `user_roles`
-(user_id, role_id, granted_by, expires_at) — xem query/rbac.sql:91.
-Sau khi đổi role nhớ bump users.token_version để cache quyền hết hạn ngay
-(khoá cache là rbac:perms:<userID>:v<N>).
+⚠️  XOÁ NGƯỜI DÙNG LÀ XOÁ LUÔN NỘI DUNG. Mọi khoá ngoại trỏ vào `users` đều
+    ON DELETE CASCADE — xoá 1 tài khoản là mất luôn assets, comics, movies,
+    music_tracks, stories, sổ bank, journal, people, organizations của họ.
+    Postgres KHÔNG chặn, không có undo. Vì vậy API bắt buộc gửi kèm
+    `confirm_email` khớp email đích (kiểm ở server, không chỉ ở UI), và UI mời
+    dùng "Khoá" trước — khoá đảo lại được, xoá thì không.
+
+    Còn 2 chốt nữa khi xoá/khoá/gỡ duyệt: không tự xoá mình, và không được bỏ
+    người CUỐI CÙNG có `users:approve` (409 `account/last-approver`) — nếu không
+    hệ thống vẫn nhận đăng ký mà vĩnh viễn không ai duyệt được.
+
+Thêm tài khoản từ /admin/users: trạng thái duyệt do QUYỀN CỦA NGƯỜI TẠO quyết
+định, không lấy từ form — người tạo có `users:approve` thì tài khoản dùng được
+ngay, không có thì vẫn là `pending`. Nếu không sẽ là đường vòng qua cửa duyệt.
+Vai trò mặc định `user`; đổi bằng nút "Vai trò" sau.
+
+Nâng quyền: dùng /admin/users → nút "Vai trò" (cần `rbac:role:assign`), hoặc
+/admin/roles để sửa ma trận quyền (cần `rbac:role:write`). Cả hai tự bump
+users.token_version nên cache quyền (rbac:perms:<userID>:v<N>) hết hạn ngay —
+KHÔNG cần UPDATE tay nữa. Bump chỉ giết access token, refresh cookie vẫn sống
+nên người dùng không bị đá ra ngoài.
+
+Hai luật chống leo thang, cả hai đều trả 403 `account/escalation`:
+  - Không cấp/gỡ được quyền mà chính mình không có (nên `admin` KHÔNG tự cấp
+    `users:approve` cho role nào được).
+  - Chỉ người có `*` mới gán/gỡ được role `superadmin`.
+Và không ai sửa được vai trò / trạng thái duyệt của chính mình (`account/self-target`).
+
+Vẫn có thể INSERT tay vào `user_roles` nếu cần (xem query/rbac.sql), nhớ bump
+users.token_version sau đó.
 
 
 ── TÀI KHOẢN DỊCH VỤ (mật khẩu xem .env, KHÔNG chép vào đây) ───────────────────

@@ -122,6 +122,10 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>("off");
   const [error, setError] = useState<string | null>(null);
+  // Bumped by every explicit play request. The source effect below keys off it
+  // as well as the track id, so asking to play the track that is ALREADY loaded
+  // still reloads and restarts it — see the effect for why that matters.
+  const [playToken, setPlayToken] = useState(0);
 
   const current = index >= 0 && index < queue.length ? queue[index] ?? null : null;
 
@@ -163,6 +167,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setIndex(mapped);
     }
     setPlaying(true);
+    setPlayToken((t) => t + 1);
   }, [shuffle]);
 
   const playTrack = useCallback((track: Track) => {
@@ -174,6 +179,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     setQueue([track]);
     setIndex(0);
     setPlaying(true);
+    setPlayToken((t) => t + 1);
   }, []);
 
   const toggle = useCallback(() => {
@@ -241,6 +247,15 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   // Load the source whenever the current track changes, and autoplay if we were
   // already in a playing state (i.e. the user pressed play, then skipped).
+  //
+  // `playToken` is a dependency because the track id alone is not enough. When
+  // "Phát tất cả" resolved to the track already loaded — the common case once a
+  // queue has been started, and guaranteed after it ends — this effect did not
+  // re-run, so nothing called `load()`/`play()`. The element stayed paused while
+  // `playing` had already been set true, and since a paused element fires no
+  // `pause` event there was nothing to correct it: the bar showed a Pause button
+  // over silence, stuck at the end of the track. Every explicit play request now
+  // bumps the token and restarts the source, unchanged id or not.
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !current?.audio_asset_id) return;
@@ -252,7 +267,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     // `playing` is intentionally omitted: this effect is about the SOURCE
     // changing. Play/pause on an unchanged source is handled by `toggle`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, current?.audio_asset_id, play]);
+  }, [current?.id, current?.audio_asset_id, playToken, play]);
 
   // Wire the media element's events to state, once.
   useEffect(() => {

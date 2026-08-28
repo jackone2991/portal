@@ -4,9 +4,9 @@ import "testing"
 
 func TestParse(t *testing.T) {
 	cases := []struct {
-		in     string
-		ok     bool
-		canon  string
+		in    string
+		ok    bool
+		canon string
 	}{
 		{"*", true, "*"},
 		{"movies:read", true, "movies:read"},
@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 		{"", false, ""},
 		{"movies", false, ""},
 		{"movies:read:any:extra", false, ""},
-		{"Movies:read", false, ""},                   // uppercase
+		{"Movies:read", false, ""}, // uppercase
 		{"movies:read with space", false, ""},
 	}
 	for _, c := range cases {

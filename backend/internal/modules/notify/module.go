@@ -95,6 +95,9 @@ func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(notifyapi.TaskEmail, m.svc.SendEmail)
 	mux.HandleFunc(notifyapi.TaskWebPush, m.svc.SendWebPush)
 	mux.HandleFunc(notifyapi.TaskOnAssetReady, m.svc.OnAssetReady)
+	mux.HandleFunc(notifyapi.TaskOnComicPublished, m.svc.OnComicPublished)
+	mux.HandleFunc(notifyapi.TaskOnConnectionRequested, m.svc.OnConnectionRequested)
+	mux.HandleFunc(notifyapi.TaskOnConnectionAccepted, m.svc.OnConnectionAccepted)
 }
 
 // PurgeOld is the notify:purge_old body (P2). cmd/worker registers it on the

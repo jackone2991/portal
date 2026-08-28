@@ -28,6 +28,14 @@ type Deps struct {
 	Enqueuer    Enqueuer                        // asynq client (api + worker: poster follow-up)
 	Events      EventPublisher                  // platform/events publisher (optional)
 	RequireAuth func(http.Handler) http.Handler // account middleware (api side)
+	// OptionalAuth wraps the variant/HLS routes. Those serve both anonymous
+	// callers (assets marked public) and signed-in ones (their own private
+	// media), so the middleware must attach an identity + tenant scope when one
+	// is present and pass the request through untouched when it is not. Without
+	// it the routes run with no tenant GUC and the 0032 policies show them
+	// public rows only — correct, but nobody would ever see their own media.
+	// Nil ⇒ the routes still mount, public-only.
+	OptionalAuth func(http.Handler) http.Handler
 	// DeleteMiddleware guards DELETE /assets/{id} with owner-or-permission. Built
 	// by cmd/api from accountMod.Engine() + the asset owner extractor, since media
 	// must not import account/rbac. Nil ⇒ the DELETE route is not mounted.
@@ -76,7 +84,7 @@ func New(d Deps) (*Module, error) {
 		transcoder:     worker.NewTranscoder(d.Store, d.Repo, d.Enqueuer, d.Events, worker.RunInTenant(d.RunInUserTenant)),
 		imageProcessor: worker.NewImageProcessor(d.Store, d.Repo, d.Events, worker.RunInTenant(d.RunInUserTenant)),
 		thumbnailer:    worker.NewThumbnailer(d.Store, d.Repo, worker.RunInTenant(d.RunInUserTenant)),
-		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.IngestImage),
+		publicAPI:      mediaapi.NewImpl(svc.ContinueItems, svc.LookupAsset, svc.AssetStatuses, svc.Ingest),
 	}, nil
 }
 
@@ -93,8 +101,17 @@ func New(d Deps) (*Module, error) {
 //	DELETE /assets/{id}                     delete asset + all storage objects       [auth, owner-or-perm]
 func (m *Module) MountHTTP(r chi.Router) {
 	r.Route("/assets", func(r chi.Router) {
-		r.Get("/{id}/hls/*", m.handler.HLS)                       // public playback
-		r.Get("/{id}/variants/{variant}", m.handler.ServeVariant) // public variant proxy
+		// Anonymous-capable reads. Access is decided by RLS (0032), not here:
+		// with no session these see only assets marked public; with a session
+		// they also see the caller's own. Never mount a media read outside this
+		// group — a route with no scope silently degrades to public-only.
+		r.Group(func(r chi.Router) {
+			if m.deps.OptionalAuth != nil {
+				r.Use(m.deps.OptionalAuth)
+			}
+			r.Get("/{id}/hls/*", m.handler.HLS)
+			r.Get("/{id}/variants/{variant}", m.handler.ServeVariant)
+		})
 
 		r.Group(func(r chi.Router) {
 			if m.deps.RequireAuth != nil {
@@ -103,6 +120,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 			r.Post("/", m.handler.Create)
 			r.Get("/", m.handler.List)
 			r.Get("/{id}", m.handler.Get)
+			r.Patch("/{id}", m.handler.Patch) // visibility (0032)
 			r.Get("/{id}/original", m.handler.DownloadOriginal)
 			r.Put("/{id}/source", m.handler.UploadSource) // dev: API-proxied upload
 			r.Post("/{id}/complete", m.handler.Complete)
