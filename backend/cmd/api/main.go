@@ -272,9 +272,11 @@ func run() error {
 	// Catalogue verticals → life stream. Emitted since the verticals landed but
 	// unsubscribed until 2026-08-25: publishing a movie produced no card while
 	// publishing a comic chapter did.
-	mediaEvents.Subscribe(movieapi.EventMoviePublished, journalapi.TaskStreamMoviePublished, asynq.Queue("default"))
-	mediaEvents.Subscribe(musicapi.EventTrackPublished, journalapi.TaskStreamTrackPublished, asynq.Queue("default"))
-	mediaEvents.Subscribe(storyapi.EventStoryPublished, journalapi.TaskStreamStoryPublished, asynq.Queue("default"))
+	// Catalogue publishes go to the bell, not the life-stream — see the note in
+	// cmd/worker's subscription list.
+	mediaEvents.Subscribe(movieapi.EventMoviePublished, notifyapi.TaskOnMoviePublished, asynq.Queue("default"))
+	mediaEvents.Subscribe(musicapi.EventTrackPublished, notifyapi.TaskOnTrackPublished, asynq.Queue("default"))
+	mediaEvents.Subscribe(storyapi.EventStoryPublished, notifyapi.TaskOnStoryPublished, asynq.Queue("default"))
 	mediaEvents.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
 	// media:playback_completed (progress→100%) → stream projection.
 	mediaEvents.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
@@ -610,8 +612,17 @@ func run() error {
 		// Bulk zip import (0038): the API stores the archive and enqueues; the
 		// unpacking happens in cmd/worker, which is where ffprobe and the tenant
 		// scoping live.
-		Storage:     store,
-		Enqueuer:    asynqClient,
+		Storage:  store,
+		Enqueuer: asynqClient,
+		// Catalogue lookup (0039). Off unless an operator sets both env vars —
+		// the API side only needs it to enqueue and to answer 503 with a reason.
+		Lookup: music.LookupConfig{
+			Enabled:     cfg.MusicbrainzEnabled,
+			Contact:     cfg.MusicbrainzContact,
+			BaseURL:     cfg.MusicbrainzBaseURL,
+			CoverArtURL: cfg.CoverArtBaseURL,
+		},
+		Redis:       rdb,
 		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(engine, code)

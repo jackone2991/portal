@@ -28,7 +28,12 @@ const (
 	// Social connections (0037).
 	TaskOnConnectionRequested = "notify:on_connection_requested"
 	TaskOnConnectionAccepted  = "notify:on_connection_accepted"
-	TaskPurgeOld              = "notify:purge_old" // P2
+	// Catalogue publishes. Three task names, one handler: they differ only in
+	// which library the click-through lands in.
+	TaskOnMoviePublished = "notify:on_movie_published"
+	TaskOnTrackPublished = "notify:on_track_published"
+	TaskOnStoryPublished = "notify:on_story_published"
+	TaskPurgeOld         = "notify:purge_old" // P2
 )
 
 // Notification type strings — an OPEN registry (see notify/README.md). New types
@@ -40,6 +45,7 @@ const (
 	TypeComicPublished      = "comic.published"
 	TypeConnectionRequested = "social.connection_requested"
 	TypeConnectionAccepted  = "social.connection_accepted"
+	TypeWorkPublished       = "catalogue.published"
 	// TypeRegistrationPending goes to everyone who can approve a registration
 	// (migration 0031). Mutable — an approver who does not want it can mute the
 	// type — but it ships with an email channel override, because the recipient

@@ -271,6 +271,58 @@ func (s *Service) OnAssetReady(ctx context.Context, task *asynq.Task) error {
 	return s.dispatchIntent(ctx, intent)
 }
 
+// workKind is one catalogue vertical: the payload key carrying the work id, and
+// where a click should land.
+type workKind struct {
+	idKey string
+	label string
+	href  func(id string) string
+}
+
+var workKinds = map[string]workKind{
+	notifyapi.TaskOnMoviePublished: {idKey: "movie_id", label: "A movie", href: func(string) string { return "/library/media" }},
+	notifyapi.TaskOnTrackPublished: {idKey: "track_id", label: "A track", href: func(id string) string { return "/library/music/" + id }},
+	notifyapi.TaskOnStoryPublished: {idKey: "story_id", label: "A story", href: func(id string) string { return "/library/novel/" + id }},
+}
+
+// OnWorkPublished is the handler for all three catalogue publishes. Publishing
+// is a library event, so it belongs in the bell rather than in the life-stream,
+// which is what the three of them used to write to (removed by 0040).
+//
+// dedup_key is the work id, so re-publishing the same thing is silent.
+func (s *Service) OnWorkPublished(ctx context.Context, task *asynq.Task) error {
+	kind, ok := workKinds[task.Type()]
+	if !ok {
+		log.Error().Str("task", task.Type()).Msg("notify: unknown catalogue publish task")
+		return fmt.Errorf("notify: unknown catalogue publish task: %w", asynq.SkipRetry)
+	}
+
+	var p map[string]any
+	if err := json.Unmarshal(task.Payload(), &p); err != nil {
+		log.Error().Err(err).Msg("notify: undecodable catalogue publish payload")
+		return fmt.Errorf("notify: undecodable catalogue publish payload: %w", asynq.SkipRetry)
+	}
+	id, _ := p[kind.idKey].(string)
+	ownerRaw, _ := p["owner_user_id"].(string)
+	owner, err := uuid.Parse(ownerRaw)
+	if id == "" || err != nil || owner == uuid.Nil {
+		log.Error().Str("owner", ownerRaw).Str("id", id).Msg("notify: catalogue publish missing owner or id")
+		return fmt.Errorf("notify: catalogue publish missing owner or id: %w", asynq.SkipRetry)
+	}
+
+	title, _ := p["title"].(string)
+	if strings.TrimSpace(title) == "" {
+		title = kind.label
+	}
+	return s.dispatchIntent(ctx, notifyapi.NotificationIntent{
+		UserID:   owner,
+		Type:     notifyapi.TypeWorkPublished,
+		Title:    title + " is published",
+		DedupKey: id,
+		Data:     map[string]any{"href": kind.href(id)},
+	})
+}
+
 type connectionEvent struct {
 	ConnectionID  string `json:"connection_id"`
 	RequesterID   string `json:"requester_id"`

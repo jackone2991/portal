@@ -113,20 +113,6 @@ func renderSystem(eventType string, refID uuid.UUID, payload json.RawMessage) (t
 			return fmt.Sprintf("Income %s", formatVND(amt)), "/bank/transactions"
 		}
 		return fmt.Sprintf("Spent %s", formatVND(amt)), "/bank/transactions"
-	case "music:track_published":
-		// Without this case the card fell through to `default`, which renders the
-		// raw event name ("music:track_published") and no link — so publishing from
-		// the music library put an unreadable, dead row on the home stream.
-		// `movie:published` and `story:published` still land in that default.
-		t := str("title")
-		if t == "" {
-			t = "A track"
-		}
-		href := "/library/music"
-		if id := str("track_id"); id != "" {
-			href += "/" + id
-		}
-		return t + " published", href
 	case "people:birthday_upcoming":
 		name := str("display_name")
 		days := num("days_until")
@@ -303,34 +289,6 @@ func (s *Service) insertSystem(ctx context.Context, payload []byte, userStr, mod
 // Each keys its card on the work's own id, so a later delete can remove it by
 // the same (source, event, ref_id) tuple the insert used.
 
-func (s *Service) OnMoviePublished(ctx context.Context, payload []byte) error {
-	return s.onWorkPublished(ctx, payload, "movie", "movie:published", "movie_id")
-}
-
-func (s *Service) OnTrackPublished(ctx context.Context, payload []byte) error {
-	return s.onWorkPublished(ctx, payload, "music", "music:track_published", "track_id")
-}
-
-func (s *Service) OnStoryPublished(ctx context.Context, payload []byte) error {
-	return s.onWorkPublished(ctx, payload, "story", "story:published", "story_id")
-}
-
-// onWorkPublished is the shared projection for the three catalogue verticals.
-// They differ only in the source label, the event name, and which key carries
-// the work id — the projection itself is identical, so it lives once.
-//
-// A payload that cannot be read is dropped rather than retried: a malformed
-// event will never become well-formed, and a poisoned stream consumer would
-// stall every later card behind it.
-func (s *Service) onWorkPublished(ctx context.Context, payload []byte, source, event, idKey string) error {
-	var p map[string]any
-	if err := json.Unmarshal(payload, &p); err != nil {
-		return nil
-	}
-	id, _ := p[idKey].(string)
-	owner, _ := p["owner_user_id"].(string)
-	if id == "" || owner == "" {
-		return nil
-	}
-	return s.insertSystem(ctx, payload, owner, source, event, id, time.Now())
-}
+// The three catalogue verticals used to project a card here on publish. They no
+// longer do: notify owns that story now (see cmd/worker's subscriptions), and
+// migration 0040 removed the rows they had already written.

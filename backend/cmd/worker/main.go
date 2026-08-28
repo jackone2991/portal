@@ -253,10 +253,20 @@ func run() error {
 	// reads the archive back, and RunInTenant opens the owner's tenant scope,
 	// without which every RLS-fenced read in the import errors outright.
 	musicMod, err := music.New(music.Deps{
-		Repo:        musicrepo.NewAdapter(conn),
-		Media:       mediaMod.API(),
-		Storage:     store,
-		Enqueuer:    asynqClient,
+		Repo:     musicrepo.NewAdapter(conn),
+		Media:    mediaMod.API(),
+		Storage:  store,
+		Enqueuer: asynqClient,
+		// The worker is where the outbound calls actually happen. Redis carries
+		// the 1-req/s throttle, which has to be shared across every replica —
+		// a per-process ticker would multiply the rate by the replica count.
+		Lookup: music.LookupConfig{
+			Enabled:     cfg.MusicbrainzEnabled,
+			Contact:     cfg.MusicbrainzContact,
+			BaseURL:     cfg.MusicbrainzBaseURL,
+			CoverArtURL: cfg.CoverArtBaseURL,
+		},
+		Redis:       rdb,
 		RunInTenant: runInUserTenant,
 	})
 	if err != nil {
@@ -315,9 +325,14 @@ func run() error {
 	// Catalogue verticals → life stream. Emitted since the verticals landed but
 	// unsubscribed until 2026-08-25: publishing a movie produced no card while
 	// publishing a comic chapter did.
-	publisher.Subscribe(movieapi.EventMoviePublished, journalapi.TaskStreamMoviePublished, asynq.Queue("default"))
-	publisher.Subscribe(musicapi.EventTrackPublished, journalapi.TaskStreamTrackPublished, asynq.Queue("default"))
-	publisher.Subscribe(storyapi.EventStoryPublished, journalapi.TaskStreamStoryPublished, asynq.Queue("default"))
+	// A catalogue publish is NOT projected into the life-stream. Publishing a
+	// track, a movie or a story is a library event — "this is now in the
+	// library" — not a moment in anyone's day, and one card per work buried the
+	// feed the same way media:asset_ready and comic:chapter_published did
+	// (0033, 0034). It reaches the bell instead.
+	publisher.Subscribe(movieapi.EventMoviePublished, notifyapi.TaskOnMoviePublished, asynq.Queue("default"))
+	publisher.Subscribe(musicapi.EventTrackPublished, notifyapi.TaskOnTrackPublished, asynq.Queue("default"))
+	publisher.Subscribe(storyapi.EventStoryPublished, notifyapi.TaskOnStoryPublished, asynq.Queue("default"))
 
 	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
 	// and subscribes to every producer. media:asset_deleted now fans out to TWO
