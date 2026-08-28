@@ -68,6 +68,16 @@ interface MusicPlayerActions {
   stop: () => void;
   /** True when this track is the one currently loaded (playing or paused). */
   isCurrent: (trackId: string) => boolean;
+  /**
+   * Jump straight to a position in the CURRENT queue and play it — what the
+   * queue popup does when you click a row.
+   *
+   * The index is into `queue`, which is already in play order (shuffled if
+   * shuffle is on), so what the list shows is what this addresses. Rebuilding
+   * the queue through playQueue instead would re-roll the shuffle and move every
+   * other row out from under the click.
+   */
+  jumpTo: (index: number) => void;
 }
 
 type MusicPlayerContextValue = MusicPlayerState & MusicPlayerActions;
@@ -115,6 +125,10 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [queue, setQueue] = useState<Track[]>([]);
+  // The queue as it was handed to playQueue, before any shuffle. Kept so that
+  // turning shuffle back off restores the real order instead of leaving the
+  // listener stuck in a random one.
+  const [baseQueue, setBaseQueue] = useState<Track[]>([]);
   const [index, setIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -136,6 +150,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   repeatRef.current = repeat;
   const queueLenRef = useRef(0);
   queueLenRef.current = queue.length;
+  // A seek requested before the duration was known, replayed once it is.
+  const pendingSeekRef = useRef<number | null>(null);
 
   const play = useCallback(() => {
     const el = audioRef.current;
@@ -159,6 +175,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     const wanted = tracks[startIndex];
     const mapped = wanted ? Math.max(0, playable.findIndex((t) => t.id === wanted.id)) : 0;
     setError(null);
+    setBaseQueue(playable);
     if (shuffle) {
       setQueue(shuffledFrom(playable, mapped));
       setIndex(0);
@@ -170,6 +187,18 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     setPlayToken((t) => t + 1);
   }, [shuffle]);
 
+  const jumpTo = useCallback((to: number) => {
+    // Bounds come from the ref, not from a setQueue updater. A state updater has
+    // to be pure — React may run it twice, or discard it — so the setIndex that
+    // performs the jump cannot live inside one. It silently did nothing when it
+    // did.
+    if (to < 0 || to >= queueLenRef.current) return; // stale click on a moved queue
+    setError(null);
+    setIndex(to);
+    setPlaying(true);
+    setPlayToken((t) => t + 1);
+  }, []);
+
   const playTrack = useCallback((track: Track) => {
     if (!isPlayable(track)) {
       setError("That track has no audio file attached yet.");
@@ -177,6 +206,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }
     setError(null);
     setQueue([track]);
+    setBaseQueue([track]);
     setIndex(0);
     setPlaying(true);
     setPlayToken((t) => t + 1);
@@ -218,10 +248,23 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     });
   }, [queue.length]);
 
+  /**
+   * Seek to a percentage of the track.
+   *
+   * A scrub that arrives before the browser knows the duration used to be
+   * dropped on the floor. That is a real window — `load()` resets duration to
+   * NaN, and the click that follows an auto-advance often lands inside it — and
+   * silently ignoring it makes the progress bar look broken. The request is
+   * parked instead and applied on `loadedmetadata`.
+   */
   const seekPct = useCallback((pct: number) => {
-    const el = audioRef.current;
-    if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
     const clamped = Math.min(100, Math.max(0, pct));
+    const el = audioRef.current;
+    if (!el || !Number.isFinite(el.duration) || el.duration <= 0) {
+      pendingSeekRef.current = clamped;
+      return;
+    }
+    pendingSeekRef.current = null;
     el.currentTime = (clamped / 100) * el.duration;
     setPosition(el.currentTime);
   }, []);
@@ -231,13 +274,36 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     if (el) el.pause();
     setPlaying(false);
     setQueue([]);
+    setBaseQueue([]);
     setIndex(-1);
     setPosition(0);
     setDuration(0);
     setError(null);
   }, []);
 
-  const toggleShuffle = useCallback(() => setShuffle((s) => !s), []);
+  /**
+   * Shuffle reorders the queue that is playing RIGHT NOW.
+   *
+   * It used to only set a flag that the next `playQueue` would read, so pressing
+   * it mid-listen lit the button up and changed nothing — the definition of a
+   * control that does not work.
+   *
+   * The current track stays put and keeps playing: only the tracks around it are
+   * reordered, and `index` is re-pointed at it. Because `current.id` does not
+   * change, the source effect does not re-run and playback is not interrupted.
+   */
+  const toggleShuffle = useCallback(() => {
+    const on = !shuffle;
+    setShuffle(on);
+
+    const base = baseQueue.length > 0 ? baseQueue : queue;
+    if (!current || base.length === 0) return;
+
+    const next = on ? shuffledFrom(base, base.findIndex((t) => t.id === current.id)) : base;
+    const at = next.findIndex((t) => t.id === current.id);
+    setQueue(next);
+    setIndex(at >= 0 ? at : 0);
+  }, [shuffle, baseQueue, queue, current]);
   const cycleRepeat = useCallback(
     () => setRepeat((r) => (r === "off" ? "all" : r === "all" ? "one" : "off")),
     [],
@@ -263,6 +329,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     el.load();
     setPosition(0);
     setDuration(0);
+    // Any parked scrub belonged to the track being replaced.
+    pendingSeekRef.current = null;
     if (playing) play();
     // `playing` is intentionally omitted: this effect is about the SOURCE
     // changing. Play/pause on an unchanged source is handled by `toggle`.
@@ -275,9 +343,26 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     if (!el) return;
 
     const onTime = () => setPosition(el.currentTime);
-    const onMeta = () => setDuration(Number.isFinite(el.duration) ? el.duration : 0);
+    const onMeta = () => {
+      const known = Number.isFinite(el.duration) ? el.duration : 0;
+      setDuration(known);
+      // Apply a scrub that arrived while the duration was still unknown.
+      const pending = pendingSeekRef.current;
+      if (pending !== null && known > 0) {
+        pendingSeekRef.current = null;
+        el.currentTime = (pending / 100) * known;
+        setPosition(el.currentTime);
+      }
+    };
     const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    // A track reaching its end fires `pause` as well as `ended`, and the pause
+    // lands FIRST. Treating that as "the user paused" set `playing` to false
+    // before `ended` advanced the index, so the next track loaded and then sat
+    // there: the queue stopped dead after every single song. `el.ended`
+    // distinguishes the two — a real pause never has it set.
+    const onPause = () => {
+      if (!el.ended) setPlaying(false);
+    };
     const onError = () => {
       setPlaying(false);
       setError("This track could not be played.");
@@ -338,10 +423,12 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       cycleRepeat,
       stop,
       isCurrent,
+      jumpTo,
     }),
     [
       queue, index, current, playing, position, duration, progressPct, shuffle, repeat, error,
       playQueue, playTrack, toggle, next, prev, seekPct, toggleShuffle, cycleRepeat, stop, isCurrent,
+      jumpTo,
     ],
   );
 

@@ -218,6 +218,22 @@ export function MusicIndexView() {
     setBulkError(e instanceof ApiError ? problemDisplayMessage(e.body) : fallback);
   }
 
+  // "Chọn tất cả" walks the cursor rather than reading the rendered array —
+  // frontend/CLAUDE.md: that array is only the pages fetched so far, so on an
+  // imported library of hundreds the button's name would be a lie. Same source
+  // of truth as "Phát tất cả".
+  const selectAll = useMutation({
+    mutationFn: () => fetchAllTracks(tab === "mine" ? "mine" : "published"),
+    onSuccess: ({ tracks: all, truncated }) => {
+      setSelected(new Set(all.map((t) => t.id)));
+      setBulkError(null);
+      // fetchAllTracks is bounded; say so rather than let the count imply the
+      // whole library was selected when it was not.
+      setBulkNote(truncated ? `Đã chọn ${all.length} bài đầu tiên (danh sách bị giới hạn).` : null);
+    },
+    onError: (e) => onBulkError(e, "Không tải được toàn bộ danh sách để chọn."),
+  });
+
   const bulkStatus = useMutation({
     mutationFn: ({ ids, status }: { ids: string[]; status: "published" | "draft" }) =>
       bulkSetTrackStatus(ids, status),
@@ -362,7 +378,8 @@ export function MusicIndexView() {
             busy={bulkStatus.isPending || addToPlaylist.isPending || newPlaylist.isPending}
             note={bulkNote}
             error={bulkError}
-            onSelectAll={() => setSelected(new Set(tracks.map((t) => t.id)))}
+            onSelectAll={() => selectAll.mutate()}
+            selecting={selectAll.isPending}
             onClear={clearSelection}
             onPublish={() => bulkStatus.mutate({ ids: [...selected], status: "published" })}
             onUnpublish={() => bulkStatus.mutate({ ids: [...selected], status: "draft" })}
@@ -563,6 +580,7 @@ function SelectionBar({
   selected,
   playlists,
   busy,
+  selecting,
   note,
   error,
   onSelectAll,
@@ -576,6 +594,7 @@ function SelectionBar({
   selected: Set<string>;
   playlists: Playlist[];
   busy: boolean;
+  selecting: boolean;
   note: string | null;
   error: string | null;
   onSelectAll: () => void;
@@ -604,7 +623,11 @@ function SelectionBar({
             aria-label="Chọn tất cả bài đang hiển thị"
             className="h-4 w-4 accent-[var(--tpl-accent)]"
           />
-          {count > 0 ? `Đã chọn ${count}` : `Chọn tất cả (${total})`}
+          {count > 0
+            ? `Đã chọn ${count}`
+            : selecting
+              ? "Đang tải danh sách…"
+              : `Chọn tất cả (${total}+ đang hiển thị)`}
         </label>
 
         {count > 0 && (
