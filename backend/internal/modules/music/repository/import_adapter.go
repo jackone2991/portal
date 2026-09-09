@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/portal/backend/internal/modules/music"
 )
@@ -138,4 +139,56 @@ func deref(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// ── catalogue lookup (0039) ────────────────────────────────────────────────
+
+func (a *Adapter) MarkLookupPending(ctx context.Context, id uuid.UUID) error {
+	return a.q.MarkTrackLookupPending(ctx, pgUUID(id))
+}
+
+// SetLookupResult records the outcome. Every value goes through the query's
+// COALESCE, so passing one for a field the track already has is harmless — the
+// "fill gaps, never overwrite" rule is enforced in SQL rather than trusted here.
+func (a *Adapter) SetLookupResult(ctx context.Context, in music.SetLookupInput) error {
+	_, err := a.q.SetTrackLookupResult(ctx, SetTrackLookupResultParams{
+		ID:            pgUUID(in.ID),
+		LookupStatus:  in.Status,
+		LookupNote:    strOrNil(in.Note),
+		Artist:        in.Artist,
+		Album:         in.Album,
+		Genre:         in.Genre,
+		ReleaseYear:   int32OrNil(in.Year),
+		CoverAssetID:  pgUUIDPtrOrZero(in.CoverAssetID),
+		MbRecordingID: pgUUIDPtrOrZero(in.MBRecordingID),
+		MbReleaseID:   pgUUIDPtrOrZero(in.MBReleaseID),
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return music.ErrNotFound
+	}
+	return err
+}
+
+func strOrNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func int32OrNil(n *int) *int32 {
+	if n == nil {
+		return nil
+	}
+	v := int32(*n)
+	return &v
+}
+
+// pgUUIDPtrOrZero maps a nil pointer to the zero pgtype.UUID, which sqlc sends
+// as SQL NULL — and NULL is what makes COALESCE keep the existing value.
+func pgUUIDPtrOrZero(id *uuid.UUID) pgtype.UUID {
+	if id == nil {
+		return pgtype.UUID{}
+	}
+	return pgUUID(*id)
 }

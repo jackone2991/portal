@@ -1238,21 +1238,50 @@ paths:
       tags: [assets]
       summary: Download the original file (owner-only)
       description: |
-        Streams the source object as an attachment with the sniffed content type.
+        Streams the source object inline with the sniffed content type.
         Owner-authenticated only — the original retains full EXIF/GPS (unlike the
         metadata-stripped variants), so it is never served through the public-ish
         variant/HLS scheme.
+
+        **Range requests are supported** and this is load-bearing, not a nicety:
+        it is the route an `<audio>`/`<video>` element plays from, and a browser
+        that cannot range-request its media source reports `seekable` as `[0,0]`
+        and silently refuses every scrub. Served via `http.ServeContent`, so
+        `Accept-Ranges: bytes` is always present and a `Range` header is answered
+        with `206` + `Content-Range`.
       operationId: downloadAssetOriginal
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/AssetID"
+        - name: Range
+          in: header
+          required: false
+          description: Byte range, e.g. `bytes=0-1023`. Answered with `206`.
+          schema: { type: string }
       responses:
         "200":
-          description: The original bytes (attachment)
+          description: The whole original, inline
+          headers:
+            Accept-Ranges:
+              description: Always `bytes` — what makes the source seekable.
+              schema: { type: string }
           content:
             application/octet-stream:
               schema: { type: string, format: binary }
+        "206":
+          description: The requested byte range
+          headers:
+            Content-Range:
+              description: e.g. `bytes 0-1023/5242880`
+              schema: { type: string }
+            Accept-Ranges:
+              schema: { type: string }
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "416":
+          description: The requested range lies outside the object
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1901,6 +1930,34 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/BankDashboard" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /bank/report:
+    get:
+      tags: [bank]
+      summary: Month report — category breakdown and trailing trend
+      description: |
+        The month screen's aggregate. `expenses` / `incomes` are per-category
+        totals with CHILD categories rolled up into their parent, sorted by
+        total descending — a breakdown that split "Cà phê" out of "Ăn uống"
+        would be a chart of slivers.
+
+        Pure transfer legs are excluded (moving money between your own wallets
+        is not spending), but a transfer FEE — a row with both `transfer_id` and
+        `category_id` — counts as an ordinary expense.
+
+        `trend` always contains a fixed window of months ending at the requested
+        one, including months with no activity as zero rows.
+      operationId: getBankReport
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: month, in: query, required: false, description: "YYYY-MM (default current month)", schema: { type: string } }
+      responses:
+        "200":
+          description: The month report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BankReport" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   # ── Comic vertical (SPEC-02) ─────────────────────────────────────────────
@@ -2560,7 +2617,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of published movies
@@ -2596,7 +2653,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of the caller's movies
@@ -2692,7 +2749,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of published tracks
@@ -2728,7 +2785,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of the caller's tracks
@@ -2897,6 +2954,68 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /tracks/imports/{id}/lookup:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [music]
+      summary: Look every imported track up in MusicBrainz
+      description: |
+        The third and last metadata pass, and the only one that leaves the
+        machine:
+
+        | pass | source | cost |
+        |---|---|---|
+        | import | the filename | free |
+        | enrich | tags and artwork inside the file (ffprobe) | local CPU |
+        | **lookup** | **MusicBrainz + Cover Art Archive** | **network, 1 req/s** |
+
+        **Off unless an operator enables it.** A lookup sends the library's
+        artist/title pairs to a third party, which is not a default anyone should
+        inherit silently. Disabled, this answers **503** `music/lookup-disabled`
+        naming the two environment variables to set — not 404, because the
+        endpoint exists and the request was fine.
+
+        MusicBrainz permits **one request per second per client**, enforced here
+        by a Redis-backed global slot so replicas cannot multiply the rate. A
+        library of 300 tracks therefore takes at least five minutes; this is a
+        background sweep, not an interactive call.
+
+        Matching is deliberately strict: MusicBrainz scores each result, and
+        anything under 88 is recorded as `no_match` rather than guessed at. A
+        wrong album silently attached to a track is worse than an empty field.
+        Like every other pass it **only fills gaps** — enforced in SQL, so a
+        value the user typed can never be replaced.
+
+        Returns **202** with `queued`, and `skipped` when the batch cap (500)
+        truncated the sweep. Watch the tracks for results: `lookup_status` moves
+        to `matched` / `no_match` / `failed`, with `lookup_note` explaining which.
+      operationId: lookupMusicImport
+      responses:
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued, skipped]
+                properties:
+                  queued: { type: integer }
+                  skipped:
+                    type: integer
+                    description: Tracks past the 500-per-sweep cap. Never silently dropped.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503":
+          description: Lookups are not enabled on this deployment (`music/lookup-disabled`)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
   /tracks/{id}:
     parameters: [{ $ref: "#/components/parameters/AssetID" }]
     get:
@@ -2984,6 +3103,45 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /tracks/{id}/lookup:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [music]
+      summary: Look this track up in MusicBrainz
+      description: |
+        Fetches what the audio file cannot contain — release year, genre, and a
+        Cover Art Archive cover — for one track. Owner, or `music:write:any`.
+
+        Same rules as the batch version: off unless enabled (503
+        `music/lookup-disabled`), throttled to one request per second across the
+        whole deployment, and refused rather than guessed below a MusicBrainz
+        score of 88. Only fills gaps.
+
+        Returns **202**; poll the track for `lookup_status` and `lookup_note`.
+      operationId: lookupTrack
+      responses:
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued]
+                properties:
+                  queued: { type: integer, enum: [1] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503":
+          description: Lookups are not enabled on this deployment (`music/lookup-disabled`)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
   /tracks/{id}/publish:
     parameters: [{ $ref: "#/components/parameters/AssetID" }]
     post:
@@ -3026,7 +3184,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of published stories
@@ -3062,7 +3220,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: cursor, in: query, required: false, schema: { type: string } }
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 30 } }
       responses:
         "200":
           description: A cursor page of the caller's stories
@@ -3578,6 +3736,8 @@ components:
         name: { type: string }
         kind: { type: string, enum: [income, expense] }
         seed: { type: boolean, description: A user_id-NULL default (visible to all, mutable by none). }
+        icon: { type: string, maxLength: 16, nullable: true, description: "An emoji, e.g. 🍜. Not a sprite id — see migration 0042." }
+        color: { type: string, pattern: '^#[0-9a-fA-F]{6}$', nullable: true, description: "Hex only; the value reaches a style attribute." }
     BankCategoryCreate:
       type: object
       required: [name, kind]
@@ -3585,12 +3745,19 @@ components:
         name: { type: string, minLength: 1, maxLength: 100 }
         kind: { type: string, enum: [income, expense] }
         parent_id: { type: string, format: uuid, nullable: true, description: Must be a top-level category of the same kind. }
+        icon: { type: string, maxLength: 16, nullable: true, description: "An emoji, e.g. 🍜. Not a sprite id — see migration 0042." }
+        color: { type: string, pattern: '^#[0-9a-fA-F]{6}$', nullable: true, description: "Hex only; the value reaches a style attribute." }
     BankCategoryPatch:
       type: object
-      description: kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it.
+      description: >
+        kind is immutable. `parent_id`, `icon` and `color` follow the same
+        present-vs-absent rule: present (including null) sets it, absent leaves
+        it alone. Seeds are immutable, so a patch against one is a 404.
       properties:
         name: { type: string, minLength: 1, maxLength: 100 }
         parent_id: { type: string, format: uuid, nullable: true }
+        icon: { type: string, maxLength: 16, nullable: true, description: "An emoji, e.g. 🍜. Not a sprite id — see migration 0042." }
+        color: { type: string, pattern: '^#[0-9a-fA-F]{6}$', nullable: true, description: "Hex only; the value reaches a style attribute." }
     BankTransaction:
       type: object
       required: [id, account_id, amount, direction, is_transfer, occurred_at, created_at, updated_at]
@@ -3667,6 +3834,34 @@ components:
         category_id: { type: string, format: uuid, description: Must be expense-kind. }
         month: { type: string, description: "YYYY-MM" }
         amount: { type: integer, format: int64, nullable: true, description: 0 or null deletes the budget. }
+    BankCategoryTotal:
+      type: object
+      required: [category_id, name, kind, total, tx_count]
+      properties:
+        category_id: { type: string, format: uuid, description: The top-level category the total rolls up to. }
+        name: { type: string }
+        kind: { type: string, enum: [income, expense] }
+        icon: { type: string, nullable: true }
+        color: { type: string, nullable: true }
+        total: { type: integer, format: int64, description: Minor units (D-41). }
+        tx_count: { type: integer, format: int64 }
+    BankMonthFlow:
+      type: object
+      required: [month, income, expense]
+      properties:
+        month: { type: string, description: "YYYY-MM" }
+        income: { type: integer, format: int64 }
+        expense: { type: integer, format: int64 }
+    BankReport:
+      type: object
+      required: [month, income, expense, expenses, incomes, trend]
+      properties:
+        month: { type: string, description: "YYYY-MM" }
+        income: { type: integer, format: int64 }
+        expense: { type: integer, format: int64 }
+        expenses: { type: array, items: { $ref: "#/components/schemas/BankCategoryTotal" } }
+        incomes: { type: array, items: { $ref: "#/components/schemas/BankCategoryTotal" } }
+        trend: { type: array, items: { $ref: "#/components/schemas/BankMonthFlow" } }
     BankDashboard:
       type: object
       required: [month, accounts, income, expense, budgets, recent]
@@ -4763,6 +4958,35 @@ components:
         audio_asset_id: { type: string, format: uuid, nullable: true, description: A ready audio asset you own. }
         cover_asset_id: { type: string, format: uuid, nullable: true, description: A ready image asset you own. }
         status: { type: string, enum: [draft, published] }
+        release_year:
+          type: integer
+          nullable: true
+          description: Original release year, from the catalogue lookup. Not in the audio file.
+        genre:
+          type: string
+          nullable: true
+          description: Most-voted MusicBrainz community tag. A folksonomy, not a taxonomy.
+        mb_recording_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            What the lookup matched. Kept so a later pass can go straight to the
+            right entity instead of re-running a fuzzy search, and so a wrong
+            match is traceable to the thing that was matched.
+        mb_release_id: { type: string, format: uuid, nullable: true }
+        lookup_status:
+          type: string
+          enum: [none, pending, matched, no_match, failed]
+          description: |
+            `none` — never looked up. `no_match` — asked, nothing scored high
+            enough; an ordinary outcome, not an error. `failed` — the call itself
+            failed and will be retried.
+        lookup_note:
+          type: string
+          nullable: true
+          description: Why a match was refused, or why the call failed. Shown to the user.
+        lookup_at: { type: string, format: date-time, nullable: true }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
     TrackList:

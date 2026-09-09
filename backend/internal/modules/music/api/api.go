@@ -18,6 +18,11 @@ const (
 	// second asset ingest, and a wait for the image pipeline.
 	TaskEnrichTrack = "music:enrich_track"
 
+	// TaskLookupTrack asks MusicBrainz for what the file cannot say — release
+	// year, genre, and a Cover Art Archive cover (0039). The only outbound
+	// third-party call in the codebase, throttled to 1 req/s and off by default.
+	TaskLookupTrack = "music:lookup_track"
+
 	// EventTrackPublished is emitted on a track publish (emit-only).
 	EventTrackPublished = "music:track_published"
 )
@@ -52,6 +57,14 @@ type ImportZipPayload struct {
 // for the same reason ImportZipPayload carries it: the worker has no request
 // tenant and cannot read an RLS-fenced table to find out.
 type EnrichTrackPayload struct {
+	TrackID string `json:"track_id"`
+	OwnerID string `json:"owner_id"`
+}
+
+// LookupTrackPayload is the music:lookup_track task body. OwnerID rides along
+// for the same reason the other music payloads carry it: the worker has no
+// request tenant and cannot read an RLS-fenced table to find out.
+type LookupTrackPayload struct {
 	TrackID string `json:"track_id"`
 	OwnerID string `json:"owner_id"`
 }

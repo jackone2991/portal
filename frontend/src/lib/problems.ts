@@ -63,7 +63,8 @@ export type ProblemType =
   | "account/confirmation-mismatch"
   | "account/last-approver"
   | "layout/validation"
-  | "layout/unknown-widget";
+  | "layout/unknown-widget"
+  | "music/lookup-disabled";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/unsupported-format":
@@ -143,6 +144,10 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "layout/validation": "Check the menu entries and try again.",
   "layout/unknown-widget":
     "That widget doesn't exist in this build — the widget list comes from the code, not the database.",
+
+  // The server's `detail` names the two env vars, so this is only the floor.
+  "music/lookup-disabled":
+    "Catalogue lookup is turned off on this deployment.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";

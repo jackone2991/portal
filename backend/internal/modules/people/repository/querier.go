@@ -22,6 +22,9 @@ type Querier interface {
 	// without describing params, so a []byte goes out as bytea and the jsonb column
 	// rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
 	// the Go param type does; the cast is here to make sqlc emit `string`.
+	// ON CONFLICT rather than letting 0035's (user_id, linked_user_id) unique raise:
+	// a violation aborts the request's tenant transaction, so the 409 the handler
+	// writes would be replaced by a 500 at COMMIT. No rows means already added.
 	CreatePerson(ctx context.Context, arg CreatePersonParams) (PeoplePerson, error)
 	// On a birthday edit/clear, drop current + future notices so a corrected date
 	// can fire fresh this year (P0.2). Past years' history stays.

@@ -324,6 +324,27 @@ func (s *fakeStore) GetRange(_ context.Context, key string, n int64) (io.ReadClo
 	}
 	return io.NopCloser(bytes.NewReader(b)), nil
 }
+
+// GetByteRange mirrors the HTTP Range convention the real store implements:
+// inclusive bounds, and a negative end meaning "to the end of the object".
+func (s *fakeStore) GetByteRange(_ context.Context, key string, start, end int64) (io.ReadCloser, error) {
+	b, ok := s.obj[key]
+	if !ok {
+		return nil, storage.ErrNotFound
+	}
+	if start < 0 {
+		start = 0
+	}
+	if start > int64(len(b)) {
+		start = int64(len(b))
+	}
+	stop := int64(len(b))
+	if end >= start && end+1 < stop {
+		stop = end + 1
+	}
+	return io.NopCloser(bytes.NewReader(b[start:stop])), nil
+}
+
 func (s *fakeStore) Size(_ context.Context, key string) (int64, error) {
 	if sz, ok := s.sizes[key]; ok {
 		return sz, nil

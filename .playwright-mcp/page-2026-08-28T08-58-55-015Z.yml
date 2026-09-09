@@ -1,0 +1,170 @@
+- generic [active] [ref=f24e1]:
+  - generic [ref=f24e2]:
+    - banner [ref=f24e5]:
+      - generic [ref=f24e6]:
+        - link "Portal — Newsfeed" [ref=f24e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f24e11]: Portal
+        - generic [ref=f24e12]:
+          - generic [ref=f24e13]: Newsfeed
+          - searchbox [ref=f24e15]
+          - link "Find Friends" [ref=f24e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f24e17]:
+            - button "Friend requests" [ref=f24e19]:
+              - generic [ref=f24e22]: "4"
+            - button "Messages" [ref=f24e24]:
+              - generic [ref=f24e27]: "2"
+            - button "Notifications" [ref=f24e29]:
+              - generic [ref=f24e308]: "1"
+            - button "Dev creator" [ref=f24e309]:
+              - generic [ref=f24e34]:
+                - generic [ref=f24e35]: Dev
+                - generic [ref=f24e36]: creator
+              - generic [ref=f24e37]: D
+    - complementary [ref=f24e42]:
+      - generic [ref=f24e43]:
+        - button "Collapse Menu" [ref=f24e44]
+        - link "Newsfeed" [ref=f24e50] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f24e55] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f24e60] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f24e65] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f24e70] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f24e75]
+        - link "Music & Playlists" [ref=f24e80] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f24e85] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f24e90] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f24e95]
+        - button "Friends Birthdays" [ref=f24e100]
+        - button "Account Stats" [ref=f24e105]
+        - button "Manage Widgets" [ref=f24e110]
+        - link "Người dùng" [ref=f24e310] [cursor=pointer]:
+          - /url: /admin/users
+        - link "Vai trò & quyền" [ref=f24e315] [cursor=pointer]:
+          - /url: /admin/roles
+      - generic [ref=f24e115]:
+        - generic [ref=f24e116]:
+          - generic [ref=f24e117]: Profile Completion
+          - generic [ref=f24e118]: 76%
+        - paragraph [ref=f24e121]:
+          - text: Complete
+          - link "your profile" [ref=f24e122] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f24e123]:
+      - generic [ref=f24e124]:
+        - generic [ref=f24e125]:
+          - generic [ref=f24e126]:
+            - generic [ref=f24e127]: Close Friends
+            - button "Settings" [ref=f24e128]
+          - list [ref=f24e129]:
+            - listitem [ref=f24e130]:
+              - generic [ref=f24e131]: CS
+              - generic [ref=f24e134]:
+                - paragraph [ref=f24e135]: Carol Summers
+                - paragraph [ref=f24e136]: Online
+              - button "Friend options" [ref=f24e137]
+            - listitem [ref=f24e140]:
+              - generic [ref=f24e141]: MB
+              - generic [ref=f24e144]:
+                - paragraph [ref=f24e145]: Mathilda Brinker
+                - paragraph [ref=f24e146]: At work!
+              - button "Friend options" [ref=f24e147]
+            - listitem [ref=f24e150]:
+              - generic [ref=f24e151]: MM
+              - generic [ref=f24e154]:
+                - paragraph [ref=f24e155]: Michael Maximoff
+                - paragraph [ref=f24e156]: Away
+              - button "Friend options" [ref=f24e157]
+            - listitem [ref=f24e160]:
+              - generic [ref=f24e161]: RH
+              - generic [ref=f24e164]:
+                - paragraph [ref=f24e165]: Rachel Howlett
+                - paragraph [ref=f24e166]: Offline
+              - button "Friend options" [ref=f24e167]
+            - listitem [ref=f24e170]:
+              - generic [ref=f24e171]: NK
+              - generic [ref=f24e174]:
+                - paragraph [ref=f24e175]: Nina Kraviz
+                - paragraph [ref=f24e176]: Online
+              - button "Friend options" [ref=f24e177]
+        - generic [ref=f24e180]:
+          - generic [ref=f24e181]:
+            - generic [ref=f24e182]: My Family
+            - button "Settings" [ref=f24e183]
+          - list [ref=f24e184]:
+            - listitem [ref=f24e185]:
+              - generic [ref=f24e186]: SH
+              - generic [ref=f24e189]:
+                - paragraph [ref=f24e190]: Sarah Hetfield
+                - paragraph [ref=f24e191]: Online
+              - button "Friend options" [ref=f24e192]
+        - generic [ref=f24e195]:
+          - generic [ref=f24e196]:
+            - generic [ref=f24e197]: Uncategorized
+            - button "Settings" [ref=f24e198]
+          - list [ref=f24e199]:
+            - listitem [ref=f24e200]:
+              - generic [ref=f24e201]: BP
+              - generic [ref=f24e204]:
+                - paragraph [ref=f24e205]: Bruce Peterson
+                - paragraph [ref=f24e206]: Online
+              - button "Friend options" [ref=f24e207]
+            - listitem [ref=f24e210]:
+              - generic [ref=f24e211]: CG
+              - generic [ref=f24e214]:
+                - paragraph [ref=f24e215]: Chris Greyson
+                - paragraph [ref=f24e216]: Away
+              - button "Friend options" [ref=f24e217]
+            - listitem [ref=f24e220]:
+              - generic [ref=f24e221]: NG
+              - generic [ref=f24e224]:
+                - paragraph [ref=f24e225]: Nicholas Grisom
+                - paragraph [ref=f24e226]: Invisible
+              - button "Friend options" [ref=f24e227]
+            - listitem [ref=f24e230]:
+              - generic [ref=f24e231]: JS
+              - generic [ref=f24e234]:
+                - paragraph [ref=f24e235]: James Spiegel
+                - paragraph [ref=f24e236]: Away
+              - button "Friend options" [ref=f24e237]
+            - listitem [ref=f24e240]:
+              - generic [ref=f24e241]: DJ
+              - generic [ref=f24e244]:
+                - paragraph [ref=f24e245]: Diana Jones
+                - paragraph [ref=f24e246]: Online
+              - button "Friend options" [ref=f24e247]
+      - generic [ref=f24e250]:
+        - textbox "Search Friends..." [ref=f24e251]
+        - button "Friend settings" [ref=f24e252]
+        - button "Collapse friends panel" [ref=f24e255]
+      - button "Olympus Chat" [ref=f24e258]
+    - main [ref=f24e262]:
+      - generic [ref=f24e264]:
+        - generic [ref=f24e265]:
+          - generic [ref=f24e266]:
+            - heading "Người dùng" [level=1] [ref=f24e267]
+            - paragraph [ref=f24e268]: Tài khoản mới đăng ký phải được phê duyệt mới đăng nhập được.
+          - generic [ref=f24e269]:
+            - button "Thêm người dùng" [ref=f24e320]
+            - textbox "Tìm theo email hoặc tên…" [ref=f24e270]: provisioned
+        - generic [ref=f24e271]:
+          - button "Chờ duyệt 2" [ref=f24e321]:
+            - text: Chờ duyệt
+            - generic [ref=f24e710]: "2"
+          - button "Đã duyệt 14" [ref=f24e776]:
+            - text: Đã duyệt
+            - generic [ref=f24e711]: "14"
+          - button "Từ chối" [ref=f24e274]
+          - button "Tất cả" [ref=f24e275]
+        - generic [ref=f24e777]: Không có tài khoản nào khớp bộ lọc.
+    - button "Go to top"
+  - alert [ref=f24e307]

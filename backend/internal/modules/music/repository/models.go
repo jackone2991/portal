@@ -73,6 +73,8 @@ type BankCategory struct {
 	Name     string      `json:"name"`
 	Kind     string      `json:"kind"`
 	TenantID pgtype.UUID `json:"tenant_id"`
+	Icon     *string     `json:"icon"`
+	Color    *string     `json:"color"`
 }
 
 type BankImportBatch struct {

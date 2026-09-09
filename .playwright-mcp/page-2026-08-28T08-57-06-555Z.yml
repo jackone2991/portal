@@ -1,0 +1,232 @@
+- generic [ref=f23e1]:
+  - generic [ref=f23e2]:
+    - banner [ref=f23e5]:
+      - generic [ref=f23e6]:
+        - link "Portal — Newsfeed" [ref=f23e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f23e11]: Portal
+        - generic [ref=f23e12]:
+          - generic [ref=f23e13]: Newsfeed
+          - searchbox [ref=f23e15]
+          - link "Find Friends" [ref=f23e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f23e17]:
+            - button "Friend requests" [ref=f23e19]:
+              - generic [ref=f23e22]: "4"
+            - button "Messages" [ref=f23e24]:
+              - generic [ref=f23e27]: "2"
+            - button "Notifications" [ref=f23e29]:
+              - generic [ref=f23e32]: "1"
+            - button "Dev creator" [ref=f23e34]:
+              - generic [ref=f23e35]:
+                - generic [ref=f23e36]: Dev
+                - generic [ref=f23e37]: creator
+              - generic [ref=f23e38]: D
+    - complementary [ref=f23e43]:
+      - generic [ref=f23e44]:
+        - button "Collapse Menu" [ref=f23e45]
+        - link "Newsfeed" [ref=f23e51] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f23e56] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f23e61] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f23e66] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f23e71] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f23e76]
+        - link "Music & Playlists" [ref=f23e81] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f23e86] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f23e91] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f23e96]
+        - button "Friends Birthdays" [ref=f23e101]
+        - button "Account Stats" [ref=f23e106]
+        - button "Manage Widgets" [ref=f23e111]
+        - link "Người dùng" [ref=f23e309] [cursor=pointer]:
+          - /url: /admin/users
+        - link "Vai trò & quyền" [ref=f23e314] [cursor=pointer]:
+          - /url: /admin/roles
+      - generic [ref=f23e116]:
+        - generic [ref=f23e117]:
+          - generic [ref=f23e118]: Profile Completion
+          - generic [ref=f23e119]: 76%
+        - paragraph [ref=f23e122]:
+          - text: Complete
+          - link "your profile" [ref=f23e123] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f23e124]:
+      - generic [ref=f23e125]:
+        - generic [ref=f23e126]:
+          - generic [ref=f23e127]:
+            - generic [ref=f23e128]: Close Friends
+            - button "Settings" [ref=f23e129]
+          - list [ref=f23e130]:
+            - listitem [ref=f23e131]:
+              - generic [ref=f23e132]: CS
+              - generic [ref=f23e135]:
+                - paragraph [ref=f23e136]: Carol Summers
+                - paragraph [ref=f23e137]: Online
+              - button "Friend options" [ref=f23e138]
+            - listitem [ref=f23e141]:
+              - generic [ref=f23e142]: MB
+              - generic [ref=f23e145]:
+                - paragraph [ref=f23e146]: Mathilda Brinker
+                - paragraph [ref=f23e147]: At work!
+              - button "Friend options" [ref=f23e148]
+            - listitem [ref=f23e151]:
+              - generic [ref=f23e152]: MM
+              - generic [ref=f23e155]:
+                - paragraph [ref=f23e156]: Michael Maximoff
+                - paragraph [ref=f23e157]: Away
+              - button "Friend options" [ref=f23e158]
+            - listitem [ref=f23e161]:
+              - generic [ref=f23e162]: RH
+              - generic [ref=f23e165]:
+                - paragraph [ref=f23e166]: Rachel Howlett
+                - paragraph [ref=f23e167]: Offline
+              - button "Friend options" [ref=f23e168]
+            - listitem [ref=f23e171]:
+              - generic [ref=f23e172]: NK
+              - generic [ref=f23e175]:
+                - paragraph [ref=f23e176]: Nina Kraviz
+                - paragraph [ref=f23e177]: Online
+              - button "Friend options" [ref=f23e178]
+        - generic [ref=f23e181]:
+          - generic [ref=f23e182]:
+            - generic [ref=f23e183]: My Family
+            - button "Settings" [ref=f23e184]
+          - list [ref=f23e185]:
+            - listitem [ref=f23e186]:
+              - generic [ref=f23e187]: SH
+              - generic [ref=f23e190]:
+                - paragraph [ref=f23e191]: Sarah Hetfield
+                - paragraph [ref=f23e192]: Online
+              - button "Friend options" [ref=f23e193]
+        - generic [ref=f23e196]:
+          - generic [ref=f23e197]:
+            - generic [ref=f23e198]: Uncategorized
+            - button "Settings" [ref=f23e199]
+          - list [ref=f23e200]:
+            - listitem [ref=f23e201]:
+              - generic [ref=f23e202]: BP
+              - generic [ref=f23e205]:
+                - paragraph [ref=f23e206]: Bruce Peterson
+                - paragraph [ref=f23e207]: Online
+              - button "Friend options" [ref=f23e208]
+            - listitem [ref=f23e211]:
+              - generic [ref=f23e212]: CG
+              - generic [ref=f23e215]:
+                - paragraph [ref=f23e216]: Chris Greyson
+                - paragraph [ref=f23e217]: Away
+              - button "Friend options" [ref=f23e218]
+            - listitem [ref=f23e221]:
+              - generic [ref=f23e222]: NG
+              - generic [ref=f23e225]:
+                - paragraph [ref=f23e226]: Nicholas Grisom
+                - paragraph [ref=f23e227]: Invisible
+              - button "Friend options" [ref=f23e228]
+            - listitem [ref=f23e231]:
+              - generic [ref=f23e232]: JS
+              - generic [ref=f23e235]:
+                - paragraph [ref=f23e236]: James Spiegel
+                - paragraph [ref=f23e237]: Away
+              - button "Friend options" [ref=f23e238]
+            - listitem [ref=f23e241]:
+              - generic [ref=f23e242]: DJ
+              - generic [ref=f23e245]:
+                - paragraph [ref=f23e246]: Diana Jones
+                - paragraph [ref=f23e247]: Online
+              - button "Friend options" [ref=f23e248]
+      - generic [ref=f23e251]:
+        - textbox "Search Friends..." [ref=f23e252]
+        - button "Friend settings" [ref=f23e253]
+        - button "Collapse friends panel" [ref=f23e256]
+      - button "Olympus Chat" [ref=f23e259]
+    - main [ref=f23e263]:
+      - generic [ref=f23e265]:
+        - generic [ref=f23e266]:
+          - generic [ref=f23e267]:
+            - heading "Người dùng" [level=1] [ref=f23e268]
+            - paragraph [ref=f23e269]: Tài khoản mới đăng ký phải được phê duyệt mới đăng nhập được.
+          - generic [ref=f23e270]:
+            - button "Thêm người dùng" [ref=f23e319]
+            - textbox "Tìm theo email hoặc tên…" [ref=f23e271]: dev@portal.localhost
+        - generic [ref=f23e272]:
+          - button "Chờ duyệt 2" [ref=f23e320]:
+            - text: Chờ duyệt
+            - generic [ref=f23e321]: "2"
+          - button "Đã duyệt 14" [ref=f23e322]:
+            - text: Đã duyệt
+            - generic [ref=f23e323]: "14"
+          - button "Từ chối" [ref=f23e275]
+          - button "Tất cả" [ref=f23e276]
+        - table [ref=f23e325]:
+          - rowgroup [ref=f23e326]:
+            - row [ref=f23e327]:
+              - columnheader "Tài khoản" [ref=f23e328]
+              - columnheader "Vai trò" [ref=f23e329]
+              - columnheader "Trạng thái" [ref=f23e330]
+              - columnheader "Đăng ký" [ref=f23e331]
+              - columnheader "Thao tác" [ref=f23e332]
+          - rowgroup [ref=f23e333]:
+            - row [ref=f23e334]:
+              - cell "P Pending Two pending2@portal.localhost" [ref=f23e335]:
+                - generic [ref=f23e336]:
+                  - generic [ref=f23e337]: P
+                  - generic [ref=f23e338]:
+                    - generic [ref=f23e339]: Pending Two
+                    - generic [ref=f23e340]: pending2@portal.localhost
+              - cell "user" [ref=f23e341]
+              - cell "Chờ duyệt" [ref=f23e344]
+              - cell "8/28/2026" [ref=f23e347]
+              - cell [ref=f23e348]:
+                - generic [ref=f23e349]:
+                  - button "Duyệt" [ref=f23e350]
+                  - button "Từ chối" [ref=f23e351]
+                  - button "Vai trò" [ref=f23e352]
+                  - button "Sửa" [ref=f23e353]
+                  - button "Khoá" [ref=f23e354]
+                  - button "Xoá" [ref=f23e355]
+            - row [ref=f23e356]:
+              - cell "U Uy Tester uitest@portal.localhost" [ref=f23e357]:
+                - generic [ref=f23e358]:
+                  - generic [ref=f23e359]: U
+                  - generic [ref=f23e360]:
+                    - generic [ref=f23e361]: Uy Tester
+                    - generic [ref=f23e362]: uitest@portal.localhost
+              - cell "user" [ref=f23e363]
+              - cell "Chờ duyệt" [ref=f23e366]
+              - cell "8/28/2026" [ref=f23e369]
+              - cell [ref=f23e370]:
+                - generic [ref=f23e371]:
+                  - button "Duyệt" [ref=f23e372]
+                  - button "Từ chối" [ref=f23e373]
+                  - button "Vai trò" [ref=f23e374]
+                  - button "Sửa" [ref=f23e375]
+                  - button "Khoá" [ref=f23e376]
+                  - button "Xoá" [ref=f23e377]
+        - dialog "Thêm người dùng" [ref=f23e378]:
+          - generic [ref=f23e379]:
+            - heading "Thêm người dùng" [level=2] [ref=f23e380]
+            - paragraph [ref=f23e381]: Tài khoản được duyệt ngay vì bạn có quyền phê duyệt. Vai trò mặc định là “user” — đổi sau bằng nút “Vai trò”.
+            - generic [ref=f23e382]:
+              - generic [ref=f23e383]:
+                - generic [ref=f23e384]: Email
+                - textbox [active] [ref=f23e385]
+              - generic [ref=f23e386]:
+                - generic [ref=f23e387]: Tên hiển thị
+                - textbox "Bỏ trống = lấy phần trước @" [ref=f23e388]
+              - generic [ref=f23e389]:
+                - generic [ref=f23e390]: Mật khẩu (ít nhất 8 ký tự)
+                - textbox [ref=f23e391]: DevPortal!2026
+              - paragraph [ref=f23e392]: Bắt buộc có mật khẩu — tài khoản không có mật khẩu thì vừa không đăng nhập được, vừa không tự đặt lại được.
+            - generic [ref=f23e393]:
+              - button "Huỷ" [ref=f23e394]
+              - button "Tạo" [disabled] [ref=f23e395]
+    - button "Go to top"
+  - alert [ref=f23e308]

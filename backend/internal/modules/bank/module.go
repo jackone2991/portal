@@ -90,6 +90,9 @@ func (m *Module) MountHTTP(r chi.Router) {
 		})
 
 		r.With(m.perm("bank-accounts:read:own")).Get("/dashboard", m.handler.Dashboard)
+		// Reads transactions grouped by category, so it carries the transaction
+		// read code rather than the account one.
+		r.With(m.perm("bank-transactions:read:own")).Get("/report", m.handler.Report)
 	})
 }
 

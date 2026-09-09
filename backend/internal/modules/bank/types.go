@@ -68,6 +68,11 @@ type Category struct {
 	Name     string
 	Kind     string
 	Seed     bool
+	// Icon is an emoji, Color a "#rrggbb" string; both optional. They exist so
+	// the ledger reads at a glance — see migration 0042 for why emoji and not a
+	// sprite id. Nil is an ordinary state; the UI falls back to a letter chip.
+	Icon  *string
+	Color *string
 }
 
 // Transaction is one ledger row. A transfer leg has TransferID set and
@@ -126,6 +131,8 @@ type CreateCategoryInput struct {
 	ParentID *uuid.UUID
 	Name     string
 	Kind     string
+	Icon     *string
+	Color    *string
 }
 
 type UpdateCategoryInput struct {
@@ -134,6 +141,12 @@ type UpdateCategoryInput struct {
 	Name      *string
 	SetParent bool       // whether parent_id is being changed at all
 	ParentID  *uuid.UUID // the new parent (nil = promote to top-level) when SetParent
+	// Same set-flag pattern as ParentID: clearing an icon back to "none" is a
+	// real edit, so "absent" and "explicitly null" cannot share a representation.
+	SetIcon  bool
+	Icon     *string
+	SetColor bool
+	Color    *string
 }
 
 type CreateTransactionInput struct {
@@ -239,6 +252,42 @@ type Repository interface {
 
 	// dashboard
 	MonthFlowTotals(ctx context.Context, userID uuid.UUID, month time.Time) (income, expense int64, err error)
+
+	// reports
+	CategorySpendForMonth(ctx context.Context, userID uuid.UUID, month time.Time) ([]CategoryTotal, error)
+	MonthlyFlowSeries(ctx context.Context, userID uuid.UUID, endMonth time.Time, months int) ([]MonthFlow, error)
+}
+
+// CategoryTotal is one slice of the month: a top-level category and everything
+// its children spent, rolled up. See the CategorySpendForMonth query for why the
+// roll-up happens in SQL rather than here.
+type CategoryTotal struct {
+	CategoryID uuid.UUID
+	Name       string
+	Kind       string
+	Icon       *string
+	Color      *string
+	Total      int64
+	TxCount    int64
+}
+
+// MonthFlow is one bar of the trend chart. Months with no activity are present
+// with zeroes — see MonthlyFlowSeries.
+type MonthFlow struct {
+	Month   time.Time
+	Income  int64
+	Expense int64
+}
+
+// Report is the month view behind /bank/report: totals, the category breakdown
+// split by kind, and the trailing trend.
+type Report struct {
+	Month    time.Time
+	Income   int64
+	Expense  int64
+	Expenses []CategoryTotal
+	Incomes  []CategoryTotal
+	Trend    []MonthFlow
 }
 
 // EventPublisher fans a domain event out to its subscribers (platform/events).

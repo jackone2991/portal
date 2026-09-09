@@ -76,6 +76,22 @@ type Config struct {
 	SMTPFrom             string `env:"SMTP_FROM" envDefault:"Portal <no-reply@portal.localhost>"`
 	NotifyEmailHourlyCap int    `env:"NOTIFY_EMAIL_HOURLY_CAP" envDefault:"200"` // global send ceiling (budget insurance); 0 = uncapped
 
+	// ── Music catalogue lookup (migration 0039) ──────────────────────────────
+	// The ONLY outbound third-party calls this app makes. Off by default: a
+	// lookup sends the library's artist/title pairs to MusicBrainz, and that is
+	// not a default anyone should inherit without deciding to.
+	//
+	// MusicbrainzContact is mandatory when enabled — their policy requires a
+	// User-Agent with real contact details and answers 403 without one. There is
+	// deliberately no fallback value: a shared fake identity is how every
+	// deployment gets blocked at once. Enabled without a contact stays OFF.
+	MusicbrainzEnabled bool   `env:"MUSICBRAINZ_ENABLED" envDefault:"false"`
+	MusicbrainzContact string `env:"MUSICBRAINZ_CONTACT" envDefault:""`
+	// Overridable for tests and for anyone running a local mirror, which is the
+	// polite way to do this at volume.
+	MusicbrainzBaseURL string `env:"MUSICBRAINZ_BASE_URL" envDefault:"https://musicbrainz.org/ws/2"`
+	CoverArtBaseURL    string `env:"COVERART_BASE_URL"   envDefault:"https://coverartarchive.org"`
+
 	// Browser origins allowed to make credentialed (cookie-bearing) calls to the
 	// API. The frontend login form POSTs cross-subdomain, so the exact origin
 	// must be allowlisted — a wildcard is invalid with credentials.

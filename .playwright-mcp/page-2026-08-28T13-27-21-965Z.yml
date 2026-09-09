@@ -1,0 +1,90 @@
+- generic [active] [ref=f50e1]:
+  - generic [ref=f50e2]:
+    - generic [ref=f50e3]: Loading …
+    - banner [ref=f50e5]:
+      - generic [ref=f50e6]:
+        - link "Portal — Newsfeed" [ref=f50e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f50e11]: Portal
+        - generic [ref=f50e12]:
+          - generic [ref=f50e13]: Newsfeed
+          - searchbox [ref=f50e15]
+          - link "Find Friends" [ref=f50e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f50e17]:
+            - button "Friend requests" [ref=f50e19]
+            - button "Messages" [ref=f50e23]:
+              - generic [ref=f50e26]: "2"
+            - button "Notifications" [ref=f50e28]
+            - button "Guest Member" [ref=f50e32]:
+              - generic [ref=f50e33]:
+                - generic [ref=f50e34]: Guest
+                - generic [ref=f50e35]: Member
+              - generic [ref=f50e36]: G
+    - complementary [ref=f50e41]:
+      - generic [ref=f50e42]:
+        - button "Collapse Menu" [ref=f50e43]
+        - link "Newsfeed" [ref=f50e49] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f50e54] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f50e59] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f50e64] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f50e69] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f50e74]
+        - link "Music & Playlists" [ref=f50e79] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f50e84] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f50e89] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f50e94]
+        - button "Friends Birthdays" [ref=f50e99]
+        - button "Account Stats" [ref=f50e104]
+      - generic [ref=f50e109]:
+        - generic [ref=f50e110]:
+          - generic [ref=f50e111]: Profile Completion
+          - generic [ref=f50e112]: 76%
+        - paragraph [ref=f50e115]:
+          - text: Complete
+          - link "your profile" [ref=f50e116] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f50e117]:
+      - paragraph [ref=f50e119]: Loading people…
+      - generic [ref=f50e120]:
+        - textbox "Search people..." [ref=f50e122]
+        - button "Collapse people panel" [ref=f50e123]
+      - link "People" [ref=f50e126] [cursor=pointer]:
+        - /url: /people
+    - main [ref=f50e130]:
+      - generic [ref=f50e132]:
+        - generic [ref=f50e133]:
+          - link "← Sổ thu chi" [ref=f50e134] [cursor=pointer]:
+            - /url: /bank
+          - heading "Báo cáo" [level=1] [ref=f50e135]
+        - generic [ref=f50e136]:
+          - button "Tháng trước" [ref=f50e137]: ‹
+          - generic [ref=f50e138]:
+            - generic [ref=f50e139]: Tháng 8, 2026
+            - textbox "Chọn tháng" [ref=f50e140] [cursor=pointer]: 2026-08
+          - button "Tháng sau" [ref=f50e141]: ›
+        - generic [ref=f50e142]:
+          - generic [ref=f50e143]:
+            - paragraph [ref=f50e144]: Thu
+            - paragraph [ref=f50e145]: "0"
+          - generic [ref=f50e146]:
+            - paragraph [ref=f50e147]: Chi
+            - paragraph [ref=f50e148]: "0"
+          - generic [ref=f50e149]:
+            - paragraph [ref=f50e150]: Còn lại
+            - paragraph [ref=f50e151]: "0"
+        - generic [ref=f50e152]:
+          - button "Chi tiêu" [pressed] [ref=f50e153]
+          - button "Thu nhập" [ref=f50e154]
+        - paragraph [ref=f50e156]: Đang tải…
+    - button "Go to top"
+  - alert [ref=f50e157]

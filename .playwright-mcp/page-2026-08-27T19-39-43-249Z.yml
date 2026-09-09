@@ -1,0 +1,126 @@
+- generic [ref=f1e5]:
+  - generic [ref=f1e8]:
+    - generic [ref=f1e9]:
+      - heading "Portal API 0.1.0 OAS 3.1" [level=2] [ref=f1e10]:
+        - text: Portal API
+        - generic [ref=f1e11]:
+          - generic [ref=f1e12]: 0.1.0
+          - generic [ref=f1e14]: OAS 3.1
+      - link "/openapi.yaml" [ref=f1e16] [cursor=pointer]:
+        - /url: /openapi.yaml
+    - generic [ref=f1e19]:
+      - paragraph [ref=f1e20]: Portal — self-hosted media platform API.
+      - paragraph [ref=f1e21]:
+        - text: This document is the
+        - strong [ref=f1e22]: source of truth
+        - text: for the HTTP contract. Server stubs (Go) and the TypeScript client are both generated from it.
+      - heading "Errors" [level=2] [ref=f1e23]
+      - paragraph [ref=f1e24]:
+        - text: Error responses use the
+        - strong [ref=f1e25]: RFC 7807
+        - code [ref=f1e26]: application/problem+json
+        - text: shape (
+        - code [ref=f1e27]: "#/components/schemas/Problem"
+        - text: ). The stable
+        - code [ref=f1e28]: type
+        - text: URI doubles as the i18n key; the
+        - code [ref=f1e29]: code
+        - text: extension is a machine-stable slug (e.g.
+        - code [ref=f1e30]: invalid_credentials
+        - text: ).
+      - blockquote [ref=f1e31]:
+        - paragraph [ref=f1e32]:
+          - strong [ref=f1e33]: "Migration note (v1):"
+          - text: RFC 7807 is the target contract per [D-7]/[D-29]. Some handlers still emit the legacy
+          - code [ref=f1e34]: "{code, message}"
+          - text: body (
+          - code [ref=f1e35]: "#/components/schemas/Error"
+          - text: ); they are retrofitted to
+          - code [ref=f1e36]: Problem
+          - text: as they are touched, not in a sweep (see ADR-01). Treat
+          - code [ref=f1e37]: Problem
+          - text: as authoritative.
+      - paragraph [ref=f1e38]:
+        - text: Auth is
+        - strong [ref=f1e39]: local password
+        - text: (
+        - link "ADR-06" [ref=f1e40] [cursor=pointer]:
+          - /url: ../doc/en/architecture/06-local-auth-model.md
+        - text: ); the OIDC/Authentik login +
+        - code [ref=f1e41]: /auth/callback
+        - text: flow was removed.
+  - generic [ref=f1e43]:
+    - generic [ref=f1e45]:
+      - text: Servers
+      - combobox [ref=f1e48]:
+        - option "https://api.portal.localhost/api/v1 - Local dev (via Traefik)" [selected]
+        - option "http://localhost:8080/api/v1 - Direct (no proxy)"
+    - button "Authorize" [ref=f1e50] [cursor=pointer]
+  - textbox "Filter by tag" [ref=f1e57]
+  - generic [ref=f1e60]:
+    - heading [level=3] [ref=f1e63] [cursor=pointer]:
+      - link "health" [ref=f1e64]:
+        - /url: "#/health"
+      - button "Expand operation" [ref=f1e65]
+    - heading [level=3] [ref=f1e70] [cursor=pointer]:
+      - link "auth" [ref=f1e71]:
+        - /url: "#/auth"
+      - button "Expand operation" [ref=f1e72]
+    - heading [level=3] [ref=f1e77] [cursor=pointer]:
+      - link "assets" [ref=f1e78]:
+        - /url: "#/assets"
+      - button "Expand operation" [ref=f1e79]
+    - heading [level=3] [ref=f1e84] [cursor=pointer]:
+      - link "notifications" [ref=f1e85]:
+        - /url: "#/notifications"
+      - button "Expand operation" [ref=f1e86]
+    - heading [level=3] [ref=f1e91] [cursor=pointer]:
+      - link "ops" [ref=f1e92]:
+        - /url: "#/ops"
+      - button "Expand operation" [ref=f1e93]
+    - heading [level=3] [ref=f1e98] [cursor=pointer]:
+      - link "movies" [ref=f1e99]:
+        - /url: "#/movies"
+      - button "Expand operation" [ref=f1e100]
+    - heading [level=3] [ref=f1e105] [cursor=pointer]:
+      - link "music" [ref=f1e106]:
+        - /url: "#/music"
+      - button "Expand operation" [ref=f1e107]
+    - heading [level=3] [ref=f1e112] [cursor=pointer]:
+      - link "stories" [ref=f1e113]:
+        - /url: "#/stories"
+      - button "Expand operation" [ref=f1e114]
+    - heading [level=3] [ref=f1e119] [cursor=pointer]:
+      - link "comic" [ref=f1e120]:
+        - /url: "#/comic"
+      - button "Expand operation" [ref=f1e121]
+    - heading [level=3] [ref=f1e126] [cursor=pointer]:
+      - link "comic-internal" [ref=f1e127]:
+        - /url: "#/comic-internal"
+      - button "Expand operation" [ref=f1e128]
+    - heading [level=3] [ref=f1e133] [cursor=pointer]:
+      - link "tenant" [ref=f1e134]:
+        - /url: "#/tenant"
+      - button "Expand operation" [ref=f1e135]
+    - heading [level=3] [ref=f1e140] [cursor=pointer]:
+      - link "platform" [ref=f1e141]:
+        - /url: "#/platform"
+      - button "Expand operation" [ref=f1e142]
+    - heading [level=3] [ref=f1e147] [cursor=pointer]:
+      - link "journal" [ref=f1e148]:
+        - /url: "#/journal"
+      - button "Expand operation" [ref=f1e149]
+    - heading [level=3] [ref=f1e154] [cursor=pointer]:
+      - link "bank" [ref=f1e155]:
+        - /url: "#/bank"
+      - button "Expand operation" [ref=f1e156]
+    - heading [level=3] [ref=f1e161] [cursor=pointer]:
+      - link "people" [ref=f1e162]:
+        - /url: "#/people"
+      - button "Expand operation" [ref=f1e163]
+    - heading [level=3] [ref=f1e168] [cursor=pointer]:
+      - link "stream" [ref=f1e169]:
+        - /url: "#/stream"
+      - button "Expand operation" [ref=f1e170]
+  - heading [level=4] [ref=f1e176] [cursor=pointer]:
+    - button "Schemas" [ref=f1e177]

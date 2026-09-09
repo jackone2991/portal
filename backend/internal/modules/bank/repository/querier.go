@@ -11,6 +11,18 @@ import (
 )
 
 type Querier interface {
+	// ══ Reports (Money-Lover-style month view) ══════════════════════════════
+	// Per-category totals for one month, for the donut and the breakdown list.
+	//
+	// Rolls CHILD categories up into their PARENT (COALESCE(parent_id, id)): a user
+	// who logs "Cà phê" and "Ăn ngoài" wants to see one "Ăn uống" slice, not two
+	// fragments of it. The per-child detail is still reachable — the transaction
+	// list filters by category — but a donut with 30 slivers communicates nothing.
+	//
+	// Excludes PURE transfer legs exactly as MonthFlowTotals does: moving money
+	// between your own wallets is not spending, but a transfer FEE (transfer_id and
+	// category_id both set) is, and dropping it would understate the month.
+	CategorySpendForMonth(ctx context.Context, arg CategorySpendForMonthParams) ([]CategorySpendForMonthRow, error)
 	CountAccountTransactions(ctx context.Context, accountID pgtype.UUID) (int64, error)
 	CountCategoryChildren(ctx context.Context, parentID pgtype.UUID) (int64, error)
 	CountCategoryTransactions(ctx context.Context, arg CountCategoryTransactionsParams) (int64, error)
@@ -69,6 +81,12 @@ type Querier interface {
 	// category_id NULL) — NOT `WHERE transfer_id IS NULL`, which would wrongly drop a
 	// P1.13 fee row. A fee row (both set) counts as an ordinary expense.
 	MonthFlowTotals(ctx context.Context, arg MonthFlowTotalsParams) (MonthFlowTotalsRow, error)
+	// Income/expense per month over a window ending at $2, for the trend bars.
+	//
+	// generate_series drives the result, not the transactions, so a month with no
+	// activity comes back as a zero row instead of vanishing — a trend chart that
+	// silently omits empty months draws a misleading line.
+	MonthlyFlowSeries(ctx context.Context, arg MonthlyFlowSeriesParams) ([]MonthlyFlowSeriesRow, error)
 	// Move this category's own transactions to the target (P0.4 delete ?reassign_to).
 	ReassignCategoryTransactions(ctx context.Context, arg ReassignCategoryTransactionsParams) error
 	// Dashboard: the 10 most recently ENTERED rows (created_at DESC — a future-dated

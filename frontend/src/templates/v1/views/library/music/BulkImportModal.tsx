@@ -10,6 +10,7 @@ import {
   getImport,
   importInFlight,
   importZip,
+  lookupImport,
   metaFromFilename,
   uploadAudioAsset,
   type MusicImport,
@@ -302,6 +303,8 @@ function ZipPanel({
   // this only reports that the second pass was asked for. Its results arrive by
   // covers appearing on the tracks, not through this dialog.
   const [enriching, setEnriching] = useState<"idle" | "queued" | "working">("idle");
+  const [looking, setLooking] = useState<"idle" | "queued" | "working">("idle");
+  const [lookupNote, setLookupNote] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Poll while the worker is unpacking. Cleared on unmount so closing the dialog
@@ -337,10 +340,29 @@ function ZipPanel({
     }
   }
 
+  async function lookup(id: string) {
+    setLooking("working");
+    setLookupNote(null);
+    try {
+      const { queued, skipped } = await lookupImport(id);
+      setLooking("queued");
+      setLookupNote(
+        skipped > 0
+          ? `Đã xếp hàng ${queued} bài, bỏ qua ${skipped} bài vượt giới hạn mỗi lượt.`
+          : `Đã xếp hàng ${queued} bài.`,
+      );
+    } catch (e) {
+      setLooking("idle");
+      onError(message(e, "Không gửi được yêu cầu tra cứu."));
+    }
+  }
+
   async function upload(file: File) {
     onError(null);
     setJob(null);
     setEnriching("idle");
+    setLooking("idle");
+    setLookupNote(null);
     setPct(0);
     try {
       setJob(await importZip(file, setPct));
@@ -388,6 +410,9 @@ function ZipPanel({
           job={job}
           enriching={enriching}
           onEnrich={() => void enrich(job.id)}
+          looking={looking}
+          lookupNote={lookupNote}
+          onLookup={() => void lookup(job.id)}
         />
       )}
     </>
@@ -398,10 +423,16 @@ function ImportProgress({
   job,
   enriching,
   onEnrich,
+  looking,
+  lookupNote,
+  onLookup,
 }: {
   job: MusicImport;
   enriching: "idle" | "queued" | "working";
   onEnrich: () => void;
+  looking: "idle" | "queued" | "working";
+  lookupNote: string | null;
+  onLookup: () => void;
 }) {
   const pct = job.total > 0 ? Math.round(((job.succeeded + job.failed) / job.total) * 100) : 0;
   const finished = !importInFlight(job) && job.succeeded > 0;
@@ -469,6 +500,39 @@ function ImportProgress({
                   Đọc ảnh bìa nhúng trong từng tệp nhạc và điền nghệ sĩ / album
                   còn trống. Chạy nền, chậm hơn bước nhập nên tách riêng; những gì
                   bạn đã tự sửa sẽ không bị ghi đè.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* The catalogue lookup is a separate offer from the local enrichment,
+            not a bigger version of it: it leaves the machine. Presenting them as
+            one button would hide that a third party is being told what is in the
+            library. */}
+        {finished && (
+          <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--tpl-border)" }}>
+            {looking === "queued" ? (
+              <p className="text-xs" style={{ color: "var(--tpl-muted)" }}>
+                {lookupNote} Kết quả hiện dần — tra cứu bị giới hạn 1 yêu cầu/giây
+                nên vài trăm bài sẽ mất ít phút.
+              </p>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onLookup}
+                  disabled={looking === "working"}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50"
+                  style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+                >
+                  {looking === "working" ? "Đang gửi…" : "Tra cứu MusicBrainz (năm, thể loại, bìa album)"}
+                </button>
+                <p className="mt-1.5 text-xs" style={{ color: "var(--tpl-muted)" }}>
+                  ⚠️ Bước này <b>gửi tên bài và nghệ sĩ ra dịch vụ ngoài</b>
+                  (MusicBrainz + Cover Art Archive) để lấy năm phát hành, thể loại
+                  và ảnh bìa chất lượng cao — những thứ không có trong tệp nhạc.
+                  Chỉ khớp khi đủ chắc chắn; không chắc thì để trống chứ không đoán.
                 </p>
               </>
             )}

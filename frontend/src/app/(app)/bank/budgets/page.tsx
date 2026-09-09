@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { activeTemplate } from "@/templates/registry";
 
-export const metadata: Metadata = { title: "Budgets" };
+export const metadata: Metadata = { title: "Ngân sách" };
 
 /** /bank/budgets — month picker + per-category budget tree (SPEC-03 P0.5). */
 export default function BankBudgetsPage() {

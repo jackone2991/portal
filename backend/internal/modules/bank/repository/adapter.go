@@ -120,6 +120,8 @@ func (a *Adapter) CreateCategory(ctx context.Context, in bank.CreateCategoryInpu
 		Name:     in.Name,
 		Kind:     in.Kind,
 		ParentID: optUUID(in.ParentID),
+		Icon:     in.Icon,
+		Color:    in.Color,
 	})
 	if err != nil {
 		return bank.Category{}, err
@@ -155,6 +157,10 @@ func (a *Adapter) UpdateCategory(ctx context.Context, in bank.UpdateCategoryInpu
 		Name:      in.Name,
 		SetParent: in.SetParent,
 		ParentID:  optUUID(in.ParentID),
+		SetIcon:   in.SetIcon,
+		Icon:      in.Icon,
+		SetColor:  in.SetColor,
+		Color:     in.Color,
 		ID:        pgUUID(in.ID),
 		UserID:    pgUUID(in.UserID),
 	})
@@ -408,6 +414,47 @@ func (a *Adapter) MonthFlowTotals(ctx context.Context, userID uuid.UUID, month t
 	return row.Income, row.Expense, nil
 }
 
+// ── reports ──────────────────────────────────────────────────────────
+
+func (a *Adapter) CategorySpendForMonth(ctx context.Context, userID uuid.UUID, month time.Time) ([]bank.CategoryTotal, error) {
+	rows, err := a.q.CategorySpendForMonth(ctx, CategorySpendForMonthParams{
+		UserID:     pgUUID(userID),
+		OccurredAt: pgDate(month),
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]bank.CategoryTotal, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, bank.CategoryTotal{
+			CategoryID: uuidFrom(r.CategoryID),
+			Name:       r.Name,
+			Kind:       r.Kind,
+			Icon:       r.Icon,
+			Color:      r.Color,
+			Total:      r.Total,
+			TxCount:    r.TxCount,
+		})
+	}
+	return out, nil
+}
+
+func (a *Adapter) MonthlyFlowSeries(ctx context.Context, userID uuid.UUID, endMonth time.Time, months int) ([]bank.MonthFlow, error) {
+	rows, err := a.q.MonthlyFlowSeries(ctx, MonthlyFlowSeriesParams{
+		UserID:  pgUUID(userID),
+		Column2: pgDate(endMonth),
+		Column3: int32(months),
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]bank.MonthFlow, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, bank.MonthFlow{Month: r.Month.Time, Income: r.Income, Expense: r.Expense})
+	}
+	return out, nil
+}
+
 // ── mapping helpers ──────────────────────────────────────────────────
 
 func createTxParams(in bank.CreateTransactionInput) CreateTransactionParams {
@@ -442,6 +489,8 @@ func toCategory(r BankCategory) bank.Category {
 		Name:     r.Name,
 		Kind:     r.Kind,
 		Seed:     !r.UserID.Valid,
+		Icon:     r.Icon,
+		Color:    r.Color,
 	}
 }
 

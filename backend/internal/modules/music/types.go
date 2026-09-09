@@ -42,6 +42,18 @@ type Track struct {
 	Status       string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+
+	// Catalogue lookup (0039). System-written, never editable on a form.
+	ReleaseYear   *int
+	Genre         *string
+	MBRecordingID *uuid.UUID
+	MBReleaseID   *uuid.UUID
+	// LookupStatus is none | pending | matched | no_match | failed. `no_match` is
+	// an ordinary outcome — most libraries contain something the catalogue has
+	// never heard of — so the UI must not present it as a failure.
+	LookupStatus string
+	LookupNote   *string
+	LookupAt     *time.Time
 }
 
 type CreateTrackInput struct {
@@ -90,6 +102,10 @@ type Repository interface {
 	NullAudioByAsset(ctx context.Context, assetID uuid.UUID) error
 	NullCoverByAsset(ctx context.Context, assetID uuid.UUID) error
 
+	// Catalogue lookup (0039).
+	MarkLookupPending(ctx context.Context, id uuid.UUID) error
+	SetLookupResult(ctx context.Context, in SetLookupInput) error
+
 	// Bulk zip import (0038).
 	CreateImport(ctx context.Context, ownerID uuid.UUID) (ImportJob, error)
 	GetImport(ctx context.Context, id uuid.UUID) (ImportJob, error)
@@ -97,6 +113,22 @@ type Repository interface {
 	SetImportUpload(ctx context.Context, id uuid.UUID, key string) (ImportJob, error)
 	StartImport(ctx context.Context, id uuid.UUID, total int) error
 	FinishImport(ctx context.Context, id uuid.UUID, status string, succeeded, failed int, report, errMsg string) error
+}
+
+// SetLookupInput is the outcome of one catalogue lookup. Every value field is
+// advisory: the query COALESCEs, so a field the track already has wins.
+type SetLookupInput struct {
+	ID     uuid.UUID
+	Status string // matched | no_match | failed
+	Note   string
+
+	Artist        *string
+	Album         *string
+	Genre         *string
+	Year          *int
+	CoverAssetID  *uuid.UUID
+	MBRecordingID *uuid.UUID
+	MBReleaseID   *uuid.UUID
 }
 
 // ImportJob is one bulk-import run. `Report` is the raw JSON array the client

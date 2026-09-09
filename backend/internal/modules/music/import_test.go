@@ -256,3 +256,11 @@ func TestCoverMimeMatchesTheExtractedExtension(t *testing.T) {
 		}
 	}
 }
+
+// Repository gained the two lookup writes; the track tests never touch them.
+func (f *fakeRepo) MarkLookupPending(context.Context, uuid.UUID) error {
+	return errNotImplementedInFake
+}
+func (f *fakeRepo) SetLookupResult(context.Context, SetLookupInput) error {
+	return errNotImplementedInFake
+}

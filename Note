@@ -56,6 +56,14 @@ Truy cập trực tiếp / qua LAN (không qua Traefik):
                                         thiếu" (POST /tracks/imports/{id}/enrich,
                                         hoặc /tracks/{id}/enrich cho 1 bài). Chỉ
                                         điền chỗ trống, không ghi đè thứ đã có.
+                                        Năm phát hành / thể loại / bìa album chất
+                                        lượng cao: tra MusicBrainz — MẶC ĐỊNH TẮT.
+                                        Bật: MUSICBRAINZ_ENABLED=true +
+                                        MUSICBRAINZ_CONTACT=<email> rồi restart.
+                                        Tắt thì API trả 503 kèm hướng dẫn, không
+                                        phải 404. Giới hạn 1 req/giây toàn hệ
+                                        thống nên vài trăm bài mất vài phút.
+                                        Điểm khớp < 88 → ghi 'no_match', KHÔNG đoán.
   /admin/layout                         Sửa menu trái + widget trang chủ
                                         (cần `system:settings:write`, role admin có sẵn)
                                         Menu: thêm/sửa/xoá/đổi thứ tự/ẩn thoải mái —

@@ -826,10 +826,17 @@ export interface paths {
         };
         /**
          * Download the original file (owner-only)
-         * @description Streams the source object as an attachment with the sniffed content type.
+         * @description Streams the source object inline with the sniffed content type.
          *     Owner-authenticated only — the original retains full EXIF/GPS (unlike the
          *     metadata-stripped variants), so it is never served through the public-ish
          *     variant/HLS scheme.
+         *
+         *     **Range requests are supported** and this is load-bearing, not a nicety:
+         *     it is the route an `<audio>`/`<video>` element plays from, and a browser
+         *     that cannot range-request its media source reports `seekable` as `[0,0]`
+         *     and silently refuses every scrub. Served via `http.ServeContent`, so
+         *     `Accept-Ranges: bytes` is always present and a `Range` header is answered
+         *     with `206` + `Content-Range`.
          */
         get: operations["downloadAssetOriginal"];
         put?: never;
@@ -1181,6 +1188,36 @@ export interface paths {
         };
         /** Ledger dashboard (balances, month flow, budgets, recent) */
         get: operations["getBankDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Month report — category breakdown and trailing trend
+         * @description The month screen's aggregate. `expenses` / `incomes` are per-category
+         *     totals with CHILD categories rolled up into their parent, sorted by
+         *     total descending — a breakdown that split "Cà phê" out of "Ăn uống"
+         *     would be a chart of slivers.
+         *
+         *     Pure transfer legs are excluded (moving money between your own wallets
+         *     is not spending), but a transfer FEE — a row with both `transfer_id` and
+         *     `category_id` — counts as an ordinary expense.
+         *
+         *     `trend` always contains a fixed window of months ending at the requested
+         *     one, including months with no activity as zero rows.
+         */
+        get: operations["getBankReport"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2018,6 +2055,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracks/imports/{id}/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look every imported track up in MusicBrainz
+         * @description The third and last metadata pass, and the only one that leaves the
+         *     machine:
+         *
+         *     | pass | source | cost |
+         *     |---|---|---|
+         *     | import | the filename | free |
+         *     | enrich | tags and artwork inside the file (ffprobe) | local CPU |
+         *     | **lookup** | **MusicBrainz + Cover Art Archive** | **network, 1 req/s** |
+         *
+         *     **Off unless an operator enables it.** A lookup sends the library's
+         *     artist/title pairs to a third party, which is not a default anyone should
+         *     inherit silently. Disabled, this answers **503** `music/lookup-disabled`
+         *     naming the two environment variables to set — not 404, because the
+         *     endpoint exists and the request was fine.
+         *
+         *     MusicBrainz permits **one request per second per client**, enforced here
+         *     by a Redis-backed global slot so replicas cannot multiply the rate. A
+         *     library of 300 tracks therefore takes at least five minutes; this is a
+         *     background sweep, not an interactive call.
+         *
+         *     Matching is deliberately strict: MusicBrainz scores each result, and
+         *     anything under 88 is recorded as `no_match` rather than guessed at. A
+         *     wrong album silently attached to a track is worse than an empty field.
+         *     Like every other pass it **only fills gaps** — enforced in SQL, so a
+         *     value the user typed can never be replaced.
+         *
+         *     Returns **202** with `queued`, and `skipped` when the batch cap (500)
+         *     truncated the sweep. Watch the tracks for results: `lookup_status` moves
+         *     to `matched` / `no_match` / `failed`, with `lookup_note` explaining which.
+         */
+        post: operations["lookupMusicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracks/{id}": {
         parameters: {
             query?: never;
@@ -2065,6 +2152,36 @@ export interface paths {
          *     error.
          */
         post: operations["enrichTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{id}/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look this track up in MusicBrainz
+         * @description Fetches what the audio file cannot contain — release year, genre, and a
+         *     Cover Art Archive cover — for one track. Owner, or `music:write:any`.
+         *
+         *     Same rules as the batch version: off unless enabled (503
+         *     `music/lookup-disabled`), throttled to one request per second across the
+         *     whole deployment, and refused rather than guessed below a MusicBrainz
+         *     score of 88. Only fills gaps.
+         *
+         *     Returns **202**; poll the track for `lookup_status` and `lookup_note`.
+         */
+        post: operations["lookupTrack"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2532,6 +2649,10 @@ export interface components {
             kind: "income" | "expense";
             /** @description A user_id-NULL default (visible to all */
             seed: boolean;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
         BankCategoryCreate: {
             name: string;
@@ -2542,12 +2663,20 @@ export interface components {
              * @description Must be a top-level category of the same kind.
              */
             parent_id?: string | null;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
-        /** @description kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it. */
+        /** @description kind is immutable. `parent_id`, `icon` and `color` follow the same present-vs-absent rule: present (including null) sets it, absent leaves it alone. Seeds are immutable, so a patch against one is a 404. */
         BankCategoryPatch: {
             name?: string;
             /** Format: uuid */
             parent_id?: string | null;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
         BankTransaction: {
             /** Format: uuid */
@@ -2665,6 +2794,44 @@ export interface components {
              * @description 0 or null deletes the budget.
              */
             amount?: number | null;
+        };
+        BankCategoryTotal: {
+            /**
+             * Format: uuid
+             * @description The top-level category the total rolls up to.
+             */
+            category_id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "income" | "expense";
+            icon?: string | null;
+            color?: string | null;
+            /**
+             * Format: int64
+             * @description Minor units (D-41).
+             */
+            total: number;
+            /** Format: int64 */
+            tx_count: number;
+        };
+        BankMonthFlow: {
+            /** @description YYYY-MM */
+            month: string;
+            /** Format: int64 */
+            income: number;
+            /** Format: int64 */
+            expense: number;
+        };
+        BankReport: {
+            /** @description YYYY-MM */
+            month: string;
+            /** Format: int64 */
+            income: number;
+            /** Format: int64 */
+            expense: number;
+            expenses: components["schemas"]["BankCategoryTotal"][];
+            incomes: components["schemas"]["BankCategoryTotal"][];
+            trend: components["schemas"]["BankMonthFlow"][];
         };
         BankDashboard: {
             month: string;
@@ -3573,6 +3740,30 @@ export interface components {
             cover_asset_id?: string | null;
             /** @enum {string} */
             status: "draft" | "published";
+            /** @description Original release year, from the catalogue lookup. Not in the audio file. */
+            release_year?: number | null;
+            /** @description Most-voted MusicBrainz community tag. A folksonomy, not a taxonomy. */
+            genre?: string | null;
+            /**
+             * Format: uuid
+             * @description What the lookup matched. Kept so a later pass can go straight to the
+             *     right entity instead of re-running a fuzzy search, and so a wrong
+             *     match is traceable to the thing that was matched.
+             */
+            mb_recording_id?: string | null;
+            /** Format: uuid */
+            mb_release_id?: string | null;
+            /**
+             * @description `none` — never looked up. `no_match` — asked, nothing scored high
+             *     enough; an ordinary outcome, not an error. `failed` — the call itself
+             *     failed and will be retried.
+             * @enum {string}
+             */
+            lookup_status?: "none" | "pending" | "matched" | "no_match" | "failed";
+            /** @description Why a match was refused, or why the call failed. Shown to the user. */
+            lookup_note?: string | null;
+            /** Format: date-time */
+            lookup_at?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -4976,7 +5167,10 @@ export interface operations {
     downloadAssetOriginal: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Byte range, e.g. `bytes=0-1023`. Answered with `206`. */
+                Range?: string;
+            };
             path: {
                 id: components["parameters"]["AssetID"];
             };
@@ -4984,9 +5178,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The original bytes (attachment) */
+            /** @description The whole original, inline */
             200: {
                 headers: {
+                    /** @description Always `bytes` — what makes the source seekable. */
+                    "Accept-Ranges"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description The requested byte range */
+            206: {
+                headers: {
+                    /** @description e.g. `bytes 0-1023/5242880` */
+                    "Content-Range"?: string;
+                    "Accept-Ranges"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -5004,6 +5212,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
+            };
+            /** @description The requested range lies outside the object */
+            416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5787,6 +6002,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BankDashboard"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getBankReport: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM (default current month) */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The month report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankReport"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -7320,6 +7559,44 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    lookupMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        queued: number;
+                        /** @description Tracks past the 500-per-sweep cap. Never silently dropped. */
+                        skipped: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Lookups are not enabled on this deployment (`music/lookup-disabled`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     getTrack: {
         parameters: {
             query?: never;
@@ -7433,6 +7710,43 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    lookupTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {integer} */
+                        queued: 1;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Lookups are not enabled on this deployment (`music/lookup-disabled`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     publishTrack: {

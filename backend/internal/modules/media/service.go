@@ -356,6 +356,33 @@ func (s *Service) DeleteAsset(ctx context.Context, id uuid.UUID) error {
 	return s.purgeAsset(ctx, asset)
 }
 
+// OriginalContent returns the uploaded original as a SEEKABLE reader, plus what
+// http.ServeContent needs to answer a Range request.
+//
+// Separate from DownloadOriginal because the two callers want different things:
+// a cross-module consumer (the music enrichment pass) just streams the bytes,
+// while the HTTP route has to support seeking or every audio and video element
+// pointed at it is unscrubbable. The caller MUST close the reader.
+func (s *Service) OriginalContent(ctx context.Context, ownerID, id uuid.UUID) (io.ReadSeekCloser, string, string, time.Time, error) {
+	asset, err := s.owned(ctx, ownerID, id)
+	if err != nil {
+		return nil, "", "", time.Time{}, err
+	}
+	if asset.Status == StatusDeleting {
+		return nil, "", "", time.Time{}, ErrNotFound
+	}
+	if asset.Status == StatusUploading {
+		return nil, "", "", time.Time{}, ErrNotReady // the source object may be partial
+	}
+
+	filename := asset.OriginalFilename
+	if filename == "" {
+		filename = asset.ID.String()
+	}
+	return newObjectReader(ctx, s.store, asset.SourceKey, asset.SizeBytes),
+		asset.MimeType, filename, asset.CreatedAt, nil
+}
+
 // DownloadOriginal streams the byte-identical uploaded original for the owner
 // (P0.5). Returns the reader, its content type and the download filename.
 func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error) {

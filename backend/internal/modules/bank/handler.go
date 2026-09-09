@@ -135,6 +135,8 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		Name     string          `json:"name"`
 		Kind     string          `json:"kind"`
 		ParentID json.RawMessage `json:"parent_id"`
+		Icon     *string         `json:"icon"`
+		Color    *string         `json:"color"`
 	}
 	if !server.Decode(w, r, &body) {
 		return
@@ -146,6 +148,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	cat, err := h.svc.CreateCategory(r.Context(), CreateCategoryInput{
 		UserID: uid, ParentID: parent, Name: body.Name, Kind: body.Kind,
+		Icon: body.Icon, Color: body.Color,
 	})
 	if err != nil {
 		writeBankErr(w, err)
@@ -166,6 +169,8 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name     *string         `json:"name"`
 		ParentID json.RawMessage `json:"parent_id"`
+		Icon     json.RawMessage `json:"icon"`
+		Color    json.RawMessage `json:"color"`
 	}
 	if !server.Decode(w, r, &body) {
 		return
@@ -175,8 +180,17 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid parent_id")
 		return
 	}
+	// Raw, not *string: an absent key must leave the icon alone while an explicit
+	// null clears it, and *string collapses those two into the same nil.
+	icon, setIcon, ierr := parseOptString(body.Icon)
+	color, setColor, cerr := parseOptString(body.Color)
+	if ierr || cerr {
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid icon or color")
+		return
+	}
 	cat, err := h.svc.UpdateCategory(r.Context(), UpdateCategoryInput{
 		UserID: uid, ID: id, Name: body.Name, SetParent: present, ParentID: parent,
+		SetIcon: setIcon, Icon: icon, SetColor: setColor, Color: color,
 	})
 	if err != nil {
 		writeBankErr(w, err)
@@ -582,7 +596,66 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	server.JSON(w, http.StatusOK, dashboardJSON(dash))
 }
 
+// Report is the month breakdown behind the reports screen: totals, per-category
+// slices and the trailing trend.
+func (h *Handler) Report(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	month, err := monthParam(r)
+	if err != nil {
+		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid month")
+		return
+	}
+	rep, err := h.svc.Report(r.Context(), uid, month)
+	if err != nil {
+		writeBankErr(w, err)
+		return
+	}
+	server.JSON(w, http.StatusOK, reportJSON(rep))
+}
+
 // ── JSON shapes ───────────────────────────────────────────────────────
+
+func categoryTotalJSON(c CategoryTotal) map[string]any {
+	return map[string]any{
+		"category_id": c.CategoryID,
+		"name":        c.Name,
+		"kind":        c.Kind,
+		"icon":        c.Icon,
+		"color":       c.Color,
+		"total":       c.Total,
+		"tx_count":    c.TxCount,
+	}
+}
+
+func categoryTotalsJSON(in []CategoryTotal) []map[string]any {
+	out := make([]map[string]any, 0, len(in))
+	for _, c := range in {
+		out = append(out, categoryTotalJSON(c))
+	}
+	return out
+}
+
+func reportJSON(rep Report) map[string]any {
+	trend := make([]map[string]any, 0, len(rep.Trend))
+	for _, m := range rep.Trend {
+		trend = append(trend, map[string]any{
+			"month":   m.Month.Format("2006-01"),
+			"income":  m.Income,
+			"expense": m.Expense,
+		})
+	}
+	return map[string]any{
+		"month":    rep.Month.Format("2006-01"),
+		"income":   rep.Income,
+		"expense":  rep.Expense,
+		"expenses": categoryTotalsJSON(rep.Expenses),
+		"incomes":  categoryTotalsJSON(rep.Incomes),
+		"trend":    trend,
+	}
+}
 
 func accountJSON(a Account) map[string]any {
 	return map[string]any{
@@ -604,6 +677,8 @@ func categoryJSON(c Category) map[string]any {
 		"name":      c.Name,
 		"kind":      c.Kind,
 		"seed":      c.Seed,
+		"icon":      c.Icon,
+		"color":     c.Color,
 	}
 }
 
@@ -743,6 +818,23 @@ func parseOptUUID(raw json.RawMessage) (id *uuid.UUID, present bool, parseErr bo
 		return nil, true, true
 	}
 	return &u, true, false
+}
+
+// parseOptString decodes a JSON field that distinguishes three states: absent
+// (leave it), null (clear it) and a string (set it). Returns (value, present,
+// bad).
+func parseOptString(raw json.RawMessage) (*string, bool, bool) {
+	if len(raw) == 0 {
+		return nil, false, false
+	}
+	if string(raw) == "null" {
+		return nil, true, false
+	}
+	var v string
+	if err := json.Unmarshal(raw, &v); err != nil {
+		return nil, false, true
+	}
+	return &v, true, false
 }
 
 // monthParam reads ?month=YYYY-MM (default: current month).

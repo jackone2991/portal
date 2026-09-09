@@ -1,0 +1,144 @@
+- generic [ref=f2e5]:
+  - generic [ref=f2e8]:
+    - generic [ref=f2e9]:
+      - heading "Portal API 0.1.0 OAS 3.1" [level=2] [ref=f2e10]:
+        - text: Portal API
+        - generic [ref=f2e11]:
+          - generic [ref=f2e12]: 0.1.0
+          - generic [ref=f2e14]: OAS 3.1
+      - link "/openapi.yaml" [ref=f2e16] [cursor=pointer]:
+        - /url: /openapi.yaml
+    - generic [ref=f2e19]:
+      - paragraph [ref=f2e20]: Portal — self-hosted media platform API.
+      - paragraph [ref=f2e21]:
+        - text: This document is the
+        - strong [ref=f2e22]: source of truth
+        - text: for the HTTP contract. Server stubs (Go) and the TypeScript client are both generated from it.
+      - heading "Errors" [level=2] [ref=f2e23]
+      - paragraph [ref=f2e24]:
+        - text: Error responses use the
+        - strong [ref=f2e25]: RFC 7807
+        - code [ref=f2e26]: application/problem+json
+        - text: shape (
+        - code [ref=f2e27]: "#/components/schemas/Problem"
+        - text: ), and that is the only error shape on the wire. The stable
+        - code [ref=f2e28]: type
+        - text: "URI is both the i18n key and the machine-stable slug: a domain code becomes"
+        - code [ref=f2e29]: <module>/<code>
+        - text: with underscores hyphenated (
+        - code [ref=f2e30]: email_taken
+        - text: →
+        - code [ref=f2e31]: account/email-taken
+        - text: ), which is what the frontend's problem catalog keys on. Transport-level codes that add nothing to the status line (
+        - code [ref=f2e32]: unauthorized
+        - text: ","
+        - code [ref=f2e33]: forbidden
+        - text: ","
+        - code [ref=f2e34]: bad_request
+        - text: ","
+        - code [ref=f2e35]: internal
+        - text: ","
+        - code [ref=f2e36]: not_found
+        - text: ) collapse to
+        - code [ref=f2e37]: about:blank
+        - text: .
+      - blockquote [ref=f2e38]:
+        - paragraph [ref=f2e39]:
+          - strong [ref=f2e40]: "Migration status (v1):"
+          - text: the RFC 7807 retrofit per [D-7]/[D-29] is
+          - strong [ref=f2e41]: complete
+          - text: — every handler, the auth/RBAC middleware, the rate limiter and the
+          - code [ref=f2e42]: /continue
+          - text: route now answer with
+          - code [ref=f2e43]: Problem
+          - text: . The legacy
+          - code [ref=f2e44]: "{code, message}"
+          - text: body (
+          - code [ref=f2e45]: "#/components/schemas/Error"
+          - text: ) is emitted nowhere and referenced by no operation; the schema is kept
+          - code [ref=f2e46]: deprecated
+          - text: so a generated client that still names the type keeps compiling, and should be dropped at the next breaking release.
+      - paragraph [ref=f2e47]:
+        - text: Auth is
+        - strong [ref=f2e48]: local password
+        - text: (
+        - link "ADR-06" [ref=f2e49] [cursor=pointer]:
+          - /url: ../docs/adr/06-local-auth-model.md
+        - text: ); the OIDC/Authentik login +
+        - code [ref=f2e50]: /auth/callback
+        - text: flow was removed.
+  - generic [ref=f2e52]:
+    - generic [ref=f2e54]:
+      - text: Servers
+      - combobox [ref=f2e57]:
+        - option "https://api.portal.localhost/api/v1 - Local dev (via Traefik)" [selected]
+        - option "http://localhost:8080/api/v1 - Direct (no proxy)"
+    - button "Authorize" [ref=f2e59] [cursor=pointer]
+  - textbox "Filter by tag" [ref=f2e66]
+  - generic [ref=f2e69]:
+    - heading [level=3] [ref=f2e72] [cursor=pointer]:
+      - link "health" [ref=f2e73]:
+        - /url: "#/health"
+      - button "Expand operation" [ref=f2e74]
+    - heading [level=3] [ref=f2e79] [cursor=pointer]:
+      - link "auth" [ref=f2e80]:
+        - /url: "#/auth"
+      - button "Expand operation" [ref=f2e81]
+    - heading [level=3] [ref=f2e86] [cursor=pointer]:
+      - link "assets" [ref=f2e87]:
+        - /url: "#/assets"
+      - button "Expand operation" [ref=f2e88]
+    - heading [level=3] [ref=f2e93] [cursor=pointer]:
+      - link "notifications" [ref=f2e94]:
+        - /url: "#/notifications"
+      - button "Expand operation" [ref=f2e95]
+    - heading [level=3] [ref=f2e100] [cursor=pointer]:
+      - link "ops" [ref=f2e101]:
+        - /url: "#/ops"
+      - button "Expand operation" [ref=f2e102]
+    - heading [level=3] [ref=f2e107] [cursor=pointer]:
+      - link "movies" [ref=f2e108]:
+        - /url: "#/movies"
+      - button "Expand operation" [ref=f2e109]
+    - heading [level=3] [ref=f2e114] [cursor=pointer]:
+      - link "music" [ref=f2e115]:
+        - /url: "#/music"
+      - button "Expand operation" [ref=f2e116]
+    - heading [level=3] [ref=f2e121] [cursor=pointer]:
+      - link "stories" [ref=f2e122]:
+        - /url: "#/stories"
+      - button "Expand operation" [ref=f2e123]
+    - heading [level=3] [ref=f2e128] [cursor=pointer]:
+      - link "comic" [ref=f2e129]:
+        - /url: "#/comic"
+      - button "Expand operation" [ref=f2e130]
+    - heading [level=3] [ref=f2e135] [cursor=pointer]:
+      - link "comic-internal" [ref=f2e136]:
+        - /url: "#/comic-internal"
+      - button "Expand operation" [ref=f2e137]
+    - heading [level=3] [ref=f2e142] [cursor=pointer]:
+      - link "tenant" [ref=f2e143]:
+        - /url: "#/tenant"
+      - button "Expand operation" [ref=f2e144]
+    - heading [level=3] [ref=f2e149] [cursor=pointer]:
+      - link "platform" [ref=f2e150]:
+        - /url: "#/platform"
+      - button "Expand operation" [ref=f2e151]
+    - heading [level=3] [ref=f2e156] [cursor=pointer]:
+      - link "journal" [ref=f2e157]:
+        - /url: "#/journal"
+      - button "Expand operation" [ref=f2e158]
+    - heading [level=3] [ref=f2e163] [cursor=pointer]:
+      - link "bank" [ref=f2e164]:
+        - /url: "#/bank"
+      - button "Expand operation" [ref=f2e165]
+    - heading [level=3] [ref=f2e170] [cursor=pointer]:
+      - link "people" [ref=f2e171]:
+        - /url: "#/people"
+      - button "Expand operation" [ref=f2e172]
+    - heading [level=3] [ref=f2e177] [cursor=pointer]:
+      - link "stream" [ref=f2e178]:
+        - /url: "#/stream"
+      - button "Expand operation" [ref=f2e179]
+  - heading [level=4] [ref=f2e185] [cursor=pointer]:
+    - button "Schemas" [ref=f2e186]

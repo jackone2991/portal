@@ -252,16 +252,27 @@ func (h *Handler) DownloadOriginal(w http.ResponseWriter, r *http.Request) {
 		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
-	rc, ct, filename, err := h.svc.DownloadOriginal(r.Context(), uid, id)
+	rs, ct, filename, modtime, err := h.svc.OriginalContent(r.Context(), uid, id)
 	if err != nil {
 		writeMediaProblem(w, err)
 		return
 	}
-	defer rc.Close()
+	defer rs.Close()
+
 	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	// `inline`, not `attachment`. This route is also the playback source for
+	// audio (music's trackAudioURL), and marking a file the app plays as a
+	// download is the wrong statement about it. The filename is still offered so
+	// an explicit "save as" keeps it.
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%q", filename))
 	w.Header().Set("Cache-Control", "private, no-store")
-	_, _ = io.Copy(w, rc)
+
+	// ServeContent — not io.Copy — is what makes this seekable. It parses Range,
+	// answers 206 with Content-Range, advertises Accept-Ranges and handles HEAD
+	// and If-Range. Without it a browser reports the media as seekable [0,0] and
+	// refuses every scrub, which reads as a broken progress bar rather than a
+	// missing server feature.
+	http.ServeContent(w, r, filename, modtime, rs)
 }
 
 // GET /assets/{id}/variants/{variant} — PUBLIC variant proxy (WebP) (P0.1).

@@ -16,6 +16,7 @@ import { DashboardView as BankDashboardView } from "./views/bank/DashboardView";
 import { TransactionsView as BankTransactionsView } from "./views/bank/TransactionsView";
 import { AccountsView as BankAccountsView } from "./views/bank/AccountsView";
 import { BudgetsView as BankBudgetsView } from "./views/bank/BudgetsView";
+import { ReportsView as BankReportsView } from "./views/bank/ReportsView";
 import { PeopleIndexView } from "./views/people/PeopleIndexView";
 import { PersonDetailView } from "./views/people/PersonDetailView";
 import { CalendarView } from "./views/calendar/CalendarView";
@@ -51,6 +52,7 @@ export const v1: TemplateManifest = {
     bankTransactions: BankTransactionsView,
     bankAccounts: BankAccountsView,
     bankBudgets: BankBudgetsView,
+    bankReports: BankReportsView,
     peopleList: PeopleIndexView,
     peopleDetail: PersonDetailView,
     calendar: CalendarView,

@@ -181,7 +181,19 @@ func trackJSON(t Track) map[string]any {
 		"id": t.ID, "owner_id": t.OwnerID, "title": t.Title, "artist": t.Artist, "album": t.Album,
 		"description": t.Description, "audio_asset_id": uuidPtrJSON(t.AudioAssetID), "cover_asset_id": uuidPtrJSON(t.CoverAssetID),
 		"status": t.Status, "created_at": t.CreatedAt.Format(time.RFC3339), "updated_at": t.UpdatedAt.Format(time.RFC3339),
+		"release_year": t.ReleaseYear, "genre": t.Genre,
+		"mb_recording_id": uuidPtrJSON(t.MBRecordingID), "mb_release_id": uuidPtrJSON(t.MBReleaseID),
+		"lookup_status": t.LookupStatus, "lookup_note": t.LookupNote, "lookup_at": timePtrJSON(t.LookupAt),
 	}
+}
+
+// timePtrJSON keeps a nil timestamp as JSON null rather than the zero time,
+// which would read as "looked up in year 1".
+func timePtrJSON(t *time.Time) any {
+	if t == nil {
+		return nil
+	}
+	return t.Format(time.RFC3339)
 }
 
 func writeTrackList(w http.ResponseWriter, res ListResult) {

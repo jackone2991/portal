@@ -13,6 +13,7 @@ package music
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -179,4 +180,63 @@ func (h *Handler) EnrichImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server.JSON(w, http.StatusAccepted, map[string]any{"queued": queued})
+}
+
+// ── catalogue lookup (0039) ────────────────────────────────────────────────
+
+// POST /tracks/{id}/lookup — ask MusicBrainz for what the file cannot say.
+func (h *Handler) LookupTrack(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		server.NotFound(w, server.ProblemType("music", "not_found"), "track not found")
+		return
+	}
+	if err := h.svc.EnqueueLookup(r.Context(), id, uid); err != nil {
+		writeLookupErr(w, err)
+		return
+	}
+	server.JSON(w, http.StatusAccepted, map[string]any{"queued": 1})
+}
+
+// POST /tracks/imports/{id}/lookup — the same, for a whole import job.
+//
+// Reports `skipped` as well as `queued`: the batch is capped, and a sweep that
+// silently covered only the first 500 tracks would read as "it did everything".
+func (h *Handler) LookupImport(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.auth(w, r)
+	if !ok {
+		return
+	}
+	id, ok := h.importID(w, r)
+	if !ok {
+		return
+	}
+	queued, skipped, err := h.svc.EnqueueLookupForImport(r.Context(), id, uid)
+	if err != nil {
+		writeLookupErr(w, err)
+		return
+	}
+	server.JSON(w, http.StatusAccepted, map[string]any{"queued": queued, "skipped": skipped})
+}
+
+// writeLookupErr distinguishes "turned off" from every other failure.
+//
+// 503 rather than 404 or 500: the endpoint exists and the request was fine, the
+// deployment simply has not enabled outbound calls. Telling the caller exactly
+// that — with the env vars to set — is the difference between a five-second fix
+// and an afternoon reading source.
+func writeLookupErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrLookupDisabled) {
+		server.Problem(w, http.StatusServiceUnavailable,
+			server.ProblemType("music", "lookup_disabled"),
+			http.StatusText(http.StatusServiceUnavailable),
+			"Tra cứu MusicBrainz đang tắt. Bật bằng MUSICBRAINZ_ENABLED=true và "+
+				"MUSICBRAINZ_CONTACT=<email liên hệ> rồi khởi động lại.")
+		return
+	}
+	writeMusicErr(w, err)
 }

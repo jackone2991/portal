@@ -1,0 +1,85 @@
+- generic [active] [ref=f34e1]:
+  - generic [ref=f34e2]:
+    - generic [ref=f34e3]: Loading …
+    - banner [ref=f34e5]:
+      - generic [ref=f34e6]:
+        - link "Portal — Newsfeed" [ref=f34e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f34e11]: Portal
+        - generic [ref=f34e12]:
+          - generic [ref=f34e13]: Newsfeed
+          - searchbox [ref=f34e15]
+          - link "Find Friends" [ref=f34e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f34e17]:
+            - button "Friend requests" [ref=f34e19]
+            - button "Messages" [ref=f34e23]:
+              - generic [ref=f34e26]: "2"
+            - button "Notifications" [ref=f34e28]
+            - button "Guest Member" [ref=f34e32]:
+              - generic [ref=f34e33]:
+                - generic [ref=f34e34]: Guest
+                - generic [ref=f34e35]: Member
+              - generic [ref=f34e36]: G
+    - complementary [ref=f34e41]:
+      - generic [ref=f34e42]:
+        - button "Collapse Menu" [ref=f34e43]
+        - link "Newsfeed" [ref=f34e49] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f34e54] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f34e59] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f34e64] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f34e69] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f34e74]
+        - link "Music & Playlists" [ref=f34e79] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f34e84] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f34e89] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f34e94]
+        - button "Friends Birthdays" [ref=f34e99]
+        - button "Account Stats" [ref=f34e104]
+        - link "Người dùng" [ref=f34e109] [cursor=pointer]:
+          - /url: /admin/users
+        - link "Vai trò & quyền" [ref=f34e114] [cursor=pointer]:
+          - /url: /admin/roles
+        - link "Menu & Widget" [ref=f34e119] [cursor=pointer]:
+          - /url: /admin/layout
+      - generic [ref=f34e124]:
+        - generic [ref=f34e125]:
+          - generic [ref=f34e126]: Profile Completion
+          - generic [ref=f34e127]: 76%
+        - paragraph [ref=f34e130]:
+          - text: Complete
+          - link "your profile" [ref=f34e131] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f34e132]:
+      - paragraph [ref=f34e134]: Loading people…
+      - generic [ref=f34e135]:
+        - textbox "Search people..." [ref=f34e136]
+        - button "Collapse people panel" [ref=f34e137]
+      - link "People" [ref=f34e140] [cursor=pointer]:
+        - /url: /people
+    - main [ref=f34e144]:
+      - generic [ref=f34e146]:
+        - generic [ref=f34e147]:
+          - heading "Nhạc" [level=1] [ref=f34e148]
+          - generic [ref=f34e149]:
+            - button "Thư viện" [ref=f34e150]
+            - button "Của tôi" [ref=f34e151]
+        - button "Phát tất cả" [disabled] [ref=f34e153]
+        - list [ref=f34e156]:
+          - listitem [ref=f34e157]
+          - listitem [ref=f34e162]
+          - listitem [ref=f34e167]
+          - listitem [ref=f34e172]
+          - listitem [ref=f34e177]
+          - listitem [ref=f34e182]
+    - button "Go to top"
+  - alert [ref=f34e187]

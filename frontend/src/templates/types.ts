@@ -57,6 +57,7 @@ export interface TemplateManifest {
     bankTransactions: ComponentType;
     bankAccounts: ComponentType;
     bankBudgets: ComponentType;
+    bankReports: ComponentType;
     /** SPEC-08 P0.5 — people registry (contacts + birthdays). */
     peopleList: ComponentType;
     peopleDetail: ComponentType<{ id: string }>;
