@@ -163,7 +163,7 @@
       "name": "AttachPhotoPopup",
       "group": "popup",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "73780b03812abdfc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -219,7 +219,7 @@
       "name": "BirthdayCard",
       "group": "widget",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "3cb6630f64622024",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -243,7 +243,7 @@
       "name": "BulkImportModal",
       "group": "music",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "2a496dccc00be54d",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -259,7 +259,7 @@
       "name": "CalendarWidget",
       "group": "widget",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "ba26f4c749666a41",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -283,7 +283,7 @@
       "name": "ChapterMenu",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "e684d1a0bfdac7da",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -323,7 +323,7 @@
       "name": "ComicReaderView",
       "group": "comic",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "0290ebd349b56959",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -371,7 +371,7 @@
       "name": "ContinueWidget",
       "group": "widget",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "f24cff4ad34af959",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -395,7 +395,7 @@
       "name": "EntryCard",
       "group": "journal",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "a4874609e88de472",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -411,7 +411,7 @@
       "name": "FinanceWidget",
       "group": "widget",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "c953611b09fc3b3f",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -603,7 +603,7 @@
       "name": "NowPlayingBar",
       "group": "music",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "34470e45b8039fbe",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -611,7 +611,7 @@
       "name": "PagedReader",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "706dfd8ad54e7ae3",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -651,7 +651,7 @@
       "name": "PlacePickerPopup",
       "group": "popup",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "a4f629161ef8d138",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -683,7 +683,7 @@
       "name": "PostOptionsMenu",
       "group": "post",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "28634bc23eb700fd",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -715,7 +715,7 @@
       "name": "ReaderChrome",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "d6213067967e041c",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -723,7 +723,7 @@
       "name": "ReaderHelp",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "cfea95a3049eede2",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -731,7 +731,7 @@
       "name": "ReaderSettings",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "9940dcce708b337e",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -787,7 +787,7 @@
       "name": "StreamItemCard",
       "group": "stream",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "a8303d300bffcae2",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -795,7 +795,7 @@
       "name": "StripReader",
       "group": "reader",
       "srcSha": null,
-      "sourceKey": "0695ba4618ca2bcc",
+      "sourceKey": "eb81b5f2e781e0fe",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },

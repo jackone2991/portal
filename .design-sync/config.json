@@ -70,6 +70,48 @@
     },
     "TrendBars": {
       "cardMode": "column"
+    },
+    "BulkImportModal": {
+      "cardMode": "single",
+      "primaryStory": "Files"
+    },
+    "AttachPhotoPopup": {
+      "cardMode": "single",
+      "primaryStory": "Gallery"
+    },
+    "PlacePickerPopup": {
+      "cardMode": "single",
+      "primaryStory": "Picker"
+    },
+    "ComicReaderView": {
+      "cardMode": "single",
+      "primaryStory": "Reader"
+    },
+    "EntryCard": {
+      "cardMode": "column"
+    },
+    "StreamItemCard": {
+      "cardMode": "column"
+    },
+    "NowPlayingBar": {
+      "cardMode": "single",
+      "primaryStory": "Playing"
+    },
+    "ChapterMenu": {
+      "cardMode": "single",
+      "primaryStory": "Chapters"
+    },
+    "ReaderChrome": {
+      "cardMode": "single",
+      "primaryStory": "Visible"
+    },
+    "ReaderHelp": {
+      "cardMode": "single",
+      "primaryStory": "Shortcuts"
+    },
+    "ReaderSettings": {
+      "cardMode": "single",
+      "primaryStory": "Panel"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",

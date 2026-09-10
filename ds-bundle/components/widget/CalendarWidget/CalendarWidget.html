@@ -3,41 +3,61 @@
 <html><head><meta charset="utf-8">
   <link rel="stylesheet" href="../../../styles.css">
   <link rel="stylesheet" href="../../../_ds_bundle.css">
-  <style>body{margin:0;padding:24px;background:#fff}</style>
+  <style>
+    body{margin:0;padding:24px;background:#fff}
+    /* auto-fit (not auto-fill): empty tracks collapse, so a 1-2 story card
+       fills the width instead of stranding stories in a half-width left
+       column beside phantom empty columns */
+    .ds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start}
+    .ds-grid.ds-col{grid-template-columns:1fr}
+    .ds-cell{border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:0;overflow:hidden;transform:translateZ(0)}
+    .ds-cell>h4{margin:0 0 8px;font:600 12px system-ui;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+    .ds-single{transform:translateZ(0)}
+  </style>
 </head><body>
-  <div id="root"></div>
-  <template id="ds-fallback">
-    <div data-ds-fallback="" style="border:1px solid #e5e7eb;border-radius:12px;padding:28px 24px;max-width:520px;font-family:system-ui">
-      <div data-ds-eyebrow="" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af"></div>
-      <div style="font-size:20px;font-weight:600;color:#111827;margin-top:6px">CalendarWidget</div>
-      <div style="font-size:12px;color:#6b7280;margin-top:14px;line-height:1.5">Preview not yet authored. The component is fully importable — its API is in <code>CalendarWidget.d.ts</code> and usage in <code>CalendarWidget.prompt.md</code>.</div>
-    </div>
-  </template>
+  <div class="ds-grid" id="g"></div>
   <script src="../../../_vendor/react.js"></script>
   <script src="../../../_vendor/react-dom.js"></script>
   <script src="../../../_ds_bundle.js"></script>
+  <script src="../../../_preview/CalendarWidget.js"></script>
   <script>
-    var h=React.createElement, C=window.PortalUI.CalendarWidget;
-    var r=document.getElementById('root');
-    function dsFallback(){
-      r.innerHTML=document.getElementById('ds-fallback').innerHTML;
-      // Group comes from the @dsCard marker line so the hashed body stays
-      // group-free (a pure regroup must not read as a contract change).
-      var c=document.childNodes[0], m=c&&c.nodeType===8?/group="([^"]*)"/.exec(c.nodeValue):null;
-      var e=r.querySelector('[data-ds-eyebrow]'); if(e&&m)e.textContent=m[1];
+    var h=React.createElement, g=document.getElementById('g');
+    var E=[]; for (var k in (window.__dsPreview||{})) {
+      if (typeof window.__dsPreview[k]==='function' && /^[A-Z]/.test(k)) E.push(k);
     }
-    try {
-      ReactDOM.createRoot(r).render(h(window.PortalUI.DSProvider,{},h(C,{})));
-    } catch (e) { dsFallback(); }
-    // React render errors don't throw here — they leave the root empty. An
-    // intentionally-empty render (returns null) earns the fallback too, and
-    // so does a mount that's no more informative than the floor: a bare echo
-    // of the stub children (the component name floating in white space) or a
-    // visually collapsed render (invisible/headless output).
-    setTimeout(function(){
-      var t=(r.textContent||'').trim();
-      if (!r.childElementCount && !t) return dsFallback();
-      if (t === "CalendarWidget" || r.getBoundingClientRect().height < 2) dsFallback();
-    }, 350);
+    window.__dsCells=E.slice();
+    var q=null; try{q=new URLSearchParams(location.search).get('story')}catch(e){}
+    var MODE="grid";
+    window.__dsMode=MODE;
+    var PRIMARY="";
+    if(MODE==='column'){
+      g.className+=' ds-col';
+      // primaryStory renders first — it's what shows above the product's fold.
+      var cpi=PRIMARY?E.indexOf(PRIMARY):-1;
+      if(cpi>0){E.splice(cpi,1);E.unshift(PRIMARY)}
+    }
+    function mount(id,key){try{ReactDOM.createRoot(document.getElementById(id)).render(h(window.PortalUI.DSProvider,{},h(window.__dsPreview[key])))}catch(e){document.getElementById(id).textContent='⚠ '+(e&&e.message||e)}}
+    var pick=null;
+    if(q){for(var j=0;j<E.length;j++){if(E[j]===q||E[j].toLowerCase()===q.toLowerCase()){pick=E[j];break}}}
+    else if(MODE==='single'&&E.length){pick=E.indexOf(PRIMARY)>=0?PRIMARY:E[0]}
+    if(q&&!pick){g.textContent='⚠ no export named '+q}
+    else if(pick){
+      var s=document.createElement('div'); s.className='ds-single'; s.id='r0';
+      // The PRODUCT's default single render is full-bleed: a full-viewport
+      // story root (100vh / Grommet full) plus body padding guarantees a
+      // permanent 48px whitespace scrollbar in the card otherwise. Gated on
+      // !q so ?story= captures keep the padding gutter — the graded framing
+      // (and its edge-shadow room vs the storybook reference) stays
+      // byte-identical to what every existing verdict was minted on.
+      if(!q)document.body.style.padding='0';
+      g.parentNode.replaceChild(s,g); mount('r0',pick);
+    } else {
+      for(var i=0;i<E.length;i++){
+        var cell=document.createElement('section'); cell.className='ds-cell';
+        cell.innerHTML='<h4>'+E[i]+'</h4><div id="r'+i+'"></div>'; g.appendChild(cell);
+        mount('r'+i,E[i]);
+      }
+      if(E.length===0){g.textContent='⚠ no PascalCase exports in _preview/CalendarWidget.js'}
+    }
   </script>
 </body></html>

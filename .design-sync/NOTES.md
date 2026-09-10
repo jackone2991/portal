@@ -244,35 +244,57 @@ after two exclusions. 7 authored previews written this run: `CategoryChip`,
 reasoning as `SessionKeeper` / `SvgSprite`: `MusicPlayerProvider` (context only,
 no UI) and `NowPlayingSpacer` (renders an invisible `h-24` div).
 
-### Still to author — the standing offer for the next re-sync
+### Floor cards: none left (2026-09-10, second pass)
 
-18 components ship the floor card. In rough value order:
+All 18 remaining floor cards were authored in four waves — reader (6), widget (4),
+music/popup/post (5), comic/journal/stream (3). **`.design-sync/previews/` now
+covers every carded component (70 files), and the render check reports 0 fallback
+cards.** A future component arrives as a floor card and is the standing offer.
 
-- **Bank**: `ReportsView` (the donut + trend screen — the two charts under it are
-  now carded, so this is mostly composition), `BackLink`.
-- **Music**: `MusicIndexView` (the bulk-select toolbar screen — needs an
-  `useInfiniteQuery` seed: `["tracks","all"]` wants `{pages:[{tracks:[…]}],
-  pageParams:[undefined]}`, which no preview here has done yet),
-  `MusicDetailView`, `BulkImportModal`.
-- **Admin**: `AdminUsersView`, `AdminRolesView`, `AdminLayoutView` — dense
-  tables; each needs several seeded caches, so budget more per component.
-- **Popups**: `AttachPhotoPopup`, `PlacePickerPopup`, `PostOptionsMenu` (each
-  wants the `transform` + `position:relative` containment and probably
-  `cfg.overrides.<Name> = {cardMode:"single"}`).
+Note the earlier version of this section listed the wrong set: it was derived from
+"has no authored preview", but a component with no preview still gets ONE render
+attempt with `.d.ts` crash-prevention props, and most of them render fine that
+way. Only the ones whose root comes up EMPTY fall back to the typographic card —
+`fallbackCard: true` in `.render-check.json` is the authoritative list.
 
-### `NowPlayingBar` — deliberately NOT carded, and why
+### Preview techniques added this pass (reuse these)
 
-Every way to give the player a `current` track goes through `playQueue` /
-`playTrack` / `jumpTo`, and all three set `playing = true`. The preview has no
-API origin, so `audio.play()` rejects and the provider sets
-`error = "Playback was blocked…"` — the bar then renders a red error banner, and
-a card that teaches "the player shows an error" is worse than a floor card.
-`AudioPlayer` (plain props) already cards the same control chrome, so the loss is
-small. To fix properly the provider would need a seed path that sets the queue
-WITHOUT starting playback (e.g. an exported `primeQueue(tracks, index)` used only
-by previews) — worth doing if the bar ever needs its own card.
+- **Seed the cache, don't fight the component.** Every widget that was blank
+  (`BirthdayCard`, `CalendarWidget`, `ContinueWidget`, `FinanceWidget`,
+  `MusicWidget`) returns `null` on empty/failed data. `DSQuerySeed` with the real
+  query key is the whole fix. `CalendarWidget` needs TWO caches — `["time-config"]`
+  as well, because the app never trusts the browser clock and renders nothing
+  until it knows the server instant.
+- **Click into internal state.** `PostOptionsMenu` (menu open), `AttachPhotoPopup`
+  (gallery pane) and `BulkImportModal` (zip mode) all hide their interesting half
+  behind internal state with no prop. The previews click the real trigger on mount
+  via a ref — driving the component through its own DOM, never its internals.
+  Without this, `AttachPhotoPopup`'s two cells were byte-identical.
+- **Stand-in images for anything behind `variantURL()`.** `PagedReader`,
+  `StripReader` and `ComicReaderView` render comic pages from the media API, which
+  a preview cannot reach; unpatched, every page hits the component's own
+  "⚠ Trang không tải được" branch. The previews intercept `img` src at the DOM
+  level and substitute a drawn SVG page. **Derive it from the asset id in the URL,
+  not a counter** — with identical pages an RTL spread is indistinguishable from
+  an LTR one and the two cells grade as identical.
+- **A clipping stage for anything that hides by translating.** `ReaderChrome`'s
+  immersive cell showed both bars half-slid until the stage got `overflow:hidden`;
+  it read as a layout bug rather than a state.
+
+### `NowPlayingBar` — now carded (supersedes the note below)
+
+It IS possible, and the earlier decision to skip it was wrong. Two separate error
+paths have to be neutralised, and missing the second cost a capture round:
+1. `HTMLMediaElement.play()` must resolve — otherwise the rejected promise sets
+   "Playback was blocked".
+2. the `<audio>` src must be swapped for a tiny silent WAV data-URI — a src that
+   404s fires the element's `error` event, a DIFFERENT branch, which paints
+   "This track could not be played."
+With both patched the bar renders normally. A `primeQueue(tracks, index)` action
+on the provider would still be the clean fix and would let both patches go.
 
 ### Harness facts learned this run (save the next run the debugging)
+
 
 - **The capture harness runs a fixed clock at 2024-05-15.** Any preview calling
   `new Date()` renders that date, and any component comparing against "today"
@@ -296,3 +318,17 @@ by previews) — worth doing if the bar ever needs its own card.
   components all carry `[key: string]: unknown` unless hand-written into
   `cfg.dtsPropsFor`. The structural fix (emit real declarations) is still the
   right one and still not done.
+
+- **`[GRID_OVERFLOW]` always arrives one run late, and in two flavours.** After the
+  second wave of new cards it fired on seven components at once. `wide` wants
+  `{cardMode:"column"}` (EntryCard, StreamItemCard); `escape (fixed/portal)` wants
+  `{cardMode:"single", primaryStory:"X"}` (NowPlayingBar, ChapterMenu, ReaderChrome,
+  ReaderHelp, ReaderSettings). Batch them into one targeted rebuild as the warn says.
+- **Git Bash `tr -d '
+'` leaves the CR.** A base64 blob piped from a file into a
+  preview string carried a stray `` and esbuild reported "Unterminated string
+  literal" pointing at a 1100-char line. Strip `` too.
+- **The capture browser HAS network.** `PlacePickerPopup` renders real
+  OpenStreetMap tiles. That makes its two cards excellent AND makes them the one
+  place in this sync whose content depends on an outside service — if OSM is
+  unreachable or rate-limits, those cards degrade to chrome over blank tiles.

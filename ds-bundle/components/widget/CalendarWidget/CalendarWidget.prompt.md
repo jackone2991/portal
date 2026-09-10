@@ -6,3 +6,20 @@ years in place — prev/next month (‹ ›) and prev/next year (« ») — inst
 navigating away. Each day shows its solar + lunar date; days with a journal
 entry get a dot. A footer link still opens the full /calendar page. Lunar dates
 are computed for Vietnam (UTC+7) via lib/lunar, matching that page.
+
+## Examples
+
+### WithEntries
+
+```jsx
+() => frame({ items: entries, next_cursor: null }, <CalendarWidget />);
+
+// A month nobody wrote in: the grid still renders, just undotted. That is an
+// ordinary state for a new journal, not an empty-data failure.
+```
+
+### EmptyMonth
+
+```jsx
+() => frame({ items: [], next_cursor: null }, <CalendarWidget />)
+```

@@ -335,7 +335,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 32888,
+    "pngBytes": 32885,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -510,7 +510,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13649,
+    "pngBytes": 13212,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -519,13 +519,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 560,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "comic\n      ComicReaderView\n      Preview not yet authored. The component is fully importable — its API is in ComicReaderView.d.ts and usage in ComicReaderView.prompt.md."
+      "‹Vạn Cổ Thần ĐếChương 1/6↑≡↓?⚙01 / 05Đang tải chương sau…Về trang truyện"
     ]
   },
   {
@@ -947,7 +947,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 67294,
+    "pngBytes": 67290,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1075,10 +1075,10 @@
     "name": "EntryCard",
     "group": "journal",
     "rel": "components/journal/EntryCard/EntryCard.html",
-    "errs": 1,
+    "errs": 0,
     "caught": 0,
-    "firstErr": "TypeError: Cannot read properties of undefined (reading 'updated_at')",
-    "pngBytes": 12029,
+    "firstErr": null,
+    "pngBytes": 58844,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1087,13 +1087,15 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 349,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "journal\n      EntryCard\n      Preview not yet authored. The component is fully importable — its API is in EntryCard.d.ts and usage in EntryCard.prompt.md."
+      "NLNguyễn LâmSep 9, 2026, 5:30 AM · editedHọp review kiến trúc backend.Chốt: tách module bank khỏi journal, event đi qua Asynq chứ không JOIN chéo bảng.EditDelete",
+      "NLNguyễn LâmSep 9, 2026, 5:30 AMgoodSáng chạy 5km ở công viên Thống Nhất. Trời mát, chạy thấy nhẹ hẳn so với tuần trước.EditDelete",
+      "NLNguyễn LâmSep 9, 2026, 5:30 AMgreatCuối cùng cũng sửa xong lỗi seek của trình phát nhạc.Nguyên nhân không nằm ở front-end: route /assets/{id}/original trả về bằng io.Copy, nên không có Accept-Ranges. Trình duyệt báo seekable = [0,0] và im lặng bỏ qua mọi cú tua.Bài học: thanh tiến trình vẫn chạy không có nghĩa là tua được.EditDelete"
     ]
   },
   {
@@ -1178,7 +1180,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 14731,
+    "pngBytes": 14863,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1330,7 +1332,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 12955,
+    "pngBytes": 23516,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1339,13 +1341,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 560,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "music\n      BulkImportModal\n      Preview not yet authored. The component is fully importable — its API is in BulkImportModal.d.ts and usage in BulkImportModal.prompt.md."
+      "Nhập nhiều bài hátTên bài lấy từ tên tệp (“01 - Nghệ sĩ - Tên bài.mp3”). Riêng cách tải .zip còn đọc được thẻ nhạc trong tệp nên lấy đúng cả nghệ sĩ và album. Sửa lại sau ở từng bài.Chọn nhiều tệpTải tệp .zipChọn tệp…Chưa chọn tệp nào. Có thể chọn nhiều tệp cùng lúc.Đóng"
     ]
   },
   {
@@ -1380,7 +1382,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13532,
+    "pngBytes": 13586,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1405,7 +1407,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13251,
+    "pngBytes": 14112,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1414,13 +1416,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 220,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "music\n      NowPlayingBar\n      Preview not yet authored. The component is fully importable — its API is in NowPlayingBar.d.ts and usage in NowPlayingBar.prompt.md."
+      "Ông Bà Anh — Lê Thiện Hiếu0:00 / 0:00"
     ]
   },
   {
@@ -1631,7 +1633,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13473,
+    "pngBytes": 23337,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1640,13 +1642,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 560,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "popup\n      AttachPhotoPopup\n      Preview not yet authored. The component is fully importable — its API is in AttachPhotoPopup.d.ts and usage in AttachPhotoPopup.prompt.md."
+      "Choose from My PhotosBackConfirm Photo"
     ]
   },
   {
@@ -1706,7 +1708,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13015,
+    "pngBytes": 355015,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1715,13 +1717,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 620,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "popup\n      PlacePickerPopup\n      Preview not yet authored. The component is fully importable — its API is in PlacePickerPopup.d.ts and usage in PlacePickerPopup.prompt.md."
+      "Add Location+−© OpenStreetMap contributorsTìm ở ô trên, hoặc bấm thẳng lên bản đồ để thả ghim. Kéo để di chuyển.Chưa chọn địa điểmCancelAdd Location"
     ]
   },
   {
@@ -1778,10 +1780,10 @@
     "name": "PostOptionsMenu",
     "group": "post",
     "rel": "components/post/PostOptionsMenu/PostOptionsMenu.html",
-    "errs": 1,
+    "errs": 0,
     "caught": 0,
-    "firstErr": "TypeError: Cannot read properties of undefined (reading 'length')",
-    "pngBytes": 13185,
+    "firstErr": null,
+    "pngBytes": 16341,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1790,13 +1792,14 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 210,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "post\n      PostOptionsMenu\n      Preview not yet authored. The component is fully importable — its API is in PostOptionsMenu.d.ts and usage in PostOptionsMenu.prompt.md."
+      "Sao chép liên kếtBáo cáo bài viết",
+      "Sửa bàiGhim lên đầuSao chép liên kếtXoá bài"
     ]
   },
   {
@@ -1884,7 +1887,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 12854,
+    "pngBytes": 17854,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1893,23 +1896,23 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 520,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      ChapterMenu\n      Preview not yet authored. The component is fully importable — its API is in ChapterMenu.d.ts and usage in ChapterMenu.prompt.md."
+      "Chương (14)Đóng1Chương 4122Chương 4113Chương 4104Chương 4095Chương 408đang đọc6Chương 4077Chương 4068Chương 4059Chương 40410Chương 40311Chương 40212Chương 40113Chương 40014Chương 399"
     ]
   },
   {
     "name": "PagedReader",
     "group": "reader",
     "rel": "components/reader/PagedReader/PagedReader.html",
-    "errs": 1,
+    "errs": 0,
     "caught": 0,
-    "firstErr": "TypeError: Cannot read properties of undefined (reading 'undefined')",
-    "pngBytes": 12889,
+    "firstErr": null,
+    "pngBytes": 20949,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1918,13 +1921,16 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 520,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      PagedReader\n      Preview not yet authored. The component is fully importable — its API is in PagedReader.d.ts and usage in PagedReader.prompt.md."
+      "",
+      "",
+      "",
+      ""
     ]
   },
   {
@@ -1934,7 +1940,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 12728,
+    "pngBytes": 9280,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1943,13 +1949,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 300,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      ReaderChrome\n      Preview not yet authored. The component is fully importable — its API is in ReaderChrome.d.ts and usage in ReaderChrome.prompt.md."
+      "‹Vạn Cổ Thần ĐếChương 408↑≡↓?⚙12 / 34"
     ]
   },
   {
@@ -1959,7 +1965,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 12003,
+    "pngBytes": 24041,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1968,13 +1974,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 420,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      ReaderHelp\n      Preview not yet authored. The component is fully importable — its API is in ReaderHelp.d.ts and usage in ReaderHelp.prompt.md."
+      "Phím tắtĐóng← / →Lật trang (theo hướng đọc)SpaceTrang sau↑ / ↓Cuộn (chế độ cuộn dọc)+ / − / 0Phóng to / thu nhỏ / đặt lạiChạm‑đúp · cuộn chuộtPhóng to tại điểm[ / ]Chương trước / sauFẨn/hiện thanh điều khiểnSCài đặtCDanh sách chương?Trợ giúp này"
     ]
   },
   {
@@ -1984,7 +1990,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13195,
+    "pngBytes": 23313,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1993,23 +1999,23 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 460,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      ReaderSettings\n      Preview not yet authored. The component is fully importable — its API is in ReaderSettings.d.ts and usage in ReaderSettings.prompt.md."
+      "Cài đặt đọcXongChế độCuộn dọcTrang đơnTrang đôiHướng đọcTự độngTrái→PhảiPhải→TráiKhít trangVừa mànVừa ngangĐộ sángChất lượng ảnhTiết kiệmChuẩnCao"
     ]
   },
   {
     "name": "StripReader",
     "group": "reader",
     "rel": "components/reader/StripReader/StripReader.html",
-    "errs": 1,
+    "errs": 0,
     "caught": 0,
-    "firstErr": "TypeError: Cannot read properties of undefined (reading 'forEach')",
-    "pngBytes": 12576,
+    "firstErr": null,
+    "pngBytes": 14978,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2018,13 +2024,13 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 560,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "reader\n      StripReader\n      Preview not yet authored. The component is fully importable — its API is in StripReader.d.ts and usage in StripReader.prompt.md."
+      "Đang tải chương sau…Về trang truyện"
     ]
   },
   {
@@ -2131,10 +2137,10 @@
     "name": "StreamItemCard",
     "group": "stream",
     "rel": "components/stream/StreamItemCard/StreamItemCard.html",
-    "errs": 1,
+    "errs": 0,
     "caught": 0,
-    "firstErr": "TypeError: Cannot read properties of undefined (reading 'occurred_at')",
-    "pngBytes": 13295,
+    "firstErr": null,
+    "pngBytes": 74712,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2143,13 +2149,16 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 317,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "stream\n      StreamItemCard\n      Preview not yet authored. The component is fully importable — its API is in StreamItemCard.d.ts and usage in StreamItemCard.prompt.md."
+      "NLNguyễn Lâm 9 Sept · goodSáng chạy 5km ở công viên Thống Nhất. Trời mát, chạy thấy nhẹ hẳn so với tuần trước.SaveCancel0Be the first to like this00",
+      "NLNguyễn Lâm 9 Sept · goodSáng chạy 5km ở công viên Thống Nhất. Trời mát, chạy thấy nhẹ hẳn so với tuần trước.0Be the first to like this00",
+      "NLNguyễn Lâm 9 Sept · goodSáng chạy 5km ở công viên Thống Nhất. Trời mát, chạy thấy nhẹ hẳn so với tuần trước.Saving…Cancel0Be the first to like this00",
+      "Đã đăng “Ông Bà Anh” — Lê Thiện Hiếu8 Sept"
     ]
   },
   {
@@ -2234,7 +2243,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 12783,
+    "pngBytes": 130360,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2243,13 +2252,15 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 273,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "widget\n      BirthdayCard\n      Preview not yet authored. The component is fully importable — its API is in BirthdayCard.d.ts and usage in BirthdayCard.prompt.md."
+      "NTIn 4 days —Nguyễn Thu Hà's Birthday! (turning 29)A heads-up so you don't forget.",
+      "TMToday isTrần Minh Khôi's Birthday! (turning 34)Reach out and make their day.",
+      "LBTomorrow isLê Bảo Ngọc's Birthday!Reach out and make their day."
     ]
   },
   {
@@ -2259,7 +2270,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 25569,
+    "pngBytes": 22894,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2268,13 +2279,14 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 310,
+    "fallbackCard": false,
+    "maxHeight": 334,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "widget\n      CalendarWidget\n      Preview not yet authored. The component is fully importable — its API is in CalendarWidget.d.ts and usage in CalendarWidget.prompt.md.\n    \n  «‹Tháng 9, 2026›»T2T3T4T5T6T7CN1202213224235246257268279281029111/812213314415516617718819920102111221223132414251526162717281829193020Mở Lịch Âm Dương →"
+      "«‹Tháng 9, 2026›»T2T3T4T5T6T7CN1202213224235246257268279281029111/812213314415516617718819920102111221223132414251526162717281829193020Mở Lịch Âm Dương →",
+      "«‹Tháng 9, 2026›»T2T3T4T5T6T7CN1202213224235246257268279281029111/812213314415516617718819920102111221223132414251526162717281829193020Mở Lịch Âm Dương →"
     ]
   },
   {
@@ -2284,7 +2296,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13553,
+    "pngBytes": 17027,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2293,13 +2305,14 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 166,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "widget\n      ContinueWidget\n      Preview not yet authored. The component is fully importable — its API is in ContinueWidget.d.ts and usage in ContinueWidget.prompt.md."
+      "ContinueVạn Cổ Thần Đế — Chương 40818%",
+      "ContinueDune: Part Two62%Vạn Cổ Thần Đế — Chương 40818%Đắc Nhân Tâm91%"
     ]
   },
   {
@@ -2309,7 +2322,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 13059,
+    "pngBytes": 18889,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -2318,13 +2331,15 @@
     "collapsed": false,
     "hasPlaceholder": false,
     "nPlaceholder": 0,
-    "fallbackCard": true,
-    "maxHeight": 162,
+    "fallbackCard": false,
+    "maxHeight": 126,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "widget\n      FinanceWidget\n      Preview not yet authored. The component is fully importable — its API is in FinanceWidget.d.ts and usage in FinanceWidget.prompt.md."
+      "This monthLedgerIncome0Expense0",
+      "This monthLedgerIncome24.000.000Expense25.800.000",
+      "This monthLedgerIncome31.000.000Expense11.030.000"
     ]
   },
   {
