@@ -1,12 +1,87 @@
 [
   {
+    "name": "AdminLayoutView",
+    "group": "admin",
+    "rel": "components/admin/AdminLayoutView/AdminLayoutView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 8130,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 164,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Không tải được cấu hình giao diện.Thử lại"
+    ]
+  },
+  {
+    "name": "AdminRolesView",
+    "group": "admin",
+    "rel": "components/admin/AdminRolesView/AdminRolesView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 8027,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 164,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Không tải được ma trận quyền.Thử lại"
+    ]
+  },
+  {
+    "name": "AdminUsersView",
+    "group": "admin",
+    "rel": "components/admin/AdminUsersView/AdminUsersView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 19228,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 290,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Người dùngTài khoản mới đăng ký phải được phê duyệt mới đăng nhập được.Chờ duyệtĐã duyệtTừ chốiTất cảKhông tải được danh sách người dùng.Thử lại"
+    ]
+  },
+  {
     "name": "AuthForm",
     "group": "auth",
     "rel": "components/auth/AuthForm/AuthForm.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 51786,
+    "pngBytes": 51778,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -107,7 +182,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 14839,
+    "pngBytes": 13772,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -117,12 +192,37 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 428,
+    "maxHeight": 229,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Accountscashcheckingsavingscredit cardewalletotherOpening balanceAdd accountNo accounts yet — add your first above."
+      "← Sổ thu chiVí của tôi+ Thêm víChưa có ví nào — bấm “Thêm ví” để tạo ví đầu tiên."
+    ]
+  },
+  {
+    "name": "BackLink",
+    "group": "bank",
+    "rel": "components/bank/BackLink/BackLink.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 5847,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 20,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "← Sổ thu chi"
     ]
   },
   {
@@ -132,7 +232,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 8382,
+    "pngBytes": 11105,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -142,12 +242,39 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 122,
+    "maxHeight": 207,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "BudgetsSet an amount and Save. Save with 0 to remove a budget."
+      "← Sổ thu chiNgân sách‹Tháng 9, 2026›Danh mục khác"
+    ]
+  },
+  {
+    "name": "CategoryChip",
+    "group": "bank",
+    "rel": "components/bank/CategoryChip/CategoryChip.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 30280,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 198,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Không icon → chip chữ cáiGcó màuQkhông màuCmặc định",
+      "Kích thước☕28☕40 (mặc định)☕56",
+      "Có emoji + màu🍜Ăn uống🏍️Đi lại🏠Nhà cửa💊Sức khoẻ💰Lương"
     ]
   },
   {
@@ -157,7 +284,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 17048,
+    "pngBytes": 38157,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -167,12 +294,88 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 408,
+    "maxHeight": 868,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Ledger+ AddNo accounts yet — add one to get started.Income0Expense0RecentAllNo transactions yet."
+      "Sổ thu chiBáo cáoVí+ Ghi chép‹Tháng 9, 2026›Tổng số dư0đThu0Chi0Còn lại0Chưa có ví nào — tạo ví đầu tiên để bắt đầu ghi chép.Chi tiêu theo danh mụcXem tất cảChưa có dữ liệuTháng này chưa có khoản chi nào.Giao dịch gần đâyXem tất cảChưa có giao dịch nào — bấm “Ghi chép” để thêm khoản đầu tiên."
+    ]
+  },
+  {
+    "name": "MonthPager",
+    "group": "bank",
+    "rel": "components/bank/MonthPager/MonthPager.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 12134,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 46,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "‹Tháng 3, 2026Hôm nay›",
+      "‹Tháng 9, 2026›"
+    ]
+  },
+  {
+    "name": "QuickAddModal",
+    "group": "bank",
+    "rel": "components/bank/QuickAddModal/QuickAddModal.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 32888,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 780,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Chi tiềnThu tiềnChuyểnSố tiềnđ1234567890000⌫Danh mục☕Cà phê🏍️Đi lại🏠Nhà cửaVíVietcombankTiền mặtMomoNgàyGhi chúLưu giao dịch"
+    ]
+  },
+  {
+    "name": "ReportsView",
+    "group": "bank",
+    "rel": "components/bank/ReportsView/ReportsView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 16347,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 448,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "← Sổ thu chiBáo cáo‹Tháng 9, 2026›Thu0Chi0Còn lại0Chi tiêuThu nhậpTháng này chưa có khoản chi nào."
     ]
   },
   {
@@ -182,7 +385,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 19897,
+    "pngBytes": 16956,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -192,12 +395,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 576,
+    "maxHeight": 346,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "TransactionsExpenseIncomeNo accountNo categoryAdd transactionCreate an account first.All accountsNo transactions."
+      "← Sổ thu chiGiao dịch+ Ghi chép‹Tháng 9, 2026›Tất cả víTất cả danh mụcKhông có giao dịch nào trong tháng này."
     ]
   },
   {
@@ -232,7 +435,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 32662,
+    "pngBytes": 31554,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -242,12 +445,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 751,
+    "maxHeight": 646,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Tháng 8, 2026Âm lịch · năm Bính Ngọ‹Hôm nay›T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Chọn một ngày để xem âm lịch và thêm ghi chú."
+      "Tháng 9, 2026Âm lịch · năm Bính Ngọ‹Hôm nay›T2T3T4T5T6T7CN1202213224235246257268279281029111/812213314415516617718819920102111221223132414251526162717281829193020Chọn một ngày để xem âm lịch và thêm ghi chú."
     ]
   },
   {
@@ -530,13 +733,13 @@
     ]
   },
   {
-    "name": "Composer",
+    "name": "CategoryDonut",
     "group": "general",
-    "rel": "components/general/Composer/Composer.html",
+    "rel": "components/general/CategoryDonut/CategoryDonut.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 58873,
+    "pngBytes": 32076,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -546,15 +749,42 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 314,
+    "maxHeight": 210,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "StatusMultimediaBlog PostMVVừa đọc xong chương mới của Vạn Cổ Thần Đế — nhịp truyện nhanh hơn hẳn arc trước.Post StatusPreview",
-      "StatusMultimediaBlog PostMVPost StatusPreview",
-      "StatusMultimediaBlog PostMVĐang đăng ghi chú này…Posting…Preview",
-      "StatusMultimediaBlog PostKhông đăng được — thử lại sau.MVGhi chú không gửi được.Post StatusPreview"
+      "Chưa có dữ liệu",
+      "Chi tháng 811.030.000",
+      "Tổng chi4.645.000"
+    ]
+  },
+  {
+    "name": "Composer",
+    "group": "general",
+    "rel": "components/general/Composer/Composer.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 51223,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 359,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "StatusMVVừa đọc xong chương mới của Vạn Cổ Thần Đế — nhịp truyện nhanh hơn hẳn arc trước.PreviewPost Status",
+      "StatusMVPreviewPost Status",
+      "StatusMVĐang đăng ghi chú này…PreviewPosting…",
+      "StatusKhông đăng được — thử lại sau.MVGhi chú không gửi được.PreviewPost Status"
     ]
   },
   {
@@ -564,7 +794,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 41633,
+    "pngBytes": 17960,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -579,7 +809,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "4Friend RequestsSettingsFind FriendsTRTamara RomanoffMutual Friend: Sarah HetfieldTSTony Stevens4 Friends in CommonGGGreen Goo8 Friends in CommonMJYou and Mary Jane Stark just became friends. Write on her wall.Check all your Events"
+      "Friend RequestsSettingsNo new friend requestsManage all your people"
     ]
   },
   {
@@ -717,7 +947,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 70344,
+    "pngBytes": 67294,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -727,7 +957,7 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 399,
+    "maxHeight": 388,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
@@ -737,13 +967,68 @@
     ]
   },
   {
+    "name": "TransactionRow",
+    "group": "general",
+    "rel": "components/general/TransactionRow/TransactionRow.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 51545,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 172,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "🎬Giải tríMomo · Xem lại khoản này-85.000",
+      "🍜Ăn uốngTiền mặt · Bún bò sáng-85.000☕Cà phêMomo-45.000🏠Nhà cửaVietcombank · Tiền điện tháng 8-1.200.000",
+      "💰LươngVietcombank · Lương tháng 8+24.000.000CChưa phân loạiTiền mặt-320.000",
+      "🔄Chuyển khoảnVietcombank · Rút về ví-5.000.000🔄Chuyển khoảnVietcombank · Phí chuyển-11.000"
+    ]
+  },
+  {
+    "name": "TrendBars",
+    "group": "general",
+    "rel": "components/general/TrendBars/TrendBars.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 15632,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 174,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "T6T7T8",
+      "T3T4T5T6T7T8",
+      "T6T7T8"
+    ]
+  },
+  {
     "name": "TopMenu",
     "group": "headers",
     "rel": "components/headers/TopMenu/TopMenu.html",
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 18401,
+    "pngBytes": 17980,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -758,7 +1043,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "PortalNewsfeedFind Friends42GuestMemberG"
+      "PortalNewsfeedFind Friends2GuestMemberG"
     ]
   },
   {
@@ -768,7 +1053,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 41425,
+    "pngBytes": 18699,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -778,12 +1063,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 610,
+    "maxHeight": 351,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "Thời tiếtBật định vị để xem thời tiết«‹Tháng 8, 2026›»T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Mở Lịch Âm Dương →DiscoverNothing published yet — browse the library.StatusMultimediaBlog PostYPost StatusPreviewCouldn't load your stream. RetryPeopleNo people yet — add someone to your registry.Recent activityYou're all caught up."
+      "StatusYPreviewPost StatusCouldn't load your stream. Retry"
     ]
   },
   {
@@ -843,7 +1128,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 86768,
+    "pngBytes": 61289,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -858,7 +1143,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "#hellopreloader{display:none !important}\n.mb-wrap{position:relative;width:850px;height:640px;overflow:hidden}\n.mb-wrap header{position:absolute !important}\n.mb-wrap aside{display:flex !important;position:absolute !important;height:568px !important}\n.mb-wrap main{padding-left:var(--tpl-sidebar-w) !important;padding-right:var(--tpl-rightbar-w) !important;min-height:640px}\nPortalNewsfeedFind Friends42GuestMemberGCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!Close FriendsSettingsCSCarol SummersOnlineMBMathilda BrinkerAt work!MMMichael MaximoffAwayRHRachel HowlettOfflineNKNina KravizOnlineMy FamilySettingsSHSarah HetfieldOnlineUncategorizedSettingsBPBruce PetersonOnlineCGChris GreysonAwayNGNicholas GrisomInvisibleJSJames SpiegelAwayDJDiana JonesOnlineOlympus ChatNewsfeedLatest from people you followCarol Summers2 hours agoJust uploaded a new travel vlog — transcoding to HLS now. Playback in a minute!Nina Kraviz added 3 tracks to a playlist"
+      "#hellopreloader{display:none !important}\n.mb-wrap{position:relative;width:850px;height:640px;overflow:hidden}\n.mb-wrap header{position:absolute !important}\n.mb-wrap aside{display:flex !important;position:absolute !important;height:568px !important}\n.mb-wrap main{padding-left:var(--tpl-sidebar-w) !important;padding-right:var(--tpl-rightbar-w) !important;min-height:640px}\nPortalNewsfeedFind Friends2GuestMemberGCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsProfile Completion76%Complete your profile so people can know more about you!Couldn't load your people.PeopleNewsfeedLatest from people you followCarol Summers2 hours agoJust uploaded a new travel vlog — transcoding to HLS now. Playback in a minute!Nina Kraviz added 3 tracks to a playlist"
     ]
   },
   {
@@ -893,7 +1178,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 14823,
+    "pngBytes": 14731,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -943,7 +1228,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 18541,
+    "pngBytes": 18137,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -958,7 +1243,7 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      ".sc-wrap header{position:static !important}PortalNewsfeedFind Friends42GuestMemberG"
+      ".sc-wrap header{position:static !important}PortalNewsfeedFind Friends2GuestMemberG"
     ]
   },
   {
@@ -968,7 +1253,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 38484,
+    "pngBytes": 37977,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -984,7 +1269,7 @@
     "gridOverflow": null,
     "texts": [
       ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}",
-      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsManage WidgetsProfile Completion76%Complete your profile so people can know more about you!"
+      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCollapse MenuNewsfeedUpload VideoLedgerPeopleCommicFriend GroupsMusic & PlaylistsWeather AppCalendar and EventsCommunity BadgesFriends BirthdaysAccount StatsProfile Completion76%Complete your profile so people can know more about you!"
     ]
   },
   {
@@ -994,7 +1279,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 64423,
+    "pngBytes": 14341,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1009,8 +1294,8 @@
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nClose FriendsSettingsCSCarol SummersOnlineMBMathilda BrinkerAt work!MMMichael MaximoffAwayRHRachel HowlettOfflineNKNina KravizOnlineMy FamilySettingsSHSarah HetfieldOnlineUncategorizedSettingsBPBruce PetersonOnlineCGChris GreysonAwayNGNicholas GrisomInvisibleJSJames SpiegelAwayDJDiana JonesOnlineOlympus Chat",
-      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCSMBMMRHNKSHBPCGNGJSDJ"
+      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}\nCouldn't load your people.People",
+      ".sb-panel aside{display:flex !important;position:static !important;height:600px !important}\n.sb-rail aside{width:var(--tpl-rail-w) !important}"
     ]
   },
   {
@@ -1036,6 +1321,106 @@
     "gridOverflow": null,
     "texts": [
       "The Past Starts Slow... — System of a Revenge0:00 / 3:20"
+    ]
+  },
+  {
+    "name": "BulkImportModal",
+    "group": "music",
+    "rel": "components/music/BulkImportModal/BulkImportModal.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 12955,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "music\n      BulkImportModal\n      Preview not yet authored. The component is fully importable — its API is in BulkImportModal.d.ts and usage in BulkImportModal.prompt.md."
+    ]
+  },
+  {
+    "name": "MusicDetailView",
+    "group": "music",
+    "rel": "components/music/MusicDetailView/MusicDetailView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 9162,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 164,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Không tìm thấy bài hát này.Thử lạiVề thư viện"
+    ]
+  },
+  {
+    "name": "MusicIndexView",
+    "group": "music",
+    "rel": "components/music/MusicIndexView/MusicIndexView.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13532,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 501,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "NhạcThư việnCủa tôiPhát tất cả"
+    ]
+  },
+  {
+    "name": "NowPlayingBar",
+    "group": "music",
+    "rel": "components/music/NowPlayingBar/NowPlayingBar.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13251,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "music\n      NowPlayingBar\n      Preview not yet authored. The component is fully importable — its API is in NowPlayingBar.d.ts and usage in NowPlayingBar.prompt.md."
     ]
   },
   {
@@ -1170,7 +1555,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 9086,
+    "pngBytes": 17678,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1180,12 +1565,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": false,
-    "maxHeight": 128,
+    "maxHeight": 144,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "People+ Add personNo people yet — add family and friends to track birthdays."
+      "People+ Add personEveryoneClose FriendsMy FamilyUncategorizedCó thể bạn biếtLời mờiNo people yet — add family and friends to track birthdays."
     ]
   },
   {
@@ -1221,7 +1606,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 27486,
+    "pngBytes": 27484,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1237,6 +1622,31 @@
     "gridOverflow": null,
     "texts": [
       "Add BookTitleAuthorCategoryComicNovelMangaLight NovelShort StoryDescriptionUpload a cover imageCancelAdd Book"
+    ]
+  },
+  {
+    "name": "AttachPhotoPopup",
+    "group": "popup",
+    "rel": "components/popup/AttachPhotoPopup/AttachPhotoPopup.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13473,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "popup\n      AttachPhotoPopup\n      Preview not yet authored. The component is fully importable — its API is in AttachPhotoPopup.d.ts and usage in AttachPhotoPopup.prompt.md."
     ]
   },
   {
@@ -1290,6 +1700,31 @@
     ]
   },
   {
+    "name": "PlacePickerPopup",
+    "group": "popup",
+    "rel": "components/popup/PlacePickerPopup/PlacePickerPopup.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 13015,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "popup\n      PlacePickerPopup\n      Preview not yet authored. The component is fully importable — its API is in PlacePickerPopup.d.ts and usage in PlacePickerPopup.prompt.md."
+    ]
+  },
+  {
     "name": "UpdateHeaderPhoto",
     "group": "popup",
     "rel": "components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.html",
@@ -1321,7 +1756,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 20601,
+    "pngBytes": 19149,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1337,6 +1772,31 @@
     "gridOverflow": null,
     "texts": [
       "Marina ValentineThe FAB column floats half-outside this card's right edge — award, like, comment, and share, with the like disc shown in its active accent state."
+    ]
+  },
+  {
+    "name": "PostOptionsMenu",
+    "group": "post",
+    "rel": "components/post/PostOptionsMenu/PostOptionsMenu.html",
+    "errs": 1,
+    "caught": 0,
+    "firstErr": "TypeError: Cannot read properties of undefined (reading 'length')",
+    "pngBytes": 13185,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": true,
+    "maxHeight": 162,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "post\n      PostOptionsMenu\n      Preview not yet authored. The component is fully importable — its API is in PostOptionsMenu.d.ts and usage in PostOptionsMenu.prompt.md."
     ]
   },
   {
@@ -1799,7 +2259,7 @@
     "errs": 0,
     "caught": 0,
     "firstErr": null,
-    "pngBytes": 25923,
+    "pngBytes": 25569,
     "blank": false,
     "rootEmpty": false,
     "thin": false,
@@ -1809,12 +2269,12 @@
     "hasPlaceholder": false,
     "nPlaceholder": 0,
     "fallbackCard": true,
-    "maxHeight": 346,
+    "maxHeight": 310,
     "variantsIdentical": false,
     "bad": false,
     "gridOverflow": null,
     "texts": [
-      "widget\n      CalendarWidget\n      Preview not yet authored. The component is fully importable — its API is in CalendarWidget.d.ts and usage in CalendarWidget.prompt.md.\n    \n  «‹Tháng 8, 2026›»T2T3T4T5T6T7CN119220321422523624725826927102811291230131/71421531641751861972082192210231124122513261427152816291730183119Mở Lịch Âm Dương →"
+      "widget\n      CalendarWidget\n      Preview not yet authored. The component is fully importable — its API is in CalendarWidget.d.ts and usage in CalendarWidget.prompt.md.\n    \n  «‹Tháng 9, 2026›»T2T3T4T5T6T7CN1202213224235246257268279281029111/812213314415516617718819920102111221223132414251526162717281829193020Mở Lịch Âm Dương →"
     ]
   },
   {
@@ -1890,6 +2350,32 @@
     "gridOverflow": null,
     "texts": [
       "PeopleNo people yet — add someone to your registry."
+    ]
+  },
+  {
+    "name": "MusicWidget",
+    "group": "widget",
+    "rel": "components/widget/MusicWidget/MusicWidget.html",
+    "errs": 0,
+    "caught": 0,
+    "firstErr": null,
+    "pngBytes": 32190,
+    "blank": false,
+    "rootEmpty": false,
+    "thin": false,
+    "nameOnly": false,
+    "allHollow": false,
+    "collapsed": false,
+    "hasPlaceholder": false,
+    "nPlaceholder": 0,
+    "fallbackCard": false,
+    "maxHeight": 402,
+    "variantsIdentical": false,
+    "bad": false,
+    "gridOverflow": null,
+    "texts": [
+      "Music1Ông Bà AnhLê Thiện HiếuOpen music library →",
+      "Music1Ông Bà AnhLê Thiện Hiếu2Đừng Quên Tên AnhHoa Vinh3Ừ Có Anh ĐâyTino4Yêu Đơn PhươngOnlyC, Karik5Đóa Hoa HồngChi PuOpen music library →"
     ]
   },
   {

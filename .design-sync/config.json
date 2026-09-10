@@ -7,8 +7,12 @@
   "tsconfig": "tsconfig.ds.json",
   "cssEntry": ".ds-compiled.css",
   "buildCmd": "node .ds-compile-css.mjs",
-  "extraEntries": ["./.ds-shims/ds-provider.tsx"],
-  "provider": { "component": "DSProvider" },
+  "extraEntries": [
+    "./.ds-shims/ds-provider.tsx"
+  ],
+  "provider": {
+    "component": "DSProvider"
+  },
   "componentSrcMap": {
     "SessionKeeper": null,
     "SvgSprite": null,
@@ -16,18 +20,57 @@
     "Field": null,
     "BtnPrimary": null,
     "BtnSecondary": null,
-    "Card": null
+    "Card": null,
+    "MusicPlayerProvider": null,
+    "NowPlayingSpacer": null
   },
   "overrides": {
-    "CommentItem": { "cardMode": "column" },
-    "MasterBase": { "cardMode": "single", "primaryStory": "App" },
-    "SidebarCenter": { "cardMode": "column" },
-    "ReactionBar": { "cardMode": "column" },
-    "HelloPreloader": { "cardMode": "single", "primaryStory": "Overlay" },
-    "AddBook": { "cardMode": "single", "primaryStory": "Dialog" },
-    "ChatResponsive": { "cardMode": "single", "primaryStory": "Chat" },
-    "ChoseFromMyPhoto": { "cardMode": "single", "primaryStory": "Dialog" },
-    "UpdateHeaderPhoto": { "cardMode": "single", "primaryStory": "Dialog" }
+    "CommentItem": {
+      "cardMode": "column"
+    },
+    "MasterBase": {
+      "cardMode": "single",
+      "primaryStory": "App"
+    },
+    "SidebarCenter": {
+      "cardMode": "column"
+    },
+    "ReactionBar": {
+      "cardMode": "column"
+    },
+    "HelloPreloader": {
+      "cardMode": "single",
+      "primaryStory": "Overlay"
+    },
+    "AddBook": {
+      "cardMode": "single",
+      "primaryStory": "Dialog"
+    },
+    "ChatResponsive": {
+      "cardMode": "single",
+      "primaryStory": "Chat"
+    },
+    "ChoseFromMyPhoto": {
+      "cardMode": "single",
+      "primaryStory": "Dialog"
+    },
+    "UpdateHeaderPhoto": {
+      "cardMode": "single",
+      "primaryStory": "Dialog"
+    },
+    "QuickAddModal": {
+      "cardMode": "single",
+      "primaryStory": "Expense"
+    },
+    "CategoryDonut": {
+      "cardMode": "column"
+    },
+    "TransactionRow": {
+      "cardMode": "column"
+    },
+    "TrendBars": {
+      "cardMode": "column"
+    }
   },
   "readmeHeader": ".design-sync/conventions.md",
   "dtsPropsFor": {

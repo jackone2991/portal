@@ -3,7 +3,7 @@
   "source": "portal-frontend@0.1.0",
   "shape": "package",
   "provider": "DSProvider",
-  "componentCount": 79,
+  "componentCount": 98,
   "skippedStoryIds": [],
   "runtimeFontPrefixes": []
 }

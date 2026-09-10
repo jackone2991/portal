@@ -9,16 +9,24 @@
     "AccountsView",
     "ActivityFeed",
     "AddBook",
+    "AdminLayoutView",
+    "AdminRolesView",
+    "AdminUsersView",
+    "AttachPhotoPopup",
     "AudioPlayer",
     "AuthForm",
     "AuthLanding",
     "Avatar",
+    "BackLink",
     "BadgeCard",
     "BirthdayCard",
     "BlogCard",
     "BudgetsView",
+    "BulkImportModal",
     "CalendarView",
     "CalendarWidget",
+    "CategoryChip",
+    "CategoryDonut",
     "ChapterMenu",
     "ChatResponsive",
     "ChoseFromMyPhoto",
@@ -55,22 +63,31 @@
     "MessagesMenu",
     "MoneyDisplay",
     "MoneyInput",
+    "MonthPager",
+    "MusicDetailView",
+    "MusicIndexView",
+    "MusicWidget",
     "NotificationsMenu",
     "NovelDetailView",
+    "NowPlayingBar",
     "PagedReader",
     "PagesWidget",
     "PeopleIndexView",
     "PersonDetailView",
     "PersonalInfoWidget",
+    "PlacePickerPopup",
     "PlaylistWidget",
     "Post",
     "PostControlButtons",
+    "PostOptionsMenu",
     "ProfileHeader",
+    "QuickAddModal",
     "ReactionBar",
     "ReaderChrome",
     "ReaderHelp",
     "ReaderSettings",
     "RegisterView",
+    "ReportsView",
     "SelectField",
     "SidebarCenter",
     "SidebarLeft",
@@ -81,7 +98,9 @@
     "ToggleRow",
     "TopMenu",
     "TrackItem",
+    "TransactionRow",
     "TransactionsView",
+    "TrendBars",
     "UpdateHeaderPhoto",
     "UploadStudio",
     "WeatherView",
@@ -113,6 +132,38 @@
       "group": "popup",
       "srcSha": null,
       "sourceKey": "3b109b20aa54a9d7",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AdminLayoutView",
+      "group": "admin",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AdminRolesView",
+      "group": "admin",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AdminUsersView",
+      "group": "admin",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "AttachPhotoPopup",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -149,6 +200,14 @@
       "stories": []
     },
     {
+      "name": "BackLink",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "BadgeCard",
       "group": "social",
       "srcSha": null,
@@ -181,6 +240,14 @@
       "stories": []
     },
     {
+      "name": "BulkImportModal",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "CalendarView",
       "group": "calendar",
       "srcSha": null,
@@ -193,6 +260,22 @@
       "group": "widget",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CategoryChip",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "a021c084017d39cb",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "CategoryDonut",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "95eaeb1d1ddd04d1",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -469,6 +552,38 @@
       "stories": []
     },
     {
+      "name": "MonthPager",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "aa6d550926986a85",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MusicDetailView",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MusicIndexView",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "MusicWidget",
+      "group": "widget",
+      "srcSha": null,
+      "sourceKey": "c2663a9faebcf8bd",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "NotificationsMenu",
       "group": "general",
       "srcSha": null,
@@ -481,6 +596,14 @@
       "group": "novel",
       "srcSha": null,
       "sourceKey": "67b58ab6ee1bffff",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "NowPlayingBar",
+      "group": "music",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -525,6 +648,14 @@
       "stories": []
     },
     {
+      "name": "PlacePickerPopup",
+      "group": "popup",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "PlaylistWidget",
       "group": "music",
       "srcSha": null,
@@ -549,10 +680,26 @@
       "stories": []
     },
     {
+      "name": "PostOptionsMenu",
+      "group": "post",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "ProfileHeader",
       "group": "profile",
       "srcSha": null,
       "sourceKey": "15321ff54d366d01",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "QuickAddModal",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0782d019393311a7",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -593,6 +740,14 @@
       "group": "auth",
       "srcSha": null,
       "sourceKey": "d7c724df44c01035",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "ReportsView",
+      "group": "bank",
+      "srcSha": null,
+      "sourceKey": "0695ba4618ca2bcc",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },
@@ -677,10 +832,26 @@
       "stories": []
     },
     {
+      "name": "TransactionRow",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "13ccd6d2938bcf2b",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
       "name": "TransactionsView",
       "group": "bank",
       "srcSha": null,
       "sourceKey": "0695ba4618ca2bcc",
+      "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
+      "stories": []
+    },
+    {
+      "name": "TrendBars",
+      "group": "general",
+      "srcSha": null,
+      "sourceKey": "05336dbc676f4e74",
       "cfgSlice": "5ff899b099eb6923833804cda955efdd69101524bec86f67dac5537cd81802e8",
       "stories": []
     },

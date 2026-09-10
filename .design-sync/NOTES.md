@@ -232,3 +232,67 @@ diverges from the cache.)
   ComicIndexView (comic), NovelDetailView (novel), UploadStudio (upload)
 - **partials**: GoToTop, HelloPreloader
 - **popup**: AddBook, ChatResponsive, ChoseFromMyPhoto, UpdateHeaderPhoto
+
+## Run 2026-09-10 — what landed, and what is still open
+
+**Landed.** 19 new components (bank/music/admin/popup verticals), 100 → 98 cards
+after two exclusions. 7 authored previews written this run: `CategoryChip`,
+`CategoryDonut`, `TrendBars`, `TransactionRow`, `MonthPager`, `MusicWidget`,
+`QuickAddModal` — 20 cells, all graded good. Render check 98/98 clean.
+
+**Excluded as cards** (`componentSrcMap: null`, still in the bundle) — same
+reasoning as `SessionKeeper` / `SvgSprite`: `MusicPlayerProvider` (context only,
+no UI) and `NowPlayingSpacer` (renders an invisible `h-24` div).
+
+### Still to author — the standing offer for the next re-sync
+
+18 components ship the floor card. In rough value order:
+
+- **Bank**: `ReportsView` (the donut + trend screen — the two charts under it are
+  now carded, so this is mostly composition), `BackLink`.
+- **Music**: `MusicIndexView` (the bulk-select toolbar screen — needs an
+  `useInfiniteQuery` seed: `["tracks","all"]` wants `{pages:[{tracks:[…]}],
+  pageParams:[undefined]}`, which no preview here has done yet),
+  `MusicDetailView`, `BulkImportModal`.
+- **Admin**: `AdminUsersView`, `AdminRolesView`, `AdminLayoutView` — dense
+  tables; each needs several seeded caches, so budget more per component.
+- **Popups**: `AttachPhotoPopup`, `PlacePickerPopup`, `PostOptionsMenu` (each
+  wants the `transform` + `position:relative` containment and probably
+  `cfg.overrides.<Name> = {cardMode:"single"}`).
+
+### `NowPlayingBar` — deliberately NOT carded, and why
+
+Every way to give the player a `current` track goes through `playQueue` /
+`playTrack` / `jumpTo`, and all three set `playing = true`. The preview has no
+API origin, so `audio.play()` rejects and the provider sets
+`error = "Playback was blocked…"` — the bar then renders a red error banner, and
+a card that teaches "the player shows an error" is worse than a floor card.
+`AudioPlayer` (plain props) already cards the same control chrome, so the loss is
+small. To fix properly the provider would need a seed path that sets the queue
+WITHOUT starting playback (e.g. an exported `primeQueue(tracks, index)` used only
+by previews) — worth doing if the bar ever needs its own card.
+
+### Harness facts learned this run (save the next run the debugging)
+
+- **The capture harness runs a fixed clock at 2024-05-15.** Any preview calling
+  `new Date()` renders that date, and any component comparing against "today"
+  branches from it. `MonthPager`'s two cells are named for the STATE they show
+  (`Current` / `AwayFromToday`), not for a date, precisely because of this.
+- **`[RENDER_BLANK]` on a query-driven widget is almost always an unseeded
+  cache**, not a broken component: `MusicWidget` returns `null` on `isError`, and
+  with `retry:false` every preview query errors. Seeding `["tracks","widget"]`
+  fixed it outright.
+- **`[GRID_OVERFLOW]` fires on newly authored previews, one run late** — it can
+  only be seen once a component renders, so expect a fresh crop the run after any
+  batch of new cards. `CategoryDonut`, `TransactionRow`, `TrendBars` all needed
+  `{cardMode:"column"}` this run.
+- **`.design-sync/.cache/remote-sync.json` in the repo was stale again**
+  (`eb0ebfb92c3b` vs the live `2294132f5e78`). `ds-bundle/_ds_sync.json` DID match
+  the live anchor byte-for-byte, so `cp`-ing it across was safe — but check the
+  three hashes (`bundleSha12`, `auxSha`, `scriptsSha`) before trusting it.
+- **Windows stub package survived** untouched since Aug: junctions still live,
+  97/97 `.tsx` mirrored. Only `.ds-compiled.css` needed regenerating + re-copying.
+- **The `.d.ts` gap is unchanged and still the biggest quality issue**: the 19 new
+  components all carry `[key: string]: unknown` unless hand-written into
+  `cfg.dtsPropsFor`. The structural fix (emit real declarations) is still the
+  right one and still not done.

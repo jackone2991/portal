@@ -85,7 +85,7 @@ for its API and examples. `<Icon name>` values are Olympus sprite ids —
 # PortalUI (portal-frontend@0.1.0)
 
 This design system is the published portal-frontend React library, bundled as a single
-browser global. All 79 components are the real upstream code.
+browser global. All 98 components are the real upstream code.
 
 ## Where things are
 
@@ -121,13 +121,13 @@ Wrap the tree in the provider — most components read theme/i18n from context:
 
 ## Tokens
 
-292 CSS custom properties from portal-frontend. Names are
+287 CSS custom properties from portal-frontend. Names are
 preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (this DS ships one compiled stylesheet rather than separate token files).
 
-- **color** (72): `--cue-color`, `--cue-bg-color`, `--cue-text-align`, …
+- **color** (66): `--cue-color`, `--cue-bg-color`, `--cue-text-align`, …
 - **spacing** (14): `--overlay-padding`, `--cue-padding-x`, `--cue-padding-y`, …
 - **typography** (24): `--cue-default-font-size`, `--cue-font-size`, `--cue-line-height`, …
-- **radius** (6): `--root-border-radius`, `--item-border-radius`, `--radius-md`, …
+- **radius** (7): `--root-border-radius`, `--item-border-radius`, `--radius-sm`, …
 - **shadow** (7): `--tw-shadow`, `--tw-ring-shadow`, `--tw-ring-offset-shadow`, …
 - **other** (169): `--size`, `--cue-width`, `--cue-top`, …
 
@@ -135,8 +135,13 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### bank
 - `AccountsView`
+- `BackLink`
 - `BudgetsView`
+- `CategoryChip`
 - `DashboardView`
+- `MonthPager`
+- `QuickAddModal`
+- `ReportsView`
 - `TransactionsView`
 
 ### widget
@@ -146,6 +151,7 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 - `ContinueWidget`
 - `FinanceWidget`
 - `FriendSuggestions`
+- `MusicWidget`
 - `PagesWidget`
 - `PersonalInfoWidget`
 - `WeatherWidget`
@@ -153,12 +159,23 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### popup
 - `AddBook`
+- `AttachPhotoPopup`
 - `ChatResponsive`
 - `ChoseFromMyPhoto`
+- `PlacePickerPopup`
 - `UpdateHeaderPhoto`
+
+### admin
+- `AdminLayoutView`
+- `AdminRolesView`
+- `AdminUsersView`
 
 ### music
 - `AudioPlayer`
+- `BulkImportModal`
+- `MusicDetailView`
+- `MusicIndexView`
+- `NowPlayingBar`
 - `PlaylistWidget`
 - `TrackItem`
 
@@ -170,6 +187,7 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### general
 - `Avatar`
+- `CategoryDonut`
 - `Composer`
 - `FriendRequestsMenu`
 - `Icon`
@@ -178,6 +196,8 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 - `MoneyInput`
 - `NotificationsMenu`
 - `Post`
+- `TransactionRow`
+- `TrendBars`
 
 ### social
 - `BadgeCard`
@@ -249,6 +269,7 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### post
 - `PostControlButtons`
+- `PostOptionsMenu`
 - `ReactionBar`
 
 ### menu

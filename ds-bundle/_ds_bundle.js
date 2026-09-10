@@ -1,4 +1,4 @@
-/* @ds-bundle: {"namespace":"PortalUI","components":[{"name":"AccountsView","sourcePath":"components/bank/AccountsView/AccountsView.jsx"},{"name":"ActivityFeed","sourcePath":"components/widget/ActivityFeed/ActivityFeed.jsx"},{"name":"AddBook","sourcePath":"components/popup/AddBook/AddBook.jsx"},{"name":"AudioPlayer","sourcePath":"components/music/AudioPlayer/AudioPlayer.jsx"},{"name":"AuthForm","sourcePath":"components/auth/AuthForm/AuthForm.jsx"},{"name":"AuthLanding","sourcePath":"components/auth/AuthLanding/AuthLanding.jsx"},{"name":"Avatar","sourcePath":"components/general/Avatar/Avatar.jsx"},{"name":"BadgeCard","sourcePath":"components/social/BadgeCard/BadgeCard.jsx"},{"name":"BirthdayCard","sourcePath":"components/widget/BirthdayCard/BirthdayCard.jsx"},{"name":"BlogCard","sourcePath":"components/blog/BlogCard/BlogCard.jsx"},{"name":"BudgetsView","sourcePath":"components/bank/BudgetsView/BudgetsView.jsx"},{"name":"CalendarView","sourcePath":"components/calendar/CalendarView/CalendarView.jsx"},{"name":"CalendarWidget","sourcePath":"components/widget/CalendarWidget/CalendarWidget.jsx"},{"name":"ChapterMenu","sourcePath":"components/reader/ChapterMenu/ChapterMenu.jsx"},{"name":"ChatResponsive","sourcePath":"components/popup/ChatResponsive/ChatResponsive.jsx"},{"name":"ChoseFromMyPhoto","sourcePath":"components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx"},{"name":"ComicDetailView","sourcePath":"components/comic/ComicDetailView/ComicDetailView.jsx"},{"name":"ComicIndexView","sourcePath":"components/comic/ComicIndexView/ComicIndexView.jsx"},{"name":"ComicReaderView","sourcePath":"components/comic/ComicReaderView/ComicReaderView.jsx"},{"name":"CommentForm","sourcePath":"components/comment/CommentForm/CommentForm.jsx"},{"name":"CommentItem","sourcePath":"components/comment/CommentItem/CommentItem.jsx"},{"name":"CommentThread","sourcePath":"components/comment/CommentThread/CommentThread.jsx"},{"name":"Composer","sourcePath":"components/general/Composer/Composer.jsx"},{"name":"ContinueRail","sourcePath":"components/library/ContinueRail/ContinueRail.jsx"},{"name":"ContinueWidget","sourcePath":"components/widget/ContinueWidget/ContinueWidget.jsx"},{"name":"ControlBlockButtons","sourcePath":"components/profile/ControlBlockButtons/ControlBlockButtons.jsx"},{"name":"DashboardView","sourcePath":"components/bank/DashboardView/DashboardView.jsx"},{"name":"EntryCard","sourcePath":"components/journal/EntryCard/EntryCard.jsx"},{"name":"EventItem","sourcePath":"components/social/EventItem/EventItem.jsx"},{"name":"FinanceWidget","sourcePath":"components/widget/FinanceWidget/FinanceWidget.jsx"},{"name":"FormField","sourcePath":"components/form/FormField/FormField.jsx"},{"name":"FriendCard","sourcePath":"components/social/FriendCard/FriendCard.jsx"},{"name":"FriendRequestItem","sourcePath":"components/social/FriendRequestItem/FriendRequestItem.jsx"},{"name":"FriendRequestsMenu","sourcePath":"components/general/FriendRequestsMenu/FriendRequestsMenu.jsx"},{"name":"FriendSuggestions","sourcePath":"components/widget/FriendSuggestions/FriendSuggestions.jsx"},{"name":"GoToTop","sourcePath":"components/partials/GoToTop/GoToTop.jsx"},{"name":"HelloPreloader","sourcePath":"components/partials/HelloPreloader/HelloPreloader.jsx"},{"name":"HomeView","sourcePath":"components/home/HomeView/HomeView.jsx"},{"name":"Icon","sourcePath":"components/general/Icon/Icon.jsx"},{"name":"LoginView","sourcePath":"components/auth/LoginView/LoginView.jsx"},{"name":"MasterBase","sourcePath":"components/master/MasterBase/MasterBase.jsx"},{"name":"MasterPublic","sourcePath":"components/master/MasterPublic/MasterPublic.jsx"},{"name":"MediaDetailView","sourcePath":"components/media/MediaDetailView/MediaDetailView.jsx"},{"name":"MediaIndexView","sourcePath":"components/media/MediaIndexView/MediaIndexView.jsx"},{"name":"MessagesMenu","sourcePath":"components/general/MessagesMenu/MessagesMenu.jsx"},{"name":"MoneyDisplay","sourcePath":"components/general/MoneyDisplay/MoneyDisplay.jsx"},{"name":"MoneyInput","sourcePath":"components/general/MoneyInput/MoneyInput.jsx"},{"name":"NotificationsMenu","sourcePath":"components/general/NotificationsMenu/NotificationsMenu.jsx"},{"name":"NovelDetailView","sourcePath":"components/novel/NovelDetailView/NovelDetailView.jsx"},{"name":"PagedReader","sourcePath":"components/reader/PagedReader/PagedReader.jsx"},{"name":"PagesWidget","sourcePath":"components/widget/PagesWidget/PagesWidget.jsx"},{"name":"PeopleIndexView","sourcePath":"components/people/PeopleIndexView/PeopleIndexView.jsx"},{"name":"PersonalInfoWidget","sourcePath":"components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx"},{"name":"PersonDetailView","sourcePath":"components/people/PersonDetailView/PersonDetailView.jsx"},{"name":"PlaylistWidget","sourcePath":"components/music/PlaylistWidget/PlaylistWidget.jsx"},{"name":"Post","sourcePath":"components/general/Post/Post.jsx"},{"name":"PostControlButtons","sourcePath":"components/post/PostControlButtons/PostControlButtons.jsx"},{"name":"ProfileHeader","sourcePath":"components/profile/ProfileHeader/ProfileHeader.jsx"},{"name":"ReactionBar","sourcePath":"components/post/ReactionBar/ReactionBar.jsx"},{"name":"ReaderChrome","sourcePath":"components/reader/ReaderChrome/ReaderChrome.jsx"},{"name":"ReaderHelp","sourcePath":"components/reader/ReaderHelp/ReaderHelp.jsx"},{"name":"ReaderSettings","sourcePath":"components/reader/ReaderSettings/ReaderSettings.jsx"},{"name":"RegisterView","sourcePath":"components/auth/RegisterView/RegisterView.jsx"},{"name":"SelectField","sourcePath":"components/form/SelectField/SelectField.jsx"},{"name":"SidebarCenter","sourcePath":"components/menu/SidebarCenter/SidebarCenter.jsx"},{"name":"SidebarLeft","sourcePath":"components/menu/SidebarLeft/SidebarLeft.jsx"},{"name":"SidebarRight","sourcePath":"components/menu/SidebarRight/SidebarRight.jsx"},{"name":"StreamItemCard","sourcePath":"components/stream/StreamItemCard/StreamItemCard.jsx"},{"name":"StripReader","sourcePath":"components/reader/StripReader/StripReader.jsx"},{"name":"TagSelect","sourcePath":"components/form/TagSelect/TagSelect.jsx"},{"name":"ToggleRow","sourcePath":"components/form/ToggleRow/ToggleRow.jsx"},{"name":"TopMenu","sourcePath":"components/headers/TopMenu/TopMenu.jsx"},{"name":"TrackItem","sourcePath":"components/music/TrackItem/TrackItem.jsx"},{"name":"TransactionsView","sourcePath":"components/bank/TransactionsView/TransactionsView.jsx"},{"name":"UpdateHeaderPhoto","sourcePath":"components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx"},{"name":"UploadStudio","sourcePath":"components/upload/UploadStudio/UploadStudio.jsx"},{"name":"WeatherView","sourcePath":"components/weather/WeatherView/WeatherView.jsx"},{"name":"WeatherWidget","sourcePath":"components/widget/WeatherWidget/WeatherWidget.jsx"},{"name":"WidgetCard","sourcePath":"components/widget/WidgetCard/WidgetCard.jsx"}],"sourceHashes":{"components/bank/AccountsView/AccountsView.jsx":"301e6665fc51","components/bank/AccountsView/AccountsView.d.ts":"f3ea75294ad2","components/bank/AccountsView/AccountsView.prompt.md":"cbecc4802017","components/widget/ActivityFeed/ActivityFeed.jsx":"7d780fe14604","components/widget/ActivityFeed/ActivityFeed.d.ts":"8b486d78f855","components/widget/ActivityFeed/ActivityFeed.prompt.md":"472a459810ce","components/popup/AddBook/AddBook.jsx":"342bf3316fa6","components/popup/AddBook/AddBook.d.ts":"955a5a8afa4f","components/popup/AddBook/AddBook.prompt.md":"01b8a578dfcb","components/music/AudioPlayer/AudioPlayer.jsx":"5838ad0176db","components/music/AudioPlayer/AudioPlayer.d.ts":"f9937a613082","components/music/AudioPlayer/AudioPlayer.prompt.md":"21d4ecf9ce8b","components/auth/AuthForm/AuthForm.jsx":"1e61c6521418","components/auth/AuthForm/AuthForm.d.ts":"aa7c72c0e540","components/auth/AuthForm/AuthForm.prompt.md":"a1d2e05687e3","components/auth/AuthLanding/AuthLanding.jsx":"8fb2228bac01","components/auth/AuthLanding/AuthLanding.d.ts":"ebe7795bc4c4","components/auth/AuthLanding/AuthLanding.prompt.md":"304b549afe05","components/general/Avatar/Avatar.jsx":"de2a9e21a364","components/general/Avatar/Avatar.d.ts":"cef099484f1a","components/general/Avatar/Avatar.prompt.md":"28cd154c7a58","components/social/BadgeCard/BadgeCard.jsx":"efa4a4d130a2","components/social/BadgeCard/BadgeCard.d.ts":"1a048347711e","components/social/BadgeCard/BadgeCard.prompt.md":"0cae404ebaf0","components/widget/BirthdayCard/BirthdayCard.jsx":"61b2b764bca9","components/widget/BirthdayCard/BirthdayCard.d.ts":"169c1800a17f","components/widget/BirthdayCard/BirthdayCard.prompt.md":"4df990b65e98","components/blog/BlogCard/BlogCard.jsx":"74fe53b4fae4","components/blog/BlogCard/BlogCard.d.ts":"5a355bf69952","components/blog/BlogCard/BlogCard.prompt.md":"40d84fd02627","components/bank/BudgetsView/BudgetsView.jsx":"424a4a18ba05","components/bank/BudgetsView/BudgetsView.d.ts":"e379ed80f5a2","components/bank/BudgetsView/BudgetsView.prompt.md":"ce825953d0f6","components/calendar/CalendarView/CalendarView.jsx":"7bb2022cea9e","components/calendar/CalendarView/CalendarView.d.ts":"fbaaa115c7bf","components/calendar/CalendarView/CalendarView.prompt.md":"93c071523ede","components/widget/CalendarWidget/CalendarWidget.jsx":"e9a8b24134c7","components/widget/CalendarWidget/CalendarWidget.d.ts":"71b8eb108e7c","components/widget/CalendarWidget/CalendarWidget.prompt.md":"40e66331e9ec","components/reader/ChapterMenu/ChapterMenu.jsx":"a06005c70a72","components/reader/ChapterMenu/ChapterMenu.d.ts":"d9cd68d278e4","components/reader/ChapterMenu/ChapterMenu.prompt.md":"7fb20fa4764b","components/popup/ChatResponsive/ChatResponsive.jsx":"731a0df6f69c","components/popup/ChatResponsive/ChatResponsive.d.ts":"af5c346f0de7","components/popup/ChatResponsive/ChatResponsive.prompt.md":"c94a075c52fa","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx":"6351148a1e60","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.d.ts":"6b3b302ef68f","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.prompt.md":"53243c634d4a","components/comic/ComicDetailView/ComicDetailView.jsx":"868e712e47ae","components/comic/ComicDetailView/ComicDetailView.d.ts":"0eabd607602a","components/comic/ComicDetailView/ComicDetailView.prompt.md":"eafc2a792c03","components/comic/ComicIndexView/ComicIndexView.jsx":"4f28ea91cd2e","components/comic/ComicIndexView/ComicIndexView.d.ts":"35a2fcfc8e80","components/comic/ComicIndexView/ComicIndexView.prompt.md":"22aad7660d9b","components/comic/ComicReaderView/ComicReaderView.jsx":"445de30e9ec3","components/comic/ComicReaderView/ComicReaderView.d.ts":"abd83f30dddc","components/comic/ComicReaderView/ComicReaderView.prompt.md":"bfd5797c2caf","components/comment/CommentForm/CommentForm.jsx":"1c8a99defa49","components/comment/CommentForm/CommentForm.d.ts":"75d3009d0f00","components/comment/CommentForm/CommentForm.prompt.md":"60cb5b0b1258","components/comment/CommentItem/CommentItem.jsx":"6fb44b469784","components/comment/CommentItem/CommentItem.d.ts":"991573d78046","components/comment/CommentItem/CommentItem.prompt.md":"dc69c22361c1","components/comment/CommentThread/CommentThread.jsx":"6b7db8e67335","components/comment/CommentThread/CommentThread.d.ts":"462dfc0bfdf0","components/comment/CommentThread/CommentThread.prompt.md":"6024a885e2ea","components/general/Composer/Composer.jsx":"db23f5d95c44","components/general/Composer/Composer.d.ts":"d013ccadccf6","components/general/Composer/Composer.prompt.md":"37fe9d8ce0c5","components/library/ContinueRail/ContinueRail.jsx":"550b895ddd13","components/library/ContinueRail/ContinueRail.d.ts":"b18bfb68ce8e","components/library/ContinueRail/ContinueRail.prompt.md":"6ab8419506f9","components/widget/ContinueWidget/ContinueWidget.jsx":"a1266e7aafd8","components/widget/ContinueWidget/ContinueWidget.d.ts":"dc2bc3dbad69","components/widget/ContinueWidget/ContinueWidget.prompt.md":"dd755077a299","components/profile/ControlBlockButtons/ControlBlockButtons.jsx":"9f5ea6dd02bb","components/profile/ControlBlockButtons/ControlBlockButtons.d.ts":"ff2cbc2650da","components/profile/ControlBlockButtons/ControlBlockButtons.prompt.md":"e1533879d5cb","components/bank/DashboardView/DashboardView.jsx":"2139072cd085","components/bank/DashboardView/DashboardView.d.ts":"1c53b7f90098","components/bank/DashboardView/DashboardView.prompt.md":"12a5d9470fc0","components/journal/EntryCard/EntryCard.jsx":"213a325fd955","components/journal/EntryCard/EntryCard.d.ts":"898570d691db","components/journal/EntryCard/EntryCard.prompt.md":"b88a75cb6cea","components/social/EventItem/EventItem.jsx":"10a68507a826","components/social/EventItem/EventItem.d.ts":"7b4345824b98","components/social/EventItem/EventItem.prompt.md":"cc266956cb6c","components/widget/FinanceWidget/FinanceWidget.jsx":"a39aabcb16aa","components/widget/FinanceWidget/FinanceWidget.d.ts":"13ef4f8960a7","components/widget/FinanceWidget/FinanceWidget.prompt.md":"e93160901909","components/form/FormField/FormField.jsx":"63b6f5ed57e0","components/form/FormField/FormField.d.ts":"90014143311a","components/form/FormField/FormField.prompt.md":"f174a5a62df9","components/social/FriendCard/FriendCard.jsx":"e64fc2419908","components/social/FriendCard/FriendCard.d.ts":"482754771ea9","components/social/FriendCard/FriendCard.prompt.md":"159a089de580","components/social/FriendRequestItem/FriendRequestItem.jsx":"65eee2d97545","components/social/FriendRequestItem/FriendRequestItem.d.ts":"52fa23811754","components/social/FriendRequestItem/FriendRequestItem.prompt.md":"528b63cb335c","components/general/FriendRequestsMenu/FriendRequestsMenu.jsx":"a08be07b3629","components/general/FriendRequestsMenu/FriendRequestsMenu.d.ts":"7fbf638c31d2","components/general/FriendRequestsMenu/FriendRequestsMenu.prompt.md":"c68f7472fcaf","components/widget/FriendSuggestions/FriendSuggestions.jsx":"9e987e330b53","components/widget/FriendSuggestions/FriendSuggestions.d.ts":"6dac979dce19","components/widget/FriendSuggestions/FriendSuggestions.prompt.md":"2a954eb8726e","components/partials/GoToTop/GoToTop.jsx":"ebc1876e812d","components/partials/GoToTop/GoToTop.d.ts":"dfc5a6093c65","components/partials/GoToTop/GoToTop.prompt.md":"a7cdd653a640","components/partials/HelloPreloader/HelloPreloader.jsx":"649f0aa9d0b0","components/partials/HelloPreloader/HelloPreloader.d.ts":"b1f073ad1018","components/partials/HelloPreloader/HelloPreloader.prompt.md":"8b3aa58951f6","components/home/HomeView/HomeView.jsx":"427c8d2a64cd","components/home/HomeView/HomeView.d.ts":"45e4f6c68587","components/home/HomeView/HomeView.prompt.md":"4114d3bc965d","components/general/Icon/Icon.jsx":"327e6a175e5e","components/general/Icon/Icon.d.ts":"b953cbae66e0","components/general/Icon/Icon.prompt.md":"3fc1f07b2b6a","components/auth/LoginView/LoginView.jsx":"b86ff10c6c9c","components/auth/LoginView/LoginView.d.ts":"12e5552a431b","components/auth/LoginView/LoginView.prompt.md":"319ac8630185","components/master/MasterBase/MasterBase.jsx":"794ed6094191","components/master/MasterBase/MasterBase.d.ts":"78c99aa225e5","components/master/MasterBase/MasterBase.prompt.md":"de08fd4cc44d","components/master/MasterPublic/MasterPublic.jsx":"68d654a8c687","components/master/MasterPublic/MasterPublic.d.ts":"f8e3f66856a2","components/master/MasterPublic/MasterPublic.prompt.md":"ac73aaeed1f5","components/media/MediaDetailView/MediaDetailView.jsx":"d889ecab9187","components/media/MediaDetailView/MediaDetailView.d.ts":"f6579d22185b","components/media/MediaDetailView/MediaDetailView.prompt.md":"322ad994a10d","components/media/MediaIndexView/MediaIndexView.jsx":"ad811ffe5ab7","components/media/MediaIndexView/MediaIndexView.d.ts":"9a861cde8f90","components/media/MediaIndexView/MediaIndexView.prompt.md":"c06c8c580f99","components/general/MessagesMenu/MessagesMenu.jsx":"8f7d104afb2d","components/general/MessagesMenu/MessagesMenu.d.ts":"48058318671f","components/general/MessagesMenu/MessagesMenu.prompt.md":"2a02efd43086","components/general/MoneyDisplay/MoneyDisplay.jsx":"4ca92f0a28e0","components/general/MoneyDisplay/MoneyDisplay.d.ts":"dfadca9ab6e9","components/general/MoneyDisplay/MoneyDisplay.prompt.md":"634993ec997a","components/general/MoneyInput/MoneyInput.jsx":"a6dc564d16ab","components/general/MoneyInput/MoneyInput.d.ts":"6c41cbfd666d","components/general/MoneyInput/MoneyInput.prompt.md":"726612f534f7","components/general/NotificationsMenu/NotificationsMenu.jsx":"8f3b3658a39e","components/general/NotificationsMenu/NotificationsMenu.d.ts":"9f8d15496d0b","components/general/NotificationsMenu/NotificationsMenu.prompt.md":"99f463cc7de0","components/novel/NovelDetailView/NovelDetailView.jsx":"9e60657d9e70","components/novel/NovelDetailView/NovelDetailView.d.ts":"4d7af66ef501","components/novel/NovelDetailView/NovelDetailView.prompt.md":"524cdaadd871","components/reader/PagedReader/PagedReader.jsx":"bb4f64370dc0","components/reader/PagedReader/PagedReader.d.ts":"e71f760160ac","components/reader/PagedReader/PagedReader.prompt.md":"05bd834a6363","components/widget/PagesWidget/PagesWidget.jsx":"519f4039a6a4","components/widget/PagesWidget/PagesWidget.d.ts":"b8788812f282","components/widget/PagesWidget/PagesWidget.prompt.md":"40cb0997f850","components/people/PeopleIndexView/PeopleIndexView.jsx":"81a668759e9e","components/people/PeopleIndexView/PeopleIndexView.d.ts":"2270f7e4d300","components/people/PeopleIndexView/PeopleIndexView.prompt.md":"ae841d31657f","components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx":"c77e6162454c","components/widget/PersonalInfoWidget/PersonalInfoWidget.d.ts":"81ab6fc38c0d","components/widget/PersonalInfoWidget/PersonalInfoWidget.prompt.md":"33f7eab8849e","components/people/PersonDetailView/PersonDetailView.jsx":"5fd05308ff9f","components/people/PersonDetailView/PersonDetailView.d.ts":"4538b687c1c5","components/people/PersonDetailView/PersonDetailView.prompt.md":"0ff37aff8a6f","components/music/PlaylistWidget/PlaylistWidget.jsx":"d141b1b1da88","components/music/PlaylistWidget/PlaylistWidget.d.ts":"003d70e56a97","components/music/PlaylistWidget/PlaylistWidget.prompt.md":"c8d60820436c","components/general/Post/Post.jsx":"543b6ccfbac2","components/general/Post/Post.d.ts":"0ea5d52ff044","components/general/Post/Post.prompt.md":"860707350182","components/post/PostControlButtons/PostControlButtons.jsx":"046b20a4f13f","components/post/PostControlButtons/PostControlButtons.d.ts":"40c709a63556","components/post/PostControlButtons/PostControlButtons.prompt.md":"e0e97ecb9bcf","components/profile/ProfileHeader/ProfileHeader.jsx":"17dc135c32e5","components/profile/ProfileHeader/ProfileHeader.d.ts":"c9881fdefc41","components/profile/ProfileHeader/ProfileHeader.prompt.md":"8eaed02cc313","components/post/ReactionBar/ReactionBar.jsx":"04d72b6d490c","components/post/ReactionBar/ReactionBar.d.ts":"90e910fa88a3","components/post/ReactionBar/ReactionBar.prompt.md":"5446f93193bf","components/reader/ReaderChrome/ReaderChrome.jsx":"aa30d46b0a21","components/reader/ReaderChrome/ReaderChrome.d.ts":"5b7f9228ec0d","components/reader/ReaderChrome/ReaderChrome.prompt.md":"3fab920b57cc","components/reader/ReaderHelp/ReaderHelp.jsx":"153691b76234","components/reader/ReaderHelp/ReaderHelp.d.ts":"b3dae7ecbfba","components/reader/ReaderHelp/ReaderHelp.prompt.md":"8d026d225a88","components/reader/ReaderSettings/ReaderSettings.jsx":"0e04895e054e","components/reader/ReaderSettings/ReaderSettings.d.ts":"e93cc06aadd1","components/reader/ReaderSettings/ReaderSettings.prompt.md":"7ae06a03ad84","components/auth/RegisterView/RegisterView.jsx":"0f9760f1341e","components/auth/RegisterView/RegisterView.d.ts":"92a8c302c44c","components/auth/RegisterView/RegisterView.prompt.md":"6ca50c2600a0","components/form/SelectField/SelectField.jsx":"52557bb1e40a","components/form/SelectField/SelectField.d.ts":"e663d927abec","components/form/SelectField/SelectField.prompt.md":"441b0b51704e","components/menu/SidebarCenter/SidebarCenter.jsx":"8d50d316a50b","components/menu/SidebarCenter/SidebarCenter.d.ts":"e2a916efabc5","components/menu/SidebarCenter/SidebarCenter.prompt.md":"d18e20ead63a","components/menu/SidebarLeft/SidebarLeft.jsx":"b6aae23633b9","components/menu/SidebarLeft/SidebarLeft.d.ts":"f12def96299c","components/menu/SidebarLeft/SidebarLeft.prompt.md":"e9b262d2b815","components/menu/SidebarRight/SidebarRight.jsx":"e9b448900d53","components/menu/SidebarRight/SidebarRight.d.ts":"0d4d15dd7d60","components/menu/SidebarRight/SidebarRight.prompt.md":"50b7c004f1d4","components/stream/StreamItemCard/StreamItemCard.jsx":"a521642ea3ac","components/stream/StreamItemCard/StreamItemCard.d.ts":"b503e0607029","components/stream/StreamItemCard/StreamItemCard.prompt.md":"8bdd6786e8e1","components/reader/StripReader/StripReader.jsx":"05cbce2ea80f","components/reader/StripReader/StripReader.d.ts":"5e21494e4a02","components/reader/StripReader/StripReader.prompt.md":"dfdf0101fe06","components/form/TagSelect/TagSelect.jsx":"af91776a8220","components/form/TagSelect/TagSelect.d.ts":"87f6b55f58b9","components/form/TagSelect/TagSelect.prompt.md":"b33852eb9270","components/form/ToggleRow/ToggleRow.jsx":"35633469de90","components/form/ToggleRow/ToggleRow.d.ts":"928f35533522","components/form/ToggleRow/ToggleRow.prompt.md":"79a8971f5545","components/headers/TopMenu/TopMenu.jsx":"3540cfee1989","components/headers/TopMenu/TopMenu.d.ts":"6516d4db52ab","components/headers/TopMenu/TopMenu.prompt.md":"7bbf0356c5e0","components/music/TrackItem/TrackItem.jsx":"db070a19f13d","components/music/TrackItem/TrackItem.d.ts":"91c728ee02c2","components/music/TrackItem/TrackItem.prompt.md":"00b43be10f28","components/bank/TransactionsView/TransactionsView.jsx":"87d493f301fb","components/bank/TransactionsView/TransactionsView.d.ts":"f7a9df3d734f","components/bank/TransactionsView/TransactionsView.prompt.md":"e8d4d00e078e","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx":"1625f80c3af1","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.d.ts":"261b915ce28d","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.prompt.md":"b4e809dc5e46","components/upload/UploadStudio/UploadStudio.jsx":"e4e9f9702fee","components/upload/UploadStudio/UploadStudio.d.ts":"1e0a5a083112","components/upload/UploadStudio/UploadStudio.prompt.md":"74f724f476de","components/weather/WeatherView/WeatherView.jsx":"a18d60399e3a","components/weather/WeatherView/WeatherView.d.ts":"41010dd77c65","components/weather/WeatherView/WeatherView.prompt.md":"c07d55bb6495","components/widget/WeatherWidget/WeatherWidget.jsx":"68162d56f018","components/widget/WeatherWidget/WeatherWidget.d.ts":"6d59df58d78a","components/widget/WeatherWidget/WeatherWidget.prompt.md":"774b3b2e3d78","components/widget/WidgetCard/WidgetCard.jsx":"2dde1e2d0e88","components/widget/WidgetCard/WidgetCard.d.ts":"79ae7519da81","components/widget/WidgetCard/WidgetCard.prompt.md":"c73ea6104733"},"inlinedExternals":["@floating-ui/core","@floating-ui/dom","@floating-ui/utils","@tanstack/query-core","@tanstack/react-query","@vidstack/react","media-captions","portal-frontend","zustand"],"builtBy":"cc-design-sync"} */
+/* @ds-bundle: {"namespace":"PortalUI","components":[{"name":"AccountsView","sourcePath":"components/bank/AccountsView/AccountsView.jsx"},{"name":"ActivityFeed","sourcePath":"components/widget/ActivityFeed/ActivityFeed.jsx"},{"name":"AddBook","sourcePath":"components/popup/AddBook/AddBook.jsx"},{"name":"AdminLayoutView","sourcePath":"components/admin/AdminLayoutView/AdminLayoutView.jsx"},{"name":"AdminRolesView","sourcePath":"components/admin/AdminRolesView/AdminRolesView.jsx"},{"name":"AdminUsersView","sourcePath":"components/admin/AdminUsersView/AdminUsersView.jsx"},{"name":"AttachPhotoPopup","sourcePath":"components/popup/AttachPhotoPopup/AttachPhotoPopup.jsx"},{"name":"AudioPlayer","sourcePath":"components/music/AudioPlayer/AudioPlayer.jsx"},{"name":"AuthForm","sourcePath":"components/auth/AuthForm/AuthForm.jsx"},{"name":"AuthLanding","sourcePath":"components/auth/AuthLanding/AuthLanding.jsx"},{"name":"Avatar","sourcePath":"components/general/Avatar/Avatar.jsx"},{"name":"BackLink","sourcePath":"components/bank/BackLink/BackLink.jsx"},{"name":"BadgeCard","sourcePath":"components/social/BadgeCard/BadgeCard.jsx"},{"name":"BirthdayCard","sourcePath":"components/widget/BirthdayCard/BirthdayCard.jsx"},{"name":"BlogCard","sourcePath":"components/blog/BlogCard/BlogCard.jsx"},{"name":"BudgetsView","sourcePath":"components/bank/BudgetsView/BudgetsView.jsx"},{"name":"BulkImportModal","sourcePath":"components/music/BulkImportModal/BulkImportModal.jsx"},{"name":"CalendarView","sourcePath":"components/calendar/CalendarView/CalendarView.jsx"},{"name":"CalendarWidget","sourcePath":"components/widget/CalendarWidget/CalendarWidget.jsx"},{"name":"CategoryChip","sourcePath":"components/bank/CategoryChip/CategoryChip.jsx"},{"name":"CategoryDonut","sourcePath":"components/general/CategoryDonut/CategoryDonut.jsx"},{"name":"ChapterMenu","sourcePath":"components/reader/ChapterMenu/ChapterMenu.jsx"},{"name":"ChatResponsive","sourcePath":"components/popup/ChatResponsive/ChatResponsive.jsx"},{"name":"ChoseFromMyPhoto","sourcePath":"components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx"},{"name":"ComicDetailView","sourcePath":"components/comic/ComicDetailView/ComicDetailView.jsx"},{"name":"ComicIndexView","sourcePath":"components/comic/ComicIndexView/ComicIndexView.jsx"},{"name":"ComicReaderView","sourcePath":"components/comic/ComicReaderView/ComicReaderView.jsx"},{"name":"CommentForm","sourcePath":"components/comment/CommentForm/CommentForm.jsx"},{"name":"CommentItem","sourcePath":"components/comment/CommentItem/CommentItem.jsx"},{"name":"CommentThread","sourcePath":"components/comment/CommentThread/CommentThread.jsx"},{"name":"Composer","sourcePath":"components/general/Composer/Composer.jsx"},{"name":"ContinueRail","sourcePath":"components/library/ContinueRail/ContinueRail.jsx"},{"name":"ContinueWidget","sourcePath":"components/widget/ContinueWidget/ContinueWidget.jsx"},{"name":"ControlBlockButtons","sourcePath":"components/profile/ControlBlockButtons/ControlBlockButtons.jsx"},{"name":"DashboardView","sourcePath":"components/bank/DashboardView/DashboardView.jsx"},{"name":"EntryCard","sourcePath":"components/journal/EntryCard/EntryCard.jsx"},{"name":"EventItem","sourcePath":"components/social/EventItem/EventItem.jsx"},{"name":"FinanceWidget","sourcePath":"components/widget/FinanceWidget/FinanceWidget.jsx"},{"name":"FormField","sourcePath":"components/form/FormField/FormField.jsx"},{"name":"FriendCard","sourcePath":"components/social/FriendCard/FriendCard.jsx"},{"name":"FriendRequestItem","sourcePath":"components/social/FriendRequestItem/FriendRequestItem.jsx"},{"name":"FriendRequestsMenu","sourcePath":"components/general/FriendRequestsMenu/FriendRequestsMenu.jsx"},{"name":"FriendSuggestions","sourcePath":"components/widget/FriendSuggestions/FriendSuggestions.jsx"},{"name":"GoToTop","sourcePath":"components/partials/GoToTop/GoToTop.jsx"},{"name":"HelloPreloader","sourcePath":"components/partials/HelloPreloader/HelloPreloader.jsx"},{"name":"HomeView","sourcePath":"components/home/HomeView/HomeView.jsx"},{"name":"Icon","sourcePath":"components/general/Icon/Icon.jsx"},{"name":"LoginView","sourcePath":"components/auth/LoginView/LoginView.jsx"},{"name":"MasterBase","sourcePath":"components/master/MasterBase/MasterBase.jsx"},{"name":"MasterPublic","sourcePath":"components/master/MasterPublic/MasterPublic.jsx"},{"name":"MediaDetailView","sourcePath":"components/media/MediaDetailView/MediaDetailView.jsx"},{"name":"MediaIndexView","sourcePath":"components/media/MediaIndexView/MediaIndexView.jsx"},{"name":"MessagesMenu","sourcePath":"components/general/MessagesMenu/MessagesMenu.jsx"},{"name":"MoneyDisplay","sourcePath":"components/general/MoneyDisplay/MoneyDisplay.jsx"},{"name":"MoneyInput","sourcePath":"components/general/MoneyInput/MoneyInput.jsx"},{"name":"MonthPager","sourcePath":"components/bank/MonthPager/MonthPager.jsx"},{"name":"MusicDetailView","sourcePath":"components/music/MusicDetailView/MusicDetailView.jsx"},{"name":"MusicIndexView","sourcePath":"components/music/MusicIndexView/MusicIndexView.jsx"},{"name":"MusicWidget","sourcePath":"components/widget/MusicWidget/MusicWidget.jsx"},{"name":"NotificationsMenu","sourcePath":"components/general/NotificationsMenu/NotificationsMenu.jsx"},{"name":"NovelDetailView","sourcePath":"components/novel/NovelDetailView/NovelDetailView.jsx"},{"name":"NowPlayingBar","sourcePath":"components/music/NowPlayingBar/NowPlayingBar.jsx"},{"name":"PagedReader","sourcePath":"components/reader/PagedReader/PagedReader.jsx"},{"name":"PagesWidget","sourcePath":"components/widget/PagesWidget/PagesWidget.jsx"},{"name":"PeopleIndexView","sourcePath":"components/people/PeopleIndexView/PeopleIndexView.jsx"},{"name":"PersonalInfoWidget","sourcePath":"components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx"},{"name":"PersonDetailView","sourcePath":"components/people/PersonDetailView/PersonDetailView.jsx"},{"name":"PlacePickerPopup","sourcePath":"components/popup/PlacePickerPopup/PlacePickerPopup.jsx"},{"name":"PlaylistWidget","sourcePath":"components/music/PlaylistWidget/PlaylistWidget.jsx"},{"name":"Post","sourcePath":"components/general/Post/Post.jsx"},{"name":"PostControlButtons","sourcePath":"components/post/PostControlButtons/PostControlButtons.jsx"},{"name":"PostOptionsMenu","sourcePath":"components/post/PostOptionsMenu/PostOptionsMenu.jsx"},{"name":"ProfileHeader","sourcePath":"components/profile/ProfileHeader/ProfileHeader.jsx"},{"name":"QuickAddModal","sourcePath":"components/bank/QuickAddModal/QuickAddModal.jsx"},{"name":"ReactionBar","sourcePath":"components/post/ReactionBar/ReactionBar.jsx"},{"name":"ReaderChrome","sourcePath":"components/reader/ReaderChrome/ReaderChrome.jsx"},{"name":"ReaderHelp","sourcePath":"components/reader/ReaderHelp/ReaderHelp.jsx"},{"name":"ReaderSettings","sourcePath":"components/reader/ReaderSettings/ReaderSettings.jsx"},{"name":"RegisterView","sourcePath":"components/auth/RegisterView/RegisterView.jsx"},{"name":"ReportsView","sourcePath":"components/bank/ReportsView/ReportsView.jsx"},{"name":"SelectField","sourcePath":"components/form/SelectField/SelectField.jsx"},{"name":"SidebarCenter","sourcePath":"components/menu/SidebarCenter/SidebarCenter.jsx"},{"name":"SidebarLeft","sourcePath":"components/menu/SidebarLeft/SidebarLeft.jsx"},{"name":"SidebarRight","sourcePath":"components/menu/SidebarRight/SidebarRight.jsx"},{"name":"StreamItemCard","sourcePath":"components/stream/StreamItemCard/StreamItemCard.jsx"},{"name":"StripReader","sourcePath":"components/reader/StripReader/StripReader.jsx"},{"name":"TagSelect","sourcePath":"components/form/TagSelect/TagSelect.jsx"},{"name":"ToggleRow","sourcePath":"components/form/ToggleRow/ToggleRow.jsx"},{"name":"TopMenu","sourcePath":"components/headers/TopMenu/TopMenu.jsx"},{"name":"TrackItem","sourcePath":"components/music/TrackItem/TrackItem.jsx"},{"name":"TransactionRow","sourcePath":"components/general/TransactionRow/TransactionRow.jsx"},{"name":"TransactionsView","sourcePath":"components/bank/TransactionsView/TransactionsView.jsx"},{"name":"TrendBars","sourcePath":"components/general/TrendBars/TrendBars.jsx"},{"name":"UpdateHeaderPhoto","sourcePath":"components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx"},{"name":"UploadStudio","sourcePath":"components/upload/UploadStudio/UploadStudio.jsx"},{"name":"WeatherView","sourcePath":"components/weather/WeatherView/WeatherView.jsx"},{"name":"WeatherWidget","sourcePath":"components/widget/WeatherWidget/WeatherWidget.jsx"},{"name":"WidgetCard","sourcePath":"components/widget/WidgetCard/WidgetCard.jsx"}],"sourceHashes":{"components/bank/AccountsView/AccountsView.jsx":"301e6665fc51","components/bank/AccountsView/AccountsView.d.ts":"f3ea75294ad2","components/bank/AccountsView/AccountsView.prompt.md":"ba8daba16b58","components/widget/ActivityFeed/ActivityFeed.jsx":"7d780fe14604","components/widget/ActivityFeed/ActivityFeed.d.ts":"8b486d78f855","components/widget/ActivityFeed/ActivityFeed.prompt.md":"472a459810ce","components/popup/AddBook/AddBook.jsx":"342bf3316fa6","components/popup/AddBook/AddBook.d.ts":"955a5a8afa4f","components/popup/AddBook/AddBook.prompt.md":"01b8a578dfcb","components/admin/AdminLayoutView/AdminLayoutView.jsx":"5b310628a60d","components/admin/AdminLayoutView/AdminLayoutView.d.ts":"0e3dcde18273","components/admin/AdminLayoutView/AdminLayoutView.prompt.md":"a265ad818b8a","components/admin/AdminRolesView/AdminRolesView.jsx":"04d76e45e222","components/admin/AdminRolesView/AdminRolesView.d.ts":"4d0f24e409a3","components/admin/AdminRolesView/AdminRolesView.prompt.md":"fe59573fbb14","components/admin/AdminUsersView/AdminUsersView.jsx":"ec17c279e279","components/admin/AdminUsersView/AdminUsersView.d.ts":"7040b94f5d8f","components/admin/AdminUsersView/AdminUsersView.prompt.md":"94083f1b7cdc","components/popup/AttachPhotoPopup/AttachPhotoPopup.jsx":"6c4078e0cf14","components/popup/AttachPhotoPopup/AttachPhotoPopup.d.ts":"f6b60b5261f4","components/popup/AttachPhotoPopup/AttachPhotoPopup.prompt.md":"fb23d1f153a1","components/music/AudioPlayer/AudioPlayer.jsx":"5838ad0176db","components/music/AudioPlayer/AudioPlayer.d.ts":"f9937a613082","components/music/AudioPlayer/AudioPlayer.prompt.md":"21d4ecf9ce8b","components/auth/AuthForm/AuthForm.jsx":"1e61c6521418","components/auth/AuthForm/AuthForm.d.ts":"aa7c72c0e540","components/auth/AuthForm/AuthForm.prompt.md":"a1d2e05687e3","components/auth/AuthLanding/AuthLanding.jsx":"8fb2228bac01","components/auth/AuthLanding/AuthLanding.d.ts":"ebe7795bc4c4","components/auth/AuthLanding/AuthLanding.prompt.md":"304b549afe05","components/general/Avatar/Avatar.jsx":"de2a9e21a364","components/general/Avatar/Avatar.d.ts":"cef099484f1a","components/general/Avatar/Avatar.prompt.md":"28cd154c7a58","components/bank/BackLink/BackLink.jsx":"f7343a20ae06","components/bank/BackLink/BackLink.d.ts":"be1dbf1a0ed1","components/bank/BackLink/BackLink.prompt.md":"56530bd0375f","components/social/BadgeCard/BadgeCard.jsx":"efa4a4d130a2","components/social/BadgeCard/BadgeCard.d.ts":"1a048347711e","components/social/BadgeCard/BadgeCard.prompt.md":"0cae404ebaf0","components/widget/BirthdayCard/BirthdayCard.jsx":"61b2b764bca9","components/widget/BirthdayCard/BirthdayCard.d.ts":"169c1800a17f","components/widget/BirthdayCard/BirthdayCard.prompt.md":"4df990b65e98","components/blog/BlogCard/BlogCard.jsx":"74fe53b4fae4","components/blog/BlogCard/BlogCard.d.ts":"5a355bf69952","components/blog/BlogCard/BlogCard.prompt.md":"40d84fd02627","components/bank/BudgetsView/BudgetsView.jsx":"424a4a18ba05","components/bank/BudgetsView/BudgetsView.d.ts":"e379ed80f5a2","components/bank/BudgetsView/BudgetsView.prompt.md":"59b3284b8646","components/music/BulkImportModal/BulkImportModal.jsx":"6b846b06da3a","components/music/BulkImportModal/BulkImportModal.d.ts":"7c8c030cb5f8","components/music/BulkImportModal/BulkImportModal.prompt.md":"21b1f0da7189","components/calendar/CalendarView/CalendarView.jsx":"7bb2022cea9e","components/calendar/CalendarView/CalendarView.d.ts":"fbaaa115c7bf","components/calendar/CalendarView/CalendarView.prompt.md":"93c071523ede","components/widget/CalendarWidget/CalendarWidget.jsx":"e9a8b24134c7","components/widget/CalendarWidget/CalendarWidget.d.ts":"71b8eb108e7c","components/widget/CalendarWidget/CalendarWidget.prompt.md":"40e66331e9ec","components/bank/CategoryChip/CategoryChip.jsx":"e8a1ec73fc43","components/bank/CategoryChip/CategoryChip.d.ts":"90123e43f498","components/bank/CategoryChip/CategoryChip.prompt.md":"c67510741136","components/general/CategoryDonut/CategoryDonut.jsx":"e34402e4a399","components/general/CategoryDonut/CategoryDonut.d.ts":"4b44affca3e2","components/general/CategoryDonut/CategoryDonut.prompt.md":"ce2a4f9ab4a4","components/reader/ChapterMenu/ChapterMenu.jsx":"a06005c70a72","components/reader/ChapterMenu/ChapterMenu.d.ts":"d9cd68d278e4","components/reader/ChapterMenu/ChapterMenu.prompt.md":"7fb20fa4764b","components/popup/ChatResponsive/ChatResponsive.jsx":"731a0df6f69c","components/popup/ChatResponsive/ChatResponsive.d.ts":"af5c346f0de7","components/popup/ChatResponsive/ChatResponsive.prompt.md":"c94a075c52fa","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.jsx":"6351148a1e60","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.d.ts":"6b3b302ef68f","components/popup/ChoseFromMyPhoto/ChoseFromMyPhoto.prompt.md":"53243c634d4a","components/comic/ComicDetailView/ComicDetailView.jsx":"868e712e47ae","components/comic/ComicDetailView/ComicDetailView.d.ts":"0eabd607602a","components/comic/ComicDetailView/ComicDetailView.prompt.md":"eafc2a792c03","components/comic/ComicIndexView/ComicIndexView.jsx":"4f28ea91cd2e","components/comic/ComicIndexView/ComicIndexView.d.ts":"35a2fcfc8e80","components/comic/ComicIndexView/ComicIndexView.prompt.md":"22aad7660d9b","components/comic/ComicReaderView/ComicReaderView.jsx":"445de30e9ec3","components/comic/ComicReaderView/ComicReaderView.d.ts":"abd83f30dddc","components/comic/ComicReaderView/ComicReaderView.prompt.md":"bfd5797c2caf","components/comment/CommentForm/CommentForm.jsx":"1c8a99defa49","components/comment/CommentForm/CommentForm.d.ts":"75d3009d0f00","components/comment/CommentForm/CommentForm.prompt.md":"60cb5b0b1258","components/comment/CommentItem/CommentItem.jsx":"6fb44b469784","components/comment/CommentItem/CommentItem.d.ts":"991573d78046","components/comment/CommentItem/CommentItem.prompt.md":"dc69c22361c1","components/comment/CommentThread/CommentThread.jsx":"6b7db8e67335","components/comment/CommentThread/CommentThread.d.ts":"462dfc0bfdf0","components/comment/CommentThread/CommentThread.prompt.md":"6024a885e2ea","components/general/Composer/Composer.jsx":"db23f5d95c44","components/general/Composer/Composer.d.ts":"d013ccadccf6","components/general/Composer/Composer.prompt.md":"37fe9d8ce0c5","components/library/ContinueRail/ContinueRail.jsx":"550b895ddd13","components/library/ContinueRail/ContinueRail.d.ts":"b18bfb68ce8e","components/library/ContinueRail/ContinueRail.prompt.md":"6ab8419506f9","components/widget/ContinueWidget/ContinueWidget.jsx":"a1266e7aafd8","components/widget/ContinueWidget/ContinueWidget.d.ts":"dc2bc3dbad69","components/widget/ContinueWidget/ContinueWidget.prompt.md":"dd755077a299","components/profile/ControlBlockButtons/ControlBlockButtons.jsx":"9f5ea6dd02bb","components/profile/ControlBlockButtons/ControlBlockButtons.d.ts":"ff2cbc2650da","components/profile/ControlBlockButtons/ControlBlockButtons.prompt.md":"e1533879d5cb","components/bank/DashboardView/DashboardView.jsx":"2139072cd085","components/bank/DashboardView/DashboardView.d.ts":"1c53b7f90098","components/bank/DashboardView/DashboardView.prompt.md":"07f775f3a730","components/journal/EntryCard/EntryCard.jsx":"213a325fd955","components/journal/EntryCard/EntryCard.d.ts":"898570d691db","components/journal/EntryCard/EntryCard.prompt.md":"b88a75cb6cea","components/social/EventItem/EventItem.jsx":"10a68507a826","components/social/EventItem/EventItem.d.ts":"7b4345824b98","components/social/EventItem/EventItem.prompt.md":"cc266956cb6c","components/widget/FinanceWidget/FinanceWidget.jsx":"a39aabcb16aa","components/widget/FinanceWidget/FinanceWidget.d.ts":"13ef4f8960a7","components/widget/FinanceWidget/FinanceWidget.prompt.md":"e93160901909","components/form/FormField/FormField.jsx":"63b6f5ed57e0","components/form/FormField/FormField.d.ts":"90014143311a","components/form/FormField/FormField.prompt.md":"f174a5a62df9","components/social/FriendCard/FriendCard.jsx":"e64fc2419908","components/social/FriendCard/FriendCard.d.ts":"482754771ea9","components/social/FriendCard/FriendCard.prompt.md":"159a089de580","components/social/FriendRequestItem/FriendRequestItem.jsx":"65eee2d97545","components/social/FriendRequestItem/FriendRequestItem.d.ts":"52fa23811754","components/social/FriendRequestItem/FriendRequestItem.prompt.md":"528b63cb335c","components/general/FriendRequestsMenu/FriendRequestsMenu.jsx":"a08be07b3629","components/general/FriendRequestsMenu/FriendRequestsMenu.d.ts":"7fbf638c31d2","components/general/FriendRequestsMenu/FriendRequestsMenu.prompt.md":"c68f7472fcaf","components/widget/FriendSuggestions/FriendSuggestions.jsx":"9e987e330b53","components/widget/FriendSuggestions/FriendSuggestions.d.ts":"6dac979dce19","components/widget/FriendSuggestions/FriendSuggestions.prompt.md":"2a954eb8726e","components/partials/GoToTop/GoToTop.jsx":"ebc1876e812d","components/partials/GoToTop/GoToTop.d.ts":"dfc5a6093c65","components/partials/GoToTop/GoToTop.prompt.md":"a7cdd653a640","components/partials/HelloPreloader/HelloPreloader.jsx":"649f0aa9d0b0","components/partials/HelloPreloader/HelloPreloader.d.ts":"b1f073ad1018","components/partials/HelloPreloader/HelloPreloader.prompt.md":"8b3aa58951f6","components/home/HomeView/HomeView.jsx":"427c8d2a64cd","components/home/HomeView/HomeView.d.ts":"45e4f6c68587","components/home/HomeView/HomeView.prompt.md":"4114d3bc965d","components/general/Icon/Icon.jsx":"327e6a175e5e","components/general/Icon/Icon.d.ts":"b953cbae66e0","components/general/Icon/Icon.prompt.md":"3fc1f07b2b6a","components/auth/LoginView/LoginView.jsx":"b86ff10c6c9c","components/auth/LoginView/LoginView.d.ts":"12e5552a431b","components/auth/LoginView/LoginView.prompt.md":"319ac8630185","components/master/MasterBase/MasterBase.jsx":"794ed6094191","components/master/MasterBase/MasterBase.d.ts":"78c99aa225e5","components/master/MasterBase/MasterBase.prompt.md":"de08fd4cc44d","components/master/MasterPublic/MasterPublic.jsx":"68d654a8c687","components/master/MasterPublic/MasterPublic.d.ts":"f8e3f66856a2","components/master/MasterPublic/MasterPublic.prompt.md":"ac73aaeed1f5","components/media/MediaDetailView/MediaDetailView.jsx":"d889ecab9187","components/media/MediaDetailView/MediaDetailView.d.ts":"f6579d22185b","components/media/MediaDetailView/MediaDetailView.prompt.md":"322ad994a10d","components/media/MediaIndexView/MediaIndexView.jsx":"ad811ffe5ab7","components/media/MediaIndexView/MediaIndexView.d.ts":"9a861cde8f90","components/media/MediaIndexView/MediaIndexView.prompt.md":"c06c8c580f99","components/general/MessagesMenu/MessagesMenu.jsx":"8f7d104afb2d","components/general/MessagesMenu/MessagesMenu.d.ts":"48058318671f","components/general/MessagesMenu/MessagesMenu.prompt.md":"2a02efd43086","components/general/MoneyDisplay/MoneyDisplay.jsx":"4ca92f0a28e0","components/general/MoneyDisplay/MoneyDisplay.d.ts":"dfadca9ab6e9","components/general/MoneyDisplay/MoneyDisplay.prompt.md":"634993ec997a","components/general/MoneyInput/MoneyInput.jsx":"a6dc564d16ab","components/general/MoneyInput/MoneyInput.d.ts":"6c41cbfd666d","components/general/MoneyInput/MoneyInput.prompt.md":"726612f534f7","components/bank/MonthPager/MonthPager.jsx":"e32dfa31849f","components/bank/MonthPager/MonthPager.d.ts":"cf3f4a0978fe","components/bank/MonthPager/MonthPager.prompt.md":"557cea7a42e6","components/music/MusicDetailView/MusicDetailView.jsx":"1ec6368ed27a","components/music/MusicDetailView/MusicDetailView.d.ts":"ccb71cf38bd4","components/music/MusicDetailView/MusicDetailView.prompt.md":"9f6352623a0b","components/music/MusicIndexView/MusicIndexView.jsx":"894002a2f6ab","components/music/MusicIndexView/MusicIndexView.d.ts":"8a88ef9182bd","components/music/MusicIndexView/MusicIndexView.prompt.md":"4783ad65fec4","components/widget/MusicWidget/MusicWidget.jsx":"93bea95d214a","components/widget/MusicWidget/MusicWidget.d.ts":"1a119f8a0e09","components/widget/MusicWidget/MusicWidget.prompt.md":"0bcea1f2b66d","components/general/NotificationsMenu/NotificationsMenu.jsx":"8f3b3658a39e","components/general/NotificationsMenu/NotificationsMenu.d.ts":"9f8d15496d0b","components/general/NotificationsMenu/NotificationsMenu.prompt.md":"99f463cc7de0","components/novel/NovelDetailView/NovelDetailView.jsx":"9e60657d9e70","components/novel/NovelDetailView/NovelDetailView.d.ts":"4d7af66ef501","components/novel/NovelDetailView/NovelDetailView.prompt.md":"524cdaadd871","components/music/NowPlayingBar/NowPlayingBar.jsx":"c4f9043c35b6","components/music/NowPlayingBar/NowPlayingBar.d.ts":"8d355eb1477a","components/music/NowPlayingBar/NowPlayingBar.prompt.md":"86d36a39b6c7","components/reader/PagedReader/PagedReader.jsx":"bb4f64370dc0","components/reader/PagedReader/PagedReader.d.ts":"e71f760160ac","components/reader/PagedReader/PagedReader.prompt.md":"05bd834a6363","components/widget/PagesWidget/PagesWidget.jsx":"519f4039a6a4","components/widget/PagesWidget/PagesWidget.d.ts":"b8788812f282","components/widget/PagesWidget/PagesWidget.prompt.md":"40cb0997f850","components/people/PeopleIndexView/PeopleIndexView.jsx":"81a668759e9e","components/people/PeopleIndexView/PeopleIndexView.d.ts":"2270f7e4d300","components/people/PeopleIndexView/PeopleIndexView.prompt.md":"ae841d31657f","components/widget/PersonalInfoWidget/PersonalInfoWidget.jsx":"c77e6162454c","components/widget/PersonalInfoWidget/PersonalInfoWidget.d.ts":"81ab6fc38c0d","components/widget/PersonalInfoWidget/PersonalInfoWidget.prompt.md":"33f7eab8849e","components/people/PersonDetailView/PersonDetailView.jsx":"5fd05308ff9f","components/people/PersonDetailView/PersonDetailView.d.ts":"4538b687c1c5","components/people/PersonDetailView/PersonDetailView.prompt.md":"0ff37aff8a6f","components/popup/PlacePickerPopup/PlacePickerPopup.jsx":"8baecb4a0d07","components/popup/PlacePickerPopup/PlacePickerPopup.d.ts":"4a6dd688f3c3","components/popup/PlacePickerPopup/PlacePickerPopup.prompt.md":"35ee3657ffbf","components/music/PlaylistWidget/PlaylistWidget.jsx":"d141b1b1da88","components/music/PlaylistWidget/PlaylistWidget.d.ts":"003d70e56a97","components/music/PlaylistWidget/PlaylistWidget.prompt.md":"c8d60820436c","components/general/Post/Post.jsx":"543b6ccfbac2","components/general/Post/Post.d.ts":"0ea5d52ff044","components/general/Post/Post.prompt.md":"a95b4192a6f7","components/post/PostControlButtons/PostControlButtons.jsx":"046b20a4f13f","components/post/PostControlButtons/PostControlButtons.d.ts":"40c709a63556","components/post/PostControlButtons/PostControlButtons.prompt.md":"e0e97ecb9bcf","components/post/PostOptionsMenu/PostOptionsMenu.jsx":"c64d997942ee","components/post/PostOptionsMenu/PostOptionsMenu.d.ts":"fd9c6d490625","components/post/PostOptionsMenu/PostOptionsMenu.prompt.md":"41e4c110bbc0","components/profile/ProfileHeader/ProfileHeader.jsx":"17dc135c32e5","components/profile/ProfileHeader/ProfileHeader.d.ts":"c9881fdefc41","components/profile/ProfileHeader/ProfileHeader.prompt.md":"8eaed02cc313","components/bank/QuickAddModal/QuickAddModal.jsx":"ec6fd54057c0","components/bank/QuickAddModal/QuickAddModal.d.ts":"e609bb584286","components/bank/QuickAddModal/QuickAddModal.prompt.md":"254c548d287e","components/post/ReactionBar/ReactionBar.jsx":"04d72b6d490c","components/post/ReactionBar/ReactionBar.d.ts":"90e910fa88a3","components/post/ReactionBar/ReactionBar.prompt.md":"5446f93193bf","components/reader/ReaderChrome/ReaderChrome.jsx":"aa30d46b0a21","components/reader/ReaderChrome/ReaderChrome.d.ts":"5b7f9228ec0d","components/reader/ReaderChrome/ReaderChrome.prompt.md":"3fab920b57cc","components/reader/ReaderHelp/ReaderHelp.jsx":"153691b76234","components/reader/ReaderHelp/ReaderHelp.d.ts":"b3dae7ecbfba","components/reader/ReaderHelp/ReaderHelp.prompt.md":"8d026d225a88","components/reader/ReaderSettings/ReaderSettings.jsx":"0e04895e054e","components/reader/ReaderSettings/ReaderSettings.d.ts":"e93cc06aadd1","components/reader/ReaderSettings/ReaderSettings.prompt.md":"7ae06a03ad84","components/auth/RegisterView/RegisterView.jsx":"0f9760f1341e","components/auth/RegisterView/RegisterView.d.ts":"92a8c302c44c","components/auth/RegisterView/RegisterView.prompt.md":"6ca50c2600a0","components/bank/ReportsView/ReportsView.jsx":"40abf17b431f","components/bank/ReportsView/ReportsView.d.ts":"ee55888b0b4c","components/bank/ReportsView/ReportsView.prompt.md":"07998a7431ed","components/form/SelectField/SelectField.jsx":"52557bb1e40a","components/form/SelectField/SelectField.d.ts":"e663d927abec","components/form/SelectField/SelectField.prompt.md":"441b0b51704e","components/menu/SidebarCenter/SidebarCenter.jsx":"8d50d316a50b","components/menu/SidebarCenter/SidebarCenter.d.ts":"e2a916efabc5","components/menu/SidebarCenter/SidebarCenter.prompt.md":"d18e20ead63a","components/menu/SidebarLeft/SidebarLeft.jsx":"b6aae23633b9","components/menu/SidebarLeft/SidebarLeft.d.ts":"f12def96299c","components/menu/SidebarLeft/SidebarLeft.prompt.md":"e9b262d2b815","components/menu/SidebarRight/SidebarRight.jsx":"e9b448900d53","components/menu/SidebarRight/SidebarRight.d.ts":"0d4d15dd7d60","components/menu/SidebarRight/SidebarRight.prompt.md":"14c6a4793fa6","components/stream/StreamItemCard/StreamItemCard.jsx":"a521642ea3ac","components/stream/StreamItemCard/StreamItemCard.d.ts":"b503e0607029","components/stream/StreamItemCard/StreamItemCard.prompt.md":"8bdd6786e8e1","components/reader/StripReader/StripReader.jsx":"05cbce2ea80f","components/reader/StripReader/StripReader.d.ts":"5e21494e4a02","components/reader/StripReader/StripReader.prompt.md":"dfdf0101fe06","components/form/TagSelect/TagSelect.jsx":"af91776a8220","components/form/TagSelect/TagSelect.d.ts":"87f6b55f58b9","components/form/TagSelect/TagSelect.prompt.md":"b33852eb9270","components/form/ToggleRow/ToggleRow.jsx":"35633469de90","components/form/ToggleRow/ToggleRow.d.ts":"928f35533522","components/form/ToggleRow/ToggleRow.prompt.md":"79a8971f5545","components/headers/TopMenu/TopMenu.jsx":"3540cfee1989","components/headers/TopMenu/TopMenu.d.ts":"6516d4db52ab","components/headers/TopMenu/TopMenu.prompt.md":"7bbf0356c5e0","components/music/TrackItem/TrackItem.jsx":"db070a19f13d","components/music/TrackItem/TrackItem.d.ts":"91c728ee02c2","components/music/TrackItem/TrackItem.prompt.md":"00b43be10f28","components/general/TransactionRow/TransactionRow.jsx":"977fe6726e9e","components/general/TransactionRow/TransactionRow.d.ts":"9a2dd3262a83","components/general/TransactionRow/TransactionRow.prompt.md":"389dd47b0dbb","components/bank/TransactionsView/TransactionsView.jsx":"87d493f301fb","components/bank/TransactionsView/TransactionsView.d.ts":"f7a9df3d734f","components/bank/TransactionsView/TransactionsView.prompt.md":"928f33dd6b46","components/general/TrendBars/TrendBars.jsx":"3a41a6607c30","components/general/TrendBars/TrendBars.d.ts":"921ceb8a5c10","components/general/TrendBars/TrendBars.prompt.md":"ac8d1aea143f","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.jsx":"1625f80c3af1","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.d.ts":"261b915ce28d","components/popup/UpdateHeaderPhoto/UpdateHeaderPhoto.prompt.md":"b4e809dc5e46","components/upload/UploadStudio/UploadStudio.jsx":"e4e9f9702fee","components/upload/UploadStudio/UploadStudio.d.ts":"1e0a5a083112","components/upload/UploadStudio/UploadStudio.prompt.md":"74f724f476de","components/weather/WeatherView/WeatherView.jsx":"a18d60399e3a","components/weather/WeatherView/WeatherView.d.ts":"41010dd77c65","components/weather/WeatherView/WeatherView.prompt.md":"c07d55bb6495","components/widget/WeatherWidget/WeatherWidget.jsx":"68162d56f018","components/widget/WeatherWidget/WeatherWidget.d.ts":"6d59df58d78a","components/widget/WeatherWidget/WeatherWidget.prompt.md":"774b3b2e3d78","components/widget/WidgetCard/WidgetCard.jsx":"2dde1e2d0e88","components/widget/WidgetCard/WidgetCard.d.ts":"79ae7519da81","components/widget/WidgetCard/WidgetCard.prompt.md":"c73ea6104733"},"inlinedExternals":["@floating-ui/core","@floating-ui/dom","@floating-ui/utils","@tanstack/query-core","@tanstack/react-query","@vidstack/react","media-captions","portal-frontend","zustand"],"builtBy":"cc-design-sync"} */
 var PortalUI = (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -6,8 +6,8 @@ var PortalUI = (() => {
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __typeError = (msg) => {
-    throw TypeError(msg);
+  var __typeError = (msg2) => {
+    throw TypeError(msg2);
   };
   var __defNormalProp = (obj, key2, value) => key2 in obj ? __defProp(obj, key2, { enumerable: true, configurable: true, writable: true, value }) : obj[key2] = value;
   var __esm = (fn, res, err) => function __init() {
@@ -47,7 +47,7 @@ var PortalUI = (() => {
   ));
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
   var __publicField = (obj, key2, value) => __defNormalProp(obj, typeof key2 !== "symbol" ? key2 + "" : key2, value);
-  var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+  var __accessCheck = (obj, member, msg2) => member.has(obj) || __typeError("Cannot " + msg2);
   var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
   var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
   var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
@@ -163,7 +163,7 @@ var PortalUI = (() => {
     chromecast_exports: () => chromecast_exports,
     composeRefs: () => composeRefs,
     computed: () => computed,
-    createContext: () => createContext5,
+    createContext: () => createContext6,
     createDisposalBin: () => createDisposalBin,
     createReactComponent: () => createReactComponent,
     createScope: () => createScope,
@@ -210,12 +210,12 @@ var PortalUI = (() => {
     toggleClass: () => toggleClass,
     untrack: () => untrack,
     uppercaseFirstChar: () => uppercaseFirstChar,
-    useContext: () => useContext5,
+    useContext: () => useContext6,
     useReactContext: () => useReactContext,
     useReactScope: () => useReactScope,
     useSignal: () => useSignal,
     useSignalRecord: () => useSignalRecord,
-    useState: () => useState34,
+    useState: () => useState46,
     useStateContext: () => useStateContext,
     waitIdlePeriod: () => waitIdlePeriod,
     waitTimeout: () => waitTimeout,
@@ -640,7 +640,7 @@ var PortalUI = (() => {
       }, options);
     });
   }
-  function createContext5(provide) {
+  function createContext6(provide) {
     return {
       id: /* @__PURE__ */ Symbol(),
       provide
@@ -650,7 +650,7 @@ var PortalUI = (() => {
     const hasProvidedValue = !isUndefined(value);
     setContext(context.id, hasProvidedValue ? value : context.provide?.(), scope);
   }
-  function useContext5(context) {
+  function useContext6(context) {
     return getContext(context.id);
   }
   function hasProvidedContext(context) {
@@ -681,8 +681,8 @@ var PortalUI = (() => {
     if (!target[METHODS]) target[METHODS] = /* @__PURE__ */ new Set();
     target[METHODS].add(propertyKey);
   }
-  function useState34(state) {
-    return useContext5(state);
+  function useState46(state) {
+    return useContext6(state);
   }
   function throttle(fn, interval, options) {
     var timeoutId = null;
@@ -3805,8 +3805,8 @@ var PortalUI = (() => {
   function coerceToError(error) {
     return error instanceof Error ? error : Error(typeof error === "string" ? error : JSON.stringify(error));
   }
-  function assert(condition, message) {
-    if (!condition) throw Error(message || "Assertion failed.");
+  function assert(condition, message5) {
+    if (!condition) throw Error(message5 || "Assertion failed.");
   }
   async function importDASH(loader, callbacks = {}) {
     if (isUndefined(loader)) return void 0;
@@ -4016,7 +4016,7 @@ var PortalUI = (() => {
         removeCue(cue, trigger) {
           const index = __privateGet(this, _cues).indexOf(cue);
           if (index >= 0) {
-            const isActive = __privateGet(this, _activeCues).includes(cue);
+            const isActive2 = __privateGet(this, _activeCues).includes(cue);
             if (cue.id) __privateGet(this, _cueIds).delete(cue.id);
             __privateGet(this, _cues).splice(index, 1);
             this[TextTrackSymbol.native]?.track.removeCue(cue);
@@ -4024,7 +4024,7 @@ var PortalUI = (() => {
               detail: cue,
               trigger
             }));
-            if (isActive) this[TextTrackSymbol.updateActiveCues](__privateGet(this, _currentTime), trigger);
+            if (isActive2) this[TextTrackSymbol.updateActiveCues](__privateGet(this, _currentTime), trigger);
           }
         }
         setMode(mode, trigger) {
@@ -5098,10 +5098,10 @@ var PortalUI = (() => {
         if (isUndefined(ctor) && !isString(__privateGet(this, _lib))) ctor = await importDASH(__privateGet(this, _lib), callbacks);
         if (!ctor) return null;
         if (!window.dashjs.supportsMediaSource()) {
-          const message = "[vidstack] `dash.js` is not supported in this environment";
+          const message5 = "[vidstack] `dash.js` is not supported in this environment";
           __privateGet(this, _ctx6).player.dispatch(new DOMEvent("dash-unsupported"));
           __privateGet(this, _ctx6).notify("error", {
-            message,
+            message: message5,
             code: 4
           });
           return null;
@@ -5489,10 +5489,10 @@ var PortalUI = (() => {
         if (isUndefined(ctor) && !isString(__privateGet(this, _lib2))) ctor = await importHLS(__privateGet(this, _lib2), callbacks);
         if (!ctor) return null;
         if (!ctor.isSupported()) {
-          const message = "[vidstack] `hls.js` is not supported in this environment";
+          const message5 = "[vidstack] `hls.js` is not supported in this environment";
           __privateGet(this, _ctx8).player.dispatch(new DOMEvent("hls-unsupported"));
           __privateGet(this, _ctx8).notify("error", {
-            message,
+            message: message5,
             code: 4
           });
           return null;
@@ -5637,9 +5637,9 @@ var PortalUI = (() => {
           listenEvent(__privateGet(this, _iframe), "load", this.onLoad.bind(this));
           effect(__privateMethod(this, _EmbedProvider_instances, watchSrc_fn).bind(this));
         }
-        postMessage(message, target) {
+        postMessage(message5, target) {
           if (IS_SERVER2) return;
-          __privateGet(this, _iframe).contentWindow?.postMessage(JSON.stringify(message), target ?? "*");
+          __privateGet(this, _iframe).contentWindow?.postMessage(JSON.stringify(message5), target ?? "*");
         }
       }, _iframe = new WeakMap(), _EmbedProvider_instances = new WeakSet(), watchSrc_fn = function() {
         const src = this.src();
@@ -5653,8 +5653,8 @@ var PortalUI = (() => {
         const origin = this.getOrigin();
         if (!((event.source === null || event.source === __privateGet(this, _iframe)?.contentWindow) && (!isString(origin) || origin === event.origin))) return;
         try {
-          const message = JSON.parse(event.data);
-          if (message) this.onMessage(message, event);
+          const message5 = JSON.parse(event.data);
+          if (message5) this.onMessage(message5, event);
           return;
         } catch (e2) {
         }
@@ -5833,8 +5833,8 @@ var PortalUI = (() => {
         destroy() {
           __privateMethod(this, _VimeoProvider_instances, reset_fn2).call(this);
           this.fullscreen = void 0;
-          const message = "provider destroyed";
-          for (const promises of __privateGet(this, _promises).values()) for (const { reject } of promises) reject(message);
+          const message5 = "provider destroyed";
+          for (const promises of __privateGet(this, _promises).values()) for (const { reject } of promises) reject(message5);
           __privateGet(this, _promises).clear();
           __privateMethod(this, _VimeoProvider_instances, remote_fn).call(this, "destroy");
         }
@@ -5888,9 +5888,9 @@ var PortalUI = (() => {
             dnt: !this.cookies
           };
         }
-        onMessage(message, event) {
-          if (message.event) __privateMethod(this, _VimeoProvider_instances, onEvent_fn).call(this, message.event, message.data, event);
-          else if (message.method) __privateMethod(this, _VimeoProvider_instances, onMethod_fn).call(this, message.method, message.value, event);
+        onMessage(message5, event) {
+          if (message5.event) __privateMethod(this, _VimeoProvider_instances, onEvent_fn).call(this, message5.event, message5.data, event);
+          else if (message5.method) __privateMethod(this, _VimeoProvider_instances, onMethod_fn).call(this, message5.method, message5.value, event);
         }
         onLoad() {
         }
@@ -6142,9 +6142,9 @@ var PortalUI = (() => {
             break;
         }
       }, onError_fn4 = function(error, trigger) {
-        const { message, method: method2 } = error;
+        const { message: message5, method: method2 } = error;
         if (method2 === "setPlaybackRate") __privateGet(this, _pro).set(false);
-        if (method2) __privateMethod(this, _VimeoProvider_instances, getPromise_fn).call(this, method2)?.reject(message);
+        if (method2) __privateMethod(this, _VimeoProvider_instances, getPromise_fn).call(this, method2)?.reject(message5);
       }, remote_fn = async function(command, arg) {
         let promise = deferredPromise(), promises = __privateGet(this, _promises).get(command);
         if (!promises) __privateGet(this, _promises).set(command, promises = []);
@@ -6289,8 +6289,8 @@ var PortalUI = (() => {
         }
         destroy() {
           __privateMethod(this, _YouTubeProvider_instances, reset_fn3).call(this);
-          const message = "provider destroyed";
-          for (const promises of __privateGet(this, _promises2).values()) for (const { reject } of promises) reject(message);
+          const message5 = "provider destroyed";
+          for (const promises of __privateGet(this, _promises2).values()) for (const { reject } of promises) reject(message5);
           __privateGet(this, _promises2).clear();
         }
         async play() {
@@ -6374,10 +6374,10 @@ var PortalUI = (() => {
           }
           if (isNumber(info.playerState) && info.playerState !== __privateGet(this, _state3)) __privateMethod(this, _YouTubeProvider_instances, onStateChange_fn2).call(this, info.playerState, event);
         }
-      }, _ctx10 = new WeakMap(), _videoId2 = new WeakMap(), _state3 = new WeakMap(), _currentSrc2 = new WeakMap(), _seekingTimer = new WeakMap(), _invalidPlay = new WeakMap(), _promises2 = new WeakMap(), _YouTubeProvider_instances = new WeakSet(), playFail_fn = function(message) {
-        __privateMethod(this, _YouTubeProvider_instances, getPromise_fn2).call(this, "playVideo")?.reject(message);
-      }, pauseFail_fn = function(message) {
-        __privateMethod(this, _YouTubeProvider_instances, getPromise_fn2).call(this, "pauseVideo")?.reject(message);
+      }, _ctx10 = new WeakMap(), _videoId2 = new WeakMap(), _state3 = new WeakMap(), _currentSrc2 = new WeakMap(), _seekingTimer = new WeakMap(), _invalidPlay = new WeakMap(), _promises2 = new WeakMap(), _YouTubeProvider_instances = new WeakSet(), playFail_fn = function(message5) {
+        __privateMethod(this, _YouTubeProvider_instances, getPromise_fn2).call(this, "playVideo")?.reject(message5);
+      }, pauseFail_fn = function(message5) {
+        __privateMethod(this, _YouTubeProvider_instances, getPromise_fn2).call(this, "pauseVideo")?.reject(message5);
       }, watchVideoId_fn2 = function() {
         __privateMethod(this, _YouTubeProvider_instances, reset_fn3).call(this);
         const videoId = __privateGet(this, _videoId2).call(this);
@@ -7037,8 +7037,8 @@ var PortalUI = (() => {
           state
         };
         ctx.notify("remote-playback-change", detail, trigger);
-      }, createError_fn = function(code, message) {
-        const error = Error(message);
+      }, createError_fn = function(code, message5) {
+        const error = Error(message5);
         error.code = code;
         return error;
       }, _a42);
@@ -7059,22 +7059,31 @@ var PortalUI = (() => {
   // ds-bundle/.bundle-entry.mjs
   var bundle_entry_exports = {};
   __export(bundle_entry_exports, {
+    ACCOUNT_TYPE_LABEL: () => ACCOUNT_TYPE_LABEL,
     AccountsView: () => AccountsView,
     ActivityFeed: () => ActivityFeed,
     AddBook: () => AddBook,
+    AdminLayoutView: () => AdminLayoutView,
+    AdminRolesView: () => AdminRolesView,
+    AdminUsersView: () => AdminUsersView,
+    AttachPhotoPopup: () => AttachPhotoPopup,
     AudioPlayer: () => AudioPlayer,
     AuthForm: () => AuthForm,
     AuthLanding: () => AuthLanding,
     Avatar: () => Avatar,
+    BackLink: () => BackLink,
     BadgeCard: () => BadgeCard,
     BirthdayCard: () => BirthdayCard,
     BlogCard: () => BlogCard,
     BtnPrimary: () => BtnPrimary,
     BtnSecondary: () => BtnSecondary,
     BudgetsView: () => BudgetsView,
+    BulkImportModal: () => BulkImportModal,
     CalendarView: () => CalendarView,
     CalendarWidget: () => CalendarWidget,
     Card: () => Card,
+    CategoryChip: () => CategoryChip,
+    CategoryDonut: () => CategoryDonut,
     ChapterMenu: () => ChapterMenu,
     ChatResponsive: () => ChatResponsive,
     ChoseFromMyPhoto: () => ChoseFromMyPhoto,
@@ -7093,7 +7102,7 @@ var PortalUI = (() => {
     DashboardView: () => DashboardView,
     EntryCard: () => EntryCard,
     EventItem: () => EventItem,
-    Field: () => Field,
+    Field: () => Field2,
     FinanceWidget: () => FinanceWidget,
     FormField: () => FormField,
     FriendCard: () => FriendCard,
@@ -7113,23 +7122,34 @@ var PortalUI = (() => {
     Modal: () => Modal,
     MoneyDisplay: () => MoneyDisplay,
     MoneyInput: () => MoneyInput,
+    MonthPager: () => MonthPager,
+    MusicDetailView: () => MusicDetailView,
+    MusicIndexView: () => MusicIndexView,
+    MusicPlayerProvider: () => MusicPlayerProvider,
+    MusicWidget: () => MusicWidget,
     NotificationsMenu: () => NotificationsMenu,
     NovelDetailView: () => NovelDetailView,
+    NowPlayingBar: () => NowPlayingBar,
+    NowPlayingSpacer: () => NowPlayingSpacer,
     OLYMP_VIEWBOX: () => OLYMP_VIEWBOX,
     PagedReader: () => PagedReader,
     PagesWidget: () => PagesWidget,
     PeopleIndexView: () => PeopleIndexView,
     PersonDetailView: () => PersonDetailView,
     PersonalInfoWidget: () => PersonalInfoWidget,
+    PlacePickerPopup: () => PlacePickerPopup,
     PlaylistWidget: () => PlaylistWidget,
     Post: () => Post,
     PostControlButtons: () => PostControlButtons,
+    PostOptionsMenu: () => PostOptionsMenu,
     ProfileHeader: () => ProfileHeader,
+    QuickAddModal: () => QuickAddModal,
     ReactionBar: () => ReactionBar,
     ReaderChrome: () => ReaderChrome,
     ReaderHelp: () => ReaderHelp,
     ReaderSettings: () => ReaderSettings,
     RegisterView: () => RegisterView,
+    ReportsView: () => ReportsView,
     SelectField: () => SelectField,
     SessionKeeper: () => SessionKeeper,
     SidebarCenter: () => SidebarCenter,
@@ -7142,15 +7162,21 @@ var PortalUI = (() => {
     ToggleRow: () => ToggleRow,
     TopMenu: () => TopMenu,
     TrackItem: () => TrackItem,
+    TransactionRow: () => TransactionRow,
     TransactionsView: () => TransactionsView,
+    TrendBars: () => TrendBars,
     UpdateHeaderPhoto: () => UpdateHeaderPhoto,
     UploadStudio: () => UploadStudio,
     WeatherView: () => WeatherView,
     WeatherWidget: () => WeatherWidget,
     WidgetCard: () => WidgetCard,
     __dsMainNs: () => pkg_entry_exports,
+    categoryTint: () => categoryTint,
+    groupByDay: () => groupByDay,
     inputCls: () => inputCls,
-    inputStyle: () => inputStyle
+    inputStyle: () => inputStyle,
+    useMusicPlayer: () => useMusicPlayer,
+    useMusicPlayerOptional: () => useMusicPlayerOptional
   });
   init_define_import_meta_env();
 
@@ -7369,11 +7395,11 @@ var PortalUI = (() => {
       }
     }
     if (type !== "all") {
-      const isActive = query.isActive();
-      if (type === "active" && !isActive) {
+      const isActive2 = query.isActive();
+      if (type === "active" && !isActive2) {
         return false;
       }
-      if (type === "inactive" && isActive) {
+      if (type === "inactive" && isActive2) {
         return false;
       }
     }
@@ -10338,22 +10364,31 @@ var PortalUI = (() => {
   // ds-bundle/.pkg-entry.mjs
   var pkg_entry_exports = {};
   __export(pkg_entry_exports, {
+    ACCOUNT_TYPE_LABEL: () => ACCOUNT_TYPE_LABEL,
     AccountsView: () => AccountsView,
     ActivityFeed: () => ActivityFeed,
     AddBook: () => AddBook,
+    AdminLayoutView: () => AdminLayoutView,
+    AdminRolesView: () => AdminRolesView,
+    AdminUsersView: () => AdminUsersView,
+    AttachPhotoPopup: () => AttachPhotoPopup,
     AudioPlayer: () => AudioPlayer,
     AuthForm: () => AuthForm,
     AuthLanding: () => AuthLanding,
     Avatar: () => Avatar,
+    BackLink: () => BackLink,
     BadgeCard: () => BadgeCard,
     BirthdayCard: () => BirthdayCard,
     BlogCard: () => BlogCard,
     BtnPrimary: () => BtnPrimary,
     BtnSecondary: () => BtnSecondary,
     BudgetsView: () => BudgetsView,
+    BulkImportModal: () => BulkImportModal,
     CalendarView: () => CalendarView,
     CalendarWidget: () => CalendarWidget,
     Card: () => Card,
+    CategoryChip: () => CategoryChip,
+    CategoryDonut: () => CategoryDonut,
     ChapterMenu: () => ChapterMenu,
     ChatResponsive: () => ChatResponsive,
     ChoseFromMyPhoto: () => ChoseFromMyPhoto,
@@ -10370,7 +10405,7 @@ var PortalUI = (() => {
     DashboardView: () => DashboardView,
     EntryCard: () => EntryCard,
     EventItem: () => EventItem,
-    Field: () => Field,
+    Field: () => Field2,
     FinanceWidget: () => FinanceWidget,
     FormField: () => FormField,
     FriendCard: () => FriendCard,
@@ -10390,23 +10425,34 @@ var PortalUI = (() => {
     Modal: () => Modal,
     MoneyDisplay: () => MoneyDisplay,
     MoneyInput: () => MoneyInput,
+    MonthPager: () => MonthPager,
+    MusicDetailView: () => MusicDetailView,
+    MusicIndexView: () => MusicIndexView,
+    MusicPlayerProvider: () => MusicPlayerProvider,
+    MusicWidget: () => MusicWidget,
     NotificationsMenu: () => NotificationsMenu,
     NovelDetailView: () => NovelDetailView,
+    NowPlayingBar: () => NowPlayingBar,
+    NowPlayingSpacer: () => NowPlayingSpacer,
     OLYMP_VIEWBOX: () => OLYMP_VIEWBOX,
     PagedReader: () => PagedReader,
     PagesWidget: () => PagesWidget,
     PeopleIndexView: () => PeopleIndexView,
     PersonDetailView: () => PersonDetailView,
     PersonalInfoWidget: () => PersonalInfoWidget,
+    PlacePickerPopup: () => PlacePickerPopup,
     PlaylistWidget: () => PlaylistWidget,
     Post: () => Post,
     PostControlButtons: () => PostControlButtons,
+    PostOptionsMenu: () => PostOptionsMenu,
     ProfileHeader: () => ProfileHeader,
+    QuickAddModal: () => QuickAddModal,
     ReactionBar: () => ReactionBar,
     ReaderChrome: () => ReaderChrome,
     ReaderHelp: () => ReaderHelp,
     ReaderSettings: () => ReaderSettings,
     RegisterView: () => RegisterView,
+    ReportsView: () => ReportsView,
     SelectField: () => SelectField,
     SessionKeeper: () => SessionKeeper,
     SidebarCenter: () => SidebarCenter,
@@ -10419,16 +10465,735 @@ var PortalUI = (() => {
     ToggleRow: () => ToggleRow,
     TopMenu: () => TopMenu,
     TrackItem: () => TrackItem,
+    TransactionRow: () => TransactionRow,
     TransactionsView: () => TransactionsView,
+    TrendBars: () => TrendBars,
     UpdateHeaderPhoto: () => UpdateHeaderPhoto,
     UploadStudio: () => UploadStudio,
     WeatherView: () => WeatherView,
     WeatherWidget: () => WeatherWidget,
     WidgetCard: () => WidgetCard,
+    categoryTint: () => categoryTint,
+    groupByDay: () => groupByDay,
     inputCls: () => inputCls,
-    inputStyle: () => inputStyle
+    inputStyle: () => inputStyle,
+    useMusicPlayer: () => useMusicPlayer,
+    useMusicPlayerOptional: () => useMusicPlayerOptional
   });
   init_define_import_meta_env();
+
+  // frontend/src/templates/v1/components/bank/BackLink.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/.ds-shims/next-link.tsx
+  init_define_import_meta_env();
+  var React9 = __toESM(require_react_shim());
+  function Link({
+    href,
+    children,
+    ...rest
+  }) {
+    const to = typeof href === "string" ? href : href?.pathname ?? "#";
+    return React9.createElement("a", { href: to, ...rest }, children);
+  }
+
+  // frontend/src/templates/v1/components/bank/BackLink.tsx
+  function BackLink({ href = "/bank", label = "S\u1ED5 thu chi" }) {
+    return /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href,
+        className: "mb-1 inline-flex items-center gap-1 text-sm font-medium transition hover:opacity-80",
+        style: { color: "var(--tpl-muted)" }
+      },
+      "\u2190 ",
+      label
+    );
+  }
+
+  // frontend/src/templates/v1/components/bank/CategoryChip.tsx
+  init_define_import_meta_env();
+  function CategoryChip({
+    icon,
+    color,
+    name,
+    size: size2 = 40,
+    className
+  }) {
+    const tint = color ?? "#64748b";
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        "aria-hidden": true,
+        className: `grid shrink-0 place-items-center rounded-full ${className ?? ""}`,
+        style: {
+          width: size2,
+          height: size2,
+          // A flat 18% wash of the category colour: strong enough to identify,
+          // never so strong that the emoji or letter stops being legible on it.
+          background: `color-mix(in srgb, ${tint} 18%, transparent)`,
+          color: tint,
+          fontSize: Math.round(size2 * 0.5),
+          lineHeight: 1
+        }
+      },
+      icon ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: Math.round(size2 * 0.5) } }, icon) : /* @__PURE__ */ React.createElement("span", { style: { fontSize: Math.round(size2 * 0.42), fontWeight: 700 } }, (name ?? "?").trim().charAt(0).toUpperCase())
+    );
+  }
+  function categoryTint(color) {
+    return color ?? "#64748b";
+  }
+
+  // frontend/src/templates/v1/components/bank/Charts.tsx
+  init_define_import_meta_env();
+
+  // frontend/node_modules/portal-frontend/src/lib/bank.ts
+  init_define_import_meta_env();
+
+  // frontend/src/lib/api-client.ts
+  init_define_import_meta_env();
+  function resolveBaseURL() {
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      if (hostname !== "portal.localhost") {
+        return `${protocol}//${hostname}:8080`;
+      }
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  }
+  var baseURL = resolveBaseURL();
+  var ApiError = class extends Error {
+    constructor(status, body, message5) {
+      super(message5 ?? `API error ${status}`);
+      __publicField(this, "status", status);
+      __publicField(this, "body", body);
+    }
+  };
+  async function api(path, init = {}) {
+    const res = await fetch(`${baseURL}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers
+      },
+      credentials: "include"
+    });
+    const text = await res.text();
+    const body = text ? safeJSON(text) : void 0;
+    if (!res.ok) {
+      throw new ApiError(res.status, body);
+    }
+    return body;
+  }
+  function safeJSON(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/bank.ts
+  async function listAccounts() {
+    const r2 = await api("/api/v1/bank/accounts");
+    return r2.accounts ?? [];
+  }
+  async function createAccount(body) {
+    return api("/api/v1/bank/accounts", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function updateAccount(id2, body) {
+    return api(`/api/v1/bank/accounts/${id2}`, { method: "PATCH", body: JSON.stringify(body) });
+  }
+  async function deleteAccount(id2) {
+    await api(`/api/v1/bank/accounts/${id2}`, { method: "DELETE" });
+  }
+  async function listCategories() {
+    const r2 = await api("/api/v1/bank/categories");
+    return r2.categories ?? [];
+  }
+  async function listTransactions(params = {}) {
+    const q = new URLSearchParams();
+    if (params.account) q.set("account", params.account);
+    if (params.category) q.set("category", params.category);
+    if (params.month) q.set("month", params.month);
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    const r2 = await api(`/api/v1/bank/transactions${qs ? `?${qs}` : ""}`);
+    return { transactions: r2.transactions ?? [], next_cursor: r2.next_cursor };
+  }
+  async function createTransaction(body) {
+    return api("/api/v1/bank/transactions", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function deleteTransaction(id2) {
+    await api(`/api/v1/bank/transactions/${id2}`, { method: "DELETE" });
+  }
+  async function createTransfer(body) {
+    return api("/api/v1/bank/transfers", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function deleteTransfer(transferId) {
+    await api(`/api/v1/bank/transfers/${transferId}`, { method: "DELETE" });
+  }
+  async function listBudgets(month) {
+    const q = month ? `?month=${month}` : "";
+    const r2 = await api(`/api/v1/bank/budgets${q}`);
+    return { month: r2.month, budgets: r2.budgets ?? [] };
+  }
+  async function setBudget(body) {
+    await api("/api/v1/bank/budgets", { method: "PUT", body: JSON.stringify(body) });
+  }
+  async function getReport(month) {
+    const q = month ? `?month=${month}` : "";
+    const r2 = await api(`/api/v1/bank/report${q}`);
+    return { ...r2, expenses: r2.expenses ?? [], incomes: r2.incomes ?? [], trend: r2.trend ?? [] };
+  }
+  async function getDashboard(month) {
+    const q = month ? `?month=${month}` : "";
+    return api(`/api/v1/bank/dashboard${q}`);
+  }
+  function formatVND(minor) {
+    const neg = minor < 0;
+    const digits = Math.abs(minor).toString();
+    const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (neg ? "-" : "") + grouped;
+  }
+  function parseVND(s) {
+    const cleaned = s.replace(/[^\d-]/g, "");
+    if (cleaned === "" || cleaned === "-") return 0;
+    return parseInt(cleaned, 10) || 0;
+  }
+  function currentMonth() {
+    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+  }
+  function today() {
+    const d = /* @__PURE__ */ new Date();
+    const p = (n2) => String(n2).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  function shiftMonth(month, n2) {
+    const [y, m] = month.split("-").map(Number);
+    const d = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1 + n2, 1));
+    return d.toISOString().slice(0, 7);
+  }
+  var MONTH_LABELS = [
+    "Th\xE1ng 1",
+    "Th\xE1ng 2",
+    "Th\xE1ng 3",
+    "Th\xE1ng 4",
+    "Th\xE1ng 5",
+    "Th\xE1ng 6",
+    "Th\xE1ng 7",
+    "Th\xE1ng 8",
+    "Th\xE1ng 9",
+    "Th\xE1ng 10",
+    "Th\xE1ng 11",
+    "Th\xE1ng 12"
+  ];
+  function monthLabel(month) {
+    const [y, m] = month.split("-").map(Number);
+    const name = MONTH_LABELS[(m ?? 1) - 1] ?? month;
+    return `${name}, ${y}`;
+  }
+  function shortMonthLabel(month) {
+    return `T${Number(month.split("-")[1] ?? 0)}`;
+  }
+  var WEEKDAYS = ["Ch\u1EE7 nh\u1EADt", "Th\u1EE9 hai", "Th\u1EE9 ba", "Th\u1EE9 t\u01B0", "Th\u1EE9 n\u0103m", "Th\u1EE9 s\xE1u", "Th\u1EE9 b\u1EA3y"];
+  function dayLabel(isoDate) {
+    const [y, m, d] = isoDate.split("-").map(Number);
+    if (!y || !m || !d) return isoDate;
+    const date = new Date(y, m - 1, d);
+    const now = /* @__PURE__ */ new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.round((midnight.getTime() - date.getTime()) / 864e5);
+    if (days === 0) return "H\xF4m nay";
+    if (days === 1) return "H\xF4m qua";
+    const wd = WEEKDAYS[date.getDay()] ?? "";
+    return `${wd}, ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
+  }
+  function signedAmount(t2) {
+    return t2.direction === "debit" ? -t2.amount : t2.amount;
+  }
+
+  // frontend/src/templates/v1/components/bank/Charts.tsx
+  var DONUT_SIZE = 168;
+  var DONUT_STROKE = 22;
+  function CategoryDonut({
+    slices,
+    total,
+    centerLabel,
+    minSharePct = 3
+  }) {
+    const r2 = (DONUT_SIZE - DONUT_STROKE) / 2;
+    const c = 2 * Math.PI * r2;
+    const big = slices.filter((s) => total > 0 && s.total / total * 100 >= minSharePct);
+    const restTotal = slices.reduce((sum, s) => sum + s.total, 0) - big.reduce((sum, s) => sum + s.total, 0);
+    const drawn = big.map((s) => ({
+      key: s.category_id,
+      value: s.total,
+      color: categoryTint(s.color)
+    }));
+    if (restTotal > 0) drawn.push({ key: "__rest", value: restTotal, color: "#94a3b8" });
+    if (total <= 0 || drawn.length === 0) {
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "grid place-items-center rounded-full",
+          style: {
+            width: DONUT_SIZE,
+            height: DONUT_SIZE,
+            border: `${DONUT_STROKE}px solid var(--tpl-surface-2)`
+          }
+        },
+        /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 d\u1EEF li\u1EC7u")
+      );
+    }
+    let offset2 = 0;
+    return /* @__PURE__ */ React.createElement("div", { className: "relative", style: { width: DONUT_SIZE, height: DONUT_SIZE } }, /* @__PURE__ */ React.createElement("svg", { width: DONUT_SIZE, height: DONUT_SIZE, role: "img", "aria-label": `T\u1ED5ng ${formatVND(total)}` }, /* @__PURE__ */ React.createElement("g", { transform: `rotate(-90 ${DONUT_SIZE / 2} ${DONUT_SIZE / 2})` }, drawn.map((s) => {
+      const len = s.value / total * c;
+      const el = /* @__PURE__ */ React.createElement(
+        "circle",
+        {
+          key: s.key,
+          cx: DONUT_SIZE / 2,
+          cy: DONUT_SIZE / 2,
+          r: r2,
+          fill: "none",
+          stroke: s.color,
+          strokeWidth: DONUT_STROKE,
+          strokeDasharray: `${len} ${c - len}`,
+          strokeDashoffset: -offset2
+        }
+      );
+      offset2 += len;
+      return el;
+    }))), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 grid place-items-center" }, /* @__PURE__ */ React.createElement("div", { className: "text-center" }, /* @__PURE__ */ React.createElement("p", { className: "text-[10px] uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, centerLabel), /* @__PURE__ */ React.createElement("p", { className: "text-base font-bold tabular-nums", style: { color: "var(--tpl-heading)" } }, formatVND(total)))));
+  }
+  function TrendBars({ data, activeMonth }) {
+    const max2 = Math.max(1, ...data.flatMap((d) => [d.income, d.expense]));
+    return /* @__PURE__ */ React.createElement("div", { className: "flex items-end justify-between gap-2", style: { height: 132 } }, data.map((d) => {
+      const active = d.month === activeMonth;
+      return /* @__PURE__ */ React.createElement("div", { key: d.month, className: "flex flex-1 flex-col items-center gap-1.5" }, /* @__PURE__ */ React.createElement("div", { className: "flex h-[96px] w-full items-end justify-center gap-1" }, /* @__PURE__ */ React.createElement(Bar, { value: d.income, max: max2, color: "#22c55e", label: `Thu ${formatVND(d.income)}` }), /* @__PURE__ */ React.createElement(Bar, { value: d.expense, max: max2, color: "#ef4444", label: `Chi ${formatVND(d.expense)}` })), /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "text-[10px] tabular-nums",
+          style: {
+            color: active ? "var(--tpl-accent)" : "var(--tpl-muted)",
+            fontWeight: active ? 700 : 400
+          }
+        },
+        shortMonthLabel(d.month)
+      ));
+    }));
+  }
+  function Bar({ value, max: max2, color, label }) {
+    const h = value > 0 ? Math.max(2, Math.round(value / max2 * 96)) : 0;
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "w-2.5 rounded-t-sm",
+        style: { height: h, background: color, minHeight: h > 0 ? 2 : 0 },
+        title: label
+      }
+    );
+  }
+
+  // frontend/src/templates/v1/components/bank/QuickAddModal.tsx
+  init_define_import_meta_env();
+  var import_react = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/api-client.ts
+  init_define_import_meta_env();
+  function resolveBaseURL2() {
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      if (hostname !== "portal.localhost") {
+        return `${protocol}//${hostname}:8080`;
+      }
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  }
+  var baseURL2 = resolveBaseURL2();
+  var ApiError2 = class extends Error {
+    constructor(status, body, message5) {
+      super(message5 ?? `API error ${status}`);
+      __publicField(this, "status", status);
+      __publicField(this, "body", body);
+    }
+  };
+  async function api2(path, init = {}) {
+    const res = await fetch(`${baseURL2}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers
+      },
+      credentials: "include"
+    });
+    const text = await res.text();
+    const body = text ? safeJSON2(text) : void 0;
+    if (!res.ok) {
+      throw new ApiError2(res.status, body);
+    }
+    return body;
+  }
+  function safeJSON2(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/problems.ts
+  init_define_import_meta_env();
+  var PROBLEM_MESSAGES = {
+    "media/unsupported-format": "This file format isn't supported. Try converting it and uploading again.",
+    "media/file-too-large": "This file is too large to upload.",
+    "media/asset-not-found": "This asset doesn't exist or was already removed.",
+    "media/asset-not-ready": "This asset is still being uploaded \u2014 try again in a moment.",
+    "journal/entry-not-found": "This entry doesn't exist or was already removed.",
+    "journal/invalid-body": "Entries need 1-20,000 characters of text.",
+    "journal/invalid-mood": "Mood can't be blank \u2014 leave it empty or add a word.",
+    "journal/invalid-asset": "Photo attachments aren't supported yet.",
+    "bank/not-found": "This item doesn't exist or was already removed.",
+    "bank/account-not-empty": "This account has transactions \u2014 archive it instead of deleting.",
+    "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
+    "bank/is-transfer-leg": "This is part of a transfer \u2014 edit or delete it from the transfer instead.",
+    "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
+    "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
+    "bank/category-immutable": "A category's kind can't be changed after it's created.",
+    "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
+    "bank/same-account-transfer": "Pick two different accounts for a transfer.",
+    "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
+    "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
+    "bank/invalid-amount": "Enter an amount greater than zero.",
+    "bank/validation": "Please check the form and try again.",
+    "bank/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "comic/not-found": "This comic doesn't exist or was already removed.",
+    "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
+    "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
+    "comic/invalid-progress-target": "Couldn't save your place on this comic.",
+    "comic/not-publishable": "Every chapter needs at least one page before publishing.",
+    "comic/validation": "Please check the form and try again.",
+    "comic/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "people/person-not-found": "This person doesn't exist or was already removed.",
+    "people/invalid-birthday": "Enter a real date \u2014 day and month together, year optional.",
+    "people/validation": "Please check the form and try again.",
+    "people/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
+    "stream/invalid-cursor": "Couldn't load more of your stream \u2014 please refresh.",
+    // Emitted by the IP rate limiter on the auth perimeter (login/register/refresh),
+    // which used to answer with the legacy {code, message} body — so this 429 fell
+    // through to the generic fallback instead of telling the user to wait.
+    "platform/rate-limited": "Too many attempts. Wait a moment and try again.",
+    // Registration approval (migration 0031). The server sends a `detail` on all
+    // of these — a rejection even carries the reviewer's note — so these entries
+    // are the floor, used only if `detail` is ever missing.
+    "account/account-pending": "This account is waiting for an administrator to approve it.",
+    "account/account-rejected": "This registration was not approved.",
+    "account/account-disabled": "This account is disabled.",
+    "account/account-not-approved": "This account is no longer approved. Sign in again to see why.",
+    // Admin console guardrails.
+    "account/self-target": "You can't apply this to your own account.",
+    "account/escalation": "You can't grant or revoke something you don't hold yourself.",
+    "account/unknown-role": "No such role.",
+    "account/unknown-permission": "No such permission.",
+    "account/role-protected": "System roles can't be edited or deleted.",
+    "account/role-in-use": "This role is still in use \u2014 move its users or child roles off it first.",
+    "account/role-cycle": "That parent would create a loop in the role hierarchy.",
+    "account/role-exists": "A role with that code already exists.",
+    // User create / edit / delete.
+    "account/invalid-email": "Enter a valid email address.",
+    "account/password-policy": "The password must be at least 8 characters.",
+    "account/email-taken": "An account with this email already exists.",
+    "account/confirmation-mismatch": "Type the account's email address to confirm this deletion.",
+    "account/last-approver": "This is the last account that can approve registrations \u2014 give another account that permission first.",
+    // Shell layout. The server names the offending row in `detail`, which
+    // problemDisplayMessage prefers — these are only the floor.
+    "layout/validation": "Check the menu entries and try again.",
+    "layout/unknown-widget": "That widget doesn't exist in this build \u2014 the widget list comes from the code, not the database.",
+    // The server's `detail` names the two env vars, so this is only the floor.
+    "music/lookup-disabled": "Catalogue lookup is turned off on this deployment."
+  };
+  var FALLBACK_MESSAGE = "Something went wrong. Please try again.";
+  function problemMessage(type) {
+    if (type && type in PROBLEM_MESSAGES) {
+      return PROBLEM_MESSAGES[type];
+    }
+    return FALLBACK_MESSAGE;
+  }
+  function problemDisplayMessage(body) {
+    const problem = body;
+    return problem?.detail || problemMessage(problem?.type);
+  }
+
+  // frontend/src/templates/v1/components/ui/Icon.tsx
+  init_define_import_meta_env();
+  function Icon({
+    name,
+    size: size2 = 20,
+    className,
+    style
+  }) {
+    const vb = OLYMP_VIEWBOX[name] ?? "0 0 32 32";
+    const parts = vb.split(/\s+/).map(Number);
+    const w = parts[2] || 1;
+    const h = parts[3] || 1;
+    const width = Math.round(w / h * size2);
+    return /* @__PURE__ */ React.createElement(
+      "svg",
+      {
+        width,
+        height: size2,
+        viewBox: vb,
+        fill: "currentColor",
+        "aria-hidden": true,
+        className,
+        style
+      },
+      /* @__PURE__ */ React.createElement("use", { href: `#olymp-${name}` })
+    );
+  }
+
+  // frontend/src/templates/v1/components/bank/QuickAddModal.tsx
+  function QuickAddModal({ onClose, defaultMode = "expense" }) {
+    const qc = useQueryClient();
+    const [mode, setMode] = (0, import_react.useState)(defaultMode);
+    const [amount, setAmount] = (0, import_react.useState)(0);
+    const [categoryId, setCategoryId] = (0, import_react.useState)(null);
+    const [accountId, setAccountId] = (0, import_react.useState)(null);
+    const [toAccountId, setToAccountId] = (0, import_react.useState)(null);
+    const [date, setDate] = (0, import_react.useState)(today());
+    const [note, setNote] = (0, import_react.useState)("");
+    const [err, setErr] = (0, import_react.useState)(null);
+    const accounts = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+    const categories = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const openAccounts = (0, import_react.useMemo)(
+      () => (accounts.data ?? []).filter((a) => !a.archived),
+      [accounts.data]
+    );
+    const account = accountId ?? openAccounts[0]?.id ?? null;
+    const toAccount = toAccountId ?? openAccounts.find((a) => a.id !== account)?.id ?? null;
+    const pickable = (0, import_react.useMemo)(() => {
+      const all = categories.data ?? [];
+      const kind = mode === "income" ? "income" : "expense";
+      const inKind = all.filter((c) => c.kind === kind);
+      const hasChild = new Set(inKind.filter((c) => c.parent_id).map((c) => c.parent_id));
+      return inKind.filter((c) => c.parent_id !== null || !hasChild.has(c.id));
+    }, [categories.data, mode]);
+    const parentName = (0, import_react.useMemo)(() => {
+      const byId = new Map((categories.data ?? []).map((c) => [c.id, c]));
+      return (c) => c.parent_id ? byId.get(c.parent_id)?.name ?? null : null;
+    }, [categories.data]);
+    const save = useMutation({
+      mutationFn: async () => {
+        if (mode === "transfer") {
+          if (!account || !toAccount) throw new Error("C\u1EA7n ch\u1ECDn c\u1EA3 hai v\xED.");
+          return createTransfer({
+            from_account: account,
+            to_account: toAccount,
+            amount,
+            occurred_at: date,
+            note: note.trim() || null
+          });
+        }
+        if (!account) throw new Error("C\u1EA7n ch\u1ECDn v\xED.");
+        if (!categoryId) throw new Error("C\u1EA7n ch\u1ECDn danh m\u1EE5c.");
+        return createTransaction({
+          account_id: account,
+          category_id: categoryId,
+          amount,
+          direction: mode === "income" ? "credit" : "debit",
+          occurred_at: date,
+          note: note.trim() || null
+        });
+      },
+      onMutate: () => setErr(null),
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ["bank"] });
+        onClose();
+      },
+      onError: (e2) => setErr(
+        e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : e2 instanceof Error ? e2.message : "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c giao d\u1ECBch."
+      )
+    });
+    const canSave = amount > 0 && !!account && (mode === "transfer" ? !!toAccount && toAccount !== account : !!categoryId) && !save.isPending;
+    const press = (d) => {
+      if (d === "back") {
+        setAmount((a) => Math.floor(a / 10));
+        return;
+      }
+      setAmount((a) => {
+        const next = Number(String(a) + d);
+        return Number.isSafeInteger(next) && String(next).length <= 15 ? next : a;
+      });
+    };
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4",
+        onClick: onClose,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": "Th\xEAm giao d\u1ECBch"
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "my-8 w-full max-w-lg rounded-2xl shadow-xl",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "rounded-t-2xl px-5 pb-5 pt-4",
+            style: { background: "var(--tpl-surface-2)" }
+          },
+          /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-1 rounded-lg p-1", style: { background: "var(--tpl-bg)" } }, [
+            ["expense", "Chi ti\u1EC1n"],
+            ["income", "Thu ti\u1EC1n"],
+            ["transfer", "Chuy\u1EC3n"]
+          ].map(([m, label]) => /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              key: m,
+              type: "button",
+              onClick: () => {
+                setMode(m);
+                setCategoryId(null);
+              },
+              "aria-pressed": mode === m,
+              className: "rounded-md px-3 py-1.5 text-sm font-semibold transition",
+              style: {
+                background: mode === m ? "var(--tpl-accent)" : "transparent",
+                color: mode === m ? "#fff" : "var(--tpl-muted)"
+              }
+            },
+            label
+          ))), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onClose, "aria-label": "\u0110\xF3ng", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 12 }))),
+          /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" }, htmlFor: "qa-amount" }, "S\u1ED1 ti\u1EC1n"),
+          /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline gap-2" }, /* @__PURE__ */ React.createElement(
+            "input",
+            {
+              id: "qa-amount",
+              autoFocus: true,
+              inputMode: "numeric",
+              value: amount === 0 ? "" : formatVND(amount),
+              placeholder: "0",
+              onChange: (e2) => {
+                const digits = e2.target.value.replace(/\D/g, "").slice(0, 15);
+                setAmount(digits === "" ? 0 : Number(digits));
+              },
+              className: "w-full bg-transparent text-right text-3xl font-bold tabular-nums outline-none",
+              style: { color: amount > 0 ? "var(--tpl-heading)" : "var(--tpl-muted)" }
+            }
+          ), /* @__PURE__ */ React.createElement("span", { className: "text-sm font-semibold", style: { color: "var(--tpl-muted)" } }, "\u0111")),
+          /* @__PURE__ */ React.createElement("div", { className: "mt-3 grid grid-cols-4 gap-1.5" }, ["1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0", "back"].map((k) => /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              key: k,
+              type: "button",
+              onClick: () => press(k),
+              "aria-label": k === "back" ? "Xo\xE1 m\u1ED9t ch\u1EEF s\u1ED1" : k,
+              className: "grid h-10 place-items-center rounded-lg text-base font-semibold transition hover:opacity-80",
+              style: { background: "var(--tpl-surface)", color: "var(--tpl-text)" }
+            },
+            k === "back" ? "\u232B" : k
+          )))
+        ),
+        /* @__PURE__ */ React.createElement("div", { className: "space-y-4 p-5" }, err && /* @__PURE__ */ React.createElement(
+          "p",
+          {
+            className: "rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+          },
+          err
+        ), mode !== "transfer" ? /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "mb-2 text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, "Danh m\u1EE5c"), categories.isPending ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026") : /* @__PURE__ */ React.createElement("div", { className: "grid max-h-56 grid-cols-4 gap-2 overflow-y-auto pr-1" }, pickable.map((c) => {
+          const on = categoryId === c.id;
+          const parent = parentName(c);
+          return /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              key: c.id,
+              type: "button",
+              onClick: () => setCategoryId(c.id),
+              "aria-pressed": on,
+              title: parent ? `${parent} \u203A ${c.name}` : c.name,
+              className: "flex flex-col items-center gap-1 rounded-xl border px-1 py-2 transition",
+              style: {
+                borderColor: on ? "var(--tpl-accent)" : "transparent",
+                background: on ? "color-mix(in srgb, var(--tpl-accent) 10%, transparent)" : "transparent"
+              }
+            },
+            /* @__PURE__ */ React.createElement(CategoryChip, { icon: c.icon, color: c.color, name: c.name, size: 38 }),
+            /* @__PURE__ */ React.createElement(
+              "span",
+              {
+                className: "line-clamp-2 text-center text-[11px] leading-tight",
+                style: { color: on ? "var(--tpl-accent)" : "var(--tpl-muted)" }
+              },
+              c.name
+            )
+          );
+        }))) : null, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement(Field, { label: mode === "transfer" ? "T\u1EEB v\xED" : "V\xED" }, /* @__PURE__ */ React.createElement(Select, { value: account ?? "", onChange: setAccountId }, openAccounts.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name)))), mode === "transfer" ? /* @__PURE__ */ React.createElement(Field, { label: "\u0110\u1EBFn v\xED" }, /* @__PURE__ */ React.createElement(Select, { value: toAccount ?? "", onChange: setToAccountId }, openAccounts.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name)))) : /* @__PURE__ */ React.createElement(Field, { label: "Ng\xE0y" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            type: "date",
+            value: date,
+            onChange: (e2) => setDate(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        ))), mode === "transfer" && /* @__PURE__ */ React.createElement(Field, { label: "Ng\xE0y" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            type: "date",
+            value: date,
+            onChange: (e2) => setDate(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        )), /* @__PURE__ */ React.createElement(Field, { label: "Ghi ch\xFA" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            value: note,
+            onChange: (e2) => setNote(e2.target.value),
+            placeholder: "Kh\xF4ng b\u1EAFt bu\u1ED9c",
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        )), openAccounts.length === 0 && !accounts.isPending && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "#f59e0b" } }, "Ch\u01B0a c\xF3 v\xED n\xE0o \u2014 t\u1EA1o m\u1ED9t v\xED tr\u01B0\u1EDBc khi ghi giao d\u1ECBch."), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => save.mutate(),
+            disabled: !canSave,
+            className: "w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-40",
+            style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+          },
+          save.isPending ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u giao d\u1ECBch"
+        ))
+      )
+    );
+  }
+  function Field({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "mb-1 text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function Select({
+    value,
+    onChange,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+      },
+      children
+    );
+  }
 
   // frontend/src/templates/v1/components/blog/BlogCard.tsx
   init_define_import_meta_env();
@@ -10472,34 +11237,6 @@ var PortalUI = (() => {
           }
         }
       )
-    );
-  }
-
-  // frontend/src/templates/v1/components/ui/Icon.tsx
-  init_define_import_meta_env();
-  function Icon({
-    name,
-    size: size2 = 20,
-    className,
-    style
-  }) {
-    const vb = OLYMP_VIEWBOX[name] ?? "0 0 32 32";
-    const parts = vb.split(/\s+/).map(Number);
-    const w = parts[2] || 1;
-    const h = parts[3] || 1;
-    const width = Math.round(w / h * size2);
-    return /* @__PURE__ */ React.createElement(
-      "svg",
-      {
-        width,
-        height: size2,
-        viewBox: vb,
-        fill: "currentColor",
-        "aria-hidden": true,
-        className,
-        style
-      },
-      /* @__PURE__ */ React.createElement("use", { href: `#olymp-${name}` })
     );
   }
 
@@ -10571,9 +11308,9 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/comment/CommentForm.tsx
   init_define_import_meta_env();
-  var import_react = __toESM(require_react_shim());
+  var import_react2 = __toESM(require_react_shim());
   function CommentForm({ displayName, onSubmit, className = "" }) {
-    const [text, setText] = (0, import_react.useState)("");
+    const [text, setText] = (0, import_react2.useState)("");
     function submit(e2) {
       e2.preventDefault();
       const t2 = text.trim();
@@ -10697,12 +11434,715 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/composer/Composer.tsx
   init_define_import_meta_env();
-  var import_react2 = __toESM(require_react_shim());
-  var TABS = [
-    { key: "status", label: "Status", icon: "status-icon" },
-    { key: "media", label: "Multimedia", icon: "multimedia-icon" },
-    { key: "blog", label: "Blog Post", icon: "blog-icon" }
-  ];
+  var import_react6 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/components/popup/AttachPhotoPopup.tsx
+  init_define_import_meta_env();
+  var import_react4 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/components/popup/Modal.tsx
+  init_define_import_meta_env();
+  var import_react3 = __toESM(require_react_shim());
+  function Modal({
+    open,
+    onClose,
+    title,
+    children,
+    width = 520
+  }) {
+    (0, import_react3.useEffect)(() => {
+      if (!open) return;
+      const onEsc = (e2) => e2.key === "Escape" && onClose();
+      document.addEventListener("keydown", onEsc);
+      return () => document.removeEventListener("keydown", onEsc);
+    }, [open, onClose]);
+    if (!open) return null;
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-[60] flex items-center justify-center p-4",
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": title
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 bg-black/45", onClick: onClose, "aria-hidden": true }),
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "relative max-h-[90vh] w-full overflow-hidden rounded-xl shadow-2xl",
+          style: { maxWidth: width, background: "var(--tpl-surface)", color: "var(--tpl-text)" }
+        },
+        /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between border-b px-6 py-4", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("h6", { className: "text-base font-semibold", style: { color: "var(--tpl-heading)" } }, title), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onClose,
+            "aria-label": "Close",
+            className: "text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]"
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 15 })
+        )),
+        children
+      )
+    );
+  }
+  function Field2({ label, children }) {
+    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement("span", { className: "mb-1.5 block text-xs font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  var inputCls = "w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]";
+  var inputStyle = { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" };
+  function BtnSecondary({ children, onClick }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function BtnPrimary({
+    children,
+    type = "button",
+    onClick,
+    disabled
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type,
+        onClick,
+        disabled,
+        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      children
+    );
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/media-assets.ts
+  init_define_import_meta_env();
+  async function listAssets(params = {}) {
+    const q = new URLSearchParams();
+    if (params.kind && params.kind !== "all") q.set("kind", params.kind);
+    if (params.status && params.status !== "all") q.set("status", params.status);
+    if (params.cursor) q.set("cursor", params.cursor);
+    const qs = q.toString();
+    return api(`/api/v1/assets${qs ? `?${qs}` : ""}`);
+  }
+  async function setAssetVisibility(id2, visibility) {
+    const r2 = await api(`/api/v1/assets/${id2}`, {
+      method: "PATCH",
+      body: JSON.stringify({ visibility })
+    });
+    return r2.asset;
+  }
+  async function deleteAsset(id2) {
+    await api(`/api/v1/assets/${id2}`, { method: "DELETE" });
+  }
+  function assetVariantURL(id2, variant) {
+    return `${baseURL}/api/v1/assets/${id2}/variants/${variant}`;
+  }
+  function assetOriginalURL(id2) {
+    return `${baseURL}/api/v1/assets/${id2}/original`;
+  }
+  async function getAsset(id2) {
+    return api(`/api/v1/assets/${id2}`);
+  }
+  async function getPlaybackProgress(id2) {
+    return api(`/api/v1/assets/${id2}/progress`);
+  }
+  async function getContinueItems(limit = 10) {
+    return api(`/api/v1/continue?limit=${limit}`);
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/media-upload.ts
+  init_define_import_meta_env();
+  async function uploadImage(file, onProgress) {
+    const contentType = file.type || guessType(file.name);
+    if (!contentType.startsWith("image/")) throw new Error("Ch\u1EC9 ch\u1EA5p nh\u1EADn t\u1EC7p \u1EA3nh.");
+    const cr = await fetch(`${baseURL}/api/v1/assets`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, content_type: contentType, size_bytes: file.size })
+    });
+    if (!cr.ok) throw new Error("Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c phi\xEAn t\u1EA3i l\xEAn.");
+    const { asset } = await cr.json();
+    await putWithProgress(`${baseURL}/api/v1/assets/${asset.id}/source`, file, contentType, onProgress);
+    const co = await fetch(`${baseURL}/api/v1/assets/${asset.id}/complete`, { method: "POST", credentials: "include" });
+    if (!co.ok) throw new Error("Kh\xF4ng ho\xE0n t\u1EA5t \u0111\u01B0\u1EE3c t\u1EA3i l\xEAn.");
+    const done = await poll(asset.id);
+    if (done.status !== "ready") throw new Error(done.error || "X\u1EED l\xFD \u1EA3nh th\u1EA5t b\u1EA1i.");
+    return { assetId: done.id, width: done.width, height: done.height };
+  }
+  function guessType(name) {
+    const ext = name.toLowerCase().split(".").pop() ?? "";
+    return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" }[ext] ?? "application/octet-stream";
+  }
+  function putWithProgress(url, file, contentType, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", contentType);
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable && onProgress) onProgress(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i l\xEAn l\u1ED7i (${xhr.status}).`));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i l\xEAn."));
+      xhr.send(file);
+    });
+  }
+  async function poll(id2) {
+    for (let i = 0; i < 120; i += 1) {
+      const r2 = await fetch(`${baseURL}/api/v1/assets/${id2}`, { credentials: "include" });
+      if (r2.ok) {
+        const a = await r2.json();
+        if (a.status === "ready" || a.status === "failed") return a;
+      }
+      await new Promise((res) => setTimeout(res, 1500));
+    }
+    return { id: id2, status: "failed", width: null, height: null, error: "H\u1EBFt th\u1EDDi gian ch\u1EDD x\u1EED l\xFD \u1EA3nh." };
+  }
+
+  // frontend/src/templates/v1/components/popup/AttachPhotoPopup.tsx
+  function AttachPhotoPopup({
+    open,
+    onClose,
+    onPick
+  }) {
+    const [pane, setPane] = (0, import_react4.useState)("choose");
+    const [selected, setSelected] = (0, import_react4.useState)(null);
+    const [pct, setPct] = (0, import_react4.useState)(null);
+    const [error, setError] = (0, import_react4.useState)(null);
+    (0, import_react4.useEffect)(() => {
+      if (!open) {
+        setPane("choose");
+        setSelected(null);
+        setPct(null);
+        setError(null);
+      }
+    }, [open]);
+    const library = useQuery({
+      queryKey: ["assets", "image", "ready"],
+      queryFn: () => listAssets({ kind: "image", status: "ready" }),
+      enabled: open && pane === "library"
+    });
+    const photos = (library.data?.assets ?? []).filter(
+      (a) => a.kind === "image" && a.status === "ready"
+    );
+    async function handleFile(file) {
+      setError(null);
+      setPct(0);
+      try {
+        const up = await uploadImage(file, setPct);
+        onPick(up.assetId);
+        onClose();
+      } catch (e2) {
+        setError(e2 instanceof Error ? e2.message : "T\u1EA3i \u1EA3nh l\xEAn th\u1EA5t b\u1EA1i.");
+      } finally {
+        setPct(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement(
+      Modal,
+      {
+        open,
+        onClose,
+        title: pane === "choose" ? "Add Photo" : "Choose from My Photos",
+        width: pane === "choose" ? 460 : 640
+      },
+      error && /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          role: "alert",
+          className: "mx-6 mt-4 rounded-lg border px-3 py-2 text-sm",
+          style: {
+            borderColor: "rgba(239,68,68,.4)",
+            background: "rgba(239,68,68,.08)",
+            color: "#ef4444"
+          }
+        },
+        error
+      ),
+      pane === "choose" ? /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6" }, pct === null ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("label", { className: "block cursor-pointer" }, /* @__PURE__ */ React.createElement(
+        Option2,
+        {
+          icon: "computer-icon",
+          title: "Upload Photo",
+          subtitle: "Browse your computer."
+        }
+      ), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "file",
+          accept: "image/*",
+          className: "hidden",
+          onChange: (e2) => {
+            const f = e2.target.files?.[0];
+            if (f) void handleFile(f);
+            e2.target.value = "";
+          }
+        }
+      )), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          className: "w-full text-left",
+          onClick: () => setPane("library")
+        },
+        /* @__PURE__ */ React.createElement(
+          Option2,
+          {
+            icon: "photos-icon",
+            title: "Choose from My Photos",
+            subtitle: "Choose from your uploaded photos"
+          }
+        )
+      )) : /* @__PURE__ */ React.createElement("div", { className: "py-4" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, pct < 100 ? `\u0110ang t\u1EA3i l\xEAn\u2026 ${pct}%` : "\u0110ang x\u1EED l\xFD \u1EA3nh\u2026"), /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "mt-3 h-2 w-full overflow-hidden rounded-full",
+          style: { background: "var(--tpl-surface-2)" }
+        },
+        /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "h-full transition-[width]",
+            style: {
+              width: `${pct}%`,
+              background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))"
+            }
+          }
+        )
+      ), /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-xs", style: { color: "var(--tpl-muted)" } }, "\u1EA2nh \u0111\u01B0\u1EE3c chuy\u1EC3n sang WebP tr\u01B0\u1EDBc khi \u0111\xEDnh v\xE0o b\xE0i."))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "max-h-[52vh] overflow-y-auto p-6" }, library.isPending ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i th\u01B0 vi\u1EC7n \u1EA3nh\u2026") : library.isError ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c th\u01B0 vi\u1EC7n \u1EA3nh.") : photos.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 \u1EA3nh n\xE0o. Quay l\u1EA1i v\xE0 ch\u1ECDn ", /* @__PURE__ */ React.createElement("b", null, "Upload Photo"), " \u0111\u1EC3 t\u1EA3i \u1EA3nh \u0111\u1EA7u ti\xEAn.") : /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-3" }, photos.map((p) => {
+        const active = selected === p.id;
+        return /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            key: p.id,
+            type: "button",
+            onClick: () => setSelected(p.id),
+            "aria-pressed": active,
+            className: "relative aspect-[3/2] overflow-hidden rounded-lg transition",
+            style: {
+              background: "var(--tpl-surface-2)",
+              boxShadow: active ? "0 0 0 3px var(--tpl-accent)" : "none"
+            }
+          },
+          /* @__PURE__ */ React.createElement(
+            "img",
+            {
+              src: assetVariantURL(p.id, "thumb"),
+              alt: p.title || p.original_filename || "photo",
+              loading: "lazy",
+              className: "h-full w-full object-cover"
+            }
+          ),
+          active && /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              className: "absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full text-white",
+              style: { background: "var(--tpl-accent)" }
+            },
+            /* @__PURE__ */ React.createElement(Icon, { name: "check-icon", size: 12 })
+          )
+        );
+      }))), /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "flex justify-end gap-2 border-t px-6 py-4",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement(BtnSecondary, { onClick: () => setPane("choose") }, "Back"),
+        /* @__PURE__ */ React.createElement(
+          BtnPrimary,
+          {
+            disabled: !selected,
+            onClick: () => {
+              if (selected) {
+                onPick(selected);
+                onClose();
+              }
+            }
+          },
+          "Confirm Photo"
+        )
+      ))
+    );
+  }
+  function Option2({ icon, title, subtitle }) {
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "flex items-center gap-4 rounded-lg border px-4 py-4 transition hover:border-[var(--tpl-accent)] hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "grid h-11 w-11 shrink-0 place-items-center rounded-full text-white",
+          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 20 })
+      ),
+      /* @__PURE__ */ React.createElement("span", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("span", { className: "block text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, title), /* @__PURE__ */ React.createElement("span", { className: "block text-xs", style: { color: "var(--tpl-muted)" } }, subtitle))
+    );
+  }
+
+  // frontend/src/templates/v1/components/popup/PlacePickerPopup.tsx
+  init_define_import_meta_env();
+  var import_react5 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/geo.ts
+  init_define_import_meta_env();
+  async function searchPlaces(query, signal2) {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    url.searchParams.set("name", q);
+    url.searchParams.set("count", "8");
+    url.searchParams.set("language", "vi");
+    url.searchParams.set("format", "json");
+    try {
+      const r2 = await fetch(url, { signal: signal2 });
+      if (!r2.ok) return [];
+      const data = await r2.json();
+      return (data.results ?? []).map((p) => ({
+        name: p.name,
+        lat: p.latitude,
+        lon: p.longitude,
+        detail: [p.admin2, p.admin1, p.country].filter(Boolean).join(", ")
+      }));
+    } catch {
+      return [];
+    }
+  }
+  var TILE = 256;
+  var MIN_ZOOM = 2;
+  var MAX_ZOOM = 18;
+  function lonToTileX(lon, z) {
+    return (lon + 180) / 360 * 2 ** z;
+  }
+  function latToTileY(lat, z) {
+    const clamped = Math.max(-85.05112878, Math.min(85.05112878, lat));
+    const r2 = clamped * Math.PI / 180;
+    return (1 - Math.log(Math.tan(r2) + 1 / Math.cos(r2)) / Math.PI) / 2 * 2 ** z;
+  }
+  function tileXToLon(x, z) {
+    return x / 2 ** z * 360 - 180;
+  }
+  function tileYToLat(y, z) {
+    const n2 = Math.PI - 2 * Math.PI * y / 2 ** z;
+    return 180 / Math.PI * Math.atan(0.5 * (Math.exp(n2) - Math.exp(-n2)));
+  }
+  function tileURL(z, x, y) {
+    const n2 = 2 ** z;
+    const wrapped = (x % n2 + n2) % n2;
+    return `https://tile.openstreetmap.org/${z}/${wrapped}/${y}.png`;
+  }
+  function fmtCoord(v) {
+    return v.toFixed(4);
+  }
+  function coordName(lat, lon) {
+    return `${fmtCoord(lat)}, ${fmtCoord(lon)}`;
+  }
+  function osmURL(lat, lon, zoom = 15) {
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
+  }
+
+  // frontend/src/templates/v1/components/popup/PlacePickerPopup.tsx
+  var DEFAULT_CENTER = { lat: 21.0278, lon: 105.8342 };
+  var MAP_H = 300;
+  function PlacePickerPopup({
+    open,
+    onClose,
+    onPick,
+    initial: initial2
+  }) {
+    const [center, setCenter] = (0, import_react5.useState)(initial2 ?? DEFAULT_CENTER);
+    const [zoom, setZoom] = (0, import_react5.useState)(initial2 ? 15 : 12);
+    const [pin, setPin] = (0, import_react5.useState)(initial2 ?? null);
+    const [name, setName] = (0, import_react5.useState)(initial2?.name ?? "");
+    const [query, setQuery] = (0, import_react5.useState)("");
+    const [results, setResults] = (0, import_react5.useState)([]);
+    const [searching, setSearching] = (0, import_react5.useState)(false);
+    const boxRef = (0, import_react5.useRef)(null);
+    const [width, setWidth] = (0, import_react5.useState)(560);
+    (0, import_react5.useEffect)(() => {
+      if (!open) return;
+      const measure = () => setWidth(boxRef.current?.clientWidth ?? 560);
+      measure();
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }, [open]);
+    (0, import_react5.useEffect)(() => {
+      if (open) return;
+      setQuery("");
+      setResults([]);
+    }, [open]);
+    (0, import_react5.useEffect)(() => {
+      if (!open) return;
+      const q = query.trim();
+      if (q.length < 2) {
+        setResults([]);
+        setSearching(false);
+        return;
+      }
+      const ctrl = new AbortController();
+      setSearching(true);
+      const t2 = setTimeout(async () => {
+        const found = await searchPlaces(q, ctrl.signal);
+        if (!ctrl.signal.aborted) {
+          setResults(found);
+          setSearching(false);
+        }
+      }, 350);
+      return () => {
+        clearTimeout(t2);
+        ctrl.abort();
+      };
+    }, [query, open]);
+    const originX = lonToTileX(center.lon, zoom) * TILE - width / 2;
+    const originY = latToTileY(center.lat, zoom) * TILE - MAP_H / 2;
+    const worldTiles = 2 ** zoom;
+    const tiles = [];
+    for (let tx = Math.floor(originX / TILE); tx <= Math.floor((originX + width) / TILE); tx += 1) {
+      for (let ty = Math.max(0, Math.floor(originY / TILE)); ty <= Math.min(worldTiles - 1, Math.floor((originY + MAP_H) / TILE)); ty += 1) {
+        tiles.push({
+          key: `${zoom}/${tx}/${ty}`,
+          url: tileURL(zoom, tx, ty),
+          left: tx * TILE - originX,
+          top: ty * TILE - originY
+        });
+      }
+    }
+    const pinPos = pin ? {
+      left: lonToTileX(pin.lon, zoom) * TILE - originX,
+      top: latToTileY(pin.lat, zoom) * TILE - originY
+    } : null;
+    const panBy = (0, import_react5.useCallback)(
+      (dx, dy) => {
+        setCenter((c) => {
+          const cx = lonToTileX(c.lon, zoom) * TILE - dx;
+          const cy = latToTileY(c.lat, zoom) * TILE - dy;
+          return { lat: tileYToLat(cy / TILE, zoom), lon: tileXToLon(cx / TILE, zoom) };
+        });
+      },
+      [zoom]
+    );
+    const drag = (0, import_react5.useRef)(null);
+    function onPointerDown(e2) {
+      e2.currentTarget.setPointerCapture(e2.pointerId);
+      drag.current = { id: e2.pointerId, moved: 0 };
+    }
+    function onPointerMove(e2) {
+      if (drag.current?.id !== e2.pointerId) return;
+      drag.current.moved += Math.abs(e2.movementX) + Math.abs(e2.movementY);
+      panBy(e2.movementX, e2.movementY);
+    }
+    function onPointerUp(e2) {
+      const d = drag.current;
+      drag.current = null;
+      if (d?.id !== e2.pointerId) return;
+      if (d.moved > 4) return;
+      const rect = e2.currentTarget.getBoundingClientRect();
+      const lat = tileYToLat((originY + (e2.clientY - rect.top)) / TILE, zoom);
+      const lon = tileXToLon((originX + (e2.clientX - rect.left)) / TILE, zoom);
+      setPin({ lat, lon });
+      setName((n2) => n2.trim() ? n2 : coordName(lat, lon));
+    }
+    function choose(p) {
+      setPin({ lat: p.lat, lon: p.lon });
+      setCenter({ lat: p.lat, lon: p.lon });
+      setZoom(14);
+      setName(p.name);
+      setResults([]);
+      setQuery("");
+    }
+    const resolved = pin ? { name: name.trim() || coordName(pin.lat, pin.lon), lat: pin.lat, lon: pin.lon } : null;
+    return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Add Location", width: 640 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6 pb-4" }, /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value: query,
+        onChange: (e2) => setQuery(e2.target.value),
+        placeholder: "T\xECm th\xE0nh ph\u1ED1, qu\u1EADn, \u0111\u1ECBa danh\u2026",
+        className: `${inputCls} pl-9`,
+        style: inputStyle
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "magnifying-glass-icon", size: 14 })
+    ), (searching || results.length > 0) && /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "absolute left-0 right-0 top-11 z-10 max-h-56 overflow-y-auto rounded-lg py-1 shadow-lg",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      searching && results.length === 0 ? /* @__PURE__ */ React.createElement("li", { className: "px-4 py-2 text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\xECm\u2026") : results.map((r2) => /* @__PURE__ */ React.createElement("li", { key: `${r2.lat},${r2.lon},${r2.name}` }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => choose(r2),
+          className: "block w-full px-4 py-2 text-left transition hover:bg-[var(--tpl-surface-2)]"
+        },
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "block text-sm font-medium",
+            style: { color: "var(--tpl-heading)" }
+          },
+          r2.name
+        ),
+        r2.detail && /* @__PURE__ */ React.createElement("span", { className: "block text-xs", style: { color: "var(--tpl-muted)" } }, r2.detail)
+      )))
+    )), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        ref: boxRef,
+        onPointerDown,
+        onPointerMove,
+        onPointerUp,
+        className: "relative touch-none select-none overflow-hidden rounded-lg border",
+        style: {
+          height: MAP_H,
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-surface-2)",
+          cursor: "crosshair"
+        }
+      },
+      tiles.map((t2) => (
+        /* eslint-disable-next-line @next/next/no-img-element -- OSM raster tile, not a static/optimizable asset */
+        /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            key: t2.key,
+            src: t2.url,
+            alt: "",
+            draggable: false,
+            width: TILE,
+            height: TILE,
+            className: "pointer-events-none absolute",
+            style: { left: t2.left, top: t2.top }
+          }
+        )
+      )),
+      pinPos && /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "pointer-events-none absolute grid place-items-center rounded-full text-white shadow",
+          style: {
+            left: pinPos.left - 14,
+            top: pinPos.top - 28,
+            width: 28,
+            height: 28,
+            background: "var(--tpl-accent)"
+          }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "small-pin-icon", size: 14 })
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "absolute right-2 top-2 flex flex-col gap-1" }, /* @__PURE__ */ React.createElement(ZoomBtn, { label: "Zoom in", onClick: () => setZoom((z) => Math.min(MAX_ZOOM, z + 1)) }, "+"), /* @__PURE__ */ React.createElement(ZoomBtn, { label: "Zoom out", onClick: () => setZoom((z) => Math.max(MIN_ZOOM, z - 1)) }, "\u2212")),
+      /* @__PURE__ */ React.createElement(
+        "a",
+        {
+          href: "https://www.openstreetmap.org/copyright",
+          target: "_blank",
+          rel: "noreferrer noopener",
+          onPointerDown: (e2) => e2.stopPropagation(),
+          className: "absolute bottom-0 right-0 bg-white/80 px-1.5 py-0.5 text-[10px]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        "\xA9 OpenStreetMap contributors"
+      )
+    ), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "T\xECm \u1EDF \xF4 tr\xEAn, ho\u1EB7c b\u1EA5m th\u1EB3ng l\xEAn b\u1EA3n \u0111\u1ED3 \u0111\u1EC3 th\u1EA3 ghim. K\xE9o \u0111\u1EC3 di chuy\u1EC3n."), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value: name,
+        onChange: (e2) => setName(e2.target.value),
+        placeholder: "T\xEAn \u0111\u1ECBa \u0111i\u1EC3m hi\u1EC3n th\u1ECB tr\xEAn b\xE0i vi\u1EBFt",
+        className: inputCls,
+        style: inputStyle,
+        disabled: !pin
+      }
+    )), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex items-center justify-between gap-2 border-t px-6 py-4",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, pin ? coordName(pin.lat, pin.lon) : "Ch\u01B0a ch\u1ECDn \u0111\u1ECBa \u0111i\u1EC3m"),
+      /* @__PURE__ */ React.createElement("span", { className: "flex gap-2" }, /* @__PURE__ */ React.createElement(BtnSecondary, { onClick: onClose }, "Cancel"), /* @__PURE__ */ React.createElement(
+        BtnPrimary,
+        {
+          disabled: !resolved,
+          onClick: () => {
+            if (resolved) {
+              onPick(resolved);
+              onClose();
+            }
+          }
+        },
+        "Add Location"
+      ))
+    ));
+  }
+  function ZoomBtn({
+    label,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        "aria-label": label,
+        onPointerDown: (e2) => e2.stopPropagation(),
+        onClick,
+        className: "grid h-7 w-7 place-items-center rounded-md text-base font-bold shadow",
+        style: { background: "var(--tpl-surface)", color: "var(--tpl-heading)" }
+      },
+      children
+    );
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/attachments.ts
+  init_define_import_meta_env();
+  var PHOTO_RE = /!\[[^\]]*\]\(asset:([0-9a-fA-F-]{36})\)/;
+  var PLACE_RE = /\[([^\]]*)\]\(geo:(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/;
+  function encodePhoto(assetId) {
+    return `![photo](asset:${assetId})`;
+  }
+  function encodePlace(place) {
+    const name = place.name.replace(/[[\]]/g, "").trim() || "Location";
+    return `[${name}](geo:${place.lat},${place.lon})`;
+  }
+  function decodeAttachments(body) {
+    const photo = PHOTO_RE.exec(body);
+    const place = PLACE_RE.exec(body);
+    let rest = body;
+    if (photo?.[0]) rest = rest.replace(photo[0], " ");
+    if (place?.[0]) rest = rest.replace(place[0], " ");
+    return {
+      photoId: photo?.[1] ?? null,
+      place: place && place[1] !== void 0 && place[2] && place[3] ? { name: place[1], lat: Number(place[2]), lon: Number(place[3]) } : null,
+      rest: rest.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim()
+    };
+  }
+  function composeBody(text, photoId, place) {
+    const parts = [text.trim()];
+    if (photoId) parts.push(encodePhoto(photoId));
+    if (place) parts.push(encodePlace(place));
+    return parts.filter(Boolean).join("\n\n");
+  }
+
+  // frontend/src/templates/v1/components/composer/Composer.tsx
   function Composer({
     displayName,
     bodyMd,
@@ -10712,11 +12152,21 @@ var PortalUI = (() => {
     error = null,
     className = ""
   }) {
-    const [preview, setPreview] = (0, import_react2.useState)(false);
+    const [preview, setPreview] = (0, import_react6.useState)(false);
+    const [photoId, setPhotoId] = (0, import_react6.useState)(null);
+    const [thumbFailed, setThumbFailed] = (0, import_react6.useState)(false);
+    const [place, setPlace] = (0, import_react6.useState)(null);
+    const [photoOpen, setPhotoOpen] = (0, import_react6.useState)(false);
+    const [placeOpen, setPlaceOpen] = (0, import_react6.useState)(false);
+    const composed = composeBody(bodyMd, photoId, place);
+    const canPost = composed.trim().length > 0 && !submitting;
     function submit(e2) {
       e2.preventDefault();
-      if (!bodyMd.trim() || submitting) return;
-      onSubmit();
+      if (!canPost) return;
+      onSubmit(composed);
+      setPhotoId(null);
+      setPlace(null);
+      setPreview(false);
     }
     return /* @__PURE__ */ React.createElement(
       "div",
@@ -10724,67 +12174,209 @@ var PortalUI = (() => {
         className: `overflow-hidden rounded-xl shadow-sm ${className}`,
         style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
       },
-      /* @__PURE__ */ React.createElement("div", { className: "flex border-b", style: { borderColor: "var(--tpl-border)" } }, TABS.map((t2) => /* @__PURE__ */ React.createElement(
-        "button",
+      /* @__PURE__ */ React.createElement(
+        "div",
         {
-          key: t2.key,
-          type: "button",
-          className: "flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition",
-          style: t2.key === "status" ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" } : { color: "var(--tpl-muted)" },
-          "aria-current": t2.key === "status" ? "true" : void 0
+          role: "tablist",
+          "aria-label": "Post type",
+          className: "flex",
+          style: {
+            background: "var(--tpl-surface-2)",
+            borderBottom: "1px solid var(--tpl-border)"
+          }
         },
-        /* @__PURE__ */ React.createElement(Icon, { name: t2.icon, size: 16 }),
-        /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline" }, t2.label)
-      ))),
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            role: "tab",
+            "aria-selected": true,
+            className: "-mb-px flex items-center gap-2 px-5 py-3.5 text-sm font-semibold",
+            style: {
+              color: "var(--tpl-heading)",
+              background: "var(--tpl-surface)",
+              border: "1px solid var(--tpl-border)",
+              borderTopColor: "transparent",
+              borderBottomColor: "var(--tpl-surface)"
+            }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "status-icon", size: 16, style: { color: "var(--tpl-accent)" } }),
+          /* @__PURE__ */ React.createElement("span", null, "Status")
+        )
+      ),
       /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "p-4" }, error && /* @__PURE__ */ React.createElement(
         "p",
         {
           role: "alert",
           className: "mb-3 rounded-lg border px-3 py-2 text-sm",
-          style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+          style: {
+            borderColor: "rgba(239,68,68,.4)",
+            background: "rgba(239,68,68,.08)",
+            color: "#ef4444"
+          }
         },
         error
-      ), /* @__PURE__ */ React.createElement("div", { className: "flex gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), preview ? /* @__PURE__ */ React.createElement("div", { className: "min-h-[3rem] w-full whitespace-pre-wrap pt-2 text-sm", style: { color: "var(--tpl-text)" } }, bodyMd.trim() ? bodyMd : /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 n\u1ED9i dung \u0111\u1EC3 xem tr\u01B0\u1EDBc.")) : /* @__PURE__ */ React.createElement(
+      ), /* @__PURE__ */ React.createElement("div", { className: "flex gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: displayName, size: 40 }), preview ? /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "min-h-[7rem] w-full whitespace-pre-wrap pt-2 text-sm",
+          style: { color: "var(--tpl-text)" }
+        },
+        composed.trim() ? composed : /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Nothing to preview yet.")
+      ) : /* @__PURE__ */ React.createElement(
         "textarea",
         {
           value: bodyMd,
           onChange: (e2) => onBodyMdChange(e2.target.value),
-          rows: 2,
+          rows: 4,
           placeholder: "Share what you are thinking here...",
-          className: "min-h-[3rem] w-full resize-none border-0 bg-transparent pt-2 text-sm outline-none placeholder:text-[var(--tpl-muted)]",
+          className: "min-h-[7rem] w-full resize-none border-0 bg-transparent pt-2 text-sm outline-none placeholder:text-[var(--tpl-muted)]",
           style: { color: "var(--tpl-text)" }
         }
-      )), /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex items-center gap-1 border-t pt-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(IconBtn, { label: "Add photos (coming soon)", icon: "camera-icon", disabled: true }), /* @__PURE__ */ React.createElement(IconBtn, { label: "Tag friends (coming soon)", icon: "computer-icon", disabled: true }), /* @__PURE__ */ React.createElement(IconBtn, { label: "Add location (coming soon)", icon: "small-pin-icon", disabled: true }), /* @__PURE__ */ React.createElement("div", { className: "ml-auto flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
-        "button",
+      )), (photoId || place) && /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex flex-wrap items-center gap-2" }, photoId && /* @__PURE__ */ React.createElement(
+        "span",
         {
-          type: "submit",
-          disabled: !bodyMd.trim() || submitting,
-          className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+          className: "relative inline-block overflow-hidden rounded-lg border",
+          style: { borderColor: "var(--tpl-border)" }
         },
-        submitting ? "Posting\u2026" : "Post Status"
-      ), /* @__PURE__ */ React.createElement(
-        "button",
+        thumbFailed ? (
+          // The variant URL can 404 (see PhotoFrame in Post.tsx); the
+          // attachment is still valid, so show a tile, not a broken icon.
+          /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              className: "grid h-20 w-28 place-items-center",
+              style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" }
+            },
+            /* @__PURE__ */ React.createElement(Icon, { name: "photos-icon", size: 22 })
+          )
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
+          /* @__PURE__ */ React.createElement(
+            "img",
+            {
+              src: assetVariantURL(photoId, "thumb"),
+              alt: "\u1EA2nh \u0111\xEDnh k\xE8m",
+              onError: () => setThumbFailed(true),
+              className: "h-20 w-28 object-cover"
+            }
+          )
+        ),
+        /* @__PURE__ */ React.createElement(ChipRemove, { label: "B\u1ECF \u1EA3nh", onClick: () => setPhotoId(null) })
+      ), place && /* @__PURE__ */ React.createElement(
+        "span",
         {
-          type: "button",
-          onClick: () => setPreview((p) => !p),
-          className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
-          style: { borderColor: "var(--tpl-border)", background: "transparent", color: "var(--tpl-muted)" }
+          className: "relative inline-flex items-center gap-2 rounded-full py-1.5 pl-3 pr-8 text-xs font-medium",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-text)" }
         },
-        preview ? "Edit" : "Preview"
-      ))))
+        /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-accent)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "small-pin-icon", size: 12 })),
+        /* @__PURE__ */ React.createElement("span", { className: "max-w-[16rem] truncate" }, place.name || coordName(place.lat, place.lon)),
+        /* @__PURE__ */ React.createElement(ChipRemove, { label: "B\u1ECF \u0111\u1ECBa \u0111i\u1EC3m", onClick: () => setPlace(null), inline: true })
+      )), /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "mt-3 flex items-center gap-1 border-t pt-3",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement(
+          IconBtn,
+          {
+            label: photoId ? "\u0110\u1ED5i \u1EA3nh" : "Th\xEAm \u1EA3nh",
+            icon: "camera-icon",
+            active: !!photoId,
+            onClick: () => setPhotoOpen(true)
+          }
+        ),
+        /* @__PURE__ */ React.createElement(IconBtn, { label: "Tag friends (coming soon)", icon: "computer-icon", disabled: true }),
+        /* @__PURE__ */ React.createElement(
+          IconBtn,
+          {
+            label: place ? "\u0110\u1ED5i \u0111\u1ECBa \u0111i\u1EC3m" : "Th\xEAm \u0111\u1ECBa \u0111i\u1EC3m",
+            icon: "small-pin-icon",
+            active: !!place,
+            onClick: () => setPlaceOpen(true)
+          }
+        ),
+        /* @__PURE__ */ React.createElement("div", { className: "ml-auto flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => setPreview((p) => !p),
+            className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+            style: {
+              borderColor: "var(--tpl-border)",
+              background: "transparent",
+              color: "var(--tpl-muted)"
+            }
+          },
+          preview ? "Edit" : "Preview"
+        ), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "submit",
+            disabled: !canPost,
+            className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+            style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+          },
+          submitting ? "Posting\u2026" : "Post Status"
+        ))
+      )),
+      /* @__PURE__ */ React.createElement(
+        AttachPhotoPopup,
+        {
+          open: photoOpen,
+          onClose: () => setPhotoOpen(false),
+          onPick: (id2) => {
+            setThumbFailed(false);
+            setPhotoId(id2);
+          }
+        }
+      ),
+      /* @__PURE__ */ React.createElement(
+        PlacePickerPopup,
+        {
+          open: placeOpen,
+          onClose: () => setPlaceOpen(false),
+          onPick: setPlace,
+          initial: place
+        }
+      )
     );
   }
-  function IconBtn({ label, icon, disabled }) {
+  function ChipRemove({
+    label,
+    onClick,
+    inline: inline2 = false
+  }) {
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
+        onClick,
+        "aria-label": label,
+        title: label,
+        className: `absolute grid place-items-center rounded-full text-white transition hover:opacity-90 ${inline2 ? "right-1.5 top-1/2 h-5 w-5 -translate-y-1/2" : "right-1 top-1 h-5 w-5"}`,
+        style: { background: "rgba(63,66,87,.75)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 8 })
+    );
+  }
+  function IconBtn({
+    label,
+    icon,
+    disabled,
+    active,
+    onClick
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
         title: label,
         "aria-label": label,
         disabled,
         className: "grid h-9 w-9 place-items-center rounded-lg transition hover:bg-[var(--tpl-surface-2)] disabled:cursor-not-allowed disabled:opacity-40",
-        style: { color: "var(--tpl-muted)" }
+        style: { color: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }
       },
       /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 18 })
     );
@@ -10792,7 +12384,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/form/FormField.tsx
   init_define_import_meta_env();
-  var import_react3 = __toESM(require_react_shim());
+  var import_react7 = __toESM(require_react_shim());
   function FormField({
     label,
     value,
@@ -10802,8 +12394,8 @@ var PortalUI = (() => {
     icon,
     disabled = false
   }) {
-    const [focused, setFocused] = (0, import_react3.useState)(false);
-    const [internal, setInternal] = (0, import_react3.useState)(value ?? "");
+    const [focused, setFocused] = (0, import_react7.useState)(false);
+    const [internal, setInternal] = (0, import_react7.useState)(value ?? "");
     const controlled = value !== void 0;
     const current = controlled ? value : internal;
     const filled = (current ?? "").length > 0;
@@ -10860,7 +12452,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/form/SelectField.tsx
   init_define_import_meta_env();
-  var import_react4 = __toESM(require_react_shim());
+  var import_react8 = __toESM(require_react_shim());
   function SelectField({
     label,
     options,
@@ -10868,7 +12460,7 @@ var PortalUI = (() => {
     onChange,
     disabled = false
   }) {
-    const [focused, setFocused] = (0, import_react4.useState)(false);
+    const [focused, setFocused] = (0, import_react8.useState)(false);
     const normalized = options.map(
       (o2) => typeof o2 === "string" ? { value: o2, label: o2 } : o2
     );
@@ -10919,7 +12511,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/form/TagSelect.tsx
   init_define_import_meta_env();
-  var import_react5 = __toESM(require_react_shim());
+  var import_react9 = __toESM(require_react_shim());
   function TagSelect({
     label,
     values,
@@ -10927,8 +12519,8 @@ var PortalUI = (() => {
     suggestions = [],
     placeholder
   }) {
-    const [draft, setDraft] = (0, import_react5.useState)("");
-    const [focused, setFocused] = (0, import_react5.useState)(false);
+    const [draft, setDraft] = (0, import_react9.useState)("");
+    const [focused, setFocused] = (0, import_react9.useState)(false);
     function addTag(raw) {
       const tag = raw.trim();
       setDraft("");
@@ -11048,15 +12640,15 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/headers/NotifMenus.tsx
   init_define_import_meta_env();
-  var import_react6 = __toESM(require_react_shim());
+  var import_react10 = __toESM(require_react_shim());
 
   // frontend/node_modules/portal-frontend/.ds-shims/next-navigation.tsx
   init_define_import_meta_env();
-  var React9 = __toESM(require_react_shim());
+  var React10 = __toESM(require_react_shim());
   var noop2 = () => {
   };
   function useRouter() {
-    return React9.useMemo(
+    return React10.useMemo(
       () => ({
         push: noop2,
         replace: noop2,
@@ -11073,56 +12665,30 @@ var PortalUI = (() => {
     return "/";
   }
   function useSearchParams() {
-    return React9.useMemo(() => new URLSearchParams(), []);
+    return React10.useMemo(() => new URLSearchParams(), []);
   }
 
-  // frontend/node_modules/portal-frontend/src/lib/notifications.ts
+  // frontend/node_modules/portal-frontend/src/lib/social.ts
   init_define_import_meta_env();
-
-  // frontend/src/lib/api-client.ts
-  init_define_import_meta_env();
-  function resolveBaseURL() {
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      if (hostname !== "portal.localhost") {
-        return `${protocol}//${hostname}:8080`;
-      }
-    }
-    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  async function listConnections(kind = "accepted") {
+    const r2 = await api(`/api/v1/connections?status=${kind}`);
+    return r2.connections ?? [];
   }
-  var baseURL = resolveBaseURL();
-  var ApiError = class extends Error {
-    constructor(status, body, message) {
-      super(message ?? `API error ${status}`);
-      __publicField(this, "status", status);
-      __publicField(this, "body", body);
-    }
-  };
-  async function api(path, init = {}) {
-    const res = await fetch(`${baseURL}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...init.headers
-      },
-      credentials: "include"
+  async function requestConnection(userId) {
+    return api("/api/v1/connections", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId })
     });
-    const text = await res.text();
-    const body = text ? safeJSON(text) : void 0;
-    if (!res.ok) {
-      throw new ApiError(res.status, body);
-    }
-    return body;
   }
-  function safeJSON(text) {
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
+  async function acceptConnection(id2) {
+    return api(`/api/v1/connections/${id2}/accept`, { method: "POST" });
+  }
+  async function removeConnection(id2) {
+    await api(`/api/v1/connections/${id2}`, { method: "DELETE" });
   }
 
   // frontend/node_modules/portal-frontend/src/lib/notifications.ts
+  init_define_import_meta_env();
   async function listNotifications(params = {}) {
     const q = new URLSearchParams();
     if (params.status) q.set("status", params.status);
@@ -11222,71 +12788,80 @@ var PortalUI = (() => {
   function Empty({ children }) {
     return /* @__PURE__ */ React.createElement("li", { className: "px-4 py-8 text-center text-sm", style: { color: "var(--tpl-muted)" } }, children);
   }
-  function InlineLink({ children, tone = "var(--tpl-accent)" }) {
-    return /* @__PURE__ */ React.createElement("a", { href: "#", className: "font-semibold hover:underline", style: { color: tone } }, children);
-  }
   var rowBorder = { borderColor: "var(--tpl-border)" };
-  var FRIEND_REQUESTS = [
-    { id: 1, name: "Tamara Romanoff", sub: "Mutual Friend: Sarah Hetfield" },
-    { id: 2, name: "Tony Stevens", sub: "4 Friends in Common" },
-    { id: 3, name: "Green Goo", sub: "8 Friends in Common" },
-    { id: 4, name: "Mary Jane Stark", sub: "", info: true }
-  ];
   function FriendRequestsMenu({ open, onToggle }) {
-    const [items, setItems] = (0, import_react6.useState)(FRIEND_REQUESTS);
-    const remove = (id2) => setItems((x) => x.filter((i) => i.id !== id2));
-    return /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement(Trigger, { icon: "happy-face-icon", tone: "var(--tpl-blue-2)", badge: items.length, label: "Friend requests", open, onToggle }), open && /* @__PURE__ */ React.createElement(
+    const qc = useQueryClient();
+    const requests = useQuery({
+      queryKey: ["connections", "incoming"],
+      queryFn: () => listConnections("incoming"),
+      // The badge has to be right before the menu is opened, so this one polls in
+      // the background rather than waiting for a click.
+      refetchInterval: 6e4
+    });
+    const refresh = () => {
+      qc.invalidateQueries({ queryKey: ["connections"] });
+      qc.invalidateQueries({ queryKey: ["people"] });
+    };
+    const accept = useMutation({ mutationFn: (id2) => acceptConnection(id2), onSuccess: refresh });
+    const decline = useMutation({ mutationFn: (id2) => removeConnection(id2), onSuccess: refresh });
+    const busy = accept.isPending || decline.isPending;
+    const items = requests.data ?? [];
+    return /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement(
+      Trigger,
+      {
+        icon: "happy-face-icon",
+        tone: "var(--tpl-blue-2)",
+        badge: items.length,
+        label: "Friend requests",
+        open,
+        onToggle
+      }
+    ), open && /* @__PURE__ */ React.createElement(
       DropdownCard,
       {
         title: "Friend Requests",
-        actions: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(ActionLink, null, "Settings"), /* @__PURE__ */ React.createElement(ActionLink, null, "Find Friends")),
-        footer: "Check all your Events"
+        actions: /* @__PURE__ */ React.createElement(ActionLink, null, "Settings"),
+        footer: "Manage all your people"
       },
       items.length === 0 && /* @__PURE__ */ React.createElement(Empty, null, "No new friend requests"),
-      items.map(
-        (r2) => r2.info ? /* @__PURE__ */ React.createElement("li", { key: r2.id, className: "flex items-center gap-3 border-b px-4 py-3", style: rowBorder }, /* @__PURE__ */ React.createElement(Avatar, { name: r2.name, size: 40 }), /* @__PURE__ */ React.createElement("p", { className: "min-w-0 flex-1 text-sm", style: { color: "var(--tpl-text)" } }, "You and ", /* @__PURE__ */ React.createElement("b", { style: { color: "var(--tpl-heading)" } }, r2.name), " just became friends. Write on", " ", /* @__PURE__ */ React.createElement(InlineLink, { tone: "var(--tpl-blue)" }, "her wall"), "."), /* @__PURE__ */ React.createElement(IconBtn2, { onClick: () => remove(r2.id), label: "Dismiss", icon: "happy-face-icon" })) : /* @__PURE__ */ React.createElement("li", { key: r2.id, className: "flex items-center gap-3 border-b px-4 py-3", style: rowBorder }, /* @__PURE__ */ React.createElement(Avatar, { name: r2.name, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, r2.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, r2.sub)), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
-            onClick: () => remove(r2.id),
-            className: "grid h-8 w-8 shrink-0 place-items-center rounded-md text-white transition hover:opacity-90",
-            style: { background: "var(--tpl-blue)" },
-            "aria-label": `Accept ${r2.name}`
-          },
-          /* @__PURE__ */ React.createElement(Icon, { name: "happy-face-icon", size: 16 })
-        ), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
-            onClick: () => remove(r2.id),
-            className: "grid h-8 w-8 shrink-0 place-items-center rounded-md transition hover:bg-black/5",
-            style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" },
-            "aria-label": `Decline ${r2.name}`
-          },
-          /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 12 })
-        ))
-      )
+      items.map((r2) => /* @__PURE__ */ React.createElement("li", { key: r2.id, className: "flex items-center gap-3 border-b px-4 py-3", style: rowBorder }, /* @__PURE__ */ React.createElement(Avatar, { name: r2.display_name ?? "?", size: 40 }), /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          className: "min-w-0 flex-1 truncate text-sm font-semibold",
+          style: { color: "var(--tpl-heading)" }
+        },
+        r2.display_name
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          disabled: busy,
+          onClick: () => accept.mutate(r2.id),
+          className: "grid h-8 w-8 shrink-0 place-items-center rounded-md text-white transition hover:opacity-90 disabled:opacity-50",
+          style: { background: "var(--tpl-blue)" },
+          "aria-label": `Accept ${r2.display_name}`
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "check-icon", size: 14 })
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          disabled: busy,
+          onClick: () => decline.mutate(r2.id),
+          className: "grid h-8 w-8 shrink-0 place-items-center rounded-md transition hover:bg-black/5 disabled:opacity-50",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" },
+          "aria-label": `Decline ${r2.display_name}`
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 12 })
+      )))
     ));
-  }
-  function IconBtn2({ onClick, label, icon }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick,
-        className: "grid h-8 w-8 shrink-0 place-items-center rounded-md transition hover:bg-black/5",
-        style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" },
-        "aria-label": label
-      },
-      /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 16 })
-    );
   }
   var MESSAGES = [
     { id: 1, name: "Elaine Dreyfuss", preview: "Hi James! I just wanted to let you know we have to reschedule the meeting\u2026", time: "Yesterday at 9:56pm" },
     { id: 2, name: "Sarah Hetfield", preview: "Hey! Would you like to hang out this weekend?", time: "March 16th at 10:23am" }
   ];
   function MessagesMenu({ open, onToggle }) {
-    const [msgs, setMsgs] = (0, import_react6.useState)(MESSAGES);
+    const [msgs, setMsgs] = (0, import_react10.useState)(MESSAGES);
     const unread = msgs.filter((m) => !m.read).length;
     const markAll = () => setMsgs((x) => x.map((m) => ({ ...m, read: true })));
     const readOne = (id2) => setMsgs((x) => x.map((m) => m.id === id2 ? { ...m, read: true } : m));
@@ -11428,69 +13003,12 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/headers/TopMenu.tsx
   init_define_import_meta_env();
-  var import_react7 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/.ds-shims/next-link.tsx
-  init_define_import_meta_env();
-  var React10 = __toESM(require_react_shim());
-  function Link({
-    href,
-    children,
-    ...rest
-  }) {
-    const to = typeof href === "string" ? href : href?.pathname ?? "#";
-    return React10.createElement("a", { href: to, ...rest }, children);
-  }
-
-  // frontend/node_modules/portal-frontend/src/lib/api-client.ts
-  init_define_import_meta_env();
-  function resolveBaseURL2() {
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      if (hostname !== "portal.localhost") {
-        return `${protocol}//${hostname}:8080`;
-      }
-    }
-    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-  }
-  var baseURL2 = resolveBaseURL2();
-  var ApiError2 = class extends Error {
-    constructor(status, body, message) {
-      super(message ?? `API error ${status}`);
-      __publicField(this, "status", status);
-      __publicField(this, "body", body);
-    }
-  };
-  async function api2(path, init = {}) {
-    const res = await fetch(`${baseURL2}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...init.headers
-      },
-      credentials: "include"
-    });
-    const text = await res.text();
-    const body = text ? safeJSON2(text) : void 0;
-    if (!res.ok) {
-      throw new ApiError2(res.status, body);
-    }
-    return body;
-  }
-  function safeJSON2(text) {
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
-  }
-
-  // frontend/src/templates/v1/components/headers/TopMenu.tsx
+  var import_react11 = __toESM(require_react_shim());
   function TopMenu() {
-    const [me, setMe] = (0, import_react7.useState)({ name: "Guest", role: "Member" });
-    const [menu, setMenu] = (0, import_react7.useState)(null);
-    const clusterRef = (0, import_react7.useRef)(null);
-    (0, import_react7.useEffect)(() => {
+    const [me, setMe] = (0, import_react11.useState)({ name: "Guest", role: "Member" });
+    const [menu, setMenu] = (0, import_react11.useState)(null);
+    const clusterRef = (0, import_react11.useRef)(null);
+    (0, import_react11.useEffect)(() => {
       let alive = true;
       fetch(`${baseURL2}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((d) => {
         if (alive && d?.display_name) setMe({ name: d.display_name, role: d.roles?.[0] ?? "Member" });
@@ -11500,7 +13018,7 @@ var PortalUI = (() => {
         alive = false;
       };
     }, []);
-    (0, import_react7.useEffect)(() => {
+    (0, import_react11.useEffect)(() => {
       if (!menu) return;
       const onDoc = (e2) => {
         if (clusterRef.current && !clusterRef.current.contains(e2.target)) setMenu(null);
@@ -11554,10 +13072,10 @@ var PortalUI = (() => {
     open,
     onToggle
   }) {
-    const [status, setStatus] = (0, import_react7.useState)("online");
-    const [subtitle, setSubtitle] = (0, import_react7.useState)(role);
-    const [draft, setDraft] = (0, import_react7.useState)(role);
-    (0, import_react7.useEffect)(() => {
+    const [status, setStatus] = (0, import_react11.useState)("online");
+    const [subtitle, setSubtitle] = (0, import_react11.useState)(role);
+    const [draft, setDraft] = (0, import_react11.useState)(role);
+    (0, import_react11.useEffect)(() => {
       setSubtitle(role);
       setDraft(role);
     }, [role]);
@@ -11800,25 +13318,77 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/menu/SidebarLeft.tsx
   init_define_import_meta_env();
-  var ITEMS = [
-    { icon: "newsfeed-icon", label: "Newsfeed", href: "/", active: true },
+
+  // frontend/node_modules/portal-frontend/src/lib/layout.ts
+  init_define_import_meta_env();
+  var LAYOUT_KEY = ["layout"];
+  var ADMIN_LAYOUT_KEY = ["admin", "layout"];
+  function useLayout() {
+    return useQuery({
+      queryKey: LAYOUT_KEY,
+      queryFn: () => api("/api/v1/layout"),
+      staleTime: 5 * 6e4,
+      retry: false
+    });
+  }
+  function getAdminLayout() {
+    return api("/api/v1/admin/layout");
+  }
+  function saveMenu(items) {
+    return api("/api/v1/admin/layout/menu", {
+      method: "PUT",
+      body: JSON.stringify({ items })
+    });
+  }
+  function saveWidgets(widgets) {
+    return api("/api/v1/admin/layout/widgets", {
+      method: "PUT",
+      body: JSON.stringify({ widgets })
+    });
+  }
+  function reorder(list, index, delta) {
+    const to = index + delta;
+    if (to < 0 || to >= list.length) return list;
+    const next = [...list];
+    const [moved] = next.splice(index, 1);
+    if (moved === void 0) return list;
+    next.splice(to, 0, moved);
+    return next;
+  }
+
+  // frontend/src/templates/v1/components/menu/SidebarLeft.tsx
+  var FALLBACK = [
+    { icon: "newsfeed-icon", label: "Newsfeed", href: "/" },
     { icon: "multimedia-icon", label: "Upload Video", href: "/upload" },
     { icon: "stats-icon", label: "Ledger", href: "/bank" },
     { icon: "happy-faces-icon", label: "People", href: "/people" },
     { icon: "albums-icon", label: "Commic", href: "/library/comic" },
     { icon: "happy-faces-icon", label: "Friend Groups" },
-    { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" },
+    { icon: "headphones-icon", label: "Music & Playlists", href: "/library/music" },
     { icon: "weather-icon", label: "Weather App", href: "/weather" },
     { icon: "calendar-icon", label: "Calendar and Events", href: "/calendar" },
     { icon: "badge-icon", label: "Community Badges" },
     { icon: "cupcake-icon", label: "Friends Birthdays" },
-    { icon: "stats-icon", label: "Account Stats" },
-    { icon: "manage-widgets-icon", label: "Manage Widgets" }
+    { icon: "stats-icon", label: "Account Stats" }
   ];
+  function toEntries(items) {
+    if (!items?.length) {
+      return FALLBACK.map((it) => ({ key: it.label, icon: it.icon, label: it.label, href: it.href }));
+    }
+    return items.map((it) => ({
+      key: it.key,
+      icon: it.icon,
+      label: it.label,
+      href: it.href ?? void 0
+    }));
+  }
   function SidebarLeft({
     collapsed,
     onToggle
   }) {
+    const pathname = usePathname();
+    const { data: layout } = useLayout();
+    const items = toEntries(layout?.menu);
     return /* @__PURE__ */ React.createElement(
       "aside",
       {
@@ -11829,15 +13399,15 @@ var PortalUI = (() => {
           borderColor: "var(--tpl-border)"
         }
       },
-      /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto py-3" }, /* @__PURE__ */ React.createElement(Row, { collapsed, onClick: onToggle, label: "Collapse Menu", icon: "menu-icon" }), /* @__PURE__ */ React.createElement("div", { className: "my-2 h-px", style: { background: "var(--tpl-border)" } }), ITEMS.map((it) => /* @__PURE__ */ React.createElement(
+      /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto py-3" }, /* @__PURE__ */ React.createElement(Row, { collapsed, onClick: onToggle, label: "Collapse Menu", icon: "menu-icon" }), /* @__PURE__ */ React.createElement("div", { className: "my-2 h-px", style: { background: "var(--tpl-border)" } }), items.map((it) => /* @__PURE__ */ React.createElement(
         Row,
         {
-          key: it.label,
+          key: it.key,
           collapsed,
           icon: it.icon,
           label: it.label,
           href: it.href,
-          active: it.active
+          active: isActive(pathname, it.href)
         }
       ))),
       !collapsed && /* @__PURE__ */ React.createElement("div", { className: "border-t px-6 py-5", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-sm", style: { color: "var(--tpl-heading)" } }, /* @__PURE__ */ React.createElement("span", { className: "font-medium" }, "Profile Completion"), /* @__PURE__ */ React.createElement("span", null, "76%")), /* @__PURE__ */ React.createElement("div", { className: "mt-2 h-1.5 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
@@ -11848,6 +13418,11 @@ var PortalUI = (() => {
         }
       )), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-xs leading-relaxed", style: { color: "var(--tpl-muted)" } }, "Complete", " ", /* @__PURE__ */ React.createElement("a", { href: "#", className: "font-medium hover:underline", style: { color: "var(--tpl-accent)" } }, "your profile"), " ", "so people can know more about you!"))
     );
+  }
+  function isActive(pathname, href) {
+    if (!href) return false;
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
   function Row({
     icon,
@@ -11882,54 +13457,109 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/menu/SidebarRight.tsx
   init_define_import_meta_env();
-  var import_react8 = __toESM(require_react_shim());
-  var STATUS = {
-    online: { label: "Online", varName: "--tpl-status-online" },
-    work: { label: "At work!", varName: "--tpl-status-work" },
-    away: { label: "Away", varName: "--tpl-status-away" },
-    offline: { label: "Offline", varName: "--tpl-status-offline" },
-    invisible: { label: "Invisible", varName: "--tpl-status-invisible" }
+  var import_react12 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/people.ts
+  init_define_import_meta_env();
+  var CIRCLE_LABEL = {
+    close_friend: "Close Friends",
+    family: "My Family",
+    other: "Uncategorized"
   };
-  var GROUPS = [
-    {
-      title: "Close Friends",
-      friends: [
-        { name: "Carol Summers", status: "online" },
-        { name: "Mathilda Brinker", status: "work" },
-        { name: "Michael Maximoff", status: "away" },
-        { name: "Rachel Howlett", status: "offline" },
-        { name: "Nina Kraviz", status: "online" }
-      ]
-    },
-    {
-      title: "My Family",
-      friends: [{ name: "Sarah Hetfield", status: "online" }]
-    },
-    {
-      title: "Uncategorized",
-      friends: [
-        { name: "Bruce Peterson", status: "online" },
-        { name: "Chris Greyson", status: "away" },
-        { name: "Nicholas Grisom", status: "invisible" },
-        { name: "James Spiegel", status: "away" },
-        { name: "Diana Jones", status: "online" }
-      ]
-    }
-  ];
+  async function listPeople(cursor, circle) {
+    const p = new URLSearchParams();
+    if (cursor) p.set("cursor", cursor);
+    if (circle) p.set("circle", circle);
+    const qs = p.toString();
+    const r2 = await api(`/api/v1/people${qs ? `?${qs}` : ""}`);
+    return { people: r2.people ?? [], next_cursor: r2.next_cursor };
+  }
+  async function listSuggestions() {
+    const r2 = await api("/api/v1/people/suggestions");
+    return r2.suggestions ?? [];
+  }
+  async function getPerson(id2) {
+    return api(`/api/v1/people/${id2}`);
+  }
+  async function createPerson(body) {
+    return api("/api/v1/people", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function updatePerson(id2, body) {
+    return api(`/api/v1/people/${id2}`, { method: "PATCH", body: JSON.stringify(body) });
+  }
+  async function deletePerson(id2) {
+    await api(`/api/v1/people/${id2}`, { method: "DELETE" });
+  }
+  async function upcomingBirthdays(days = 14) {
+    const r2 = await api(`/api/v1/people/upcoming-birthdays?days=${days}`);
+    return r2.upcoming ?? [];
+  }
+  function formatBirthday(b) {
+    if (!b) return "";
+    const dd = String(b.day).padStart(2, "0");
+    const mm = String(b.month).padStart(2, "0");
+    return b.year ? `${dd}/${mm}/${b.year}` : `${dd}/${mm}`;
+  }
+
+  // frontend/src/templates/v1/components/menu/SidebarRight.tsx
   function SidebarRight({
     collapsed,
     onToggle
   }) {
-    const [q, setQ] = (0, import_react8.useState)("");
-    const groups = (0, import_react8.useMemo)(() => {
-      const needle = q.trim().toLowerCase();
-      if (!needle) return GROUPS;
-      return GROUPS.map((g) => ({
-        ...g,
-        friends: g.friends.filter((f) => f.name.toLowerCase().includes(needle))
-      })).filter((g) => g.friends.length > 0);
-    }, [q]);
-    const allFriends = (0, import_react8.useMemo)(() => GROUPS.flatMap((g) => g.friends), []);
+    const [q, setQ] = (0, import_react12.useState)("");
+    const query = useQuery({
+      queryKey: ["people", "rail"],
+      queryFn: () => listPeople(),
+      staleTime: 6e4
+      // the rail is on every page; don't refetch on each nav
+    });
+    const people = (0, import_react12.useMemo)(() => query.data?.people ?? [], [query.data]);
+    const suggestQuery = useQuery({
+      queryKey: ["people", "suggestions"],
+      queryFn: listSuggestions,
+      enabled: !collapsed,
+      staleTime: 3e5
+    });
+    const needle = q.trim().toLowerCase();
+    const match = (name) => !needle || name.toLowerCase().includes(needle);
+    const circles = (0, import_react12.useMemo)(() => {
+      const pick = (c) => people.filter((p) => p.circle === c && match(p.display_name));
+      return { close_friend: pick("close_friend"), family: pick("family") };
+    }, [people, q]);
+    const rawSuggestions = (suggestQuery.data ?? []).filter((s) => match(s.display_name));
+    const accepted = useQuery({ queryKey: ["connections", "accepted"], queryFn: () => listConnections("accepted"), staleTime: 6e4 });
+    const incoming = useQuery({ queryKey: ["connections", "incoming"], queryFn: () => listConnections("incoming"), staleTime: 6e4 });
+    const outgoing = useQuery({ queryKey: ["connections", "outgoing"], queryFn: () => listConnections("outgoing"), staleTime: 6e4 });
+    const linkState = (0, import_react12.useMemo)(() => {
+      const m = /* @__PURE__ */ new Map();
+      for (const c of outgoing.data ?? []) m.set(c.user_id, "asked");
+      for (const c of incoming.data ?? []) m.set(c.user_id, "asking");
+      for (const c of accepted.data ?? []) m.set(c.user_id, "connected");
+      return m;
+    }, [accepted.data, incoming.data, outgoing.data]);
+    const filed = (0, import_react12.useMemo)(() => {
+      const ids = /* @__PURE__ */ new Set();
+      for (const p of [...circles.close_friend, ...circles.family]) {
+        if (p.linked_user_id) ids.add(p.linked_user_id);
+      }
+      return ids;
+    }, [circles]);
+    const others = (0, import_react12.useMemo)(() => {
+      const seen = /* @__PURE__ */ new Set();
+      const out = [];
+      const push = (userID, name, state) => {
+        if (!userID || seen.has(userID) || filed.has(userID) || !match(name)) return;
+        seen.add(userID);
+        out.push({ userID, name, state });
+      };
+      for (const c of accepted.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "connected");
+      for (const c of incoming.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "asking");
+      for (const c of outgoing.data ?? []) push(c.user_id, c.display_name ?? "Unknown", "asked");
+      for (const sug of rawSuggestions) push(sug.user_id, sug.display_name);
+      return out;
+    }, [accepted.data, incoming.data, outgoing.data, rawSuggestions, filed, q]);
+    const hasAnything = circles.close_friend.length > 0 || circles.family.length > 0 || others.length > 0;
+    const railPeople = [...circles.close_friend, ...circles.family];
     return /* @__PURE__ */ React.createElement(
       "aside",
       {
@@ -11942,83 +13572,216 @@ var PortalUI = (() => {
       },
       collapsed ? (
         /* ── collapsed: avatar rail ── */
-        /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto py-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col items-center gap-2.5" }, allFriends.map((f, i) => /* @__PURE__ */ React.createElement("button", { key: `${f.name}-${i}`, type: "button", title: f.name, className: "relative", "aria-label": f.name }, /* @__PURE__ */ React.createElement(Avatar, { name: f.name, size: 40 }), /* @__PURE__ */ React.createElement(StatusDot, { status: f.status, ring: true }))))), /* @__PURE__ */ React.createElement(
+        /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto py-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col items-center gap-2.5" }, railPeople.map((p) => /* @__PURE__ */ React.createElement(
+          Link,
+          {
+            key: p.id,
+            href: `/people/${p.id}`,
+            title: `${p.display_name}${stateLabel(linkState.get(p.linked_user_id ?? ""))}`,
+            "aria-label": p.display_name,
+            className: "relative"
+          },
+          /* @__PURE__ */ React.createElement(PersonAvatar, { person: p, size: 40 }),
+          /* @__PURE__ */ React.createElement(StatusDot, { state: linkState.get(p.linked_user_id ?? "") })
+        )), others.map((o2) => /* @__PURE__ */ React.createElement(
+          Link,
+          {
+            key: o2.userID,
+            href: othersHref(o2.state),
+            title: `${o2.name}${stateLabel(o2.state)}`,
+            "aria-label": o2.name,
+            className: "relative"
+          },
+          /* @__PURE__ */ React.createElement(Avatar, { name: o2.name, size: 40 }),
+          /* @__PURE__ */ React.createElement(StatusDot, { state: o2.state })
+        )))), /* @__PURE__ */ React.createElement(
           "button",
           {
             type: "button",
             onClick: onToggle,
             className: "grid h-11 place-items-center border-t text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]",
             style: { borderColor: "var(--tpl-border)" },
-            "aria-label": "Expand friends panel"
+            "aria-label": "Expand people panel"
           },
           /* @__PURE__ */ React.createElement(Icon, { name: "popup-left-arrow", size: 14 })
         ))
       ) : (
         /* ── expanded: grouped lists ── */
-        /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto" }, groups.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.title }, /* @__PURE__ */ React.createElement(
+        /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "flex-1 overflow-y-auto" }, query.isPending ? /* @__PURE__ */ React.createElement("p", { className: "px-4 py-6 text-sm", style: { color: "var(--tpl-muted)" } }, "Loading people\u2026") : query.isError ? /* @__PURE__ */ React.createElement("p", { className: "px-4 py-6 text-sm", style: { color: "var(--tpl-muted)" } }, "Couldn't load your people.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+          Section,
+          {
+            title: "Close Friends",
+            manageHref: "/people?circle=close_friend",
+            empty: "No one in this circle yet."
+          },
+          circles.close_friend.map((p) => /* @__PURE__ */ React.createElement(PersonRow, { key: p.id, person: p, state: linkState.get(p.linked_user_id ?? "") }))
+        ), /* @__PURE__ */ React.createElement(
+          Section,
+          {
+            title: "My Family",
+            manageHref: "/people?circle=family",
+            empty: "No one in this circle yet."
+          },
+          circles.family.map((p) => /* @__PURE__ */ React.createElement(PersonRow, { key: p.id, person: p, state: linkState.get(p.linked_user_id ?? "") }))
+        ), /* @__PURE__ */ React.createElement(
+          Section,
+          {
+            title: "C\xF3 th\u1EC3 b\u1EA1n bi\u1EBFt",
+            manageHref: "/people?circle=suggestions",
+            empty: suggestQuery.isPending ? "Looking for people\u2026" : "No other accounts on this Portal yet."
+          },
+          others.map((o2) => /* @__PURE__ */ React.createElement("li", { key: o2.userID }, /* @__PURE__ */ React.createElement(
+            Link,
+            {
+              href: othersHref(o2.state),
+              title: `${o2.name}${stateLabel(o2.state)}`,
+              className: "flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
+            },
+            /* @__PURE__ */ React.createElement("span", { className: "relative shrink-0" }, /* @__PURE__ */ React.createElement(Avatar, { name: o2.name, size: 38 }), /* @__PURE__ */ React.createElement(StatusDot, { state: o2.state })),
+            /* @__PURE__ */ React.createElement(
+              "p",
+              {
+                className: "min-w-0 flex-1 truncate text-sm font-semibold",
+                style: { color: "var(--tpl-heading)" }
+              },
+              o2.name
+            )
+          )))
+        ), !hasAnything && needle !== "" && /* @__PURE__ */ React.createElement("p", { className: "px-4 py-6 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "No one matches \u201C", q, "\u201D."))), /* @__PURE__ */ React.createElement(
           "div",
           {
-            className: "flex items-center justify-between px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wide",
-            style: { color: "var(--tpl-accent)" }
+            className: "flex items-center gap-2 border-t px-3 py-3",
+            style: { borderColor: "var(--tpl-border)" }
           },
-          /* @__PURE__ */ React.createElement("span", null, g.title),
-          /* @__PURE__ */ React.createElement("button", { type: "button", className: "text-[var(--tpl-muted)] hover:text-[var(--tpl-heading)]" }, "Settings")
-        ), /* @__PURE__ */ React.createElement("ul", null, g.friends.map((f, i) => /* @__PURE__ */ React.createElement(
-          "li",
-          {
-            key: `${f.name}-${i}`,
-            className: "group flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]"
-          },
-          /* @__PURE__ */ React.createElement("span", { className: "relative shrink-0" }, /* @__PURE__ */ React.createElement(Avatar, { name: f.name, size: 38 }), /* @__PURE__ */ React.createElement(StatusDot, { status: f.status, ring: true })),
-          /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, f.name), /* @__PURE__ */ React.createElement("p", { className: "truncate text-[10px] font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, STATUS[f.status].label)),
+          /* @__PURE__ */ React.createElement("span", { className: "relative min-w-0 flex-1" }, /* @__PURE__ */ React.createElement(
+            "input",
+            {
+              value: q,
+              onChange: (e2) => setQ(e2.target.value),
+              placeholder: "Search people...",
+              className: "w-full rounded-md border bg-transparent py-1.5 pl-3 pr-7 text-sm outline-none focus:border-[var(--tpl-accent)]",
+              style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+            }
+          ), q !== "" && /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              type: "button",
+              onClick: () => setQ(""),
+              "aria-label": "Clear search",
+              className: "absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]"
+            },
+            /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 })
+          )),
           /* @__PURE__ */ React.createElement(
             "button",
             {
               type: "button",
-              className: "text-[var(--tpl-muted)] opacity-0 transition group-hover:opacity-100",
-              "aria-label": "Friend options"
+              onClick: onToggle,
+              title: "Collapse people panel",
+              className: "shrink-0 text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]",
+              "aria-label": "Collapse people panel"
             },
-            /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 16 })
+            /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 16 })
           )
-        ))))), groups.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "px-4 py-6 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "No friends match \u201C", q, "\u201D.")), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 border-t px-3 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
-          "input",
+        ), /* @__PURE__ */ React.createElement(
+          Link,
           {
-            value: q,
-            onChange: (e2) => setQ(e2.target.value),
-            placeholder: "Search Friends...",
-            className: "min-w-0 flex-1 rounded-md border bg-transparent px-3 py-1.5 text-sm outline-none focus:border-[var(--tpl-accent)]",
-            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
-          }
-        ), /* @__PURE__ */ React.createElement("button", { type: "button", className: "text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]", "aria-label": "Friend settings" }, /* @__PURE__ */ React.createElement(Icon, { name: "settings-v2-icon", size: 18 })), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
-            onClick: onToggle,
-            className: "text-[var(--tpl-muted)] hover:text-[var(--tpl-accent)]",
-            "aria-label": "Collapse friends panel"
-          },
-          /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 16 })
-        )), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
+            href: "/people",
             className: "flex items-center justify-between px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:opacity-95",
-            style: { background: "#7c5ac2" }
+            style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
           },
-          /* @__PURE__ */ React.createElement("span", null, "Olympus Chat"),
-          /* @__PURE__ */ React.createElement(Icon, { name: "chat---messages-icon", size: 20 })
+          /* @__PURE__ */ React.createElement("span", null, "People"),
+          /* @__PURE__ */ React.createElement(Icon, { name: "happy-faces-icon", size: 20 })
         ))
       )
     );
   }
-  function StatusDot({ status, ring }) {
+  function Section({
+    title,
+    manageHref,
+    empty,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between px-4 pb-1 pt-4" }, /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "text-[11px] font-bold uppercase tracking-wide",
+        style: { color: "var(--tpl-accent)" }
+      },
+      title
+    ), /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: manageHref,
+        className: "text-[11px] font-semibold uppercase tracking-wide transition hover:text-[var(--tpl-accent)]",
+        style: { color: "var(--tpl-muted)" }
+      },
+      "Settings"
+    )), children.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "px-4 py-2 text-xs", style: { color: "var(--tpl-muted)" } }, empty) : /* @__PURE__ */ React.createElement("ul", null, children));
+  }
+  function PersonRow({ person, state }) {
+    return /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: `/people/${person.id}`,
+        className: "flex items-center gap-3 px-4 py-2 transition hover:bg-[var(--tpl-surface-2)]",
+        title: `${person.display_name}${stateLabel(state)}`
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "relative shrink-0" }, /* @__PURE__ */ React.createElement(PersonAvatar, { person, size: 38 }), /* @__PURE__ */ React.createElement(StatusDot, { state })),
+      /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          className: "min-w-0 flex-1 truncate text-sm font-semibold",
+          style: { color: "var(--tpl-heading)" }
+        },
+        person.display_name
+      )
+    ));
+  }
+  function othersHref(state) {
+    return state === "asking" || state === "asked" ? "/people?circle=requests" : "/people?circle=suggestions";
+  }
+  var STATE = {
+    // Teal reads as "settled" in this palette, and a connection is the settled state.
+    connected: { color: "var(--tpl-status-online)", label: "connected" },
+    // Accent, because this one is the only state that needs you to do something.
+    asking: { color: "var(--tpl-accent)", label: "wants to connect" },
+    // Amber for waiting on them.
+    asked: { color: "var(--tpl-status-away)", label: "request sent" }
+  };
+  function StatusDot({ state }) {
+    if (!state) return null;
+    const s = STATE[state];
     return /* @__PURE__ */ React.createElement(
       "span",
       {
-        className: `absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${ring ? "border-2 border-white" : ""}`,
-        style: { background: `var(${STATUS[status].varName})` }
+        className: "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white",
+        style: { background: s.color },
+        "aria-hidden": true
       }
     );
+  }
+  function stateLabel(state) {
+    return state ? ` \u2014 ${STATE[state].label}` : "";
+  }
+  function PersonAvatar({ person, size: size2 }) {
+    const [failed, setFailed] = (0, import_react12.useState)(false);
+    if (person.avatar_asset_id && !failed) {
+      return (
+        /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
+        /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            src: assetVariantURL(person.avatar_asset_id, "thumb"),
+            alt: person.display_name,
+            onError: () => setFailed(true),
+            className: "shrink-0 rounded-full object-cover",
+            style: { width: size2, height: size2 }
+          }
+        )
+      );
+    }
+    return /* @__PURE__ */ React.createElement(Avatar, { name: person.display_name, size: size2 });
   }
 
   // frontend/src/templates/v1/components/music/AudioPlayer.tsx
@@ -12034,52 +13797,116 @@ var PortalUI = (() => {
     track = { title: "The Past Starts Slow...", artist: "System of a Revenge" },
     playing = false,
     progress = 0,
+    durationSec,
+    coverUrl,
+    shuffle = false,
+    repeat = "off",
+    disabled = false,
     onPlayPause,
     onNext,
-    onPrev
+    onPrev,
+    onSeek,
+    onShuffle,
+    onRepeat
   }) {
     const pct = Math.min(100, Math.max(0, progress));
-    const current = formatTime(pct / 100 * REF_TOTAL_SEC);
-    const total = formatTime(REF_TOTAL_SEC);
+    const total = durationSec && durationSec > 0 ? durationSec : REF_TOTAL_SEC;
+    const current = formatTime(pct / 100 * total);
+    const seekable = Boolean(onSeek);
+    function seekFromPointer(e2) {
+      if (!onSeek) return;
+      const rect = e2.currentTarget.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      onSeek((e2.clientX - rect.left) / rect.width * 100);
+    }
+    function seekFromKey(e2) {
+      if (!onSeek) return;
+      const step = e2.shiftKey ? 10 : 5;
+      if (e2.key === "ArrowRight") {
+        e2.preventDefault();
+        onSeek(pct + step);
+      } else if (e2.key === "ArrowLeft") {
+        e2.preventDefault();
+        onSeek(pct - step);
+      } else if (e2.key === "Home") {
+        e2.preventDefault();
+        onSeek(0);
+      } else if (e2.key === "End") {
+        e2.preventDefault();
+        onSeek(100);
+      }
+    }
+    const activeToggle = { color: "var(--tpl-accent)" };
     return /* @__PURE__ */ React.createElement(
       "div",
       {
         className: "flex items-center gap-4 rounded-xl px-4 py-3 shadow-sm",
         style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
       },
-      /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(
-        "button",
+      coverUrl && // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+      /* @__PURE__ */ React.createElement(
+        "img",
         {
-          type: "button",
-          onClick: onPrev,
-          "aria-label": "Previous track",
-          className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-heading)]"
-        },
-        /* @__PURE__ */ React.createElement(Icon, { name: "music-previous-song-icon", size: 16 })
-      ), /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "button",
-          onClick: onPlayPause,
-          "aria-label": playing ? "Pause" : "Play",
-          className: "grid h-11 w-11 place-items-center rounded-full text-white shadow-sm transition hover:opacity-90",
-          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-        },
-        /* @__PURE__ */ React.createElement(Icon, { name: playing ? "music-pause-icon" : "music-play-icon-big", size: 18 })
-      ), /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "button",
-          onClick: onNext,
-          "aria-label": "Next track",
-          className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-heading)]"
-        },
-        /* @__PURE__ */ React.createElement(Icon, { name: "music-next-song-icon", size: 16 })
-      )),
-      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between gap-3" }, /* @__PURE__ */ React.createElement("p", { className: "min-w-0 truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, track.title, /* @__PURE__ */ React.createElement("span", { className: "font-normal", style: { color: "var(--tpl-muted)" } }, " ", "\u2014 ", track.artist)), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, current, " / ", total)), /* @__PURE__ */ React.createElement(
+          src: coverUrl,
+          alt: "",
+          className: "h-11 w-11 shrink-0 rounded-md object-cover",
+          style: { background: "var(--tpl-surface-2)" }
+        }
+      ),
+      /* @__PURE__ */ React.createElement(
         "div",
         {
-          className: "mt-2 h-1.5 w-full overflow-hidden rounded-full",
+          className: "flex items-center gap-2",
+          style: { color: "var(--tpl-muted)", opacity: disabled ? 0.5 : 1 }
+        },
+        /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onPrev,
+            disabled,
+            "aria-label": "Previous track",
+            className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-heading)] disabled:cursor-default"
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "music-previous-song-icon", size: 16 })
+        ),
+        /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onPlayPause,
+            disabled,
+            "aria-label": playing ? "Pause" : "Play",
+            className: "grid h-11 w-11 place-items-center rounded-full text-white shadow-sm transition hover:opacity-90 disabled:cursor-default",
+            style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: playing ? "music-pause-icon" : "music-play-icon-big", size: 18 })
+        ),
+        /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onNext,
+            disabled,
+            "aria-label": "Next track",
+            className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-heading)] disabled:cursor-default"
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "music-next-song-icon", size: 16 })
+        )
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between gap-3" }, /* @__PURE__ */ React.createElement("p", { className: "min-w-0 truncate text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, track.title, /* @__PURE__ */ React.createElement("span", { className: "font-normal", style: { color: "var(--tpl-muted)" } }, " ", "\u2014 ", track.artist)), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, current, " / ", formatTime(total))), /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          role: seekable ? "slider" : void 0,
+          tabIndex: seekable ? 0 : void 0,
+          "aria-label": seekable ? "Seek" : void 0,
+          "aria-valuemin": seekable ? 0 : void 0,
+          "aria-valuemax": seekable ? 100 : void 0,
+          "aria-valuenow": seekable ? Math.round(pct) : void 0,
+          "aria-valuetext": seekable ? `${current} of ${formatTime(total)}` : void 0,
+          onClick: seekable ? seekFromPointer : void 0,
+          onKeyDown: seekable ? seekFromKey : void 0,
+          className: `mt-2 h-1.5 w-full overflow-hidden rounded-full ${seekable ? "cursor-pointer" : ""}`,
           style: { background: "var(--tpl-surface-2)" }
         },
         /* @__PURE__ */ React.createElement(
@@ -12097,19 +13924,658 @@ var PortalUI = (() => {
         "button",
         {
           type: "button",
+          onClick: onShuffle,
           "aria-label": "Shuffle",
-          className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-accent)]"
+          "aria-pressed": onShuffle ? shuffle : void 0,
+          className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-accent)]",
+          style: shuffle ? activeToggle : void 0
         },
         /* @__PURE__ */ React.createElement(Icon, { name: "music-shuffle-icon", size: 16 })
       ), /* @__PURE__ */ React.createElement(
         "button",
         {
           type: "button",
-          "aria-label": "Repeat",
-          className: "grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-accent)]"
+          onClick: onRepeat,
+          "aria-label": repeat === "one" ? "Repeat one" : "Repeat",
+          "aria-pressed": onRepeat ? repeat !== "off" : void 0,
+          className: "relative grid h-8 w-8 place-items-center rounded-full transition hover:text-[var(--tpl-accent)]",
+          style: repeat !== "off" ? activeToggle : void 0
         },
-        /* @__PURE__ */ React.createElement(Icon, { name: "music-repeat-icon", size: 16 })
+        /* @__PURE__ */ React.createElement(Icon, { name: "music-repeat-icon", size: 16 }),
+        repeat === "one" && /* @__PURE__ */ React.createElement("span", { className: "absolute -bottom-0.5 text-[9px] font-bold leading-none" }, "1")
       ))
+    );
+  }
+
+  // frontend/src/templates/v1/components/music/MusicPlayerProvider.tsx
+  init_define_import_meta_env();
+  var import_react13 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/music.ts
+  init_define_import_meta_env();
+  function trackAudioURL(audioAssetId) {
+    return `${baseURL}/api/v1/assets/${audioAssetId}/original`;
+  }
+  function trackCoverURL(coverAssetId, variant = "thumb") {
+    return `${baseURL}/api/v1/assets/${coverAssetId}/variants/${variant}`;
+  }
+  function isPlayable(t2) {
+    return Boolean(t2.audio_asset_id);
+  }
+  function trackArtist(t2) {
+    return t2.artist?.trim() || "Unknown artist";
+  }
+  var TRACKS_MAX_PAGE = 50;
+  function tracksQuery(cursor, limit) {
+    const p = new URLSearchParams();
+    if (cursor) p.set("cursor", cursor);
+    if (limit) p.set("limit", String(limit));
+    const q = p.toString();
+    return q ? `?${q}` : "";
+  }
+  async function listTracks(cursor, limit) {
+    const r2 = await api(`/api/v1/tracks${tracksQuery(cursor, limit)}`);
+    return { tracks: r2.tracks ?? [], next_cursor: r2.next_cursor };
+  }
+  async function listMyTracks(cursor, limit) {
+    const r2 = await api(`/api/v1/tracks/mine${tracksQuery(cursor, limit)}`);
+    return { tracks: r2.tracks ?? [], next_cursor: r2.next_cursor };
+  }
+  async function fetchAllTracks(scope, maxTracks = 1e3) {
+    const page = scope === "mine" ? listMyTracks : listTracks;
+    const tracks = [];
+    let cursor;
+    for (; ; ) {
+      const r2 = await page(cursor, TRACKS_MAX_PAGE);
+      tracks.push(...r2.tracks);
+      cursor = r2.next_cursor ?? void 0;
+      if (!cursor) return { tracks, truncated: false };
+      if (tracks.length >= maxTracks) return { tracks: tracks.slice(0, maxTracks), truncated: true };
+    }
+  }
+  async function getTrack(id2) {
+    return api(`/api/v1/tracks/${id2}`);
+  }
+  async function createTrack(body) {
+    return api("/api/v1/tracks", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function updateTrack(id2, patch) {
+    return api(`/api/v1/tracks/${id2}`, { method: "PATCH", body: JSON.stringify(patch) });
+  }
+  async function deleteTrack(id2) {
+    await api(`/api/v1/tracks/${id2}`, { method: "DELETE" });
+  }
+  async function publishTrack(id2) {
+    return api(`/api/v1/tracks/${id2}/publish`, { method: "POST" });
+  }
+  async function unpublishTrack(id2) {
+    return api(`/api/v1/tracks/${id2}/unpublish`, { method: "POST" });
+  }
+  async function uploadAudioAsset(file, onProgress) {
+    if (!file.type.startsWith("audio/")) {
+      throw new Error("Ch\u1EC9 ch\u1EA5p nh\u1EADn t\u1EC7p \xE2m thanh.");
+    }
+    const created = await api("/api/v1/assets", {
+      method: "POST",
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type,
+        size_bytes: file.size
+      })
+    });
+    const assetId = created.asset.id;
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", `${baseURL}/api/v1/assets/${assetId}/source`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable) onProgress?.(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i l\xEAn th\u1EA5t b\u1EA1i (${xhr.status}).`));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i l\xEAn."));
+      xhr.send(file);
+    });
+    await api(`/api/v1/assets/${assetId}/complete`, { method: "POST" });
+    return assetId;
+  }
+  function getImport(id2) {
+    return api(`/api/v1/tracks/imports/${id2}`);
+  }
+  async function importZip(file, onProgress) {
+    const job = await api("/api/v1/tracks/imports", { method: "POST" });
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", `${baseURL}/api/v1/tracks/imports/${job.id}/upload`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", "application/zip");
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable) onProgress?.(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(uploadErrorMessage(xhr)));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i l\xEAn."));
+      xhr.send(file);
+    });
+    return getImport(job.id);
+  }
+  function uploadErrorMessage(xhr) {
+    try {
+      const body = JSON.parse(xhr.responseText);
+      if (body.detail) return body.detail;
+    } catch {
+    }
+    return `T\u1EA3i l\xEAn th\u1EA5t b\u1EA1i (${xhr.status}).`;
+  }
+  async function enrichImport(importId) {
+    const r2 = await api(`/api/v1/tracks/imports/${importId}/enrich`, {
+      method: "POST"
+    });
+    return r2.queued;
+  }
+  function importInFlight(job) {
+    return job.status === "pending" || job.status === "uploaded" || job.status === "processing";
+  }
+  function metaFromFilename(filename) {
+    const stem = stripTrackNumber(filename.replace(/\.[^.]+$/, "").trim());
+    const parts = stem.split(" - ").map((p) => p.trim());
+    if (parts.length <= 1) return { title: parts[0] || stem };
+    return { artist: parts[0], title: parts.slice(1).join(" - ") };
+  }
+  function stripTrackNumber(stem) {
+    const m = /^(\d{1,3})\s*([.\-_])\s*(.+)$/.exec(stem);
+    return m && m[3] ? m[3].trim() : stem;
+  }
+  function lookupImport(importId) {
+    return api(
+      `/api/v1/tracks/imports/${importId}/lookup`,
+      { method: "POST" }
+    );
+  }
+  async function listPlaylists() {
+    const r2 = await api("/api/v1/playlists");
+    return r2.playlists ?? [];
+  }
+  async function createPlaylist(name, description) {
+    return api("/api/v1/playlists", {
+      method: "POST",
+      body: JSON.stringify({ name, description: description ?? null })
+    });
+  }
+  async function addTracksToPlaylist(playlistID, trackIDs) {
+    return api(`/api/v1/playlists/${playlistID}/tracks`, {
+      method: "POST",
+      body: JSON.stringify({ track_ids: trackIDs })
+    });
+  }
+  async function bulkSetTrackStatus(trackIDs, status) {
+    return api("/api/v1/tracks/bulk-status", {
+      method: "POST",
+      body: JSON.stringify({ track_ids: trackIDs, status })
+    });
+  }
+
+  // frontend/src/templates/v1/components/music/MusicPlayerProvider.tsx
+  var MusicPlayerContext = (0, import_react13.createContext)(null);
+  function useMusicPlayerOptional() {
+    return (0, import_react13.useContext)(MusicPlayerContext);
+  }
+  function useMusicPlayer() {
+    const ctx = (0, import_react13.useContext)(MusicPlayerContext);
+    if (!ctx) {
+      throw new Error("useMusicPlayer must be used inside <MusicPlayerProvider>");
+    }
+    return ctx;
+  }
+  function shuffledFrom(list, firstIndex) {
+    const first = list[firstIndex];
+    const rest = list.filter((_, i) => i !== firstIndex);
+    for (let i = rest.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const a = rest[i];
+      const b = rest[j];
+      if (a !== void 0 && b !== void 0) {
+        rest[i] = b;
+        rest[j] = a;
+      }
+    }
+    return first ? [first, ...rest] : rest;
+  }
+  function MusicPlayerProvider({ children }) {
+    const audioRef = (0, import_react13.useRef)(null);
+    const [queue, setQueue] = (0, import_react13.useState)([]);
+    const [baseQueue, setBaseQueue] = (0, import_react13.useState)([]);
+    const [index, setIndex] = (0, import_react13.useState)(-1);
+    const [playing, setPlaying] = (0, import_react13.useState)(false);
+    const [position, setPosition] = (0, import_react13.useState)(0);
+    const [duration, setDuration] = (0, import_react13.useState)(0);
+    const [shuffle, setShuffle] = (0, import_react13.useState)(false);
+    const [repeat, setRepeat] = (0, import_react13.useState)("off");
+    const [error, setError] = (0, import_react13.useState)(null);
+    const [playToken, setPlayToken] = (0, import_react13.useState)(0);
+    const current = index >= 0 && index < queue.length ? queue[index] ?? null : null;
+    const repeatRef = (0, import_react13.useRef)(repeat);
+    repeatRef.current = repeat;
+    const queueLenRef = (0, import_react13.useRef)(0);
+    queueLenRef.current = queue.length;
+    const pendingSeekRef = (0, import_react13.useRef)(null);
+    const play = (0, import_react13.useCallback)(() => {
+      const el = audioRef.current;
+      if (!el) return;
+      const p = el.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          setPlaying(false);
+          setError("Playback was blocked. Press play to start.");
+        });
+      }
+    }, []);
+    const playQueue = (0, import_react13.useCallback)((tracks, startIndex = 0) => {
+      const playable = tracks.filter(isPlayable);
+      if (playable.length === 0) {
+        setError("That track has no audio file attached yet.");
+        return;
+      }
+      const wanted = tracks[startIndex];
+      const mapped = wanted ? Math.max(0, playable.findIndex((t2) => t2.id === wanted.id)) : 0;
+      setError(null);
+      setBaseQueue(playable);
+      if (shuffle) {
+        setQueue(shuffledFrom(playable, mapped));
+        setIndex(0);
+      } else {
+        setQueue(playable);
+        setIndex(mapped);
+      }
+      setPlaying(true);
+      setPlayToken((t2) => t2 + 1);
+    }, [shuffle]);
+    const jumpTo = (0, import_react13.useCallback)((to) => {
+      if (to < 0 || to >= queueLenRef.current) return;
+      setError(null);
+      setIndex(to);
+      setPlaying(true);
+      setPlayToken((t2) => t2 + 1);
+    }, []);
+    const playTrack = (0, import_react13.useCallback)((track) => {
+      if (!isPlayable(track)) {
+        setError("That track has no audio file attached yet.");
+        return;
+      }
+      setError(null);
+      setQueue([track]);
+      setBaseQueue([track]);
+      setIndex(0);
+      setPlaying(true);
+      setPlayToken((t2) => t2 + 1);
+    }, []);
+    const toggle = (0, import_react13.useCallback)(() => {
+      const el = audioRef.current;
+      if (!el || !current) return;
+      setError(null);
+      if (el.paused) {
+        setPlaying(true);
+        play();
+      } else {
+        el.pause();
+        setPlaying(false);
+      }
+    }, [current, play]);
+    const next = (0, import_react13.useCallback)(() => {
+      setIndex((i) => {
+        if (queue.length === 0) return i;
+        if (i + 1 < queue.length) return i + 1;
+        return repeatRef.current === "all" ? 0 : i;
+      });
+    }, [queue.length]);
+    const prev = (0, import_react13.useCallback)(() => {
+      const el = audioRef.current;
+      if (el && el.currentTime > 3) {
+        el.currentTime = 0;
+        setPosition(0);
+        return;
+      }
+      setIndex((i) => {
+        if (queue.length === 0) return i;
+        if (i - 1 >= 0) return i - 1;
+        return repeatRef.current === "all" ? queue.length - 1 : i;
+      });
+    }, [queue.length]);
+    const seekPct = (0, import_react13.useCallback)((pct) => {
+      const clamped = Math.min(100, Math.max(0, pct));
+      const el = audioRef.current;
+      if (!el || !Number.isFinite(el.duration) || el.duration <= 0) {
+        pendingSeekRef.current = clamped;
+        return;
+      }
+      pendingSeekRef.current = null;
+      el.currentTime = clamped / 100 * el.duration;
+      setPosition(el.currentTime);
+    }, []);
+    const stop = (0, import_react13.useCallback)(() => {
+      const el = audioRef.current;
+      if (el) el.pause();
+      setPlaying(false);
+      setQueue([]);
+      setBaseQueue([]);
+      setIndex(-1);
+      setPosition(0);
+      setDuration(0);
+      setError(null);
+    }, []);
+    const toggleShuffle = (0, import_react13.useCallback)(() => {
+      const on = !shuffle;
+      setShuffle(on);
+      const base = baseQueue.length > 0 ? baseQueue : queue;
+      if (!current || base.length === 0) return;
+      const next2 = on ? shuffledFrom(base, base.findIndex((t2) => t2.id === current.id)) : base;
+      const at = next2.findIndex((t2) => t2.id === current.id);
+      setQueue(next2);
+      setIndex(at >= 0 ? at : 0);
+    }, [shuffle, baseQueue, queue, current]);
+    const cycleRepeat = (0, import_react13.useCallback)(
+      () => setRepeat((r2) => r2 === "off" ? "all" : r2 === "all" ? "one" : "off"),
+      []
+    );
+    const isCurrent = (0, import_react13.useCallback)((trackId) => current?.id === trackId, [current]);
+    (0, import_react13.useEffect)(() => {
+      const el = audioRef.current;
+      if (!el || !current?.audio_asset_id) return;
+      el.src = trackAudioURL(current.audio_asset_id);
+      el.load();
+      setPosition(0);
+      setDuration(0);
+      pendingSeekRef.current = null;
+      if (playing) play();
+    }, [current?.id, current?.audio_asset_id, playToken, play]);
+    (0, import_react13.useEffect)(() => {
+      const el = audioRef.current;
+      if (!el) return;
+      const onTime = () => setPosition(el.currentTime);
+      const onMeta = () => {
+        const known = Number.isFinite(el.duration) ? el.duration : 0;
+        setDuration(known);
+        const pending2 = pendingSeekRef.current;
+        if (pending2 !== null && known > 0) {
+          pendingSeekRef.current = null;
+          el.currentTime = pending2 / 100 * known;
+          setPosition(el.currentTime);
+        }
+      };
+      const onPlay = () => setPlaying(true);
+      const onPause = () => {
+        if (!el.ended) setPlaying(false);
+      };
+      const onError = () => {
+        setPlaying(false);
+        setError("This track could not be played.");
+      };
+      const onEnded = () => {
+        if (repeatRef.current === "one") {
+          el.currentTime = 0;
+          void el.play();
+          return;
+        }
+        setIndex((i) => {
+          if (i + 1 < queueLenRef.current) return i + 1;
+          if (repeatRef.current === "all") return 0;
+          setPlaying(false);
+          return i;
+        });
+      };
+      el.addEventListener("timeupdate", onTime);
+      el.addEventListener("loadedmetadata", onMeta);
+      el.addEventListener("durationchange", onMeta);
+      el.addEventListener("play", onPlay);
+      el.addEventListener("pause", onPause);
+      el.addEventListener("error", onError);
+      el.addEventListener("ended", onEnded);
+      return () => {
+        el.removeEventListener("timeupdate", onTime);
+        el.removeEventListener("loadedmetadata", onMeta);
+        el.removeEventListener("durationchange", onMeta);
+        el.removeEventListener("play", onPlay);
+        el.removeEventListener("pause", onPause);
+        el.removeEventListener("error", onError);
+        el.removeEventListener("ended", onEnded);
+      };
+    }, []);
+    const progressPct = duration > 0 ? Math.min(100, position / duration * 100) : 0;
+    const value = (0, import_react13.useMemo)(
+      () => ({
+        queue,
+        index,
+        current,
+        playing,
+        position,
+        duration,
+        progressPct,
+        shuffle,
+        repeat,
+        error,
+        playQueue,
+        playTrack,
+        toggle,
+        next,
+        prev,
+        seekPct,
+        toggleShuffle,
+        cycleRepeat,
+        stop,
+        isCurrent,
+        jumpTo
+      }),
+      [
+        queue,
+        index,
+        current,
+        playing,
+        position,
+        duration,
+        progressPct,
+        shuffle,
+        repeat,
+        error,
+        playQueue,
+        playTrack,
+        toggle,
+        next,
+        prev,
+        seekPct,
+        toggleShuffle,
+        cycleRepeat,
+        stop,
+        isCurrent,
+        jumpTo
+      ]
+    );
+    return /* @__PURE__ */ React.createElement(MusicPlayerContext.Provider, { value }, children, /* @__PURE__ */ React.createElement("audio", { ref: audioRef, preload: "metadata", hidden: true }));
+  }
+
+  // frontend/src/templates/v1/components/music/NowPlayingBar.tsx
+  init_define_import_meta_env();
+  var import_react14 = __toESM(require_react_shim());
+  function NowPlayingSpacer() {
+    const player = useMusicPlayerOptional();
+    if (!player?.current) return null;
+    return /* @__PURE__ */ React.createElement("div", { "aria-hidden": true, className: "h-24" });
+  }
+  function NowPlayingBar() {
+    const player = useMusicPlayerOptional();
+    const [queueOpen, setQueueOpen] = (0, import_react14.useState)(false);
+    if (!player || !player.current) return null;
+    const {
+      current,
+      playing,
+      progressPct,
+      duration,
+      shuffle,
+      repeat,
+      error,
+      queue,
+      index,
+      toggle,
+      next,
+      prev,
+      seekPct,
+      toggleShuffle,
+      cycleRepeat,
+      stop,
+      jumpTo
+    } = player;
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-x-0 bottom-0 z-40 transition-[padding] duration-200 xl:pl-[var(--tpl-sidebar-cur)] xl:pr-[var(--tpl-rightbar-cur)]"
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "mx-auto w-full max-w-[1220px] px-3 pb-3 sm:px-5" }, error && /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          className: "mb-2 rounded-lg border px-3 py-2 text-xs",
+          style: {
+            borderColor: "rgba(239,68,68,.4)",
+            background: "rgba(239,68,68,.08)",
+            color: "#ef4444"
+          }
+        },
+        error
+      ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement(
+        AudioPlayer,
+        {
+          track: { title: current.title, artist: trackArtist(current) },
+          playing,
+          progress: progressPct,
+          durationSec: duration,
+          coverUrl: current.cover_asset_id ? trackCoverURL(current.cover_asset_id) : null,
+          shuffle,
+          repeat,
+          onPlayPause: toggle,
+          onNext: next,
+          onPrev: prev,
+          onSeek: seekPct,
+          onShuffle: toggleShuffle,
+          onRepeat: cycleRepeat
+        }
+      )), /* @__PURE__ */ React.createElement("div", { className: "relative flex shrink-0 flex-col gap-1" }, queueOpen && /* @__PURE__ */ React.createElement(
+        QueuePopup,
+        {
+          queue,
+          index,
+          playing,
+          onPick: (i) => jumpTo(i),
+          onClose: () => setQueueOpen(false)
+        }
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => setQueueOpen((v) => !v),
+          "aria-label": "Danh s\xE1ch ph\xE1t",
+          "aria-expanded": queueOpen,
+          title: "Danh s\xE1ch ph\xE1t",
+          className: "grid h-8 w-8 place-items-center rounded-full border transition hover:bg-[var(--tpl-surface-2)]",
+          style: {
+            borderColor: queueOpen ? "var(--tpl-accent)" : "var(--tpl-border)",
+            color: queueOpen ? "var(--tpl-accent)" : "var(--tpl-muted)"
+          }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "music-open-playlist-icon", size: 14 })
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: stop,
+          "aria-label": "Close player",
+          title: "Close player",
+          className: "grid h-8 w-8 place-items-center rounded-full border transition hover:bg-[var(--tpl-surface-2)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 12 })
+      ))))
+    );
+  }
+  function QueuePopup({
+    queue,
+    index,
+    playing,
+    onPick,
+    onClose
+  }) {
+    const root2 = (0, import_react14.useRef)(null);
+    const currentRow = (0, import_react14.useRef)(null);
+    (0, import_react14.useEffect)(() => {
+      function onDown(e2) {
+        if (!root2.current?.contains(e2.target)) onClose();
+      }
+      function onKey(e2) {
+        if (e2.key === "Escape") onClose();
+      }
+      document.addEventListener("mousedown", onDown);
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("mousedown", onDown);
+        document.removeEventListener("keydown", onKey);
+      };
+    }, [onClose]);
+    (0, import_react14.useEffect)(() => {
+      currentRow.current?.scrollIntoView({ block: "nearest" });
+    }, []);
+    const now = queue[index];
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        ref: root2,
+        role: "dialog",
+        "aria-label": "Danh s\xE1ch ph\xE1t",
+        className: "absolute bottom-full right-0 z-50 mb-2 w-80 overflow-hidden rounded-xl shadow-2xl",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "flex items-center justify-between border-b px-4 py-2.5",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement("span", { className: "text-xs font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "Danh s\xE1ch ph\xE1t \xB7 ", queue.length),
+        now && /* @__PURE__ */ React.createElement(
+          Link,
+          {
+            href: `/library/music/${now.id}`,
+            onClick: onClose,
+            className: "text-xs font-semibold hover:underline",
+            style: { color: "var(--tpl-accent)" }
+          },
+          "M\u1EDF b\xE0i n\xE0y"
+        )
+      ),
+      /* @__PURE__ */ React.createElement("ul", { className: "max-h-72 overflow-y-auto" }, queue.map((t2, i) => {
+        const isNow = i === index;
+        return /* @__PURE__ */ React.createElement("li", { key: `${t2.id}-${i}` }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            ref: isNow ? currentRow : void 0,
+            type: "button",
+            onClick: () => onPick(i),
+            className: "flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-[var(--tpl-surface-2)]",
+            style: { background: isNow ? "var(--tpl-surface-2)" : void 0 }
+          },
+          /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              className: "grid h-4 w-4 shrink-0 place-items-center text-[10px] tabular-nums",
+              style: { color: isNow ? "var(--tpl-accent)" : "var(--tpl-muted)" }
+            },
+            isNow ? /* @__PURE__ */ React.createElement(Icon, { name: playing ? "music-pause-icon" : "play-icon", size: 9 }) : i + 1
+          ),
+          /* @__PURE__ */ React.createElement("span", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              className: "block truncate text-sm font-semibold",
+              style: { color: isNow ? "var(--tpl-accent)" : "var(--tpl-heading)" }
+            },
+            t2.title
+          ), /* @__PURE__ */ React.createElement("span", { className: "block truncate text-xs", style: { color: "var(--tpl-muted)" } }, trackArtist(t2)))
+        ));
+      }))
     );
   }
 
@@ -12127,6 +14593,7 @@ var PortalUI = (() => {
     title,
     artist,
     duration,
+    coverUrl,
     playing = false,
     onPlay
   }) {
@@ -12146,6 +14613,8 @@ var PortalUI = (() => {
         className: "relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-md",
         style: { background: seedGradient2(title + artist) }
       },
+      coverUrl && // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+      /* @__PURE__ */ React.createElement("img", { src: coverUrl, alt: "", className: "absolute inset-0 h-full w-full object-cover" }),
       /* @__PURE__ */ React.createElement(
         "span",
         {
@@ -12160,7 +14629,7 @@ var PortalUI = (() => {
         style: { color: playing ? "var(--tpl-accent)" : "var(--tpl-heading)" }
       },
       title
-    ), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, artist)), /* @__PURE__ */ React.createElement("time", { className: "shrink-0 text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, duration), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, artist)), duration && /* @__PURE__ */ React.createElement("time", { className: "shrink-0 text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, duration), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -12183,9 +14652,11 @@ var PortalUI = (() => {
     title = "Playlist",
     tracks = SAMPLE_TRACKS,
     nowPlaying,
+    emptyLabel = "No tracks yet.",
+    footer,
     onPlay
   }) {
-    return /* @__PURE__ */ React.createElement(WidgetCard, { title, more: true }, /* @__PURE__ */ React.createElement("ol", { className: "space-y-1" }, tracks.map((t2, i) => {
+    return /* @__PURE__ */ React.createElement(WidgetCard, { title, more: true }, tracks.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "py-2 text-sm", style: { color: "var(--tpl-muted)" } }, emptyLabel) : /* @__PURE__ */ React.createElement("ol", { className: "space-y-1" }, tracks.map((t2, i) => {
       const index = i + 1;
       return /* @__PURE__ */ React.createElement(
         TrackItem,
@@ -12195,100 +14666,17 @@ var PortalUI = (() => {
           title: t2.title,
           artist: t2.artist,
           duration: t2.duration,
+          coverUrl: t2.coverUrl,
           playing: index === nowPlaying,
           onPlay: () => onPlay?.(index)
         }
       );
-    })));
+    })), footer && /* @__PURE__ */ React.createElement("div", { className: "mt-3" }, footer));
   }
 
   // frontend/src/templates/v1/components/popup/AddBook.tsx
   init_define_import_meta_env();
-  var import_react10 = __toESM(require_react_shim());
-
-  // frontend/src/templates/v1/components/popup/Modal.tsx
-  init_define_import_meta_env();
-  var import_react9 = __toESM(require_react_shim());
-  function Modal({
-    open,
-    onClose,
-    title,
-    children,
-    width = 520
-  }) {
-    (0, import_react9.useEffect)(() => {
-      if (!open) return;
-      const onEsc = (e2) => e2.key === "Escape" && onClose();
-      document.addEventListener("keydown", onEsc);
-      return () => document.removeEventListener("keydown", onEsc);
-    }, [open, onClose]);
-    if (!open) return null;
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "fixed inset-0 z-[60] flex items-center justify-center p-4",
-        role: "dialog",
-        "aria-modal": "true",
-        "aria-label": title
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 bg-black/45", onClick: onClose, "aria-hidden": true }),
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          className: "relative max-h-[90vh] w-full overflow-hidden rounded-xl shadow-2xl",
-          style: { maxWidth: width, background: "var(--tpl-surface)", color: "var(--tpl-text)" }
-        },
-        /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between border-b px-6 py-4", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("h6", { className: "text-base font-semibold", style: { color: "var(--tpl-heading)" } }, title), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            type: "button",
-            onClick: onClose,
-            "aria-label": "Close",
-            className: "text-[var(--tpl-muted)] transition hover:text-[var(--tpl-accent)]"
-          },
-          /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 15 })
-        )),
-        children
-      )
-    );
-  }
-  function Field({ label, children }) {
-    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement("span", { className: "mb-1.5 block text-xs font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, label), children);
-  }
-  var inputCls = "w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]";
-  var inputStyle = { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" };
-  function BtnSecondary({ children, onClick }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick,
-        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
-        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-      },
-      children
-    );
-  }
-  function BtnPrimary({
-    children,
-    type = "button",
-    onClick,
-    disabled
-  }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type,
-        onClick,
-        disabled,
-        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-      },
-      children
-    );
-  }
-
-  // frontend/src/templates/v1/components/popup/AddBook.tsx
+  var import_react15 = __toESM(require_react_shim());
   var CATEGORIES = ["Comic", "Novel", "Manga", "Light Novel", "Short Story"];
   function AddBook({
     open = false,
@@ -12296,18 +14684,18 @@ var PortalUI = (() => {
     },
     onSave
   }) {
-    const [title, setTitle] = (0, import_react10.useState)("");
-    const [author, setAuthor] = (0, import_react10.useState)("");
-    const [category, setCategory] = (0, import_react10.useState)(CATEGORIES[0] ?? "Comic");
-    const [description, setDescription] = (0, import_react10.useState)("");
-    const [cover, setCover] = (0, import_react10.useState)(null);
+    const [title, setTitle] = (0, import_react15.useState)("");
+    const [author, setAuthor] = (0, import_react15.useState)("");
+    const [category, setCategory] = (0, import_react15.useState)(CATEGORIES[0] ?? "Comic");
+    const [description, setDescription] = (0, import_react15.useState)("");
+    const [cover, setCover] = (0, import_react15.useState)(null);
     function submit(e2) {
       e2.preventDefault();
       if (!title.trim()) return;
       onSave?.({ title: title.trim(), author: author.trim(), category, description: description.trim() });
       onClose();
     }
-    return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Add Book", width: 560 }, /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "space-y-4 p-6" }, /* @__PURE__ */ React.createElement("div", { className: "grid gap-4 sm:grid-cols-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: inputCls, style: inputStyle, value: title, onChange: (e2) => setTitle(e2.target.value), placeholder: "The Majestic Canyon", autoFocus: true })), /* @__PURE__ */ React.createElement(Field, { label: "Author" }, /* @__PURE__ */ React.createElement("input", { className: inputCls, style: inputStyle, value: author, onChange: (e2) => setAuthor(e2.target.value), placeholder: "Marina Valentine" }))), /* @__PURE__ */ React.createElement(Field, { label: "Category" }, /* @__PURE__ */ React.createElement("select", { className: inputCls, style: inputStyle, value: category, onChange: (e2) => setCategory(e2.target.value) }, CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)))), /* @__PURE__ */ React.createElement(Field, { label: "Description" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Add Book", width: 560 }, /* @__PURE__ */ React.createElement("form", { onSubmit: submit, className: "space-y-4 p-6" }, /* @__PURE__ */ React.createElement("div", { className: "grid gap-4 sm:grid-cols-2" }, /* @__PURE__ */ React.createElement(Field2, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: inputCls, style: inputStyle, value: title, onChange: (e2) => setTitle(e2.target.value), placeholder: "The Majestic Canyon", autoFocus: true })), /* @__PURE__ */ React.createElement(Field2, { label: "Author" }, /* @__PURE__ */ React.createElement("input", { className: inputCls, style: inputStyle, value: author, onChange: (e2) => setAuthor(e2.target.value), placeholder: "Marina Valentine" }))), /* @__PURE__ */ React.createElement(Field2, { label: "Category" }, /* @__PURE__ */ React.createElement("select", { className: inputCls, style: inputStyle, value: category, onChange: (e2) => setCategory(e2.target.value) }, CATEGORIES.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)))), /* @__PURE__ */ React.createElement(Field2, { label: "Description" }, /* @__PURE__ */ React.createElement(
       "textarea",
       {
         className: `${inputCls} resize-none`,
@@ -12339,7 +14727,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/popup/ChatResponsive.tsx
   init_define_import_meta_env();
-  var import_react11 = __toESM(require_react_shim());
+  var import_react16 = __toESM(require_react_shim());
   var SEED = [
     { id: "m1", from: "them", text: "Hey! Are we still on for the show this weekend?", time: "Yesterday at 8:10pm" },
     { id: "m2", from: "me", text: "Absolutely \u2014 got the tickets this morning \u{1F3B8}", time: "Yesterday at 8:12pm" },
@@ -12353,8 +14741,8 @@ var PortalUI = (() => {
     contact = "Marina Valentine",
     online = true
   }) {
-    const [messages, setMessages] = (0, import_react11.useState)(SEED);
-    const [draft, setDraft] = (0, import_react11.useState)("");
+    const [messages, setMessages] = (0, import_react16.useState)(SEED);
+    const [draft, setDraft] = (0, import_react16.useState)("");
     function send(e2) {
       e2.preventDefault();
       const t2 = draft.trim();
@@ -12395,7 +14783,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/popup/ChoseFromMyPhoto.tsx
   init_define_import_meta_env();
-  var import_react12 = __toESM(require_react_shim());
+  var import_react17 = __toESM(require_react_shim());
   var PHOTOS = Array.from({ length: 9 }, (_, i) => i);
   var ALBUMS = [
     "South America Vacations",
@@ -12415,8 +14803,8 @@ var PortalUI = (() => {
     },
     onConfirm
   }) {
-    const [tab, setTab] = (0, import_react12.useState)("photos");
-    const [selected, setSelected] = (0, import_react12.useState)(null);
+    const [tab, setTab] = (0, import_react17.useState)("photos");
+    const [selected, setSelected] = (0, import_react17.useState)(null);
     return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Choose from My Photos", width: 640 }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-1 border-b px-6", style: { borderColor: "var(--tpl-border)" } }, [
       ["photos", "photos-icon", "Photos"],
       ["albums", "albums-icon", "Albums"]
@@ -12490,7 +14878,7 @@ var PortalUI = (() => {
     onUpload,
     onChooseFromPhotos
   }) {
-    return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Update Header Photo", width: 460 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6" }, /* @__PURE__ */ React.createElement("label", { className: "block cursor-pointer" }, /* @__PURE__ */ React.createElement(Option2, { icon: "computer-icon", title: "Upload Photo", subtitle: "Browse your computer." }), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Modal, { open, onClose, title: "Update Header Photo", width: 460 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6" }, /* @__PURE__ */ React.createElement("label", { className: "block cursor-pointer" }, /* @__PURE__ */ React.createElement(Option3, { icon: "computer-icon", title: "Upload Photo", subtitle: "Browse your computer." }), /* @__PURE__ */ React.createElement(
       "input",
       {
         type: "file",
@@ -12501,9 +14889,9 @@ var PortalUI = (() => {
           if (f) onUpload?.(f);
         }
       }
-    )), /* @__PURE__ */ React.createElement("button", { type: "button", className: "w-full text-left", onClick: () => onChooseFromPhotos?.() }, /* @__PURE__ */ React.createElement(Option2, { icon: "photos-icon", title: "Choose from My Photos", subtitle: "Choose from your uploaded photos" }))));
+    )), /* @__PURE__ */ React.createElement("button", { type: "button", className: "w-full text-left", onClick: () => onChooseFromPhotos?.() }, /* @__PURE__ */ React.createElement(Option3, { icon: "photos-icon", title: "Choose from My Photos", subtitle: "Choose from your uploaded photos" }))));
   }
-  function Option2({ icon, title, subtitle }) {
+  function Option3({ icon, title, subtitle }) {
     return /* @__PURE__ */ React.createElement(
       "span",
       {
@@ -12524,6 +14912,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/post/Post.tsx
   init_define_import_meta_env();
+  var import_react18 = __toESM(require_react_shim());
 
   // frontend/src/templates/v1/components/post/ReactionBar.tsx
   init_define_import_meta_env();
@@ -12590,7 +14979,7 @@ var PortalUI = (() => {
       {
         className: `absolute right-0 top-6 hidden translate-x-1/2 flex-col gap-2 sm:flex ${className}`
       },
-      /* @__PURE__ */ React.createElement(Fab, { label: "Award", icon: "trophy-icon", onClick: onAward }),
+      onAward && /* @__PURE__ */ React.createElement(Fab, { label: "Award", icon: "trophy-icon", onClick: onAward }),
       /* @__PURE__ */ React.createElement(Fab, { label: "Like", icon: "like-post-icon", active: liked, onClick: onLike }),
       /* @__PURE__ */ React.createElement(Fab, { label: "Comment", icon: "comments-post-icon", onClick: onComment }),
       /* @__PURE__ */ React.createElement(Fab, { label: "Share", icon: "share-icon", onClick: onShare })
@@ -12602,14 +14991,17 @@ var PortalUI = (() => {
     active,
     onClick
   }) {
+    const inert = !onClick;
     return /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick,
+        disabled: inert,
         "aria-label": label,
         "aria-pressed": active,
-        className: "grid h-[34px] w-[34px] place-items-center rounded-full text-white shadow-sm transition hover:opacity-90",
+        title: inert ? `${label} \u2014 arrives with the social layer` : label,
+        className: "grid h-[34px] w-[34px] place-items-center rounded-full text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60",
         style: { background: active ? "var(--tpl-accent)" : "var(--tpl-muted)" }
       },
       /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 16 })
@@ -12630,6 +15022,8 @@ var PortalUI = (() => {
     shares,
     liked,
     onToggleLike,
+    place,
+    menu,
     className = ""
   }) {
     return /* @__PURE__ */ React.createElement(
@@ -12639,17 +15033,29 @@ var PortalUI = (() => {
         style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
       },
       /* @__PURE__ */ React.createElement(PostControlButtons, { liked, onLike: onToggleLike }),
-      /* @__PURE__ */ React.createElement("header", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: author, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm" }, /* @__PURE__ */ React.createElement("span", { className: "font-semibold", style: { color: "var(--tpl-heading)" } }, author), " ", action && /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, action)), /* @__PURE__ */ React.createElement("time", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, time)), /* @__PURE__ */ React.createElement(
+      /* @__PURE__ */ React.createElement("header", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: author, size: 40 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm" }, /* @__PURE__ */ React.createElement("span", { className: "font-semibold", style: { color: "var(--tpl-heading)" } }, author), " ", action && /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, action)), /* @__PURE__ */ React.createElement("time", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, time)), /* @__PURE__ */ React.createElement("div", { className: "ml-auto pr-8" }, menu ?? /* @__PURE__ */ React.createElement(
         "button",
         {
           type: "button",
-          className: "ml-auto pr-8 text-[var(--tpl-muted)]",
+          className: "text-[var(--tpl-muted)]",
           "aria-label": "Post options"
         },
-        /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 18 })
-      )),
-      /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-sm leading-relaxed", style: { color: "var(--tpl-text)" } }, text),
+        /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 6 })
+      ))),
+      text && /* @__PURE__ */ React.createElement("div", { className: "mt-3 text-sm leading-relaxed", style: { color: "var(--tpl-text)" } }, text),
       media && /* @__PURE__ */ React.createElement(MediaCard, { media }),
+      place && /* @__PURE__ */ React.createElement(
+        "a",
+        {
+          href: place.href,
+          target: "_blank",
+          rel: "noreferrer noopener",
+          className: "mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition hover:opacity-90",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-text)" }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-accent)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "small-pin-icon", size: 12 })),
+        /* @__PURE__ */ React.createElement("span", { className: "max-w-[18rem] truncate" }, place.name)
+      ),
       /* @__PURE__ */ React.createElement(
         ReactionBar,
         {
@@ -12665,39 +15071,58 @@ var PortalUI = (() => {
   }
   function MediaCard({ media }) {
     if (media.type === "photo") return /* @__PURE__ */ React.createElement(PhotoCard, { media });
-    return /* @__PURE__ */ React.createElement(VideoCard, { media });
+    return /* @__PURE__ */ React.createElement(LinkCard, { media });
   }
-  function VideoCard({ media }) {
-    return /* @__PURE__ */ React.createElement(
+  function LinkCard({ media }) {
+    const inner = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
       "div",
       {
-        className: "mt-3 flex gap-4 overflow-hidden rounded-lg border",
-        style: { borderColor: "var(--tpl-border)" }
+        className: "relative grid h-40 w-44 shrink-0 place-items-center",
+        style: { background: gradientOf(media.seed ?? String(media.title ?? "")) }
       },
-      /* @__PURE__ */ React.createElement(
-        "div",
+      media.type === "video" ? /* @__PURE__ */ React.createElement(
+        "span",
         {
-          className: "relative grid h-40 w-44 shrink-0 place-items-center",
-          style: { background: "linear-gradient(135deg,#c78a5b,#7c5240)" }
+          className: "grid h-14 w-14 place-items-center rounded-full text-white shadow",
+          style: { background: "var(--tpl-accent)" }
         },
-        /* @__PURE__ */ React.createElement(
-          "span",
-          {
-            className: "grid h-14 w-14 place-items-center rounded-full text-white shadow",
-            style: { background: "var(--tpl-accent)" }
-          },
-          /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 20 })
-        )
-      ),
-      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 py-4 pr-4" }, media.title && /* @__PURE__ */ React.createElement("p", { className: "text-base font-semibold", style: { color: "var(--tpl-heading)" } }, media.title), media.desc && /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs leading-relaxed", style: { color: "var(--tpl-muted)" } }, media.desc), media.source && /* @__PURE__ */ React.createElement(
-        "p",
-        {
-          className: "mt-3 text-[11px] font-semibold tracking-wide",
-          style: { color: "var(--tpl-muted)" }
-        },
-        media.source
-      ))
-    );
+        /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 20 })
+      ) : /* @__PURE__ */ React.createElement("span", { className: "text-white/70" }, /* @__PURE__ */ React.createElement(Icon, { name: "albums-icon", size: 34 }))
+    ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 py-4 pr-4" }, media.title && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "truncate text-base font-semibold",
+        style: { color: "var(--tpl-heading)" }
+      },
+      media.title
+    ), media.desc && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mt-1 line-clamp-3 text-xs leading-relaxed break-words",
+        style: { color: "var(--tpl-muted)" }
+      },
+      media.desc
+    ), media.source && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mt-3 text-[11px] font-semibold uppercase tracking-wide",
+        style: { color: "var(--tpl-muted)" }
+      },
+      media.source
+    )));
+    const cls = "mt-3 flex gap-4 overflow-hidden rounded-lg border transition";
+    const style = { borderColor: "var(--tpl-border)" };
+    return media.href ? /* @__PURE__ */ React.createElement(
+      "a",
+      {
+        href: media.href,
+        target: "_blank",
+        rel: "noreferrer noopener",
+        className: `${cls} hover:shadow-sm`,
+        style
+      },
+      inner
+    ) : /* @__PURE__ */ React.createElement("div", { className: cls, style }, inner);
   }
   function PhotoCard({ media }) {
     return /* @__PURE__ */ React.createElement(
@@ -12706,16 +15131,103 @@ var PortalUI = (() => {
         className: "mt-3 overflow-hidden rounded-lg border",
         style: { borderColor: "var(--tpl-border)" }
       },
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          className: "grid h-64 place-items-center",
-          style: { background: "linear-gradient(135deg,#6d4bb8,#8a63d2)" }
-        },
-        /* @__PURE__ */ React.createElement("span", { className: "text-white/70" }, /* @__PURE__ */ React.createElement(Icon, { name: "photos-icon", size: 40 }))
-      ),
+      /* @__PURE__ */ React.createElement(PhotoFrame, { media }),
       (media.title || media.desc) && /* @__PURE__ */ React.createElement("div", { className: "p-4" }, media.title && /* @__PURE__ */ React.createElement("p", { className: "text-base font-semibold", style: { color: "var(--tpl-heading)" } }, media.title), media.desc && /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs leading-relaxed", style: { color: "var(--tpl-muted)" } }, media.desc))
     );
+  }
+  function PhotoFrame({ media }) {
+    const [failed, setFailed] = (0, import_react18.useState)(false);
+    if (media.src && !failed) {
+      return (
+        /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
+        /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            src: media.src,
+            alt: typeof media.title === "string" ? media.title : "photo",
+            loading: "lazy",
+            onError: () => setFailed(true),
+            className: "max-h-[32rem] w-full object-contain",
+            style: { background: "var(--tpl-surface-2)" }
+          }
+        )
+      );
+    }
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "grid h-64 place-items-center",
+        style: { background: gradientOf(media.seed ?? String(media.title ?? "photo")) }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "text-white/70" }, /* @__PURE__ */ React.createElement(Icon, { name: "photos-icon", size: 40 }))
+    );
+  }
+  function gradientOf(seed) {
+    const hue = [...seed].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+    return `linear-gradient(135deg, hsl(${hue} 45% 52%), hsl(${(hue + 35) % 360} 45% 38%))`;
+  }
+
+  // frontend/src/templates/v1/components/post/PostOptionsMenu.tsx
+  init_define_import_meta_env();
+  var import_react19 = __toESM(require_react_shim());
+  function PostOptionsMenu({ items }) {
+    const [open, setOpen] = (0, import_react19.useState)(false);
+    const root2 = (0, import_react19.useRef)(null);
+    const trigger = (0, import_react19.useRef)(null);
+    (0, import_react19.useEffect)(() => {
+      if (!open) return;
+      function onDown(e2) {
+        if (!root2.current?.contains(e2.target)) setOpen(false);
+      }
+      function onKey(e2) {
+        if (e2.key === "Escape") {
+          setOpen(false);
+          trigger.current?.focus();
+        }
+      }
+      document.addEventListener("mousedown", onDown);
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("mousedown", onDown);
+        document.removeEventListener("keydown", onKey);
+      };
+    }, [open]);
+    if (items.length === 0) return null;
+    return /* @__PURE__ */ React.createElement("div", { ref: root2, className: "relative" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        ref: trigger,
+        type: "button",
+        onClick: () => setOpen((o2) => !o2),
+        "aria-label": "Post options",
+        "aria-haspopup": "menu",
+        "aria-expanded": open,
+        className: "grid h-8 w-8 place-items-center rounded-md transition hover:bg-[var(--tpl-surface-2)]",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "three-dots-icon", size: 6 })
+    ), open && /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        role: "menu",
+        className: "absolute right-0 top-9 z-20 min-w-[11rem] overflow-hidden rounded-lg py-1 shadow-lg",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      items.map((it) => /* @__PURE__ */ React.createElement("li", { key: it.label, role: "none" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          role: "menuitem",
+          onClick: () => {
+            setOpen(false);
+            it.onSelect();
+          },
+          className: "block w-full px-4 py-2 text-left text-sm transition hover:bg-[var(--tpl-surface-2)]",
+          style: { color: it.danger ? "#ef4444" : "var(--tpl-text)" }
+        },
+        it.label
+      )))
+    ));
   }
 
   // frontend/src/templates/v1/components/profile/ControlBlockButtons.tsx
@@ -13005,6 +15517,56 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/stream/StreamItemCard.tsx
   init_define_import_meta_env();
+  var import_react20 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/links.ts
+  init_define_import_meta_env();
+  var URL_RE = /https?:\/\/[^\s<>"'`)\]]+/gi;
+  var VIDEO_HOSTS = [
+    "youtube.com",
+    "youtu.be",
+    "vimeo.com",
+    "dailymotion.com",
+    "twitch.tv",
+    "tiktok.com",
+    "soundcloud.com",
+    "spotify.com"
+  ];
+  function trimTrailing(url) {
+    return url.replace(/[.,;:!?]+$/, "");
+  }
+  function firstLink(body) {
+    const matches = body.match(URL_RE);
+    if (!matches?.length) return null;
+    for (const raw of matches) {
+      const url = trimTrailing(raw);
+      let host;
+      try {
+        host = new URL(url).hostname.replace(/^www\./, "");
+      } catch {
+        continue;
+      }
+      const kind = VIDEO_HOSTS.some((h) => host === h || host.endsWith(`.${h}`)) ? "video" : "link";
+      return { url, host, kind };
+    }
+    return null;
+  }
+  function stripLink(body, url) {
+    return body.split(url).join(" ").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function splitLinks(text) {
+    const out = [];
+    let last = 0;
+    for (const m of text.matchAll(URL_RE)) {
+      const start = m.index ?? 0;
+      const url = trimTrailing(m[0]);
+      if (start > last) out.push({ text: text.slice(last, start) });
+      out.push({ text: url, href: url });
+      last = start + url.length;
+    }
+    if (last < text.length) out.push({ text: text.slice(last) });
+    return out;
+  }
 
   // frontend/node_modules/portal-frontend/src/lib/time.ts
   init_define_import_meta_env();
@@ -13081,32 +15643,185 @@ var PortalUI = (() => {
   }
 
   // frontend/src/templates/v1/components/stream/StreamItemCard.tsx
-  function StreamItemCard({ item, displayName }) {
+  function StreamItemCard({
+    item,
+    displayName,
+    editing = false,
+    onStartEdit,
+    onCancelEdit,
+    onSave,
+    onDelete,
+    saving = false
+  }) {
     const { data: tc } = useTimeConfig();
     const when = formatDate(item.occurred_at, tc?.timezone ?? "UTC");
     if (item.source_module === "journal") {
       return /* @__PURE__ */ React.createElement(
-        Post,
+        JournalPost,
         {
-          author: displayName ?? "You",
-          time: item.mood ? `${when} \xB7 ${item.mood}` : when,
-          text: /* @__PURE__ */ React.createElement("span", { className: "whitespace-pre-wrap" }, item.body_md),
-          likes: 0,
-          likedBy: [],
-          comments: 0,
-          shares: 0
+          item,
+          when,
+          displayName,
+          editing,
+          onStartEdit,
+          onCancelEdit,
+          onSave,
+          onDelete,
+          saving
         }
       );
     }
-    const icon = iconFor(item.source_module);
+    return /* @__PURE__ */ React.createElement(SystemCard, { item, when });
+  }
+  function JournalPost({
+    item,
+    when,
+    displayName,
+    editing,
+    onStartEdit,
+    onCancelEdit,
+    onSave,
+    onDelete,
+    saving
+  }) {
+    const body = item.body_md ?? "";
+    const att = decodeAttachments(body);
+    const link = att.photoId ? null : firstLink(att.rest);
+    const stripped = link ? stripLink(att.rest, link.url) : att.rest;
+    const { heading, rest } = splitHeading(stripped);
+    const persisted = !item.id.startsWith("temp-");
+    const menuItems = [];
+    if (persisted && onStartEdit) {
+      menuItems.push({ label: "Edit Post", onSelect: () => onStartEdit(item) });
+    }
+    if (persisted && onDelete) {
+      menuItems.push({ label: "Delete Post", danger: true, onSelect: () => onDelete(item) });
+    }
+    return /* @__PURE__ */ React.createElement(
+      Post,
+      {
+        author: displayName ?? "You",
+        time: item.mood ? `${when} \xB7 ${item.mood}` : when,
+        action: link ? /* @__PURE__ */ React.createElement(SharedA, { kind: link.kind }) : void 0,
+        text: editing ? /* @__PURE__ */ React.createElement(
+          InlineEditor,
+          {
+            initial: body,
+            saving,
+            onCancel: () => onCancelEdit?.(),
+            onSave: (v) => onSave?.(item, v)
+          }
+        ) : heading || rest.trim() ? (
+          // Guard here, not inside RichText: an element that renders null is
+          // still truthy, so Post would draw the empty body spacer on a
+          // link-only post.
+          /* @__PURE__ */ React.createElement(React.Fragment, null, heading && /* @__PURE__ */ React.createElement("p", { className: "mb-2 text-base font-semibold", style: { color: "var(--tpl-heading)" } }, heading), /* @__PURE__ */ React.createElement(RichText, { text: rest }))
+        ) : null,
+        place: !editing && att.place ? {
+          name: att.place.name || coordName(att.place.lat, att.place.lon),
+          href: osmURL(att.place.lat, att.place.lon)
+        } : void 0,
+        media: editing ? void 0 : att.photoId ? { type: "photo", src: assetVariantURL(att.photoId, "medium") } : link ? {
+          type: link.kind,
+          // Host as the title and the bare URL as the excerpt: without a
+          // crawler those are the only two true things we have, and
+          // repeating the host in the `.link-site` line would just pad the
+          // card, so `source` stays empty.
+          title: link.host,
+          desc: link.url.replace(/^https?:\/\//, ""),
+          href: link.url,
+          seed: link.host
+        } : void 0,
+        menu: menuItems.length > 0 ? /* @__PURE__ */ React.createElement(PostOptionsMenu, { items: menuItems }) : void 0,
+        likes: 0,
+        likedBy: [],
+        comments: 0,
+        shares: 0
+      }
+    );
+  }
+  function SharedA({ kind }) {
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, "shared a", " ", /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-accent)" } }, kind === "video" ? "video" : "link"));
+  }
+  function splitHeading(body) {
+    const [first = "", ...others] = body.split("\n");
+    const m = /^#{1,3}\s+(.+)$/.exec(first.trim());
+    if (!m?.[1]) return { heading: null, rest: body };
+    return { heading: m[1].trim(), rest: others.join("\n").trim() };
+  }
+  function RichText({ text }) {
+    if (!text.trim()) return null;
+    return /* @__PURE__ */ React.createElement("p", { className: "whitespace-pre-wrap" }, splitLinks(text).map(
+      (part, i) => part.href ? /* @__PURE__ */ React.createElement(
+        "a",
+        {
+          key: i,
+          href: part.href,
+          target: "_blank",
+          rel: "noreferrer noopener",
+          className: "hover:underline",
+          style: { color: "var(--tpl-accent)" }
+        },
+        part.text
+      ) : /* @__PURE__ */ React.createElement("span", { key: i }, part.text)
+    ));
+  }
+  function InlineEditor({
+    initial: initial2,
+    saving,
+    onSave,
+    onCancel
+  }) {
+    const [value, setValue] = (0, import_react20.useState)(initial2);
+    const dirty = value.trim().length > 0 && value !== initial2;
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        value,
+        onChange: (e2) => setValue(e2.target.value),
+        rows: 4,
+        autoFocus: true,
+        className: "w-full resize-none rounded-md border p-3 text-sm outline-none",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => onSave(value.trim()),
+        disabled: !dirty || saving,
+        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      saving ? "Saving\u2026" : "Save"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onCancel,
+        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Cancel"
+    )));
+  }
+  function SystemCard({ item, when }) {
     const body = /* @__PURE__ */ React.createElement(
       "div",
       {
-        className: "flex items-center gap-3 rounded-xl border p-3",
-        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+        className: "flex items-center gap-3 rounded-xl p-4 shadow-sm",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
       },
-      /* @__PURE__ */ React.createElement("span", { className: "grid h-9 w-9 shrink-0 place-items-center rounded-full", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 18 })),
-      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, item.title || item.event_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, when))
+      /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: iconFor(item.source_module), size: 18 })
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, item.title || item.event_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, when)),
+      item.href && /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "dropdown-arrow-icon", size: 12, className: "-rotate-90" }))
     );
     return item.href ? /* @__PURE__ */ React.createElement(Link, { href: item.href, className: "block transition hover:opacity-90" }, body) : body;
   }
@@ -13127,70 +15842,6 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/ui/Money.tsx
   init_define_import_meta_env();
-
-  // frontend/node_modules/portal-frontend/src/lib/bank.ts
-  init_define_import_meta_env();
-  async function listAccounts() {
-    const r2 = await api("/api/v1/bank/accounts");
-    return r2.accounts ?? [];
-  }
-  async function createAccount(body) {
-    return api("/api/v1/bank/accounts", { method: "POST", body: JSON.stringify(body) });
-  }
-  async function updateAccount(id2, body) {
-    return api(`/api/v1/bank/accounts/${id2}`, { method: "PATCH", body: JSON.stringify(body) });
-  }
-  async function deleteAccount(id2) {
-    await api(`/api/v1/bank/accounts/${id2}`, { method: "DELETE" });
-  }
-  async function listCategories() {
-    const r2 = await api("/api/v1/bank/categories");
-    return r2.categories ?? [];
-  }
-  async function listTransactions(params = {}) {
-    const q = new URLSearchParams();
-    if (params.account) q.set("account", params.account);
-    if (params.category) q.set("category", params.category);
-    if (params.month) q.set("month", params.month);
-    if (params.cursor) q.set("cursor", params.cursor);
-    const qs = q.toString();
-    const r2 = await api(`/api/v1/bank/transactions${qs ? `?${qs}` : ""}`);
-    return { transactions: r2.transactions ?? [], next_cursor: r2.next_cursor };
-  }
-  async function createTransaction(body) {
-    return api("/api/v1/bank/transactions", { method: "POST", body: JSON.stringify(body) });
-  }
-  async function deleteTransaction(id2) {
-    await api(`/api/v1/bank/transactions/${id2}`, { method: "DELETE" });
-  }
-  async function listBudgets(month) {
-    const q = month ? `?month=${month}` : "";
-    const r2 = await api(`/api/v1/bank/budgets${q}`);
-    return { month: r2.month, budgets: r2.budgets ?? [] };
-  }
-  async function setBudget(body) {
-    await api("/api/v1/bank/budgets", { method: "PUT", body: JSON.stringify(body) });
-  }
-  async function getDashboard(month) {
-    const q = month ? `?month=${month}` : "";
-    return api(`/api/v1/bank/dashboard${q}`);
-  }
-  function formatVND(minor) {
-    const neg = minor < 0;
-    const digits = Math.abs(minor).toString();
-    const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return (neg ? "-" : "") + grouped;
-  }
-  function parseVND(s) {
-    const cleaned = s.replace(/[^\d-]/g, "");
-    if (cleaned === "" || cleaned === "-") return 0;
-    return parseInt(cleaned, 10) || 0;
-  }
-  function currentMonth() {
-    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
-  }
-
-  // frontend/src/templates/v1/components/ui/Money.tsx
   function MoneyDisplay({
     amount,
     currency,
@@ -13256,35 +15907,6 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/BirthdayCard.tsx
   init_define_import_meta_env();
-
-  // frontend/node_modules/portal-frontend/src/lib/people.ts
-  init_define_import_meta_env();
-  async function listPeople(cursor) {
-    const q = cursor ? `?cursor=${cursor}` : "";
-    const r2 = await api(`/api/v1/people${q}`);
-    return { people: r2.people ?? [], next_cursor: r2.next_cursor };
-  }
-  async function getPerson(id2) {
-    return api(`/api/v1/people/${id2}`);
-  }
-  async function createPerson(body) {
-    return api("/api/v1/people", { method: "POST", body: JSON.stringify(body) });
-  }
-  async function deletePerson(id2) {
-    await api(`/api/v1/people/${id2}`, { method: "DELETE" });
-  }
-  async function upcomingBirthdays(days = 14) {
-    const r2 = await api(`/api/v1/people/upcoming-birthdays?days=${days}`);
-    return r2.upcoming ?? [];
-  }
-  function formatBirthday(b) {
-    if (!b) return "";
-    const dd = String(b.day).padStart(2, "0");
-    const mm = String(b.month).padStart(2, "0");
-    return b.year ? `${dd}/${mm}/${b.year}` : `${dd}/${mm}`;
-  }
-
-  // frontend/src/templates/v1/components/widget/BirthdayCard.tsx
   function BirthdayCard() {
     const { data = [], isLoading } = useQuery({ queryKey: ["people", "upcoming"], queryFn: () => upcomingBirthdays(14) });
     const next = data[0];
@@ -13305,7 +15927,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/CalendarWidget.tsx
   init_define_import_meta_env();
-  var import_react13 = __toESM(require_react_shim());
+  var import_react21 = __toESM(require_react_shim());
 
   // frontend/node_modules/portal-frontend/src/lib/journal.ts
   init_define_import_meta_env();
@@ -13320,6 +15942,15 @@ var PortalUI = (() => {
       method: "POST",
       body: JSON.stringify(input)
     });
+  }
+  async function patchEntry(id2, input) {
+    return api(`/api/v1/journal/entries/${id2}`, {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    });
+  }
+  async function deleteEntry(id2) {
+    await api(`/api/v1/journal/entries/${id2}`, { method: "DELETE" });
   }
 
   // frontend/node_modules/portal-frontend/src/lib/lunar.ts
@@ -13434,7 +16065,7 @@ var PortalUI = (() => {
   }
 
   // frontend/src/templates/v1/components/widget/CalendarWidget.tsx
-  var WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  var WEEKDAYS2 = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
   function CalendarWidget() {
     const { data: tc } = useTimeConfig();
     const { data } = useQuery({
@@ -13442,14 +16073,14 @@ var PortalUI = (() => {
       queryFn: () => listEntries(),
       retry: false
     });
-    const [ym, setYm] = (0, import_react13.useState)(null);
-    (0, import_react13.useEffect)(() => {
+    const [ym, setYm] = (0, import_react21.useState)(null);
+    (0, import_react21.useEffect)(() => {
       if (tc && !ym) {
         const c = zonedYMD(tc.now, tc.timezone);
         setYm({ year: c.year, month: c.month });
       }
     }, [tc, ym]);
-    const activeDays = (0, import_react13.useMemo)(() => {
+    const activeDays = (0, import_react21.useMemo)(() => {
       const s = /* @__PURE__ */ new Set();
       if (!tc || !ym) return s;
       for (const e2 of data?.items ?? []) {
@@ -13458,7 +16089,7 @@ var PortalUI = (() => {
       }
       return s;
     }, [data, tc, ym]);
-    const lunarByDay = (0, import_react13.useMemo)(() => {
+    const lunarByDay = (0, import_react21.useMemo)(() => {
       const map = /* @__PURE__ */ new Map();
       if (!ym) return map;
       const dim = new Date(Date.UTC(ym.year, ym.month + 1, 0)).getUTCDate();
@@ -13478,13 +16109,13 @@ var PortalUI = (() => {
       ...Array.from({ length: firstDow }, () => null),
       ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
     ];
-    const shiftMonth = (delta) => setYm((m) => {
+    const shiftMonth3 = (delta) => setYm((m) => {
       if (!m) return m;
       const d = new Date(Date.UTC(m.year, m.month + delta, 1));
       return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
     });
     const goToday = () => setYm({ year: now.year, month: now.month });
-    return /* @__PURE__ */ React.createElement(Card, { className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m tr\u01B0\u1EDBc", glyph: "\xAB", onClick: () => shiftMonth(-12) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth(-1) })), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Card, { className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m tr\u01B0\u1EDBc", glyph: "\xAB", onClick: () => shiftMonth3(-12) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth3(-1) })), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -13497,7 +16128,7 @@ var PortalUI = (() => {
       month + 1,
       ", ",
       year
-    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth(1) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m sau", glyph: "\xBB", onClick: () => shiftMonth(12) }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-y-1.5 text-center" }, WEEKDAYS.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, className: "text-[10px] font-bold", style: { color: i === 6 ? "var(--tpl-accent)" : "var(--tpl-muted)" } }, d)), cells.map((day, i) => {
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-0.5" }, /* @__PURE__ */ React.createElement(NavBtn, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth3(1) }), /* @__PURE__ */ React.createElement(NavBtn, { label: "N\u0103m sau", glyph: "\xBB", onClick: () => shiftMonth3(12) }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-y-1.5 text-center" }, WEEKDAYS2.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, className: "text-[10px] font-bold", style: { color: i === 6 ? "var(--tpl-accent)" : "var(--tpl-muted)" } }, d)), cells.map((day, i) => {
       if (day === null) return /* @__PURE__ */ React.createElement("span", { key: `b${i}` });
       const lunar = lunarByDay.get(day);
       const isMonthStart = lunar?.day === 1;
@@ -13545,37 +16176,6 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/components/widget/ContinueWidget.tsx
   init_define_import_meta_env();
-
-  // frontend/node_modules/portal-frontend/src/lib/media-assets.ts
-  init_define_import_meta_env();
-  async function listAssets(params = {}) {
-    const q = new URLSearchParams();
-    if (params.kind && params.kind !== "all") q.set("kind", params.kind);
-    if (params.status && params.status !== "all") q.set("status", params.status);
-    if (params.cursor) q.set("cursor", params.cursor);
-    const qs = q.toString();
-    return api(`/api/v1/assets${qs ? `?${qs}` : ""}`);
-  }
-  async function deleteAsset(id2) {
-    await api(`/api/v1/assets/${id2}`, { method: "DELETE" });
-  }
-  function assetVariantURL(id2, variant) {
-    return `${baseURL}/api/v1/assets/${id2}/variants/${variant}`;
-  }
-  function assetOriginalURL(id2) {
-    return `${baseURL}/api/v1/assets/${id2}/original`;
-  }
-  async function getAsset(id2) {
-    return api(`/api/v1/assets/${id2}`);
-  }
-  async function getPlaybackProgress(id2) {
-    return api(`/api/v1/assets/${id2}/progress`);
-  }
-  async function getContinueItems(limit = 10) {
-    return api(`/api/v1/continue?limit=${limit}`);
-  }
-
-  // frontend/src/templates/v1/components/widget/ContinueWidget.tsx
   function ContinueWidget() {
     const { data } = useQuery({ queryKey: ["continue", "home"], queryFn: () => getContinueItems(5), retry: false });
     const items = data?.items ?? [];
@@ -13618,6 +16218,44 @@ var PortalUI = (() => {
       },
       /* @__PURE__ */ React.createElement(Icon, { name: "happy-face-icon", size: 16 })
     )))));
+  }
+
+  // frontend/src/templates/v1/components/widget/MusicWidget.tsx
+  init_define_import_meta_env();
+  var WIDGET_LIMIT = 5;
+  function MusicWidget() {
+    const player = useMusicPlayerOptional();
+    const { data, isError } = useQuery({
+      queryKey: ["tracks", "widget"],
+      queryFn: () => listTracks(),
+      retry: false
+    });
+    if (isError) return null;
+    const playable = (data?.tracks ?? []).filter(isPlayable).slice(0, WIDGET_LIMIT);
+    const nowPlaying = player?.current ? playable.findIndex((t2) => t2.id === player.current.id) + 1 || void 0 : void 0;
+    return /* @__PURE__ */ React.createElement(
+      PlaylistWidget,
+      {
+        title: "Music",
+        tracks: playable.map((t2) => ({
+          title: t2.title,
+          artist: trackArtist(t2),
+          coverUrl: t2.cover_asset_id ? trackCoverURL(t2.cover_asset_id) : null
+        })),
+        nowPlaying,
+        emptyLabel: "No published tracks yet.",
+        onPlay: (index) => player?.playQueue(playable, index - 1),
+        footer: /* @__PURE__ */ React.createElement(
+          Link,
+          {
+            href: "/library/music",
+            className: "text-xs font-semibold transition hover:opacity-80",
+            style: { color: "var(--tpl-accent)" }
+          },
+          "Open music library \u2192"
+        )
+      }
+    );
   }
 
   // frontend/src/templates/v1/components/widget/PagesWidget.tsx
@@ -13750,7 +16388,7 @@ var PortalUI = (() => {
 
   // frontend/node_modules/portal-frontend/src/lib/weather.ts
   init_define_import_meta_env();
-  var import_react14 = __toESM(require_react_shim());
+  var import_react22 = __toESM(require_react_shim());
   function wmo(code) {
     if (code === 0) return { icon: "weather-sunny-icon", label: "Tr\u1EDDi quang" };
     if (code <= 2) return { icon: "weather-partly-sunny-icon", label: "\xCDt m\xE2y" };
@@ -13818,8 +16456,8 @@ var PortalUI = (() => {
     return { lat, lon, place: place || null };
   }
   function useGeoWeather() {
-    const [state, setState] = (0, import_react14.useState)({ status: "loading", data: null });
-    (0, import_react14.useEffect)(() => {
+    const [state, setState] = (0, import_react22.useState)({ status: "loading", data: null });
+    (0, import_react22.useEffect)(() => {
       let alive = true;
       const cfg = configuredLocation();
       if (cfg) {
@@ -13869,1692 +16507,9 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/master/MasterBase.tsx
   init_define_import_meta_env();
-  var import_react18 = __toESM(require_react_shim());
-
-  // frontend/src/templates/v1/partials/HelloPreloader.tsx
-  init_define_import_meta_env();
-  var import_react15 = __toESM(require_react_shim());
-  function HelloPreloader() {
-    const [done, setDone] = (0, import_react15.useState)(false);
-    (0, import_react15.useEffect)(() => {
-      const t2 = setTimeout(() => setDone(true), 300);
-      return () => clearTimeout(t2);
-    }, []);
-    if (done) return null;
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        id: "hellopreloader",
-        className: "fixed inset-0 z-[100] grid place-items-center",
-        style: { background: "var(--background, #0b0b10)" }
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "animate-pulse text-sm", style: { color: "var(--tpl-muted)" } }, "Loading \u2026")
-    );
-  }
-
-  // frontend/src/templates/v1/partials/GoToTop.tsx
-  init_define_import_meta_env();
-  var import_react16 = __toESM(require_react_shim());
-  function GoToTop() {
-    const [show, setShow] = (0, import_react16.useState)(false);
-    (0, import_react16.useEffect)(() => {
-      const onScroll = () => setShow(window.scrollY > 300);
-      onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => window.removeEventListener("scroll", onScroll);
-    }, []);
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        "aria-label": "Go to top",
-        onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }),
-        className: `fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-full text-white shadow-lg transition-opacity duration-200 hover:opacity-90 xl:right-[calc(var(--tpl-rightbar-cur)+1.5rem)] ${show ? "opacity-100" : "pointer-events-none opacity-0"}`,
-        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "svg",
-        {
-          width: "22",
-          height: "22",
-          viewBox: "0 0 24 24",
-          fill: "none",
-          stroke: "currentColor",
-          strokeWidth: "2.5",
-          strokeLinecap: "round",
-          strokeLinejoin: "round",
-          "aria-hidden": true
-        },
-        /* @__PURE__ */ React.createElement("polyline", { points: "18 15 12 9 6 15" })
-      )
-    );
-  }
-
-  // frontend/src/templates/v1/partials/SessionKeeper.tsx
-  init_define_import_meta_env();
-  var import_react17 = __toESM(require_react_shim());
-  var REFRESH_MS = 4 * 60 * 1e3;
-  var CLAIM_MS = REFRESH_MS - 15e3;
-  var KEY = "portal_refresh_at";
-  function SessionKeeper() {
-    (0, import_react17.useEffect)(() => {
-      let stopped = false;
-      async function refresh(force) {
-        const last = Number(localStorage.getItem(KEY) || 0);
-        const now = Date.now();
-        if (!force && now - last < CLAIM_MS) return;
-        localStorage.setItem(KEY, String(now));
-        try {
-          const res = await fetch(`${baseURL2}/api/v1/auth/refresh`, {
-            method: "POST",
-            credentials: "include"
-          });
-          if (res.ok) {
-            localStorage.setItem(KEY, String(Date.now()));
-          } else if (res.status === 401 && !stopped) {
-            localStorage.removeItem(KEY);
-            window.location.assign("/login");
-          }
-        } catch {
-          localStorage.setItem(KEY, String(last));
-        }
-      }
-      refresh(false);
-      const timer = setInterval(() => refresh(false), REFRESH_MS);
-      const onVisible = () => {
-        if (document.visibilityState === "visible") refresh(false);
-      };
-      document.addEventListener("visibilitychange", onVisible);
-      window.addEventListener("focus", onVisible);
-      return () => {
-        stopped = true;
-        clearInterval(timer);
-        document.removeEventListener("visibilitychange", onVisible);
-        window.removeEventListener("focus", onVisible);
-      };
-    }, []);
-    return null;
-  }
-
-  // frontend/src/templates/v1/master/MasterBase.tsx
-  function MasterBase({ children }) {
-    const [collapsed, setCollapsed] = (0, import_react18.useState)(false);
-    const [rightCollapsed, setRightCollapsed] = (0, import_react18.useState)(false);
-    const rootStyle = {
-      background: "var(--tpl-bg)",
-      "--tpl-sidebar-cur": collapsed ? "var(--tpl-rail-w)" : "var(--tpl-sidebar-w)",
-      "--tpl-rightbar-cur": rightCollapsed ? "var(--tpl-rail-w)" : "var(--tpl-rightbar-w)"
-    };
-    return /* @__PURE__ */ React.createElement("div", { "data-template": "v1", className: "min-h-screen", style: rootStyle }, /* @__PURE__ */ React.createElement(HelloPreloader, null), /* @__PURE__ */ React.createElement(SessionKeeper, null), /* @__PURE__ */ React.createElement(SidebarCenter, null), /* @__PURE__ */ React.createElement(SidebarLeft, { collapsed, onToggle: () => setCollapsed((c) => !c) }), /* @__PURE__ */ React.createElement(SidebarRight, { collapsed: rightCollapsed, onToggle: () => setRightCollapsed((c) => !c) }), /* @__PURE__ */ React.createElement(
-      "main",
-      {
-        className: "min-h-screen transition-[padding] duration-200 xl:pl-[var(--tpl-sidebar-cur)] xl:pr-[var(--tpl-rightbar-cur)]",
-        style: { paddingTop: "var(--tpl-header-h)", color: "var(--tpl-text)" }
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5" }, children)
-    ), /* @__PURE__ */ React.createElement(GoToTop, null), /* @__PURE__ */ React.createElement(UpdateHeaderPhoto, null), /* @__PURE__ */ React.createElement(ChoseFromMyPhoto, null), /* @__PURE__ */ React.createElement(ChatResponsive, null), /* @__PURE__ */ React.createElement(SvgSprite, null));
-  }
-
-  // frontend/src/templates/v1/master/MasterPublic.tsx
-  init_define_import_meta_env();
-  function MasterPublic({ children }) {
-    return /* @__PURE__ */ React.createElement("div", { "data-template": "v1", className: "landing-page min-h-screen" }, children, /* @__PURE__ */ React.createElement(SvgSprite, null));
-  }
-
-  // frontend/src/templates/v1/views/auth/AuthForm.tsx
-  init_define_import_meta_env();
-  var import_react19 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/src/lib/problems.ts
-  init_define_import_meta_env();
-  var PROBLEM_MESSAGES = {
-    "media/unsupported-format": "This file format isn't supported. Try converting it and uploading again.",
-    "media/file-too-large": "This file is too large to upload.",
-    "media/asset-not-found": "This asset doesn't exist or was already removed.",
-    "media/asset-not-ready": "This asset is still being uploaded \u2014 try again in a moment.",
-    "journal/entry-not-found": "This entry doesn't exist or was already removed.",
-    "journal/invalid-body": "Entries need 1-20,000 characters of text.",
-    "journal/invalid-mood": "Mood can't be blank \u2014 leave it empty or add a word.",
-    "journal/invalid-asset": "Photo attachments aren't supported yet.",
-    "bank/not-found": "This item doesn't exist or was already removed.",
-    "bank/account-not-empty": "This account has transactions \u2014 archive it instead of deleting.",
-    "bank/account-not-mutable": "You can't change the currency once an account has transactions.",
-    "bank/is-transfer-leg": "This is part of a transfer \u2014 edit or delete it from the transfer instead.",
-    "bank/category-in-use": "This category has transactions. Reassign them to another category first.",
-    "bank/category-kind-mismatch": "That category is a different kind (income vs expense).",
-    "bank/category-immutable": "A category's kind can't be changed after it's created.",
-    "bank/invalid-category-parent": "A parent must be a top-level category of the same kind.",
-    "bank/same-account-transfer": "Pick two different accounts for a transfer.",
-    "bank/currency-mismatch": "Transfers between different currencies aren't supported yet.",
-    "bank/direction-kind-mismatch": "Expenses need an expense category, income needs an income category.",
-    "bank/invalid-amount": "Enter an amount greater than zero.",
-    "bank/validation": "Please check the form and try again.",
-    "bank/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "comic/not-found": "This comic doesn't exist or was already removed.",
-    "comic/invalid-cover-asset": "The cover must be a ready image you uploaded.",
-    "comic/invalid-page-asset": "Each page must be a ready image you uploaded.",
-    "comic/invalid-progress-target": "Couldn't save your place on this comic.",
-    "comic/not-publishable": "Every chapter needs at least one page before publishing.",
-    "comic/validation": "Please check the form and try again.",
-    "comic/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "people/person-not-found": "This person doesn't exist or was already removed.",
-    "people/invalid-birthday": "Enter a real date \u2014 day and month together, year optional.",
-    "people/validation": "Please check the form and try again.",
-    "people/invalid-cursor": "Couldn't load the next page \u2014 please refresh.",
-    "stream/invalid-cursor": "Couldn't load more of your stream \u2014 please refresh."
-  };
-  var FALLBACK_MESSAGE = "Something went wrong. Please try again.";
-  function problemMessage(type) {
-    if (type && type in PROBLEM_MESSAGES) {
-      return PROBLEM_MESSAGES[type];
-    }
-    return FALLBACK_MESSAGE;
-  }
-  function problemDisplayMessage(body) {
-    const problem = body;
-    return problem?.detail || problemMessage(problem?.type);
-  }
-
-  // frontend/src/templates/v1/views/auth/AuthForm.tsx
-  function AuthForm({ defaultTab = "login" }) {
-    const [tab, setTab] = (0, import_react19.useState)(defaultTab);
-    const [notice, setNotice] = (0, import_react19.useState)(null);
-    const [prefillEmail, setPrefillEmail] = (0, import_react19.useState)("");
-    function handleRegistered(email) {
-      setPrefillEmail(email);
-      setNotice("Account created. Please sign in with your new account.");
-      setTab("login");
-    }
-    function switchTo(next) {
-      setNotice(null);
-      setTab(next);
-    }
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "w-full max-w-md rounded-2xl border p-6 shadow-2xl backdrop-blur sm:p-8",
-        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          className: "mb-6 grid grid-cols-2 overflow-hidden rounded-xl border",
-          style: { borderColor: "var(--tpl-border)" }
-        },
-        /* @__PURE__ */ React.createElement(TabButton, { active: tab === "login", onClick: () => switchTo("login") }, /* @__PURE__ */ React.createElement(LogInIcon, null), " Sign in"),
-        /* @__PURE__ */ React.createElement(TabButton, { active: tab === "register", onClick: () => switchTo("register") }, /* @__PURE__ */ React.createElement(UserPlusIcon, null), " Register")
-      ),
-      tab === "login" ? /* @__PURE__ */ React.createElement(
-        LoginForm,
-        {
-          onSwitch: () => switchTo("register"),
-          initialEmail: prefillEmail,
-          notice
-        }
-      ) : /* @__PURE__ */ React.createElement(RegisterForm, { onSwitch: () => switchTo("login"), onRegistered: handleRegistered })
-    );
-  }
-  function nextTarget() {
-    if (typeof window === "undefined") return "/";
-    const n2 = new URLSearchParams(window.location.search).get("next");
-    return n2 && n2.startsWith("/") ? n2 : "/";
-  }
-  async function postAuth(path, payload) {
-    const res = await fetch(`${baseURL2}/api/v1/auth/${path}`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) return null;
-    try {
-      return problemDisplayMessage(await res.json());
-    } catch {
-      return problemDisplayMessage(void 0);
-    }
-  }
-  function LoginForm({
-    onSwitch,
-    initialEmail = "",
-    notice = null
-  }) {
-    const [email, setEmail] = (0, import_react19.useState)(initialEmail);
-    const [password, setPassword] = (0, import_react19.useState)("");
-    const [remember, setRemember] = (0, import_react19.useState)(true);
-    const [error, setError] = (0, import_react19.useState)(null);
-    const [loading, setLoading] = (0, import_react19.useState)(false);
-    async function onSubmit(e2) {
-      e2.preventDefault();
-      setError(null);
-      setLoading(true);
-      const err = await postAuth("login", { email, password, remember });
-      if (err) {
-        setError(err);
-        setLoading(false);
-        return;
-      }
-      try {
-        localStorage.setItem("portal_refresh_at", String(Date.now()));
-      } catch {
-      }
-      window.location.assign(nextTarget());
-    }
-    return /* @__PURE__ */ React.createElement("form", { className: "space-y-4", onSubmit }, /* @__PURE__ */ React.createElement("h2", { className: "text-lg font-semibold" }, "Login to your account"), notice && /* @__PURE__ */ React.createElement(SuccessBanner, null, notice), error && /* @__PURE__ */ React.createElement(ErrorBanner, null, error), /* @__PURE__ */ React.createElement(
-      Field2,
-      {
-        label: "Your Email",
-        name: "email",
-        type: "email",
-        autoComplete: "email",
-        placeholder: "you@example.com",
-        value: email,
-        onChange: setEmail,
-        required: true
-      }
-    ), /* @__PURE__ */ React.createElement(
-      Field2,
-      {
-        label: "Your Password",
-        name: "password",
-        type: "password",
-        autoComplete: "current-password",
-        placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
-        value: password,
-        onChange: setPassword,
-        required: true
-      }
-    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-sm" }, /* @__PURE__ */ React.createElement(
-      "label",
-      {
-        className: "flex cursor-pointer items-center gap-2",
-        style: { color: "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "checkbox",
-          className: "accent-[var(--tpl-accent)]",
-          checked: remember,
-          onChange: (e2) => setRemember(e2.target.checked)
-        }
-      ),
-      " ",
-      "Remember me"
-    ), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Forgot password? (coming soon)")), /* @__PURE__ */ React.createElement(PrimaryButton, { loading }, "Login"), /* @__PURE__ */ React.createElement("p", { className: "text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Don't have an account?", " ", /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: onSwitch,
-        className: "font-medium hover:underline",
-        style: { color: "var(--tpl-accent)" }
-      },
-      "Register now"
-    )));
-  }
-  function RegisterForm({
-    onSwitch,
-    onRegistered
-  }) {
-    const [displayName, setDisplayName] = (0, import_react19.useState)("");
-    const [email, setEmail] = (0, import_react19.useState)("");
-    const [password, setPassword] = (0, import_react19.useState)("");
-    const [accepted, setAccepted] = (0, import_react19.useState)(false);
-    const [error, setError] = (0, import_react19.useState)(null);
-    const [loading, setLoading] = (0, import_react19.useState)(false);
-    async function onSubmit(e2) {
-      e2.preventDefault();
-      setError(null);
-      if (!accepted) {
-        setError("Please accept the Terms & Conditions to continue.");
-        return;
-      }
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters.");
-        return;
-      }
-      setLoading(true);
-      const err = await postAuth("register", {
-        email,
-        password,
-        display_name: displayName
-      });
-      if (err) {
-        setError(err);
-        setLoading(false);
-        return;
-      }
-      onRegistered(email);
-    }
-    return /* @__PURE__ */ React.createElement("form", { className: "space-y-4", onSubmit }, /* @__PURE__ */ React.createElement("h2", { className: "text-lg font-semibold" }, "Create your account"), error && /* @__PURE__ */ React.createElement(ErrorBanner, null, error), /* @__PURE__ */ React.createElement(
-      Field2,
-      {
-        label: "Display name",
-        name: "display_name",
-        autoComplete: "name",
-        placeholder: "Your name",
-        value: displayName,
-        onChange: setDisplayName
-      }
-    ), /* @__PURE__ */ React.createElement(
-      Field2,
-      {
-        label: "Your Email",
-        name: "email",
-        type: "email",
-        autoComplete: "email",
-        placeholder: "you@example.com",
-        value: email,
-        onChange: setEmail,
-        required: true
-      }
-    ), /* @__PURE__ */ React.createElement(
-      Field2,
-      {
-        label: "Your Password",
-        name: "password",
-        type: "password",
-        autoComplete: "new-password",
-        placeholder: "At least 8 characters",
-        value: password,
-        onChange: setPassword,
-        required: true
-      }
-    ), /* @__PURE__ */ React.createElement(
-      "label",
-      {
-        className: "flex cursor-pointer items-start gap-2 text-sm",
-        style: { color: "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "checkbox",
-          className: "mt-0.5 accent-[var(--tpl-accent)]",
-          checked: accepted,
-          onChange: (e2) => setAccepted(e2.target.checked)
-        }
-      ),
-      /* @__PURE__ */ React.createElement("span", null, "I accept the", " ", /* @__PURE__ */ React.createElement("a", { href: "#", className: "hover:underline", style: { color: "var(--tpl-accent)" } }, "Terms & Conditions"), " ", "of the website")
-    ), /* @__PURE__ */ React.createElement(PrimaryButton, { loading }, "Complete registration"), /* @__PURE__ */ React.createElement("p", { className: "text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Already have an account?", " ", /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: onSwitch,
-        className: "font-medium hover:underline",
-        style: { color: "var(--tpl-accent)" }
-      },
-      "Sign in"
-    )));
-  }
-  function TabButton({
-    active,
-    onClick,
-    children
-  }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick,
-        className: "flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition",
-        style: active ? { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" } : { color: "var(--tpl-muted)" }
-      },
-      children
-    );
-  }
-  function Field2({
-    label,
-    name,
-    type = "text",
-    placeholder,
-    value,
-    onChange,
-    autoComplete,
-    required
-  }) {
-    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement(
-      "span",
-      {
-        className: "mb-1.5 block text-xs font-medium uppercase tracking-wide",
-        style: { color: "var(--tpl-muted)" }
-      },
-      label
-    ), /* @__PURE__ */ React.createElement(
-      "input",
-      {
-        name,
-        type,
-        placeholder,
-        value,
-        onChange: (e2) => onChange(e2.target.value),
-        autoComplete,
-        required,
-        className: "w-full rounded-lg border bg-transparent px-3.5 py-2.5 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
-        style: { borderColor: "var(--tpl-border)" }
-      }
-    ));
-  }
-  function PrimaryButton({ children, loading }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "submit",
-        disabled: loading,
-        className: "w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60",
-        style: { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" }
-      },
-      loading ? "Please wait\u2026" : children
-    );
-  }
-  function ErrorBanner({ children }) {
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        role: "alert",
-        className: "rounded-lg border px-3.5 py-2.5 text-sm",
-        style: {
-          borderColor: "rgba(239,68,68,0.4)",
-          background: "rgba(239,68,68,0.08)",
-          color: "#ef4444"
-        }
-      },
-      children
-    );
-  }
-  function SuccessBanner({ children }) {
-    return /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        role: "status",
-        className: "rounded-lg border px-3.5 py-2.5 text-sm",
-        style: {
-          borderColor: "rgba(34,197,94,0.4)",
-          background: "rgba(34,197,94,0.08)",
-          color: "#22c55e"
-        }
-      },
-      children
-    );
-  }
-  function iconProps() {
-    return {
-      width: 16,
-      height: 16,
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: 2,
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      "aria-hidden": true
-    };
-  }
-  function LogInIcon() {
-    return /* @__PURE__ */ React.createElement("svg", { ...iconProps() }, /* @__PURE__ */ React.createElement("path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" }), /* @__PURE__ */ React.createElement("polyline", { points: "10 17 15 12 10 7" }), /* @__PURE__ */ React.createElement("line", { x1: "15", y1: "12", x2: "3", y2: "12" }));
-  }
-  function UserPlusIcon() {
-    return /* @__PURE__ */ React.createElement("svg", { ...iconProps() }, /* @__PURE__ */ React.createElement("path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" }), /* @__PURE__ */ React.createElement("circle", { cx: "9", cy: "7", r: "4" }), /* @__PURE__ */ React.createElement("line", { x1: "19", y1: "8", x2: "19", y2: "14" }), /* @__PURE__ */ React.createElement("line", { x1: "22", y1: "11", x2: "16", y2: "11" }));
-  }
-
-  // frontend/src/templates/v1/views/auth/AuthLanding.tsx
-  init_define_import_meta_env();
-  function AuthLanding({ defaultTab }) {
-    const registering = defaultTab === "register";
-    return /* @__PURE__ */ React.createElement("div", { className: "relative flex min-h-screen items-center overflow-hidden" }, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        "aria-hidden": true,
-        className: "pointer-events-none absolute inset-0",
-        style: {
-          background: "radial-gradient(55% 55% at 18% 22%, rgba(255,94,58,0.14), transparent 70%),radial-gradient(45% 45% at 90% 85%, rgba(56,169,255,0.10), transparent 70%)"
-        }
-      }
-    ), /* @__PURE__ */ React.createElement("div", { className: "relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2" }, /* @__PURE__ */ React.createElement("div", { className: "landing-content" }, /* @__PURE__ */ React.createElement(
-      Link,
-      {
-        href: "/",
-        className: "inline-flex items-center gap-2 text-sm",
-        style: { color: "var(--tpl-muted)" }
-      },
-      /* @__PURE__ */ React.createElement(
-        "span",
-        {
-          className: "grid h-8 w-8 place-items-center rounded-lg text-sm font-bold",
-          style: { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" }
-        },
-        "S"
-      ),
-      "Sky Feeling \xB7 Social Network"
-    ), /* @__PURE__ */ React.createElement("h1", { className: "mt-6 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl" }, registering ? "Join the biggest social network" : "Welcome to the biggest social network"), /* @__PURE__ */ React.createElement("p", { className: "mt-5 max-w-md text-lg", style: { color: "var(--tpl-muted)" } }, "Share your thoughts, write posts, stream your favourite music, earn badges and much more."), /* @__PURE__ */ React.createElement(
-      Link,
-      {
-        href: registering ? "/login" : "/register",
-        className: "mt-8 inline-block rounded-lg border px-5 py-2.5 text-sm font-medium transition hover:bg-white/5",
-        style: { borderColor: "var(--tpl-border)" }
-      },
-      registering ? "I already have an account" : "Register now"
-    )), /* @__PURE__ */ React.createElement("div", { className: "flex justify-center md:justify-end" }, /* @__PURE__ */ React.createElement(AuthForm, { defaultTab }))));
-  }
-
-  // frontend/src/templates/v1/views/auth/LoginView.tsx
-  init_define_import_meta_env();
-  function LoginView() {
-    return /* @__PURE__ */ React.createElement(AuthLanding, { defaultTab: "login" });
-  }
-
-  // frontend/src/templates/v1/views/auth/RegisterView.tsx
-  init_define_import_meta_env();
-  function RegisterView() {
-    return /* @__PURE__ */ React.createElement(AuthLanding, { defaultTab: "register" });
-  }
-
-  // frontend/src/templates/v1/views/bank/AccountsView.tsx
-  init_define_import_meta_env();
-  var import_react20 = __toESM(require_react_shim());
-  var TYPES = ["cash", "checking", "savings", "credit_card", "ewallet", "other"];
-  function AccountsView() {
-    const qc = useQueryClient();
-    const { data: accounts = [], isLoading } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
-    const [name, setName] = (0, import_react20.useState)("");
-    const [type, setType] = (0, import_react20.useState)("cash");
-    const [currency, setCurrency] = (0, import_react20.useState)("VND");
-    const [opening, setOpening] = (0, import_react20.useState)(0);
-    const [err, setErr] = (0, import_react20.useState)(null);
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
-    const create2 = useMutation({
-      mutationFn: () => createAccount({ name, type, currency, opening_balance: opening }),
-      onSuccess: () => {
-        setName("");
-        setOpening(0);
-        setErr(null);
-        invalidate();
-      },
-      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not create account")
-    });
-    const archive = useMutation({
-      mutationFn: (a) => updateAccount(a.id, { archived: a.archived }),
-      onSuccess: invalidate
-    });
-    const remove = useMutation({
-      mutationFn: (id2) => deleteAccount(id2),
-      onSuccess: invalidate,
-      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not delete")
-    });
-    const active = accounts.filter((a) => !a.archived);
-    const archived = accounts.filter((a) => a.archived);
-    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("h1", { className: "mb-6 text-2xl font-bold" }, "Accounts"), /* @__PURE__ */ React.createElement(
-      "form",
-      {
-        className: "mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-800 bg-gray-900 p-4",
-        onSubmit: (e2) => {
-          e2.preventDefault();
-          if (name.trim()) create2.mutate();
-        }
-      },
-      /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          className: "col-span-2 rounded-md border border-gray-700 bg-gray-800 px-3 py-2",
-          placeholder: "Account name (e.g. TCB, Cash, Momo)",
-          value: name,
-          onChange: (e2) => setName(e2.target.value)
-        }
-      ),
-      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: type, onChange: (e2) => setType(e2.target.value) }, TYPES.map((t2) => /* @__PURE__ */ React.createElement("option", { key: t2, value: t2 }, t2.replace("_", " ")))),
-      /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2 uppercase",
-          value: currency,
-          maxLength: 3,
-          onChange: (e2) => setCurrency(e2.target.value.toUpperCase())
-        }
-      ),
-      /* @__PURE__ */ React.createElement("label", { className: "col-span-2 text-sm text-gray-400" }, "Opening balance"),
-      /* @__PURE__ */ React.createElement("div", { className: "col-span-2" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: opening, onChange: setOpening })),
-      /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "submit",
-          disabled: create2.isPending || !name.trim(),
-          className: "col-span-2 rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500 disabled:opacity-50"
-        },
-        "Add account"
-      ),
-      err && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-red-400" }, err)
-    ), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("ul", { className: "space-y-2" }, active.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium" }, a.name), /* @__PURE__ */ React.createElement("div", { className: "text-xs capitalize text-gray-400" }, a.type.replace("_", " "))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance, currency: a.currency, className: "font-semibold" }), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-gray-400 hover:text-white", onClick: () => archive.mutate({ id: a.id, archived: true }) }, "Archive"), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-red-400 hover:text-red-300", onClick: () => remove.mutate(a.id) }, "Delete")))), active.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "No accounts yet \u2014 add your first above.")), archived.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-8 text-sm font-semibold uppercase text-gray-500" }, "Archived"), /* @__PURE__ */ React.createElement("ul", { className: "space-y-2 opacity-60" }, archived.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 p-3" }, /* @__PURE__ */ React.createElement("span", null, a.name), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance, currency: a.currency }), /* @__PURE__ */ React.createElement("button", { className: "text-xs text-gray-400 hover:text-white", onClick: () => archive.mutate({ id: a.id, archived: false }) }, "Unarchive"))))))));
-  }
-
-  // frontend/src/templates/v1/views/bank/BudgetsView.tsx
-  init_define_import_meta_env();
-  var import_react21 = __toESM(require_react_shim());
-  function tree(categories) {
-    const expense = categories.filter((c) => c.kind === "expense");
-    const tops = expense.filter((c) => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name));
-    const out = [];
-    for (const p of tops) {
-      out.push(p);
-      out.push(...expense.filter((c) => c.parent_id === p.id).sort((a, b) => a.name.localeCompare(b.name)));
-    }
-    return out;
-  }
-  function BudgetsView() {
-    const qc = useQueryClient();
-    const [month, setMonth] = (0, import_react21.useState)(currentMonth());
-    const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
-    const { data: budgets } = useQuery({ queryKey: ["bank", "budgets", month], queryFn: () => listBudgets(month) });
-    const rows = (0, import_react21.useMemo)(() => tree(categories), [categories]);
-    const budgetByCat = (0, import_react21.useMemo)(() => {
-      const m = /* @__PURE__ */ new Map();
-      budgets?.budgets.forEach((b) => m.set(b.category_id, { amount: b.amount, spent: b.spent }));
-      return m;
-    }, [budgets]);
-    const [edits, setEdits] = (0, import_react21.useState)({});
-    const save = useMutation({
-      mutationFn: (v) => setBudget({ category_id: v.category_id, month: `${month}`, amount: v.amount || null }),
-      onSuccess: () => qc.invalidateQueries({ queryKey: ["bank", "budgets", month] })
-    });
-    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "Budgets"), /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: month, onChange: (e2) => setMonth(e2.target.value) })), /* @__PURE__ */ React.createElement("ul", { className: "space-y-1" }, rows.map((c) => {
-      const existing = budgetByCat.get(c.id);
-      const draft = edits[c.id] ?? existing?.amount ?? 0;
-      const pct = existing && existing.amount > 0 ? Math.round(existing.spent / existing.amount * 100) : 0;
-      const over = pct > 100;
-      return /* @__PURE__ */ React.createElement("li", { key: c.id, className: `rounded-lg border border-gray-800 bg-gray-900 p-3 ${c.parent_id ? "ml-6" : ""}` }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("span", { className: "flex-1 text-sm" }, c.parent_id ? "\xB7 " : "", c.name), /* @__PURE__ */ React.createElement("div", { className: "w-40" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: draft, onChange: (v) => setEdits((s) => ({ ...s, [c.id]: v })) })), /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          className: "rounded-md bg-blue-600 px-3 py-2 text-xs font-medium hover:bg-blue-500 disabled:opacity-50",
-          disabled: save.isPending || (edits[c.id] ?? existing?.amount ?? 0) === (existing?.amount ?? 0),
-          onClick: () => save.mutate({ category_id: c.id, amount: draft })
-        },
-        "Save"
-      )), existing && /* @__PURE__ */ React.createElement("div", { className: "mt-2" }, /* @__PURE__ */ React.createElement("div", { className: "h-2 overflow-hidden rounded-full bg-gray-700" }, /* @__PURE__ */ React.createElement("div", { className: `h-full ${over ? "bg-red-500" : "bg-blue-500"}`, style: { width: `${Math.min(pct, 100)}%` } })), /* @__PURE__ */ React.createElement("div", { className: "mt-1 flex justify-between text-[11px] text-gray-400" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: existing.spent }), " / ", /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: existing.amount })), /* @__PURE__ */ React.createElement("span", { className: over ? "text-red-400" : "" }, pct, "%"))));
-    })), /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-xs text-gray-500" }, "Set an amount and Save. Save with 0 to remove a budget."));
-  }
-
-  // frontend/src/templates/v1/views/bank/DashboardView.tsx
-  init_define_import_meta_env();
-  var import_react22 = __toESM(require_react_shim());
-  function byCurrency(accounts) {
-    var _a117;
-    const g = {};
-    for (const a of accounts) {
-      if (a.archived) continue;
-      (g[_a117 = a.currency] ?? (g[_a117] = [])).push(a);
-    }
-    return g;
-  }
-  function DashboardView() {
-    const [month, setMonth] = (0, import_react22.useState)(currentMonth());
-    const { data, isLoading } = useQuery({ queryKey: ["bank", "dashboard", month], queryFn: () => getDashboard(month) });
-    const groups = (0, import_react22.useMemo)(() => byCurrency(data?.accounts ?? []), [data]);
-    const budgetSet = (0, import_react22.useMemo)(() => new Set(data?.budgets.map((b) => b.category_id)), [data]);
-    const topBudgets = (data?.budgets ?? []).filter((b) => !(b.parent_id && budgetSet.has(b.parent_id)));
-    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-4xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "Ledger"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: month, onChange: (e2) => setMonth(e2.target.value) }), /* @__PURE__ */ React.createElement(Link, { href: "/bank/transactions", className: "rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium hover:bg-blue-500" }, "+ Add"))), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : /* @__PURE__ */ React.createElement("div", { className: "space-y-8" }, /* @__PURE__ */ React.createElement("section", null, Object.entries(groups).map(([cur, accts]) => {
-      const total = accts.reduce((s, a) => s + a.balance, 0);
-      return /* @__PURE__ */ React.createElement("div", { key: cur, className: "mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between text-sm text-gray-400" }, /* @__PURE__ */ React.createElement("span", null, "Balance (", cur, ")"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: total, className: "text-lg font-bold text-white" })), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800" }, accts.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex justify-between py-1.5 text-sm" }, /* @__PURE__ */ React.createElement("span", null, a.name), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: a.balance })))));
-    }), Object.keys(groups).length === 0 && /* @__PURE__ */ React.createElement(Link, { href: "/bank/accounts", className: "block rounded-lg border border-dashed border-gray-700 p-6 text-center text-gray-400 hover:bg-gray-900" }, "No accounts yet \u2014 add one to get started.")), /* @__PURE__ */ React.createElement("section", { className: "grid grid-cols-2 gap-4" }, /* @__PURE__ */ React.createElement("div", { className: "rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs uppercase text-gray-500" }, "Income"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data?.income ?? 0, className: "text-xl font-bold text-green-400" })), /* @__PURE__ */ React.createElement("div", { className: "rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs uppercase text-gray-500" }, "Expense"), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: data?.expense ?? 0, className: "text-xl font-bold text-red-400" }))), topBudgets.length > 0 && /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-semibold uppercase text-gray-500" }, "Budgets"), /* @__PURE__ */ React.createElement(Link, { href: "/bank/budgets", className: "text-xs text-blue-400 hover:underline" }, "Manage")), /* @__PURE__ */ React.createElement("ul", { className: "space-y-3" }, topBudgets.map((b) => {
-      const pct = b.amount > 0 ? Math.round(b.spent / b.amount * 100) : 0;
-      const over = pct > 100;
-      return /* @__PURE__ */ React.createElement("li", { key: b.category_id }, /* @__PURE__ */ React.createElement("div", { className: "mb-1 flex justify-between text-sm" }, /* @__PURE__ */ React.createElement("span", null, b.name), /* @__PURE__ */ React.createElement("span", { className: over ? "text-red-400" : "text-gray-400" }, pct, "%")), /* @__PURE__ */ React.createElement("div", { className: "h-2 overflow-hidden rounded-full bg-gray-700" }, /* @__PURE__ */ React.createElement("div", { className: `h-full ${over ? "bg-red-500" : "bg-blue-500"}`, style: { width: `${Math.min(pct, 100)}%` } })));
-    }))), /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-semibold uppercase text-gray-500" }, "Recent"), /* @__PURE__ */ React.createElement(Link, { href: "/bank/transactions", className: "text-xs text-blue-400 hover:underline" }, "All")), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, (data?.recent ?? []).map((t2) => /* @__PURE__ */ React.createElement("li", { key: t2.id, className: "flex justify-between px-4 py-2 text-sm" }, /* @__PURE__ */ React.createElement("span", { className: "text-gray-300" }, t2.occurred_at, t2.is_transfer ? " \xB7 Transfer" : "", t2.note ? ` \xB7 ${t2.note}` : ""), /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: t2.direction === "credit" ? t2.amount : -t2.amount, signed: true }))), (data?.recent ?? []).length === 0 && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-4 text-center text-gray-500" }, "No transactions yet.")))));
-  }
-
-  // frontend/src/templates/v1/views/bank/TransactionsView.tsx
-  init_define_import_meta_env();
-  var import_react23 = __toESM(require_react_shim());
-  function today() {
-    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  }
-  function TransactionsView() {
-    const qc = useQueryClient();
-    const { data: accounts = [] } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
-    const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
-    const [monthFilter, setMonthFilter] = (0, import_react23.useState)("");
-    const [accountFilter, setAccountFilter] = (0, import_react23.useState)("");
-    const list = useInfiniteQuery({
-      queryKey: ["bank", "transactions", { month: monthFilter, account: accountFilter }],
-      queryFn: ({ pageParam }) => listTransactions({ cursor: pageParam || void 0, month: monthFilter || void 0, account: accountFilter || void 0 }),
-      initialPageParam: "",
-      getNextPageParam: (last) => last.next_cursor || void 0
-    });
-    const active = accounts.filter((a) => !a.archived);
-    const [amount, setAmount] = (0, import_react23.useState)(0);
-    const [direction, setDirection] = (0, import_react23.useState)("debit");
-    const [accountId, setAccountId] = (0, import_react23.useState)("");
-    const [categoryId, setCategoryId] = (0, import_react23.useState)("");
-    const [date, setDate] = (0, import_react23.useState)(today());
-    const [note, setNote] = (0, import_react23.useState)("");
-    const [err, setErr] = (0, import_react23.useState)(null);
-    const kindForDir = direction === "debit" ? "expense" : "income";
-    const pickableCats = (0, import_react23.useMemo)(() => categories.filter((c) => c.kind === kindForDir), [categories, kindForDir]);
-    const accountName = (id2) => accounts.find((a) => a.id === id2)?.name ?? "\u2014";
-    const categoryName = (id2) => categories.find((c) => c.id === id2)?.name ?? null;
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
-    const add = useMutation({
-      mutationFn: () => createTransaction({
-        account_id: accountId || active[0]?.id || "",
-        category_id: categoryId || pickableCats[0]?.id || "",
-        amount,
-        direction,
-        occurred_at: date,
-        note: note || null
-      }),
-      onSuccess: () => {
-        setAmount(0);
-        setNote("");
-        setErr(null);
-        invalidate();
-      },
-      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not save")
-    });
-    const remove = useMutation({
-      mutationFn: (id2) => deleteTransaction(id2),
-      onSuccess: invalidate,
-      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not delete")
-    });
-    const rows = list.data?.pages.flatMap((p) => p.transactions) ?? [];
-    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("h1", { className: "mb-6 text-2xl font-bold" }, "Transactions"), /* @__PURE__ */ React.createElement(
-      "form",
-      {
-        className: "mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-800 bg-gray-900 p-4",
-        onSubmit: (e2) => {
-          e2.preventDefault();
-          if (amount > 0) add.mutate();
-        }
-      },
-      /* @__PURE__ */ React.createElement("div", { className: "col-span-2 flex gap-2" }, /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "button",
-          className: `flex-1 rounded-md py-2 text-sm font-medium ${direction === "debit" ? "bg-red-600" : "bg-gray-800"}`,
-          onClick: () => {
-            setDirection("debit");
-            setCategoryId("");
-          }
-        },
-        "Expense"
-      ), /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "button",
-          className: `flex-1 rounded-md py-2 text-sm font-medium ${direction === "credit" ? "bg-green-600" : "bg-gray-800"}`,
-          onClick: () => {
-            setDirection("credit");
-            setCategoryId("");
-          }
-        },
-        "Income"
-      )),
-      /* @__PURE__ */ React.createElement("div", { className: "col-span-2" }, /* @__PURE__ */ React.createElement(MoneyInput, { value: amount, onChange: setAmount, placeholder: "Amount" })),
-      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: accountId, onChange: (e2) => setAccountId(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, active[0] ? `Account: ${active[0].name}` : "No account"), active.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name))),
-      /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: categoryId, onChange: (e2) => setCategoryId(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, pickableCats[0] ? `Category: ${pickableCats[0].name}` : "No category"), pickableCats.map((c) => /* @__PURE__ */ React.createElement("option", { key: c.id, value: c.id }, c.parent_id ? "\xB7 " : "", c.name))),
-      /* @__PURE__ */ React.createElement("input", { type: "date", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", value: date, onChange: (e2) => setDate(e2.target.value) }),
-      /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Note (optional)", value: note, onChange: (e2) => setNote(e2.target.value) }),
-      /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || amount <= 0 || active.length === 0, className: "col-span-2 rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500 disabled:opacity-50" }, "Add transaction"),
-      active.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-yellow-500" }, "Create an account first."),
-      err && /* @__PURE__ */ React.createElement("p", { className: "col-span-2 text-sm text-red-400" }, err)
-    ), /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex gap-2" }, /* @__PURE__ */ React.createElement("input", { type: "month", className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: monthFilter, onChange: (e2) => setMonthFilter(e2.target.value) }), /* @__PURE__ */ React.createElement("select", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm", value: accountFilter, onChange: (e2) => setAccountFilter(e2.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "All accounts"), accounts.map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name)))), /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, rows.map((t2) => /* @__PURE__ */ React.createElement("li", { key: t2.id, className: "flex items-center justify-between px-4 py-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 text-sm" }, /* @__PURE__ */ React.createElement("span", null, categoryName(t2.category_id) ?? (t2.is_transfer ? "Transfer" : "\u2014")), t2.is_transfer && /* @__PURE__ */ React.createElement("span", { className: "rounded bg-indigo-900 px-1.5 py-0.5 text-[10px] uppercase text-indigo-300" }, "transfer")), /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-500" }, t2.occurred_at, " \xB7 ", accountName(t2.account_id), t2.note ? ` \xB7 ${t2.note}` : "")), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(MoneyDisplay, { amount: t2.direction === "credit" ? t2.amount : -t2.amount, signed: true, className: "text-sm font-medium" }), !t2.is_transfer && /* @__PURE__ */ React.createElement("button", { className: "text-xs text-red-400 hover:text-red-300", onClick: () => remove.mutate(t2.id) }, "\u2715")))), rows.length === 0 && !list.isLoading && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-6 text-center text-gray-500" }, "No transactions.")), list.hasNextPage && /* @__PURE__ */ React.createElement("button", { className: "mt-4 w-full rounded-md border border-gray-700 py-2 text-sm text-gray-300 hover:bg-gray-800", onClick: () => list.fetchNextPage(), disabled: list.isFetchingNextPage }, list.isFetchingNextPage ? "Loading\u2026" : "Load more"));
-  }
-
-  // frontend/src/templates/v1/views/calendar/CalendarView.tsx
-  init_define_import_meta_env();
-  var import_react24 = __toESM(require_react_shim());
-  var WEEKDAYS2 = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  var WEEKDAY_FULL = ["Ch\u1EE7 Nh\u1EADt", "Th\u1EE9 Hai", "Th\u1EE9 Ba", "Th\u1EE9 T\u01B0", "Th\u1EE9 N\u0103m", "Th\u1EE9 S\xE1u", "Th\u1EE9 B\u1EA3y"];
-  var MAX_PAGES = 12;
-  function CalendarView() {
-    const { data: tc } = useTimeConfig();
-    const qc = useQueryClient();
-    const [ym, setYm] = (0, import_react24.useState)(null);
-    const [selectedDay, setSelectedDay] = (0, import_react24.useState)(null);
-    const [noteTime, setNoteTime] = (0, import_react24.useState)("12:00");
-    const [bodyMd, setBodyMd] = (0, import_react24.useState)("");
-    const [mood, setMood] = (0, import_react24.useState)("");
-    const [formError, setFormError] = (0, import_react24.useState)(null);
-    const q = useInfiniteQuery({
-      queryKey: ["journal", "all"],
-      queryFn: ({ pageParam }) => listEntries({ cursor: pageParam }),
-      initialPageParam: void 0,
-      getNextPageParam: (last) => last.next_cursor ?? void 0
-    });
-    const entries = (0, import_react24.useMemo)(() => q.data?.pages.flatMap((p) => p.items) ?? [], [q.data]);
-    (0, import_react24.useEffect)(() => {
-      if (tc && !ym) {
-        const c = zonedYMD(tc.now, tc.timezone);
-        setYm({ year: c.year, month: c.month });
-      }
-    }, [tc, ym]);
-    (0, import_react24.useEffect)(() => {
-      if (!ym || !q.hasNextPage || q.isFetchingNextPage) return;
-      const oldest = entries[entries.length - 1];
-      const monthStart = Date.UTC(ym.year, ym.month, 1);
-      if ((!oldest || new Date(oldest.occurred_at).getTime() >= monthStart) && (q.data?.pages.length ?? 0) < MAX_PAGES) {
-        q.fetchNextPage();
-      }
-    }, [entries, ym, q]);
-    const lunarByDay = (0, import_react24.useMemo)(() => {
-      const map = /* @__PURE__ */ new Map();
-      if (!ym) return map;
-      const dim = new Date(Date.UTC(ym.year, ym.month + 1, 0)).getUTCDate();
-      for (let d = 1; d <= dim; d += 1) map.set(d, solarToLunar(d, ym.month + 1, ym.year));
-      return map;
-    }, [ym]);
-    const byDay = (0, import_react24.useMemo)(() => {
-      const map = /* @__PURE__ */ new Map();
-      if (!tc || !ym) return map;
-      for (const e2 of entries) {
-        const p = zonedYMD(new Date(e2.occurred_at), tc.timezone);
-        if (p.year === ym.year && p.month === ym.month) {
-          const list = map.get(p.day);
-          if (list) list.push(e2);
-          else map.set(p.day, [e2]);
-        }
-      }
-      return map;
-    }, [entries, tc, ym]);
-    const create2 = useMutation({
-      mutationFn: (input) => createEntry(input),
-      onSuccess: () => {
-        setBodyMd("");
-        setMood("");
-        setNoteTime("12:00");
-        setFormError(null);
-        qc.invalidateQueries({ queryKey: ["journal"] });
-        qc.invalidateQueries({ queryKey: ["stream"] });
-      },
-      onError: (err) => setFormError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ghi ch\xFA")
-    });
-    if (!tc || !ym) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i l\u1ECBch\u2026");
-    const { year, month } = ym;
-    const cfgTz = tc.timezone;
-    const today2 = zonedYMD(tc.now, cfgTz);
-    const isThisMonth = today2.year === year && today2.month === month;
-    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-    const firstDow = (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7;
-    const cells = [
-      ...Array.from({ length: firstDow }, () => null),
-      ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
-    ];
-    const yearLunar = lunarByDay.get(1)?.year ?? year;
-    function shiftMonth(delta) {
-      setSelectedDay(null);
-      setYm((m) => {
-        if (!m) return m;
-        const d = new Date(Date.UTC(m.year, m.month + delta, 1));
-        return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
-      });
-    }
-    function selectDay(day) {
-      setSelectedDay(day);
-      setNoteTime("12:00");
-      setBodyMd("");
-      setMood("");
-      setFormError(null);
-    }
-    function handleCreate() {
-      const body = bodyMd.trim();
-      if (!body || create2.isPending || selectedDay == null) return;
-      const mm = String(month + 1).padStart(2, "0");
-      const dd = String(selectedDay).padStart(2, "0");
-      const input = {
-        body_md: body,
-        occurred_at: fromDatetimeLocalInTz(`${year}-${mm}-${dd}T${noteTime}`, cfgTz)
-      };
-      const m = mood.trim();
-      if (m) input.mood = m;
-      create2.mutate(input);
-    }
-    const timeLabel = (iso) => new Intl.DateTimeFormat("en-GB", { timeZone: cfgTz, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-    const selLunar = selectedDay != null ? lunarByDay.get(selectedDay) : null;
-    const selEntries = selectedDay != null ? byDay.get(selectedDay) ?? [] : [];
-    const selWeekday = selectedDay != null ? WEEKDAY_FULL[new Date(Date.UTC(year, month, selectedDay)).getUTCDay()] : "";
-    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]" }, /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("header", { className: "mb-4 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\xC2m l\u1ECBch \xB7 n\u0103m ", canChiYear(yearLunar))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth(-1) }), /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: () => {
-          const c = zonedYMD(tc.now, cfgTz);
-          setSelectedDay(null);
-          setYm({ year: c.year, month: c.month });
-        },
-        className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)]",
-        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-      },
-      "H\xF4m nay"
-    ), /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth(1) }))), /* @__PURE__ */ React.createElement("div", { className: "mb-2 grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold", style: { color: "var(--tpl-muted)" } }, WEEKDAYS2.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, style: i === 6 ? { color: "var(--tpl-accent)" } : void 0 }, d))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-1.5" }, cells.map((day, i) => {
-      if (day === null) return /* @__PURE__ */ React.createElement("span", { key: `b${i}` });
-      const lunar = lunarByDay.get(day);
-      const hasNotes = (byDay.get(day)?.length ?? 0) > 0;
-      const isToday = isThisMonth && day === today2.day;
-      const isSelected = day === selectedDay;
-      const isMonthStart = lunar?.day === 1;
-      return /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          key: day,
-          type: "button",
-          onClick: () => selectDay(day),
-          className: "relative flex aspect-square flex-col items-center justify-center rounded-xl border transition hover:border-[var(--tpl-accent)]",
-          style: {
-            borderColor: isSelected ? "var(--tpl-accent)" : "var(--tpl-border)",
-            background: isSelected ? "var(--tpl-surface-2)" : isToday ? "color-mix(in srgb, var(--tpl-accent) 12%, transparent)" : "transparent"
-          }
-        },
-        hasNotes && /* @__PURE__ */ React.createElement("span", { className: "absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full", style: { background: "var(--tpl-accent)" } }),
-        /* @__PURE__ */ React.createElement("span", { className: "text-base font-semibold leading-none", style: { color: isToday ? "var(--tpl-accent)" : "var(--tpl-heading)" } }, day),
-        /* @__PURE__ */ React.createElement(
-          "span",
-          {
-            className: "mt-1 text-[10px] leading-none",
-            style: { color: isMonthStart ? "var(--tpl-accent)" : "var(--tpl-muted)", fontWeight: isMonthStart ? 700 : 400 }
-          },
-          isMonthStart ? `1/${lunar?.month}` : lunar?.day
-        )
-      );
-    }))), /* @__PURE__ */ React.createElement("aside", { className: "space-y-4" }, selectedDay == null || !selLunar ? /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-6 text-center text-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)", color: "var(--tpl-muted)" } }, "Ch\u1ECDn m\u1ED9t ng\xE0y \u0111\u1EC3 xem \xE2m l\u1ECBch v\xE0 th\xEAm ghi ch\xFA.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "overflow-hidden rounded-2xl border shadow-sm", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "p-4 text-white", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-blue))" } }, /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, selWeekday), /* @__PURE__ */ React.createElement("p", { className: "text-2xl font-bold leading-tight" }, selectedDay, " th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm text-white/90" }, "\xC2m l\u1ECBch: ", /* @__PURE__ */ React.createElement("b", null, selLunar.day, "/", selLunar.month, selLunar.leap ? " (nhu\u1EADn)" : ""), " \xB7 n\u0103m ", canChiYear(selLunar.year)), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "Ng\xE0y ", canChiDay(selectedDay, month + 1, year)))), /* @__PURE__ */ React.createElement(
-      "form",
-      {
-        onSubmit: (e2) => {
-          e2.preventDefault();
-          handleCreate();
-        },
-        className: "rounded-2xl border p-4 shadow-sm",
-        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
-      },
-      /* @__PURE__ */ React.createElement("label", { className: "mb-2 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, "Ghi ch\xFA m\u1EDBi"),
-      /* @__PURE__ */ React.createElement(
-        "textarea",
-        {
-          value: bodyMd,
-          onChange: (e2) => setBodyMd(e2.target.value),
-          rows: 3,
-          placeholder: "H\xF4m nay c\xF3 g\xEC \u0111\xE1ng nh\u1EDB?",
-          className: "w-full resize-none rounded-xl border bg-transparent p-3 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
-          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
-        }
-      ),
-      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }, title: "Gi\u1EDD" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": true }, "\u{1F551}"), /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "time",
-          value: noteTime,
-          onChange: (e2) => setNoteTime(e2.target.value),
-          "aria-label": "Gi\u1EDD",
-          className: "bg-transparent text-sm outline-none",
-          style: { color: "var(--tpl-text)" }
-        }
-      )), /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "text",
-          value: mood,
-          onChange: (e2) => setMood(e2.target.value),
-          maxLength: 80,
-          placeholder: "T\xE2m tr\u1EA1ng (tu\u1EF3 ch\u1ECDn)",
-          "aria-label": "T\xE2m tr\u1EA1ng",
-          className: "min-w-0 flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
-          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
-        }
-      )),
-      formError && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-3 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, formError),
-      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex justify-end" }, /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          type: "submit",
-          disabled: !bodyMd.trim() || create2.isPending,
-          className: "rounded-xl px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
-        },
-        create2.isPending ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u ghi ch\xFA"
-      ))
-    ), selEntries.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "px-1 text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ghi ch\xFA cho ng\xE0y n\xE0y.") : selEntries.map((e2) => /* @__PURE__ */ React.createElement("article", { key: e2.id, className: "rounded-2xl border p-4 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-1 flex items-center gap-2 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-1.5 py-0.5 font-semibold", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, timeLabel(e2.occurred_at)), e2.mood ? /* @__PURE__ */ React.createElement("span", null, "\xB7 ", e2.mood) : null), /* @__PURE__ */ React.createElement("p", { className: "whitespace-pre-wrap text-sm", style: { color: "var(--tpl-heading)" } }, e2.body_md))))));
-  }
-  function NavBtn2({ label, glyph, onClick }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick,
-        "aria-label": label,
-        title: label,
-        className: "grid h-8 w-8 place-items-center rounded-lg border text-lg leading-none transition hover:bg-[var(--tpl-surface-2)]",
-        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-      },
-      glyph
-    );
-  }
-
-  // frontend/src/templates/v1/views/home/HomeView.tsx
-  init_define_import_meta_env();
-  var import_react25 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/src/lib/stream.ts
-  init_define_import_meta_env();
-  async function getStream(cursor) {
-    const q = cursor ? `?cursor=${cursor}` : "";
-    const r2 = await api(`/api/v1/stream${q}`);
-    return { items: r2.items ?? [], next_cursor: r2.next_cursor };
-  }
-
-  // frontend/src/templates/v1/views/home/HomeView.tsx
-  var STREAM_KEY = ["stream"];
-  function HomeView() {
-    const displayName = useDisplayName();
-    const qc = useQueryClient();
-    const [bodyMd, setBodyMd] = (0, import_react25.useState)("");
-    const [composerError, setComposerError] = (0, import_react25.useState)(null);
-    const query = useInfiniteQuery({
-      queryKey: STREAM_KEY,
-      queryFn: ({ pageParam }) => getStream(pageParam),
-      initialPageParam: void 0,
-      getNextPageParam: (last) => last.next_cursor ?? void 0
-    });
-    const items = (0, import_react25.useMemo)(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
-    const create2 = useMutation({
-      mutationFn: (input) => createEntry(input),
-      onMutate: async (input) => {
-        await qc.cancelQueries({ queryKey: STREAM_KEY });
-        const previous = qc.getQueryData(STREAM_KEY);
-        const optimistic = {
-          id: makeTempId(),
-          source_module: "journal",
-          event_type: "journal:entry_created",
-          occurred_at: input.occurred_at ?? (/* @__PURE__ */ new Date()).toISOString(),
-          body_md: input.body_md,
-          mood: null
-        };
-        qc.setQueryData(STREAM_KEY, (data) => prepend(data, optimistic));
-        return { previous };
-      },
-      onError: (err, input, ctx) => {
-        if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
-        setBodyMd(input.body_md);
-        setComposerError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not post");
-      },
-      onSuccess: () => {
-        setComposerError(null);
-        qc.invalidateQueries({ queryKey: STREAM_KEY });
-      }
-    });
-    function handleCreate() {
-      const body = bodyMd.trim();
-      if (!body || create2.isPending) return;
-      setComposerError(null);
-      setBodyMd("");
-      create2.mutate({ body_md: body });
-    }
-    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]" }, /* @__PURE__ */ React.createElement("div", { className: "hidden space-y-5 lg:block" }, /* @__PURE__ */ React.createElement(FinanceWidget, null), /* @__PURE__ */ React.createElement(ContinueWidget, null), /* @__PURE__ */ React.createElement(WeatherWidget, null), /* @__PURE__ */ React.createElement(CalendarWidget, null), /* @__PURE__ */ React.createElement(PagesWidget, null)), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 space-y-5" }, /* @__PURE__ */ React.createElement(
-      Composer,
-      {
-        displayName,
-        bodyMd,
-        onBodyMdChange: setBodyMd,
-        onSubmit: handleCreate,
-        submitting: create2.isPending,
-        error: composerError
-      }
-    ), query.isPending ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Loading your stream\u2026") : query.isError ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Couldn't load your stream.", " ", /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => query.refetch(), className: "underline" }, "Retry")) : items.length === 0 ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Your life-stream is empty \u2014 write your first note above.") : /* @__PURE__ */ React.createElement(React.Fragment, null, items.map((it) => /* @__PURE__ */ React.createElement(StreamItemCard, { key: it.id, item: it, displayName })), query.hasNextPage && /* @__PURE__ */ React.createElement("div", { className: "flex justify-center" }, /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: () => query.fetchNextPage(),
-        disabled: query.isFetchingNextPage,
-        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
-        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
-      },
-      query.isFetchingNextPage ? "Loading\u2026" : "Load more"
-    )))), /* @__PURE__ */ React.createElement("aside", { className: "hidden space-y-5 2xl:block" }, /* @__PURE__ */ React.createElement(BirthdayCard, null), /* @__PURE__ */ React.createElement(FriendSuggestions, null), /* @__PURE__ */ React.createElement(ActivityFeed, null)));
-  }
-  function useDisplayName() {
-    const [name, setName] = (0, import_react25.useState)("You");
-    (0, import_react25.useEffect)(() => {
-      let alive = true;
-      fetch(`${baseURL2}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((me) => {
-        if (alive && me?.display_name) setName(me.display_name);
-      }).catch(() => {
-      });
-      return () => {
-        alive = false;
-      };
-    }, []);
-    return name;
-  }
-  function prepend(data, item) {
-    const first = data?.pages[0];
-    if (!data || !first) {
-      return { pages: [{ items: [item] }], pageParams: [void 0] };
-    }
-    return { ...data, pages: [{ ...first, items: [item, ...first.items] }, ...data.pages.slice(1)] };
-  }
-  var tempSeq = 0;
-  function makeTempId() {
-    tempSeq += 1;
-    return `temp-${tempSeq}`;
-  }
-
-  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
-  init_define_import_meta_env();
-  var import_react26 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/src/lib/media-upload.ts
-  init_define_import_meta_env();
-  async function uploadImage(file, onProgress) {
-    const contentType = file.type || guessType(file.name);
-    if (!contentType.startsWith("image/")) throw new Error("Ch\u1EC9 ch\u1EA5p nh\u1EADn t\u1EC7p \u1EA3nh.");
-    const cr = await fetch(`${baseURL}/api/v1/assets`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name, content_type: contentType, size_bytes: file.size })
-    });
-    if (!cr.ok) throw new Error("Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c phi\xEAn t\u1EA3i l\xEAn.");
-    const { asset } = await cr.json();
-    await putWithProgress(`${baseURL}/api/v1/assets/${asset.id}/source`, file, contentType, onProgress);
-    const co = await fetch(`${baseURL}/api/v1/assets/${asset.id}/complete`, { method: "POST", credentials: "include" });
-    if (!co.ok) throw new Error("Kh\xF4ng ho\xE0n t\u1EA5t \u0111\u01B0\u1EE3c t\u1EA3i l\xEAn.");
-    const done = await poll(asset.id);
-    if (done.status !== "ready") throw new Error(done.error || "X\u1EED l\xFD \u1EA3nh th\u1EA5t b\u1EA1i.");
-    return { assetId: done.id, width: done.width, height: done.height };
-  }
-  function guessType(name) {
-    const ext = name.toLowerCase().split(".").pop() ?? "";
-    return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" }[ext] ?? "application/octet-stream";
-  }
-  function putWithProgress(url, file, contentType, onProgress) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", url);
-      xhr.withCredentials = true;
-      xhr.setRequestHeader("Content-Type", contentType);
-      xhr.upload.onprogress = (e2) => {
-        if (e2.lengthComputable && onProgress) onProgress(Math.round(e2.loaded / e2.total * 100));
-      };
-      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i l\xEAn l\u1ED7i (${xhr.status}).`));
-      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i l\xEAn."));
-      xhr.send(file);
-    });
-  }
-  async function poll(id2) {
-    for (let i = 0; i < 120; i += 1) {
-      const r2 = await fetch(`${baseURL}/api/v1/assets/${id2}`, { credentials: "include" });
-      if (r2.ok) {
-        const a = await r2.json();
-        if (a.status === "ready" || a.status === "failed") return a;
-      }
-      await new Promise((res) => setTimeout(res, 1500));
-    }
-    return { id: id2, status: "failed", width: null, height: null, error: "H\u1EBFt th\u1EDDi gian ch\u1EDD x\u1EED l\xFD \u1EA3nh." };
-  }
-
-  // frontend/node_modules/portal-frontend/src/lib/comic-import.ts
-  init_define_import_meta_env();
-  async function createImport(chapterId) {
-    return api(`/api/v1/chapters/${chapterId}/imports`, { method: "POST" });
-  }
-  async function createComicImport(comicId) {
-    return api(`/api/v1/comics/${comicId}/imports`, { method: "POST" });
-  }
-  async function getImport(importId) {
-    return api(`/api/v1/imports/${importId}`);
-  }
-  function runZipImport(chapterId, file, onProgress) {
-    return runImport(() => createImport(chapterId), file, onProgress);
-  }
-  function runComicZipImport(comicId, file, onProgress) {
-    return runImport(() => createComicImport(comicId), file, onProgress);
-  }
-  async function runImport(createJob, file, onProgress) {
-    const job = await createJob();
-    onProgress({ phase: "uploading", uploadPct: 0 });
-    await putZip(job.id, file, (pct) => onProgress({ phase: "uploading", uploadPct: pct }));
-    onProgress({ phase: "processing" });
-    let last = job;
-    for (let i = 0; i < 3600; i += 1) {
-      await sleep2(2e3);
-      last = await getImport(job.id);
-      onProgress({ phase: "processing", job: last });
-      if (last.status === "done" || last.status === "failed") return last;
-    }
-    return last;
-  }
-  function putZip(importId, file, onProgress) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", `${baseURL}/api/v1/imports/${importId}/zip`);
-      xhr.withCredentials = true;
-      xhr.setRequestHeader("Content-Type", "application/zip");
-      xhr.upload.onprogress = (e2) => {
-        if (e2.lengthComputable) onProgress(Math.round(e2.loaded / e2.total * 100));
-      };
-      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i zip l\u1ED7i (${xhr.status})${zipErrDetail(xhr.responseText)}.`));
-      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i zip."));
-      xhr.send(file);
-    });
-  }
-  function zipErrDetail(body) {
-    try {
-      const detail = JSON.parse(body).detail;
-      return detail ? `: ${detail}` : "";
-    } catch {
-      return "";
-    }
-  }
-  var sleep2 = (ms2) => new Promise((r2) => setTimeout(r2, ms2));
-
-  // frontend/node_modules/portal-frontend/src/lib/comic-sync.ts
-  init_define_import_meta_env();
-  async function listSyncSources(comicId) {
-    const r2 = await api(`/api/v1/comics/${comicId}/sync-sources`);
-    return r2.sources ?? [];
-  }
-  async function createSyncSource(comicId, body) {
-    return api(`/api/v1/comics/${comicId}/sync-sources`, { method: "POST", body: JSON.stringify(body) });
-  }
-  async function triggerSync(sourceId) {
-    return api(`/api/v1/sync-sources/${sourceId}/sync`, { method: "POST" });
-  }
-  async function cancelSync(sourceId) {
-    return api(`/api/v1/sync-sources/${sourceId}/cancel`, { method: "POST" });
-  }
-  async function deleteSyncSource(sourceId) {
-    await api(`/api/v1/sync-sources/${sourceId}`, { method: "DELETE" });
-  }
-
-  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
-  function ComicDetailView({ id: id2 }) {
-    const { data: comic, isLoading } = useQuery({ queryKey: ["comic", id2], queryFn: () => getComic(id2) });
-    const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => api2("/api/v1/auth/me").catch(() => ({})) });
-    if (isLoading) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026");
-    if (!comic) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-heading)" } }, "Kh\xF4ng t\xECm th\u1EA5y truy\u1EC7n.");
-    const isOwner = !!me?.id && me.id === comic.owner_id;
-    return isOwner ? /* @__PURE__ */ React.createElement(OwnerManager, { id: id2, comic }) : /* @__PURE__ */ React.createElement(ReadView, { id: id2, comic });
-  }
-  function ReadView({ id: id2, comic }) {
-    const continueHref = comic.progress ? `/library/comic/${id2}/read/${comic.progress.chapter_id}` : comic.chapters[0] ? `/library/comic/${id2}/read/${comic.chapters[0].id}` : null;
-    return /* @__PURE__ */ React.createElement("div", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-6" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("div", { className: "flex-1" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), comic.description && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "var(--tpl-muted)" } }, comic.description), continueHref && /* @__PURE__ */ React.createElement(Link, { href: continueHref, className: "mt-4 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, comic.progress ? "\u0110\u1ECDc ti\u1EBFp" : "B\u1EAFt \u0111\u1EA7u \u0111\u1ECDc"))), /* @__PURE__ */ React.createElement(ChapterList, { id: id2, chapters: comic.chapters }));
-  }
-  function ChapterList({ id: id2, chapters }) {
-    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-8 text-xs font-semibold uppercase tracking-wider", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0\u01A1ng"), /* @__PURE__ */ React.createElement("ul", { className: "overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement("li", { key: ch.id, className: "border-t first:border-t-0", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${ch.id}`, className: "flex justify-between px-4 py-3 text-sm transition hover:bg-[var(--tpl-surface-2)]" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, i + 1, ". ", ch.title), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, new Date(ch.created_at).toLocaleDateString("vi-VN"))))), chapters.length === 0 && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-4 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng n\xE0o.")));
-  }
-  function OwnerManager({ id: id2, comic }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "space-y-6", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Link, { href: "/library/comic", className: "mb-1 inline-flex items-center gap-1 text-sm font-medium transition hover:opacity-80", style: { color: "var(--tpl-muted)" } }, "\u2190 Danh s\xE1ch truy\u1EC7n"), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Qu\u1EA3n l\xFD truy\u1EC7n \xB7 ", comic.chapters.length, " ch\u01B0\u01A1ng")), comic.chapters[0] && /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${comic.chapters[0].id}`, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u0110\u1ECDc th\u1EED")), /* @__PURE__ */ React.createElement(SettingsCard, { id: id2, comic }), /* @__PURE__ */ React.createElement(SyncSourcesManager, { id: id2 }), /* @__PURE__ */ React.createElement(ChaptersManager, { id: id2, comic }));
-  }
-  function SyncSourcesManager({ id: id2 }) {
-    const qc = useQueryClient();
-    const [url, setUrl] = (0, import_react26.useState)("");
-    const [hint, setHint] = (0, import_react26.useState)("");
-    const [err, setErr] = (0, import_react26.useState)(null);
-    const sources = useQuery({
-      queryKey: ["sync-sources", id2],
-      queryFn: () => listSyncSources(id2),
-      refetchInterval: (q) => (q.state.data ?? []).some((s) => s.last_status === "syncing") ? 3e3 : false
-    });
-    const list = sources.data ?? [];
-    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : e2 instanceof Error ? e2.message : "C\xF3 l\u1ED7i x\u1EA3y ra");
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["sync-sources", id2] });
-    const add = useMutation({ mutationFn: () => createSyncSource(id2, { source_url: url.trim(), chapters_hint: hint.trim() }), onSuccess: () => {
-      setErr(null);
-      setUrl("");
-      setHint("");
-      invalidate();
-    }, onError: onErr });
-    const sync = useMutation({ mutationFn: (sid) => triggerSync(sid), onSuccess: () => {
-      setErr(null);
-      invalidate();
-    }, onError: onErr });
-    const cancel = useMutation({ mutationFn: (sid) => cancelSync(sid), onSuccess: () => {
-      setErr(null);
-      invalidate();
-    }, onError: onErr });
-    const del = useMutation({ mutationFn: (sid) => deleteSyncSource(sid), onSuccess: invalidate, onError: onErr });
-    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ngu\u1ED3n \u0111\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EF1 \u0111\u1ED9ng c\xE0o truy\u1EC7n t\u1EEB ngu\u1ED3n ngo\xE0i r\u1ED3i nh\u1EADp v\xE0o b\u1ED9 n\xE0y (ch\u1EA1y n\u1EC1n)."), err && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "mt-3 space-y-2" }, list.map((s) => /* @__PURE__ */ React.createElement(SyncSourceRow, { key: s.id, source: s, onSync: () => sync.mutate(s.id), onCancel: () => cancel.mutate(s.id), onDelete: () => del.mutate(s.id), busy: sync.isPending || del.isPending || cancel.isPending })), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ngu\u1ED3n n\xE0o \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex flex-col gap-2 sm:flex-row", onSubmit: (e2) => {
-      e2.preventDefault();
-      if (url.trim()) add.mutate();
-    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "URL trang truy\u1EC7n (vd https://truyenqqno.com/truyen-tranh/...)", value: url, onChange: (e2) => setUrl(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)] sm:w-44", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "Ch\u01B0\u01A1ng (tr\u1ED1ng = t\u1EA5t c\u1EA3, vd 1-50)", value: hint, onChange: (e2) => setHint(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !url.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ngu\u1ED3n")));
-  }
-  function SyncSourceRow({ source, onSync, onCancel, onDelete, busy }) {
-    const badge = {
-      idle: { label: "Ch\u01B0a ch\u1EA1y", color: "var(--tpl-muted)" },
-      syncing: { label: "\u0110ang c\xE0o\u2026", color: "#f59e0b" },
-      done: { label: "\u0110\xE3 c\xE0o xong", color: "#22c55e" },
-      failed: { label: "L\u1ED7i", color: "#ef4444" },
-      cancelled: { label: "\u0110\xE3 ng\u1EEBng", color: "var(--tpl-muted)" }
-    };
-    const b = badge[source.last_status];
-    const syncing = source.last_status === "syncing";
-    const pct = source.total_chapters > 0 ? Math.round(source.scraped_chapters / source.total_chapters * 100) : 0;
-    return /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3 rounded-lg border px-3 py-2", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("div", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, source.source_site || source.source_url), /* @__PURE__ */ React.createElement("a", { href: source.source_url, target: "_blank", rel: "noreferrer", className: "block truncate text-xs hover:underline", style: { color: "var(--tpl-muted)" } }, source.source_url), /* @__PURE__ */ React.createElement("div", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { style: { color: b.color } }, "\u25CF ", b.label), source.chapters_hint && /* @__PURE__ */ React.createElement("span", null, " \xB7 ch\u01B0\u01A1ng ", source.chapters_hint), source.total_chapters > 0 && (source.last_status === "syncing" ? /* @__PURE__ */ React.createElement("span", null, " \xB7 C\xE0o: ", source.scraped_chapters, "/", source.total_chapters, " ch\u01B0\u01A1ng (", pct, "%)") : /* @__PURE__ */ React.createElement("span", null, " \xB7 ", source.total_chapters, " ch\u01B0\u01A1ng")), source.last_error && /* @__PURE__ */ React.createElement("span", { style: { color: "#ef4444" } }, " \xB7 \u26A0 ", source.last_error))), /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 gap-2" }, syncing ? /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onCancel, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "#ef4444", color: "#ef4444" } }, "\u23F9 Ng\u1EEBng") : /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onSync, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u27F3 \u0110\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDelete, disabled: busy || syncing, className: "rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "X\xF3a")));
-  }
-  function SettingsCard({ id: id2, comic }) {
-    const qc = useQueryClient();
-    const router = useRouter();
-    const titleRef = (0, import_react26.useRef)(null);
-    const descRef = (0, import_react26.useRef)(null);
-    const coverInput = (0, import_react26.useRef)(null);
-    const [uploadingCover, setUploadingCover] = (0, import_react26.useState)(false);
-    const [err, setErr] = (0, import_react26.useState)(null);
-    const [saved, setSaved] = (0, import_react26.useState)(false);
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
-    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "C\xF3 l\u1ED7i x\u1EA3y ra");
-    const save = useMutation({
-      mutationFn: () => updateComic(id2, { title: titleRef.current?.value.trim() || comic.title, description: descRef.current?.value.trim() || null }),
-      onSuccess: () => {
-        setErr(null);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 1500);
-        invalidate();
-      },
-      onError: onErr
-    });
-    const setDir = useMutation({ mutationFn: (d) => updateComic(id2, { reading_direction: d }), onSuccess: invalidate, onError: onErr });
-    const pub = useMutation({ mutationFn: () => comic.status === "published" ? unpublishComic(id2) : publishComic(id2), onSuccess: () => {
-      setErr(null);
-      invalidate();
-    }, onError: onErr });
-    const del = useMutation({ mutationFn: () => deleteComic(id2), onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["comics"] });
-      router.push("/library/comic");
-    }, onError: onErr });
-    async function onCover(file) {
-      setErr(null);
-      setUploadingCover(true);
-      try {
-        const { assetId } = await uploadImage(file);
-        await updateComic(id2, { cover_asset_id: assetId });
-        invalidate();
-      } catch (e2) {
-        setErr(e2 instanceof Error ? e2.message : "Kh\xF4ng \u0111\u1EB7t \u0111\u01B0\u1EE3c b\xECa");
-      } finally {
-        setUploadingCover(false);
-      }
-    }
-    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-5 sm:flex-row" }, /* @__PURE__ */ React.createElement("div", { className: "w-36 shrink-0" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => coverInput.current?.click(), disabled: uploadingCover, className: "mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, uploadingCover ? "\u0110ang t\u1EA3i\u2026" : "\u0110\u1ED5i b\xECa"), /* @__PURE__ */ React.createElement("input", { ref: coverInput, type: "file", accept: "image/*", className: "hidden", onChange: (e2) => {
-      const f = e2.target.files?.[0];
-      if (f) void onCover(f);
-      e2.target.value = "";
-    } })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1 space-y-3" }, /* @__PURE__ */ React.createElement(Field3, { label: "T\xEAn truy\u1EC7n" }, /* @__PURE__ */ React.createElement("input", { ref: titleRef, defaultValue: comic.title, maxLength: 200, className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field3, { label: "M\xF4 t\u1EA3" }, /* @__PURE__ */ React.createElement("textarea", { ref: descRef, defaultValue: comic.description ?? "", rows: 2, className: "w-full resize-none rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field3, { label: "H\u01B0\u1EDBng \u0111\u1ECDc" }, /* @__PURE__ */ React.createElement(
-      Segmented,
-      {
-        value: comic.reading_direction,
-        onChange: (v) => setDir.mutate(v),
-        options: [{ v: "vertical", label: "Cu\u1ED9n d\u1ECDc" }, { v: "ltr", label: "Tr\xE1i \u2192 Ph\u1EA3i" }, { v: "rtl", label: "Ph\u1EA3i \u2192 Tr\xE1i (manga)" }]
-      }
-    )), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-2 pt-1" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => save.mutate(), disabled: save.isPending, className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, save.isPending ? "\u0110ang l\u01B0u\u2026" : saved ? "\u0110\xE3 l\u01B0u \u2713" : "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => pub.mutate(), disabled: pub.isPending, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, comic.status === "published" ? "G\u1EE1 xu\u1EA5t b\u1EA3n" : "Xu\u1EA5t b\u1EA3n"), /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.45)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p"), /* @__PURE__ */ React.createElement("div", { className: "ml-auto" }, /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1 truy\u1EC7n", confirmLabel: "Xo\xE1 th\u1EADt?", onConfirm: () => del.mutate() }))))));
-  }
-  function ChaptersManager({ id: id2, comic }) {
-    const qc = useQueryClient();
-    const [title, setTitle] = (0, import_react26.useState)("");
-    const zipRef = (0, import_react26.useRef)(null);
-    const [zip, setZip] = (0, import_react26.useState)(null);
-    const [note, setNote] = (0, import_react26.useState)(null);
-    const chapters = comic.chapters;
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
-    const add = useMutation({ mutationFn: () => createChapter(id2, { title: title.trim(), sort_order: (chapters.length + 1) * 10 }), onSuccess: () => {
-      setTitle("");
-      invalidate();
-    } });
-    const reorder = useMutation({ mutationFn: (order) => reorderChapters(id2, order), onSuccess: invalidate });
-    const move = (idx, delta) => {
-      const ids = chapters.map((c) => c.id);
-      const j = idx + delta;
-      if (j < 0 || j >= ids.length) return;
-      const tmp = ids[idx];
-      ids[idx] = ids[j];
-      ids[j] = tmp;
-      reorder.mutate(ids);
-    };
-    async function onZip(file) {
-      setNote(null);
-      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
-      try {
-        const job = await runComicZipImport(id2, file, (p) => {
-          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i zip ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
-          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
-        });
-        qc.invalidateQueries({ queryKey: ["comic", id2] });
-        setNote(job.status === "done" ? `\u0110\xE3 nh\u1EADp ${job.succeeded} trang${job.failed ? `, ${job.failed} l\u1ED7i` : ""} (b\u1ED9 nhi\u1EC1u ch\u01B0\u01A1ng).` : `Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
-      } catch (e2) {
-        setNote(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
-      } finally {
-        setZip(null);
-      }
-    }
-    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ch\u01B0\u01A1ng (", chapters.length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip, title: "ZIP c\xF3 c\xE1c th\u01B0 m\u1EE5c con = m\u1ED7i ch\u01B0\u01A1ng (ho\u1EB7c zip ph\u1EB3ng = 1 ch\u01B0\u01A1ng)", className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label} ${zip.total ? `${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp b\u1ED9 t\u1EEB ZIP"), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
-      const f = e2.target.files?.[0];
-      if (f) void onZip(f);
-      e2.target.value = "";
-    } })), note && /* @__PURE__ */ React.createElement("p", { className: "mb-3 rounded-lg px-3 py-2 text-xs", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, note), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement(ChapterRow, { key: ch.id, id: id2, chapter: ch, index: i, total: chapters.length, onMove: move })), chapters.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi, ho\u1EB7c nh\u1EADp t\u1EEB ZIP.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex gap-2", onSubmit: (e2) => {
-      e2.preventDefault();
-      if (title.trim()) add.mutate();
-    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "T\xEAn ch\u01B0\u01A1ng m\u1EDBi", value: title, onChange: (e2) => setTitle(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ch\u01B0\u01A1ng")));
-  }
-  function ChapterRow({ id: id2, chapter, index, total, onMove }) {
-    const qc = useQueryClient();
-    const [open, setOpen] = (0, import_react26.useState)(false);
-    const [editing, setEditing] = (0, import_react26.useState)(false);
-    const [title, setTitle] = (0, import_react26.useState)(chapter.title);
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
-    const rename = useMutation({ mutationFn: () => updateChapter(chapter.id, { title: title.trim() }), onSuccess: () => {
-      setEditing(false);
-      invalidate();
-    } });
-    const del = useMutation({ mutationFn: () => deleteChapter(chapter.id), onSuccess: invalidate });
-    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-3 py-2" }, /* @__PURE__ */ React.createElement("span", { className: "w-6 shrink-0 text-center font-mono text-xs", style: { color: "var(--tpl-muted)" } }, index + 1), editing ? /* @__PURE__ */ React.createElement("form", { className: "flex flex-1 gap-2", onSubmit: (e2) => {
-      e2.preventDefault();
-      if (title.trim()) rename.mutate();
-    } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: title, onChange: (e2) => setTitle(e2.target.value), className: "flex-1 rounded-md border bg-transparent px-2 py-1 text-sm outline-none", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } }), /* @__PURE__ */ React.createElement("button", { type: "submit", className: "text-xs font-semibold", style: { color: "var(--tpl-accent)" } }, "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-      setEditing(false);
-      setTitle(chapter.title);
-    }, className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Hu\u1EF7")) : (
-      // The title IS the read affordance: clicking a chapter goes straight into
-      // it. A real <Link>, so middle-click and "open in new tab" work. Expanding
-      // the page manager moved to its own ▸ button below — that is the rarer,
-      // editing-only action, so it should not own the primary click.
-      /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${chapter.id}`, title: `\u0110\u1ECDc: ${chapter.title}`, className: "flex-1 truncate text-left text-sm font-medium hover:underline", style: { color: "var(--tpl-heading)" } }, chapter.title)
-    ), /* @__PURE__ */ React.createElement(IconBtn3, { label: open ? "\u1EA8n danh s\xE1ch trang" : "Danh s\xE1ch trang", onClick: () => setOpen((o2) => !o2) }, open ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "L\xEAn", disabled: index === 0, onClick: () => onMove(index, -1) }, "\u2191"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "Xu\u1ED1ng", disabled: index === total - 1, onClick: () => onMove(index, 1) }, "\u2193"), /* @__PURE__ */ React.createElement(IconBtn3, { label: "S\u1EEDa t\xEAn", onClick: () => {
-      setTitle(chapter.title);
-      setEditing(true);
-    } }, "\u270E"), /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1", confirmLabel: "Xo\xE1?", small: true, onConfirm: () => del.mutate() })), open && /* @__PURE__ */ React.createElement(PageManager, { id: id2, chapterId: chapter.id }));
-  }
-  function PageManager({ id: id2, chapterId }) {
-    const qc = useQueryClient();
-    const fileRef = (0, import_react26.useRef)(null);
-    const zipRef = (0, import_react26.useRef)(null);
-    const [uploading, setUploading] = (0, import_react26.useState)(null);
-    const [zip, setZip] = (0, import_react26.useState)(null);
-    const [err, setErr] = (0, import_react26.useState)(null);
-    const { data: pages } = useQuery({ queryKey: ["comic", id2, "pages", chapterId], queryFn: () => getChapterPages(chapterId) });
-    const list = pages ?? [];
-    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2, "pages", chapterId] });
-    const del = useMutation({ mutationFn: (pageId) => deletePage(pageId), onSuccess: invalidate });
-    const reorder = useMutation({ mutationFn: (order) => reorderPages(chapterId, order), onSuccess: invalidate });
-    const move = (idx, delta) => {
-      const ids = list.map((p) => p.page_id);
-      const j = idx + delta;
-      if (j < 0 || j >= ids.length) return;
-      const tmp = ids[idx];
-      ids[idx] = ids[j];
-      ids[j] = tmp;
-      reorder.mutate(ids);
-    };
-    async function onFiles(files) {
-      setErr(null);
-      const arr = Array.from(files);
-      setUploading({ done: 0, total: arr.length });
-      const created = [];
-      try {
-        for (let i = 0; i < arr.length; i += 1) {
-          const { assetId } = await uploadImage(arr[i]);
-          created.push({ asset_id: assetId, sort_order: (list.length + i + 1) * 10 });
-          setUploading({ done: i + 1, total: arr.length });
-        }
-        if (created.length) await createPages(chapterId, created);
-        invalidate();
-      } catch (e2) {
-        setErr(e2 instanceof Error ? e2.message : "T\u1EA3i trang th\u1EA5t b\u1EA1i");
-      } finally {
-        setUploading(null);
-      }
-    }
-    async function onZipImport(file) {
-      setErr(null);
-      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
-      try {
-        const job = await runZipImport(chapterId, file, (p) => {
-          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
-          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
-        });
-        invalidate();
-        if (job.status !== "done") setErr(`Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
-        else if (job.failed) setErr(`Nh\u1EADp xong: ${job.succeeded} trang, ${job.failed} l\u1ED7i.`);
-      } catch (e2) {
-        setErr(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
-      } finally {
-        setZip(null);
-      }
-    }
-    return /* @__PURE__ */ React.createElement("div", { className: "border-t px-3 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, list.length, " trang"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip || !!uploading, className: "rounded-lg border px-2.5 py-1 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label}${zip.total ? ` ${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp ZIP")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6" }, list.map((p, i) => /* @__PURE__ */ React.createElement("div", { key: p.page_id, className: "group relative overflow-hidden rounded-lg border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4]" }, /* @__PURE__ */ React.createElement("img", { src: variantURL(p.asset_id, "thumb"), alt: `Trang ${i + 1}`, className: "h-full w-full object-cover", onError: (e2) => {
-      e2.currentTarget.style.visibility = "hidden";
-    } })), /* @__PURE__ */ React.createElement("span", { className: "absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-mono text-white" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 opacity-0 transition group-hover:opacity-100" }, /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "L\xEAn", disabled: i === 0, onClick: () => move(i, -1), className: "text-xs text-white disabled:opacity-30" }, "\u2191"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xu\u1ED1ng", disabled: i === list.length - 1, onClick: () => move(i, 1), className: "text-xs text-white disabled:opacity-30" }, "\u2193"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xo\xE1 trang", onClick: () => del.mutate(p.page_id), className: "text-xs text-red-400" }, "\u2715")))), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => fileRef.current?.click(), disabled: !!uploading, className: "flex aspect-[3/4] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center transition hover:border-[var(--tpl-accent)] disabled:opacity-60", style: { borderColor: "var(--tpl-border)" } }, uploading ? /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i ", uploading.done, "/", uploading.total, "\u2026") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "text-xl", style: { color: "var(--tpl-accent)" } }, "+"), /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "Th\xEAm trang")))), /* @__PURE__ */ React.createElement("input", { ref: fileRef, type: "file", accept: "image/*", multiple: true, className: "hidden", onChange: (e2) => {
-      if (e2.target.files?.length) void onFiles(e2.target.files);
-      e2.target.value = "";
-    } }), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
-      const f = e2.target.files?.[0];
-      if (f) void onZipImport(f);
-      e2.target.value = "";
-    } }), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 text-xs", style: { color: "#ef4444" } }, err));
-  }
-  function Cover({ assetId, title }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] w-full overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, assetId ? /* @__PURE__ */ React.createElement("img", { src: variantURL(assetId, "medium"), alt: title, className: "h-full w-full object-cover" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"));
-  }
-  function Field3({ label, children }) {
-    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement("span", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
-  }
-  function Segmented({ value, options, onChange }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "inline-flex flex-wrap gap-1 rounded-lg p-1", style: { background: "var(--tpl-surface-2)" } }, options.map((o2) => /* @__PURE__ */ React.createElement("button", { key: o2.v, type: "button", onClick: () => onChange(o2.v), "aria-pressed": value === o2.v, className: "rounded-md px-3 py-1.5 text-xs font-semibold transition", style: value === o2.v ? { background: "var(--tpl-accent)", color: "#fff" } : { color: "var(--tpl-muted)" } }, o2.label)));
-  }
-  function IconBtn3({ children, label, onClick, disabled }) {
-    return /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": label, title: label, onClick, disabled, className: "grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-30", style: { color: "var(--tpl-muted)" } }, children);
-  }
-  function DangerConfirm({ label, confirmLabel, onConfirm, small }) {
-    const [armed, setArmed] = (0, import_react26.useState)(false);
-    const t2 = (0, import_react26.useRef)(null);
-    (0, import_react26.useEffect)(() => () => {
-      if (t2.current) clearTimeout(t2.current);
-    }, []);
-    const cls = small ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm";
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: () => {
-          if (armed) {
-            setArmed(false);
-            onConfirm();
-            return;
-          }
-          setArmed(true);
-          if (t2.current) clearTimeout(t2.current);
-          t2.current = setTimeout(() => setArmed(false), 3e3);
-        },
-        className: `rounded-lg font-semibold transition ${cls}`,
-        style: armed ? { background: "#ef4444", color: "#fff" } : { color: "#ef4444", border: "1px solid rgba(239,68,68,.4)" }
-      },
-      armed ? confirmLabel : label
-    );
-  }
-
-  // frontend/src/templates/v1/views/library/comic/ComicIndexView.tsx
-  init_define_import_meta_env();
   var import_react27 = __toESM(require_react_shim());
-  function ComicIndexView() {
-    const qc = useQueryClient();
-    const router = useRouter();
-    const [tab, setTab] = (0, import_react27.useState)("all");
-    const [modalOpen, setModalOpen] = (0, import_react27.useState)(false);
-    const [title, setTitle] = (0, import_react27.useState)("");
-    const [err, setErr] = (0, import_react27.useState)(null);
-    const all = useQuery({ queryKey: ["comics", "published"], queryFn: () => listComics() });
-    const mine = useQuery({ queryKey: ["comics", "mine"], queryFn: () => listMyComics(), enabled: tab === "mine" });
-    const create2 = useMutation({
-      mutationFn: () => createComic({ title: title.trim() }),
-      onSuccess: (c) => {
-        setTitle("");
-        setModalOpen(false);
-        setErr(null);
-        qc.invalidateQueries({ queryKey: ["comics"] });
-        router.push(`/library/comic/${c.id}`);
-      },
-      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c truy\u1EC7n")
-    });
-    const active = tab === "all" ? all : mine;
-    const comics = tab === "all" ? all.data?.comics ?? [] : mine.data?.comics ?? [];
-    const loading = active.isLoading;
-    return /* @__PURE__ */ React.createElement("section", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold tracking-tight", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n tranh"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110\u1ECDc v\xE0 qu\u1EA3n l\xFD truy\u1EC7n tranh c\u1EE7a b\u1EA1n."), /* @__PURE__ */ React.createElement("div", { className: "mt-4 inline-flex gap-1 rounded-xl p-1", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "all", onClick: () => setTab("all") }, "Th\u01B0 vi\u1EC7n"), /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "mine", onClick: () => setTab("mine") }, "C\u1EE7a t\xF4i"))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, tab === "mine" && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-      setErr(null);
-      setModalOpen(true);
-    }, className: "group block text-left" }, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        className: "flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition group-hover:border-[var(--tpl-accent)]",
-        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
-      },
-      /* @__PURE__ */ React.createElement("span", { className: "grid h-11 w-11 place-items-center rounded-full text-2xl leading-none transition group-hover:scale-105", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, "+"),
-      /* @__PURE__ */ React.createElement("span", { className: "text-sm font-semibold transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-muted)" } }, "Th\xEAm truy\u1EC7n")
-    ), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n m\u1EDBi"), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EA1o b\u1EA3n nh\xE1p")), loading ? Array.from({ length: 4 }, (_, i) => /* @__PURE__ */ React.createElement(SkeletonCard, { key: `s${i}` })) : comics.map((c) => /* @__PURE__ */ React.createElement(ComicCard, { key: c.id, comic: c, showStatus: tab === "mine" }))), !loading && comics.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-sm", style: { color: "var(--tpl-muted)" } }, tab === "all" ? "Ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u0111\u01B0\u1EE3c xu\u1EA5t b\u1EA3n." : "B\u1EA1n ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u2014 b\u1EA5m \u201CTh\xEAm truy\u1EC7n\u201D \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u."), modalOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4", onClick: () => setModalOpen(false), role: "dialog", "aria-modal": "true", "aria-label": "T\u1EA1o truy\u1EC7n m\u1EDBi" }, /* @__PURE__ */ React.createElement(
-      "form",
-      {
-        onClick: (e2) => e2.stopPropagation(),
-        onSubmit: (e2) => {
-          e2.preventDefault();
-          if (title.trim()) create2.mutate();
-        },
-        className: "w-full max-w-md rounded-2xl p-5 shadow-xl",
-        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
-      },
-      /* @__PURE__ */ React.createElement("h2", { className: "text-base font-bold", style: { color: "var(--tpl-heading)" } }, "T\u1EA1o truy\u1EC7n m\u1EDBi"),
-      /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\u1EB7t t\xEAn truy\u1EC7n. B\u1EA1n s\u1EBD th\xEAm ch\u01B0\u01A1ng v\xE0 trang \u1EDF b\u01B0\u1EDBc sau."),
-      /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          autoFocus: true,
-          className: "mt-4 w-full rounded-lg border bg-transparent px-3 py-2.5 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
-          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" },
-          placeholder: "T\xEAn truy\u1EC7n",
-          value: title,
-          maxLength: 200,
-          onChange: (e2) => setTitle(e2.target.value)
-        }
-      ),
-      err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err),
-      /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => setModalOpen(false), className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "Hu\u1EF7"), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: create2.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, create2.isPending ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o truy\u1EC7n"))
-    )));
-  }
-  function TabBtn({ active, onClick, children }) {
-    return /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick,
-        "aria-pressed": active,
-        className: "rounded-lg px-4 py-1.5 text-sm font-semibold transition",
-        style: active ? { background: "var(--tpl-surface)", color: "var(--tpl-heading)", boxShadow: "0 1px 2px rgba(0,0,0,.08)" } : { color: "var(--tpl-muted)" }
-      },
-      children
-    );
-  }
-  function ComicCard({ comic, showStatus }) {
-    return /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${comic.id}`, className: "group block" }, /* @__PURE__ */ React.createElement("div", { className: "relative aspect-[3/4] overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, comic.cover_asset_id ? /* @__PURE__ */ React.createElement("img", { src: variantURL(comic.cover_asset_id, "thumb"), alt: comic.title, className: "h-full w-full object-cover transition group-hover:scale-[1.02]" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"), showStatus && /* @__PURE__ */ React.createElement("span", { className: "absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.55)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p")), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, comic.chapter_count ?? 0, " ch\u01B0\u01A1ng"));
-  }
-  function SkeletonCard() {
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] animate-pulse rounded-xl", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 h-3 w-2/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }));
-  }
 
-  // frontend/src/templates/v1/views/library/comic/ComicReaderView.tsx
-  init_define_import_meta_env();
-  var import_react34 = __toESM(require_react_shim());
-
-  // frontend/node_modules/portal-frontend/src/lib/reader-settings.ts
+  // frontend/node_modules/portal-frontend/src/lib/shell-layout.ts
   init_define_import_meta_env();
 
   // frontend/node_modules/zustand/esm/vanilla.mjs
@@ -15584,15 +16539,15 @@ var PortalUI = (() => {
 
   // frontend/node_modules/zustand/esm/react.mjs
   init_define_import_meta_env();
-  var import_react28 = __toESM(require_react_shim(), 1);
+  var import_react23 = __toESM(require_react_shim(), 1);
   var identity = (arg) => arg;
   function useStore(api3, selector = identity) {
-    const slice = import_react28.default.useSyncExternalStore(
+    const slice = import_react23.default.useSyncExternalStore(
       api3.subscribe,
-      import_react28.default.useCallback(() => selector(api3.getState()), [api3, selector]),
-      import_react28.default.useCallback(() => selector(api3.getInitialState()), [api3, selector])
+      import_react23.default.useCallback(() => selector(api3.getState()), [api3, selector]),
+      import_react23.default.useCallback(() => selector(api3.getInitialState()), [api3, selector])
     );
-    import_react28.default.useDebugValue(slice);
+    import_react23.default.useDebugValue(slice);
     return slice;
   }
   var createImpl = (createState) => {
@@ -15803,7 +16758,3982 @@ var PortalUI = (() => {
   };
   var persist = persistImpl;
 
+  // frontend/node_modules/portal-frontend/src/lib/shell-layout.ts
+  var useShellLayout = create()(
+    persist(
+      (set) => ({
+        // Both open by default: the shipped look, and the one that shows a new
+        // user what is there.
+        menuCollapsed: false,
+        peopleCollapsed: false,
+        toggleMenu: () => set((s) => ({ menuCollapsed: !s.menuCollapsed })),
+        togglePeople: () => set((s) => ({ peopleCollapsed: !s.peopleCollapsed }))
+      }),
+      {
+        name: "portal.shell.layout",
+        version: 1,
+        // Guard SSR: the store is created at import time on the server too, where
+        // `localStorage` is undefined — hand persist a no-op storage there.
+        storage: createJSONStorage(
+          () => typeof window === "undefined" ? { getItem: () => null, setItem: () => {
+          }, removeItem: () => {
+          } } : window.localStorage
+        )
+      }
+    )
+  );
+
+  // frontend/src/templates/v1/partials/HelloPreloader.tsx
+  init_define_import_meta_env();
+  var import_react24 = __toESM(require_react_shim());
+  function HelloPreloader() {
+    const [done, setDone] = (0, import_react24.useState)(false);
+    (0, import_react24.useEffect)(() => {
+      const t2 = setTimeout(() => setDone(true), 300);
+      return () => clearTimeout(t2);
+    }, []);
+    if (done) return null;
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        id: "hellopreloader",
+        className: "fixed inset-0 z-[100] grid place-items-center",
+        style: { background: "var(--background, #0b0b10)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "animate-pulse text-sm", style: { color: "var(--tpl-muted)" } }, "Loading \u2026")
+    );
+  }
+
+  // frontend/src/templates/v1/partials/GoToTop.tsx
+  init_define_import_meta_env();
+  var import_react25 = __toESM(require_react_shim());
+  function GoToTop() {
+    const [show, setShow] = (0, import_react25.useState)(false);
+    (0, import_react25.useEffect)(() => {
+      const onScroll = () => setShow(window.scrollY > 300);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        "aria-label": "Go to top",
+        onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }),
+        className: `fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-full text-white shadow-lg transition-opacity duration-200 hover:opacity-90 xl:right-[calc(var(--tpl-rightbar-cur)+1.5rem)] ${show ? "opacity-100" : "pointer-events-none opacity-0"}`,
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "svg",
+        {
+          width: "22",
+          height: "22",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "2.5",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true
+        },
+        /* @__PURE__ */ React.createElement("polyline", { points: "18 15 12 9 6 15" })
+      )
+    );
+  }
+
+  // frontend/src/templates/v1/partials/SessionKeeper.tsx
+  init_define_import_meta_env();
+  var import_react26 = __toESM(require_react_shim());
+  var REFRESH_MS = 4 * 60 * 1e3;
+  var CLAIM_MS = REFRESH_MS - 15e3;
+  var KEY = "portal_refresh_at";
+  function SessionKeeper() {
+    (0, import_react26.useEffect)(() => {
+      let stopped = false;
+      async function refresh(force) {
+        const last = Number(localStorage.getItem(KEY) || 0);
+        const now = Date.now();
+        if (!force && now - last < CLAIM_MS) return;
+        localStorage.setItem(KEY, String(now));
+        try {
+          const res = await fetch(`${baseURL2}/api/v1/auth/refresh`, {
+            method: "POST",
+            credentials: "include"
+          });
+          if (res.ok) {
+            localStorage.setItem(KEY, String(Date.now()));
+          } else if (res.status === 401 && !stopped) {
+            localStorage.removeItem(KEY);
+            window.location.assign("/login");
+          }
+        } catch {
+          localStorage.setItem(KEY, String(last));
+        }
+      }
+      refresh(false);
+      const timer = setInterval(() => refresh(false), REFRESH_MS);
+      const onVisible = () => {
+        if (document.visibilityState === "visible") refresh(false);
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      window.addEventListener("focus", onVisible);
+      return () => {
+        stopped = true;
+        clearInterval(timer);
+        document.removeEventListener("visibilitychange", onVisible);
+        window.removeEventListener("focus", onVisible);
+      };
+    }, []);
+    return null;
+  }
+
+  // frontend/src/templates/v1/master/MasterBase.tsx
+  function MasterBase({ children }) {
+    const { menuCollapsed, peopleCollapsed, toggleMenu, togglePeople } = useShellLayout();
+    const [hydrated, setHydrated] = (0, import_react27.useState)(false);
+    (0, import_react27.useEffect)(() => setHydrated(true), []);
+    const collapsed = hydrated && menuCollapsed;
+    const rightCollapsed = hydrated && peopleCollapsed;
+    const rootStyle = {
+      background: "var(--tpl-bg)",
+      "--tpl-sidebar-cur": collapsed ? "var(--tpl-rail-w)" : "var(--tpl-sidebar-w)",
+      "--tpl-rightbar-cur": rightCollapsed ? "var(--tpl-rail-w)" : "var(--tpl-rightbar-w)"
+    };
+    return /* @__PURE__ */ React.createElement(MusicPlayerProvider, null, /* @__PURE__ */ React.createElement("div", { "data-template": "v1", className: "min-h-screen", style: rootStyle }, /* @__PURE__ */ React.createElement(HelloPreloader, null), /* @__PURE__ */ React.createElement(SessionKeeper, null), /* @__PURE__ */ React.createElement(SidebarCenter, null), /* @__PURE__ */ React.createElement(SidebarLeft, { collapsed, onToggle: toggleMenu }), /* @__PURE__ */ React.createElement(SidebarRight, { collapsed: rightCollapsed, onToggle: togglePeople }), /* @__PURE__ */ React.createElement(
+      "main",
+      {
+        className: "min-h-screen transition-[padding] duration-200 xl:pl-[var(--tpl-sidebar-cur)] xl:pr-[var(--tpl-rightbar-cur)]",
+        style: { paddingTop: "var(--tpl-header-h)", color: "var(--tpl-text)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5" }, children, /* @__PURE__ */ React.createElement(NowPlayingSpacer, null))
+    ), /* @__PURE__ */ React.createElement(NowPlayingBar, null), /* @__PURE__ */ React.createElement(GoToTop, null), /* @__PURE__ */ React.createElement(UpdateHeaderPhoto, null), /* @__PURE__ */ React.createElement(ChoseFromMyPhoto, null), /* @__PURE__ */ React.createElement(ChatResponsive, null), /* @__PURE__ */ React.createElement(SvgSprite, null)));
+  }
+
+  // frontend/src/templates/v1/master/MasterPublic.tsx
+  init_define_import_meta_env();
+  function MasterPublic({ children }) {
+    return /* @__PURE__ */ React.createElement("div", { "data-template": "v1", className: "landing-page min-h-screen" }, children, /* @__PURE__ */ React.createElement(SvgSprite, null));
+  }
+
+  // frontend/src/templates/v1/views/admin/AdminLayoutView.tsx
+  init_define_import_meta_env();
+  var import_react28 = __toESM(require_react_shim());
+  function AdminLayoutView() {
+    const qc = useQueryClient();
+    const [tab, setTab] = (0, import_react28.useState)("menu");
+    const [err, setErr] = (0, import_react28.useState)(null);
+    const layout = useQuery({ queryKey: ADMIN_LAYOUT_KEY, queryFn: getAdminLayout, retry: false });
+    const [menu, setMenu] = (0, import_react28.useState)([]);
+    const [widgets, setWidgets] = (0, import_react28.useState)([]);
+    (0, import_react28.useEffect)(() => {
+      if (layout.data) {
+        setMenu(layout.data.menu);
+        setWidgets(layout.data.widgets);
+      }
+    }, [layout.data]);
+    function accept(next) {
+      qc.setQueryData(ADMIN_LAYOUT_KEY, next);
+      qc.invalidateQueries({ queryKey: LAYOUT_KEY });
+      setErr(null);
+    }
+    const persistMenu = useMutation({
+      mutationFn: () => saveMenu(
+        menu.map((it) => ({
+          key: it.key,
+          label: it.label,
+          icon: it.icon,
+          href: it.href ?? "",
+          permission: it.permission ?? "",
+          visible: it.visible
+        }))
+      ),
+      onSuccess: accept,
+      onError: (e2) => setErr(message(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c menu."))
+    });
+    const persistWidgets = useMutation({
+      mutationFn: () => saveWidgets(
+        widgets.map((w) => ({
+          key: w.key,
+          label: w.label,
+          slot: w.slot,
+          permission: w.permission ?? "",
+          visible: w.visible
+        }))
+      ),
+      onSuccess: accept,
+      onError: (e2) => setErr(message(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c widget."))
+    });
+    const menuDirty = layout.data ? !sameMenu(menu, layout.data.menu) : false;
+    const widgetsDirty = layout.data ? !sameWidgets(widgets, layout.data.widgets) : false;
+    if (layout.isPending) return /* @__PURE__ */ React.createElement(Skeleton, null);
+    if (layout.isError) return /* @__PURE__ */ React.createElement(ErrorState, { error: layout.error, onRetry: () => layout.refetch() });
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Menu & Widget"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "Th\u1EE9 t\u1EF1 trong danh s\xE1ch ch\xEDnh l\xE0 th\u1EE9 t\u1EF1 hi\u1EC3n th\u1ECB. \u1EA8n m\u1ED9t m\u1EE5c th\xEC kh\xF4ng ai th\u1EA5y n\u1EEFa; \u0111\u1EB7t quy\u1EC1n th\xEC ch\u1EC9 ng\u01B0\u1EDDi c\xF3 quy\u1EC1n \u0111\xF3 m\u1EDBi th\u1EA5y.")), /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "menu", onClick: () => setTab("menu") }, "Menu (", menu.length, ")", menuDirty ? " \u2022" : ""), /* @__PURE__ */ React.createElement(TabBtn, { active: tab === "widgets", onClick: () => setTab("widgets") }, "Widget (", widgets.length, ")", widgetsDirty ? " \u2022" : "")), err && /* @__PURE__ */ React.createElement(Banner, { onDismiss: () => setErr(null) }, err), tab === "menu" ? /* @__PURE__ */ React.createElement(
+      MenuPanel,
+      {
+        items: menu,
+        onChange: setMenu,
+        onSave: () => persistMenu.mutate(),
+        saving: persistMenu.isPending,
+        dirty: menuDirty,
+        onReset: () => layout.data && setMenu(layout.data.menu)
+      }
+    ) : /* @__PURE__ */ React.createElement(
+      WidgetPanel,
+      {
+        widgets,
+        onChange: setWidgets,
+        onSave: () => persistWidgets.mutate(),
+        saving: persistWidgets.isPending,
+        dirty: widgetsDirty,
+        onReset: () => layout.data && setWidgets(layout.data.widgets)
+      }
+    ));
+  }
+  function MenuPanel({
+    items,
+    onChange,
+    onSave,
+    saving,
+    dirty,
+    onReset
+  }) {
+    const [adding, setAdding] = (0, import_react28.useState)(false);
+    function patch(index, changes) {
+      onChange(items.map((it, i) => i === index ? { ...it, ...changes } : it));
+    }
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setAdding(true),
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\xEAm m\u1EE5c"
+    ), /* @__PURE__ */ React.createElement(SaveButton, { onClick: onSave, saving, dirty }), dirty && /* @__PURE__ */ React.createElement(ResetButton, { onClick: onReset })), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "overflow-x-auto rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("table", { className: "w-full min-w-[900px] text-sm" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Th, null, "Th\u1EE9 t\u1EF1"), /* @__PURE__ */ React.createElement(Th, null, "Nh\xE3n"), /* @__PURE__ */ React.createElement(Th, null, "Icon"), /* @__PURE__ */ React.createElement(Th, null, "\u0110\u01B0\u1EDDng d\u1EABn"), /* @__PURE__ */ React.createElement(Th, null, "Quy\u1EC1n \u0111\u1EC3 th\u1EA5y"), /* @__PURE__ */ React.createElement(Th, null, "Hi\u1EC7n"), /* @__PURE__ */ React.createElement(Th, { align: "right" }))), /* @__PURE__ */ React.createElement("tbody", null, items.map((it, i) => /* @__PURE__ */ React.createElement("tr", { key: it.key, className: "border-t", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2" }, /* @__PURE__ */ React.createElement(
+        MoveButtons,
+        {
+          onUp: () => onChange(reorder(items, i, -1)),
+          onDown: () => onChange(reorder(items, i, 1)),
+          first: i === 0,
+          last: i === items.length - 1,
+          index: i
+        }
+      )), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2" }, /* @__PURE__ */ React.createElement(Cell, { value: it.label, onChange: (v) => patch(i, { label: v }) }), /* @__PURE__ */ React.createElement("div", { className: "mt-0.5 font-mono text-[10px]", style: { color: "var(--tpl-muted)" } }, it.key)), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2" }, /* @__PURE__ */ React.createElement(Cell, { value: it.icon, onChange: (v) => patch(i, { icon: v }), mono: true })), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2" }, /* @__PURE__ */ React.createElement(
+        Cell,
+        {
+          value: it.href ?? "",
+          onChange: (v) => patch(i, { href: v || null }),
+          placeholder: "(kh\xF4ng c\xF3 link)",
+          mono: true
+        }
+      )), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2" }, /* @__PURE__ */ React.createElement(
+        Cell,
+        {
+          value: it.permission ?? "",
+          onChange: (v) => patch(i, { permission: v || null }),
+          placeholder: "(ai c\u0169ng th\u1EA5y)",
+          mono: true
+        }
+      )), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2 text-center" }, /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: it.visible,
+          "aria-label": `Hi\u1EC7n ${it.label}`,
+          onChange: (e2) => patch(i, { visible: e2.target.checked })
+        }
+      )), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2 text-right" }, it.is_system ? /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "text-[10px]",
+          style: { color: "var(--tpl-muted)" },
+          title: "\u0110\xE2y l\xE0 l\u1ED1i v\xE0o ch\xEDnh m\xE0n h\xECnh n\xE0y \u2014 xo\xE1 \u0111i th\xEC ph\u1EA3i g\xF5 URL m\u1EDBi quay l\u1EA1i \u0111\u01B0\u1EE3c, n\xEAn n\xF3 kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c. V\u1EABn \u1EA9n/\u0111\u1ED5i t\xEAn/\u0111\u1ED5i th\u1EE9 t\u1EF1 b\xECnh th\u01B0\u1EDDng."
+        },
+        "kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c"
+      ) : /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => onChange(items.filter((_, j) => j !== i)),
+          "aria-label": `Xo\xE1 ${it.label}`,
+          className: "transition hover:text-[#ef4444]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 14 })
+      ))))))
+    ), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-xs", style: { color: "var(--tpl-muted)" } }, "Xo\xE1 m\u1ED9t m\u1EE5c ch\u1EC9 b\u1ECF n\xF3 kh\u1ECFi b\u1EA3n nh\xE1p \u2014 b\u1EA5m \u201CL\u01B0u\u201D m\u1EDBi ghi l\u1EA1i, v\xE0 c\xF3 th\u1EC3 b\u1EA5m \u201CHo\xE0n t\xE1c\u201D tr\u01B0\u1EDBc \u0111\xF3. \u0110\u01B0\u1EDDng d\u1EABn ph\u1EA3i n\u1EB1m trong \u1EE9ng d\u1EE5ng, b\u1EAFt \u0111\u1EA7u b\u1EB1ng m\u1ED9t d\u1EA5u \u201C/\u201D; b\u1ECF tr\u1ED1ng n\u1EBFu ch\u1EC9 mu\u1ED1n m\u1ED9t d\xF2ng kh\xF4ng b\u1EA5m \u0111\u01B0\u1EE3c."), adding && /* @__PURE__ */ React.createElement(
+      AddMenuItemModal,
+      {
+        existingKeys: items.map((it) => it.key),
+        onCancel: () => setAdding(false),
+        onAdd: (item) => {
+          onChange([...items, item]);
+          setAdding(false);
+        }
+      }
+    ));
+  }
+  function AddMenuItemModal({
+    existingKeys,
+    onCancel,
+    onAdd
+  }) {
+    const [key2, setKey] = (0, import_react28.useState)("");
+    const [label, setLabel] = (0, import_react28.useState)("");
+    const [icon, setIcon] = (0, import_react28.useState)("newsfeed-icon");
+    const [href, setHref] = (0, import_react28.useState)("");
+    const [permission, setPermission] = (0, import_react28.useState)("");
+    const duplicate = existingKeys.includes(key2.trim());
+    const valid = /^[a-z0-9_-]{1,40}$/.test(key2.trim()) && label.trim() !== "" && !duplicate;
+    return /* @__PURE__ */ React.createElement(Modal2, { title: "Th\xEAm m\u1EE5c menu", onClose: onCancel }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Field3, { label: "M\xE3 (ch\u1EEF th\u01B0\u1EDDng, s\u1ED1, - _)" }, /* @__PURE__ */ React.createElement(TextInput, { value: key2, onChange: (v) => setKey(v.toLowerCase()), autoFocus: true })), duplicate && /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "#ef4444" } }, "M\xE3 n\xE0y \u0111\xE3 c\xF3 trong menu."), /* @__PURE__ */ React.createElement(Field3, { label: "Nh\xE3n" }, /* @__PURE__ */ React.createElement(TextInput, { value: label, onChange: setLabel })), /* @__PURE__ */ React.createElement(Field3, { label: "Icon (t\xEAn trong sprite)" }, /* @__PURE__ */ React.createElement(TextInput, { value: icon, onChange: setIcon })), /* @__PURE__ */ React.createElement(Field3, { label: "\u0110\u01B0\u1EDDng d\u1EABn (b\u1ECF tr\u1ED1ng = kh\xF4ng c\xF3 link)" }, /* @__PURE__ */ React.createElement(TextInput, { value: href, onChange: setHref, placeholder: "/library/music" })), /* @__PURE__ */ React.createElement(Field3, { label: "Quy\u1EC1n \u0111\u1EC3 th\u1EA5y (b\u1ECF tr\u1ED1ng = ai c\u0169ng th\u1EA5y)" }, /* @__PURE__ */ React.createElement(TextInput, { value: permission, onChange: setPermission, placeholder: "users:read:any" })), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "M\u1EE5c m\u1EDBi ch\u1EC9 n\u1EB1m trong b\u1EA3n nh\xE1p \u2014 b\u1EA5m \u201CL\u01B0u menu\u201D m\u1EDBi ghi l\u1EA1i.")), /* @__PURE__ */ React.createElement(
+      ModalActions,
+      {
+        onCancel,
+        confirmLabel: "Th\xEAm",
+        confirmDisabled: !valid,
+        onConfirm: () => onAdd({
+          // No id until the server assigns one; the key is what identifies the
+          // row on save, so a placeholder id is honest here.
+          id: `new:${key2.trim()}`,
+          key: key2.trim(),
+          label: label.trim(),
+          icon: icon.trim(),
+          href: href.trim() || null,
+          permission: permission.trim() || null,
+          position: 0,
+          visible: true,
+          is_system: false
+        })
+      }
+    ));
+  }
+  var SLOTS = [
+    { key: "left", label: "C\u1ED9t tr\xE1i", hint: "hi\u1EC7n t\u1EEB m\xE0n h\xECnh l\u1EDBn (lg)" },
+    { key: "right", label: "C\u1ED9t ph\u1EA3i", hint: "ch\u1EC9 hi\u1EC7n t\u1EEB m\xE0n h\xECnh r\u1EA5t l\u1EDBn (2xl)" }
+  ];
+  function WidgetPanel({
+    widgets,
+    onChange,
+    onSave,
+    saving,
+    dirty,
+    onReset
+  }) {
+    function patch(key2, changes) {
+      onChange(widgets.map((w) => w.key === key2 ? { ...w, ...changes } : w));
+    }
+    function move(slot2, index, delta) {
+      const inSlot = widgets.filter((w) => w.slot === slot2);
+      const moved = reorder(inSlot, index, delta);
+      if (moved === inSlot) return;
+      const others = widgets.filter((w) => w.slot !== slot2);
+      onChange(slot2 === "left" ? [...moved, ...others] : [...others, ...moved]);
+    }
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(SaveButton, { onClick: onSave, saving, dirty }), dirty && /* @__PURE__ */ React.createElement(ResetButton, { onClick: onReset })), /* @__PURE__ */ React.createElement("div", { className: "grid gap-4 lg:grid-cols-2" }, SLOTS.map((slot2) => {
+      const inSlot = widgets.filter((w) => w.slot === slot2.key);
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: slot2.key,
+          className: "rounded-xl border p-3",
+          style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, slot2.label, /* @__PURE__ */ React.createElement("span", { className: "ml-2 text-[10px] font-normal", style: { color: "var(--tpl-muted)" } }, slot2.hint)),
+        inSlot.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "py-6 text-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 widget n\xE0o \u1EDF c\u1ED9t n\xE0y.") : /* @__PURE__ */ React.createElement("ul", { className: "mt-2 space-y-2" }, inSlot.map((w, i) => /* @__PURE__ */ React.createElement(
+          "li",
+          {
+            key: w.key,
+            className: "rounded-lg border p-2.5",
+            style: { borderColor: "var(--tpl-border)" }
+          },
+          /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+            MoveButtons,
+            {
+              onUp: () => move(slot2.key, i, -1),
+              onDown: () => move(slot2.key, i, 1),
+              first: i === 0,
+              last: i === inSlot.length - 1,
+              index: i
+            }
+          ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement(Cell, { value: w.label, onChange: (v) => patch(w.key, { label: v }) }), /* @__PURE__ */ React.createElement("div", { className: "mt-0.5 font-mono text-[10px]", style: { color: "var(--tpl-muted)" } }, w.key)), /* @__PURE__ */ React.createElement("label", { className: "flex shrink-0 items-center gap-1 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(
+            "input",
+            {
+              type: "checkbox",
+              checked: w.visible,
+              "aria-label": `Hi\u1EC7n ${w.label}`,
+              onChange: (e2) => patch(w.key, { visible: e2.target.checked })
+            }
+          ), "Hi\u1EC7n")),
+          /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+            "select",
+            {
+              value: w.slot,
+              "aria-label": `C\u1ED9t c\u1EE7a ${w.label}`,
+              onChange: (e2) => patch(w.key, { slot: e2.target.value }),
+              className: "rounded-md border px-2 py-1 text-xs",
+              style: {
+                borderColor: "var(--tpl-border)",
+                background: "var(--tpl-bg)",
+                color: "var(--tpl-text)"
+              }
+            },
+            SLOTS.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.key, value: s.key }, s.label))
+          ), /* @__PURE__ */ React.createElement(
+            Cell,
+            {
+              value: w.permission ?? "",
+              onChange: (v) => patch(w.key, { permission: v || null }),
+              placeholder: "(ai c\u0169ng th\u1EA5y)",
+              mono: true
+            }
+          ))
+        )))
+      );
+    })), /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-xs", style: { color: "var(--tpl-muted)" } }, "Kh\xF4ng th\xEAm/xo\xE1 \u0111\u01B0\u1EE3c widget \u1EDF \u0111\xE2y: m\u1ED7i widget l\xE0 m\u1ED9t component trong m\xE3 ngu\u1ED3n, danh s\xE1ch do b\u1EA3n build quy\u1EBFt \u0111\u1ECBnh. \u1EDE \u0111\xE2y ch\u1EC9 \u0111\u1ED5i \u0111\u01B0\u1EE3c v\u1ECB tr\xED, nh\xE3n, quy\u1EC1n v\xE0 \u1EA9n/hi\u1EC7n."));
+  }
+  function SaveButton({
+    onClick,
+    saving,
+    dirty
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        disabled: saving || !dirty,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40",
+        style: { background: "var(--tpl-accent)" }
+      },
+      saving ? "\u0110ang l\u01B0u\u2026" : dirty ? "L\u01B0u thay \u0111\u1ED5i" : "\u0110\xE3 l\u01B0u"
+    );
+  }
+  function ResetButton({ onClick }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Ho\xE0n t\xE1c"
+    );
+  }
+  function sameMenu(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((x, i) => {
+      const y = b[i];
+      return y !== void 0 && x.key === y.key && x.label === y.label && x.icon === y.icon && (x.href ?? "") === (y.href ?? "") && (x.permission ?? "") === (y.permission ?? "") && x.visible === y.visible;
+    });
+  }
+  function sameWidgets(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((x, i) => {
+      const y = b[i];
+      return y !== void 0 && x.key === y.key && x.label === y.label && x.slot === y.slot && (x.permission ?? "") === (y.permission ?? "") && x.visible === y.visible;
+    });
+  }
+  function MoveButtons({
+    onUp,
+    onDown,
+    first,
+    last,
+    index
+  }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "w-5 text-center text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, index + 1), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onUp,
+        disabled: first,
+        "aria-label": "L\xEAn",
+        className: "rounded border px-1.5 text-xs disabled:opacity-30",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "\u2191"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onDown,
+        disabled: last,
+        "aria-label": "Xu\u1ED1ng",
+        className: "rounded border px-1.5 text-xs disabled:opacity-30",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "\u2193"
+    ));
+  }
+  function Cell({
+    value,
+    onChange,
+    placeholder,
+    mono
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value,
+        placeholder,
+        onChange: (e2) => onChange(e2.target.value),
+        className: `w-full rounded-md border px-2 py-1 text-xs ${mono ? "font-mono" : ""}`,
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    );
+  }
+  function Th({ children, align }) {
+    return /* @__PURE__ */ React.createElement(
+      "th",
+      {
+        className: `px-3 py-2 text-xs font-semibold uppercase tracking-wide ${align === "right" ? "text-right" : "text-left"}`
+      },
+      children
+    );
+  }
+  function TabBtn({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+        style: {
+          background: active ? "var(--tpl-accent)" : "transparent",
+          color: active ? "#fff" : "var(--tpl-muted)",
+          border: `1px solid ${active ? "var(--tpl-accent)" : "var(--tpl-border)"}`
+        }
+      },
+      children
+    );
+  }
+  function Modal2({
+    title,
+    onClose,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+        onClick: onClose,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": title
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "w-full max-w-md rounded-xl p-6 shadow-lg",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "mb-4 text-lg font-semibold", style: { color: "var(--tpl-heading)" } }, title),
+        children
+      )
+    );
+  }
+  function ModalActions({
+    onCancel,
+    onConfirm,
+    confirmLabel,
+    confirmDisabled
+  }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onCancel,
+        className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Hu\u1EF7"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onConfirm,
+        disabled: confirmDisabled,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "var(--tpl-accent)" }
+      },
+      confirmLabel
+    ));
+  }
+  function Field3({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function TextInput({
+    value,
+    onChange,
+    placeholder,
+    autoFocus
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        autoFocus,
+        value,
+        placeholder,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    );
+  }
+  function Banner({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function Skeleton() {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "h-72 animate-pulse rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" }
+      }
+    );
+  }
+  function ErrorState({ error, onRetry }) {
+    const forbidden = error instanceof ApiError2 && error.status === 403;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, forbidden ? "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n kh\xF4ng c\xF3 quy\u1EC1n s\u1EEDa menu v\xE0 widget." : "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c c\u1EA5u h\xECnh giao di\u1EC7n."), !forbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRetry,
+        className: "mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\u1EED l\u1EA1i"
+    ));
+  }
+  function message(e2, fallback) {
+    return e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback;
+  }
+
+  // frontend/src/templates/v1/views/admin/AdminRolesView.tsx
+  init_define_import_meta_env();
+  var import_react29 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/session.ts
+  init_define_import_meta_env();
+  var SESSION_KEY = ["session"];
+  function useSession() {
+    return useQuery({
+      queryKey: SESSION_KEY,
+      queryFn: () => api("/api/v1/auth/me"),
+      // Identity does not change under the user mid-page, and a stale menu is
+      // worse than a slightly old one only in the other direction: keep it warm
+      // for a minute, then let a navigation refresh it.
+      staleTime: 6e4,
+      retry: false
+    });
+  }
+  function can(granted, required) {
+    if (!granted?.length) return false;
+    const req = required.split(":");
+    if (req.length < 2 || req.length > 3) return false;
+    return granted.some((code) => {
+      if (code === "*") return true;
+      const g = code.split(":");
+      if (g.length < 2 || g.length > 3) return false;
+      if (!segMatch(g[0], req[0]) || !segMatch(g[1], req[1])) return false;
+      const gScope = g[2];
+      const rScope = req[2];
+      if (gScope === void 0) return rScope === void 0 || rScope === "any";
+      if (gScope === "*") return true;
+      if (gScope === "any") return rScope === void 0 || rScope === "any";
+      return gScope === rScope;
+    });
+  }
+  function segMatch(granted, required) {
+    return granted === "*" || granted === required;
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/admin.ts
+  init_define_import_meta_env();
+  async function listUsers(p = {}) {
+    const qs = new URLSearchParams();
+    if (p.status) qs.set("status", p.status);
+    if (p.q) qs.set("q", p.q);
+    if (p.limit) qs.set("limit", String(p.limit));
+    if (p.offset) qs.set("offset", String(p.offset));
+    const suffix = qs.toString() ? `?${qs}` : "";
+    const r2 = await api(`/api/v1/admin/users${suffix}`);
+    return { ...r2, users: r2.users ?? [] };
+  }
+  function decideUser(id2, decision, note) {
+    return api(`/api/v1/admin/users/${id2}/${decision}`, {
+      method: "POST",
+      body: JSON.stringify({ note: note ?? "" })
+    });
+  }
+  function setUserDisabled(id2, disabled) {
+    return api(`/api/v1/admin/users/${id2}/${disabled ? "disable" : "enable"}`, {
+      method: "POST"
+    });
+  }
+  function setUserRoles(id2, roles) {
+    return api(`/api/v1/admin/users/${id2}/roles`, {
+      method: "PUT",
+      body: JSON.stringify({ roles })
+    });
+  }
+  function createUser(body) {
+    return api("/api/v1/admin/users", { method: "POST", body: JSON.stringify(body) });
+  }
+  function updateUser(id2, body) {
+    return api(`/api/v1/admin/users/${id2}`, {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    });
+  }
+  async function deleteUser(id2, confirmEmail) {
+    await api(`/api/v1/admin/users/${id2}`, {
+      method: "DELETE",
+      body: JSON.stringify({ confirm_email: confirmEmail })
+    });
+  }
+  function getMatrix() {
+    return api("/api/v1/admin/permission-matrix");
+  }
+  function setRolePermissions(roleId, permissions) {
+    return api(`/api/v1/admin/roles/${roleId}/permissions`, {
+      method: "PUT",
+      body: JSON.stringify({ permissions })
+    });
+  }
+  function createRole(body) {
+    return api("/api/v1/admin/roles", { method: "POST", body: JSON.stringify(body) });
+  }
+  async function deleteRole(id2) {
+    await api(`/api/v1/admin/roles/${id2}`, { method: "DELETE" });
+  }
+  var APPROVAL_LABEL = {
+    pending: "Ch\u1EDD duy\u1EC7t",
+    approved: "\u0110\xE3 duy\u1EC7t",
+    rejected: "T\u1EEB ch\u1ED1i"
+  };
+  function orderRolesByHierarchy(roles) {
+    const byParent = /* @__PURE__ */ new Map();
+    for (const r2 of roles) {
+      const key2 = r2.parent_code ?? "";
+      byParent.set(key2, [...byParent.get(key2) ?? [], r2]);
+    }
+    const out = [];
+    const seen = /* @__PURE__ */ new Set();
+    const walk = (parent) => {
+      for (const r2 of byParent.get(parent) ?? []) {
+        if (seen.has(r2.code)) continue;
+        seen.add(r2.code);
+        out.push(r2);
+        walk(r2.code);
+      }
+    };
+    walk("");
+    for (const r2 of roles) if (!seen.has(r2.code)) out.push(r2);
+    return out;
+  }
+
+  // frontend/src/templates/v1/views/admin/AdminRolesView.tsx
+  function AdminRolesView() {
+    const qc = useQueryClient();
+    const { data: me } = useSession();
+    const mayWrite = can(me?.permissions, "rbac:role:write");
+    const [draft, setDraft] = (0, import_react29.useState)({});
+    const [err, setErr] = (0, import_react29.useState)(null);
+    const [creating, setCreating] = (0, import_react29.useState)(false);
+    const [group, setGroup] = (0, import_react29.useState)("all");
+    const matrix = useQuery({ queryKey: ["admin", "matrix"], queryFn: getMatrix, retry: false });
+    const roles = (0, import_react29.useMemo)(
+      () => orderRolesByHierarchy(matrix.data?.roles ?? []),
+      [matrix.data?.roles]
+    );
+    const permissions = matrix.data?.permissions ?? [];
+    const groups = (0, import_react29.useMemo)(() => {
+      const seen = [];
+      for (const p of permissions) if (!seen.includes(p.group)) seen.push(p.group);
+      return seen;
+    }, [permissions]);
+    const visible = group === "all" ? permissions : permissions.filter((p) => p.group === group);
+    function accept(next) {
+      qc.setQueryData(["admin", "matrix"], next);
+      setDraft({});
+    }
+    const save = useMutation({
+      mutationFn: (v) => setRolePermissions(v.role.id, v.codes),
+      onSuccess: accept,
+      onError: (e2) => setErr(message2(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ma tr\u1EADn quy\u1EC1n."))
+    });
+    const create2 = useMutation({
+      mutationFn: createRole,
+      onSuccess: () => {
+        setCreating(false);
+        qc.invalidateQueries({ queryKey: ["admin", "matrix"] });
+      },
+      onError: (e2) => setErr(message2(e2, "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c vai tr\xF2."))
+    });
+    const remove = useMutation({
+      mutationFn: (r2) => deleteRole(r2.id),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "matrix"] }),
+      onError: (e2) => setErr(message2(e2, "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c vai tr\xF2."))
+    });
+    function directOf(role) {
+      return draft[role.code] ?? role.direct;
+    }
+    function toggle(role, code) {
+      const current = directOf(role);
+      const next = current.includes(code) ? current.filter((c) => c !== code) : [...current, code].sort();
+      setDraft((d) => ({ ...d, [role.code]: next }));
+    }
+    function isDirty(role) {
+      const d = draft[role.code];
+      if (!d) return false;
+      return d.length !== role.direct.length || d.some((c) => !role.direct.includes(c));
+    }
+    if (matrix.isPending) return /* @__PURE__ */ React.createElement(Skeleton2, null);
+    if (matrix.isError) return /* @__PURE__ */ React.createElement(ErrorState2, { error: matrix.error, onRetry: () => matrix.refetch() });
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Vai tr\xF2 & quy\u1EC1n"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "Vai tr\xF2 con k\u1EBF th\u1EEBa to\xE0n b\u1ED9 quy\u1EC1n c\u1EE7a cha. \xD4 m\u1EDD l\xE0 quy\u1EC1n k\u1EBF th\u1EEBa \u2014 mu\u1ED1n \u0111\u1ED5i th\xEC s\u1EEDa \u1EDF vai tr\xF2 cha.")), mayWrite && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setCreating(true),
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\xEAm vai tr\xF2"
+    )), err && /* @__PURE__ */ React.createElement(Banner2, { onDismiss: () => setErr(null) }, err), /* @__PURE__ */ React.createElement(Hierarchy, { roles, onDelete: mayWrite ? (r2) => remove.mutate(r2) : void 0 }), /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(GroupBtn, { active: group === "all", onClick: () => setGroup("all") }, "T\u1EA5t c\u1EA3"), groups.map((g) => /* @__PURE__ */ React.createElement(GroupBtn, { key: g, active: group === g, onClick: () => setGroup(g) }, g))), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "overflow-x-auto rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("table", { className: "w-full text-sm" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement(
+        "th",
+        {
+          className: "sticky left-0 z-10 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide",
+          style: { background: "var(--tpl-surface)", color: "var(--tpl-muted)" }
+        },
+        "Quy\u1EC1n"
+      ), roles.map((r2) => /* @__PURE__ */ React.createElement("th", { key: r2.code, className: "px-2 py-2 text-center align-bottom" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs font-bold", style: { color: "var(--tpl-heading)" } }, r2.code), /* @__PURE__ */ React.createElement("div", { className: "text-[10px] font-normal", style: { color: "var(--tpl-muted)" } }, r2.parent_code ? `\u2191 ${r2.parent_code}` : "g\u1ED1c", " \xB7 ", r2.user_count), mayWrite && isDirty(r2) && /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => save.mutate({ role: r2, codes: directOf(r2) }),
+          disabled: save.isPending,
+          className: "mt-1 rounded px-2 py-0.5 text-[10px] font-bold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: { background: "var(--tpl-accent)" }
+        },
+        save.isPending ? "\u2026" : "L\u01B0u"
+      ))))), /* @__PURE__ */ React.createElement("tbody", null, visible.map((p) => /* @__PURE__ */ React.createElement(
+        PermissionRow,
+        {
+          key: p.code,
+          perm: p,
+          roles,
+          directOf,
+          editable: mayWrite,
+          onToggle: toggle
+        }
+      ))))
+    ), creating && /* @__PURE__ */ React.createElement(
+      CreateRoleModal,
+      {
+        roles,
+        pending: create2.isPending,
+        onCancel: () => setCreating(false),
+        onCreate: (body) => create2.mutate(body)
+      }
+    ));
+  }
+  function PermissionRow({
+    perm,
+    roles,
+    directOf,
+    editable,
+    onToggle
+  }) {
+    return /* @__PURE__ */ React.createElement("tr", { className: "border-t", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
+      "th",
+      {
+        className: "sticky left-0 z-10 max-w-[280px] px-3 py-1.5 text-left font-normal",
+        style: { background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "truncate font-mono text-xs", style: { color: "var(--tpl-heading)" } }, perm.code),
+      perm.description && /* @__PURE__ */ React.createElement("div", { className: "truncate text-[11px]", style: { color: "var(--tpl-muted)" }, title: perm.description }, perm.description)
+    ), roles.map((r2) => {
+      const direct = directOf(r2).includes(perm.code);
+      const inherited = !direct && (r2.effective.includes(perm.code) || can(r2.effective, perm.code));
+      return /* @__PURE__ */ React.createElement("td", { key: r2.code, className: "px-2 py-1.5 text-center" }, inherited ? /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          title: r2.effective.includes("*") ? "C\xF3 qua quy\u1EC1n \u0111\u1EA1i di\u1EC7n (*)" : `K\u1EBF th\u1EEBa t\u1EEB ${r2.parent_code ?? "vai tr\xF2 cha"}`,
+          className: "inline-block h-2 w-2 rounded-full",
+          style: { background: "var(--tpl-muted)", opacity: 0.45 }
+        }
+      ) : /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: direct,
+          disabled: !editable,
+          "aria-label": `${perm.code} cho ${r2.code}`,
+          onChange: () => onToggle(r2, perm.code)
+        }
+      ));
+    }));
+  }
+  function Hierarchy({
+    roles,
+    onDelete
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-5 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2.5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      roles.map((r2, i) => /* @__PURE__ */ React.createElement("span", { key: r2.code, className: "flex items-center gap-2" }, i > 0 && /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, r2.parent_code === roles[i - 1]?.code ? "\u2192" : "\xB7"), /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-heading)" },
+          title: r2.description || r2.name
+        },
+        r2.code,
+        onDelete && !r2.is_system && r2.user_count === 0 && /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => onDelete(r2),
+            "aria-label": `Xo\xE1 vai tr\xF2 ${r2.code}`,
+            className: "transition hover:text-[#ef4444]",
+            style: { color: "var(--tpl-muted)" }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 12 })
+        )
+      )))
+    );
+  }
+  function CreateRoleModal({
+    roles,
+    pending: pending2,
+    onCancel,
+    onCreate
+  }) {
+    const [code, setCode] = (0, import_react29.useState)("");
+    const [name, setName] = (0, import_react29.useState)("");
+    const [description, setDescription] = (0, import_react29.useState)("");
+    const [parent, setParent] = (0, import_react29.useState)("");
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+        onClick: onCancel,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": "Th\xEAm vai tr\xF2"
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "w-full max-w-md rounded-xl p-6 shadow-lg",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "mb-4 text-lg font-semibold", style: { color: "var(--tpl-heading)" } }, "Th\xEAm vai tr\xF2"),
+        /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Field4, { label: "M\xE3 (ch\u1EEF th\u01B0\u1EDDng, s\u1ED1, - _)" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            value: code,
+            onChange: (e2) => setCode(e2.target.value.toLowerCase()),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        )), /* @__PURE__ */ React.createElement(Field4, { label: "T\xEAn hi\u1EC3n th\u1ECB" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            value: name,
+            onChange: (e2) => setName(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        )), /* @__PURE__ */ React.createElement(Field4, { label: "M\xF4 t\u1EA3" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            value: description,
+            onChange: (e2) => setDescription(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          }
+        )), /* @__PURE__ */ React.createElement(Field4, { label: "K\u1EBF th\u1EEBa t\u1EEB" }, /* @__PURE__ */ React.createElement(
+          "select",
+          {
+            value: parent,
+            onChange: (e2) => setParent(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+          },
+          /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 Kh\xF4ng k\u1EBF th\u1EEBa (vai tr\xF2 g\u1ED1c) \u2014"),
+          roles.map((r2) => /* @__PURE__ */ React.createElement("option", { key: r2.code, value: r2.code }, r2.code))
+        ))),
+        /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onCancel,
+            className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+          },
+          "Hu\u1EF7"
+        ), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => onCreate({ code: code.trim(), name: name.trim(), description, parent_code: parent }),
+            disabled: pending2 || !code.trim(),
+            className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+            style: { background: "var(--tpl-accent)" }
+          },
+          pending2 ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o"
+        ))
+      )
+    );
+  }
+  function Field4({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function GroupBtn({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-md px-2.5 py-1 text-xs font-semibold transition",
+        style: {
+          background: active ? "var(--tpl-accent)" : "transparent",
+          color: active ? "#fff" : "var(--tpl-muted)",
+          border: `1px solid ${active ? "var(--tpl-accent)" : "var(--tpl-border)"}`
+        }
+      },
+      children
+    );
+  }
+  function Banner2({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function Skeleton2() {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "h-72 animate-pulse rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" }
+      }
+    );
+  }
+  function ErrorState2({ error, onRetry }) {
+    const forbidden = error instanceof ApiError2 && error.status === 403;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, forbidden ? "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n kh\xF4ng c\xF3 quy\u1EC1n xem vai tr\xF2 v\xE0 ma tr\u1EADn quy\u1EC1n." : "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c ma tr\u1EADn quy\u1EC1n."), !forbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRetry,
+        className: "mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\u1EED l\u1EA1i"
+    ));
+  }
+  function message2(e2, fallback) {
+    return e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback;
+  }
+
+  // frontend/src/templates/v1/views/admin/AdminUsersView.tsx
+  init_define_import_meta_env();
+  var import_react30 = __toESM(require_react_shim());
+  var PAGE_SIZE = 25;
+  var TABS = [
+    { key: "pending", label: "Ch\u1EDD duy\u1EC7t" },
+    { key: "approved", label: "\u0110\xE3 duy\u1EC7t" },
+    { key: "rejected", label: "T\u1EEB ch\u1ED1i" },
+    { key: "all", label: "T\u1EA5t c\u1EA3" }
+  ];
+  function AdminUsersView() {
+    const qc = useQueryClient();
+    const { data: me } = useSession();
+    const [tab, setTab] = (0, import_react30.useState)("pending");
+    const [search, setSearch] = (0, import_react30.useState)("");
+    const [query, setQuery] = (0, import_react30.useState)("");
+    const [page, setPage] = (0, import_react30.useState)(0);
+    const [err, setErr] = (0, import_react30.useState)(null);
+    const [rejecting, setRejecting] = (0, import_react30.useState)(null);
+    const [editingRoles, setEditingRoles] = (0, import_react30.useState)(null);
+    const [editing, setEditing] = (0, import_react30.useState)(null);
+    const [deleting, setDeleting] = (0, import_react30.useState)(null);
+    const [creating, setCreating] = (0, import_react30.useState)(false);
+    const mayApprove = can(me?.permissions, "users:approve");
+    const mayWrite = can(me?.permissions, "users:write:any");
+    const mayDelete = can(me?.permissions, "users:delete:any");
+    const mayAssign = can(me?.permissions, "rbac:role:assign");
+    const users = useQuery({
+      queryKey: ["admin", "users", tab, query, page],
+      queryFn: () => listUsers({
+        status: tab === "all" ? "" : tab,
+        q: query,
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE
+      })
+    });
+    const matrix = useQuery({
+      queryKey: ["admin", "matrix"],
+      queryFn: getMatrix,
+      enabled: editingRoles !== null
+    });
+    function invalidate() {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    }
+    const decide = useMutation({
+      mutationFn: (v) => decideUser(v.user.id, v.action, v.note),
+      onSuccess: () => {
+        setRejecting(null);
+        invalidate();
+      },
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng th\u1EF1c hi\u1EC7n \u0111\u01B0\u1EE3c thao t\xE1c."))
+    });
+    const toggleDisabled = useMutation({
+      mutationFn: (u) => setUserDisabled(u.id, !u.disabled),
+      onSuccess: invalidate,
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng \u0111\u1ED5i \u0111\u01B0\u1EE3c tr\u1EA1ng th\xE1i t\xE0i kho\u1EA3n."))
+    });
+    const create2 = useMutation({
+      mutationFn: createUser,
+      onSuccess: () => {
+        setCreating(false);
+        invalidate();
+      },
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c t\xE0i kho\u1EA3n."))
+    });
+    const edit = useMutation({
+      mutationFn: (v) => updateUser(v.id, v.body),
+      onSuccess: () => {
+        setEditing(null);
+        invalidate();
+      },
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c thay \u0111\u1ED5i."))
+    });
+    const remove = useMutation({
+      mutationFn: (v) => deleteUser(v.id, v.confirmEmail),
+      onSuccess: () => {
+        setDeleting(null);
+        invalidate();
+      },
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c t\xE0i kho\u1EA3n."))
+    });
+    const saveRoles = useMutation({
+      mutationFn: (v) => setUserRoles(v.id, v.roles),
+      onSuccess: () => {
+        setEditingRoles(null);
+        invalidate();
+      },
+      onError: (e2) => setErr(message3(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c vai tr\xF2."))
+    });
+    const counts = users.data?.counts;
+    const rows = users.data?.users ?? [];
+    const total = users.data?.total ?? 0;
+    const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Ng\u01B0\u1EDDi d\xF9ng"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "T\xE0i kho\u1EA3n m\u1EDBi \u0111\u0103ng k\xFD ph\u1EA3i \u0111\u01B0\u1EE3c ph\xEA duy\u1EC7t m\u1EDBi \u0111\u0103ng nh\u1EADp \u0111\u01B0\u1EE3c.")), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, mayWrite && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          setErr(null);
+          setCreating(true);
+        },
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90",
+        style: { background: "var(--tpl-accent)" }
+      },
+      "Th\xEAm ng\u01B0\u1EDDi d\xF9ng"
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value: search,
+        onChange: (e2) => setSearch(e2.target.value),
+        onKeyDown: (e2) => {
+          if (e2.key === "Enter") {
+            setPage(0);
+            setQuery(search.trim());
+          }
+        },
+        placeholder: "T\xECm theo email ho\u1EB7c t\xEAn\u2026",
+        className: "w-64 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    ))), /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex flex-wrap items-center gap-2" }, TABS.map((t2) => /* @__PURE__ */ React.createElement(
+      TabBtn2,
+      {
+        key: t2.key,
+        active: tab === t2.key,
+        onClick: () => {
+          setTab(t2.key);
+          setPage(0);
+        }
+      },
+      t2.label,
+      t2.key !== "all" && counts ? /* @__PURE__ */ React.createElement(Badge, { n: counts[t2.key], active: tab === t2.key }) : null
+    ))), err && /* @__PURE__ */ React.createElement(Banner3, { onDismiss: () => setErr(null) }, err), users.isPending ? /* @__PURE__ */ React.createElement(Skeleton3, null) : users.isError ? /* @__PURE__ */ React.createElement(ErrorState3, { error: users.error, onRetry: () => users.refetch() }) : rows.length === 0 ? /* @__PURE__ */ React.createElement(Empty2, { tab }) : /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "overflow-x-auto rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("table", { className: "w-full min-w-[820px] text-sm" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", { style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Th2, null, "T\xE0i kho\u1EA3n"), /* @__PURE__ */ React.createElement(Th2, null, "Vai tr\xF2"), /* @__PURE__ */ React.createElement(Th2, null, "Tr\u1EA1ng th\xE1i"), /* @__PURE__ */ React.createElement(Th2, null, "\u0110\u0103ng k\xFD"), /* @__PURE__ */ React.createElement(Th2, { align: "right" }, "Thao t\xE1c"))), /* @__PURE__ */ React.createElement("tbody", null, rows.map((u) => /* @__PURE__ */ React.createElement("tr", { key: u.id, className: "border-t", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2.5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2.5" }, /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white",
+          style: { background: "var(--tpl-accent)" }
+        },
+        initial(u.display_name || u.email)
+      ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("div", { className: "truncate font-semibold", style: { color: "var(--tpl-heading)" } }, u.display_name, u.id === me?.id && /* @__PURE__ */ React.createElement("span", { className: "ml-1.5 text-[10px] font-normal", style: { color: "var(--tpl-muted)" } }, "(b\u1EA1n)")), /* @__PURE__ */ React.createElement("div", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, u.email)))), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2.5" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap gap-1" }, u.roles.length === 0 ? /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\u2014") : u.roles.map((c) => /* @__PURE__ */ React.createElement(Chip, { key: c }, c)))), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2.5" }, /* @__PURE__ */ React.createElement(StatusBadge, { status: u.approval_status, disabled: u.disabled }), u.approval_note && /* @__PURE__ */ React.createElement("div", { className: "mt-1 max-w-[220px] truncate text-xs", style: { color: "var(--tpl-muted)" }, title: u.approval_note }, u.approval_note)), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2.5 text-xs", style: { color: "var(--tpl-muted)" } }, formatDate2(u.created_at)), /* @__PURE__ */ React.createElement("td", { className: "px-3 py-2.5" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center justify-end gap-2" }, u.id !== me?.id && mayApprove && u.approval_status !== "approved" && /* @__PURE__ */ React.createElement(
+        Action,
+        {
+          onClick: () => decide.mutate({ user: u, action: "approve" }),
+          disabled: decide.isPending,
+          tone: "accent"
+        },
+        "Duy\u1EC7t"
+      ), u.id !== me?.id && mayApprove && u.approval_status !== "rejected" && /* @__PURE__ */ React.createElement(Action, { onClick: () => setRejecting(u), disabled: decide.isPending }, "T\u1EEB ch\u1ED1i"), u.id !== me?.id && mayApprove && u.approval_status === "approved" && /* @__PURE__ */ React.createElement(
+        Action,
+        {
+          onClick: () => decide.mutate({ user: u, action: "revoke-approval" }),
+          disabled: decide.isPending
+        },
+        "G\u1EE1 duy\u1EC7t"
+      ), u.id !== me?.id && mayAssign && /* @__PURE__ */ React.createElement(Action, { onClick: () => setEditingRoles(u) }, "Vai tr\xF2"), mayWrite && /* @__PURE__ */ React.createElement(Action, { onClick: () => setEditing(u) }, "S\u1EEDa"), u.id !== me?.id && mayWrite && /* @__PURE__ */ React.createElement(Action, { onClick: () => toggleDisabled.mutate(u), disabled: toggleDisabled.isPending }, u.disabled ? "M\u1EDF kho\xE1" : "Kho\xE1"), u.id !== me?.id && mayDelete && /* @__PURE__ */ React.createElement(Action, { onClick: () => setDeleting(u), tone: "danger" }, "Xo\xE1")))))))
+    ), pages > 1 && /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex items-center justify-between text-sm", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", null, total, " t\xE0i kho\u1EA3n \xB7 trang ", page + 1, "/", pages), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2" }, /* @__PURE__ */ React.createElement(Action, { onClick: () => setPage((p) => Math.max(0, p - 1)), disabled: page === 0 }, "Tr\u01B0\u1EDBc"), /* @__PURE__ */ React.createElement(Action, { onClick: () => setPage((p) => p + 1), disabled: page + 1 >= pages }, "Sau"))), rejecting && /* @__PURE__ */ React.createElement(
+      RejectModal,
+      {
+        user: rejecting,
+        pending: decide.isPending,
+        onCancel: () => setRejecting(null),
+        onConfirm: (note) => decide.mutate({ user: rejecting, action: "reject", note })
+      }
+    ), creating && /* @__PURE__ */ React.createElement(
+      CreateUserModal,
+      {
+        canApprove: mayApprove,
+        pending: create2.isPending,
+        onCancel: () => setCreating(false),
+        onCreate: (body) => create2.mutate(body)
+      }
+    ), editing && /* @__PURE__ */ React.createElement(
+      EditUserModal,
+      {
+        user: editing,
+        pending: edit.isPending,
+        onCancel: () => setEditing(null),
+        onSave: (body) => edit.mutate({ id: editing.id, body })
+      }
+    ), deleting && /* @__PURE__ */ React.createElement(
+      DeleteUserModal,
+      {
+        user: deleting,
+        pending: remove.isPending,
+        onCancel: () => setDeleting(null),
+        onDisableInstead: () => {
+          toggleDisabled.mutate(deleting);
+          setDeleting(null);
+        },
+        onDelete: (confirmEmail) => remove.mutate({ id: deleting.id, confirmEmail })
+      }
+    ), editingRoles && /* @__PURE__ */ React.createElement(
+      RolesModal,
+      {
+        user: editingRoles,
+        allRoles: (matrix.data?.roles ?? []).map((r2) => r2.code),
+        loading: matrix.isPending,
+        pending: saveRoles.isPending,
+        onCancel: () => setEditingRoles(null),
+        onSave: (roles) => saveRoles.mutate({ id: editingRoles.id, roles })
+      }
+    ));
+  }
+  function RejectModal({
+    user,
+    pending: pending2,
+    onCancel,
+    onConfirm
+  }) {
+    const [note, setNote] = (0, import_react30.useState)("");
+    return /* @__PURE__ */ React.createElement(Modal3, { title: `T\u1EEB ch\u1ED1i ${user.email}`, onClose: onCancel }, /* @__PURE__ */ React.createElement("p", { className: "mb-3 text-xs", style: { color: "var(--tpl-muted)" } }, "L\xFD do s\u1EBD hi\u1EC7n cho ng\u01B0\u1EDDi d\xF9ng khi h\u1ECD th\u1EED \u0111\u0103ng nh\u1EADp. T\xE0i kho\u1EA3n \u0111\u01B0\u1EE3c gi\u1EEF l\u1EA1i (kh\xF4ng xo\xE1) \u0111\u1EC3 email n\xE0y kh\xF4ng th\u1EC3 \u0111\u0103ng k\xFD l\u1EA1i nh\u1EB1m l\xE1ch quy\u1EBFt \u0111\u1ECBnh."), /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        value: note,
+        onChange: (e2) => setNote(e2.target.value.slice(0, 500)),
+        rows: 3,
+        placeholder: "L\xFD do (kh\xF4ng b\u1EAFt bu\u1ED9c)",
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    ), /* @__PURE__ */ React.createElement(
+      ModalActions2,
+      {
+        onCancel,
+        confirmLabel: pending2 ? "\u0110ang l\u01B0u\u2026" : "T\u1EEB ch\u1ED1i",
+        confirmDisabled: pending2,
+        onConfirm: () => onConfirm(note.trim())
+      }
+    ));
+  }
+  function RolesModal({
+    user,
+    allRoles,
+    loading,
+    pending: pending2,
+    onCancel,
+    onSave
+  }) {
+    const [selected, setSelected] = (0, import_react30.useState)(user.roles);
+    return /* @__PURE__ */ React.createElement(Modal3, { title: `Vai tr\xF2 \xB7 ${user.display_name}`, onClose: onCancel }, /* @__PURE__ */ React.createElement("p", { className: "mb-3 text-xs", style: { color: "var(--tpl-muted)" } }, "Vai tr\xF2 con k\u1EBF th\u1EEBa to\xE0n b\u1ED9 quy\u1EC1n c\u1EE7a vai tr\xF2 cha. B\u1EA1n ch\u1EC9 g\xE1n \u0111\u01B0\u1EE3c vai tr\xF2 m\xE0 ch\xEDnh b\u1EA1n \u0111\xE3 c\xF3 \u0111\u1EE7 quy\u1EC1n."), loading ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i danh s\xE1ch vai tr\xF2\u2026") : /* @__PURE__ */ React.createElement("div", { className: "space-y-1.5" }, allRoles.map((code) => /* @__PURE__ */ React.createElement("label", { key: code, className: "flex items-center gap-2 text-sm" }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: selected.includes(code),
+        onChange: (e2) => setSelected((s) => e2.target.checked ? [...s, code] : s.filter((c) => c !== code))
+      }
+    ), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-text)" } }, code)))), /* @__PURE__ */ React.createElement(
+      ModalActions2,
+      {
+        onCancel,
+        confirmLabel: pending2 ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u",
+        confirmDisabled: pending2 || loading,
+        onConfirm: () => onSave(selected)
+      }
+    ));
+  }
+  function Modal3({
+    title,
+    onClose,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+        onClick: onClose,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": title
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "w-full max-w-md rounded-xl p-6 shadow-lg",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "mb-4 text-lg font-semibold", style: { color: "var(--tpl-heading)" } }, title),
+        children
+      )
+    );
+  }
+  function ModalActions2({
+    onCancel,
+    onConfirm,
+    confirmLabel,
+    confirmDisabled
+  }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onCancel,
+        className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Hu\u1EF7"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onConfirm,
+        disabled: confirmDisabled,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "var(--tpl-accent)" }
+      },
+      confirmLabel
+    ));
+  }
+  function Th2({ children, align }) {
+    return /* @__PURE__ */ React.createElement(
+      "th",
+      {
+        className: `px-3 py-2 text-xs font-semibold uppercase tracking-wide ${align === "right" ? "text-right" : "text-left"}`
+      },
+      children
+    );
+  }
+  function Chip({ children }) {
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "rounded px-1.5 py-0.5 text-[10px] font-semibold",
+        style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function StatusBadge({ status, disabled }) {
+    const tone = status === "approved" ? "#16a34a" : status === "rejected" ? "#ef4444" : "var(--tpl-accent)";
+    return /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-1" }, /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white",
+        style: { background: tone }
+      },
+      APPROVAL_LABEL[status]
+    ), disabled && /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
+        style: { background: "rgba(0,0,0,.08)", color: "var(--tpl-muted)" }
+      },
+      "\u0110\xE3 kho\xE1"
+    ));
+  }
+  function Badge({ n: n2, active }) {
+    if (!n2) return null;
+    return /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+        style: {
+          background: active ? "rgba(255,255,255,.25)" : "var(--tpl-accent)",
+          color: "#fff"
+        }
+      },
+      n2
+    );
+  }
+  function TabBtn2({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "flex items-center rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+        style: {
+          background: active ? "var(--tpl-accent)" : "transparent",
+          color: active ? "#fff" : "var(--tpl-muted)",
+          border: `1px solid ${active ? "var(--tpl-accent)" : "var(--tpl-border)"}`
+        }
+      },
+      children
+    );
+  }
+  function Action({
+    children,
+    onClick,
+    disabled,
+    tone
+  }) {
+    const color = tone === "accent" ? "var(--tpl-accent)" : tone === "danger" ? "#ef4444" : "var(--tpl-muted)";
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        disabled,
+        className: "rounded-md border px-2.5 py-1 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-40",
+        style: {
+          borderColor: tone === void 0 ? "var(--tpl-border)" : color,
+          color
+        }
+      },
+      children
+    );
+  }
+  function Banner3({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function Skeleton3() {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "divide-y rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      Array.from({ length: 6 }).map((_, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "flex items-center gap-3 px-3 py-3" }, /* @__PURE__ */ React.createElement("div", { className: "h-8 w-8 shrink-0 animate-pulse rounded-full", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "flex-1 space-y-1.5" }, /* @__PURE__ */ React.createElement("div", { className: "h-3 w-1/4 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "h-2.5 w-1/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }))))
+    );
+  }
+  function Empty2({ tab }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "rounded-xl border border-dashed py-16 text-center text-sm",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      tab === "pending" ? "Kh\xF4ng c\xF3 t\xE0i kho\u1EA3n n\xE0o \u0111ang ch\u1EDD duy\u1EC7t." : "Kh\xF4ng c\xF3 t\xE0i kho\u1EA3n n\xE0o kh\u1EDBp b\u1ED9 l\u1ECDc."
+    );
+  }
+  function ErrorState3({ error, onRetry }) {
+    const forbidden = error instanceof ApiError2 && error.status === 403;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, forbidden ? "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n kh\xF4ng c\xF3 quy\u1EC1n qu\u1EA3n tr\u1ECB ng\u01B0\u1EDDi d\xF9ng." : "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c danh s\xE1ch ng\u01B0\u1EDDi d\xF9ng."), !forbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRetry,
+        className: "mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\u1EED l\u1EA1i"
+    ));
+  }
+  function message3(e2, fallback) {
+    return e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback;
+  }
+  function initial(s) {
+    return (s.trim()[0] ?? "?").toUpperCase();
+  }
+  function formatDate2(iso) {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleDateString();
+  }
+  function CreateUserModal({
+    canApprove,
+    pending: pending2,
+    onCancel,
+    onCreate
+  }) {
+    const [email, setEmail] = (0, import_react30.useState)("");
+    const [displayName, setDisplayName] = (0, import_react30.useState)("");
+    const [password, setPassword] = (0, import_react30.useState)("");
+    const tooShort = password.length > 0 && password.length < 8;
+    return /* @__PURE__ */ React.createElement(Modal3, { title: "Th\xEAm ng\u01B0\u1EDDi d\xF9ng", onClose: onCancel }, /* @__PURE__ */ React.createElement("p", { className: "mb-3 text-xs", style: { color: "var(--tpl-muted)" } }, canApprove ? "T\xE0i kho\u1EA3n \u0111\u01B0\u1EE3c duy\u1EC7t ngay v\xEC b\u1EA1n c\xF3 quy\u1EC1n ph\xEA duy\u1EC7t. Vai tr\xF2 m\u1EB7c \u0111\u1ECBnh l\xE0 \u201Cuser\u201D \u2014 \u0111\u1ED5i sau b\u1EB1ng n\xFAt \u201CVai tr\xF2\u201D." : "B\u1EA1n kh\xF4ng c\xF3 quy\u1EC1n ph\xEA duy\u1EC7t n\xEAn t\xE0i kho\u1EA3n n\xE0y s\u1EBD \u1EDF tr\u1EA1ng th\xE1i ch\u1EDD duy\u1EC7t, gi\u1ED1ng nh\u01B0 ng\u01B0\u1EDDi t\u1EF1 \u0111\u0103ng k\xFD."), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Field5, { label: "Email" }, /* @__PURE__ */ React.createElement(TextInput2, { value: email, onChange: setEmail, type: "email", autoFocus: true })), /* @__PURE__ */ React.createElement(Field5, { label: "T\xEAn hi\u1EC3n th\u1ECB" }, /* @__PURE__ */ React.createElement(TextInput2, { value: displayName, onChange: setDisplayName, placeholder: "B\u1ECF tr\u1ED1ng = l\u1EA5y ph\u1EA7n tr\u01B0\u1EDBc @" })), /* @__PURE__ */ React.createElement(Field5, { label: "M\u1EADt kh\u1EA9u (\xEDt nh\u1EA5t 8 k\xFD t\u1EF1)" }, /* @__PURE__ */ React.createElement(TextInput2, { value: password, onChange: setPassword, type: "password" })), tooShort && /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "#ef4444" } }, "M\u1EADt kh\u1EA9u ph\u1EA3i t\u1EEB 8 k\xFD t\u1EF1."), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "B\u1EAFt bu\u1ED9c c\xF3 m\u1EADt kh\u1EA9u \u2014 t\xE0i kho\u1EA3n kh\xF4ng c\xF3 m\u1EADt kh\u1EA9u th\xEC v\u1EEBa kh\xF4ng \u0111\u0103ng nh\u1EADp \u0111\u01B0\u1EE3c, v\u1EEBa kh\xF4ng t\u1EF1 \u0111\u1EB7t l\u1EA1i \u0111\u01B0\u1EE3c.")), /* @__PURE__ */ React.createElement(
+      ModalActions2,
+      {
+        onCancel,
+        confirmLabel: pending2 ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o",
+        confirmDisabled: pending2 || !email.trim() || password.length < 8,
+        onConfirm: () => onCreate({ email: email.trim(), password, display_name: displayName.trim() })
+      }
+    ));
+  }
+  function EditUserModal({
+    user,
+    pending: pending2,
+    onCancel,
+    onSave
+  }) {
+    const [email, setEmail] = (0, import_react30.useState)(user.email);
+    const [displayName, setDisplayName] = (0, import_react30.useState)(user.display_name);
+    const [password, setPassword] = (0, import_react30.useState)("");
+    const tooShort = password.length > 0 && password.length < 8;
+    return /* @__PURE__ */ React.createElement(Modal3, { title: `S\u1EEDa \xB7 ${user.display_name}`, onClose: onCancel }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Field5, { label: "Email" }, /* @__PURE__ */ React.createElement(TextInput2, { value: email, onChange: setEmail, type: "email" })), /* @__PURE__ */ React.createElement(Field5, { label: "T\xEAn hi\u1EC3n th\u1ECB" }, /* @__PURE__ */ React.createElement(TextInput2, { value: displayName, onChange: setDisplayName })), /* @__PURE__ */ React.createElement(Field5, { label: "M\u1EADt kh\u1EA9u m\u1EDBi (b\u1ECF tr\u1ED1ng = gi\u1EEF nguy\xEAn)" }, /* @__PURE__ */ React.createElement(TextInput2, { value: password, onChange: setPassword, type: "password" })), tooShort && /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "#ef4444" } }, "M\u1EADt kh\u1EA9u ph\u1EA3i t\u1EEB 8 k\xFD t\u1EF1."), password.length >= 8 && /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\u1ED5i m\u1EADt kh\u1EA9u s\u1EBD \u0111\u0103ng xu\u1EA5t t\xE0i kho\u1EA3n n\xE0y kh\u1ECFi m\u1ECDi thi\u1EBFt b\u1ECB."), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Email ch\xEDnh l\xE0 t\xEAn \u0111\u0103ng nh\u1EADp \u2014 s\u1EEDa email l\xE0 \u0111\u1ED5i lu\xF4n c\xE1ch h\u1ECD \u0111\u0103ng nh\u1EADp.")), /* @__PURE__ */ React.createElement(
+      ModalActions2,
+      {
+        onCancel,
+        confirmLabel: pending2 ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u",
+        confirmDisabled: pending2 || !email.trim() || tooShort,
+        onConfirm: () => onSave({
+          email: email.trim(),
+          display_name: displayName.trim(),
+          password: password || void 0
+        })
+      }
+    ));
+  }
+  function DeleteUserModal({
+    user,
+    pending: pending2,
+    onCancel,
+    onDisableInstead,
+    onDelete
+  }) {
+    const [typed, setTyped] = (0, import_react30.useState)("");
+    const matches = typed.trim().toLowerCase() === user.email.toLowerCase();
+    return /* @__PURE__ */ React.createElement(Modal3, { title: `Xo\xE1 v\u0129nh vi\u1EC5n \xB7 ${user.email}`, onClose: onCancel }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-3 rounded-lg border px-3 py-2.5 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("p", { className: "font-semibold" }, "Thao t\xE1c n\xE0y xo\xE1 lu\xF4n to\xE0n b\u1ED9 n\u1ED9i dung c\u1EE7a h\u1ECD."),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs" }, "\u1EA2nh/video \u0111\xE3 t\u1EA3i l\xEAn, truy\u1EC7n, phim, nh\u1EA1c, ti\u1EC3u thuy\u1EBFt, s\u1ED5 thu chi, nh\u1EADt k\xFD, danh b\u1EA1 v\xE0 t\u1ED5 ch\u1EE9c \u2014 t\u1EA5t c\u1EA3 b\u1ECB xo\xE1 theo v\xE0 ", /* @__PURE__ */ React.createElement("b", null, "kh\xF4ng kh\xF4i ph\u1EE5c \u0111\u01B0\u1EE3c"), ".")
+    ), !user.disabled && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onDisableInstead,
+        className: "mb-3 w-full rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" }
+      },
+      "Kho\xE1 t\xE0i kho\u1EA3n thay v\xEC xo\xE1 (\u0111\u1EA3o l\u1EA1i \u0111\u01B0\u1EE3c)"
+    ), /* @__PURE__ */ React.createElement(Field5, { label: `G\xF5 "${user.email}" \u0111\u1EC3 x\xE1c nh\u1EADn` }, /* @__PURE__ */ React.createElement(TextInput2, { value: typed, onChange: setTyped, autoFocus: true })), /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onCancel,
+        className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Hu\u1EF7"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => onDelete(typed.trim()),
+        disabled: pending2 || !matches,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40",
+        style: { background: "#ef4444" }
+      },
+      pending2 ? "\u0110ang xo\xE1\u2026" : "Xo\xE1 v\u0129nh vi\u1EC5n"
+    )));
+  }
+  function Field5({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function TextInput2({
+    value,
+    onChange,
+    type = "text",
+    placeholder,
+    autoFocus
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        autoFocus,
+        type,
+        value,
+        placeholder,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    );
+  }
+
+  // frontend/src/templates/v1/views/auth/AuthForm.tsx
+  init_define_import_meta_env();
+  var import_react31 = __toESM(require_react_shim());
+  function AuthForm({ defaultTab = "login" }) {
+    const [tab, setTab] = (0, import_react31.useState)(defaultTab);
+    const [notice, setNotice] = (0, import_react31.useState)(null);
+    const [prefillEmail, setPrefillEmail] = (0, import_react31.useState)("");
+    function handleRegistered(email, awaitingApproval) {
+      setPrefillEmail(email);
+      setNotice(
+        awaitingApproval ? "Account created. An administrator has to approve it before you can sign in \u2014 you will be able to log in once they do." : "Account created. Please sign in with your new account."
+      );
+      setTab("login");
+    }
+    function switchTo(next) {
+      setNotice(null);
+      setTab(next);
+    }
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "w-full max-w-md rounded-2xl border p-6 shadow-2xl backdrop-blur sm:p-8",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "mb-6 grid grid-cols-2 overflow-hidden rounded-xl border",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement(TabButton, { active: tab === "login", onClick: () => switchTo("login") }, /* @__PURE__ */ React.createElement(LogInIcon, null), " Sign in"),
+        /* @__PURE__ */ React.createElement(TabButton, { active: tab === "register", onClick: () => switchTo("register") }, /* @__PURE__ */ React.createElement(UserPlusIcon, null), " Register")
+      ),
+      tab === "login" ? /* @__PURE__ */ React.createElement(
+        LoginForm,
+        {
+          onSwitch: () => switchTo("register"),
+          initialEmail: prefillEmail,
+          notice
+        }
+      ) : /* @__PURE__ */ React.createElement(RegisterForm, { onSwitch: () => switchTo("login"), onRegistered: handleRegistered })
+    );
+  }
+  function nextTarget() {
+    if (typeof window === "undefined") return "/";
+    const n2 = new URLSearchParams(window.location.search).get("next");
+    return n2 && n2.startsWith("/") ? n2 : "/";
+  }
+  async function postAuth(path, payload) {
+    const res = await fetch(`${baseURL2}/api/v1/auth/${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      try {
+        return { error: null, data: await res.json() };
+      } catch {
+        return { error: null, data: null };
+      }
+    }
+    try {
+      return { error: problemDisplayMessage(await res.json()), data: null };
+    } catch {
+      return { error: problemDisplayMessage(void 0), data: null };
+    }
+  }
+  function LoginForm({
+    onSwitch,
+    initialEmail = "",
+    notice = null
+  }) {
+    const [email, setEmail] = (0, import_react31.useState)(initialEmail);
+    const [password, setPassword] = (0, import_react31.useState)("");
+    const [remember, setRemember] = (0, import_react31.useState)(true);
+    const [error, setError] = (0, import_react31.useState)(null);
+    const [loading, setLoading] = (0, import_react31.useState)(false);
+    async function onSubmit(e2) {
+      e2.preventDefault();
+      setError(null);
+      setLoading(true);
+      const { error: err } = await postAuth("login", { email, password, remember });
+      if (err) {
+        setError(err);
+        setLoading(false);
+        return;
+      }
+      try {
+        localStorage.setItem("portal_refresh_at", String(Date.now()));
+      } catch {
+      }
+      window.location.assign(nextTarget());
+    }
+    return /* @__PURE__ */ React.createElement("form", { className: "space-y-4", onSubmit }, /* @__PURE__ */ React.createElement("h2", { className: "text-lg font-semibold" }, "Login to your account"), notice && /* @__PURE__ */ React.createElement(SuccessBanner, null, notice), error && /* @__PURE__ */ React.createElement(ErrorBanner, null, error), /* @__PURE__ */ React.createElement(
+      Field6,
+      {
+        label: "Your Email",
+        name: "email",
+        type: "email",
+        autoComplete: "email",
+        placeholder: "you@example.com",
+        value: email,
+        onChange: setEmail,
+        required: true
+      }
+    ), /* @__PURE__ */ React.createElement(
+      Field6,
+      {
+        label: "Your Password",
+        name: "password",
+        type: "password",
+        autoComplete: "current-password",
+        placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+        value: password,
+        onChange: setPassword,
+        required: true
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-sm" }, /* @__PURE__ */ React.createElement(
+      "label",
+      {
+        className: "flex cursor-pointer items-center gap-2",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          className: "accent-[var(--tpl-accent)]",
+          checked: remember,
+          onChange: (e2) => setRemember(e2.target.checked)
+        }
+      ),
+      " ",
+      "Remember me"
+    ), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, "Forgot password? (coming soon)")), /* @__PURE__ */ React.createElement(PrimaryButton, { loading }, "Login"), /* @__PURE__ */ React.createElement("p", { className: "text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Don't have an account?", " ", /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onSwitch,
+        className: "font-medium hover:underline",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "Register now"
+    )));
+  }
+  function RegisterForm({
+    onSwitch,
+    onRegistered
+  }) {
+    const [displayName, setDisplayName] = (0, import_react31.useState)("");
+    const [email, setEmail] = (0, import_react31.useState)("");
+    const [password, setPassword] = (0, import_react31.useState)("");
+    const [accepted, setAccepted] = (0, import_react31.useState)(false);
+    const [error, setError] = (0, import_react31.useState)(null);
+    const [loading, setLoading] = (0, import_react31.useState)(false);
+    async function onSubmit(e2) {
+      e2.preventDefault();
+      setError(null);
+      if (!accepted) {
+        setError("Please accept the Terms & Conditions to continue.");
+        return;
+      }
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+      }
+      setLoading(true);
+      const { error: err, data } = await postAuth("register", {
+        email,
+        password,
+        display_name: displayName
+      });
+      if (err) {
+        setError(err);
+        setLoading(false);
+        return;
+      }
+      onRegistered(email, data?.approval_status !== "approved");
+    }
+    return /* @__PURE__ */ React.createElement("form", { className: "space-y-4", onSubmit }, /* @__PURE__ */ React.createElement("h2", { className: "text-lg font-semibold" }, "Create your account"), error && /* @__PURE__ */ React.createElement(ErrorBanner, null, error), /* @__PURE__ */ React.createElement(
+      Field6,
+      {
+        label: "Display name",
+        name: "display_name",
+        autoComplete: "name",
+        placeholder: "Your name",
+        value: displayName,
+        onChange: setDisplayName
+      }
+    ), /* @__PURE__ */ React.createElement(
+      Field6,
+      {
+        label: "Your Email",
+        name: "email",
+        type: "email",
+        autoComplete: "email",
+        placeholder: "you@example.com",
+        value: email,
+        onChange: setEmail,
+        required: true
+      }
+    ), /* @__PURE__ */ React.createElement(
+      Field6,
+      {
+        label: "Your Password",
+        name: "password",
+        type: "password",
+        autoComplete: "new-password",
+        placeholder: "At least 8 characters",
+        value: password,
+        onChange: setPassword,
+        required: true
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "label",
+      {
+        className: "flex cursor-pointer items-start gap-2 text-sm",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          className: "mt-0.5 accent-[var(--tpl-accent)]",
+          checked: accepted,
+          onChange: (e2) => setAccepted(e2.target.checked)
+        }
+      ),
+      /* @__PURE__ */ React.createElement("span", null, "I accept the", " ", /* @__PURE__ */ React.createElement("a", { href: "#", className: "hover:underline", style: { color: "var(--tpl-accent)" } }, "Terms & Conditions"), " ", "of the website")
+    ), /* @__PURE__ */ React.createElement(PrimaryButton, { loading }, "Complete registration"), /* @__PURE__ */ React.createElement("p", { className: "text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Already have an account?", " ", /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onSwitch,
+        className: "font-medium hover:underline",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "Sign in"
+    )));
+  }
+  function TabButton({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition",
+        style: active ? { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" } : { color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function Field6({
+    label,
+    name,
+    type = "text",
+    placeholder,
+    value,
+    onChange,
+    autoComplete,
+    required
+  }) {
+    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "mb-1.5 block text-xs font-medium uppercase tracking-wide",
+        style: { color: "var(--tpl-muted)" }
+      },
+      label
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        name,
+        type,
+        placeholder,
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        autoComplete,
+        required,
+        className: "w-full rounded-lg border bg-transparent px-3.5 py-2.5 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+        style: { borderColor: "var(--tpl-border)" }
+      }
+    ));
+  }
+  function PrimaryButton({ children, loading }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "submit",
+        disabled: loading,
+        className: "w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60",
+        style: { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" }
+      },
+      loading ? "Please wait\u2026" : children
+    );
+  }
+  function ErrorBanner({ children }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        role: "alert",
+        className: "rounded-lg border px-3.5 py-2.5 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,0.4)",
+          background: "rgba(239,68,68,0.08)",
+          color: "#ef4444"
+        }
+      },
+      children
+    );
+  }
+  function SuccessBanner({ children }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        role: "status",
+        className: "rounded-lg border px-3.5 py-2.5 text-sm",
+        style: {
+          borderColor: "rgba(34,197,94,0.4)",
+          background: "rgba(34,197,94,0.08)",
+          color: "#22c55e"
+        }
+      },
+      children
+    );
+  }
+  function iconProps() {
+    return {
+      width: 16,
+      height: 16,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": true
+    };
+  }
+  function LogInIcon() {
+    return /* @__PURE__ */ React.createElement("svg", { ...iconProps() }, /* @__PURE__ */ React.createElement("path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" }), /* @__PURE__ */ React.createElement("polyline", { points: "10 17 15 12 10 7" }), /* @__PURE__ */ React.createElement("line", { x1: "15", y1: "12", x2: "3", y2: "12" }));
+  }
+  function UserPlusIcon() {
+    return /* @__PURE__ */ React.createElement("svg", { ...iconProps() }, /* @__PURE__ */ React.createElement("path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" }), /* @__PURE__ */ React.createElement("circle", { cx: "9", cy: "7", r: "4" }), /* @__PURE__ */ React.createElement("line", { x1: "19", y1: "8", x2: "19", y2: "14" }), /* @__PURE__ */ React.createElement("line", { x1: "22", y1: "11", x2: "16", y2: "11" }));
+  }
+
+  // frontend/src/templates/v1/views/auth/AuthLanding.tsx
+  init_define_import_meta_env();
+  function AuthLanding({ defaultTab }) {
+    const registering = defaultTab === "register";
+    return /* @__PURE__ */ React.createElement("div", { className: "relative flex min-h-screen items-center overflow-hidden" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        "aria-hidden": true,
+        className: "pointer-events-none absolute inset-0",
+        style: {
+          background: "radial-gradient(55% 55% at 18% 22%, rgba(255,94,58,0.14), transparent 70%),radial-gradient(45% 45% at 90% 85%, rgba(56,169,255,0.10), transparent 70%)"
+        }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2" }, /* @__PURE__ */ React.createElement("div", { className: "landing-content" }, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/",
+        className: "inline-flex items-center gap-2 text-sm",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "grid h-8 w-8 place-items-center rounded-lg text-sm font-bold",
+          style: { background: "var(--tpl-accent)", color: "var(--tpl-accent-contrast)" }
+        },
+        "S"
+      ),
+      "Sky Feeling \xB7 Social Network"
+    ), /* @__PURE__ */ React.createElement("h1", { className: "mt-6 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl" }, registering ? "Join the biggest social network" : "Welcome to the biggest social network"), /* @__PURE__ */ React.createElement("p", { className: "mt-5 max-w-md text-lg", style: { color: "var(--tpl-muted)" } }, "Share your thoughts, write posts, stream your favourite music, earn badges and much more."), /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: registering ? "/login" : "/register",
+        className: "mt-8 inline-block rounded-lg border px-5 py-2.5 text-sm font-medium transition hover:bg-white/5",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      registering ? "I already have an account" : "Register now"
+    )), /* @__PURE__ */ React.createElement("div", { className: "flex justify-center md:justify-end" }, /* @__PURE__ */ React.createElement(AuthForm, { defaultTab }))));
+  }
+
+  // frontend/src/templates/v1/views/auth/LoginView.tsx
+  init_define_import_meta_env();
+  function LoginView() {
+    return /* @__PURE__ */ React.createElement(AuthLanding, { defaultTab: "login" });
+  }
+
+  // frontend/src/templates/v1/views/auth/RegisterView.tsx
+  init_define_import_meta_env();
+  function RegisterView() {
+    return /* @__PURE__ */ React.createElement(AuthLanding, { defaultTab: "register" });
+  }
+
+  // frontend/src/templates/v1/views/bank/AccountsView.tsx
+  init_define_import_meta_env();
+  var import_react33 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/views/bank/DashboardView.tsx
+  init_define_import_meta_env();
+  var import_react32 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/views/bank/MonthPager.tsx
+  init_define_import_meta_env();
+  function MonthPager({ month, onChange }) {
+    const isCurrent = month === currentMonth();
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex items-center justify-between rounded-xl border px-2 py-1.5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement(Arrow, { label: "Th\xE1ng tr\u01B0\u1EDBc", onClick: () => onChange(shiftMonth(month, -1)) }, "\u2039"),
+      /* @__PURE__ */ React.createElement("div", { className: "relative flex items-center gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, monthLabel(month)), !isCurrent && /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => onChange(currentMonth()),
+          className: "rounded-md px-2 py-0.5 text-[11px] font-semibold",
+          style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" }
+        },
+        "H\xF4m nay"
+      ), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "month",
+          value: month,
+          onChange: (e2) => e2.target.value && onChange(e2.target.value),
+          "aria-label": "Ch\u1ECDn th\xE1ng",
+          className: "absolute inset-0 cursor-pointer opacity-0"
+        }
+      )),
+      /* @__PURE__ */ React.createElement(Arrow, { label: "Th\xE1ng sau", onClick: () => onChange(shiftMonth(month, 1)) }, "\u203A")
+    );
+  }
+  function Arrow({
+    label,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        "aria-label": label,
+        className: "grid h-8 w-8 place-items-center rounded-lg text-lg leading-none transition hover:bg-[var(--tpl-surface-2)]",
+        style: { color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+
+  // frontend/src/templates/v1/views/bank/DashboardView.tsx
+  function DashboardView() {
+    const [month, setMonth] = (0, import_react32.useState)(currentMonth());
+    const [adding, setAdding] = (0, import_react32.useState)(false);
+    const dash = useQuery({ queryKey: ["bank", "dashboard", month], queryFn: () => getDashboard(month) });
+    const report = useQuery({ queryKey: ["bank", "report", month], queryFn: () => getReport(month) });
+    const cats = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const recent = useQuery({
+      queryKey: ["bank", "transactions", month, "", ""],
+      queryFn: () => listTransactions({ month })
+    });
+    const catById = (0, import_react32.useMemo)(
+      () => new Map((cats.data ?? []).map((c) => [c.id, c])),
+      [cats.data]
+    );
+    const accountById = (0, import_react32.useMemo)(
+      () => new Map((dash.data?.accounts ?? []).map((a) => [a.id, a])),
+      [dash.data]
+    );
+    const openAccounts = (dash.data?.accounts ?? []).filter((a) => !a.archived);
+    const net = (dash.data?.income ?? 0) - (dash.data?.expense ?? 0);
+    const budgetSet = (0, import_react32.useMemo)(() => new Set(dash.data?.budgets.map((b) => b.category_id)), [dash.data]);
+    const topBudgets = (dash.data?.budgets ?? []).filter((b) => !(b.parent_id && budgetSet.has(b.parent_id)));
+    return /* @__PURE__ */ React.createElement("section", { className: "pb-8" }, /* @__PURE__ */ React.createElement("header", { className: "mb-5 flex flex-wrap items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "S\u1ED5 thu chi"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/bank/reports",
+        className: "rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "B\xE1o c\xE1o"
+    ), /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/bank/accounts",
+        className: "rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "V\xED"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setAdding(true),
+        className: "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition hover:opacity-90",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      "+ Ghi ch\xE9p"
+    ))), /* @__PURE__ */ React.createElement(MonthPager, { month, onChange: setMonth }), /* @__PURE__ */ React.createElement(
+      "section",
+      {
+        className: "mt-4 overflow-hidden rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("p", { className: "text-xs font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "T\u1ED5ng s\u1ED1 d\u01B0"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-3xl font-bold tabular-nums", style: { color: "var(--tpl-heading)" } }, formatVND(openAccounts.reduce((s, a) => s + a.balance, 0)), /* @__PURE__ */ React.createElement("span", { className: "ml-1.5 text-base font-semibold", style: { color: "var(--tpl-muted)" } }, "\u0111"))),
+      /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 border-t", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(Stat, { label: "Thu", value: dash.data?.income ?? 0, tone: "#22c55e" }), /* @__PURE__ */ React.createElement(Stat, { label: "Chi", value: dash.data?.expense ?? 0, tone: "#ef4444", bordered: true }), /* @__PURE__ */ React.createElement(Stat, { label: "C\xF2n l\u1EA1i", value: net, tone: net < 0 ? "#ef4444" : "var(--tpl-heading)", signed: true }))
+    ), openAccounts.length > 0 ? /* @__PURE__ */ React.createElement("section", { className: "mt-4" }, /* @__PURE__ */ React.createElement(SectionHead, { title: "V\xED c\u1EE7a t\xF4i", href: "/bank/accounts" }), /* @__PURE__ */ React.createElement("div", { className: "grid gap-2 sm:grid-cols-2" }, openAccounts.map((a) => /* @__PURE__ */ React.createElement(WalletCard, { key: a.id, account: a })))) : !dash.isPending && /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/bank/accounts",
+        className: "mt-4 block rounded-2xl border border-dashed p-8 text-center text-sm transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Ch\u01B0a c\xF3 v\xED n\xE0o \u2014 t\u1EA1o v\xED \u0111\u1EA7u ti\xEAn \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u ghi ch\xE9p."
+    ), /* @__PURE__ */ React.createElement("section", { className: "mt-6" }, /* @__PURE__ */ React.createElement(SectionHead, { title: "Chi ti\xEAu theo danh m\u1EE5c", href: "/bank/reports" }), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "rounded-2xl border p-5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "flex flex-col items-center gap-6 sm:flex-row sm:items-start" }, /* @__PURE__ */ React.createElement(
+        CategoryDonut,
+        {
+          slices: report.data?.expenses ?? [],
+          total: report.data?.expense ?? 0,
+          centerLabel: "\u0110\xE3 chi"
+        }
+      ), /* @__PURE__ */ React.createElement("ul", { className: "w-full min-w-0 flex-1 space-y-2" }, (report.data?.expenses ?? []).slice(0, 6).map((c) => {
+        const pct = report.data?.expense ? c.total / report.data.expense * 100 : 0;
+        return /* @__PURE__ */ React.createElement("li", { key: c.category_id, className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement(CategoryChip, { icon: c.icon, color: c.color, name: c.name, size: 30 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "truncate text-sm", style: { color: "var(--tpl-text)" } }, c.name), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-sm font-semibold tabular-nums", style: { color: "var(--tpl-heading)" } }, formatVND(c.total))), /* @__PURE__ */ React.createElement("div", { className: "mt-1 h-1.5 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "h-full rounded-full",
+            style: { width: `${Math.max(2, pct)}%`, background: categoryTint(c.color) }
+          }
+        ))), /* @__PURE__ */ React.createElement("span", { className: "w-10 shrink-0 text-right text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, pct.toFixed(0), "%"));
+      }), (report.data?.expenses ?? []).length === 0 && !report.isPending && /* @__PURE__ */ React.createElement("li", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Th\xE1ng n\xE0y ch\u01B0a c\xF3 kho\u1EA3n chi n\xE0o.")))
+    )), topBudgets.length > 0 && /* @__PURE__ */ React.createElement("section", { className: "mt-6" }, /* @__PURE__ */ React.createElement(SectionHead, { title: "Ng\xE2n s\xE1ch", href: "/bank/budgets" }), /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      topBudgets.map((b) => {
+        const cat = catById.get(b.category_id);
+        const pct = b.amount > 0 ? Math.min(100, b.spent / b.amount * 100) : 0;
+        const over = b.spent > b.amount;
+        return /* @__PURE__ */ React.createElement("li", { key: b.category_id, className: "flex items-center gap-3 px-4 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(CategoryChip, { icon: cat?.icon, color: cat?.color, name: b.name, size: 34 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-text)" } }, b.name), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-xs tabular-nums", style: { color: over ? "#ef4444" : "var(--tpl-muted)" } }, formatVND(b.spent), " / ", formatVND(b.amount))), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 h-2 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "h-full rounded-full transition-all",
+            style: {
+              width: `${Math.max(2, pct)}%`,
+              // Over budget turns red rather than just filling the bar:
+              // a full bar and an exceeded one must not look identical.
+              background: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#22c55e"
+            }
+          }
+        ))));
+      })
+    )), (report.data?.trend ?? []).length > 0 && /* @__PURE__ */ React.createElement("section", { className: "mt-6" }, /* @__PURE__ */ React.createElement(SectionHead, { title: "6 th\xE1ng g\u1EA7n \u0111\xE2y" }), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "rounded-2xl border px-5 py-4",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement(TrendBars, { data: report.data?.trend ?? [], activeMonth: month }),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex justify-center gap-4 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Legend, { color: "#22c55e", label: "Thu" }), /* @__PURE__ */ React.createElement(Legend, { color: "#ef4444", label: "Chi" }))
+    )), /* @__PURE__ */ React.createElement("section", { className: "mt-6" }, /* @__PURE__ */ React.createElement(SectionHead, { title: "Giao d\u1ECBch g\u1EA7n \u0111\xE2y", href: "/bank/transactions" }), /* @__PURE__ */ React.createElement(
+      RecentList,
+      {
+        transactions: (recent.data?.transactions ?? []).slice(0, RECENT_LIMIT),
+        loading: recent.isPending,
+        categoryOf: (id2) => id2 ? catById.get(id2) ?? null : null,
+        accountOf: (id2) => accountById.get(id2) ?? null
+      }
+    )), adding && /* @__PURE__ */ React.createElement(QuickAddModal, { onClose: () => setAdding(false) }));
+  }
+  var RECENT_LIMIT = 12;
+  function Stat({
+    label,
+    value,
+    tone,
+    bordered,
+    signed
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "px-5 py-3",
+        style: bordered ? { borderLeft: "1px solid var(--tpl-border)", borderRight: "1px solid var(--tpl-border)" } : void 0
+      },
+      /* @__PURE__ */ React.createElement("p", { className: "text-[11px] font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, label),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-base font-bold tabular-nums", style: { color: tone } }, signed && value > 0 ? "+" : "", formatVND(value))
+    );
+  }
+  function WalletCard({ account }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex items-center justify-between rounded-xl border px-4 py-3",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-text)" } }, account.name), /* @__PURE__ */ React.createElement("p", { className: "text-[11px] uppercase", style: { color: "var(--tpl-muted)" } }, ACCOUNT_TYPE_LABEL[account.type] ?? account.type)),
+      /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "shrink-0 text-sm font-bold tabular-nums",
+          style: { color: account.balance < 0 ? "#ef4444" : "var(--tpl-heading)" }
+        },
+        formatVND(account.balance)
+      )
+    );
+  }
+  var ACCOUNT_TYPE_LABEL = {
+    cash: "Ti\u1EC1n m\u1EB7t",
+    checking: "Thanh to\xE1n",
+    savings: "Ti\u1EBFt ki\u1EC7m",
+    credit_card: "Th\u1EBB t\xEDn d\u1EE5ng",
+    ewallet: "V\xED \u0111i\u1EC7n t\u1EED",
+    other: "Kh\xE1c"
+  };
+  function SectionHead({ title, href }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "mb-2 flex items-baseline justify-between" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, title), href && /* @__PURE__ */ React.createElement(Link, { href, className: "text-xs font-semibold", style: { color: "var(--tpl-accent)" } }, "Xem t\u1EA5t c\u1EA3"));
+  }
+  function Legend({ color, label }) {
+    return /* @__PURE__ */ React.createElement("span", { className: "flex items-center gap-1.5" }, /* @__PURE__ */ React.createElement("span", { className: "h-2 w-2 rounded-full", style: { background: color } }), label);
+  }
+  function RecentList({
+    transactions,
+    loading,
+    categoryOf,
+    accountOf
+  }) {
+    const days = (0, import_react32.useMemo)(() => groupByDay(transactions), [transactions]);
+    if (loading) {
+      return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-6 text-sm", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026");
+    }
+    if (transactions.length === 0) {
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "flex flex-col items-center gap-2 rounded-2xl border border-dashed py-10 text-center",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "stats-icon", size: 24, style: { color: "var(--tpl-muted)" } }),
+        /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 giao d\u1ECBch n\xE0o \u2014 b\u1EA5m \u201CGhi ch\xE9p\u201D \u0111\u1EC3 th\xEAm kho\u1EA3n \u0111\u1EA7u ti\xEAn.")
+      );
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, days.map(([day, rows]) => {
+      const net = rows.reduce((s, t2) => s + signedAmount(t2), 0);
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: day,
+          className: "overflow-hidden rounded-2xl border",
+          style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+        },
+        /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "flex items-baseline justify-between px-4 py-2",
+            style: { background: "var(--tpl-surface-2)" }
+          },
+          /* @__PURE__ */ React.createElement("span", { className: "text-xs font-bold", style: { color: "var(--tpl-text)" } }, dayLabel(day)),
+          /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              className: "text-xs font-semibold tabular-nums",
+              style: { color: net < 0 ? "#ef4444" : "#22c55e" }
+            },
+            net > 0 ? "+" : "",
+            formatVND(net)
+          )
+        ),
+        /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, rows.map((t2) => /* @__PURE__ */ React.createElement(
+          TransactionRow,
+          {
+            key: t2.id,
+            tx: t2,
+            category: categoryOf(t2.category_id),
+            accountName: accountOf(t2.account_id)?.name ?? ""
+          }
+        )))
+      );
+    }));
+  }
+  function groupByDay(rows) {
+    const map = /* @__PURE__ */ new Map();
+    for (const t2 of rows) {
+      const list = map.get(t2.occurred_at);
+      if (list) list.push(t2);
+      else map.set(t2.occurred_at, [t2]);
+    }
+    return [...map.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1);
+  }
+  function TransactionRow({
+    tx,
+    category,
+    accountName,
+    onDelete
+  }) {
+    const amount = signedAmount(tx);
+    const title = tx.is_transfer ? "Chuy\u1EC3n kho\u1EA3n" : category?.name ?? "Ch\u01B0a ph\xE2n lo\u1EA1i";
+    return /* @__PURE__ */ React.createElement("li", { className: "flex items-center gap-3 px-4 py-2.5", style: { borderColor: "var(--tpl-border)" } }, tx.is_transfer ? /* @__PURE__ */ React.createElement(CategoryChip, { icon: "\u{1F504}", color: "#0ea5e9", name: title, size: 36 }) : /* @__PURE__ */ React.createElement(CategoryChip, { icon: category?.icon, color: category?.color, name: title, size: 36 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-text)" } }, title), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, [accountName, tx.note].filter(Boolean).join(" \xB7 ") || "\u2014")), /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "shrink-0 text-sm font-semibold tabular-nums",
+        style: { color: tx.is_transfer ? "var(--tpl-muted)" : amount < 0 ? "#ef4444" : "#22c55e" }
+      },
+      amount > 0 ? "+" : "",
+      formatVND(amount)
+    ), onDelete && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onDelete,
+        "aria-label": `Xo\xE1 giao d\u1ECBch ${title}`,
+        className: "shrink-0 transition hover:text-[#ef4444]",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 14 })
+    ));
+  }
+
+  // frontend/src/templates/v1/views/bank/AccountsView.tsx
+  var TYPES = ["cash", "checking", "savings", "credit_card", "ewallet", "other"];
+  var TYPE_ICON = {
+    cash: "\u{1F4B5}",
+    checking: "\u{1F3E6}",
+    savings: "\u{1F437}",
+    credit_card: "\u{1F4B3}",
+    ewallet: "\u{1F4F1}",
+    other: "\u{1F4C1}"
+  };
+  function AccountsView() {
+    const qc = useQueryClient();
+    const { data: accounts = [], isPending } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+    const [open, setOpen] = (0, import_react33.useState)(false);
+    const [name, setName] = (0, import_react33.useState)("");
+    const [type, setType] = (0, import_react33.useState)("cash");
+    const [opening, setOpening] = (0, import_react33.useState)(0);
+    const [err, setErr] = (0, import_react33.useState)(null);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
+    const create2 = useMutation({
+      mutationFn: () => createAccount({ name: name.trim(), type, currency: "VND", opening_balance: opening }),
+      onSuccess: () => {
+        setName("");
+        setOpening(0);
+        setErr(null);
+        setOpen(false);
+        invalidate();
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c v\xED.")
+    });
+    const archive = useMutation({
+      mutationFn: (a) => updateAccount(a.id, { archived: a.archived }),
+      onMutate: () => setErr(null),
+      onSuccess: invalidate,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng \u0111\u1ED5i \u0111\u01B0\u1EE3c tr\u1EA1ng th\xE1i v\xED.")
+    });
+    const remove = useMutation({
+      mutationFn: (id2) => deleteAccount(id2),
+      onMutate: () => setErr(null),
+      onSuccess: invalidate,
+      onError: (e2) => setErr(
+        e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c v\xED \u2014 v\xED \u0111\xE3 c\xF3 giao d\u1ECBch th\xEC ch\u1EC9 c\xF3 th\u1EC3 l\u01B0u tr\u1EEF."
+      )
+    });
+    const active = accounts.filter((a) => !a.archived);
+    const archived = accounts.filter((a) => a.archived);
+    const total = active.reduce((s, a) => s + a.balance, 0);
+    return /* @__PURE__ */ React.createElement("section", { className: "pb-8" }, /* @__PURE__ */ React.createElement("header", { className: "mb-5 flex flex-wrap items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(BackLink, null), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "V\xED c\u1EE7a t\xF4i")), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setOpen((v) => !v),
+        className: "rounded-lg px-4 py-2 text-sm font-bold text-white transition hover:opacity-90",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      open ? "Hu\u1EF7" : "+ Th\xEAm v\xED"
+    )), active.length > 0 && /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-4 rounded-2xl border p-5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("p", { className: "text-xs font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "T\u1ED5ng s\u1ED1 d\u01B0"),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-2xl font-bold tabular-nums", style: { color: "var(--tpl-heading)" } }, formatVND(total), " ", /* @__PURE__ */ React.createElement("span", { className: "text-base font-semibold", style: { color: "var(--tpl-muted)" } }, "\u0111"))
+    ), err && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+      },
+      err
+    ), open && /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        className: "mb-5 grid gap-3 rounded-2xl border p-5 sm:grid-cols-2",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" },
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (name.trim()) create2.mutate();
+        }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "sm:col-span-2" }, /* @__PURE__ */ React.createElement(Label, { htmlFor: "acct-name" }, "T\xEAn v\xED"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          id: "acct-name",
+          value: name,
+          onChange: (e2) => setName(e2.target.value),
+          placeholder: "V\xED d\u1EE5: Ti\u1EC1n m\u1EB7t, Techcombank, Momo",
+          className: "w-full rounded-lg border px-3 py-2 text-sm",
+          style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+        }
+      )),
+      /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Label, { htmlFor: "acct-type" }, "Lo\u1EA1i"), /* @__PURE__ */ React.createElement(
+        "select",
+        {
+          id: "acct-type",
+          value: type,
+          onChange: (e2) => setType(e2.target.value),
+          className: "w-full rounded-lg border px-3 py-2 text-sm",
+          style: { borderColor: "var(--tpl-border)", background: "var(--tpl-bg)", color: "var(--tpl-text)" }
+        },
+        TYPES.map((t2) => /* @__PURE__ */ React.createElement("option", { key: t2, value: t2 }, TYPE_ICON[t2], " ", ACCOUNT_TYPE_LABEL[t2]))
+      )),
+      /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Label, { htmlFor: "acct-opening" }, "S\u1ED1 d\u01B0 ban \u0111\u1EA7u"), /* @__PURE__ */ React.createElement(
+        MoneyInput,
+        {
+          id: "acct-opening",
+          value: opening,
+          onChange: setOpening,
+          className: "w-full rounded-lg border px-3 py-2 text-right text-sm tabular-nums outline-none"
+        }
+      )),
+      /* @__PURE__ */ React.createElement("p", { className: "text-xs sm:col-span-2", style: { color: "var(--tpl-muted)" } }, "S\u1ED1 d\u01B0 ban \u0111\u1EA7u ch\u1EC9 \u0111\u1EB7t \u0111\u01B0\u1EE3c l\xFAc t\u1EA1o \u2014 sau \u0111\xF3 s\u1ED1 d\u01B0 \u0111\u01B0\u1EE3c t\xEDnh t\u1EEB giao d\u1ECBch, n\xEAn s\u1EEDa l\u1EA1i s\u1EBD l\xE0m sai l\u1EC7ch c\xE1c th\xE1ng \u0111\xE3 ch\u1ED1t."),
+      /* @__PURE__ */ React.createElement("div", { className: "sm:col-span-2" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "submit",
+          disabled: !name.trim() || create2.isPending,
+          className: "rounded-lg px-4 py-2 text-sm font-bold text-white transition disabled:opacity-40",
+          style: { background: "var(--tpl-accent)" }
+        },
+        create2.isPending ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o v\xED"
+      ))
+    ), isPending ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026") : accounts.length === 0 ? /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "rounded-2xl border border-dashed py-12 text-center text-sm",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Ch\u01B0a c\xF3 v\xED n\xE0o \u2014 b\u1EA5m \u201CTh\xEAm v\xED\u201D \u0111\u1EC3 t\u1EA1o v\xED \u0111\u1EA7u ti\xEAn."
+    ) : /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      active.map((a) => /* @__PURE__ */ React.createElement(
+        AccountRow,
+        {
+          key: a.id,
+          account: a,
+          onArchive: () => archive.mutate({ id: a.id, archived: true }),
+          onDelete: () => remove.mutate(a.id)
+        }
+      ))
+    ), archived.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-6 text-sm font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "\u0110\xE3 l\u01B0u tr\u1EEF"), /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y rounded-2xl border opacity-60",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      archived.map((a) => /* @__PURE__ */ React.createElement(
+        AccountRow,
+        {
+          key: a.id,
+          account: a,
+          onRestore: () => archive.mutate({ id: a.id, archived: false }),
+          onDelete: () => remove.mutate(a.id)
+        }
+      ))
+    )));
+  }
+  function AccountRow({
+    account,
+    onArchive,
+    onRestore,
+    onDelete
+  }) {
+    return /* @__PURE__ */ React.createElement("li", { className: "flex items-center gap-3 px-4 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg",
+        style: { background: "var(--tpl-surface-2)" }
+      },
+      TYPE_ICON[account.type] ?? "\u{1F4C1}"
+    ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-semibold", style: { color: "var(--tpl-text)" } }, account.name), /* @__PURE__ */ React.createElement("p", { className: "text-[11px]", style: { color: "var(--tpl-muted)" } }, ACCOUNT_TYPE_LABEL[account.type] ?? account.type, " \xB7 ", account.currency)), /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "shrink-0 text-sm font-bold tabular-nums",
+        style: { color: account.balance < 0 ? "#ef4444" : "var(--tpl-heading)" }
+      },
+      formatVND(account.balance)
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 items-center gap-2" }, onArchive && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onArchive,
+        className: "text-xs font-semibold transition hover:opacity-80",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "L\u01B0u tr\u1EEF"
+    ), onRestore && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRestore,
+        className: "text-xs font-semibold transition hover:opacity-80",
+        style: { color: "var(--tpl-accent)" }
+      },
+      "Kh\xF4i ph\u1EE5c"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onDelete,
+        "aria-label": `Xo\xE1 v\xED ${account.name}`,
+        className: "transition hover:text-[#ef4444]",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 15 })
+    )));
+  }
+  function Label({ htmlFor, children }) {
+    return /* @__PURE__ */ React.createElement("label", { htmlFor, className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, children);
+  }
+
+  // frontend/src/templates/v1/views/bank/BudgetsView.tsx
+  init_define_import_meta_env();
+  var import_react34 = __toESM(require_react_shim());
+  function tree(categories) {
+    const expense = categories.filter((c) => c.kind === "expense");
+    const tops = expense.filter((c) => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name, "vi"));
+    const out = [];
+    for (const p of tops) {
+      out.push(p);
+      out.push(
+        ...expense.filter((c) => c.parent_id === p.id).sort((a, b) => a.name.localeCompare(b.name, "vi"))
+      );
+    }
+    return out;
+  }
+  function BudgetsView() {
+    const qc = useQueryClient();
+    const [month, setMonth] = (0, import_react34.useState)(currentMonth());
+    const [edits, setEdits] = (0, import_react34.useState)({});
+    const [err, setErr] = (0, import_react34.useState)(null);
+    const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const { data: budgets } = useQuery({ queryKey: ["bank", "budgets", month], queryFn: () => listBudgets(month) });
+    const byCat = (0, import_react34.useMemo)(() => {
+      const m = /* @__PURE__ */ new Map();
+      budgets?.budgets.forEach((b) => m.set(b.category_id, { amount: b.amount, spent: b.spent }));
+      return m;
+    }, [budgets]);
+    const rows = (0, import_react34.useMemo)(() => {
+      const all = tree(categories);
+      const set = all.filter((c) => byCat.has(c.id));
+      const unset = all.filter((c) => !byCat.has(c.id));
+      return { set, unset };
+    }, [categories, byCat]);
+    const save = useMutation({
+      mutationFn: (v) => (
+        // 0 means "no budget": the API takes null to clear, so an emptied field
+        // removes the cap rather than storing a budget of zero that every spend
+        // instantly blows through.
+        setBudget({ category_id: v.category_id, month, amount: v.amount || null })
+      ),
+      onMutate: () => setErr(null),
+      onSuccess: (_d2, v) => {
+        setEdits((s) => {
+          const next = { ...s };
+          delete next[v.category_id];
+          return next;
+        });
+        qc.invalidateQueries({ queryKey: ["bank"] });
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ng\xE2n s\xE1ch.")
+    });
+    const totalBudget = (budgets?.budgets ?? []).reduce((s, b) => s + b.amount, 0);
+    const totalSpent = (budgets?.budgets ?? []).reduce((s, b) => s + b.spent, 0);
+    const row = (c) => {
+      const existing = byCat.get(c.id);
+      const draft = edits[c.id] ?? existing?.amount ?? 0;
+      const dirty = edits[c.id] !== void 0 && edits[c.id] !== (existing?.amount ?? 0);
+      const pct = existing && existing.amount > 0 ? existing.spent / existing.amount * 100 : 0;
+      const over = pct > 100;
+      return /* @__PURE__ */ React.createElement(
+        "li",
+        {
+          key: c.id,
+          className: "flex flex-wrap items-center gap-3 px-4 py-3",
+          style: { borderColor: "var(--tpl-border)" }
+        },
+        /* @__PURE__ */ React.createElement(CategoryChip, { icon: c.icon, color: c.color, name: c.name, size: 34 }),
+        /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-text)" } }, c.name), existing ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 h-2 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "h-full rounded-full transition-all",
+            style: {
+              width: `${Math.min(100, Math.max(2, pct))}%`,
+              background: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#22c55e"
+            }
+          }
+        )), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-[11px] tabular-nums", style: { color: over ? "#ef4444" : "var(--tpl-muted)" } }, "\u0110\xE3 chi ", formatVND(existing.spent), " / ", formatVND(existing.amount), over ? ` \xB7 v\u01B0\u1EE3t ${formatVND(existing.spent - existing.amount)}` : ` \xB7 c\xF2n ${formatVND(existing.amount - existing.spent)}`)) : /* @__PURE__ */ React.createElement("p", { className: "text-[11px]", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a \u0111\u1EB7t ng\xE2n s\xE1ch")),
+        /* @__PURE__ */ React.createElement("div", { className: "w-36" }, /* @__PURE__ */ React.createElement(
+          MoneyInput,
+          {
+            value: draft,
+            onChange: (v) => setEdits((s) => ({ ...s, [c.id]: v })),
+            className: "w-full rounded-lg border px-3 py-1.5 text-right text-sm tabular-nums outline-none"
+          }
+        )),
+        /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => save.mutate({ category_id: c.id, amount: draft }),
+            disabled: !dirty || save.isPending,
+            className: "rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition disabled:opacity-30",
+            style: { background: "var(--tpl-accent)" }
+          },
+          "L\u01B0u"
+        )
+      );
+    };
+    return /* @__PURE__ */ React.createElement("section", { className: "pb-8" }, /* @__PURE__ */ React.createElement("header", { className: "mb-5" }, /* @__PURE__ */ React.createElement(BackLink, null), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Ng\xE2n s\xE1ch")), /* @__PURE__ */ React.createElement(MonthPager, { month, onChange: setMonth }), totalBudget > 0 && /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mt-4 rounded-2xl border p-5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between" }, /* @__PURE__ */ React.createElement("p", { className: "text-xs font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "T\u1ED5ng ng\xE2n s\xE1ch"), /* @__PURE__ */ React.createElement("p", { className: "text-sm font-bold tabular-nums", style: { color: totalSpent > totalBudget ? "#ef4444" : "var(--tpl-heading)" } }, formatVND(totalSpent), " / ", formatVND(totalBudget))),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-2 h-2.5 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "h-full rounded-full",
+          style: {
+            width: `${Math.min(100, Math.max(2, totalSpent / totalBudget * 100))}%`,
+            background: totalSpent > totalBudget ? "#ef4444" : "#22c55e"
+          }
+        }
+      ))
+    ), err && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mt-3 rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+      },
+      err
+    ), rows.set.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-5 text-sm font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "\u0110ang theo d\xF5i"), /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      rows.set.map(row)
+    )), /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-5 text-sm font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "Danh m\u1EE5c kh\xE1c"), /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      rows.unset.map(row)
+    ));
+  }
+
+  // frontend/src/templates/v1/views/bank/ReportsView.tsx
+  init_define_import_meta_env();
+  var import_react35 = __toESM(require_react_shim());
+  function ReportsView() {
+    const [month, setMonth] = (0, import_react35.useState)(currentMonth());
+    const [kind, setKind] = (0, import_react35.useState)("expense");
+    const report = useQuery({ queryKey: ["bank", "report", month], queryFn: () => getReport(month) });
+    const slices = kind === "expense" ? report.data?.expenses ?? [] : report.data?.incomes ?? [];
+    const total = kind === "expense" ? report.data?.expense ?? 0 : report.data?.income ?? 0;
+    const net = (report.data?.income ?? 0) - (report.data?.expense ?? 0);
+    return /* @__PURE__ */ React.createElement("section", { className: "pb-8" }, /* @__PURE__ */ React.createElement("header", { className: "mb-5" }, /* @__PURE__ */ React.createElement(BackLink, null), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "B\xE1o c\xE1o")), /* @__PURE__ */ React.createElement(MonthPager, { month, onChange: setMonth }), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement(Total, { label: "Thu", value: report.data?.income ?? 0, tone: "#22c55e" }),
+      /* @__PURE__ */ React.createElement(Total, { label: "Chi", value: report.data?.expense ?? 0, tone: "#ef4444", bordered: true }),
+      /* @__PURE__ */ React.createElement(Total, { label: "C\xF2n l\u1EA1i", value: net, tone: net < 0 ? "#ef4444" : "var(--tpl-heading)", signed: true })
+    ), /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex gap-1 rounded-lg p-1", style: { background: "var(--tpl-surface-2)", width: "fit-content" } }, [
+      ["expense", "Chi ti\xEAu"],
+      ["income", "Thu nh\u1EADp"]
+    ].map(([k, label]) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: k,
+        type: "button",
+        onClick: () => setKind(k),
+        "aria-pressed": kind === k,
+        className: "rounded-md px-4 py-1.5 text-sm font-semibold transition",
+        style: {
+          background: kind === k ? "var(--tpl-accent)" : "transparent",
+          color: kind === k ? "#fff" : "var(--tpl-muted)"
+        }
+      },
+      label
+    ))), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mt-3 rounded-2xl border p-5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      report.isPending ? /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026") : slices.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "py-8 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Th\xE1ng n\xE0y ch\u01B0a c\xF3 ", kind === "expense" ? "kho\u1EA3n chi" : "kho\u1EA3n thu", " n\xE0o.") : /* @__PURE__ */ React.createElement("div", { className: "flex flex-col items-center gap-6 md:flex-row md:items-start" }, /* @__PURE__ */ React.createElement(
+        CategoryDonut,
+        {
+          slices,
+          total,
+          centerLabel: kind === "expense" ? "\u0110\xE3 chi" : "\u0110\xE3 thu"
+        }
+      ), /* @__PURE__ */ React.createElement("ul", { className: "w-full min-w-0 flex-1 divide-y", style: { borderColor: "var(--tpl-border)" } }, slices.map((c) => /* @__PURE__ */ React.createElement(BreakdownRow, { key: c.category_id, slice: c, total }))))
+    ), (report.data?.trend ?? []).length > 0 && /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mt-4 rounded-2xl border px-5 py-4",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, "6 th\xE1ng g\u1EA7n \u0111\xE2y"),
+      /* @__PURE__ */ React.createElement(TrendBars, { data: report.data?.trend ?? [], activeMonth: month })
+    ));
+  }
+  function Total({
+    label,
+    value,
+    tone,
+    bordered,
+    signed
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "px-5 py-4",
+        style: bordered ? { borderLeft: "1px solid var(--tpl-border)", borderRight: "1px solid var(--tpl-border)" } : void 0
+      },
+      /* @__PURE__ */ React.createElement("p", { className: "text-[11px] font-semibold uppercase tracking-wide", style: { color: "var(--tpl-muted)" } }, label),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-lg font-bold tabular-nums", style: { color: tone } }, signed && value > 0 ? "+" : "", formatVND(value))
+    );
+  }
+  function BreakdownRow({ slice, total }) {
+    const pct = total > 0 ? slice.total / total * 100 : 0;
+    return /* @__PURE__ */ React.createElement("li", { className: "flex items-center gap-3 py-2.5", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(CategoryChip, { icon: slice.icon, color: slice.color, name: slice.name, size: 34 }), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-text)" } }, slice.name), /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-sm font-semibold tabular-nums", style: { color: "var(--tpl-heading)" } }, formatVND(slice.total))), /* @__PURE__ */ React.createElement("div", { className: "mt-1 flex items-center gap-2" }, /* @__PURE__ */ React.createElement("div", { className: "h-1.5 flex-1 overflow-hidden rounded-full", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "h-full rounded-full",
+        style: { width: `${Math.max(2, pct)}%`, background: categoryTint(slice.color) }
+      }
+    )), /* @__PURE__ */ React.createElement("span", { className: "w-20 shrink-0 text-right text-[11px] tabular-nums", style: { color: "var(--tpl-muted)" } }, pct.toFixed(1), "% \xB7 ", slice.tx_count, " GD"))));
+  }
+
+  // frontend/src/templates/v1/views/bank/TransactionsView.tsx
+  init_define_import_meta_env();
+  var import_react37 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/use-infinite-scroll.ts
+  init_define_import_meta_env();
+  var import_react36 = __toESM(require_react_shim());
+  function useInfiniteScroll({
+    onLoadMore,
+    hasMore,
+    isLoading,
+    rootMargin = "400px"
+  }) {
+    const sentinelRef = (0, import_react36.useRef)(null);
+    const cb = (0, import_react36.useRef)(onLoadMore);
+    cb.current = onLoadMore;
+    const fire = (0, import_react36.useCallback)(() => {
+      if (hasMore && !isLoading) cb.current();
+    }, [hasMore, isLoading]);
+    (0, import_react36.useEffect)(() => {
+      const el = sentinelRef.current;
+      if (!el || !hasMore || isLoading) return;
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e2) => e2.isIntersecting)) fire();
+        },
+        { rootMargin }
+      );
+      io.observe(el);
+      return () => io.disconnect();
+    }, [hasMore, isLoading, rootMargin, fire]);
+    return sentinelRef;
+  }
+
+  // frontend/src/templates/v1/views/bank/TransactionsView.tsx
+  function TransactionsView() {
+    const qc = useQueryClient();
+    const [month, setMonth] = (0, import_react37.useState)(currentMonth());
+    const [accountId, setAccountId] = (0, import_react37.useState)("");
+    const [categoryId, setCategoryId] = (0, import_react37.useState)("");
+    const [adding, setAdding] = (0, import_react37.useState)(false);
+    const [err, setErr] = (0, import_react37.useState)(null);
+    const accounts = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+    const cats = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
+    const list = useInfiniteQuery({
+      queryKey: ["bank", "transactions", month, accountId, categoryId],
+      queryFn: ({ pageParam }) => listTransactions({
+        month,
+        account: accountId || void 0,
+        category: categoryId || void 0,
+        cursor: pageParam
+      }),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0
+    });
+    const rows = (0, import_react37.useMemo)(
+      () => list.data?.pages.flatMap((p) => p.transactions) ?? [],
+      [list.data]
+    );
+    const days = (0, import_react37.useMemo)(() => groupByDay(rows), [rows]);
+    const sentinelRef = useInfiniteScroll({
+      onLoadMore: () => list.fetchNextPage(),
+      hasMore: list.hasNextPage,
+      isLoading: list.isFetchingNextPage
+    });
+    const catById = (0, import_react37.useMemo)(() => new Map((cats.data ?? []).map((c) => [c.id, c])), [cats.data]);
+    const acctById = (0, import_react37.useMemo)(() => new Map((accounts.data ?? []).map((a) => [a.id, a])), [accounts.data]);
+    const remove = useMutation({
+      // Deleting one leg of a transfer would leave the other stranded and the two
+      // wallet balances permanently out of step, so a transfer is removed whole.
+      mutationFn: (t2) => t2.transfer_id ? deleteTransfer(t2.transfer_id) : deleteTransaction(t2.id),
+      onMutate: () => setErr(null),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c giao d\u1ECBch.")
+    });
+    const monthNet = rows.reduce((s, t2) => s + (t2.is_transfer ? 0 : signedAmount(t2)), 0);
+    return /* @__PURE__ */ React.createElement("section", { className: "pb-8" }, /* @__PURE__ */ React.createElement("header", { className: "mb-5 flex flex-wrap items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(BackLink, null), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Giao d\u1ECBch")), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setAdding(true),
+        className: "rounded-lg px-4 py-2 text-sm font-bold text-white transition hover:opacity-90",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      "+ Ghi ch\xE9p"
+    )), /* @__PURE__ */ React.createElement(MonthPager, { month, onChange: setMonth }), /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex flex-wrap gap-2" }, /* @__PURE__ */ React.createElement(Filter, { value: accountId, onChange: setAccountId, label: "T\u1EA5t c\u1EA3 v\xED" }, (accounts.data ?? []).map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.name))), /* @__PURE__ */ React.createElement(Filter, { value: categoryId, onChange: setCategoryId, label: "T\u1EA5t c\u1EA3 danh m\u1EE5c" }, (cats.data ?? []).map((c) => /* @__PURE__ */ React.createElement("option", { key: c.id, value: c.id }, c.icon ? `${c.icon} ` : "", c.name)))), err && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mt-3 rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }
+      },
+      err
+    ), list.isPending ? /* @__PURE__ */ React.createElement("p", { className: "mt-6 text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026") : rows.length === 0 ? /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mt-6 rounded-2xl border border-dashed py-12 text-center text-sm",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Kh\xF4ng c\xF3 giao d\u1ECBch n\xE0o trong th\xE1ng n\xE0y."
+    ) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\xEAnh l\u1EC7ch th\xE1ng:", " ", /* @__PURE__ */ React.createElement("span", { className: "font-bold tabular-nums", style: { color: monthNet < 0 ? "#ef4444" : "#22c55e" } }, monthNet > 0 ? "+" : "", formatVND(monthNet))), /* @__PURE__ */ React.createElement("div", { className: "mt-2 space-y-3" }, days.map(([day, dayRows]) => {
+      const net = dayRows.reduce((s, t2) => s + (t2.is_transfer ? 0 : signedAmount(t2)), 0);
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: day,
+          className: "overflow-hidden rounded-2xl border",
+          style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+        },
+        /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline justify-between px-4 py-2", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement("span", { className: "text-xs font-bold", style: { color: "var(--tpl-text)" } }, dayLabel(day)), /* @__PURE__ */ React.createElement("span", { className: "text-xs font-semibold tabular-nums", style: { color: net < 0 ? "#ef4444" : "#22c55e" } }, net > 0 ? "+" : "", formatVND(net))),
+        /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, dayRows.map((t2) => /* @__PURE__ */ React.createElement(
+          TransactionRow,
+          {
+            key: t2.id,
+            tx: t2,
+            category: t2.category_id ? catById.get(t2.category_id) ?? null : null,
+            accountName: acctById.get(t2.account_id)?.name ?? "",
+            onDelete: () => remove.mutate(t2)
+          }
+        )))
+      );
+    })), /* @__PURE__ */ React.createElement("div", { ref: sentinelRef, "aria-hidden": true }), /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-center text-xs", style: { color: "var(--tpl-muted)" }, "aria-live": "polite" }, list.isFetchingNextPage ? "\u0110ang t\u1EA3i\u2026" : list.hasNextPage ? `\u0110ang hi\u1EC3n th\u1ECB ${rows.length}+ giao d\u1ECBch` : `${rows.length} giao d\u1ECBch`)), adding && /* @__PURE__ */ React.createElement(QuickAddModal, { onClose: () => setAdding(false) }));
+  }
+  function Filter({
+    value,
+    onChange,
+    label,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        "aria-label": label,
+        className: "rounded-lg border px-3 py-1.5 text-sm",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)", color: "var(--tpl-text)" }
+      },
+      /* @__PURE__ */ React.createElement("option", { value: "" }, label),
+      children
+    );
+  }
+
+  // frontend/src/templates/v1/views/calendar/CalendarView.tsx
+  init_define_import_meta_env();
+  var import_react38 = __toESM(require_react_shim());
+  var WEEKDAYS3 = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  var WEEKDAY_FULL = ["Ch\u1EE7 Nh\u1EADt", "Th\u1EE9 Hai", "Th\u1EE9 Ba", "Th\u1EE9 T\u01B0", "Th\u1EE9 N\u0103m", "Th\u1EE9 S\xE1u", "Th\u1EE9 B\u1EA3y"];
+  var MAX_PAGES = 12;
+  function CalendarView() {
+    const { data: tc } = useTimeConfig();
+    const qc = useQueryClient();
+    const [ym, setYm] = (0, import_react38.useState)(null);
+    const [selectedDay, setSelectedDay] = (0, import_react38.useState)(null);
+    const [noteTime, setNoteTime] = (0, import_react38.useState)("12:00");
+    const [bodyMd, setBodyMd] = (0, import_react38.useState)("");
+    const [mood, setMood] = (0, import_react38.useState)("");
+    const [formError, setFormError] = (0, import_react38.useState)(null);
+    const q = useInfiniteQuery({
+      queryKey: ["journal", "all"],
+      queryFn: ({ pageParam }) => listEntries({ cursor: pageParam }),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0
+    });
+    const entries = (0, import_react38.useMemo)(() => q.data?.pages.flatMap((p) => p.items) ?? [], [q.data]);
+    (0, import_react38.useEffect)(() => {
+      if (tc && !ym) {
+        const c = zonedYMD(tc.now, tc.timezone);
+        setYm({ year: c.year, month: c.month });
+      }
+    }, [tc, ym]);
+    (0, import_react38.useEffect)(() => {
+      if (!ym || !q.hasNextPage || q.isFetchingNextPage) return;
+      const oldest = entries[entries.length - 1];
+      const monthStart = Date.UTC(ym.year, ym.month, 1);
+      if ((!oldest || new Date(oldest.occurred_at).getTime() >= monthStart) && (q.data?.pages.length ?? 0) < MAX_PAGES) {
+        q.fetchNextPage();
+      }
+    }, [entries, ym, q]);
+    const lunarByDay = (0, import_react38.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      if (!ym) return map;
+      const dim = new Date(Date.UTC(ym.year, ym.month + 1, 0)).getUTCDate();
+      for (let d = 1; d <= dim; d += 1) map.set(d, solarToLunar(d, ym.month + 1, ym.year));
+      return map;
+    }, [ym]);
+    const byDay = (0, import_react38.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      if (!tc || !ym) return map;
+      for (const e2 of entries) {
+        const p = zonedYMD(new Date(e2.occurred_at), tc.timezone);
+        if (p.year === ym.year && p.month === ym.month) {
+          const list = map.get(p.day);
+          if (list) list.push(e2);
+          else map.set(p.day, [e2]);
+        }
+      }
+      return map;
+    }, [entries, tc, ym]);
+    const create2 = useMutation({
+      mutationFn: (input) => createEntry(input),
+      onSuccess: () => {
+        setBodyMd("");
+        setMood("");
+        setNoteTime("12:00");
+        setFormError(null);
+        qc.invalidateQueries({ queryKey: ["journal"] });
+        qc.invalidateQueries({ queryKey: ["stream"] });
+      },
+      onError: (err) => setFormError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ghi ch\xFA")
+    });
+    if (!tc || !ym) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i l\u1ECBch\u2026");
+    const { year, month } = ym;
+    const cfgTz = tc.timezone;
+    const today2 = zonedYMD(tc.now, cfgTz);
+    const isThisMonth = today2.year === year && today2.month === month;
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const firstDow = (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7;
+    const cells = [
+      ...Array.from({ length: firstDow }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+    ];
+    const yearLunar = lunarByDay.get(1)?.year ?? year;
+    function shiftMonth3(delta) {
+      setSelectedDay(null);
+      setYm((m) => {
+        if (!m) return m;
+        const d = new Date(Date.UTC(m.year, m.month + delta, 1));
+        return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+      });
+    }
+    function selectDay(day) {
+      setSelectedDay(day);
+      setNoteTime("12:00");
+      setBodyMd("");
+      setMood("");
+      setFormError(null);
+    }
+    function handleCreate() {
+      const body = bodyMd.trim();
+      if (!body || create2.isPending || selectedDay == null) return;
+      const mm = String(month + 1).padStart(2, "0");
+      const dd = String(selectedDay).padStart(2, "0");
+      const input = {
+        body_md: body,
+        occurred_at: fromDatetimeLocalInTz(`${year}-${mm}-${dd}T${noteTime}`, cfgTz)
+      };
+      const m = mood.trim();
+      if (m) input.mood = m;
+      create2.mutate(input);
+    }
+    const timeLabel = (iso) => new Intl.DateTimeFormat("en-GB", { timeZone: cfgTz, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+    const selLunar = selectedDay != null ? lunarByDay.get(selectedDay) : null;
+    const selEntries = selectedDay != null ? byDay.get(selectedDay) ?? [] : [];
+    const selWeekday = selectedDay != null ? WEEKDAY_FULL[new Date(Date.UTC(year, month, selectedDay)).getUTCDay()] : "";
+    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]" }, /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("header", { className: "mb-4 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\xC2m l\u1ECBch \xB7 n\u0103m ", canChiYear(yearLunar))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng tr\u01B0\u1EDBc", glyph: "\u2039", onClick: () => shiftMonth3(-1) }), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          const c = zonedYMD(tc.now, cfgTz);
+          setSelectedDay(null);
+          setYm({ year: c.year, month: c.month });
+        },
+        className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "H\xF4m nay"
+    ), /* @__PURE__ */ React.createElement(NavBtn2, { label: "Th\xE1ng sau", glyph: "\u203A", onClick: () => shiftMonth3(1) }))), /* @__PURE__ */ React.createElement("div", { className: "mb-2 grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold", style: { color: "var(--tpl-muted)" } }, WEEKDAYS3.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: d, style: i === 6 ? { color: "var(--tpl-accent)" } : void 0 }, d))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-7 gap-1.5" }, cells.map((day, i) => {
+      if (day === null) return /* @__PURE__ */ React.createElement("span", { key: `b${i}` });
+      const lunar = lunarByDay.get(day);
+      const hasNotes = (byDay.get(day)?.length ?? 0) > 0;
+      const isToday = isThisMonth && day === today2.day;
+      const isSelected = day === selectedDay;
+      const isMonthStart = lunar?.day === 1;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: day,
+          type: "button",
+          onClick: () => selectDay(day),
+          className: "relative flex aspect-square flex-col items-center justify-center rounded-xl border transition hover:border-[var(--tpl-accent)]",
+          style: {
+            borderColor: isSelected ? "var(--tpl-accent)" : "var(--tpl-border)",
+            background: isSelected ? "var(--tpl-surface-2)" : isToday ? "color-mix(in srgb, var(--tpl-accent) 12%, transparent)" : "transparent"
+          }
+        },
+        hasNotes && /* @__PURE__ */ React.createElement("span", { className: "absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full", style: { background: "var(--tpl-accent)" } }),
+        /* @__PURE__ */ React.createElement("span", { className: "text-base font-semibold leading-none", style: { color: isToday ? "var(--tpl-accent)" : "var(--tpl-heading)" } }, day),
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "mt-1 text-[10px] leading-none",
+            style: { color: isMonthStart ? "var(--tpl-accent)" : "var(--tpl-muted)", fontWeight: isMonthStart ? 700 : 400 }
+          },
+          isMonthStart ? `1/${lunar?.month}` : lunar?.day
+        )
+      );
+    }))), /* @__PURE__ */ React.createElement("aside", { className: "space-y-4" }, selectedDay == null || !selLunar ? /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-6 text-center text-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)", color: "var(--tpl-muted)" } }, "Ch\u1ECDn m\u1ED9t ng\xE0y \u0111\u1EC3 xem \xE2m l\u1ECBch v\xE0 th\xEAm ghi ch\xFA.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "overflow-hidden rounded-2xl border shadow-sm", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "p-4 text-white", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-blue))" } }, /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, selWeekday), /* @__PURE__ */ React.createElement("p", { className: "text-2xl font-bold leading-tight" }, selectedDay, " th\xE1ng ", month + 1, ", ", year), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm text-white/90" }, "\xC2m l\u1ECBch: ", /* @__PURE__ */ React.createElement("b", null, selLunar.day, "/", selLunar.month, selLunar.leap ? " (nhu\u1EADn)" : ""), " \xB7 n\u0103m ", canChiYear(selLunar.year)), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-white/80" }, "Ng\xE0y ", canChiDay(selectedDay, month + 1, year)))), /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          handleCreate();
+        },
+        className: "rounded-2xl border p-4 shadow-sm",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("label", { className: "mb-2 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, "Ghi ch\xFA m\u1EDBi"),
+      /* @__PURE__ */ React.createElement(
+        "textarea",
+        {
+          value: bodyMd,
+          onChange: (e2) => setBodyMd(e2.target.value),
+          rows: 3,
+          placeholder: "H\xF4m nay c\xF3 g\xEC \u0111\xE1ng nh\u1EDB?",
+          className: "w-full resize-none rounded-xl border bg-transparent p-3 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+        }
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }, title: "Gi\u1EDD" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": true }, "\u{1F551}"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "time",
+          value: noteTime,
+          onChange: (e2) => setNoteTime(e2.target.value),
+          "aria-label": "Gi\u1EDD",
+          className: "bg-transparent text-sm outline-none",
+          style: { color: "var(--tpl-text)" }
+        }
+      )), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "text",
+          value: mood,
+          onChange: (e2) => setMood(e2.target.value),
+          maxLength: 80,
+          placeholder: "T\xE2m tr\u1EA1ng (tu\u1EF3 ch\u1ECDn)",
+          "aria-label": "T\xE2m tr\u1EA1ng",
+          className: "min-w-0 flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+        }
+      )),
+      formError && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-3 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, formError),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex justify-end" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "submit",
+          disabled: !bodyMd.trim() || create2.isPending,
+          className: "rounded-xl px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+        },
+        create2.isPending ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u ghi ch\xFA"
+      ))
+    ), selEntries.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "px-1 text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ghi ch\xFA cho ng\xE0y n\xE0y.") : selEntries.map((e2) => /* @__PURE__ */ React.createElement("article", { key: e2.id, className: "rounded-2xl border p-4 shadow-sm", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-1 flex items-center gap-2 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-1.5 py-0.5 font-semibold", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, timeLabel(e2.occurred_at)), e2.mood ? /* @__PURE__ */ React.createElement("span", null, "\xB7 ", e2.mood) : null), /* @__PURE__ */ React.createElement("p", { className: "whitespace-pre-wrap text-sm", style: { color: "var(--tpl-heading)" } }, e2.body_md))))));
+  }
+  function NavBtn2({ label, glyph, onClick }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        "aria-label": label,
+        title: label,
+        className: "grid h-8 w-8 place-items-center rounded-lg border text-lg leading-none transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      glyph
+    );
+  }
+
+  // frontend/src/templates/v1/views/home/HomeView.tsx
+  init_define_import_meta_env();
+  var import_react39 = __toESM(require_react_shim());
+
+  // frontend/src/templates/v1/components/widget/registry.ts
+  init_define_import_meta_env();
+  var WIDGET_REGISTRY = {
+    finance: FinanceWidget,
+    continue: ContinueWidget,
+    music: MusicWidget,
+    weather: WeatherWidget,
+    calendar: CalendarWidget,
+    pages: PagesWidget,
+    birthdays: BirthdayCard,
+    "friend-suggestions": FriendSuggestions,
+    "activity-feed": ActivityFeed
+  };
+  function widgetComponent(key2) {
+    return WIDGET_REGISTRY[key2];
+  }
+
+  // frontend/node_modules/portal-frontend/src/lib/stream.ts
+  init_define_import_meta_env();
+  async function getStream(cursor) {
+    const q = cursor ? `?cursor=${cursor}` : "";
+    const r2 = await api(`/api/v1/stream${q}`);
+    return { items: r2.items ?? [], next_cursor: r2.next_cursor };
+  }
+
+  // frontend/src/templates/v1/views/home/HomeView.tsx
+  var STREAM_KEY = ["stream"];
+  function HomeView() {
+    const displayName = useDisplayName();
+    const qc = useQueryClient();
+    const [bodyMd, setBodyMd] = (0, import_react39.useState)("");
+    const [composerError, setComposerError] = (0, import_react39.useState)(null);
+    const [editingId, setEditingId] = (0, import_react39.useState)(null);
+    const [actionError, setActionError] = (0, import_react39.useState)(null);
+    const query = useInfiniteQuery({
+      queryKey: STREAM_KEY,
+      queryFn: ({ pageParam }) => getStream(pageParam),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0
+    });
+    const items = (0, import_react39.useMemo)(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+    const create2 = useMutation({
+      mutationFn: (input) => createEntry(input),
+      onMutate: async (input) => {
+        await qc.cancelQueries({ queryKey: STREAM_KEY });
+        const previous = qc.getQueryData(STREAM_KEY);
+        const tempId = makeTempId();
+        const optimistic = {
+          id: tempId,
+          ref_id: tempId,
+          source_module: "journal",
+          event_type: "journal:entry_created",
+          occurred_at: input.occurred_at ?? (/* @__PURE__ */ new Date()).toISOString(),
+          body_md: input.body_md,
+          mood: null
+        };
+        qc.setQueryData(STREAM_KEY, (data) => prepend(data, optimistic));
+        return { previous };
+      },
+      onError: (err, input, ctx) => {
+        if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
+        setBodyMd(input.body_md);
+        setComposerError(err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not post");
+      },
+      onSuccess: () => {
+        setComposerError(null);
+        qc.invalidateQueries({ queryKey: STREAM_KEY });
+      }
+    });
+    const update2 = useMutation({
+      mutationFn: ({ refId, bodyMd: body }) => patchEntry(refId, { body_md: body }),
+      onMutate: async ({ refId, bodyMd: body }) => {
+        await qc.cancelQueries({ queryKey: STREAM_KEY });
+        const previous = qc.getQueryData(STREAM_KEY);
+        qc.setQueryData(
+          STREAM_KEY,
+          (data) => mapItems(data, (it) => it.ref_id === refId ? { ...it, body_md: body } : it)
+        );
+        return { previous };
+      },
+      onError: (err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
+        setActionError(
+          err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not save the post"
+        );
+      },
+      onSuccess: () => {
+        setActionError(null);
+        setEditingId(null);
+        qc.invalidateQueries({ queryKey: STREAM_KEY });
+      }
+    });
+    const remove = useMutation({
+      mutationFn: (refId) => deleteEntry(refId),
+      onMutate: async (refId) => {
+        await qc.cancelQueries({ queryKey: STREAM_KEY });
+        const previous = qc.getQueryData(STREAM_KEY);
+        qc.setQueryData(
+          STREAM_KEY,
+          (data) => filterItems(data, (it) => it.ref_id !== refId)
+        );
+        return { previous };
+      },
+      onError: (err, _refId, ctx) => {
+        if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
+        setActionError(
+          err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not delete the post"
+        );
+      },
+      onSuccess: () => {
+        setActionError(null);
+        qc.invalidateQueries({ queryKey: STREAM_KEY });
+      }
+    });
+    function handleCreate(composed) {
+      const body = composed.trim();
+      if (!body || create2.isPending) return;
+      setComposerError(null);
+      setBodyMd("");
+      create2.mutate({ body_md: body });
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)_300px]" }, /* @__PURE__ */ React.createElement("div", { className: "hidden space-y-5 lg:block" }, /* @__PURE__ */ React.createElement(WidgetRail, { slot: "left" })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 space-y-5" }, /* @__PURE__ */ React.createElement(
+      Composer,
+      {
+        displayName,
+        bodyMd,
+        onBodyMdChange: setBodyMd,
+        onSubmit: handleCreate,
+        submitting: create2.isPending,
+        error: composerError
+      }
+    ), actionError && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        role: "alert",
+        className: "rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      actionError
+    ), query.isPending ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Loading your stream\u2026") : query.isError ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Couldn't load your stream.", " ", /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => query.refetch(), className: "underline" }, "Retry")) : items.length === 0 ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Your life-stream is empty \u2014 write your first note above.") : /* @__PURE__ */ React.createElement(React.Fragment, null, items.map((it) => /* @__PURE__ */ React.createElement(
+      StreamItemCard,
+      {
+        key: it.id,
+        item: it,
+        displayName,
+        editing: editingId === it.id,
+        saving: update2.isPending,
+        onStartEdit: (target) => {
+          setActionError(null);
+          setEditingId(target.id);
+        },
+        onCancelEdit: () => setEditingId(null),
+        onSave: (target, body) => update2.mutate({ refId: target.ref_id, bodyMd: body }),
+        onDelete: (target) => remove.mutate(target.ref_id)
+      }
+    )), query.hasNextPage && /* @__PURE__ */ React.createElement("div", { className: "flex justify-center" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => query.fetchNextPage(),
+        disabled: query.isFetchingNextPage,
+        className: "rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      query.isFetchingNextPage ? "Loading\u2026" : "Load more"
+    )))), /* @__PURE__ */ React.createElement("aside", { className: "hidden space-y-5 2xl:block" }, /* @__PURE__ */ React.createElement(WidgetRail, { slot: "right" })));
+  }
+  function WidgetRail({ slot: slot2 }) {
+    const { data } = useLayout();
+    const widgets = (data?.widgets ?? []).filter((w) => w.slot === slot2);
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, widgets.map((w) => {
+      const Widget = widgetComponent(w.key);
+      return Widget ? /* @__PURE__ */ React.createElement(Widget, { key: w.key }) : null;
+    }));
+  }
+  function useDisplayName() {
+    const [name, setName] = (0, import_react39.useState)("You");
+    (0, import_react39.useEffect)(() => {
+      let alive = true;
+      fetch(`${baseURL2}/api/v1/auth/me`, { credentials: "include" }).then((r2) => r2.ok ? r2.json() : null).then((me) => {
+        if (alive && me?.display_name) setName(me.display_name);
+      }).catch(() => {
+      });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return name;
+  }
+  function prepend(data, item) {
+    const first = data?.pages[0];
+    if (!data || !first) {
+      return { pages: [{ items: [item] }], pageParams: [void 0] };
+    }
+    return { ...data, pages: [{ ...first, items: [item, ...first.items] }, ...data.pages.slice(1)] };
+  }
+  function mapItems(data, fn) {
+    if (!data) return data;
+    return { ...data, pages: data.pages.map((p) => ({ ...p, items: p.items.map(fn) })) };
+  }
+  function filterItems(data, keep) {
+    if (!data) return data;
+    return { ...data, pages: data.pages.map((p) => ({ ...p, items: p.items.filter(keep) })) };
+  }
+  var tempSeq = 0;
+  function makeTempId() {
+    tempSeq += 1;
+    return `temp-${tempSeq}`;
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
+  init_define_import_meta_env();
+  var import_react40 = __toESM(require_react_shim());
+
+  // frontend/node_modules/portal-frontend/src/lib/comic-import.ts
+  init_define_import_meta_env();
+  async function createImport(chapterId) {
+    return api(`/api/v1/chapters/${chapterId}/imports`, { method: "POST" });
+  }
+  async function createComicImport(comicId) {
+    return api(`/api/v1/comics/${comicId}/imports`, { method: "POST" });
+  }
+  async function getImport2(importId) {
+    return api(`/api/v1/imports/${importId}`);
+  }
+  function runZipImport(chapterId, file, onProgress) {
+    return runImport(() => createImport(chapterId), file, onProgress);
+  }
+  function runComicZipImport(comicId, file, onProgress) {
+    return runImport(() => createComicImport(comicId), file, onProgress);
+  }
+  async function runImport(createJob, file, onProgress) {
+    const job = await createJob();
+    onProgress({ phase: "uploading", uploadPct: 0 });
+    await putZip(job.id, file, (pct) => onProgress({ phase: "uploading", uploadPct: pct }));
+    onProgress({ phase: "processing" });
+    let last = job;
+    for (let i = 0; i < 3600; i += 1) {
+      await sleep2(2e3);
+      last = await getImport2(job.id);
+      onProgress({ phase: "processing", job: last });
+      if (last.status === "done" || last.status === "failed") return last;
+    }
+    return last;
+  }
+  function putZip(importId, file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", `${baseURL}/api/v1/imports/${importId}/zip`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", "application/zip");
+      xhr.upload.onprogress = (e2) => {
+        if (e2.lengthComputable) onProgress(Math.round(e2.loaded / e2.total * 100));
+      };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`T\u1EA3i zip l\u1ED7i (${xhr.status})${zipErrDetail(xhr.responseText)}.`));
+      xhr.onerror = () => reject(new Error("L\u1ED7i m\u1EA1ng khi t\u1EA3i zip."));
+      xhr.send(file);
+    });
+  }
+  function zipErrDetail(body) {
+    try {
+      const detail = JSON.parse(body).detail;
+      return detail ? `: ${detail}` : "";
+    } catch {
+      return "";
+    }
+  }
+  var sleep2 = (ms2) => new Promise((r2) => setTimeout(r2, ms2));
+
+  // frontend/node_modules/portal-frontend/src/lib/comic-sync.ts
+  init_define_import_meta_env();
+  async function listSyncSources(comicId) {
+    const r2 = await api(`/api/v1/comics/${comicId}/sync-sources`);
+    return r2.sources ?? [];
+  }
+  async function createSyncSource(comicId, body) {
+    return api(`/api/v1/comics/${comicId}/sync-sources`, { method: "POST", body: JSON.stringify(body) });
+  }
+  async function triggerSync(sourceId) {
+    return api(`/api/v1/sync-sources/${sourceId}/sync`, { method: "POST" });
+  }
+  async function cancelSync(sourceId) {
+    return api(`/api/v1/sync-sources/${sourceId}/cancel`, { method: "POST" });
+  }
+  async function deleteSyncSource(sourceId) {
+    await api(`/api/v1/sync-sources/${sourceId}`, { method: "DELETE" });
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicDetailView.tsx
+  function ComicDetailView({ id: id2 }) {
+    const { data: comic, isLoading } = useQuery({ queryKey: ["comic", id2], queryFn: () => getComic(id2) });
+    const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => api2("/api/v1/auth/me").catch(() => ({})) });
+    if (isLoading) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i\u2026");
+    if (!comic) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-heading)" } }, "Kh\xF4ng t\xECm th\u1EA5y truy\u1EC7n.");
+    const isOwner = !!me?.id && me.id === comic.owner_id;
+    return isOwner ? /* @__PURE__ */ React.createElement(OwnerManager, { id: id2, comic }) : /* @__PURE__ */ React.createElement(ReadView, { id: id2, comic });
+  }
+  function ReadView({ id: id2, comic }) {
+    const continueHref = comic.progress ? `/library/comic/${id2}/read/${comic.progress.chapter_id}` : comic.chapters[0] ? `/library/comic/${id2}/read/${comic.chapters[0].id}` : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-6" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("div", { className: "flex-1" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), comic.description && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "var(--tpl-muted)" } }, comic.description), continueHref && /* @__PURE__ */ React.createElement(Link, { href: continueHref, className: "mt-4 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, comic.progress ? "\u0110\u1ECDc ti\u1EBFp" : "B\u1EAFt \u0111\u1EA7u \u0111\u1ECDc"))), /* @__PURE__ */ React.createElement(ChapterList, { id: id2, chapters: comic.chapters }));
+  }
+  function ChapterList({ id: id2, chapters }) {
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 mt-8 text-xs font-semibold uppercase tracking-wider", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0\u01A1ng"), /* @__PURE__ */ React.createElement("ul", { className: "overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement("li", { key: ch.id, className: "border-t first:border-t-0", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${ch.id}`, className: "flex justify-between px-4 py-3 text-sm transition hover:bg-[var(--tpl-surface-2)]" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, i + 1, ". ", ch.title), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, new Date(ch.created_at).toLocaleDateString("vi-VN"))))), chapters.length === 0 && /* @__PURE__ */ React.createElement("li", { className: "px-4 py-4 text-center text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng n\xE0o.")));
+  }
+  function OwnerManager({ id: id2, comic }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "space-y-6", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Link, { href: "/library/comic", className: "mb-1 inline-flex items-center gap-1 text-sm font-medium transition hover:opacity-80", style: { color: "var(--tpl-muted)" } }, "\u2190 Danh s\xE1ch truy\u1EC7n"), /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Qu\u1EA3n l\xFD truy\u1EC7n \xB7 ", comic.chapters.length, " ch\u01B0\u01A1ng")), comic.chapters[0] && /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${comic.chapters[0].id}`, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u0110\u1ECDc th\u1EED")), /* @__PURE__ */ React.createElement(SettingsCard, { id: id2, comic }), /* @__PURE__ */ React.createElement(SyncSourcesManager, { id: id2 }), /* @__PURE__ */ React.createElement(ChaptersManager, { id: id2, comic }));
+  }
+  function SyncSourcesManager({ id: id2 }) {
+    const qc = useQueryClient();
+    const [url, setUrl] = (0, import_react40.useState)("");
+    const [hint, setHint] = (0, import_react40.useState)("");
+    const [err, setErr] = (0, import_react40.useState)(null);
+    const sources = useQuery({
+      queryKey: ["sync-sources", id2],
+      queryFn: () => listSyncSources(id2),
+      refetchInterval: (q) => (q.state.data ?? []).some((s) => s.last_status === "syncing") ? 3e3 : false
+    });
+    const list = sources.data ?? [];
+    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : e2 instanceof Error ? e2.message : "C\xF3 l\u1ED7i x\u1EA3y ra");
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["sync-sources", id2] });
+    const add = useMutation({ mutationFn: () => createSyncSource(id2, { source_url: url.trim(), chapters_hint: hint.trim() }), onSuccess: () => {
+      setErr(null);
+      setUrl("");
+      setHint("");
+      invalidate();
+    }, onError: onErr });
+    const sync = useMutation({ mutationFn: (sid) => triggerSync(sid), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const cancel = useMutation({ mutationFn: (sid) => cancelSync(sid), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const del = useMutation({ mutationFn: (sid) => deleteSyncSource(sid), onSuccess: invalidate, onError: onErr });
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ngu\u1ED3n \u0111\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("p", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EF1 \u0111\u1ED9ng c\xE0o truy\u1EC7n t\u1EEB ngu\u1ED3n ngo\xE0i r\u1ED3i nh\u1EADp v\xE0o b\u1ED9 n\xE0y (ch\u1EA1y n\u1EC1n)."), err && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-sm", style: { color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "mt-3 space-y-2" }, list.map((s) => /* @__PURE__ */ React.createElement(SyncSourceRow, { key: s.id, source: s, onSync: () => sync.mutate(s.id), onCancel: () => cancel.mutate(s.id), onDelete: () => del.mutate(s.id), busy: sync.isPending || del.isPending || cancel.isPending })), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ngu\u1ED3n n\xE0o \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex flex-col gap-2 sm:flex-row", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (url.trim()) add.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "URL trang truy\u1EC7n (vd https://truyenqqno.com/truyen-tranh/...)", value: url, onChange: (e2) => setUrl(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)] sm:w-44", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "Ch\u01B0\u01A1ng (tr\u1ED1ng = t\u1EA5t c\u1EA3, vd 1-50)", value: hint, onChange: (e2) => setHint(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !url.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ngu\u1ED3n")));
+  }
+  function SyncSourceRow({ source, onSync, onCancel, onDelete, busy }) {
+    const badge = {
+      idle: { label: "Ch\u01B0a ch\u1EA1y", color: "var(--tpl-muted)" },
+      syncing: { label: "\u0110ang c\xE0o\u2026", color: "#f59e0b" },
+      done: { label: "\u0110\xE3 c\xE0o xong", color: "#22c55e" },
+      failed: { label: "L\u1ED7i", color: "#ef4444" },
+      cancelled: { label: "\u0110\xE3 ng\u1EEBng", color: "var(--tpl-muted)" }
+    };
+    const b = badge[source.last_status];
+    const syncing = source.last_status === "syncing";
+    const pct = source.total_chapters > 0 ? Math.round(source.scraped_chapters / source.total_chapters * 100) : 0;
+    return /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between gap-3 rounded-lg border px-3 py-2", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "min-w-0" }, /* @__PURE__ */ React.createElement("div", { className: "truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, source.source_site || source.source_url), /* @__PURE__ */ React.createElement("a", { href: source.source_url, target: "_blank", rel: "noreferrer", className: "block truncate text-xs hover:underline", style: { color: "var(--tpl-muted)" } }, source.source_url), /* @__PURE__ */ React.createElement("div", { className: "mt-0.5 text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", { style: { color: b.color } }, "\u25CF ", b.label), source.chapters_hint && /* @__PURE__ */ React.createElement("span", null, " \xB7 ch\u01B0\u01A1ng ", source.chapters_hint), source.total_chapters > 0 && (source.last_status === "syncing" ? /* @__PURE__ */ React.createElement("span", null, " \xB7 C\xE0o: ", source.scraped_chapters, "/", source.total_chapters, " ch\u01B0\u01A1ng (", pct, "%)") : /* @__PURE__ */ React.createElement("span", null, " \xB7 ", source.total_chapters, " ch\u01B0\u01A1ng")), source.last_error && /* @__PURE__ */ React.createElement("span", { style: { color: "#ef4444" } }, " \xB7 \u26A0 ", source.last_error))), /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 gap-2" }, syncing ? /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onCancel, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "#ef4444", color: "#ef4444" } }, "\u23F9 Ng\u1EEBng") : /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onSync, disabled: busy, className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, "\u27F3 \u0110\u1ED3ng b\u1ED9"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDelete, disabled: busy || syncing, className: "rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "X\xF3a")));
+  }
+  function SettingsCard({ id: id2, comic }) {
+    const qc = useQueryClient();
+    const router = useRouter();
+    const titleRef = (0, import_react40.useRef)(null);
+    const descRef = (0, import_react40.useRef)(null);
+    const coverInput = (0, import_react40.useRef)(null);
+    const [uploadingCover, setUploadingCover] = (0, import_react40.useState)(false);
+    const [err, setErr] = (0, import_react40.useState)(null);
+    const [saved, setSaved] = (0, import_react40.useState)(false);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const onErr = (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "C\xF3 l\u1ED7i x\u1EA3y ra");
+    const save = useMutation({
+      mutationFn: () => updateComic(id2, { title: titleRef.current?.value.trim() || comic.title, description: descRef.current?.value.trim() || null }),
+      onSuccess: () => {
+        setErr(null);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+        invalidate();
+      },
+      onError: onErr
+    });
+    const setDir = useMutation({ mutationFn: (d) => updateComic(id2, { reading_direction: d }), onSuccess: invalidate, onError: onErr });
+    const pub = useMutation({ mutationFn: () => comic.status === "published" ? unpublishComic(id2) : publishComic(id2), onSuccess: () => {
+      setErr(null);
+      invalidate();
+    }, onError: onErr });
+    const del = useMutation({ mutationFn: () => deleteComic(id2), onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["comics"] });
+      router.push("/library/comic");
+    }, onError: onErr });
+    async function onCover(file) {
+      setErr(null);
+      setUploadingCover(true);
+      try {
+        const { assetId } = await uploadImage(file);
+        await updateComic(id2, { cover_asset_id: assetId });
+        invalidate();
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "Kh\xF4ng \u0111\u1EB7t \u0111\u01B0\u1EE3c b\xECa");
+      } finally {
+        setUploadingCover(false);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-5 sm:flex-row" }, /* @__PURE__ */ React.createElement("div", { className: "w-36 shrink-0" }, /* @__PURE__ */ React.createElement(Cover, { assetId: comic.cover_asset_id, title: comic.title }), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => coverInput.current?.click(), disabled: uploadingCover, className: "mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, uploadingCover ? "\u0110ang t\u1EA3i\u2026" : "\u0110\u1ED5i b\xECa"), /* @__PURE__ */ React.createElement("input", { ref: coverInput, type: "file", accept: "image/*", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onCover(f);
+      e2.target.value = "";
+    } })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1 space-y-3" }, /* @__PURE__ */ React.createElement(Field7, { label: "T\xEAn truy\u1EC7n" }, /* @__PURE__ */ React.createElement("input", { ref: titleRef, defaultValue: comic.title, maxLength: 200, className: "w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field7, { label: "M\xF4 t\u1EA3" }, /* @__PURE__ */ React.createElement("textarea", { ref: descRef, defaultValue: comic.description ?? "", rows: 2, className: "w-full resize-none rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } })), /* @__PURE__ */ React.createElement(Field7, { label: "H\u01B0\u1EDBng \u0111\u1ECDc" }, /* @__PURE__ */ React.createElement(
+      Segmented,
+      {
+        value: comic.reading_direction,
+        onChange: (v) => setDir.mutate(v),
+        options: [{ v: "vertical", label: "Cu\u1ED9n d\u1ECDc" }, { v: "ltr", label: "Tr\xE1i \u2192 Ph\u1EA3i" }, { v: "rtl", label: "Ph\u1EA3i \u2192 Tr\xE1i (manga)" }]
+      }
+    )), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err), /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-2 pt-1" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => save.mutate(), disabled: save.isPending, className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, save.isPending ? "\u0110ang l\u01B0u\u2026" : saved ? "\u0110\xE3 l\u01B0u \u2713" : "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => pub.mutate(), disabled: pub.isPending, className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, comic.status === "published" ? "G\u1EE1 xu\u1EA5t b\u1EA3n" : "Xu\u1EA5t b\u1EA3n"), /* @__PURE__ */ React.createElement("span", { className: "rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.45)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p"), /* @__PURE__ */ React.createElement("div", { className: "ml-auto" }, /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1 truy\u1EC7n", confirmLabel: "Xo\xE1 th\u1EADt?", onConfirm: () => del.mutate() }))))));
+  }
+  function ChaptersManager({ id: id2, comic }) {
+    const qc = useQueryClient();
+    const [title, setTitle] = (0, import_react40.useState)("");
+    const zipRef = (0, import_react40.useRef)(null);
+    const [zip, setZip] = (0, import_react40.useState)(null);
+    const [note, setNote] = (0, import_react40.useState)(null);
+    const chapters = comic.chapters;
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const add = useMutation({ mutationFn: () => createChapter(id2, { title: title.trim(), sort_order: (chapters.length + 1) * 10 }), onSuccess: () => {
+      setTitle("");
+      invalidate();
+    } });
+    const reorder2 = useMutation({ mutationFn: (order) => reorderChapters(id2, order), onSuccess: invalidate });
+    const move = (idx, delta) => {
+      const ids = chapters.map((c) => c.id);
+      const j = idx + delta;
+      if (j < 0 || j >= ids.length) return;
+      const tmp = ids[idx];
+      ids[idx] = ids[j];
+      ids[j] = tmp;
+      reorder2.mutate(ids);
+    };
+    async function onZip(file) {
+      setNote(null);
+      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
+      try {
+        const job = await runComicZipImport(id2, file, (p) => {
+          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i zip ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
+          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
+        });
+        qc.invalidateQueries({ queryKey: ["comic", id2] });
+        setNote(job.status === "done" ? `\u0110\xE3 nh\u1EADp ${job.succeeded} trang${job.failed ? `, ${job.failed} l\u1ED7i` : ""} (b\u1ED9 nhi\u1EC1u ch\u01B0\u01A1ng).` : `Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
+      } catch (e2) {
+        setNote(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
+      } finally {
+        setZip(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl border p-5", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("h2", { className: "text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Ch\u01B0\u01A1ng (", chapters.length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip, title: "ZIP c\xF3 c\xE1c th\u01B0 m\u1EE5c con = m\u1ED7i ch\u01B0\u01A1ng (ho\u1EB7c zip ph\u1EB3ng = 1 ch\u01B0\u01A1ng)", className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label} ${zip.total ? `${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp b\u1ED9 t\u1EEB ZIP"), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onZip(f);
+      e2.target.value = "";
+    } })), note && /* @__PURE__ */ React.createElement("p", { className: "mb-3 rounded-lg px-3 py-2 text-xs", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, note), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, chapters.map((ch, i) => /* @__PURE__ */ React.createElement(ChapterRow, { key: ch.id, id: id2, chapter: ch, index: i, total: chapters.length, onMove: move })), chapters.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 ch\u01B0\u01A1ng \u2014 th\xEAm b\xEAn d\u01B0\u1EDBi, ho\u1EB7c nh\u1EADp t\u1EEB ZIP.")), /* @__PURE__ */ React.createElement("form", { className: "mt-4 flex gap-2", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (title.trim()) add.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { className: "flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-[var(--tpl-accent)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }, placeholder: "T\xEAn ch\u01B0\u01A1ng m\u1EDBi", value: title, onChange: (e2) => setTitle(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: add.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, "Th\xEAm ch\u01B0\u01A1ng")));
+  }
+  function ChapterRow({ id: id2, chapter, index, total, onMove }) {
+    const qc = useQueryClient();
+    const [open, setOpen] = (0, import_react40.useState)(false);
+    const [editing, setEditing] = (0, import_react40.useState)(false);
+    const [title, setTitle] = (0, import_react40.useState)(chapter.title);
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2] });
+    const rename = useMutation({ mutationFn: () => updateChapter(chapter.id, { title: title.trim() }), onSuccess: () => {
+      setEditing(false);
+      invalidate();
+    } });
+    const del = useMutation({ mutationFn: () => deleteChapter(chapter.id), onSuccess: invalidate });
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-3 py-2" }, /* @__PURE__ */ React.createElement("span", { className: "w-6 shrink-0 text-center font-mono text-xs", style: { color: "var(--tpl-muted)" } }, index + 1), editing ? /* @__PURE__ */ React.createElement("form", { className: "flex flex-1 gap-2", onSubmit: (e2) => {
+      e2.preventDefault();
+      if (title.trim()) rename.mutate();
+    } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: title, onChange: (e2) => setTitle(e2.target.value), className: "flex-1 rounded-md border bg-transparent px-2 py-1 text-sm outline-none", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" } }), /* @__PURE__ */ React.createElement("button", { type: "submit", className: "text-xs font-semibold", style: { color: "var(--tpl-accent)" } }, "L\u01B0u"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+      setEditing(false);
+      setTitle(chapter.title);
+    }, className: "text-xs", style: { color: "var(--tpl-muted)" } }, "Hu\u1EF7")) : (
+      // The title IS the read affordance: clicking a chapter goes straight into
+      // it. A real <Link>, so middle-click and "open in new tab" work. Expanding
+      // the page manager moved to its own ▸ button below — that is the rarer,
+      // editing-only action, so it should not own the primary click.
+      /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${id2}/read/${chapter.id}`, title: `\u0110\u1ECDc: ${chapter.title}`, className: "flex-1 truncate text-left text-sm font-medium hover:underline", style: { color: "var(--tpl-heading)" } }, chapter.title)
+    ), /* @__PURE__ */ React.createElement(IconBtn2, { label: open ? "\u1EA8n danh s\xE1ch trang" : "Danh s\xE1ch trang", onClick: () => setOpen((o2) => !o2) }, open ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement(IconBtn2, { label: "L\xEAn", disabled: index === 0, onClick: () => onMove(index, -1) }, "\u2191"), /* @__PURE__ */ React.createElement(IconBtn2, { label: "Xu\u1ED1ng", disabled: index === total - 1, onClick: () => onMove(index, 1) }, "\u2193"), /* @__PURE__ */ React.createElement(IconBtn2, { label: "S\u1EEDa t\xEAn", onClick: () => {
+      setTitle(chapter.title);
+      setEditing(true);
+    } }, "\u270E"), /* @__PURE__ */ React.createElement(DangerConfirm, { label: "Xo\xE1", confirmLabel: "Xo\xE1?", small: true, onConfirm: () => del.mutate() })), open && /* @__PURE__ */ React.createElement(PageManager, { id: id2, chapterId: chapter.id }));
+  }
+  function PageManager({ id: id2, chapterId }) {
+    const qc = useQueryClient();
+    const fileRef = (0, import_react40.useRef)(null);
+    const zipRef = (0, import_react40.useRef)(null);
+    const [uploading, setUploading] = (0, import_react40.useState)(null);
+    const [zip, setZip] = (0, import_react40.useState)(null);
+    const [err, setErr] = (0, import_react40.useState)(null);
+    const { data: pages } = useQuery({ queryKey: ["comic", id2, "pages", chapterId], queryFn: () => getChapterPages(chapterId) });
+    const list = pages ?? [];
+    const invalidate = () => qc.invalidateQueries({ queryKey: ["comic", id2, "pages", chapterId] });
+    const del = useMutation({ mutationFn: (pageId) => deletePage(pageId), onSuccess: invalidate });
+    const reorder2 = useMutation({ mutationFn: (order) => reorderPages(chapterId, order), onSuccess: invalidate });
+    const move = (idx, delta) => {
+      const ids = list.map((p) => p.page_id);
+      const j = idx + delta;
+      if (j < 0 || j >= ids.length) return;
+      const tmp = ids[idx];
+      ids[idx] = ids[j];
+      ids[j] = tmp;
+      reorder2.mutate(ids);
+    };
+    async function onFiles(files) {
+      setErr(null);
+      const arr = Array.from(files);
+      setUploading({ done: 0, total: arr.length });
+      const created = [];
+      try {
+        for (let i = 0; i < arr.length; i += 1) {
+          const { assetId } = await uploadImage(arr[i]);
+          created.push({ asset_id: assetId, sort_order: (list.length + i + 1) * 10 });
+          setUploading({ done: i + 1, total: arr.length });
+        }
+        if (created.length) await createPages(chapterId, created);
+        invalidate();
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "T\u1EA3i trang th\u1EA5t b\u1EA1i");
+      } finally {
+        setUploading(null);
+      }
+    }
+    async function onZipImport(file) {
+      setErr(null);
+      setZip({ label: "\u0110ang t\u1EA3i zip\u2026", done: 0, total: 0 });
+      try {
+        const job = await runZipImport(chapterId, file, (p) => {
+          if (p.phase === "uploading") setZip({ label: `\u0110ang t\u1EA3i ${p.uploadPct ?? 0}%`, done: 0, total: 0 });
+          else setZip({ label: "\u0110ang x\u1EED l\xFD", done: p.job?.succeeded ?? 0, total: p.job?.total ?? 0 });
+        });
+        invalidate();
+        if (job.status !== "done") setErr(`Nh\u1EADp th\u1EA5t b\u1EA1i: ${job.error ?? "l\u1ED7i kh\xF4ng r\xF5"}.`);
+        else if (job.failed) setErr(`Nh\u1EADp xong: ${job.succeeded} trang, ${job.failed} l\u1ED7i.`);
+      } catch (e2) {
+        setErr(e2 instanceof Error ? e2.message : "Nh\u1EADp ZIP th\u1EA5t b\u1EA1i.");
+      } finally {
+        setZip(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "border-t px-3 py-3", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex items-center justify-between gap-2" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, list.length, " trang"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => zipRef.current?.click(), disabled: !!zip || !!uploading, className: "rounded-lg border px-2.5 py-1 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-heading)" } }, zip ? `${zip.label}${zip.total ? ` ${zip.done}/${zip.total}` : ""}` : "\u2B06 Nh\u1EADp ZIP")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6" }, list.map((p, i) => /* @__PURE__ */ React.createElement("div", { key: p.page_id, className: "group relative overflow-hidden rounded-lg border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4]" }, /* @__PURE__ */ React.createElement("img", { src: variantURL(p.asset_id, "thumb"), alt: `Trang ${i + 1}`, className: "h-full w-full object-cover", onError: (e2) => {
+      e2.currentTarget.style.visibility = "hidden";
+    } })), /* @__PURE__ */ React.createElement("span", { className: "absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-mono text-white" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 opacity-0 transition group-hover:opacity-100" }, /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "L\xEAn", disabled: i === 0, onClick: () => move(i, -1), className: "text-xs text-white disabled:opacity-30" }, "\u2191"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xu\u1ED1ng", disabled: i === list.length - 1, onClick: () => move(i, 1), className: "text-xs text-white disabled:opacity-30" }, "\u2193"), /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": "Xo\xE1 trang", onClick: () => del.mutate(p.page_id), className: "text-xs text-red-400" }, "\u2715")))), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => fileRef.current?.click(), disabled: !!uploading, className: "flex aspect-[3/4] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center transition hover:border-[var(--tpl-accent)] disabled:opacity-60", style: { borderColor: "var(--tpl-border)" } }, uploading ? /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "\u0110ang t\u1EA3i ", uploading.done, "/", uploading.total, "\u2026") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "text-xl", style: { color: "var(--tpl-accent)" } }, "+"), /* @__PURE__ */ React.createElement("span", { className: "px-1 text-[11px] font-medium", style: { color: "var(--tpl-muted)" } }, "Th\xEAm trang")))), /* @__PURE__ */ React.createElement("input", { ref: fileRef, type: "file", accept: "image/*", multiple: true, className: "hidden", onChange: (e2) => {
+      if (e2.target.files?.length) void onFiles(e2.target.files);
+      e2.target.value = "";
+    } }), /* @__PURE__ */ React.createElement("input", { ref: zipRef, type: "file", accept: ".zip,application/zip,application/x-zip-compressed", className: "hidden", onChange: (e2) => {
+      const f = e2.target.files?.[0];
+      if (f) void onZipImport(f);
+      e2.target.value = "";
+    } }), err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 text-xs", style: { color: "#ef4444" } }, err));
+  }
+  function Cover({ assetId, title }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] w-full overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, assetId ? /* @__PURE__ */ React.createElement("img", { src: variantURL(assetId, "medium"), alt: title, className: "h-full w-full object-cover" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"));
+  }
+  function Field7({ label, children }) {
+    return /* @__PURE__ */ React.createElement("label", { className: "block" }, /* @__PURE__ */ React.createElement("span", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), children);
+  }
+  function Segmented({ value, options, onChange }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "inline-flex flex-wrap gap-1 rounded-lg p-1", style: { background: "var(--tpl-surface-2)" } }, options.map((o2) => /* @__PURE__ */ React.createElement("button", { key: o2.v, type: "button", onClick: () => onChange(o2.v), "aria-pressed": value === o2.v, className: "rounded-md px-3 py-1.5 text-xs font-semibold transition", style: value === o2.v ? { background: "var(--tpl-accent)", color: "#fff" } : { color: "var(--tpl-muted)" } }, o2.label)));
+  }
+  function IconBtn2({ children, label, onClick, disabled }) {
+    return /* @__PURE__ */ React.createElement("button", { type: "button", "aria-label": label, title: label, onClick, disabled, className: "grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-30", style: { color: "var(--tpl-muted)" } }, children);
+  }
+  function DangerConfirm({ label, confirmLabel, onConfirm, small }) {
+    const [armed, setArmed] = (0, import_react40.useState)(false);
+    const t2 = (0, import_react40.useRef)(null);
+    (0, import_react40.useEffect)(() => () => {
+      if (t2.current) clearTimeout(t2.current);
+    }, []);
+    const cls = small ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm";
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          if (armed) {
+            setArmed(false);
+            onConfirm();
+            return;
+          }
+          setArmed(true);
+          if (t2.current) clearTimeout(t2.current);
+          t2.current = setTimeout(() => setArmed(false), 3e3);
+        },
+        className: `rounded-lg font-semibold transition ${cls}`,
+        style: armed ? { background: "#ef4444", color: "#fff" } : { color: "#ef4444", border: "1px solid rgba(239,68,68,.4)" }
+      },
+      armed ? confirmLabel : label
+    );
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicIndexView.tsx
+  init_define_import_meta_env();
+  var import_react41 = __toESM(require_react_shim());
+  function ComicIndexView() {
+    const qc = useQueryClient();
+    const router = useRouter();
+    const [tab, setTab] = (0, import_react41.useState)("all");
+    const [modalOpen, setModalOpen] = (0, import_react41.useState)(false);
+    const [title, setTitle] = (0, import_react41.useState)("");
+    const [err, setErr] = (0, import_react41.useState)(null);
+    const all = useQuery({ queryKey: ["comics", "published"], queryFn: () => listComics() });
+    const mine = useQuery({ queryKey: ["comics", "mine"], queryFn: () => listMyComics(), enabled: tab === "mine" });
+    const create2 = useMutation({
+      mutationFn: () => createComic({ title: title.trim() }),
+      onSuccess: (c) => {
+        setTitle("");
+        setModalOpen(false);
+        setErr(null);
+        qc.invalidateQueries({ queryKey: ["comics"] });
+        router.push(`/library/comic/${c.id}`);
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c truy\u1EC7n")
+    });
+    const active = tab === "all" ? all : mine;
+    const comics = tab === "all" ? all.data?.comics ?? [] : mine.data?.comics ?? [];
+    const loading = active.isLoading;
+    return /* @__PURE__ */ React.createElement("section", { style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold tracking-tight", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n tranh"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "\u0110\u1ECDc v\xE0 qu\u1EA3n l\xFD truy\u1EC7n tranh c\u1EE7a b\u1EA1n."), /* @__PURE__ */ React.createElement("div", { className: "mt-4 inline-flex gap-1 rounded-xl p-1", style: { background: "var(--tpl-surface-2)" } }, /* @__PURE__ */ React.createElement(TabBtn3, { active: tab === "all", onClick: () => setTab("all") }, "Th\u01B0 vi\u1EC7n"), /* @__PURE__ */ React.createElement(TabBtn3, { active: tab === "mine", onClick: () => setTab("mine") }, "C\u1EE7a t\xF4i"))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, tab === "mine" && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+      setErr(null);
+      setModalOpen(true);
+    }, className: "group block text-left" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition group-hover:border-[var(--tpl-accent)]",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "grid h-11 w-11 place-items-center rounded-full text-2xl leading-none transition group-hover:scale-105", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-accent)" } }, "+"),
+      /* @__PURE__ */ React.createElement("span", { className: "text-sm font-semibold transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-muted)" } }, "Th\xEAm truy\u1EC7n")
+    ), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium", style: { color: "var(--tpl-heading)" } }, "Truy\u1EC7n m\u1EDBi"), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "T\u1EA1o b\u1EA3n nh\xE1p")), loading ? Array.from({ length: 4 }, (_, i) => /* @__PURE__ */ React.createElement(SkeletonCard, { key: `s${i}` })) : comics.map((c) => /* @__PURE__ */ React.createElement(ComicCard, { key: c.id, comic: c, showStatus: tab === "mine" }))), !loading && comics.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "mt-4 text-sm", style: { color: "var(--tpl-muted)" } }, tab === "all" ? "Ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u0111\u01B0\u1EE3c xu\u1EA5t b\u1EA3n." : "B\u1EA1n ch\u01B0a c\xF3 truy\u1EC7n n\xE0o \u2014 b\u1EA5m \u201CTh\xEAm truy\u1EC7n\u201D \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u."), modalOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4", onClick: () => setModalOpen(false), role: "dialog", "aria-modal": "true", "aria-label": "T\u1EA1o truy\u1EC7n m\u1EDBi" }, /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        onClick: (e2) => e2.stopPropagation(),
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (title.trim()) create2.mutate();
+        },
+        className: "w-full max-w-md rounded-2xl p-5 shadow-xl",
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("h2", { className: "text-base font-bold", style: { color: "var(--tpl-heading)" } }, "T\u1EA1o truy\u1EC7n m\u1EDBi"),
+      /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\u1EB7t t\xEAn truy\u1EC7n. B\u1EA1n s\u1EBD th\xEAm ch\u01B0\u01A1ng v\xE0 trang \u1EDF b\u01B0\u1EDBc sau."),
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          autoFocus: true,
+          className: "mt-4 w-full rounded-lg border bg-transparent px-3 py-2.5 text-sm outline-none transition focus:border-[var(--tpl-accent)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" },
+          placeholder: "T\xEAn truy\u1EC7n",
+          value: title,
+          maxLength: 200,
+          onChange: (e2) => setTitle(e2.target.value)
+        }
+      ),
+      err && /* @__PURE__ */ React.createElement("p", { role: "alert", className: "mt-2 rounded-lg px-3 py-2 text-sm", style: { background: "rgba(239,68,68,.08)", color: "#ef4444" } }, err),
+      /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => setModalOpen(false), className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]", style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" } }, "Hu\u1EF7"), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: create2.isPending || !title.trim(), className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50", style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" } }, create2.isPending ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o truy\u1EC7n"))
+    )));
+  }
+  function TabBtn3({ active, onClick, children }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        "aria-pressed": active,
+        className: "rounded-lg px-4 py-1.5 text-sm font-semibold transition",
+        style: active ? { background: "var(--tpl-surface)", color: "var(--tpl-heading)", boxShadow: "0 1px 2px rgba(0,0,0,.08)" } : { color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function ComicCard({ comic, showStatus }) {
+    return /* @__PURE__ */ React.createElement(Link, { href: `/library/comic/${comic.id}`, className: "group block" }, /* @__PURE__ */ React.createElement("div", { className: "relative aspect-[3/4] overflow-hidden rounded-xl border", style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface-2)" } }, comic.cover_asset_id ? /* @__PURE__ */ React.createElement("img", { src: variantURL(comic.cover_asset_id, "thumb"), alt: comic.title, className: "h-full w-full object-cover transition group-hover:scale-[1.02]" }) : /* @__PURE__ */ React.createElement("div", { className: "flex h-full w-full items-center justify-center text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 b\xECa"), showStatus && /* @__PURE__ */ React.createElement("span", { className: "absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white", style: { background: comic.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.55)" } }, comic.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p")), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 truncate text-sm font-medium transition group-hover:text-[var(--tpl-accent)]", style: { color: "var(--tpl-heading)" } }, comic.title), /* @__PURE__ */ React.createElement("div", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, comic.chapter_count ?? 0, " ch\u01B0\u01A1ng"));
+  }
+  function SkeletonCard() {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "aspect-[3/4] animate-pulse rounded-xl", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "mt-1.5 h-3 w-2/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }));
+  }
+
+  // frontend/src/templates/v1/views/library/comic/ComicReaderView.tsx
+  init_define_import_meta_env();
+  var import_react47 = __toESM(require_react_shim());
+
   // frontend/node_modules/portal-frontend/src/lib/reader-settings.ts
+  init_define_import_meta_env();
   var useReaderSettings = create()(
     persist(
       (set) => ({
@@ -15848,15 +20778,15 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/comic/reader/useReaderProgress.ts
   init_define_import_meta_env();
-  var import_react29 = __toESM(require_react_shim());
+  var import_react42 = __toESM(require_react_shim());
   var THROTTLE_MS = 1e4;
   function useReaderProgress(comicId) {
-    const posRef = (0, import_react29.useRef)(null);
-    const lastSync = (0, import_react29.useRef)(0);
-    const flush = (0, import_react29.useCallback)(() => {
+    const posRef = (0, import_react42.useRef)(null);
+    const lastSync = (0, import_react42.useRef)(0);
+    const flush = (0, import_react42.useCallback)(() => {
       if (posRef.current) saveComicProgress(comicId, posRef.current.chapterId, posRef.current.pageId);
     }, [comicId]);
-    const report = (0, import_react29.useCallback)(
+    const report = (0, import_react42.useCallback)(
       (chapterId, pageId) => {
         posRef.current = { chapterId, pageId };
         const now = Date.now();
@@ -15867,7 +20797,7 @@ var PortalUI = (() => {
       },
       [flush]
     );
-    (0, import_react29.useEffect)(() => {
+    (0, import_react42.useEffect)(() => {
       const onHide = () => flush();
       const onVis = () => {
         if (document.visibilityState === "hidden") flush();
@@ -15884,7 +20814,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/comic/reader/usePagePreloader.ts
   init_define_import_meta_env();
-  var import_react30 = __toESM(require_react_shim());
+  var import_react43 = __toESM(require_react_shim());
   function usePagePreloader({
     comicId,
     pages,
@@ -15893,7 +20823,7 @@ var PortalUI = (() => {
     ahead = 4,
     nextChapterId
   }) {
-    (0, import_react30.useEffect)(() => {
+    (0, import_react43.useEffect)(() => {
       if (typeof window === "undefined") return;
       for (let i = index + 1; i <= index + ahead && i < pages.length; i += 1) {
         const p = pages[i];
@@ -15905,7 +20835,7 @@ var PortalUI = (() => {
       }
     }, [pages, index, variant, ahead]);
     const qc = useQueryClient();
-    (0, import_react30.useEffect)(() => {
+    (0, import_react43.useEffect)(() => {
       if (!nextChapterId) return;
       if (index >= pages.length - ahead) {
         qc.prefetchQuery({
@@ -15919,33 +20849,33 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/comic/reader/StripReader.tsx
   init_define_import_meta_env();
-  var import_react31 = __toESM(require_react_shim());
-  var StripReader = (0, import_react31.forwardRef)(function StripReader2({ comicId, chapters, startChapterId, startPages, variant, initialPageId, scrollRef, onActive, onToggleChrome }, ref) {
-    const [segments, setSegments] = (0, import_react31.useState)([{ chapterId: startChapterId, pages: startPages }]);
-    const [failed, setFailed] = (0, import_react31.useState)(() => /* @__PURE__ */ new Set());
-    const els = (0, import_react31.useRef)({});
-    const loadingNext = (0, import_react31.useRef)(false);
-    const lastActive = (0, import_react31.useRef)(null);
-    const [didResume, setDidResume] = (0, import_react31.useState)(false);
-    const meta = (0, import_react31.useMemo)(() => {
+  var import_react44 = __toESM(require_react_shim());
+  var StripReader = (0, import_react44.forwardRef)(function StripReader2({ comicId, chapters, startChapterId, startPages, variant, initialPageId, scrollRef, onActive, onToggleChrome }, ref) {
+    const [segments, setSegments] = (0, import_react44.useState)([{ chapterId: startChapterId, pages: startPages }]);
+    const [failed, setFailed] = (0, import_react44.useState)(() => /* @__PURE__ */ new Set());
+    const els = (0, import_react44.useRef)({});
+    const loadingNext = (0, import_react44.useRef)(false);
+    const lastActive = (0, import_react44.useRef)(null);
+    const [didResume, setDidResume] = (0, import_react44.useState)(false);
+    const meta = (0, import_react44.useMemo)(() => {
       const m = /* @__PURE__ */ new Map();
       for (const seg of segments) seg.pages.forEach((p, i) => m.set(p.page_id, { chapterId: seg.chapterId, index: i, count: seg.pages.length }));
       return m;
     }, [segments]);
-    const flat = (0, import_react31.useMemo)(() => segments.flatMap((s) => s.pages), [segments]);
-    (0, import_react31.useImperativeHandle)(ref, () => ({
+    const flat = (0, import_react44.useMemo)(() => segments.flatMap((s) => s.pages), [segments]);
+    (0, import_react44.useImperativeHandle)(ref, () => ({
       seek: (chapterId, index) => {
         const seg = segments.find((s) => s.chapterId === chapterId);
         const p = seg?.pages[index];
         if (p && els.current[p.page_id]) els.current[p.page_id].scrollIntoView({ block: "start" });
       }
     }), [segments]);
-    (0, import_react31.useEffect)(() => {
+    (0, import_react44.useEffect)(() => {
       if (didResume || flat.length === 0) return;
       if (initialPageId && els.current[initialPageId]) els.current[initialPageId].scrollIntoView();
       setDidResume(true);
     }, [initialPageId, didResume, flat]);
-    const loadNext = (0, import_react31.useCallback)(async () => {
+    const loadNext = (0, import_react44.useCallback)(async () => {
       if (loadingNext.current) return;
       const lastCh = segments[segments.length - 1]?.chapterId;
       const idx = chapters.findIndex((c) => c.id === lastCh);
@@ -15960,7 +20890,7 @@ var PortalUI = (() => {
         loadingNext.current = false;
       }
     }, [segments, chapters]);
-    const onScroll = (0, import_react31.useCallback)(() => {
+    const onScroll = (0, import_react44.useCallback)(() => {
       const sc = scrollRef.current;
       if (!sc) return;
       const mid = sc.scrollTop + sc.clientHeight / 2;
@@ -15976,7 +20906,7 @@ var PortalUI = (() => {
       }
       if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1200) loadNext();
     }, [flat, meta, onActive, loadNext, scrollRef]);
-    (0, import_react31.useEffect)(() => {
+    (0, import_react44.useEffect)(() => {
       const sc = scrollRef.current;
       if (!sc) return;
       sc.addEventListener("scroll", onScroll, { passive: true });
@@ -16010,14 +20940,14 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/comic/reader/PagedReader.tsx
   init_define_import_meta_env();
-  var import_react33 = __toESM(require_react_shim());
+  var import_react46 = __toESM(require_react_shim());
 
   // frontend/src/templates/v1/views/library/comic/reader/useReducedMotion.ts
   init_define_import_meta_env();
-  var import_react32 = __toESM(require_react_shim());
+  var import_react45 = __toESM(require_react_shim());
   function useReducedMotion() {
-    const [reduced, setReduced] = (0, import_react32.useState)(false);
-    (0, import_react32.useEffect)(() => {
+    const [reduced, setReduced] = (0, import_react45.useState)(false);
+    (0, import_react45.useEffect)(() => {
       const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
       const update2 = () => setReduced(mq.matches);
       update2();
@@ -16051,12 +20981,12 @@ var PortalUI = (() => {
       shown = pages[index] ? [pages[index]] : [];
     }
     const shownKey = shown.map((p) => p.page_id).join("|");
-    const [zoom, dispatch] = (0, import_react33.useReducer)(zoomReducer, { scale: 1, x: 0, y: 0 });
-    const [failed, setFailed] = (0, import_react33.useState)(() => /* @__PURE__ */ new Set());
-    const containerRef = (0, import_react33.useRef)(null);
+    const [zoom, dispatch] = (0, import_react46.useReducer)(zoomReducer, { scale: 1, x: 0, y: 0 });
+    const [failed, setFailed] = (0, import_react46.useState)(() => /* @__PURE__ */ new Set());
+    const containerRef = (0, import_react46.useRef)(null);
     const reduceMotion = useReducedMotion();
-    (0, import_react33.useEffect)(() => dispatch("reset"), [shownKey, mode, fit]);
-    const zoomAround = (0, import_react33.useCallback)((factor, cx, cy) => {
+    (0, import_react46.useEffect)(() => dispatch("reset"), [shownKey, mode, fit]);
+    const zoomAround = (0, import_react46.useCallback)((factor, cx, cy) => {
       dispatch(
         (() => {
           const el = containerRef.current;
@@ -16073,7 +21003,7 @@ var PortalUI = (() => {
         })()
       );
     }, [zoom]);
-    const tapNav = (0, import_react33.useCallback)((clientX) => {
+    const tapNav = (0, import_react46.useCallback)((clientX) => {
       const el = containerRef.current;
       if (!el) return;
       const r2 = el.getBoundingClientRect();
@@ -16082,7 +21012,7 @@ var PortalUI = (() => {
       else if (third > 0.66) (dir === "rtl" ? onPrev : onNext)();
       else onToggleChrome();
     }, [dir, onPrev, onNext, onToggleChrome]);
-    const drag = (0, import_react33.useRef)(null);
+    const drag = (0, import_react46.useRef)(null);
     const onMouseDown = (e2) => {
       if (zoom.scale > 1) drag.current = { x: e2.clientX - zoom.x, y: e2.clientY - zoom.y, moved: false };
     };
@@ -16106,7 +21036,7 @@ var PortalUI = (() => {
     const onWheel = (e2) => {
       zoomAround(e2.deltaY < 0 ? 1.15 : 1 / 1.15, e2.clientX, e2.clientY);
     };
-    const touch = (0, import_react33.useRef)({ x: 0, y: 0, t: 0, d0: 0, s0: 1, px: 0, py: 0, lastTap: 0 });
+    const touch = (0, import_react46.useRef)({ x: 0, y: 0, t: 0, d0: 0, s0: 1, px: 0, py: 0, lastTap: 0 });
     const onTouchStart = (e2) => {
       const t2 = touch.current;
       const a = e2.touches[0], b = e2.touches[1];
@@ -16155,7 +21085,7 @@ var PortalUI = (() => {
       }
       t2.d0 = 0;
     };
-    (0, import_react33.useEffect)(() => {
+    (0, import_react46.useEffect)(() => {
       const onKey = (e2) => {
         if (e2.key === "+" || e2.key === "=") {
           e2.preventDefault();
@@ -16341,30 +21271,30 @@ var PortalUI = (() => {
     const variant = qualityVariant(quality);
     const dir = effectiveDirection(direction, comic?.reading_direction);
     const { report } = useReaderProgress(id2);
-    const [mounted, setMounted] = (0, import_react34.useState)(false);
-    const [chromeVisible, setChromeVisible] = (0, import_react34.useState)(true);
-    const [settingsOpen, setSettingsOpen] = (0, import_react34.useState)(false);
-    const [chaptersOpen, setChaptersOpen] = (0, import_react34.useState)(false);
-    const [helpOpen, setHelpOpen] = (0, import_react34.useState)(false);
-    const [pagedIndex, setPagedIndex] = (0, import_react34.useState)(0);
-    const [didResume, setDidResume] = (0, import_react34.useState)(false);
-    const [active, setActive] = (0, import_react34.useState)(null);
-    const stripRef = (0, import_react34.useRef)(null);
-    const scrollRef = (0, import_react34.useRef)(null);
-    (0, import_react34.useEffect)(() => setMounted(true), []);
-    (0, import_react34.useEffect)(() => {
+    const [mounted, setMounted] = (0, import_react47.useState)(false);
+    const [chromeVisible, setChromeVisible] = (0, import_react47.useState)(true);
+    const [settingsOpen, setSettingsOpen] = (0, import_react47.useState)(false);
+    const [chaptersOpen, setChaptersOpen] = (0, import_react47.useState)(false);
+    const [helpOpen, setHelpOpen] = (0, import_react47.useState)(false);
+    const [pagedIndex, setPagedIndex] = (0, import_react47.useState)(0);
+    const [didResume, setDidResume] = (0, import_react47.useState)(false);
+    const [active, setActive] = (0, import_react47.useState)(null);
+    const stripRef = (0, import_react47.useRef)(null);
+    const scrollRef = (0, import_react47.useRef)(null);
+    (0, import_react47.useEffect)(() => setMounted(true), []);
+    (0, import_react47.useEffect)(() => {
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = prev;
       };
     }, []);
-    (0, import_react34.useEffect)(() => {
+    (0, import_react47.useEffect)(() => {
       setPagedIndex(0);
       setDidResume(false);
       setActive(null);
     }, [chapterId]);
-    const chapters = (0, import_react34.useMemo)(() => comic?.chapters ?? [], [comic]);
+    const chapters = (0, import_react47.useMemo)(() => comic?.chapters ?? [], [comic]);
     const isWebtoon = mode === "webtoon";
     const curChapterId = isWebtoon ? active?.chapterId ?? chapterId : chapterId;
     const chIdx = chapters.findIndex((c) => c.id === curChapterId);
@@ -16373,8 +21303,8 @@ var PortalUI = (() => {
     const nextChapterId = chIdx >= 0 && chIdx < chapters.length - 1 ? chapters[chIdx + 1].id : null;
     const initialPageId = comic?.progress && comic.progress.chapter_id === chapterId ? comic.progress.page_id : null;
     usePagePreloader({ comicId: id2, pages: pages ?? [], index: pagedIndex, variant, nextChapterId: mode === "webtoon" ? null : nextChapterId });
-    const toggleChrome = (0, import_react34.useCallback)(() => setChromeVisible((v) => !v), []);
-    const goPaged = (0, import_react34.useCallback)((delta) => {
+    const toggleChrome = (0, import_react47.useCallback)(() => setChromeVisible((v) => !v), []);
+    const goPaged = (0, import_react47.useCallback)((delta) => {
       if (!pages || pages.length === 0) return;
       const step = mode === "double" ? 2 : 1;
       let ni = pagedIndex + delta * step;
@@ -16390,7 +21320,7 @@ var PortalUI = (() => {
       setPagedIndex(ni);
       setChromeVisible(true);
     }, [pages, pagedIndex, mode, prevHref, nextHref, router]);
-    (0, import_react34.useEffect)(() => {
+    (0, import_react47.useEffect)(() => {
       if (didResume || !pages || isWebtoon) return;
       if (initialPageId) {
         const i = pages.findIndex((p) => p.page_id === initialPageId);
@@ -16398,14 +21328,14 @@ var PortalUI = (() => {
       }
       setDidResume(true);
     }, [pages, isWebtoon, initialPageId, didResume, mode]);
-    (0, import_react34.useEffect)(() => {
+    (0, import_react47.useEffect)(() => {
       if (!isWebtoon && pages && pages[pagedIndex]) report(chapterId, pages[pagedIndex].page_id);
     }, [isWebtoon, pages, pagedIndex, chapterId, report]);
-    const onWebtoonActive = (0, import_react34.useCallback)((pos) => {
+    const onWebtoonActive = (0, import_react47.useCallback)((pos) => {
       setActive(pos);
       report(pos.chapterId, pos.pageId);
     }, [report]);
-    (0, import_react34.useEffect)(() => {
+    (0, import_react47.useEffect)(() => {
       const onKey = (e2) => {
         if (settingsOpen || chaptersOpen || helpOpen) {
           if (e2.key === "Escape") {
@@ -16463,7 +21393,7 @@ var PortalUI = (() => {
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, [settingsOpen, chaptersOpen, helpOpen, isWebtoon, dir, goPaged, toggleChrome, prevHref, nextHref, router]);
-    (0, import_react34.useEffect)(() => {
+    (0, import_react47.useEffect)(() => {
       if (isWebtoon || !chromeVisible || settingsOpen || chaptersOpen || helpOpen) return;
       const t2 = setTimeout(() => setChromeVisible(false), CHROME_HIDE_MS);
       return () => clearTimeout(t2);
@@ -16570,7 +21500,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/media/MediaDetailView.tsx
   init_define_import_meta_env();
-  var import_react36 = __toESM(require_react_shim());
+  var import_react49 = __toESM(require_react_shim());
 
   // frontend/node_modules/@vidstack/react/prod/vidstack.js
   init_define_import_meta_env();
@@ -18084,9 +23014,9 @@ var PortalUI = (() => {
     if (store.isLiveDVR() && store.liveDVRWindow() > 0 && clippedTime < store.seekableEnd() - store.liveDVRWindow()) return store.bufferedStart();
     return Math.min(Math.max(store.seekableStart() + 0.1, clippedTime), store.seekableEnd() - 0.1);
   }
-  var mediaContext = createContext5();
+  var mediaContext = createContext6();
   function useMediaContext() {
-    return useContext5(mediaContext);
+    return useContext6(mediaContext);
   }
   var GROUPED_LOG = /* @__PURE__ */ Symbol(0);
   var _a43, _b2;
@@ -22672,7 +27602,7 @@ var PortalUI = (() => {
     window.clearTimeout(__privateGet(this, _showTimerId));
     __privateSet(this, _showTimerId, -1);
   }, _a73);
-  var tooltipContext = createContext5();
+  var tooltipContext = createContext6();
   var id = 0;
   var _a74, _id2, _trigger, _content, _showing, _Tooltip_instances, attachTrigger_fn, detachTrigger_fn, attachContent_fn, detachContent_fn, onShowingChange_fn;
   var Tooltip = (_a74 = class extends Component2 {
@@ -22752,7 +27682,7 @@ var PortalUI = (() => {
       onDispose(requestScopedAnimationFrame(() => {
         if (!this.connectScope) return;
         __privateMethod(this, _TooltipTrigger_instances, attach_fn).call(this);
-        const tooltip = useContext5(tooltipContext);
+        const tooltip = useContext6(tooltipContext);
         onDispose(() => {
           const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this);
           button && tooltip.detachTrigger(button);
@@ -22760,7 +27690,7 @@ var PortalUI = (() => {
       }));
     }
   }, _TooltipTrigger_instances = new WeakSet(), attach_fn = function() {
-    const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this), tooltip = useContext5(tooltipContext);
+    const button = __privateMethod(this, _TooltipTrigger_instances, getButton_fn).call(this), tooltip = useContext6(tooltipContext);
     button && tooltip.attachTrigger(button);
   }, getButton_fn = function() {
     const candidate = this.el.firstElementChild;
@@ -22786,7 +27716,7 @@ var PortalUI = (() => {
     }
     onConnect(el) {
       __privateMethod(this, _TooltipContent_instances, attach_fn2).call(this, el);
-      const tooltip = useContext5(tooltipContext);
+      const tooltip = useContext6(tooltipContext);
       onDispose(() => tooltip.detachContent(el));
       onDispose(requestScopedAnimationFrame(() => {
         if (!this.connectScope) return;
@@ -22794,9 +27724,9 @@ var PortalUI = (() => {
       }));
     }
   }, _TooltipContent_instances = new WeakSet(), attach_fn2 = function(el) {
-    useContext5(tooltipContext).attachContent(el);
+    useContext6(tooltipContext).attachContent(el);
   }, watchPlacement_fn = function() {
-    const { showing } = useContext5(tooltipContext);
+    const { showing } = useContext6(tooltipContext);
     if (!showing()) return;
     const { placement, offset: mainOffset, alignOffset } = this.$props;
     return autoPlacement2(this.el, __privateMethod(this, _TooltipContent_instances, getTrigger_fn).call(this), placement(), {
@@ -22805,7 +27735,7 @@ var PortalUI = (() => {
       yOffset: mainOffset()
     });
   }, getTrigger_fn = function() {
-    return useContext5(tooltipContext).trigger();
+    return useContext6(tooltipContext).trigger();
   }, __publicField(_a76, "props", {
     placement: "top center",
     offset: 0,
@@ -23250,8 +28180,8 @@ var PortalUI = (() => {
     __privateGet(this, _observer)?.disconnect();
     __privateSet(this, _observer, void 0);
   }, _a88);
-  var sliderContext = createContext5();
-  var sliderObserverContext = createContext5();
+  var sliderContext = createContext6();
+  var sliderObserverContext = createContext6();
   function getClampedValue(min2, max2, value, step) {
     return clampNumber(min2, round(value, getNumberOfDecimalPlaces(step)), max2);
   }
@@ -23289,7 +28219,7 @@ var PortalUI = (() => {
       __privateSet(this, _media25, media);
     }
     onSetup() {
-      if (hasProvidedContext(sliderObserverContext)) __privateSet(this, _observer2, useContext5(sliderObserverContext));
+      if (hasProvidedContext(sliderObserverContext)) __privateSet(this, _observer2, useContext6(sliderObserverContext));
     }
     onConnect(el) {
       effect(__privateMethod(this, _SliderEventsController_instances, attachEventListeners_fn).bind(this, el));
@@ -23459,7 +28389,7 @@ var PortalUI = (() => {
   }, onDocumentTouchMove_fn = function(event) {
     event.preventDefault();
   }, _onDocumentPointerMove = new WeakMap(), _a89);
-  var sliderValueFormatContext = createContext5(() => ({}));
+  var sliderValueFormatContext = createContext6(() => ({}));
   var _a90, _media26, _delegate4, _isVisible, _isIntersecting, _SliderController_instances, onIntersectionChange_fn, watchHidden_fn, watchValue_fn, watchStep_fn, watchDisabled_fn, getARIADisabled_fn, setupAttrs_fn, watchCSSVars_fn, _updateSliderVars;
   var SliderController = (_a90 = class extends ViewController {
     constructor(delegate) {
@@ -23896,7 +28826,7 @@ var PortalUI = (() => {
       __privateAdd(this, _slider);
     }
     onAttach(el) {
-      __privateSet(this, _slider, useState34(Slider.state));
+      __privateSet(this, _slider, useState46(Slider.state));
     }
     getTime() {
       const { duration, clipStartTime } = this.media.$state;
@@ -23916,7 +28846,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media28, useMediaContext());
-      __privateSet(this, _slider2, useState34(Slider.state));
+      __privateSet(this, _slider2, useState46(Slider.state));
       __privateMethod(this, _SliderVideo_instances, watchCrossOrigin_fn3).call(this);
       this.setAttributes({
         "data-loading": __privateMethod(this, _SliderVideo_instances, isLoading_fn2).bind(this),
@@ -23993,8 +28923,8 @@ var PortalUI = (() => {
       __privateAdd(this, _slider3);
     }
     onSetup() {
-      __privateSet(this, _slider3, useState34(Slider.state));
-      __privateSet(this, _format, useContext5(sliderValueFormatContext));
+      __privateSet(this, _slider3, useState46(Slider.state));
+      __privateSet(this, _format, useContext6(sliderValueFormatContext));
       __privateSet(this, _text, computed(this.getValueText.bind(this)));
     }
     /**
@@ -24043,8 +28973,8 @@ var PortalUI = (() => {
       }));
     }
     onSetup() {
-      __privateSet(this, _slider4, useContext5(sliderContext));
-      const { active } = useState34(Slider.state);
+      __privateSet(this, _slider4, useContext6(sliderContext));
+      const { active } = useState46(Slider.state);
       this.setAttributes({ "data-visible": active });
     }
     onAttach(el) {
@@ -24436,7 +29366,7 @@ var PortalUI = (() => {
       this.dispatch("value-change", { detail: newValue });
     }
   }, watchPreviewing_fn = function() {
-    const player = __privateGet(this, _media33).player.el, { preview } = useContext5(sliderContext);
+    const player = __privateGet(this, _media33).player.el, { preview } = useContext6(sliderContext);
     player && preview() && setAttribute(player, "data-preview", this.$state.active());
   }, seeking_fn2 = function(time, event) {
     __privateGet(this, _media33).remote.seeking(time, event);
@@ -24558,7 +29488,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media34, useMediaContext());
-      __privateSet(this, _sliderState, useState34(TimeSlider.state));
+      __privateSet(this, _sliderState, useState46(TimeSlider.state));
     }
     onAttach(el) {
       watchActiveTextTrack(__privateGet(this, _media34).textTracks, "chapters", __privateMethod(this, _SliderChapters_instances, setTrack_fn).bind(this));
@@ -24728,7 +29658,7 @@ var PortalUI = (() => {
   prop(sliderchapters__proto, "activeCue");
   prop(sliderchapters__proto, "activePointerCue");
   method(sliderchapters__proto, "setRefs");
-  var menuContext = createContext5();
+  var menuContext = createContext6();
   function scrollIntoView(el, options) {
     const scrolls = r(el, options);
     for (const { el: el2, top, left } of scrolls) el2.scroll({
@@ -24973,7 +29903,7 @@ var PortalUI = (() => {
       __privateSet(this, _menuId, `media-menu-${currentIdCount}`);
       __privateSet(this, _menuButtonId, `media-menu-button-${currentIdCount}`);
       __privateSet(this, _focus, new MenuFocusController({ closeMenu: this.close.bind(this) }));
-      if (hasProvidedContext(menuContext)) __privateSet(this, _parentMenu, useContext5(menuContext));
+      if (hasProvidedContext(menuContext)) __privateSet(this, _parentMenu, useContext6(menuContext));
       __privateMethod(this, _Menu_instances, observeSliders_fn).call(this);
       this.setAttributes({
         "data-open": __privateGet(this, _expanded),
@@ -25032,7 +29962,7 @@ var PortalUI = (() => {
       tick();
     }
   }, _media35 = new WeakMap(), _menuId = new WeakMap(), _menuButtonId = new WeakMap(), _expanded = new WeakMap(), _disabled = new WeakMap(), _trigger2 = new WeakMap(), _content2 = new WeakMap(), _parentMenu = new WeakMap(), _submenus = new WeakMap(), _menuObserver = new WeakMap(), _popper = new WeakMap(), _focus = new WeakMap(), _isSliderActive = new WeakMap(), _isTriggerDisabled = new WeakMap(), _transitionCallbacks = new WeakMap(), _Menu_instances = new WeakSet(), observeSliders_fn = function() {
-    let sliderActiveTimer = -1, parentSliderObserver = hasProvidedContext(sliderObserverContext) ? useContext5(sliderObserverContext) : null;
+    let sliderActiveTimer = -1, parentSliderObserver = hasProvidedContext(sliderObserverContext) ? useContext6(sliderObserverContext) : null;
     provideContext(sliderObserverContext, {
       onDragStart: () => {
         parentSliderObserver?.onDragStart?.();
@@ -25227,7 +30157,7 @@ var PortalUI = (() => {
       return __privateGet(this, _menu)?.expanded() ?? false;
     }
     onSetup() {
-      __privateSet(this, _menu, useContext5(menuContext));
+      __privateSet(this, _menu, useContext6(menuContext));
     }
     onAttach(el) {
       __privateGet(this, _menu).attachMenuButton(this);
@@ -25265,7 +30195,7 @@ var PortalUI = (() => {
   prop(menubutton__proto, "expanded");
   var MenuItem2 = class extends MenuButton {
   };
-  var menuPortalContext = createContext5();
+  var menuPortalContext = createContext6();
   var _a107, _menu2, _MenuItems_instances, watchPlacement_fn2, hide_fn, getButton_fn2;
   var MenuItems = (_a107 = class extends Component2 {
     constructor() {
@@ -25277,10 +30207,10 @@ var PortalUI = (() => {
       this.setAttributes({ "data-placement": placement });
     }
     onAttach(el) {
-      __privateSet(this, _menu2, useContext5(menuContext));
+      __privateSet(this, _menu2, useContext6(menuContext));
       __privateGet(this, _menu2).attachMenuItems(this);
       if (hasProvidedContext(menuPortalContext)) {
-        const portal = useContext5(menuPortalContext);
+        const portal = useContext6(menuPortalContext);
         if (portal) {
           provideContext(menuPortalContext, null);
           portal.attach(el);
@@ -25320,7 +30250,7 @@ var PortalUI = (() => {
     offset: 0,
     alignOffset: 0
   }), _a107);
-  var radioControllerContext = createContext5();
+  var radioControllerContext = createContext6();
   var _group, _value, _controller4, _RadioGroupController_instances, addRadio_fn, removeRadio_fn, _onChangeBind, onChange_fn4, findRadio_fn, _a108;
   var RadioGroupController = (_a108 = class extends ViewController {
     constructor() {
@@ -25453,10 +30383,10 @@ var PortalUI = (() => {
     }
   }, _checked = new WeakMap(), _controller6 = new WeakMap(), _Radio_instances = new WeakSet(), onDisconnect_fn5 = function() {
     scoped(() => {
-      useContext5(radioControllerContext).remove(__privateGet(this, _controller6));
+      useContext6(radioControllerContext).remove(__privateGet(this, _controller6));
     }, this.connectScope);
   }, addToGroup_fn = function() {
-    useContext5(radioControllerContext).add(__privateGet(this, _controller6));
+    useContext6(radioControllerContext).add(__privateGet(this, _controller6));
   }, watchValue_fn4 = function() {
     const { value } = this.$props, newValue = value();
     if (peek(__privateGet(this, _checked))) __privateGet(this, _controller6).onCheck?.(newValue);
@@ -26123,7 +31053,7 @@ var PortalUI = (() => {
   // frontend/node_modules/@vidstack/react/prod/chunks/vidstack-BEp8cIq7.js
   init_define_import_meta_env();
   init_vidstack_B9fTkxQO();
-  var import_react35 = __toESM(require_react_shim(), 1);
+  var import_react48 = __toESM(require_react_shim(), 1);
   var sliderStateRecord = SliderInstance.state.record;
   var initialSliderStore = Object.keys(sliderStateRecord).reduce((store, prop2) => ({
     ...store,
@@ -26935,7 +31865,7 @@ var PortalUI = (() => {
     }
     onSetup() {
       __privateSet(this, _media40, useMediaContext());
-      if (hasProvidedContext(menuContext)) __privateSet(this, _menu3, useContext5(menuContext));
+      if (hasProvidedContext(menuContext)) __privateSet(this, _menu3, useContext6(menuContext));
     }
     onConnect(el) {
       effect(__privateMethod(this, _AudioGainRadioGroup_instances, watchValue_fn5).bind(this));
@@ -27311,13 +32241,13 @@ var PortalUI = (() => {
     }, [el, callback]);
   }
   function useTransitionActive(el) {
-    const [isActive, setIsActive] = React19.useState(false);
+    const [isActive2, setIsActive] = React19.useState(false);
     React19.useEffect(() => {
       if (!el) return;
       const events = new EventsController(el).add("transitionstart", () => setIsActive(true)).add("transitionend", () => setIsActive(false));
       return () => events.abort();
     }, [el]);
-    return isActive;
+    return isActive2;
   }
   function useMouseEnter(el) {
     const [isMouseEnter, setIsMouseEnter] = React19.useState(false);
@@ -28058,7 +32988,7 @@ var PortalUI = (() => {
   }
   DefaultResetMenuItem.displayName = "DefaultResetMenuItem";
   function DefaultMenuCheckbox({ label, checked, storageKey, defaultChecked = false, onChange }) {
-    const [isChecked, setIsChecked] = React20.useState(defaultChecked), [isActive, setIsActive] = React20.useState(false);
+    const [isChecked, setIsChecked] = React20.useState(defaultChecked), [isActive2, setIsActive] = React20.useState(false);
     React20.useEffect(() => {
       const checked2 = !!((storageKey ? localStorage.getItem(storageKey) : null) ?? defaultChecked);
       setIsChecked(checked2);
@@ -28088,7 +33018,7 @@ var PortalUI = (() => {
       tabIndex: 0,
       "aria-label": label,
       "aria-checked": isChecked ? "true" : "false",
-      "data-active": isActive ? "" : null,
+      "data-active": isActive2 ? "" : null,
       onPointerUp: onPress2,
       onPointerDown: onActive,
       onKeyDown
@@ -28511,7 +33441,7 @@ var PortalUI = (() => {
   });
   DefaultKeyboardDisplay.displayName = "DefaultKeyboardDisplay";
   function getText() {
-    const { $state } = useContext5(mediaContext), action = $state.lastKeyboardAction()?.action, audioGain = $state.audioGain() ?? 1;
+    const { $state } = useContext6(mediaContext), action = $state.lastKeyboardAction()?.action, audioGain = $state.audioGain() ?? 1;
     switch (action) {
       case "toggleMuted":
         return $state.muted() ? "0%" : getVolumeText($state.volume(), audioGain);
@@ -28526,7 +33456,7 @@ var PortalUI = (() => {
     return `${Math.round(volume * gain * 100)}%`;
   }
   function getIcon(Icons) {
-    const { $state } = useContext5(mediaContext);
+    const { $state } = useContext6(mediaContext);
     switch ($state.lastKeyboardAction()?.action) {
       case "togglePaused":
         return !$state.paused() ? Icons.Play : Icons.Pause;
@@ -28702,12 +33632,12 @@ var PortalUI = (() => {
   }
   var THROTTLE_MS2 = 1e4;
   function MediaDetailView({ id: id2 }) {
-    const playerRef = (0, import_react36.useRef)(null);
-    const lastSyncRef = (0, import_react36.useRef)(0);
-    const lastTimeRef = (0, import_react36.useRef)(0);
-    const [ready, setReady] = (0, import_react36.useState)(false);
-    const [showStartOver, setShowStartOver] = (0, import_react36.useState)(false);
-    const [didSeek, setDidSeek] = (0, import_react36.useState)(false);
+    const playerRef = (0, import_react49.useRef)(null);
+    const lastSyncRef = (0, import_react49.useRef)(0);
+    const lastTimeRef = (0, import_react49.useRef)(0);
+    const [ready, setReady] = (0, import_react49.useState)(false);
+    const [showStartOver, setShowStartOver] = (0, import_react49.useState)(false);
+    const [didSeek, setDidSeek] = (0, import_react49.useState)(false);
     const { data: asset, isLoading: assetLoading } = useQuery({
       queryKey: ["assets", id2],
       queryFn: () => getAsset(id2)
@@ -28717,7 +33647,7 @@ var PortalUI = (() => {
       queryFn: () => getPlaybackProgress(id2).catch(() => null)
       // 404 is fine
     });
-    (0, import_react36.useEffect)(() => {
+    (0, import_react49.useEffect)(() => {
       if (!ready || !playerRef.current || didSeek) return;
       if (shouldResume(progress)) {
         playerRef.current.currentTime = progress.position_ms / 1e3;
@@ -28725,13 +33655,13 @@ var PortalUI = (() => {
       }
       setDidSeek(true);
     }, [ready, progress, didSeek]);
-    const sendFinalBeacon = (0, import_react36.useCallback)(() => {
+    const sendFinalBeacon = (0, import_react49.useCallback)(() => {
       const t2 = lastTimeRef.current;
       if (t2 > 0) {
         sendProgressBeacon(id2, Math.floor(t2 * 1e3));
       }
     }, [id2]);
-    (0, import_react36.useEffect)(() => {
+    (0, import_react49.useEffect)(() => {
       const onVisChange = () => {
         if (document.visibilityState === "hidden") sendFinalBeacon();
       };
@@ -28806,7 +33736,7 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/library/media/MediaIndexView.tsx
   init_define_import_meta_env();
-  var import_react38 = __toESM(require_react_shim());
+  var import_react51 = __toESM(require_react_shim());
   var KIND_OPTIONS = [
     { value: "all", label: "All kinds" },
     { value: "video", label: "Video" },
@@ -28836,9 +33766,9 @@ var PortalUI = (() => {
     const queryClient2 = useQueryClient();
     const kind = searchParams.get("kind") ?? "all";
     const status = searchParams.get("status") ?? "all";
-    const [viewer, setViewer] = (0, import_react38.useState)(null);
-    const [pendingDelete, setPendingDelete] = (0, import_react38.useState)(null);
-    const [deleteError, setDeleteError] = (0, import_react38.useState)(null);
+    const [viewer, setViewer] = (0, import_react51.useState)(null);
+    const [pendingDelete, setPendingDelete] = (0, import_react51.useState)(null);
+    const [deleteError, setDeleteError] = (0, import_react51.useState)(null);
     function setFilter(next) {
       const merged = { kind, status, ...next };
       const params = new URLSearchParams(searchParams.toString());
@@ -28855,7 +33785,7 @@ var PortalUI = (() => {
       initialPageParam: void 0,
       getNextPageParam: (lastPage) => lastPage.next_cursor ?? void 0
     });
-    const assets = (0, import_react38.useMemo)(
+    const assets = (0, import_react51.useMemo)(
       () => query.data?.pages.flatMap((page) => page.assets) ?? [],
       [query.data]
     );
@@ -28889,10 +33819,44 @@ var PortalUI = (() => {
         setViewer((v) => v && v.asset.id === asset.id ? null : v);
       }
     });
+    const visibilityMutation = useMutation({
+      mutationFn: ({ asset, visibility }) => setAssetVisibility(asset.id, visibility),
+      onMutate: async ({ asset, visibility }) => {
+        await queryClient2.cancelQueries({ queryKey: [ASSETS_KEY] });
+        const previous = queryClient2.getQueriesData({
+          queryKey: [ASSETS_KEY]
+        });
+        queryClient2.setQueriesData(
+          { queryKey: [ASSETS_KEY] },
+          (data) => data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              assets: page.assets.map((a) => a.id === asset.id ? { ...a, visibility } : a)
+            }))
+          }
+        );
+        setDeleteError(null);
+        return { previous };
+      },
+      onError: (err, _vars, context) => {
+        context?.previous.forEach(([key2, data]) => queryClient2.setQueryData(key2, data));
+        setDeleteError(
+          err instanceof ApiError2 ? problemDisplayMessage(err.body) : "Could not change who can see this asset."
+        );
+      }
+    });
+    function toggleVisibility(asset) {
+      visibilityMutation.mutate({
+        asset,
+        visibility: asset.visibility === "public" ? "private" : "public"
+      });
+    }
     function openDelete(asset) {
       setDeleteError(null);
       setPendingDelete(asset);
     }
+    const viewerAsset = viewer ? assets.find((a) => a.id === viewer.asset.id) ?? viewer.asset : null;
     return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Media"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-4" }, /* @__PURE__ */ React.createElement("div", { className: "w-36" }, /* @__PURE__ */ React.createElement(
       SelectField,
       {
@@ -28915,7 +33879,8 @@ var PortalUI = (() => {
         key: asset.id,
         asset,
         onOpen: () => setViewer({ asset, mode: asset.kind === "image" ? "lightbox" : "player" }),
-        onDelete: () => openDelete(asset)
+        onDelete: () => openDelete(asset),
+        onToggleVisibility: () => toggleVisibility(asset)
       }
     ))), query.hasNextPage && /* @__PURE__ */ React.createElement("div", { className: "mt-6 flex justify-center" }, /* @__PURE__ */ React.createElement(
       "button",
@@ -28927,13 +33892,15 @@ var PortalUI = (() => {
         style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
       },
       query.isFetchingNextPage ? "Loading\u2026" : "Load more"
-    ))), viewer && /* @__PURE__ */ React.createElement(
+    ))), viewer && viewerAsset && /* @__PURE__ */ React.createElement(
       ViewerModal,
       {
-        asset: viewer.asset,
+        asset: viewerAsset,
         mode: viewer.mode,
         onClose: () => setViewer(null),
-        onDelete: () => openDelete(viewer.asset)
+        onDelete: () => openDelete(viewerAsset),
+        onToggleVisibility: () => toggleVisibility(viewerAsset),
+        busy: visibilityMutation.isPending
       }
     ), pendingDelete && /* @__PURE__ */ React.createElement(Modal, { open: true, onClose: () => setPendingDelete(null), title: "Delete asset?", width: 420 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-4 p-6" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-text)" } }, assetLabel(pendingDelete), " will be permanently deleted. This can't be undone."), /* @__PURE__ */ React.createElement("div", { className: "flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(BtnSecondary, { onClick: () => setPendingDelete(null) }, "Cancel"), /* @__PURE__ */ React.createElement(
       "button",
@@ -28953,10 +33920,12 @@ var PortalUI = (() => {
   function AssetCard({
     asset,
     onOpen,
-    onDelete
+    onDelete,
+    onToggleVisibility
   }) {
     const isFailed = asset.status === "failed";
     const isReady = asset.status === "ready";
+    const isPublic = asset.visibility === "public";
     const label = assetLabel(asset);
     return /* @__PURE__ */ React.createElement(
       "div",
@@ -28991,7 +33960,7 @@ var PortalUI = (() => {
           /* @__PURE__ */ React.createElement(Icon, { name: isFailed ? "close-icon" : KIND_ICON[asset.kind], size: 22 })
         ),
         /* @__PURE__ */ React.createElement("span", { className: "absolute left-2 top-2" }, /* @__PURE__ */ React.createElement(Pill, null, KIND_LABEL[asset.kind])),
-        /* @__PURE__ */ React.createElement("span", { className: "absolute right-2 top-2" }, /* @__PURE__ */ React.createElement(StatusPill, { status: asset.status }))
+        /* @__PURE__ */ React.createElement("span", { className: "absolute right-2 top-2 flex gap-1" }, isPublic && /* @__PURE__ */ React.createElement(Pill, { color: "#22c55e" }, "Public"), /* @__PURE__ */ React.createElement(StatusPill, { status: asset.status }))
       ),
       /* @__PURE__ */ React.createElement("div", { className: "flex flex-1 flex-col gap-1 p-3" }, /* @__PURE__ */ React.createElement(
         "p",
@@ -29010,6 +33979,16 @@ var PortalUI = (() => {
           style: { color: "var(--tpl-accent)" }
         },
         "Download original"
+      ), isReady && /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onToggleVisibility,
+          title: isPublic ? "Anyone with the link can view this \u2014 click to make it private again" : "Only you can view this \u2014 click to let anyone with the link view it",
+          className: "text-xs font-semibold transition hover:opacity-80",
+          style: { color: isPublic ? "#22c55e" : "var(--tpl-muted)" }
+        },
+        isPublic ? "Public" : "Private"
       ), /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -29050,7 +34029,9 @@ var PortalUI = (() => {
     asset,
     mode,
     onClose,
-    onDelete
+    onDelete,
+    onToggleVisibility,
+    busy
   }) {
     return /* @__PURE__ */ React.createElement(Modal, { open: true, onClose, title: assetLabel(asset), width: mode === "player" ? 880 : 720 }, /* @__PURE__ */ React.createElement("div", { className: "space-y-3 p-6" }, mode === "player" ? asset.hls_url ? /* @__PURE__ */ React.createElement(
       MediaPlayer2,
@@ -29073,7 +34054,7 @@ var PortalUI = (() => {
           style: { background: "var(--tpl-surface-2)" }
         }
       )
-    ), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement(ShareRow, { asset, onToggle: onToggleVisibility, busy }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement(
       "a",
       {
         href: assetOriginalURL(asset.id),
@@ -29093,6 +34074,56 @@ var PortalUI = (() => {
       /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 14 }),
       "Delete"
     ))));
+  }
+  function ShareRow({
+    asset,
+    onToggle,
+    busy
+  }) {
+    const [copied, setCopied] = (0, import_react51.useState)(false);
+    const isPublic = asset.visibility === "public";
+    const link = asset.kind === "video" && asset.hls_url ? asset.hls_url : assetVariantURL(asset.id, "medium");
+    async function copy() {
+      try {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2e3);
+      } catch {
+        setCopied(false);
+      }
+    }
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex flex-wrap items-center gap-3 rounded-lg px-4 py-3",
+        style: { background: "var(--tpl-surface-2)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { color: isPublic ? "#22c55e" : "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: isPublic ? "share-icon" : "badge-icon", size: 16 })),
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm font-semibold", style: { color: "var(--tpl-heading)" } }, isPublic ? "Public" : "Private"), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, isPublic ? "Anyone with the link can view this, without signing in." : "Only you can view this.")),
+      isPublic && /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: copy,
+          className: "rounded-md border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+        },
+        copied ? "Copied" : "Copy link"
+      ),
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onToggle,
+          disabled: busy,
+          className: "rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: {
+            background: isPublic ? "var(--tpl-muted)" : "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))"
+          }
+        },
+        isPublic ? "Make private" : "Make public"
+      )
+    );
   }
   function SkeletonGrid() {
     return /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" }, Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ React.createElement(
@@ -29147,6 +34178,1357 @@ var PortalUI = (() => {
     );
   }
 
+  // frontend/src/templates/v1/views/library/music/BulkImportModal.tsx
+  init_define_import_meta_env();
+  var import_react53 = __toESM(require_react_shim());
+  var BULK_HINT_THRESHOLD = 25;
+  var POLL_MS = 1500;
+  function BulkImportModal({
+    onClose,
+    onImported
+  }) {
+    const [mode, setMode] = (0, import_react53.useState)("files");
+    const [err, setErr] = (0, import_react53.useState)(null);
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+        onClick: onClose,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": "Nh\u1EADp nhi\u1EC1u b\xE0i h\xE1t"
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl p-6 shadow-lg",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "mb-1 text-lg font-semibold", style: { color: "var(--tpl-heading)" } }, "Nh\u1EADp nhi\u1EC1u b\xE0i h\xE1t"),
+        /* @__PURE__ */ React.createElement("p", { className: "mb-4 text-xs", style: { color: "var(--tpl-muted)" } }, "T\xEAn b\xE0i l\u1EA5y t\u1EEB t\xEAn t\u1EC7p (\u201C01 - Ngh\u1EC7 s\u0129 - T\xEAn b\xE0i.mp3\u201D). Ri\xEAng c\xE1ch t\u1EA3i .zip c\xF2n \u0111\u1ECDc \u0111\u01B0\u1EE3c th\u1EBB nh\u1EA1c trong t\u1EC7p n\xEAn l\u1EA5y \u0111\xFAng c\u1EA3 ngh\u1EC7 s\u0129 v\xE0 album. S\u1EEDa l\u1EA1i sau \u1EDF t\u1EEBng b\xE0i."),
+        /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(TabBtn4, { active: mode === "files", onClick: () => setMode("files") }, "Ch\u1ECDn nhi\u1EC1u t\u1EC7p"), /* @__PURE__ */ React.createElement(TabBtn4, { active: mode === "zip", onClick: () => setMode("zip") }, "T\u1EA3i t\u1EC7p .zip")),
+        err && /* @__PURE__ */ React.createElement(Banner4, { onDismiss: () => setErr(null) }, err),
+        /* @__PURE__ */ React.createElement("div", { className: "min-h-0 flex-1 overflow-y-auto" }, mode === "files" ? /* @__PURE__ */ React.createElement(FilesPanel, { onError: setErr, onImported, onSwitchToZip: () => setMode("zip") }) : /* @__PURE__ */ React.createElement(ZipPanel, { onError: setErr, onImported })),
+        /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end" }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onClose,
+            className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+          },
+          "\u0110\xF3ng"
+        ))
+      )
+    );
+  }
+  function FilesPanel({
+    onError,
+    onImported,
+    onSwitchToZip
+  }) {
+    const [files, setFiles] = (0, import_react53.useState)([]);
+    const [running, setRunning] = (0, import_react53.useState)(false);
+    const inputRef = (0, import_react53.useRef)(null);
+    const done = files.filter((f) => f.status === "done").length;
+    const failed = files.filter((f) => f.status === "failed").length;
+    function pick(list) {
+      if (!list) return;
+      onError(null);
+      setFiles(
+        Array.from(list).filter((f) => f.type.startsWith("audio/") || /\.(mp3|m4a|aac|flac|ogg|oga|opus|wav|wma)$/i.test(f.name)).map((file) => ({ file, status: "waiting", pct: 0 }))
+      );
+    }
+    async function run() {
+      setRunning(true);
+      onError(null);
+      let created = 0;
+      for (let i = 0; i < files.length; i++) {
+        const current = files[i];
+        if (!current || current.status === "done") continue;
+        const patch = (changes) => setFiles((prev) => prev.map((f, j) => j === i ? { ...f, ...changes } : f));
+        patch({ status: "uploading", pct: 0, error: void 0 });
+        try {
+          const assetId = await uploadAudioAsset(current.file, (pct) => patch({ pct }));
+          const { title, artist } = metaFromFilename(current.file.name);
+          await createTrack({ title, artist: artist ?? null, audio_asset_id: assetId });
+          patch({ status: "done", pct: 100, title });
+          created++;
+        } catch (e2) {
+          patch({ status: "failed", error: message4(e2, "Kh\xF4ng nh\u1EADp \u0111\u01B0\u1EE3c t\u1EC7p n\xE0y.") });
+        }
+      }
+      setRunning(false);
+      if (created > 0) onImported();
+    }
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => inputRef.current?.click(),
+        disabled: running,
+        className: "rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-accent)" }
+      },
+      "Ch\u1ECDn t\u1EC7p\u2026"
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        ref: inputRef,
+        type: "file",
+        accept: "audio/*,.mp3,.m4a,.aac,.flac,.ogg,.oga,.opus,.wav,.wma",
+        multiple: true,
+        className: "hidden",
+        onChange: (e2) => {
+          pick(e2.target.files);
+          e2.target.value = "";
+        }
+      }
+    ), files.length > 0 && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: run,
+        disabled: running,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "var(--tpl-accent)" }
+      },
+      running ? `\u0110ang nh\u1EADp\u2026 (${done}/${files.length})` : `Nh\u1EADp ${files.length} b\xE0i`
+    )), files.length > BULK_HINT_THRESHOLD && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 rounded-lg border px-3 py-2 text-xs",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      files.length,
+      " t\u1EC7p l\xE0 kh\xE1 nhi\u1EC1u cho c\xE1ch n\xE0y \u2014 m\u1ED7i t\u1EC7p l\xE0 hai l\u01B0\u1EE3t g\u1ECDi v\xE0 ph\u1EA3i gi\u1EEF tab m\u1EDF t\u1EDBi khi xong.",
+      " ",
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onSwitchToZip,
+          className: "font-semibold underline",
+          style: { color: "var(--tpl-accent)" }
+        },
+        "N\xE9n th\xE0nh .zip"
+      ),
+      " ",
+      "r\u1ED3i t\u1EA3i m\u1ED9t l\u1EA7n s\u1EBD nhanh v\xE0 an to\xE0n h\u01A1n."
+    ), files.length === 0 ? /* @__PURE__ */ React.createElement(Empty3, null, "Ch\u01B0a ch\u1ECDn t\u1EC7p n\xE0o. C\xF3 th\u1EC3 ch\u1ECDn nhi\u1EC1u t\u1EC7p c\xF9ng l\xFAc.") : /* @__PURE__ */ React.createElement("ul", { className: "space-y-1.5" }, files.map((f) => /* @__PURE__ */ React.createElement(
+      "li",
+      {
+        key: f.file.name + f.file.size,
+        className: "flex items-center gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "min-w-0 flex-1 truncate", style: { color: "var(--tpl-text)" } }, f.file.name),
+      /* @__PURE__ */ React.createElement(FileStatus, { state: f })
+    ))), (done > 0 || failed > 0) && !running && /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-xs", style: { color: "var(--tpl-muted)" } }, "Xong: ", done, " th\xE0nh c\xF4ng", failed > 0 ? `, ${failed} l\u1ED7i` : "", "."));
+  }
+  function FileStatus({ state }) {
+    switch (state.status) {
+      case "waiting":
+        return /* @__PURE__ */ React.createElement(Muted, null, "ch\u1EDD");
+      case "uploading":
+        return /* @__PURE__ */ React.createElement(Muted, null, state.pct, "%");
+      case "done":
+        return /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-xs font-semibold", style: { color: "#16a34a" } }, "\u0111\xE3 nh\u1EADp");
+      case "failed":
+        return /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "shrink-0 max-w-[45%] truncate text-xs font-semibold",
+            style: { color: "#ef4444" },
+            title: state.error
+          },
+          state.error
+        );
+    }
+  }
+  function ZipPanel({
+    onError,
+    onImported
+  }) {
+    const [pct, setPct] = (0, import_react53.useState)(null);
+    const [job, setJob] = (0, import_react53.useState)(null);
+    const [enriching, setEnriching] = (0, import_react53.useState)("idle");
+    const [looking, setLooking] = (0, import_react53.useState)("idle");
+    const [lookupNote, setLookupNote] = (0, import_react53.useState)(null);
+    const inputRef = (0, import_react53.useRef)(null);
+    (0, import_react53.useEffect)(() => {
+      if (!job || !importInFlight(job)) return;
+      let alive = true;
+      const timer = setInterval(async () => {
+        try {
+          const next = await getImport(job.id);
+          if (!alive) return;
+          setJob(next);
+          if (next.succeeded > 0 && !importInFlight(next)) onImported();
+        } catch {
+        }
+      }, POLL_MS);
+      return () => {
+        alive = false;
+        clearInterval(timer);
+      };
+    }, [job, onImported]);
+    async function enrich(id2) {
+      setEnriching("working");
+      try {
+        await enrichImport(id2);
+        setEnriching("queued");
+      } catch (e2) {
+        setEnriching("idle");
+        onError(message4(e2, "Kh\xF4ng g\u1EEDi \u0111\u01B0\u1EE3c y\xEAu c\u1EA7u l\u1EA5y \u1EA3nh b\xECa."));
+      }
+    }
+    async function lookup(id2) {
+      setLooking("working");
+      setLookupNote(null);
+      try {
+        const { queued, skipped } = await lookupImport(id2);
+        setLooking("queued");
+        setLookupNote(
+          skipped > 0 ? `\u0110\xE3 x\u1EBFp h\xE0ng ${queued} b\xE0i, b\u1ECF qua ${skipped} b\xE0i v\u01B0\u1EE3t gi\u1EDBi h\u1EA1n m\u1ED7i l\u01B0\u1EE3t.` : `\u0110\xE3 x\u1EBFp h\xE0ng ${queued} b\xE0i.`
+        );
+      } catch (e2) {
+        setLooking("idle");
+        onError(message4(e2, "Kh\xF4ng g\u1EEDi \u0111\u01B0\u1EE3c y\xEAu c\u1EA7u tra c\u1EE9u."));
+      }
+    }
+    async function upload(file) {
+      onError(null);
+      setJob(null);
+      setEnriching("idle");
+      setLooking("idle");
+      setLookupNote(null);
+      setPct(0);
+      try {
+        setJob(await importZip(file, setPct));
+      } catch (e2) {
+        onError(message4(e2, "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c t\u1EC7p zip."));
+      } finally {
+        setPct(null);
+      }
+    }
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mb-3 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => inputRef.current?.click(),
+        disabled: pct !== null,
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "var(--tpl-accent)" }
+      },
+      pct !== null ? `\u0110ang t\u1EA3i l\xEAn\u2026 ${pct}%` : "Ch\u1ECDn t\u1EC7p .zip"
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        ref: inputRef,
+        type: "file",
+        accept: ".zip,application/zip",
+        className: "hidden",
+        onChange: (e2) => {
+          const f = e2.target.files?.[0];
+          e2.target.value = "";
+          if (f) void upload(f);
+        }
+      }
+    )), !job && pct === null && /* @__PURE__ */ React.createElement(Empty3, null, "N\xE9n c\u1EA3 th\u01B0 m\u1EE5c nh\u1EA1c th\xE0nh m\u1ED9t t\u1EC7p .zip r\u1ED3i t\u1EA3i l\xEAn. T\u1ED1i \u0111a 4 GB, 2000 b\xE0i. \u1EA2nh b\xECa v\xE0 t\u1EC7p l\u1EA1 trong zip \u0111\u01B0\u1EE3c b\u1ECF qua, kh\xF4ng t\xEDnh l\xE0 l\u1ED7i."), job && /* @__PURE__ */ React.createElement(
+      ImportProgress,
+      {
+        job,
+        enriching,
+        onEnrich: () => void enrich(job.id),
+        looking,
+        lookupNote,
+        onLookup: () => void lookup(job.id)
+      }
+    ));
+  }
+  function ImportProgress({
+    job,
+    enriching,
+    onEnrich,
+    looking,
+    lookupNote,
+    onLookup
+  }) {
+    const pct = job.total > 0 ? Math.round((job.succeeded + job.failed) / job.total * 100) : 0;
+    const finished = !importInFlight(job) && job.succeeded > 0;
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-3 rounded-lg border px-3 py-2.5",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-sm" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-heading)" } }, statusLabel(job)), job.total > 0 && /* @__PURE__ */ React.createElement("span", { className: "tabular-nums text-xs", style: { color: "var(--tpl-muted)" } }, job.succeeded + job.failed, "/", job.total)),
+      job.total > 0 && /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "mt-2 h-1.5 overflow-hidden rounded-full",
+          style: { background: "var(--tpl-surface-2)" }
+        },
+        /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            className: "h-full rounded-full transition-[width]",
+            style: { width: `${pct}%`, background: "var(--tpl-accent)" }
+          }
+        )
+      ),
+      job.error && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-xs", style: { color: "#ef4444" } }, job.error),
+      !importInFlight(job) && !job.error && /* @__PURE__ */ React.createElement("p", { className: "mt-2 text-xs", style: { color: "var(--tpl-muted)" } }, job.succeeded, " b\xE0i \u0111\xE3 nh\u1EADp", job.failed > 0 ? `, ${job.failed} t\u1EC7p l\u1ED7i` : "", ". C\xF3 th\u1EC3 \u0111\xF3ng c\u1EEDa s\u1ED5 n\xE0y \u2014 nh\u1EA1c \u0111\xE3 n\u1EB1m trong th\u01B0 vi\u1EC7n."),
+      finished && /* @__PURE__ */ React.createElement("div", { className: "mt-3" }, enriching === "queued" ? /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\xE3 g\u1EEDi y\xEAu c\u1EA7u \u2014 \u1EA3nh b\xECa v\xE0 th\xF4ng tin c\xF2n thi\u1EBFu s\u1EBD hi\u1EC7n d\u1EA7n trong th\u01B0 vi\u1EC7n, kh\xF4ng c\u1EA7n m\u1EDF c\u1EEDa s\u1ED5 n\xE0y.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onEnrich,
+          disabled: enriching === "working",
+          className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+          style: { borderColor: "var(--tpl-accent)", color: "var(--tpl-accent)" }
+        },
+        enriching === "working" ? "\u0110ang g\u1EEDi\u2026" : "L\u1EA5y \u1EA3nh b\xECa & th\xF4ng tin c\xF2n thi\u1EBFu"
+      ), /* @__PURE__ */ React.createElement("p", { className: "mt-1.5 text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110\u1ECDc \u1EA3nh b\xECa nh\xFAng trong t\u1EEBng t\u1EC7p nh\u1EA1c v\xE0 \u0111i\u1EC1n ngh\u1EC7 s\u0129 / album c\xF2n tr\u1ED1ng. Ch\u1EA1y n\u1EC1n, ch\u1EADm h\u01A1n b\u01B0\u1EDBc nh\u1EADp n\xEAn t\xE1ch ri\xEAng; nh\u1EEFng g\xEC b\u1EA1n \u0111\xE3 t\u1EF1 s\u1EEDa s\u1EBD kh\xF4ng b\u1ECB ghi \u0111\xE8."))),
+      finished && /* @__PURE__ */ React.createElement("div", { className: "mt-3 border-t pt-3", style: { borderColor: "var(--tpl-border)" } }, looking === "queued" ? /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, lookupNote, " K\u1EBFt qu\u1EA3 hi\u1EC7n d\u1EA7n \u2014 tra c\u1EE9u b\u1ECB gi\u1EDBi h\u1EA1n 1 y\xEAu c\u1EA7u/gi\xE2y n\xEAn v\xE0i tr\u0103m b\xE0i s\u1EBD m\u1EA5t \xEDt ph\xFAt.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onLookup,
+          disabled: looking === "working",
+          className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+        },
+        looking === "working" ? "\u0110ang g\u1EEDi\u2026" : "Tra c\u1EE9u MusicBrainz (n\u0103m, th\u1EC3 lo\u1EA1i, b\xECa album)"
+      ), /* @__PURE__ */ React.createElement("p", { className: "mt-1.5 text-xs", style: { color: "var(--tpl-muted)" } }, "\u26A0\uFE0F B\u01B0\u1EDBc n\xE0y ", /* @__PURE__ */ React.createElement("b", null, "g\u1EEDi t\xEAn b\xE0i v\xE0 ngh\u1EC7 s\u0129 ra d\u1ECBch v\u1EE5 ngo\xE0i"), "(MusicBrainz + Cover Art Archive) \u0111\u1EC3 l\u1EA5y n\u0103m ph\xE1t h\xE0nh, th\u1EC3 lo\u1EA1i v\xE0 \u1EA3nh b\xECa ch\u1EA5t l\u01B0\u1EE3ng cao \u2014 nh\u1EEFng th\u1EE9 kh\xF4ng c\xF3 trong t\u1EC7p nh\u1EA1c. Ch\u1EC9 kh\u1EDBp khi \u0111\u1EE7 ch\u1EAFc ch\u1EAFn; kh\xF4ng ch\u1EAFc th\xEC \u0111\u1EC3 tr\u1ED1ng ch\u1EE9 kh\xF4ng \u0111o\xE1n.")))
+    ), job.report.length > 0 && /* @__PURE__ */ React.createElement("ul", { className: "space-y-1" }, job.report.map((entry) => /* @__PURE__ */ React.createElement(
+      "li",
+      {
+        key: entry.name,
+        className: "flex items-center gap-3 rounded-lg border px-3 py-1.5 text-xs",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "min-w-0 flex-1 truncate", style: { color: "var(--tpl-text)" } }, entry.title || entry.name),
+      entry.ok ? /* @__PURE__ */ React.createElement("span", { className: "shrink-0 font-semibold", style: { color: "#16a34a" } }, "\u2713") : /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "shrink-0 max-w-[50%] truncate font-semibold",
+          style: { color: "#ef4444" },
+          title: entry.error
+        },
+        entry.error
+      )
+    ))));
+  }
+  function statusLabel(job) {
+    switch (job.status) {
+      case "pending":
+      case "uploaded":
+        return "\u0110ang ch\u1EDD x\u1EED l\xFD\u2026";
+      case "processing":
+        return "\u0110ang gi\u1EA3i n\xE9n v\xE0 nh\u1EADp\u2026";
+      case "done":
+        return "\u0110\xE3 nh\u1EADp xong";
+      case "failed":
+        return "Nh\u1EADp th\u1EA5t b\u1EA1i";
+    }
+  }
+  function TabBtn4({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+        style: {
+          background: active ? "var(--tpl-accent)" : "transparent",
+          color: active ? "#fff" : "var(--tpl-muted)",
+          border: `1px solid ${active ? "var(--tpl-accent)" : "var(--tpl-border)"}`
+        }
+      },
+      children
+    );
+  }
+  function Muted({ children }) {
+    return /* @__PURE__ */ React.createElement("span", { className: "shrink-0 text-xs tabular-nums", style: { color: "var(--tpl-muted)" } }, children);
+  }
+  function Empty3({ children }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "rounded-xl border border-dashed px-4 py-8 text-center text-xs",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function Banner4({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function message4(e2, fallback) {
+    if (e2 instanceof ApiError2) return problemDisplayMessage(e2.body);
+    return e2 instanceof Error && e2.message ? e2.message : fallback;
+  }
+
+  // frontend/src/templates/v1/views/library/music/MusicDetailView.tsx
+  init_define_import_meta_env();
+  var import_react54 = __toESM(require_react_shim());
+  function MusicDetailView({ id: id2 }) {
+    const qc = useQueryClient();
+    const player = useMusicPlayerOptional();
+    const { data: track, isPending, isError, refetch } = useQuery({
+      queryKey: ["tracks", id2],
+      queryFn: () => getTrack(id2)
+    });
+    const [editing, setEditing] = (0, import_react54.useState)(false);
+    const [form, setForm] = (0, import_react54.useState)({ title: "", artist: "", album: "", description: "" });
+    const [err, setErr] = (0, import_react54.useState)(null);
+    (0, import_react54.useEffect)(() => {
+      if (!track) return;
+      setForm({
+        title: track.title,
+        artist: track.artist ?? "",
+        album: track.album ?? "",
+        description: track.description ?? ""
+      });
+    }, [track]);
+    const save = useMutation({
+      mutationFn: () => {
+        if (!track) throw new Error("no track");
+        const patch = {};
+        if (form.title.trim() && form.title.trim() !== track.title) patch.title = form.title.trim();
+        const norm = (s) => s.trim() ? s.trim() : null;
+        if (norm(form.artist) !== track.artist) patch.artist = norm(form.artist);
+        if (norm(form.album) !== track.album) patch.album = norm(form.album);
+        if (norm(form.description) !== track.description) patch.description = norm(form.description);
+        return updateTrack(track.id, patch);
+      },
+      onSuccess: () => {
+        setEditing(false);
+        qc.invalidateQueries({ queryKey: ["tracks"] });
+      },
+      onError: (e2) => setErr(msg(e2, "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c thay \u0111\u1ED5i."))
+    });
+    const publish = useMutation({
+      mutationFn: () => track.status === "published" ? unpublishTrack(id2) : publishTrack(id2),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["tracks"] }),
+      onError: (e2) => setErr(msg(e2, "Kh\xF4ng \u0111\u1ED5i \u0111\u01B0\u1EE3c tr\u1EA1ng th\xE1i."))
+    });
+    const remove = useMutation({
+      mutationFn: () => deleteTrack(id2),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["tracks"] }),
+      onError: (e2) => setErr(msg(e2, "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c b\xE0i h\xE1t."))
+    });
+    if (isPending) return /* @__PURE__ */ React.createElement(DetailSkeleton, null);
+    if (isError || !track) {
+      return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, "Kh\xF4ng t\xECm th\u1EA5y b\xE0i h\xE1t n\xE0y."), /* @__PURE__ */ React.createElement("div", { className: "mt-3 flex justify-center gap-2" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => refetch(),
+          className: "rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+          style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+        },
+        "Th\u1EED l\u1EA1i"
+      ), /* @__PURE__ */ React.createElement(
+        Link,
+        {
+          href: "/library/music",
+          className: "rounded-md px-3 py-1.5 text-sm font-semibold text-white",
+          style: { background: "var(--tpl-accent)" }
+        },
+        "V\u1EC1 th\u01B0 vi\u1EC7n"
+      )));
+    }
+    const current = player?.isCurrent(track.id) ?? false;
+    const playing = current && (player?.playing ?? false);
+    const canPlay = isPlayable(track);
+    return /* @__PURE__ */ React.createElement("section", { className: "space-y-6" }, /* @__PURE__ */ React.createElement(
+      Link,
+      {
+        href: "/library/music",
+        className: "inline-flex items-center gap-1.5 text-sm font-semibold transition hover:opacity-80",
+        style: { color: "var(--tpl-muted)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "popup-left-arrow", size: 12 }),
+      "Nh\u1EA1c"
+    ), err && /* @__PURE__ */ React.createElement(Banner5, { onDismiss: () => setErr(null) }, err), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-6 sm:flex-row" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "relative h-44 w-44 shrink-0 overflow-hidden rounded-xl",
+        style: { background: "var(--tpl-surface-2)" }
+      },
+      track.cover_asset_id ? (
+        // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+        /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            src: trackCoverURL(track.cover_asset_id, "medium"),
+            alt: "",
+            className: "h-full w-full object-cover"
+          }
+        )
+      ) : /* @__PURE__ */ React.createElement("div", { className: "grid h-full w-full place-items-center", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "headphones-icon", size: 34 }))
+    ), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, editing ? /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Field8, { label: "T\xEAn b\xE0i h\xE1t", value: form.title, onChange: (v) => setForm({ ...form, title: v }) }), /* @__PURE__ */ React.createElement(Field8, { label: "Ngh\u1EC7 s\u0129", value: form.artist, onChange: (v) => setForm({ ...form, artist: v }) }), /* @__PURE__ */ React.createElement(Field8, { label: "Album", value: form.album, onChange: (v) => setForm({ ...form, album: v }) }), /* @__PURE__ */ React.createElement(
+      Field8,
+      {
+        label: "M\xF4 t\u1EA3",
+        value: form.description,
+        onChange: (v) => setForm({ ...form, description: v }),
+        multiline: true
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => save.mutate(),
+        disabled: save.isPending || !form.title.trim(),
+        className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "var(--tpl-accent)" }
+      },
+      save.isPending ? "\u0110ang l\u01B0u\u2026" : "L\u01B0u"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setEditing(false),
+        className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Hu\u1EF7"
+    ))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, track.title), /* @__PURE__ */ React.createElement(
+      "span",
+      {
+        className: "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white",
+        style: {
+          background: track.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.45)"
+        }
+      },
+      track.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p"
+    )), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, trackArtist(track), track.album ? ` \xB7 ${track.album}` : ""), track.description && /* @__PURE__ */ React.createElement("p", { className: "mt-3 whitespace-pre-wrap text-sm", style: { color: "var(--tpl-text)" } }, track.description), !canPlay && /* @__PURE__ */ React.createElement("p", { className: "mt-3 text-xs", style: { color: "#ef4444" } }, "B\xE0i h\xE1t ch\u01B0a g\u1EAFn t\u1EC7p \xE2m thanh n\xEAn ch\u01B0a ph\xE1t \u0111\u01B0\u1EE3c."), /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => current ? player?.toggle() : player?.playTrack(track),
+        disabled: !canPlay,
+        className: "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40",
+        style: {
+          background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))"
+        }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: playing ? "music-pause-icon" : "music-play-icon-big", size: 14 }),
+      playing ? "T\u1EA1m d\u1EEBng" : "Ph\xE1t"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setEditing(true),
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "S\u1EEDa"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => publish.mutate(),
+        disabled: publish.isPending,
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-accent)" }
+      },
+      track.status === "published" ? "G\u1EE1 xu\u1ED1ng" : "\u0110\u0103ng"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => remove.mutate(),
+        disabled: remove.isPending,
+        className: "ml-auto flex items-center gap-1.5 text-sm font-semibold transition hover:opacity-80 disabled:opacity-50",
+        style: { color: "#ef4444" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 14 }),
+      "Xo\xE1"
+    ))))));
+  }
+  function msg(e2, fallback) {
+    return e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback;
+  }
+  function Field8({
+    label,
+    value,
+    onChange,
+    multiline
+  }) {
+    const style = {
+      borderColor: "var(--tpl-border)",
+      background: "var(--tpl-bg)",
+      color: "var(--tpl-text)"
+    };
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), multiline ? /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        value,
+        rows: 3,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style
+      }
+    ) : /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style
+      }
+    ));
+  }
+  function Banner5({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function DetailSkeleton() {
+    return /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-6 sm:flex-row" }, /* @__PURE__ */ React.createElement("div", { className: "h-44 w-44 shrink-0 animate-pulse rounded-xl", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "flex-1 space-y-3" }, /* @__PURE__ */ React.createElement("div", { className: "h-6 w-1/2 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "h-3 w-1/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "h-9 w-32 animate-pulse rounded-lg", style: { background: "var(--tpl-surface-2)" } })));
+  }
+
+  // frontend/src/templates/v1/views/library/music/MusicIndexView.tsx
+  init_define_import_meta_env();
+  var import_react55 = __toESM(require_react_shim());
+  function MusicIndexView() {
+    const qc = useQueryClient();
+    const player = useMusicPlayerOptional();
+    const [tab, setTab] = (0, import_react55.useState)("all");
+    const [selected, setSelected] = (0, import_react55.useState)(/* @__PURE__ */ new Set());
+    const [bulkError, setBulkError] = (0, import_react55.useState)(null);
+    const [bulkNote, setBulkNote] = (0, import_react55.useState)(null);
+    const [modalOpen, setModalOpen] = (0, import_react55.useState)(false);
+    const [bulkOpen, setBulkOpen] = (0, import_react55.useState)(false);
+    const [title, setTitle] = (0, import_react55.useState)("");
+    const [artist, setArtist] = (0, import_react55.useState)("");
+    const [album, setAlbum] = (0, import_react55.useState)("");
+    const [audioAssetId, setAudioAssetId] = (0, import_react55.useState)("");
+    const [err, setErr] = (0, import_react55.useState)(null);
+    const [rowErr, setRowErr] = (0, import_react55.useState)(null);
+    const [uploadPct, setUploadPct] = (0, import_react55.useState)(null);
+    const fileRef = (0, import_react55.useRef)(null);
+    const all = useInfiniteQuery({
+      queryKey: ["tracks", "published"],
+      queryFn: ({ pageParam }) => listTracks(pageParam),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0,
+      retry: retryUnlessClientError
+    });
+    const mine = useInfiniteQuery({
+      queryKey: ["tracks", "mine"],
+      queryFn: ({ pageParam }) => listMyTracks(pageParam),
+      initialPageParam: void 0,
+      getNextPageParam: (last) => last.next_cursor ?? void 0,
+      enabled: tab === "mine",
+      retry: retryUnlessClientError
+    });
+    const audioAssets = useQuery({
+      queryKey: ["assets", "audio", "ready"],
+      queryFn: () => listAssets({ kind: "audio", status: "ready" }),
+      enabled: modalOpen
+    });
+    function resetForm() {
+      setTitle("");
+      setArtist("");
+      setAlbum("");
+      setAudioAssetId("");
+      setUploadPct(null);
+    }
+    const upload = useMutation({
+      mutationFn: (file) => uploadAudioAsset(file, setUploadPct),
+      onMutate: () => {
+        setErr(null);
+        setUploadPct(0);
+      },
+      onSuccess: (assetId, file) => {
+        setAudioAssetId(assetId);
+        setUploadPct(null);
+        if (!title.trim()) setTitle(file.name.replace(/\.[^.]+$/, ""));
+        audioAssets.refetch();
+      },
+      onError: (e2) => {
+        setUploadPct(null);
+        setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : errText(e2, "T\u1EA3i t\u1EC7p l\xEAn th\u1EA5t b\u1EA1i."));
+      }
+    });
+    const create2 = useMutation({
+      mutationFn: () => createTrack({
+        title: title.trim(),
+        artist: artist.trim() || null,
+        album: album.trim() || null,
+        audio_asset_id: audioAssetId || null
+      }),
+      onSuccess: () => {
+        setModalOpen(false);
+        resetForm();
+        qc.invalidateQueries({ queryKey: ["tracks"] });
+      },
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c b\xE0i h\xE1t.")
+    });
+    const mutateRow = {
+      publish: useMutation({
+        mutationFn: (t2) => publishTrack(t2.id),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["tracks"] }),
+        onError: (e2) => setRowErr(rowMessage(e2, "Kh\xF4ng \u0111\u0103ng \u0111\u01B0\u1EE3c b\xE0i h\xE1t."))
+      }),
+      unpublish: useMutation({
+        mutationFn: (t2) => unpublishTrack(t2.id),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["tracks"] }),
+        onError: (e2) => setRowErr(rowMessage(e2, "Kh\xF4ng g\u1EE1 \u0111\u01B0\u1EE3c b\xE0i h\xE1t."))
+      }),
+      remove: useMutation({
+        mutationFn: (t2) => deleteTrack(t2.id),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["tracks"] }),
+        onError: (e2) => setRowErr(rowMessage(e2, "Kh\xF4ng xo\xE1 \u0111\u01B0\u1EE3c b\xE0i h\xE1t."))
+      })
+    };
+    const playlists = useQuery({
+      queryKey: ["playlists"],
+      queryFn: listPlaylists,
+      enabled: tab === "mine"
+    });
+    function clearSelection() {
+      setSelected(/* @__PURE__ */ new Set());
+      setBulkError(null);
+      setBulkNote(null);
+    }
+    function toggleSelected(id2) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(id2)) next.delete(id2);
+        else next.add(id2);
+        return next;
+      });
+      setBulkNote(null);
+    }
+    function afterBulk(note) {
+      setBulkError(null);
+      setBulkNote(note);
+      clearSelectionKeepNote(note);
+      qc.invalidateQueries({ queryKey: ["tracks"] });
+      qc.invalidateQueries({ queryKey: ["playlists"] });
+    }
+    function clearSelectionKeepNote(note) {
+      setSelected(/* @__PURE__ */ new Set());
+      setBulkNote(note);
+    }
+    function onBulkError(e2, fallback) {
+      setBulkNote(null);
+      setBulkError(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback);
+    }
+    const selectAll = useMutation({
+      mutationFn: () => fetchAllTracks(tab === "mine" ? "mine" : "published"),
+      onSuccess: ({ tracks: all2, truncated }) => {
+        setSelected(new Set(all2.map((t2) => t2.id)));
+        setBulkError(null);
+        setBulkNote(truncated ? `\u0110\xE3 ch\u1ECDn ${all2.length} b\xE0i \u0111\u1EA7u ti\xEAn (danh s\xE1ch b\u1ECB gi\u1EDBi h\u1EA1n).` : null);
+      },
+      onError: (e2) => onBulkError(e2, "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c to\xE0n b\u1ED9 danh s\xE1ch \u0111\u1EC3 ch\u1ECDn.")
+    });
+    const bulkStatus = useMutation({
+      mutationFn: ({ ids, status }) => bulkSetTrackStatus(ids, status),
+      onSuccess: (r2, v) => afterBulk(
+        v.status === "published" ? `\u0110\xE3 \u0111\u0103ng ${r2.changed}/${r2.requested} b\xE0i.` : `\u0110\xE3 g\u1EE1 ${r2.changed}/${r2.requested} b\xE0i.`
+      ),
+      onError: (e2) => onBulkError(e2, "Kh\xF4ng \u0111\u1ED5i \u0111\u01B0\u1EE3c tr\u1EA1ng th\xE1i.")
+    });
+    const addToPlaylist = useMutation({
+      mutationFn: ({ playlistID, ids }) => addTracksToPlaylist(playlistID, ids),
+      onSuccess: (r2) => afterBulk(
+        r2.added === r2.requested ? `\u0110\xE3 th\xEAm ${r2.added} b\xE0i v\xE0o playlist.` : `\u0110\xE3 th\xEAm ${r2.added}/${r2.requested} b\xE0i \u2014 s\u1ED1 c\xF2n l\u1EA1i \u0111\xE3 c\xF3 s\u1EB5n trong playlist.`
+      ),
+      onError: (e2) => onBulkError(e2, "Kh\xF4ng th\xEAm \u0111\u01B0\u1EE3c v\xE0o playlist.")
+    });
+    const newPlaylist = useMutation({
+      mutationFn: ({ name, ids }) => createPlaylist(name).then(
+        (p) => addTracksToPlaylist(p.id, ids).then((r2) => ({ ...r2, name: p.name }))
+      ),
+      onSuccess: (r2) => afterBulk(`\u0110\xE3 t\u1EA1o \u201C${r2.name}\u201D v\u1EDBi ${r2.added} b\xE0i.`),
+      onError: (e2) => onBulkError(e2, "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c playlist.")
+    });
+    const mineForbidden = mine.error instanceof ApiError2 && mine.error.status === 403;
+    const active = tab === "all" ? all : mine;
+    const tracks = (0, import_react55.useMemo)(
+      () => active.data?.pages.flatMap((p) => p.tracks) ?? [],
+      [active.data]
+    );
+    const playable = (0, import_react55.useMemo)(() => tracks.filter(isPlayable), [tracks]);
+    const sentinelRef = useInfiniteScroll({
+      onLoadMore: () => active.fetchNextPage(),
+      hasMore: active.hasNextPage,
+      isLoading: active.isFetchingNextPage
+    });
+    const playAll = useMutation({
+      mutationFn: () => fetchAllTracks(tab === "mine" ? "mine" : "published"),
+      onMutate: () => setRowErr(null),
+      onSuccess: ({ tracks: fetched, truncated }) => {
+        const queue = fetched.filter(isPlayable);
+        if (queue.length === 0) {
+          setRowErr("Kh\xF4ng c\xF3 b\xE0i h\xE1t n\xE0o \u0111\xE3 g\u1EAFn t\u1EC7p \xE2m thanh \u0111\u1EC3 ph\xE1t.");
+          return;
+        }
+        player?.playQueue(queue, 0);
+        if (truncated) {
+          setRowErr(`Danh s\xE1ch qu\xE1 d\xE0i \u2014 \u0111\xE3 x\u1EBFp h\xE0ng ${queue.length} b\xE0i \u0111\u1EA7u ti\xEAn.`);
+        }
+      },
+      onError: (e2) => setRowErr(rowMessage(e2, "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c to\xE0n b\u1ED9 danh s\xE1ch."))
+    });
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-4" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "Nh\u1EA1c"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement(TabBtn5, { active: tab === "all", onClick: () => setTab("all") }, "Th\u01B0 vi\u1EC7n"), /* @__PURE__ */ React.createElement(TabBtn5, { active: tab === "mine", onClick: () => setTab("mine") }, "C\u1EE7a t\xF4i"))), /* @__PURE__ */ React.createElement("div", { className: "mb-4 flex flex-wrap items-center gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => playAll.mutate(),
+        disabled: playable.length === 0 || playAll.isPending,
+        className: "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "music-play-icon-big", size: 14 }),
+      playAll.isPending ? "\u0110ang x\u1EBFp h\xE0ng\u2026" : "Ph\xE1t t\u1EA5t c\u1EA3"
+    ), tab === "mine" && !mineForbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          setErr(null);
+          setModalOpen(true);
+        },
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\xEAm b\xE0i h\xE1t"
+    ), tab === "mine" && !mineForbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setBulkOpen(true),
+        className: "rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Nh\u1EADp nhi\u1EC1u b\xE0i"
+    )), rowErr && /* @__PURE__ */ React.createElement(Banner6, { onDismiss: () => setRowErr(null) }, rowErr), active.isPending ? /* @__PURE__ */ React.createElement(SkeletonList, null) : active.isError ? /* @__PURE__ */ React.createElement(ErrorState4, { error: active.error, onRetry: () => active.refetch() }) : tracks.length === 0 ? /* @__PURE__ */ React.createElement(EmptyState2, { mine: tab === "mine" }) : /* @__PURE__ */ React.createElement(React.Fragment, null, tab === "mine" && /* @__PURE__ */ React.createElement(
+      SelectionBar,
+      {
+        total: tracks.length,
+        selected,
+        playlists: playlists.data ?? [],
+        busy: bulkStatus.isPending || addToPlaylist.isPending || newPlaylist.isPending,
+        note: bulkNote,
+        error: bulkError,
+        onSelectAll: () => selectAll.mutate(),
+        selecting: selectAll.isPending,
+        onClear: clearSelection,
+        onPublish: () => bulkStatus.mutate({ ids: [...selected], status: "published" }),
+        onUnpublish: () => bulkStatus.mutate({ ids: [...selected], status: "draft" }),
+        onAddTo: (playlistID) => addToPlaylist.mutate({ playlistID, ids: [...selected] }),
+        onCreateWith: (name) => newPlaylist.mutate({ name, ids: [...selected] })
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y overflow-hidden rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      tracks.map((t2, i) => /* @__PURE__ */ React.createElement(
+        TrackRow,
+        {
+          key: t2.id,
+          track: t2,
+          index: i + 1,
+          showStatus: tab === "mine",
+          selectable: tab === "mine",
+          selected: selected.has(t2.id),
+          onToggleSelect: () => toggleSelected(t2.id),
+          current: player?.isCurrent(t2.id) ?? false,
+          playing: (player?.isCurrent(t2.id) ?? false) && (player?.playing ?? false),
+          onPlay: () => {
+            if (player?.isCurrent(t2.id)) {
+              player.toggle();
+              return;
+            }
+            const at = playable.findIndex((p) => p.id === t2.id);
+            if (at >= 0) player?.playQueue(playable, at);
+          },
+          onPublish: () => mutateRow.publish.mutate(t2),
+          onUnpublish: () => mutateRow.unpublish.mutate(t2),
+          onDelete: () => mutateRow.remove.mutate(t2)
+        }
+      ))
+    )), tracks.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { ref: sentinelRef, "aria-hidden": true }), /* @__PURE__ */ React.createElement("div", { className: "mt-4 flex flex-col items-center gap-2", "aria-live": "polite" }, active.isFetchingNextPage && /* @__PURE__ */ React.createElement(RowSkeleton, null), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, active.hasNextPage ? `\u0110ang hi\u1EC3n th\u1ECB ${tracks.length}+ b\xE0i h\xE1t` : `${tracks.length} b\xE0i h\xE1t`))), bulkOpen && /* @__PURE__ */ React.createElement(
+      BulkImportModal,
+      {
+        onClose: () => setBulkOpen(false),
+        onImported: () => qc.invalidateQueries({ queryKey: ["tracks"] })
+      }
+    ), modalOpen && /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+        onClick: () => setModalOpen(false),
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": "Th\xEAm b\xE0i h\xE1t"
+      },
+      /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "w-full max-w-md rounded-xl p-6 shadow-lg",
+          style: { background: "var(--tpl-surface)" },
+          onClick: (e2) => e2.stopPropagation()
+        },
+        /* @__PURE__ */ React.createElement("h2", { className: "mb-4 text-lg font-semibold", style: { color: "var(--tpl-heading)" } }, "Th\xEAm b\xE0i h\xE1t"),
+        err && /* @__PURE__ */ React.createElement(Banner6, null, err),
+        /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(Input, { label: "T\xEAn b\xE0i h\xE1t", value: title, onChange: setTitle, autoFocus: true }), /* @__PURE__ */ React.createElement(Input, { label: "Ngh\u1EC7 s\u0129", value: artist, onChange: setArtist }), /* @__PURE__ */ React.createElement(Input, { label: "Album", value: album, onChange: setAlbum }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
+          "label",
+          {
+            className: "mb-1 block text-xs font-semibold",
+            style: { color: "var(--tpl-muted)" },
+            htmlFor: "track-audio-asset"
+          },
+          "T\u1EC7p \xE2m thanh"
+        ), /* @__PURE__ */ React.createElement(
+          "select",
+          {
+            id: "track-audio-asset",
+            value: audioAssetId,
+            onChange: (e2) => setAudioAssetId(e2.target.value),
+            className: "w-full rounded-lg border px-3 py-2 text-sm",
+            style: {
+              borderColor: "var(--tpl-border)",
+              background: "var(--tpl-bg)",
+              color: "var(--tpl-text)"
+            }
+          },
+          /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 Ch\u01B0a g\u1EAFn (kh\xF4ng ph\xE1t \u0111\u01B0\u1EE3c) \u2014"),
+          (audioAssets.data?.assets ?? []).map((a) => /* @__PURE__ */ React.createElement("option", { key: a.id, value: a.id }, a.title || a.original_filename || a.id.slice(0, 8)))
+        ), /* @__PURE__ */ React.createElement("div", { className: "mt-2 flex items-center gap-2" }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => fileRef.current?.click(),
+            disabled: upload.isPending,
+            className: "rounded-lg border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-accent)" }
+          },
+          upload.isPending ? `\u0110ang t\u1EA3i l\xEAn\u2026 ${uploadPct ?? 0}%` : "T\u1EA3i t\u1EC7p m\u1EDBi l\xEAn"
+        ), /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            ref: fileRef,
+            type: "file",
+            accept: "audio/*",
+            className: "hidden",
+            onChange: (e2) => {
+              const f = e2.target.files?.[0];
+              e2.target.value = "";
+              if (f) upload.mutate(f);
+            }
+          }
+        )), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-xs", style: { color: "var(--tpl-muted)" } }, audioAssets.isPending ? "\u0110ang t\u1EA3i danh s\xE1ch\u2026" : (audioAssets.data?.assets ?? []).length === 0 ? "Ch\u01B0a c\xF3 t\u1EC7p \xE2m thanh n\xE0o \u2014 b\u1EA5m \u201CT\u1EA3i t\u1EC7p m\u1EDBi l\xEAn\u201D \u0111\u1EC3 th\xEAm." : "Kh\xF4ng g\u1EAFn t\u1EC7p th\xEC b\xE0i h\xE1t v\u1EABn t\u1EA1o \u0111\u01B0\u1EE3c nh\u01B0ng s\u1EBD kh\xF4ng ph\xE1t \u0111\u01B0\u1EE3c."))),
+        /* @__PURE__ */ React.createElement("div", { className: "mt-5 flex justify-end gap-2" }, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => setModalOpen(false),
+            className: "rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-[var(--tpl-surface-2)]",
+            style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+          },
+          "Hu\u1EF7"
+        ), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => create2.mutate(),
+            disabled: !title.trim() || create2.isPending,
+            className: "rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+            style: { background: "var(--tpl-accent)" }
+          },
+          create2.isPending ? "\u0110ang t\u1EA1o\u2026" : "T\u1EA1o"
+        ))
+      )
+    ));
+  }
+  function rowMessage(e2, fallback) {
+    return e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : fallback;
+  }
+  function errText(e2, fallback) {
+    return e2 instanceof Error && e2.message ? e2.message : fallback;
+  }
+  function SelectionBar({
+    total,
+    selected,
+    playlists,
+    busy,
+    selecting,
+    note,
+    error,
+    onSelectAll,
+    onClear,
+    onPublish,
+    onUnpublish,
+    onAddTo,
+    onCreateWith
+  }) {
+    const [picking, setPicking] = (0, import_react55.useState)(false);
+    const [newName, setNewName] = (0, import_react55.useState)("");
+    const count = selected.size;
+    const allSelected = total > 0 && count === total;
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-3 rounded-xl border px-3 py-2.5",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-3" }, /* @__PURE__ */ React.createElement("label", { className: "flex shrink-0 items-center gap-2 text-sm", style: { color: "var(--tpl-text)" } }, /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: allSelected,
+          onChange: () => allSelected ? onClear() : onSelectAll(),
+          "aria-label": "Ch\u1ECDn t\u1EA5t c\u1EA3 b\xE0i \u0111ang hi\u1EC3n th\u1ECB",
+          className: "h-4 w-4 accent-[var(--tpl-accent)]"
+        }
+      ), count > 0 ? `\u0110\xE3 ch\u1ECDn ${count}` : selecting ? "\u0110ang t\u1EA3i danh s\xE1ch\u2026" : `Ch\u1ECDn t\u1EA5t c\u1EA3 (${total}+ \u0111ang hi\u1EC3n th\u1ECB)`), count > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(BulkBtn, { onClick: onPublish, disabled: busy, primary: true }, "\u0110\u0103ng"), /* @__PURE__ */ React.createElement(BulkBtn, { onClick: onUnpublish, disabled: busy }, "G\u1EE1"), /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement(BulkBtn, { onClick: () => setPicking((v) => !v), disabled: busy }, "Th\xEAm v\xE0o playlist \u25BE"), picking && /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "absolute left-0 top-9 z-20 w-64 rounded-lg py-1 shadow-lg",
+          style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+        },
+        playlists.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "px-3 py-2 text-xs", style: { color: "var(--tpl-muted)" } }, "Ch\u01B0a c\xF3 playlist n\xE0o."),
+        playlists.map((pl) => /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            key: pl.id,
+            type: "button",
+            onClick: () => {
+              setPicking(false);
+              onAddTo(pl.id);
+            },
+            className: "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-[var(--tpl-surface-2)]",
+            style: { color: "var(--tpl-text)" }
+          },
+          /* @__PURE__ */ React.createElement("span", { className: "truncate" }, pl.name),
+          /* @__PURE__ */ React.createElement("span", { className: "ml-2 shrink-0 text-xs", style: { color: "var(--tpl-muted)" } }, pl.track_count)
+        )),
+        /* @__PURE__ */ React.createElement("div", { className: "mt-1 border-t px-2 pt-2", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement(
+          "form",
+          {
+            onSubmit: (e2) => {
+              e2.preventDefault();
+              const name = newName.trim();
+              if (!name) return;
+              setNewName("");
+              setPicking(false);
+              onCreateWith(name);
+            },
+            className: "flex gap-1"
+          },
+          /* @__PURE__ */ React.createElement(
+            "input",
+            {
+              value: newName,
+              onChange: (e2) => setNewName(e2.target.value),
+              placeholder: "Playlist m\u1EDBi\u2026",
+              className: "min-w-0 flex-1 rounded-md border bg-transparent px-2 py-1 text-xs outline-none",
+              style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+            }
+          ),
+          /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              type: "submit",
+              disabled: !newName.trim(),
+              className: "rounded-md px-2 py-1 text-xs font-semibold text-white disabled:opacity-50",
+              style: { background: "var(--tpl-accent)" }
+            },
+            "T\u1EA1o"
+          )
+        ))
+      )), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onClear,
+          className: "text-xs font-semibold transition hover:opacity-80",
+          style: { color: "var(--tpl-muted)" }
+        },
+        "B\u1ECF ch\u1ECDn"
+      ))),
+      (note || error) && /* @__PURE__ */ React.createElement(
+        "p",
+        {
+          className: "mt-2 text-xs",
+          role: error ? "alert" : void 0,
+          style: { color: error ? "#ef4444" : "var(--tpl-muted)" }
+        },
+        error ?? note
+      )
+    );
+  }
+  function BulkBtn({
+    children,
+    onClick,
+    disabled,
+    primary
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        disabled,
+        className: "shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-50",
+        style: primary ? { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))", color: "#fff" } : { border: "1px solid var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function TrackRow({
+    track,
+    index,
+    showStatus,
+    selectable,
+    selected,
+    onToggleSelect,
+    current,
+    playing,
+    onPlay,
+    onPublish,
+    onUnpublish,
+    onDelete
+  }) {
+    const playableRow = isPlayable(track);
+    const accent = current ? "var(--tpl-accent)" : "var(--tpl-heading)";
+    return /* @__PURE__ */ React.createElement(
+      "li",
+      {
+        className: "flex items-center gap-3 px-3 py-2.5 transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      selectable ? /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: selected,
+          onChange: onToggleSelect,
+          "aria-label": `Ch\u1ECDn ${track.title}`,
+          className: "h-4 w-4 shrink-0 accent-[var(--tpl-accent)]"
+        }
+      ) : /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "w-5 shrink-0 text-center text-xs tabular-nums",
+          style: { color: current ? "var(--tpl-accent)" : "var(--tpl-muted)" }
+        },
+        index
+      ),
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onPlay,
+          disabled: !playableRow,
+          "aria-label": playing ? `T\u1EA1m d\u1EEBng ${track.title}` : `Ph\xE1t ${track.title}`,
+          title: playableRow ? void 0 : "B\xE0i h\xE1t ch\u01B0a g\u1EAFn t\u1EC7p \xE2m thanh",
+          className: "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md disabled:opacity-40",
+          style: { background: "var(--tpl-surface-2)" }
+        },
+        track.cover_asset_id && // eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset
+        /* @__PURE__ */ React.createElement(
+          "img",
+          {
+            src: trackCoverURL(track.cover_asset_id),
+            alt: "",
+            className: "absolute inset-0 h-full w-full object-cover"
+          }
+        ),
+        /* @__PURE__ */ React.createElement(
+          "span",
+          {
+            className: "relative grid h-full w-full place-items-center bg-black/35 text-white",
+            style: { opacity: playableRow ? 1 : 0.6 }
+          },
+          /* @__PURE__ */ React.createElement(Icon, { name: playing ? "music-pause-icon" : "play-icon", size: 12 })
+        )
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement(
+        Link,
+        {
+          href: `/library/music/${track.id}`,
+          className: "block truncate text-sm font-semibold hover:underline",
+          style: { color: accent }
+        },
+        track.title
+      ), /* @__PURE__ */ React.createElement("p", { className: "truncate text-xs", style: { color: "var(--tpl-muted)" } }, trackArtist(track), track.album ? ` \xB7 ${track.album}` : "")),
+      showStatus && /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          className: "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white",
+          style: {
+            background: track.status === "published" ? "var(--tpl-accent)" : "rgba(0,0,0,.45)"
+          }
+        },
+        track.status === "published" ? "\u0111\xE3 \u0111\u0103ng" : "nh\xE1p"
+      ),
+      showStatus && /* @__PURE__ */ React.createElement("div", { className: "flex shrink-0 items-center gap-2" }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: track.status === "published" ? onUnpublish : onPublish,
+          className: "text-xs font-semibold transition hover:opacity-80",
+          style: { color: "var(--tpl-accent)" }
+        },
+        track.status === "published" ? "G\u1EE1" : "\u0110\u0103ng"
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: onDelete,
+          "aria-label": `Xo\xE1 ${track.title}`,
+          className: "transition hover:text-[#ef4444]",
+          style: { color: "var(--tpl-muted)" }
+        },
+        /* @__PURE__ */ React.createElement(Icon, { name: "little-delete", size: 15 })
+      ))
+    );
+  }
+  function TabBtn5({
+    active,
+    onClick,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        className: "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+        style: {
+          background: active ? "var(--tpl-accent)" : "transparent",
+          color: active ? "#fff" : "var(--tpl-muted)",
+          border: `1px solid ${active ? "var(--tpl-accent)" : "var(--tpl-border)"}`
+        }
+      },
+      children
+    );
+  }
+  function Input({
+    label,
+    value,
+    onChange,
+    autoFocus
+  }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "mb-1 block text-xs font-semibold", style: { color: "var(--tpl-muted)" } }, label), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        autoFocus,
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        className: "w-full rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "var(--tpl-border)",
+          background: "var(--tpl-bg)",
+          color: "var(--tpl-text)"
+        }
+      }
+    ));
+  }
+  function Banner6({ children, onDismiss }) {
+    return /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        className: "mb-3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", null, children),
+      onDismiss && /* @__PURE__ */ React.createElement("button", { type: "button", onClick: onDismiss, "aria-label": "\u0110\xF3ng" }, /* @__PURE__ */ React.createElement(Icon, { name: "close-icon", size: 10 }))
+    );
+  }
+  function RowSkeleton() {
+    return /* @__PURE__ */ React.createElement("div", { className: "flex w-full items-center gap-3 px-3 py-2" }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "h-10 w-10 shrink-0 animate-pulse rounded-md",
+        style: { background: "var(--tpl-surface-2)" }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { className: "flex-1 space-y-1.5" }, /* @__PURE__ */ React.createElement("div", { className: "h-3 w-1/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "h-2.5 w-1/5 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } })));
+  }
+  function SkeletonList() {
+    return /* @__PURE__ */ React.createElement(
+      "ul",
+      {
+        className: "divide-y overflow-hidden rounded-xl border",
+        style: { borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }
+      },
+      Array.from({ length: 6 }).map((_, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "flex items-center gap-3 px-3 py-3" }, /* @__PURE__ */ React.createElement("div", { className: "h-10 w-10 shrink-0 animate-pulse rounded-md", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "flex-1 space-y-1.5" }, /* @__PURE__ */ React.createElement("div", { className: "h-3 w-1/3 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }), /* @__PURE__ */ React.createElement("div", { className: "h-2.5 w-1/5 animate-pulse rounded", style: { background: "var(--tpl-surface-2)" } }))))
+    );
+  }
+  function EmptyState2({ mine }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "flex flex-col items-center gap-3 rounded-xl border border-dashed py-16 text-center",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: "headphones-icon", size: 28, style: { color: "var(--tpl-muted)" } }),
+      /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, mine ? "B\u1EA1n ch\u01B0a c\xF3 b\xE0i h\xE1t n\xE0o \u2014 b\u1EA5m \u201CTh\xEAm b\xE0i h\xE1t\u201D \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u." : "Ch\u01B0a c\xF3 b\xE0i h\xE1t n\xE0o \u0111\u01B0\u1EE3c xu\u1EA5t b\u1EA3n.")
+    );
+  }
+  function ErrorState4({ error, onRetry }) {
+    const forbidden = error instanceof ApiError2 && error.status === 403;
+    return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl border py-12 text-center", style: { borderColor: "var(--tpl-border)" } }, /* @__PURE__ */ React.createElement("p", { className: "text-sm", style: { color: "var(--tpl-muted)" } }, forbidden ? "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n ch\u01B0a c\xF3 quy\u1EC1n \u0111\u0103ng nh\u1EA1c \u2014 c\u1EA7n vai tr\xF2 \u201Ccreator\u201D tr\u1EDF l\xEAn." : "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c danh s\xE1ch nh\u1EA1c."), !forbidden && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: onRetry,
+        className: "mt-3 rounded-md border px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\u1EED l\u1EA1i"
+    ));
+  }
+  function retryUnlessClientError(failureCount, error) {
+    if (error instanceof ApiError2 && error.status >= 400 && error.status < 500) return false;
+    return failureCount < 3;
+  }
+
   // frontend/src/templates/v1/views/library/novel/NovelDetailView.tsx
   init_define_import_meta_env();
   function NovelDetailView({ id: id2 }) {
@@ -29164,23 +35546,77 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/people/PeopleIndexView.tsx
   init_define_import_meta_env();
-  var import_react40 = __toESM(require_react_shim());
+  var import_react56 = __toESM(require_react_shim());
+  var TABS2 = [
+    { key: "all", label: "Everyone" },
+    { key: "close_friend", label: CIRCLE_LABEL.close_friend },
+    { key: "family", label: CIRCLE_LABEL.family },
+    { key: "other", label: CIRCLE_LABEL.other },
+    { key: "suggestions", label: "C\xF3 th\u1EC3 b\u1EA1n bi\u1EBFt" },
+    { key: "requests", label: "L\u1EDDi m\u1EDDi" }
+  ];
+  var CIRCLE_OPTIONS = ["close_friend", "family", "other"];
   function PeopleIndexView() {
     const qc = useQueryClient();
-    const { data, isLoading } = useQuery({ queryKey: ["people"], queryFn: () => listPeople() });
-    const { data: upcoming = [] } = useQuery({ queryKey: ["people", "upcoming"], queryFn: () => upcomingBirthdays(30) });
-    const [open, setOpen] = (0, import_react40.useState)(false);
-    const [name, setName] = (0, import_react40.useState)("");
-    const [relationship, setRelationship] = (0, import_react40.useState)("");
-    const [month, setMonth] = (0, import_react40.useState)("");
-    const [day, setDay] = (0, import_react40.useState)("");
-    const [year, setYear] = (0, import_react40.useState)("");
-    const [err, setErr] = (0, import_react40.useState)(null);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const tab = searchParams.get("circle") ?? "all";
+    const circle = tab === "all" || tab === "suggestions" || tab === "requests" ? void 0 : tab;
+    const people = useQuery({
+      queryKey: ["people", "list", circle ?? "all"],
+      queryFn: () => listPeople(void 0, circle),
+      enabled: tab !== "suggestions" && tab !== "requests"
+    });
+    const incoming = useQuery({
+      queryKey: ["connections", "incoming"],
+      queryFn: () => listConnections("incoming"),
+      enabled: tab === "requests"
+    });
+    const outgoing = useQuery({
+      queryKey: ["connections", "outgoing"],
+      queryFn: () => listConnections("outgoing"),
+      enabled: tab === "requests"
+    });
+    const suggestions = useQuery({
+      queryKey: ["people", "suggestions"],
+      queryFn: listSuggestions,
+      enabled: tab === "suggestions"
+    });
+    const { data: upcoming = [] } = useQuery({
+      queryKey: ["people", "upcoming"],
+      queryFn: () => upcomingBirthdays(30)
+    });
+    const [open, setOpen] = (0, import_react56.useState)(false);
+    const [name, setName] = (0, import_react56.useState)("");
+    const [relationship, setRelationship] = (0, import_react56.useState)("");
+    const [month, setMonth] = (0, import_react56.useState)("");
+    const [day, setDay] = (0, import_react56.useState)("");
+    const [year, setYear] = (0, import_react56.useState)("");
+    const [err, setErr] = (0, import_react56.useState)(null);
+    function refresh() {
+      qc.invalidateQueries({ queryKey: ["people"] });
+      qc.invalidateQueries({ queryKey: ["connections"] });
+    }
     const create2 = useMutation({
       mutationFn: () => {
         let birthday = null;
-        if (month && day) birthday = { month: Number(month), day: Number(day), year: year ? Number(year) : null, calendar: "solar" };
-        return createPerson({ display_name: name, relationship: relationship || null, birthday });
+        if (month && day) {
+          birthday = {
+            month: Number(month),
+            day: Number(day),
+            year: year ? Number(year) : null,
+            calendar: "solar"
+          };
+        }
+        return createPerson({
+          display_name: name,
+          relationship: relationship || null,
+          birthday,
+          // Adding from inside a circle's page files them there — that is what
+          // you came to this page to do.
+          circle: circle ?? "other"
+        });
       },
       onSuccess: () => {
         setName("");
@@ -29190,15 +35626,306 @@ var PortalUI = (() => {
         setYear("");
         setOpen(false);
         setErr(null);
-        qc.invalidateQueries({ queryKey: ["people"] });
+        refresh();
       },
       onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not save")
     });
-    const people = data?.people ?? [];
-    return /* @__PURE__ */ React.createElement("main", { className: "mx-auto max-w-3xl p-6 text-white" }, /* @__PURE__ */ React.createElement("div", { className: "mb-6 flex items-center justify-between" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-bold" }, "People"), /* @__PURE__ */ React.createElement("button", { className: "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-500", onClick: () => setOpen((o2) => !o2) }, "+ Add person")), upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4" }, /* @__PURE__ */ React.createElement("h2", { className: "mb-2 text-sm font-semibold uppercase text-gray-500" }, "Upcoming birthdays"), /* @__PURE__ */ React.createElement("ul", { className: "space-y-1 text-sm" }, upcoming.slice(0, 5).map((u) => /* @__PURE__ */ React.createElement("li", { key: u.person_id, className: "flex justify-between" }, /* @__PURE__ */ React.createElement("span", null, u.display_name, u.age_turning != null ? ` (turns ${u.age_turning})` : ""), /* @__PURE__ */ React.createElement("span", { className: "text-gray-400" }, u.days_until === 0 ? "today \u{1F382}" : `in ${u.days_until} day${u.days_until === 1 ? "" : "s"}`))))), open && /* @__PURE__ */ React.createElement("form", { className: "mb-6 grid grid-cols-3 gap-2 rounded-lg border border-gray-800 bg-gray-900 p-4", onSubmit: (e2) => {
-      e2.preventDefault();
-      if (name.trim()) create2.mutate();
-    } }, /* @__PURE__ */ React.createElement("input", { className: "col-span-3 rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Name (e.g. M\u1EB9)", value: name, onChange: (e2) => setName(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "col-span-3 rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Relationship (e.g. m\u1EB9, b\u1EA1n \u0111\u1EA1i h\u1ECDc)", value: relationship, onChange: (e2) => setRelationship(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Day", inputMode: "numeric", value: day, onChange: (e2) => setDay(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Month", inputMode: "numeric", value: month, onChange: (e2) => setMonth(e2.target.value) }), /* @__PURE__ */ React.createElement("input", { className: "rounded-md border border-gray-700 bg-gray-800 px-3 py-2", placeholder: "Year (optional)", inputMode: "numeric", value: year, onChange: (e2) => setYear(e2.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "submit", disabled: create2.isPending || !name.trim(), className: "col-span-3 rounded-md bg-blue-600 py-2 text-sm font-medium disabled:opacity-50" }, "Add"), err && /* @__PURE__ */ React.createElement("p", { className: "col-span-3 text-sm text-red-400" }, err)), isLoading ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-400" }, "Loading\u2026") : people.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-gray-500" }, "No people yet \u2014 add family and friends to track birthdays.") : /* @__PURE__ */ React.createElement("ul", { className: "divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900" }, people.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.id }, /* @__PURE__ */ React.createElement(Link, { href: `/people/${p.id}`, className: "flex items-center justify-between px-4 py-3 hover:bg-gray-800" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium" }, p.display_name), p.relationship && /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-500" }, p.relationship)), p.birthday && /* @__PURE__ */ React.createElement("span", { className: "text-sm text-gray-400" }, "\u{1F382} ", formatBirthday(p.birthday)))))));
+    const move = useMutation({
+      mutationFn: ({ id: id2, to }) => updatePerson(id2, { circle: to }),
+      onSuccess: refresh,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not move this person")
+    });
+    const connect = useMutation({
+      mutationFn: (userId) => requestConnection(userId),
+      onSuccess: refresh,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not send the request")
+    });
+    const accept = useMutation({
+      mutationFn: (id2) => acceptConnection(id2),
+      onSuccess: refresh,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not accept")
+    });
+    const drop = useMutation({
+      mutationFn: (id2) => removeConnection(id2),
+      onSuccess: refresh,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not update the request")
+    });
+    const add = useMutation({
+      mutationFn: ({ userId, displayName }) => createPerson({ display_name: displayName, linked_user_id: userId, circle: "other" }),
+      onSuccess: refresh,
+      onError: (e2) => setErr(e2 instanceof ApiError2 ? problemDisplayMessage(e2.body) : "Could not add this person")
+    });
+    function selectTab(next) {
+      setErr(null);
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "all") params.delete("circle");
+      else params.set("circle", next);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    }
+    const rows = people.data?.people ?? [];
+    return /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("header", { className: "mb-6 flex flex-wrap items-center justify-between gap-3" }, /* @__PURE__ */ React.createElement("h1", { className: "text-2xl font-semibold", style: { color: "var(--tpl-heading)" } }, "People"), tab !== "suggestions" && /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => setOpen((o2) => !o2),
+        className: "rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      open ? "Close" : "+ Add person"
+    )), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: "mb-5 flex flex-wrap gap-1 border-b",
+        style: { borderColor: "var(--tpl-border)" }
+      },
+      TABS2.map((t2) => {
+        const on = t2.key === tab;
+        return /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            key: t2.key,
+            type: "button",
+            onClick: () => selectTab(t2.key),
+            className: "-mb-px px-4 py-2.5 text-sm font-semibold transition",
+            style: on ? { color: "var(--tpl-accent)", boxShadow: "inset 0 -2px 0 var(--tpl-accent)" } : { color: "var(--tpl-muted)" }
+          },
+          t2.label
+        );
+      })
+    ), err && /* @__PURE__ */ React.createElement(
+      "p",
+      {
+        role: "alert",
+        className: "mb-4 rounded-lg border px-3 py-2 text-sm",
+        style: {
+          borderColor: "rgba(239,68,68,.4)",
+          background: "rgba(239,68,68,.08)",
+          color: "#ef4444"
+        }
+      },
+      err
+    ), tab === "all" && upcoming.length > 0 && /* @__PURE__ */ React.createElement(Card2, { className: "mb-6 p-4" }, /* @__PURE__ */ React.createElement(
+      "h2",
+      {
+        className: "mb-2 text-xs font-bold uppercase tracking-wide",
+        style: { color: "var(--tpl-muted)" }
+      },
+      "Upcoming birthdays"
+    ), /* @__PURE__ */ React.createElement("ul", { className: "space-y-1 text-sm" }, upcoming.slice(0, 5).map((u) => /* @__PURE__ */ React.createElement("li", { key: u.person_id, className: "flex justify-between" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-text)" } }, u.display_name, u.age_turning != null ? ` (turns ${u.age_turning})` : ""), /* @__PURE__ */ React.createElement("span", { style: { color: "var(--tpl-muted)" } }, u.days_until === 0 ? "today \u{1F382}" : `in ${u.days_until} day${u.days_until === 1 ? "" : "s"}`))))), open && tab !== "suggestions" && /* @__PURE__ */ React.createElement(Card2, { className: "mb-6 p-4" }, /* @__PURE__ */ React.createElement(
+      "form",
+      {
+        className: "grid grid-cols-3 gap-2",
+        onSubmit: (e2) => {
+          e2.preventDefault();
+          if (name.trim()) create2.mutate();
+        }
+      },
+      /* @__PURE__ */ React.createElement(
+        Input2,
+        {
+          className: "col-span-3",
+          placeholder: "Name (e.g. M\u1EB9)",
+          value: name,
+          onChange: setName
+        }
+      ),
+      /* @__PURE__ */ React.createElement(
+        Input2,
+        {
+          className: "col-span-3",
+          placeholder: "Relationship (e.g. m\u1EB9, b\u1EA1n \u0111\u1EA1i h\u1ECDc)",
+          value: relationship,
+          onChange: setRelationship
+        }
+      ),
+      /* @__PURE__ */ React.createElement(Input2, { placeholder: "Day", value: day, onChange: setDay, numeric: true }),
+      /* @__PURE__ */ React.createElement(Input2, { placeholder: "Month", value: month, onChange: setMonth, numeric: true }),
+      /* @__PURE__ */ React.createElement(Input2, { placeholder: "Year (optional)", value: year, onChange: setYear, numeric: true }),
+      /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          type: "submit",
+          disabled: create2.isPending || !name.trim(),
+          className: "col-span-3 rounded-md py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+          style: {
+            background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))"
+          }
+        },
+        create2.isPending ? "Adding\u2026" : `Add to ${CIRCLE_LABEL[circle ?? "other"]}`
+      )
+    )), tab === "requests" ? /* @__PURE__ */ React.createElement(
+      RequestLists,
+      {
+        incoming: incoming.data ?? [],
+        outgoing: outgoing.data ?? [],
+        loading: incoming.isPending || outgoing.isPending,
+        onAccept: (id2) => accept.mutate(id2),
+        onRemove: (id2) => drop.mutate(id2),
+        busy: accept.isPending || drop.isPending
+      }
+    ) : tab === "suggestions" ? /* @__PURE__ */ React.createElement(
+      SuggestionList,
+      {
+        loading: suggestions.isPending,
+        items: suggestions.data ?? [],
+        onConnect: (userId) => connect.mutate(userId),
+        onAdd: (userId, displayName) => add.mutate({ userId, displayName }),
+        busy: connect.isPending || add.isPending
+      }
+    ) : people.isPending ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Loading\u2026") : rows.length === 0 ? /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, circle ? `No one in ${CIRCLE_LABEL[circle]} yet \u2014 move someone here, or add a person.` : "No people yet \u2014 add family and friends to track birthdays.") : /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, rows.map((p) => /* @__PURE__ */ React.createElement(
+      PersonListItem,
+      {
+        key: p.id,
+        person: p,
+        onMove: (to) => move.mutate({ id: p.id, to }),
+        busy: move.isPending
+      }
+    )))));
+  }
+  function PersonListItem({
+    person,
+    onMove,
+    busy
+  }) {
+    return /* @__PURE__ */ React.createElement("li", { className: "flex items-center gap-3 px-4 py-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: person.display_name, size: 38 }), /* @__PURE__ */ React.createElement(Link, { href: `/people/${person.id}`, className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("span", { className: "block truncate font-medium", style: { color: "var(--tpl-heading)" } }, person.display_name), person.relationship && /* @__PURE__ */ React.createElement("span", { className: "block truncate text-xs", style: { color: "var(--tpl-muted)" } }, person.relationship)), person.birthday && /* @__PURE__ */ React.createElement("span", { className: "hidden text-sm sm:inline", style: { color: "var(--tpl-muted)" } }, "\u{1F382} ", formatBirthday(person.birthday)), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: person.circle,
+        disabled: busy,
+        onChange: (e2) => onMove(e2.target.value),
+        "aria-label": `Circle for ${person.display_name}`,
+        className: "rounded-md border bg-transparent px-2 py-1.5 text-xs outline-none disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+      },
+      CIRCLE_OPTIONS.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, CIRCLE_LABEL[c]))
+    ));
+  }
+  function SuggestionList({
+    loading,
+    items,
+    onConnect,
+    onAdd,
+    busy
+  }) {
+    if (loading) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Looking for people\u2026");
+    if (items.length === 0) {
+      return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "No other accounts on this Portal yet \u2014 or you have added everyone already.");
+    }
+    return /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, items.map((s) => /* @__PURE__ */ React.createElement("li", { key: s.user_id, className: "flex items-center gap-3 px-4 py-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: s.display_name, size: 38 }), /* @__PURE__ */ React.createElement("span", { className: "min-w-0 flex-1 truncate font-medium", style: { color: "var(--tpl-heading)" } }, s.display_name), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        disabled: busy,
+        onClick: () => onConnect(s.user_id),
+        className: "rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      "K\u1EBFt b\u1EA1n"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        disabled: busy,
+        onClick: () => onAdd(s.user_id, s.display_name),
+        className: "rounded-md border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      "Th\xEAm v\xE0o s\u1ED5"
+    )))));
+  }
+  function RequestLists({
+    incoming,
+    outgoing,
+    loading,
+    onAccept,
+    onRemove,
+    busy
+  }) {
+    if (loading) return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "Loading requests\u2026");
+    if (incoming.length === 0 && outgoing.length === 0) {
+      return /* @__PURE__ */ React.createElement("p", { style: { color: "var(--tpl-muted)" } }, "No requests waiting either way.");
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "space-y-6" }, incoming.length > 0 && /* @__PURE__ */ React.createElement(RequestGroup, { title: "Waiting on you" }, incoming.map((c) => /* @__PURE__ */ React.createElement(RequestRow, { key: c.id, connection: c, busy }, /* @__PURE__ */ React.createElement(PrimaryBtn, { onClick: () => onAccept(c.id), disabled: busy }, "Ch\u1EA5p nh\u1EADn"), /* @__PURE__ */ React.createElement(GhostBtn, { onClick: () => onRemove(c.id), disabled: busy }, "T\u1EEB ch\u1ED1i")))), outgoing.length > 0 && /* @__PURE__ */ React.createElement(RequestGroup, { title: "You asked" }, outgoing.map((c) => /* @__PURE__ */ React.createElement(RequestRow, { key: c.id, connection: c, busy }, /* @__PURE__ */ React.createElement("span", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, "\u0110ang ch\u1EDD"), /* @__PURE__ */ React.createElement(GhostBtn, { onClick: () => onRemove(c.id), disabled: busy }, "Thu h\u1ED3i")))));
+  }
+  function RequestGroup({ title, children }) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
+      "h2",
+      {
+        className: "mb-2 text-xs font-bold uppercase tracking-wide",
+        style: { color: "var(--tpl-muted)" }
+      },
+      title
+    ), /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, children)));
+  }
+  function RequestRow({
+    connection,
+    children
+  }) {
+    return /* @__PURE__ */ React.createElement("li", { className: "flex items-center gap-3 px-4 py-3" }, /* @__PURE__ */ React.createElement(Avatar, { name: connection.display_name ?? "?", size: 38 }), /* @__PURE__ */ React.createElement("span", { className: "min-w-0 flex-1 truncate font-medium", style: { color: "var(--tpl-heading)" } }, connection.display_name), children);
+  }
+  function PrimaryBtn({
+    children,
+    onClick,
+    disabled
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        disabled,
+        className: "rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+        style: { background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }
+      },
+      children
+    );
+  }
+  function GhostBtn({
+    children,
+    onClick,
+    disabled
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick,
+        disabled,
+        className: "rounded-md border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50",
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }
+      },
+      children
+    );
+  }
+  function Card2({ children, className = "" }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        className: `rounded-xl shadow-sm ${className}`,
+        style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" }
+      },
+      children
+    );
+  }
+  function Input2({
+    value,
+    onChange,
+    placeholder,
+    className = "",
+    numeric
+  }) {
+    return /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value,
+        onChange: (e2) => onChange(e2.target.value),
+        placeholder,
+        inputMode: numeric ? "numeric" : void 0,
+        className: `rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--tpl-accent)] ${className}`,
+        style: { borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }
+      }
+    );
   }
 
   // frontend/src/templates/v1/views/people/PersonDetailView.tsx
@@ -29222,15 +35949,15 @@ var PortalUI = (() => {
 
   // frontend/src/templates/v1/views/upload/UploadStudio.tsx
   init_define_import_meta_env();
-  var import_react41 = __toESM(require_react_shim());
+  var import_react57 = __toESM(require_react_shim());
   function UploadStudio() {
-    const [phase, setPhase] = (0, import_react41.useState)("idle");
-    const [progress, setProgress] = (0, import_react41.useState)(0);
-    const [current, setCurrent] = (0, import_react41.useState)(null);
-    const [error, setError] = (0, import_react41.useState)(null);
-    const [library, setLibrary] = (0, import_react41.useState)([]);
-    const fileRef = (0, import_react41.useRef)(null);
-    (0, import_react41.useEffect)(() => {
+    const [phase, setPhase] = (0, import_react57.useState)("idle");
+    const [progress, setProgress] = (0, import_react57.useState)(0);
+    const [current, setCurrent] = (0, import_react57.useState)(null);
+    const [error, setError] = (0, import_react57.useState)(null);
+    const [library, setLibrary] = (0, import_react57.useState)([]);
+    const fileRef = (0, import_react57.useRef)(null);
+    (0, import_react57.useEffect)(() => {
       void refreshLibrary();
     }, []);
     async function refreshLibrary() {
@@ -29286,7 +36013,7 @@ var PortalUI = (() => {
       setProgress(0);
       if (fileRef.current) fileRef.current.value = "";
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "mx-auto max-w-3xl space-y-5" }, /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Upload a video"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "Pick an MP4. It uploads, transcodes to HLS on the worker, then plays back here."), phase === "idle" || phase === "error" ? /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "mx-auto max-w-3xl space-y-5" }, /* @__PURE__ */ React.createElement(Card3, null, /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold", style: { color: "var(--tpl-heading)" } }, "Upload a video"), /* @__PURE__ */ React.createElement("p", { className: "mt-1 text-sm", style: { color: "var(--tpl-muted)" } }, "Pick an MP4. It uploads, transcodes to HLS on the worker, then plays back here."), phase === "idle" || phase === "error" ? /* @__PURE__ */ React.createElement("div", { className: "mt-4" }, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -29308,7 +36035,7 @@ var PortalUI = (() => {
           if (f) void onFile(f);
         }
       }
-    ), error && /* @__PURE__ */ React.createElement("p", { className: "mt-3 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" } }, error)) : phase === "uploading" ? /* @__PURE__ */ React.createElement(Progress2, { label: `Uploading\u2026 ${progress}%`, value: progress }) : phase === "processing" ? /* @__PURE__ */ React.createElement(Progress2, { label: "Transcoding to HLS\u2026", indeterminate: true }) : current && /* @__PURE__ */ React.createElement("div", { className: "mt-4 space-y-3" }, /* @__PURE__ */ React.createElement(Player, { src: current.hls_url }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", null, current.width, "\xD7", current.height, " \xB7 ", Math.round((current.duration_ms ?? 0) / 1e3), "s \xB7", " ", (current.size_bytes / 1024 / 1024).toFixed(1), " MB"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: reset, className: "font-semibold", style: { color: "var(--tpl-accent)" } }, "Upload another")))), library.length > 0 && /* @__PURE__ */ React.createElement(Card2, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Your uploads"), /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, library.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center gap-3 py-2.5" }, /* @__PURE__ */ React.createElement("span", { className: "grid h-8 w-8 place-items-center rounded-md", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 14 })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm", style: { color: "var(--tpl-heading)" } }, a.id.slice(0, 8), " \xB7 ", a.mime_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, a.status, a.width ? ` \xB7 ${a.width}\xD7${a.height}` : "")), a.status === "ready" && a.hls_url && /* @__PURE__ */ React.createElement(
+    ), error && /* @__PURE__ */ React.createElement("p", { className: "mt-3 rounded-lg border px-3 py-2 text-sm", style: { borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" } }, error)) : phase === "uploading" ? /* @__PURE__ */ React.createElement(Progress2, { label: `Uploading\u2026 ${progress}%`, value: progress }) : phase === "processing" ? /* @__PURE__ */ React.createElement(Progress2, { label: "Transcoding to HLS\u2026", indeterminate: true }) : current && /* @__PURE__ */ React.createElement("div", { className: "mt-4 space-y-3" }, /* @__PURE__ */ React.createElement(Player, { src: current.hls_url }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between text-xs", style: { color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement("span", null, current.width, "\xD7", current.height, " \xB7 ", Math.round((current.duration_ms ?? 0) / 1e3), "s \xB7", " ", (current.size_bytes / 1024 / 1024).toFixed(1), " MB"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: reset, className: "font-semibold", style: { color: "var(--tpl-accent)" } }, "Upload another")))), library.length > 0 && /* @__PURE__ */ React.createElement(Card3, null, /* @__PURE__ */ React.createElement("h2", { className: "mb-3 text-sm font-bold", style: { color: "var(--tpl-heading)" } }, "Your uploads"), /* @__PURE__ */ React.createElement("ul", { className: "divide-y", style: { borderColor: "var(--tpl-border)" } }, library.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.id, className: "flex items-center gap-3 py-2.5" }, /* @__PURE__ */ React.createElement("span", { className: "grid h-8 w-8 place-items-center rounded-md", style: { background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "play-icon", size: 14 })), /* @__PURE__ */ React.createElement("div", { className: "min-w-0 flex-1" }, /* @__PURE__ */ React.createElement("p", { className: "truncate text-sm", style: { color: "var(--tpl-heading)" } }, a.id.slice(0, 8), " \xB7 ", a.mime_type), /* @__PURE__ */ React.createElement("p", { className: "text-xs", style: { color: "var(--tpl-muted)" } }, a.status, a.width ? ` \xB7 ${a.width}\xD7${a.height}` : "")), a.status === "ready" && a.hls_url && /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -29349,7 +36076,7 @@ var PortalUI = (() => {
       }
     )));
   }
-  function Card2({ children }) {
+  function Card3({ children }) {
     return /* @__PURE__ */ React.createElement("div", { className: "rounded-xl p-5 shadow-sm", style: { background: "var(--tpl-surface)", border: "1px solid var(--tpl-border)" } }, children);
   }
   function putWithProgress2(url, file, onProgress) {
