@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-- `README.md` does not exist — this file is the primary written description of the project. [backend/MODULES.md](backend/MODULES.md) is the authoritative spec for backend module conventions; read it before adding a new domain or crossing an existing module boundary.
+- `README.md` is a ten-line pointer and makes no claims; this file is the primary written description of the project. [backend/MODULES.md](backend/MODULES.md) is the authoritative spec for backend module conventions; read it before adding a new domain or crossing an existing module boundary.
 - `now.png` is a legacy architecture diagram from the original spec.
 - `template-main/` is **reference material, not active code** — a Laravel/PHP portal scaffold and a static HTML social template. Don't edit, don't import. The Go scaffold under `backend/` is the real implementation.
 - `scraper/` is a **separate Python service** (FastAPI + SeleniumBase/`undetected-chromedriver`), not part of the Go build — it scrapes an external comic source and hands zips to the comic import pipeline (SPEC-02 P1.8). Read [scraper/README.md](scraper/README.md) before touching comic sync. **Load-bearing detail:** chapters arrive *out of order*, so a chapter's `sort_order` is parsed from its **title**, not from arrival order (`chapterSortOrder` in [backend/internal/modules/comic/import.go](backend/internal/modules/comic/import.go)) — change the naming scheme and reader order scrambles.

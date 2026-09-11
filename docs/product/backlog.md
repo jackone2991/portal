@@ -79,8 +79,11 @@ was checked, and code moves.
    when:* `comic` and `bank` have handler tests asserting those three rules
    (audit Tier A-4).
 9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
-   (matrix SPEC-01 P0.1/P0.2). *Closes when:* the image pipeline's cap/variant/
-   orientation rules and the poster's audio-skip are unit-tested against fixtures.
+   (matrix SPEC-01 P0.1/P0.2), and `comic.RunImport` — the largest function in
+   that module, reachable only with an object store, a tenant runner, a real
+   zip and wall-clock sleeps. *Closes when:* the image pipeline's cap/variant/
+   orientation rules and the poster's audio-skip are unit-tested against
+   fixtures, and `RunImport` has a fake-store test.
 10. **`make test` fails** — `vitest run` with zero test files exits non-zero;
     CI never runs it (audit §3.1, Tier C-13). *Closes when:* either a first
     frontend test exists or `--passWithNoTests` is set, and `pnpm test` is in
@@ -119,9 +122,11 @@ was checked, and code moves.
     The highest-value single P1 left (audit D-17).
 19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
     `journal:backfill_stream`.
-20. SPEC-06 **stream is blind to movie/music/story publishes** — `notify`
-    consumes `movie:published` / `music:track_published` / `story:published`;
-    `journal` does not, so publishing one produces a bell but no stream card.
+20. SPEC-06 **stream de-projection is a decision, not a gap** — `0033`/`0034`/
+    `0040` (2026-08-28) removed `asset_ready`, comic chapter and catalogue
+    publishes from the stream on purpose (library events belong in the bell).
+    SPEC-06 P0.1 still describes them as projected: the spec's fact layer is
+    stale. *Closes when:* SPEC-06 says what the stream projects today.
 21. SPEC-04 P1.1 **Web Push** (table exists, handler is a stub), P1.2 **SSE**,
     P1.3 **notification preferences** route (table exists), P1.4
     **`account.security_alert`** on refresh-reuse. P2 `notify:purge_old` is
@@ -146,8 +151,12 @@ was checked, and code moves.
     26-line placeholder; no `/movies` route exists. Music got its UI
     (library, import, playlists, player) in 0038–0041. Finish these to the
     music standard or revert them (audit Tier D-14) — do not leave them.
-29. **Story reading progress** and **movie/story FTS** (module READMEs' genuinely
-    open items) — FTS is explicitly not now (no corpus at n=1).
+29. **Story reading progress**, **movie/story FTS** (not now — no corpus at
+    n=1), and media's three: **HLS variant ladder** per tier (transcode
+    produces one rendition), **S3 multipart upload** for large originals (a
+    source is one presigned PUT), **audio transcode profile** (audio is served
+    as-is). These were the genuine items in the module READMEs' "Open work"
+    sections, removed 2026-09-11 (one owner for status).
 30. **`docs/operations/deployment.md` and `r2-setup.md`** do not exist (ADR-03
     item 6, ADR-04 item 7). The VPS sizing rationale and the R2 CORS JSON live
     nowhere but the ADRs.

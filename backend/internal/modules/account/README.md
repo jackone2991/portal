@@ -44,14 +44,9 @@ See [api/api.go](api/api.go). Other modules MUST NOT reach into `auth`, `rbac`, 
 
 ## Open work
 
-- **Brute-force protection on `/auth/login`.** ADR-06 assigned this to Portal
-  when Authentik was dropped. `internal/platform/middleware/ratelimit.go` is
-  written and has **zero importers** — `cmd/api` supplies no limiter. For an
-  internet-facing single-VPS deployment this is the highest-severity security
-  gap in the tree.
-- **TOTP enrolment + step-up flow** (D-27/D-28). Deliberately deferred: the
-  decisions gate MFA on *real-bank* credentials, which are themselves deferred —
-  the manual ledger holds none.
-- **`api/` package is dead.** `account/api` has zero cross-module importers and
-  its `HasPermission` is an unconditional `return false`. The real cross-module
-  seam is the injected-function pattern the wiring layer builds.
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+

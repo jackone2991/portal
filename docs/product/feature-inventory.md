@@ -1,5 +1,7 @@
 # Portal — Feature List
 
+**Status:** current · **Last verified:** never (as a whole — this file is ~1,400 lines and has only ever been corrected in places; treat any state claim in it as unverified and prefer `/CLAUDE.md` § Current status. Decision IDs `D-N` are stable regardless)
+
 > **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout (there is no tracker file — `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; verify against the code). v1 scope is the hard cut in [ADR-01](../adr/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](../adr/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
 
 Derived from [CLAUDE.md](../../CLAUDE.md) (architecture + module split) and [template-main/social/](../../template-main/social/) (visual/UX reference for the social layer). Each feature is mapped to the backend module that should own it ([backend/MODULES.md](../../backend/MODULES.md) rules apply: cross-module access goes through `api/` only).

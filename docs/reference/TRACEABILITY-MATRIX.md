@@ -63,7 +63,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.4 | Reading progress keyed by page_id | TC-COMIC-080…088 | P0 | ⚠ | `modules/comic/comic_test.go: TestProgressMembership` — page-belongs-to-comic guard only. |
 | P0.5 | Library + detail | TC-COMIC-100…104 | P0 | ✖ | frontend; the backend list has no test either. |
 | P0.6 | Asset-deletion coupling | TC-COMIC-120…123 | P0 | ✅ | `modules/comic/comic_test.go: TestAssetDeletedConsumer`. |
-| P1.7/P1.9 | Zip import, chapter events | TC-COMIC-140…148 | P1 | ⚠ | import ordering `modules/comic/comic_test.go: TestChapterSortOrder`; scraper source guard `modules/comic/sourceguard_test.go` (6 tests: allow-list, private-IP block, echoed-owner check). `comic:chapter_published` is consumed in `modules/notify/service_test.go: TestOnComicPublished` and `modules/journal/journal_test.go: TestStreamReadMapping`, but no comic test asserts it is emitted. |
+| P1.7/P1.9 | Zip import, chapter events | TC-COMIC-140…148 | P1 | ⚠ | import ordering `modules/comic/comic_test.go: TestChapterSortOrder`; scraper source guard `modules/comic/sourceguard_test.go` (6 tests: allow-list, private-IP block, echoed-owner check). `comic:chapter_published` is consumed in `modules/notify/service_test.go: TestOnComicPublished` (the stream projection was removed in `0034`), but no comic test asserts it is emitted. |
 
 ## SPEC-03 — Bank ([cases](../testing/TEST-CASES-SPEC-03-bank.md))
 

@@ -13,12 +13,9 @@ Owns: long-form written stories with chapters, authors, reading progress, bookma
 
 ## Open work
 
-The migration is `0023_story_core` (not `0008_story_init`) and CRUD + chapters +
-reorder are live. Genuinely open:
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
 
-- **No frontend.** `views/library/novel/NovelDetailView.tsx` is a 26-line static
-  placeholder and the index route it links to does not exist.
-- **Reading progress** — comic has `comic_reading_progress`; story has no
-  equivalent.
-- **Search** — Postgres FTS + `unaccent` (D-2). Not started in any module.
-- **No SPEC.**

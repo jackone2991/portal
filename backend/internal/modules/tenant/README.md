@@ -26,17 +26,9 @@ Owns the **organization** entity (the tenant boundary) and the middleware that p
 
 ## Open work
 
-The migration is `0018_tenant_core` (not `0004_tenant_organizations`), and
-`RequireTenant` is not a skeleton — it wraps **all eleven** domain modules via
-`authTenant` in `cmd/api/main.go`, and since 2026-08-25 the app connects as
-`portal_app`, so its policies are actually enforced (see
-[docs/operations/rls-cutover.md](../../../../docs/operations/rls-cutover.md)).
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
 
-Genuinely open, and deliberately deferred at one user with one personal org:
-
-- `POST /auth/switch-tenant` and `POST/GET /admin/organizations` (ADR-07 step 5)
-- per-tenant RBAC — `user_roles(user_id, org_id, role_id)` (step 6)
-- `cmd/sysjobs` + `internal/sysrepository` on the BYPASSRLS `portal_sys` role
-  (step 7). `forEachTenant` in `cmd/worker` made this unnecessary for now: a
-  sweep that iterates tenants needs no BYPASSRLS role.
-- the `/t/{org}/…` URL contract (D-23)

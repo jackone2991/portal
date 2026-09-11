@@ -21,7 +21,14 @@ First lines after the title, so staleness is visible before content is trusted:
 
 `Last verified` is the **only** mark that a document has been checked against the
 code ([ADR-11](adr/11-docs-canonicalisation.md)). No changelogs, no per-section
-"update notes": correct the text, bump the date.
+"update notes": correct the text, bump the date. The date means the **whole
+file** was checked; a file nobody has checked as a whole says
+`**Last verified:** never` — an honest `never` beats a date that means "last
+edited". There is no per-section variant.
+
+Audits (`product/analysis/`) additionally carry `**Triaged:** YYYY-MM-DD →
+backlog.md` once their findings have been turned into backlog lines. Header
+lines and link targets are the only things ever edited in an audit.
 
 Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE.md)
 § "Current status" rather than restate it — a pointer beats a table that rots.
@@ -33,7 +40,8 @@ Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE
 - Specs: `SPEC-NN-kebab-title.md`, numbered by intended build order.
 - Briefs: `NN-kebab-title.md` within `product/briefs/`.
 - Audits in `product/analysis/`: `topic-YYYY-MM-DD.md` — the one place a date
-  belongs in a filename, because the date *is* the identity of an audit.
+  belongs in a filename, because the date *is* the identity of an audit. The
+  genre is called *audit* everywhere, whatever the file calls itself.
 - Otherwise no spaces and no dates in filenames; dates live in status headers.
 
 ## Linking

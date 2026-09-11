@@ -1,5 +1,6 @@
 # Remaining Work — Code-Verified Audit
 
+**Status:** historical · **Triaged:** 2026-09-11 → [backlog.md](../backlog.md) (every numbered item in §3–§6 has a line there, under P0/P1/P2, Deferred, or Closed) · **Last verified:** 2026-09-11 (label only — the body is a dated record and is not edited)
 **Date:** 2026-08-25 · **Type:** point-in-time audit · **Question answered:** *"What is actually left to do?"*
 **Method rule:** every claim about *state* is sourced to code, a migration, a test file, or `git log`. Documents are cited only as evidence of *intent*.
 

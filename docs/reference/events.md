@@ -1,6 +1,6 @@
 # Asynq Events & Tasks Registry
 
-**Status:** current · **Last verified:** 2026-08-25 (re-derived from `cmd/api/main.go` + `cmd/worker/main.go`)
+**Status:** current · **Last verified:** 2026-09-11 (re-derived from the `Subscribe(` and `scheduler.Register(` calls in `cmd/api/main.go` + `cmd/worker/main.go` — `grep -n 'Subscribe(' backend/cmd/*/main.go` is the source; this table is the copy)
 
 Cross-module coupling happens **only** through this bus (hard rule). Naming:
 `<module>:<event_or_task>`; the emitting/owning module is the prefix. Two kinds:
@@ -17,17 +17,18 @@ the naming *rules*, this file owns the *inventory*.
 
 | Name | Payload (sketch) | Emitter | Status | Consumers |
 |---|---|---|---|---|
-| `media:asset_ready` | `{asset_id, kind, owner_user_id, title, origin: 'upload'\|'import'}` | media | live — **2 consumers** | notify — in-app notification, skips `origin='import'` (SPEC-04 P0.4); stream projection, skips `origin='import'` (SPEC-06 P0.1). `origin` exists so a SPEC-02 zip import (≤300 assets) can't flood the bell/stream — the meaningful signal there is `comic:chapter_published` |
-| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — **5 consumers** | **comic — drop dangling pages / null covers (SPEC-02 P0.6, live)**; stream — remove **all** media-sourced items with this ref (SPEC-06 P0.1); journal — strip attachment ids (SPEC-05 P1.5); people — null avatars (SPEC-08 P1.7); movie/music/story later |
+| `media:asset_ready` | `{asset_id, kind, owner_user_id, title, origin: 'upload'\|'import'}` | media | live — **1 consumer** | notify — in-app notification, skips `origin='import'` (SPEC-04 P0.4). **Not projected into the stream** since `0033` (2026-08-28): an upload finishing is a library event, not a moment in the day. `origin` exists so a SPEC-02 zip import (≤300 assets) can't flood the bell |
+| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — **5 consumers** | comic — drop dangling pages / null covers (SPEC-02 P0.6); movie, music, story — null the asset references (`*:on_asset_deleted`); stream — `journal:stream_asset_deleted` removes every media-sourced item with this ref (SPEC-06 P0.1). Not yet: journal attachment ids (SPEC-05 P1.5), people avatars (SPEC-08 P1.7) |
 | `media:playback_completed` | `{asset_id, user_id, title}` | media | live — **1 consumer** (stream) | stream (SPEC-06); notify (SPEC-04 open type registry) |
-| `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | live (SPEC-02 P1.9) — emitted per chapter on comic publish | stream (SPEC-06 P0.1 — projects a "\<title\> published" card keyed on chapter_id); notify later |
-| `comic:chapter_deleted` | `{comic_id, chapter_id, owner_user_id}` | comic | live (SPEC-02 P1.9) — emitted per chapter on chapter/comic delete | stream (SPEC-06 P0.1 — `journal:stream_comic_deleted` removes the published card by chapter_id; idempotent no-op if never published) |
+| `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | live (SPEC-02 P1.9) — emitted per chapter on comic publish | notify — `notify:on_comic_published`, one bell entry with a click-through. **Not projected into the stream** since `0034` (2026-08-28) |
+| `comic:chapter_deleted` | `{comic_id, chapter_id, owner_user_id}` | comic | live (SPEC-02 P1.9) — emitted per chapter on chapter/comic delete | **none** since `0034` removed the comic stream projection; emit-only |
 | `bank:transaction_created` | `{transaction_id, user_id, account_id, amount, direction, category_id, occurred_at, is_transfer, transfer_id, counterparty_account_id}` | bank | live — **1 consumer** (stream) | stream — `journal:stream_bank_created` |
 | `bank:transaction_updated` | same as created | bank | live — **1 consumer** (stream) | stream — `journal:stream_bank_updated` refreshes the matching item's payload/occurred_at |
 | `bank:transaction_deleted` | same as created | bank | live — **1 consumer** (stream) | stream — `journal:stream_bank_deleted` removes the item |
-| `movie:published` | `{movie_id, owner_user_id, title}` | movie | live — **1 consumer** (stream, wired 2026-08-25) | stream — `journal:stream_movie_published` |
-| `music:track_published` | `{track_id, owner_user_id, title}` | music | live — **1 consumer** (stream, wired 2026-08-25) | stream — `journal:stream_track_published` |
-| `story:published` | `{story_id, owner_user_id, title}` | story | live — **1 consumer** (stream, wired 2026-08-25) | stream — `journal:stream_story_published` |
+| `movie:published` | `{movie_id, owner_user_id, title}` | movie | live — **1 consumer** | notify — `notify:on_movie_published` (bell). Stream projection removed in `0040` (2026-08-28) |
+| `music:track_published` | `{track_id, owner_user_id, title}` | music | live — **1 consumer** | notify — `notify:on_track_published` (bell). Stream projection removed in `0040` |
+| `story:published` | `{story_id, owner_user_id, title}` | story | live — **1 consumer** | notify — `notify:on_story_published` (bell). Stream projection removed in `0040` |
+| `social:connection_requested` / `social:connection_accepted` | `{connection_id, requester_id, addressee_id}` | social | live (0037) — **1 consumer** each | notify — `notify:on_connection_requested` / `notify:on_connection_accepted` |
 | `bank:budget_exceeded` | `{user_id, category_id, month}` | bank | planned (SPEC-03 P1.12) | notify later |
 | `journal:entry_created` | `{entry_id, user_id, occurred_at}` | journal | planned (SPEC-05 P0.3) | — emit-only for future external consumers. The stream projection is maintained **transactionally in-module** (SPEC-06 P0.1), not via this event; no updated/deleted events for the same reason (SPEC-05 P0.3) |
 | `people:birthday_upcoming` | `{notice_id, person_id, user_id, display_name, days_until}` | people | live — **1 consumer** (stream) | stream — `ref_id = notice_id`, so recurring years/thresholds never collide (SPEC-06 P0.1); notify (SPEC-04) as they land |
@@ -54,7 +55,7 @@ the naming *rules*, this file owns the *inventory*.
 | `notify:on_asset_ready` | `{asset_id, kind, owner_user_id, title, origin}` (consumer; subscribes to `media:asset_ready`) | notify | live (SPEC-04 P0.4) |
 | `notify:purge_old` | — (janitor sweep) | notify | planned (SPEC-04 P2; handler is a registered stub, unscheduled) |
 | `journal:backfill_stream` | — (one-shot stream seed, via `mediaapi`) | journal | planned (SPEC-06 P1.6) |
-| `journal:stream_*` | consumer tasks (asset_ready/playback_completed/asset_deleted, bank transaction_{created,updated,deleted}, birthday, comic_published, comic_deleted, **movie_published, track_published, story_published**) | journal | live (SPEC-06 P0.1b; journal owns `stream_items` and projects every producer event — `media:asset_deleted` now fans out to BOTH comic reap + stream removal) |
+| `journal:stream_*` | consumer tasks — `playback_completed`, `asset_deleted`, `bank_{created,updated,deleted}`, `birthday` | journal | live (SPEC-06 P0.1b; journal owns `stream_items`). The stream projects **moments** (a playback finished, money moved, a birthday is near), not **library events**: `asset_ready`, `comic_published/deleted` and the three catalogue publishes were dropped in `0033`/`0034`/`0040` and go to the bell instead |
 | `people:scan_birthdays` | — (daily scan, instance-TZ) | people | live (SPEC-08 P0.4; daily 06:00 UTC; `default` queue; runs **once per tenant** via `forEachTenant` since the RLS cutover) |
 | `ops:backup_database` | — (nightly pg_dump → storage) | ops | live (SPEC-09 P0.2; nightly 03:00 UTC on the shared scheduler; "default" queue) |
 | `ops:takeout` | `{export_id, user_id}` | ops | planned (SPEC-09 P1.7) |

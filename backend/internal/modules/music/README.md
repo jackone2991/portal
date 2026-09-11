@@ -17,11 +17,9 @@ Owns: tracks, albums, artists, playlists for the music vertical.
 
 ## Open work
 
-The migration is `0022_music_core` (not `0007_music_init`) and CRUD +
-permissions are live. Genuinely open:
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
 
-- **No frontend.** There is no `/tracks` route in the Next.js app; the three
-  `components/music/*` files have zero importers.
-- **Audio transcode profile** — audio uploads are stored and served as-is;
-  media's pipeline transcodes video and images only.
-- **No SPEC.**
