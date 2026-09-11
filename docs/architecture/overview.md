@@ -49,7 +49,9 @@ always the same: the envelope.
    effective permissions), values are computed from source-of-truth rows (+ cache),
    not maintained as mutable columns.
 6. **Status truth is centralized.** Documents don't restate implementation state;
-   `MILESTONE_CHECKS.md` does. Diagrams tag tiers instead of pretending.
+   the code does, described in one place — `/CLAUDE.md` § Current status
+   (`MILESTONE_CHECKS.md` did this until it was deleted in `f11cf3f`). Diagrams
+   tag tiers instead of pretending.
 
 ## 3. The system, by tier
 

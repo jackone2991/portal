@@ -1,11 +1,11 @@
 # Architecture Review — Portal (May 2026)
 
-**Status:** Accepted
+**Status:** historical · **Last verified:** 2026-09-11 (label only — an audit's body is a dated record and is not edited; moved here from `docs/adr/00-architecture-review.md` under ADR-11 because it is a review, not a decision; relative links were retargeted for the new location and nothing else changed)
 **Date:** 2026-05-24
 **Reviewers:** kirito (solo dev / sole reviewer)
 **Scope:** Whole stack — every area on the form (auth, tenant/RLS, media, domain modules, storage/CDN, jobs, DB, frontend, OpenAPI, cross-cutting).
 
-> **Update (2026-07-06):** This review's action items were all executed — ADRs 01–05 are Accepted and implemented, and the v1 demo loop is closed (see `MILESTONE_CHECKS.md`). One §2 endorsement was later reversed: [ADR-06](./06-local-auth-model.md) (2026-07-05) removed Authentik/OIDC in favour of Portal-owned local password auth (Argon2id); the refresh-token and revocation machinery is unchanged. The body below is preserved as written on 2026-05-24, with dated notes marking superseded findings.
+> **Update (2026-07-06):** This review's action items were all executed — ADRs 01–05 are Accepted and implemented, and the v1 demo loop is closed (see `MILESTONE_CHECKS.md`). One §2 endorsement was later reversed: [ADR-06](../../adr/06-local-auth-model.md) (2026-07-05) removed Authentik/OIDC in favour of Portal-owned local password auth (Argon2id); the refresh-token and revocation machinery is unchanged. The body below is preserved as written on 2026-05-24, with dated notes marking superseded findings.
 
 This document is the entry point for the ADR set. It captures the **findings** of the review; the individual ADRs that follow propose the corrective actions.
 
@@ -22,7 +22,7 @@ That same maturity is also the project's biggest risk. The scope described in `f
 - The two competing RBAC specs (role-hierarchy in CLAUDE.md/feature.md, policy-bundles in archivetech.md) cannot both be true. Code already exists for one of them.
 - The deployment-target diagrams.md draws (Postgres + PgBouncer + Dragonfly + MinIO + Authentik + 5-service observability stack + mediamtx + LiveKit + Mailpit) does not fit on a single $30–60 VPS once you account for Authentik's RAM footprint and FFmpeg's bursty CPU.
 
-The single most useful thing this review can do is **make the v1 cut explicit** so the next 2 weeks aren't spent reading 40 decisions in linear order. See [ADR-01](./01-v1-scope-cut.md).
+The single most useful thing this review can do is **make the v1 cut explicit** so the next 2 weeks aren't spent reading 40 decisions in linear order. See [ADR-01](../../adr/01-v1-scope-cut.md).
 
 ---
 
@@ -41,7 +41,7 @@ These choices should survive any v1 cut. Don't second-guess them mid-sprint:
 | **Vidstack for HLS playback** | Vidstack on Next.js is the path of least resistance; the alternative (Shaka, hls.js direct) is more wiring. |
 | **`cmd/sysjobs` separation + sysrepository BYPASSRLS lock-down** | This is one decision you should NOT defer even at solo-dev speed. RLS bypass is the kind of thing that turns into a multi-tenant data leak. The depguard rule pays for itself the first time you forget. |
 
-> **Update (2026-07-06):** the Authentik row above was superseded by [ADR-06](./06-local-auth-model.md) — Authentik was dropped and Portal now owns local password auth (Argon2id). The refresh-token and revocation machinery it endorsed is unchanged and still in use.
+> **Update (2026-07-06):** the Authentik row above was superseded by [ADR-06](../../adr/06-local-auth-model.md) — Authentik was dropped and Portal now owns local password auth (Argon2id). The refresh-token and revocation machinery it endorsed is unchanged and still in use.
 
 ## 3. What's at risk
 
@@ -60,33 +60,33 @@ These are the choices most likely to cost time or burn the budget under the stat
 | Conflict resolution | First-match wins on the grant set | Deny-wins (AWS/OPA semantics) |
 | Permission cache key | `rbac:perms:<userID>:v<N>` | Same shape, but per `(user_id, token_version)` |
 
-Both specs can't coexist. Code currently implements the role-hierarchy model. `archivetech.md`'s spec-wins clause is unenforceable until someone decides which spec is canonical. Decision deferred to [ADR-02](./02-rbac-model-reconciliation.md); recommendation there is to **keep role-hierarchy as the v1 grant primitive** and add policy-bundles as a Phase-2 layer **on top of** roles, not instead of them.
+Both specs can't coexist. Code currently implements the role-hierarchy model. `archivetech.md`'s spec-wins clause is unenforceable until someone decides which spec is canonical. Decision deferred to [ADR-02](../../adr/02-rbac-model-reconciliation.md); recommendation there is to **keep role-hierarchy as the v1 grant primitive** and add policy-bundles as a Phase-2 layer **on top of** roles, not instead of them.
 
-> **Update (2026-07-06):** resolved — [ADR-02](./02-rbac-model-reconciliation.md) is Accepted; role-hierarchy is canonical for v1 and policy bundles layer on top later. `archivetech.md`'s spec-wins clause is disregarded for v1.
+> **Update (2026-07-06):** resolved — [ADR-02](../../adr/02-rbac-model-reconciliation.md) is Accepted; role-hierarchy is canonical for v1 and policy bundles layer on top later. `archivetech.md`'s spec-wins clause is disregarded for v1.
 
 ### 3.2 Scope vs. runway mismatch
 
-`feature.md` Phase 0 alone has 14 deliverables and would take 1 dev ~1 week if everything goes well. Phases 1–12 are years of work. The 2-week budget means **picking a single phase set** and committing. See [ADR-01](./01-v1-scope-cut.md); the recommended cut is *Phase 0 + a vertical slice of Phase 2 (one video upload happy path)* and nothing else.
+`feature.md` Phase 0 alone has 14 deliverables and would take 1 dev ~1 week if everything goes well. Phases 1–12 are years of work. The 2-week budget means **picking a single phase set** and committing. See [ADR-01](../../adr/01-v1-scope-cut.md); the recommended cut is *Phase 0 + a vertical slice of Phase 2 (one video upload happy path)* and nothing else.
 
 ### 3.3 RAM budget on a single VPS
 
 If you bring up `docker-compose.yml` plus add **Authentik** (~1 GB), the **observability profile** (~1.1 GB across Loki/Prometheus/Tempo/Grafana/GlitchTip), **mediamtx + LiveKit** (~500 MB + bursty), and FFmpeg worker (1–2 GB during transcode), you exceed 4 GB before the API has handled a request. A reasonable $60/mo VPS (8 vCPU / 32 GB) covers it; a $30/mo VPS (4 vCPU / 16 GB) does not once Authentik is in the mix.
 
-[ADR-03](./03-single-vps-topology.md) proposes the v1 service set and which profile flags stay off.
+[ADR-03](../../adr/03-single-vps-topology.md) proposes the v1 service set and which profile flags stay off.
 
-> **Update (2026-07-06):** Authentik was removed by [ADR-06](./06-local-auth-model.md), taking its RAM footprint out of the equation; the shipped v1 stack is 8 services (postgres, pgbouncer, dragonfly, minio, traefik, api, worker, frontend).
+> **Update (2026-07-06):** Authentik was removed by [ADR-06](../../adr/06-local-auth-model.md), taking its RAM footprint out of the equation; the shipped v1 stack is 8 services (postgres, pgbouncer, dragonfly, minio, traefik, api, worker, frontend).
 
 ### 3.4 Storage tier complexity
 
 `docker-compose.yml` runs MinIO inside the VPS. The diagrams imply MinIO is the *origin* and R2 is the *edge*, with continuous replication. That's two storage systems, two sets of credentials, replication monitoring, and 100–500 GB of VPS-attached disk before any user uploads.
 
-For v1 the simpler answer is **R2 only** — it's S3-compatible, costs ~$0.015/GB-month for storage and has zero egress fees inside Cloudflare's edge. MinIO becomes a Phase-2 addition if a self-hoster wants to run entirely without Cloudflare. See [ADR-04](./04-storage-tier-budget.md).
+For v1 the simpler answer is **R2 only** — it's S3-compatible, costs ~$0.015/GB-month for storage and has zero egress fees inside Cloudflare's edge. MinIO becomes a Phase-2 addition if a self-hoster wants to run entirely without Cloudflare. See [ADR-04](../../adr/04-storage-tier-budget.md).
 
 > **Update (2026-07-06):** adopted with a refinement — see ADR-04's 2026-06-06 update. R2-only holds for deployed environments; local dev uses MinIO behind the same single S3 client.
 
 ### 3.5 Wiring gap is the actual blocker
 
-CLAUDE.md says it out loud: *"`cmd/api/main.go` still has a `TODO: mount OpenAPI-generated handlers` comment and does not yet call `account.New(...)` or any module's `MountHTTP`."* Every downstream feature is gated on this. [ADR-05](./05-phase0-wiring-order.md) sequences the closure.
+CLAUDE.md says it out loud: *"`cmd/api/main.go` still has a `TODO: mount OpenAPI-generated handlers` comment and does not yet call `account.New(...)` or any module's `MountHTTP`."* Every downstream feature is gated on this. [ADR-05](../../adr/05-phase0-wiring-order.md) sequences the closure.
 
 > **Update (2026-07-06):** closed — ADR-05 was executed in order; `cmd/api/main.go` now constructs the account and media modules and `/api/v1/healthz` returns 200. See `MILESTONE_CHECKS.md`.
 
@@ -115,7 +115,7 @@ These are explicitly **scope cuts** for the 2-week window. Each is a complete fe
 | LiveKit + mediamtx (§9.25, Phase 10/12) | ~500 MB + bursty CPU + complex networking. Out for v1. Compose profile `--calls` and `--profile live` already gate them; keep the profiles disabled. |
 | Observability stack (Phase 1, D-8) | Loki + Prometheus + Tempo + Grafana + GlitchTip is 5 services. Run with stdout JSON logs in v1; add the stack when traffic justifies it. Keep `--profile observability` disabled. |
 
-[ADR-01](./01-v1-scope-cut.md) restates the cut formally.
+[ADR-01](../../adr/01-v1-scope-cut.md) restates the cut formally.
 
 ## 6. Findings the corpus doesn't address
 
@@ -133,10 +133,10 @@ A few things weren't in the input docs and should be on the radar:
 
 Five concrete ADRs follow. In sprint priority order:
 
-1. **[ADR-05](./05-phase0-wiring-order.md)** — close the wiring gap (Day 1–3). Nothing else matters until `make up && make dev && curl /api/v1/healthz` returns 200 from a *constructed* module.
-2. **[ADR-01](./01-v1-scope-cut.md)** — agree on the v1 cut so you don't reflexively reach for the bank module in week 2.
-3. **[ADR-02](./02-rbac-model-reconciliation.md)** — pick one RBAC model and write it down before any admin UI ships.
-4. **[ADR-03](./03-single-vps-topology.md)** — lock in the compose profile set and the VPS sizing so the deploy script doesn't ship with `--profile observability` enabled by accident.
-5. **[ADR-04](./04-storage-tier-budget.md)** — decide MinIO+R2 vs R2-only before the upload handler is written; the call shapes the storage interface.
+1. **[ADR-05](../../adr/05-phase0-wiring-order.md)** — close the wiring gap (Day 1–3). Nothing else matters until `make up && make dev && curl /api/v1/healthz` returns 200 from a *constructed* module.
+2. **[ADR-01](../../adr/01-v1-scope-cut.md)** — agree on the v1 cut so you don't reflexively reach for the bank module in week 2.
+3. **[ADR-02](../../adr/02-rbac-model-reconciliation.md)** — pick one RBAC model and write it down before any admin UI ships.
+4. **[ADR-03](../../adr/03-single-vps-topology.md)** — lock in the compose profile set and the VPS sizing so the deploy script doesn't ship with `--profile observability` enabled by accident.
+5. **[ADR-04](../../adr/04-storage-tier-budget.md)** — decide MinIO+R2 vs R2-only before the upload handler is written; the call shapes the storage interface.
 
-See the system landscape diagram at [`diagrams/system-landscape.md`](./diagrams/system-landscape.md) for the v1-scoped picture.
+See the system landscape diagram at [`diagrams/system-landscape.md`](../../adr/diagrams/system-landscape.md) for the v1-scoped picture.

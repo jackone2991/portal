@@ -4,8 +4,10 @@
 //
 //   - NewPool: a pgxpool configured for PgBouncer transaction pooling.
 //   - BeginTenantScope + WithTx/TxFrom: a per-request transaction that pins
-//     app.current_tenant (RLS reads this GUC in a later increment; today it is
-//     set but unenforced because the app connects as a superuser).
+//     app.current_tenant. RLS reads this GUC and enforces it only when the
+//     binary connects as portal_app (NOBYPASSRLS); as the superuser `portal`
+//     every policy is bypassed. Which role a deployment uses is its
+//     DATABASE_URL — see ADR-07 § Consequences and CLAUDE.md.
 //   - Conn: a context-aware sqlc DBTX that routes each query onto the request
 //     transaction when one is bound, else the pool. One Conn is handed to every
 //     module's repository NewAdapter; when no request tx is present it behaves

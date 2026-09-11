@@ -1,7 +1,7 @@
 // Command api runs the Portal HTTP server.
 //
-// v1 scope: see doc/en/architecture/01-v1-scope-cut.md. Only the account module
-// is mounted; other modules attach under r.Route("/api/v1", ...) the same way.
+// v1 scope: see docs/adr/01-v1-scope-cut.md. Every module under
+// internal/modules is constructed here and mounted under r.Route("/api/v1", ...).
 package main
 
 import (

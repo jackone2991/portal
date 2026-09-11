@@ -4,7 +4,7 @@ Companion to [feature.md](../product/feature-inventory.md). Where `feature.md` d
 
 Read [§16 Frontend](../product/feature-inventory.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34] — superseded by client-side SessionKeeper, see the §4 banner — and [D-7]); this doc expands them with concrete patterns and a build-out roadmap.
 
-> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (live tracker: `MILESTONE_CHECKS.md`). Per [ADR-06](../adr/06-local-auth-model.md) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../adr/01-v1-scope-cut.md)).
+> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (tracked at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code — `/CLAUDE.md` § Current status). Per [ADR-06](../adr/06-local-auth-model.md) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../adr/01-v1-scope-cut.md)).
 
 ---
 

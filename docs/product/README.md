@@ -20,7 +20,7 @@ Why Portal exists, what it is, and what gets built in what order.
 An idea moves left to right, gaining precision and shedding ambiguity:
 
 ```
-brainstorm → briefs/NN-*.md → specs/SPEC-NN-*.md → code + MILESTONE_CHECKS.md
+brainstorm → briefs/NN-*.md → specs/SPEC-NN-*.md → code (status: /CLAUDE.md § Current status)
                     ↑ decisions worth recording → ../adr/ or D-N entries
 ```
 

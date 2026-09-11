@@ -581,7 +581,7 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Hot-reload dev** — `make dev` (`air` for Go, `pnpm dev` for Next).
 - **Tests** — `go test ./... -race -count=1` + `pnpm test`. Single test: `cd backend && go test ./internal/modules/account/rbac -run TestMatches -v`. Coverage targets per module in [D-9].
 - **Lint** — `golangci-lint` (incl. depguard enforcing module-boundary rules) + `pnpm lint`. Optional pre-commit hook via `lefthook` [D-9].
-- **CI/CD** — done: `.github/workflows/ci.yml` — backend go build/vet/test `-race` + sqlc-drift; frontend `next build` (typecheck + lint); OpenAPI well-formedness check. Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
+- **CI/CD** — done: `.github/workflows/ci.yml` — `backend` (sqlc generate → go build/vet/test `-race`; sqlc output is not committed, so there is no sqlc drift gate), `lint` (depguard), `openapi` (parse + regenerate-and-diff, ADR-10), `frontend` (typecheck + build), `link-check` (ADR-11). Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
 - **Observability** — opt-in `--profile observability` in `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip *(planned per [D-8]; deferred for v1 by ADR-01 — not in `docker-compose.yml` yet)*.
 - **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; quarterly restore drill. Targets + procedures in `docs/operations/backups.md` [D-10].
 - **Secrets** — `.env` in dev, Compose/K8s secrets (or optional SOPS) in prod; rotation policy per secret class in `docs/operations/secrets.md` [D-11].

@@ -1,46 +1,44 @@
 # ADR-01: v1 scope cut — what fits in 2 weeks / 1 dev / $100/mo / 1 VPS
 
-**Status:** Accepted
-**Date:** 2026-05-24
+**Status:** **accepted** 2026-05-24 · scope since widened by [ADR-08](./08-life-os-pivot.md)
+**Last verified:** 2026-09-11
 **Deciders:** kirito
-
-> **Update (2026-07-06):** v1 shipped — the demo loop below is closed and committed; `MILESTONE_CHECKS.md` at repo root is the living status tracker. As-built deltas:
-> - Step 1 is superseded by [ADR-06](./06-local-auth-model.md): sign-in is Portal-owned local password auth (`POST /api/v1/auth/login`); Authentik/OIDC is removed from code and compose. The OIDC-specific deliverable rows below (`user_oidc_roles` group sync, `amr`/`acr`/`auth_time` claims) are retired with it.
-> - Step 4: dev persists to MinIO; R2 applies to deployed environments only — see ADR-04's Update (2026-06-06).
-> - The [D-34] refresh-and-return route was replaced by the `portal_session` middleware gate + `SessionKeeper` client-side silent refresh.
-> - CI landed in Phase 6 with `sqlc-drift`; an openapi handler-drift check is still open — `shared/openapi.yaml` currently drifts (missing `/auth/register`, stale `/auth/callback`).
-> - As-built routes mount under plain `/api/v1` with no `/t/{tenant}` prefix; the tenant URL contract stays deferred to Phase 1.
 
 ## Context
 
-`feature.md` describes 12 phases and 40 settled decisions covering identity, multi-tenancy, media, four content verticals, personal finance, notifications, social, search, marketing site, advanced social (reels/live/audio rooms), creator economy, marketplace, and ML safety. The decisions are individually sound; collectively they describe a platform that would take a small team a year or more to ship.
+*As found on 2026-05-24. The cut this ADR made was executed and closed: the
+demo loop shipped on 2026-07-06 and is the regression baseline. What has been
+built since is not tracked here — [`/CLAUDE.md`](../../CLAUDE.md) § Current
+status owns that.*
 
-The stated constraint envelope is:
+[`feature-inventory.md`](../product/feature-inventory.md) (then `feature.md`) described 12 phases and 40 settled decisions covering identity, multi-tenancy, media, four content verticals, personal finance, notifications, social, search, marketing site, advanced social (reels/live/audio rooms), creator economy, marketplace, and ML safety. The decisions are individually sound; collectively they describe a platform that would take a small team a year or more to ship.
+
+The stated constraint envelope was:
 
 - 1 developer
 - 2 weeks to v1
 - ≤ $100/month infrastructure budget
 - single VPS
 
-A version of Portal that tries to honour every Phase 0 deliverable in 2 weeks will run out of time around Phase 0 step 8 (out of 14) and ship nothing. A version that picks one coherent slice, ships it, and treats the rest as a backlog can produce a *running* artefact at the end of the sprint.
+A version of Portal that tried to honour every Phase 0 deliverable in 2 weeks would run out of time around Phase 0 step 8 (out of 14) and ship nothing. A version that picked one coherent slice, shipped it, and treated the rest as a backlog could produce a *running* artefact at the end of the sprint.
 
-This ADR makes the cut explicit so it's a decision, not a drift.
+This ADR made the cut explicit so it was a decision, not a drift.
 
 ## Decision
 
-**v1 ships Phase 0 (foundation wiring) plus a vertical slice of Phase 2 (one video upload happy path) and nothing else.** Everything in Phases 1, 3–12 is deferred. The phase ordering in `feature.md` is unchanged; the scope of what counts as "v1" is the only thing this ADR moves.
+**v1 ships Phase 0 (foundation wiring) plus a vertical slice of Phase 2 (one video upload happy path) and nothing else.** Everything in Phases 1, 3–12 was deferred by this cut. The phase ordering in `feature.md` was unchanged; the scope of what counted as "v1" was the only thing this ADR moved.
 
-Concretely, v1 = the smallest demo that proves the architecture works end-to-end:
+Concretely, v1 = the smallest demo that proves the architecture works end-to-end. As built (two steps differ from the 2026-05-24 text: sign-in was to be Authentik/OIDC and the upload was to go straight to R2):
 
-1. A user signs in via Authentik (OIDC).
+1. A user signs in with a local password ([ADR-06](./06-local-auth-model.md): `POST /api/v1/auth/login`; Authentik/OIDC never shipped).
 2. They land on the Next.js home page authenticated.
 3. They upload an mp4 via the UI.
-4. The upload is persisted to R2 (see [ADR-04](./04-storage-tier-budget.md)).
+4. The upload is persisted to MinIO in dev and R2 in deployed environments ([ADR-04](./04-storage-tier-budget.md)).
 5. The worker picks up the transcode task, produces an HLS ladder, and updates `assets.status = ready`.
 6. The user plays the video back in the browser using Vidstack.
 7. They sign out; the session is revocable via the existing two-channel mechanism.
 
-That's the entire v1 demo loop. No tenants. No movies/music/stories/comics CRUD. No bank. No social. No notifications. No mediamtx. No LiveKit. No observability stack. No file-gated permissions. No policy bundles. No marketplace.
+That was the entire v1 demo loop. At the time of the cut: no tenants, no movies/music/stories/comics CRUD, no bank, no social, no notifications, no mediamtx, no LiveKit, no observability stack, no file-gated permissions, no policy bundles, no marketplace. Of those, tenants, the four verticals, bank, notifications and a first social slice have since shipped under ADR-08; the rest remain out.
 
 ## Options considered
 
@@ -108,29 +106,30 @@ For Phase 2 the v1 cut is: one queue priority, libx264 only, no hardware encoder
 
 ## Consequences
 
-**What becomes easier:**
+**What became easier:**
 
-- The 2-week sprint has a single, demonstrable success criterion: end-of-sprint demo runs the 7 steps above. Easy to test, easy to know if it's done.
-- The wiring gap (the actual blocker) gets closed on Day 1–3 because everything else depends on it.
-- Solo-dev cognitive load drops — only the modules touched by the demo loop need to be understood deeply in week 1.
+- The 2-week sprint had a single, demonstrable success criterion: the 7 steps above. It ran, and it still runs — it is the regression baseline every later change is checked against.
+- The wiring gap (the actual blocker) closed first because everything else depended on it.
+- Solo-dev cognitive load dropped — only the modules touched by the demo loop needed to be understood deeply in week 1.
 
-**What becomes harder:**
+**What became harder, and how it resolved:**
 
-- Deferring the migration audit *would* be cheaper now than later, so doing it under v1 (rather than punting to Phase 0.5) costs a day. Worth it.
-- Skipping the frontend conventions doc means the first contributor (whoever they are) lands without a state-boundary contract. Accept this — the doc can land when needed.
-- Skipping the observability stack means the v1 demo runs blind. For a single-user demo this is fine; production deploy should add `--profile observability` before any external users.
-- Skipping multi-tenant means the URL prefix `/t/{tenant}/...` isn't exercised in v1. Defer the URL contract until Phase 1; do NOT hard-code the v1 demo paths in a way that's incompatible with the prefix later. Use `/api/v1/healthz` only; protected routes should already live under `/t/me/api/v1/...` even with a hard-coded `me` tenant.
+- The migration audit was done under v1 rather than punted; it cost a day and was worth it.
+- The frontend conventions doc was skipped for v1 and later written as [`frontend/CLAUDE.md`](../../frontend/CLAUDE.md) ([D-32]/[D-33]/[D-34]).
+- The observability stack was skipped and is still absent (ADR-03).
+- The `/t/{tenant}/...` URL prefix was never adopted. Tenancy landed ([ADR-07](./07-tenancy-rls-model.md)) with routes staying under plain `/api/v1`; the tenant is resolved by middleware (`RequireTenant` in `cmd/api/main.go`), not by the path.
+- The [D-34] refresh-and-return route was replaced by the `portal_session` middleware gate plus `SessionKeeper` client-side silent refresh.
 
-**What we'll need to revisit:**
+**What we said we'd revisit:**
 
-- After v1 ships, run a Phase 0.5 sprint to close the skipped Phase 0 items (CI workflows in full, frontend conventions doc, observability profile setup) before Phase 1 (tenancy) begins.
-- Pick up Phase 1 (tenancy + RLS) as the next sprint; the `me` synthetic tenant carries forward unchanged. [D-23]/[D-24]
-- The RBAC schism ([ADR-02](./02-rbac-model-reconciliation.md)) should be resolved BEFORE Phase 1 so the role + policy migrations land in one pass.
+- A Phase 0.5 sprint for the skipped items never ran as such; CI landed in Phase 6 (the `backend`, `lint`, `openapi`, `frontend` and `link-check` jobs in `.github/workflows/ci.yml` — there is no `sqlc-drift` job and never was, sqlc output is not committed), the conventions doc landed with the frontend work, observability has not.
+- Phase 1 (tenancy + RLS) landed per ADR-07; the `me` synthetic tenant was not carried forward — personal organisations are real rows.
+- The RBAC schism was resolved by [ADR-02](./02-rbac-model-reconciliation.md) before tenancy, as intended.
 
 ## Action items
 
-1. [x] Pin this ADR (`Accepted`) before writing any code for the 2-week sprint. *(done 2026-07-06 — status flipped; v1 was built under this cut)*
-2. [ ] Open a tracking issue/todo with the 7-step demo as the literal acceptance criterion. → acceptance tracked in `MILESTONE_CHECKS.md`
-3. [ ] Add a `v1-out-of-scope` label/section in the issue tracker for everything in §3 of the executive review — keeps the deferred work visible without inviting scope creep.
-4. [ ] Add `# v1 scope: see doc/en/architecture/01-v1-scope-cut.md` as a comment at the top of `cmd/api/main.go` so future-you doesn't reach for a non-v1 module.
-5. [ ] At sprint end, write a one-page "what we cut, what we shipped, what we learned" retrospective; promote any cut-but-needed items into the Phase 0.5 backlog.
+1. [x] Pin this ADR (`Accepted`) before writing any code for the 2-week sprint (2026-07-06 status flip; v1 was built under this cut).
+2. [x] Acceptance criterion tracked and met — the loop shipped 2026-07-06. (It was tracked in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code, see `/CLAUDE.md`.)
+3. [ ] A `v1-out-of-scope` label/section in an issue tracker — there is no issue tracker; the deferred list lives in `/CLAUDE.md` § "Still deferred".
+4. [x] Scope comment at the top of `cmd/api/main.go` (path corrected 2026-09-11 to `docs/adr/01-v1-scope-cut.md`).
+5. [ ] Sprint-end retrospective — never written. The nearest thing is [analysis/spec-gap-fix-worklog-2026-07-11.md](../product/analysis/spec-gap-fix-worklog-2026-07-11.md).

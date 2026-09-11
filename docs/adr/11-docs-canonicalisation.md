@@ -119,13 +119,13 @@ again.
 ## Consequences
 
 - ADR numbering: `00` is retired permanently.
-  [00-architecture-review.md](00-architecture-review.md) was never a decision
-  record — it is a dated review of the architecture as found on 2026-07-07,
-  all eleven of its false statements are descriptions of that day, and by the
-  genre rules it belongs in `analysis/`. It moves to
-  `product/analysis/architecture-review-2026-07.md` (body untouched, status
-  `historical`) as an action item below. STYLE.md says numbers are never
-  reused, so the next ADR is 12.
+  [architecture-review-2026-05-24.md](../product/analysis/architecture-review-2026-05-24.md)
+  (formerly `adr/00-architecture-review.md`) was never a decision record — it is
+  a dated review of the architecture as found on 2026-05-24, all eleven of its
+  false statements are descriptions of that day, and by the genre rules it
+  belongs in `analysis/`. Moved, body untouched, status `historical`; the
+  filename carries the review's own date per STYLE.md. STYLE.md says numbers
+  are never reused, so the next ADR is 12.
 - `docs/README.md` gains rules for `testing/`, `operations/` and `analysis/`
   (three folders that existed on disk without a declared genre), a reading-
   order line that puts the newest audit **before** every other document, and
@@ -149,7 +149,7 @@ again.
 - [x] Fix the broken relative links (95 → 0), then enable the link-check job.
 - [ ] Rewrite the fact layer of ADR-01…10 (ADR-10 and ADR-03 first — they
       carry 23 of the 79 — then review before the rest).
-- [ ] Move ADR-00 to `analysis/`.
+- [x] Move ADR-00 to `analysis/`.
 - [ ] Re-grade `TRACEABILITY-MATRIX.md` against the `_test.go` files that
       exist, with an `Evidence` column (`file:func`) — a ✅ with no evidence is
       what produced 47 rows at 100%.

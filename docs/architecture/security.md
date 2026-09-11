@@ -16,7 +16,7 @@
 
 > **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
 > channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
-> (see `MILESTONE_CHECKS.md`, [ADR-06](../adr/06-local-auth-model.md)). Everything
+> (see [ADR-06](../adr/06-local-auth-model.md); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). Everything
 > tenant/policy-shaped — §1 L2 tenant layer, §2.4 TOTP, §3 tenancy+RLS, §4 policy-bundle
 > authorization, §5.4 notifications, §6 steps 8–9, §9 migrations beyond 0007 — is **POST-V1 DESIGN**,
 > not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](../adr/02-rbac-model-reconciliation.md).
