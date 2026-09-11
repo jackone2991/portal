@@ -16,7 +16,7 @@ The requirement baseline is the nine implementation-ready specs in
 [docs/product/specs/](../product/specs/). Each spec states acceptance criteria
 (AC); this plan turns every AC into one or more executable test cases in the
 companion `TEST-CASES-SPEC-*.md` files, and tracks coverage in
-[TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md).
+[TRACEABILITY-MATRIX.md](../reference/TRACEABILITY-MATRIX.md).
 
 ## 2. Scope
 

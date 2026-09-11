@@ -11,7 +11,7 @@ case carries preconditions, steps, test data, and an unambiguous expected result
 | File | What it is |
 |------|-----------|
 | [TEST-PLAN.md](TEST-PLAN.md) | Master test plan — scope, strategy, levels, environments, entry/exit criteria, risk model, defect workflow, roles, schedule. **Read this first.** |
-| [TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md) | Requirement (`SPEC-NN Px.y`) ↔ test-case-ID map. Coverage gate. |
+| [TRACEABILITY-MATRIX.md](../reference/TRACEABILITY-MATRIX.md) | Requirement (`SPEC-NN Px.y`) ↔ test-case-ID map. Coverage gate. |
 | [TEST-CASES-SPEC-01-media.md](TEST-CASES-SPEC-01-media.md) | `media` — image pipeline, poster, delete/janitor, library, download-original, events |
 | [TEST-CASES-SPEC-02-comic.md](TEST-CASES-SPEC-02-comic.md) | `comic` — CRUD, publish/RBAC, reader, progress, asset-deletion coupling, zip import |
 | [TEST-CASES-SPEC-03-bank.md](TEST-CASES-SPEC-03-bank.md) | `bank` — accounts, transactions, transfers, categories, budgets, dashboard, events |

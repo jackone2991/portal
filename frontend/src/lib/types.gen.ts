@@ -2494,7 +2494,7 @@ export interface paths {
          * The tenants the caller belongs to
          * @description At v1 every user has exactly one `personal` organization, created on
          *     first tenant resolution. Multi-org membership is ADR-07 step 5 and is
-         *     deliberately deferred — see docs/guides/rls-cutover.md.
+         *     deliberately deferred — see docs/operations/rls-cutover.md.
          */
         get: operations["listMyOrganizations"];
         put?: never;

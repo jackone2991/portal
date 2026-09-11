@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Restore drill — SPEC-09 P0.4. Proves a nightly backup is actually restorable.
-# Runbook: docs/guides/backup-restore.md.
+# Runbook: docs/operations/backup-restore.md.
 #
 # Reads the backup MANIFEST (backups/pg/LATEST.json — never latest-by-listing,
 # which a partial upload could poison), downloads + sha256-verifies the dump,

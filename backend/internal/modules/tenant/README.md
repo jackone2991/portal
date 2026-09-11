@@ -30,7 +30,7 @@ The migration is `0018_tenant_core` (not `0004_tenant_organizations`), and
 `RequireTenant` is not a skeleton — it wraps **all eleven** domain modules via
 `authTenant` in `cmd/api/main.go`, and since 2026-08-25 the app connects as
 `portal_app`, so its policies are actually enforced (see
-[docs/guides/rls-cutover.md](../../../../docs/guides/rls-cutover.md)).
+[docs/operations/rls-cutover.md](../../../../docs/operations/rls-cutover.md)).
 
 Genuinely open, and deliberately deferred at one user with one personal org:
 

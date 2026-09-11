@@ -140,7 +140,7 @@ a tautology.)* Mechanics:
    `users` and `assets` (the media table's real name — not `media_assets`)
    return plausible row counts; spot-query one known row.
 
-Documented as a runbook in `docs/guides/backup-restore.md` (this spec's PR
+Documented as a runbook in `docs/operations/backup-restore.md` (this spec's PR
 ships the doc). Quarterly execution is a calendar practice, not automation.
 
 **Acceptance criteria.**

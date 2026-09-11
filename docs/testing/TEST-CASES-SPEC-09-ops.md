@@ -44,7 +44,7 @@
 | TC-OPS-021 | Selection via manifest, not key-listing | Reliability | P0 | drill reads LATEST.json | selects from manifest (never latest-by-key-listing that a partial upload could poison) | ☐ |
 | TC-OPS-022 | sha256 verified before restore | Data-integrity | P0(S1) | drill downloads dump | verifies sha256 matches manifest before pg_restore | ☐ |
 | TC-OPS-023 | Sanity checks meaningful | Functional | P0 | after restore into scratch DB | migration version ≤ repo latest & high enough for checked tables; `users` + `assets` plausible counts; one known row spot-query | ☐ |
-| TC-OPS-024 | Runbook followable by a stranger | Usability | P0 | someone who didn't write it follows `docs/guides/backup-restore.md` | completes start-to-finish | ☐ [MANUAL] |
+| TC-OPS-024 | Runbook followable by a stranger | Usability | P0 | someone who didn't write it follows `docs/operations/backup-restore.md` | completes start-to-finish | ☐ [MANUAL] |
 
 ## P0.5 — Freshness sentinel
 

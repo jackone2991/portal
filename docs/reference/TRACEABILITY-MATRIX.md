@@ -29,7 +29,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 
 ---
 
-## SPEC-01 — Media ([cases](TEST-CASES-SPEC-01-media.md))
+## SPEC-01 — Media ([cases](../testing/TEST-CASES-SPEC-01-media.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -41,7 +41,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.6 | Event fan-out prerequisite | TC-MEDIA-090…093 | P0 | ✅ | |
 | P1.1/P1.2 | Metadata edit, asset_ready emit | TC-MEDIA-100…102 | P1 | ✅ | |
 
-## SPEC-02 — Comic ([cases](TEST-CASES-SPEC-02-comic.md))
+## SPEC-02 — Comic ([cases](../testing/TEST-CASES-SPEC-02-comic.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -53,7 +53,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.6 | Asset-deletion coupling | TC-COMIC-120…123 | P0 | ✅ | |
 | P1.7/P1.9 | Zip import, chapter events | TC-COMIC-140…148 | P1 | ✅ | |
 
-## SPEC-03 — Bank ([cases](TEST-CASES-SPEC-03-bank.md))
+## SPEC-03 — Bank ([cases](../testing/TEST-CASES-SPEC-03-bank.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -67,7 +67,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.8 | RBAC owner isolation + seeds | TC-BANK-160…164 | P0 | ✅ | |
 | P0.9 | Import scaffolding | TC-BANK-180…181 | P1 | ✅ | |
 
-## SPEC-04 — Notify ([cases](TEST-CASES-SPEC-04-notify.md))
+## SPEC-04 — Notify ([cases](../testing/TEST-CASES-SPEC-04-notify.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -78,7 +78,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.5 | Bell wiring | TC-NOTIFY-090…094 | P0 | ✅ | |
 | P1.1–P1.4 | Web push, SSE, prefs UI, security alert | TC-NOTIFY-110…113 | P1 | ✅ | |
 
-## SPEC-05 — Journal ([cases](TEST-CASES-SPEC-05-journal.md))
+## SPEC-05 — Journal ([cases](../testing/TEST-CASES-SPEC-05-journal.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -88,7 +88,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.4 | Composer + home + sanitization | TC-JRNL-050…059 | P0 | ✅ | |
 | P1.5/P1.6 | Attachments, mood picker | TC-JRNL-070…074 | P1 | ✅ | |
 
-## SPEC-06 — Stream ([cases](TEST-CASES-SPEC-06-stream.md))
+## SPEC-06 — Stream ([cases](../testing/TEST-CASES-SPEC-06-stream.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -98,7 +98,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.4 | Widget rail + failure isolation | TC-STREAM-070…072 | P0 | ✅ | |
 | P1.5/P1.6 | Memories, backfill task | TC-STREAM-090…092 | P1 | ✅ | |
 
-## SPEC-07 — Continue ([cases](TEST-CASES-SPEC-07-continue.md))
+## SPEC-07 — Continue ([cases](../testing/TEST-CASES-SPEC-07-continue.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -108,7 +108,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.4 | Resume UX | TC-CONT-060…064 | P0 | ✅ | |
 | P1.5 | Completion event (latch) | TC-CONT-080…083 | P1 | ✅ | |
 
-## SPEC-08 — People ([cases](TEST-CASES-SPEC-08-people.md))
+## SPEC-08 — People ([cases](../testing/TEST-CASES-SPEC-08-people.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|
@@ -118,7 +118,7 @@ Legend: **Pri** = highest priority among mapped cases · **Cov** = ✅ covered /
 | P0.5 | Frontend (BirthdayCard, empty, gate) | TC-PPL-070…073 | P0 | ✅ | |
 | P1.6/P1.7 | Interactions, avatar | TC-PPL-090…092 | P1 | ✅ | |
 
-## SPEC-09 — Ops ([cases](TEST-CASES-SPEC-09-ops.md))
+## SPEC-09 — Ops ([cases](../testing/TEST-CASES-SPEC-09-ops.md))
 
 | Req | Summary | Test cases | Pri | Cov | Result |
 |-----|---------|-----------|-----|-----|--------|

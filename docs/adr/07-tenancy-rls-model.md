@@ -9,7 +9,7 @@
 > been live for weeks. As of 2026-08-25 the runtime is cut over too — the app
 > connects as `portal_app`, so RLS is **enforced, not inert**, and the isolation
 > test this ADR demands at step 8 exists and passes (8/8). See
-> [docs/guides/rls-cutover.md](../guides/rls-cutover.md).
+> [docs/operations/rls-cutover.md](../operations/rls-cutover.md).
 >
 > **Steps 5–7 stay deferred on purpose** at one user with one personal org:
 > `switch-tenant` / `/admin/organizations`, per-tenant `user_roles`, the
@@ -19,7 +19,7 @@
 > failure.
 **Date:** 2026-07-07
 **Deciders:** kirito
-**Relates:** [ADR-01](./01-v1-scope-cut.md) (v1 cut) · [ADR-02](./02-rbac-model-reconciliation.md) (RBAC) · [ADR-03](./03-single-vps-topology.md) (single-VPS / PgBouncer) · [feature.md §2 + §18 Phase 1](../feature.md) · [D-23] [D-24] [D-25]
+**Relates:** [ADR-01](./01-v1-scope-cut.md) (v1 cut) · [ADR-02](./02-rbac-model-reconciliation.md) (RBAC) · [ADR-03](./03-single-vps-topology.md) (single-VPS / PgBouncer) · [feature.md §2 + §18 Phase 1](../product/feature-inventory.md) · [D-23] [D-24] [D-25]
 
 ## Context
 
