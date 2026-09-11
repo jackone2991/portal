@@ -6,15 +6,16 @@ package db_test
 // This is the repo's first test that touches a real database, and it has to be:
 // every claim it makes is about PostgreSQL policy evaluation, which no in-memory
 // fake can model. It follows the platform/storage/s3_test.go convention and
-// SKIPS unless it is pointed at a database, so `go test ./...` stays hermetic.
+// SKIPS unless it is pointed at a database, so `go test ./...` stays hermetic
+// (except in CI — see setup).
 //
 //	RLS_TEST_ADMIN_URL  superuser/owner DSN — creates and removes fixtures
 //	RLS_TEST_APP_URL    portal_app DSN — the role the app runs as after cutover
 //
-// Run it with:
+// Run it with (passwords are the placeholders 0019 and .env.example ship):
 //
 //	RLS_TEST_ADMIN_URL='postgres://portal:change-me@127.0.0.1:5432/portal?sslmode=disable' \
-//	RLS_TEST_APP_URL='postgres://portal_app:change-me@127.0.0.1:5432/portal?sslmode=disable' \
+//	RLS_TEST_APP_URL='postgres://portal_app:change-me-portal-app@127.0.0.1:5432/portal?sslmode=disable' \
 //	go test ./internal/platform/db -run TestRLS -v
 //
 // It writes only rows it owns, inside two throwaway personal orgs, and removes
@@ -46,6 +47,16 @@ func setup(t *testing.T) *fixture {
 	t.Helper()
 	adminURL, appURL := os.Getenv("RLS_TEST_ADMIN_URL"), os.Getenv("RLS_TEST_APP_URL")
 	if adminURL == "" || appURL == "" {
+		// Locally an unpointed run is a hermetic run. In CI it is a hole: the
+		// `backend` job in .github/workflows/ci.yml provisions a throwaway
+		// Postgres (migrated from zero) for exactly this suite, and a skip
+		// there reads as green while proving nothing — which is how the
+		// isolation guarantee stayed "verified by hand" from the day this file
+		// landed until the job was wired. Any non-empty CI counts; GitHub
+		// Actions sets CI=true.
+		if os.Getenv("CI") != "" {
+			t.Fatal("RLS_TEST_ADMIN_URL / RLS_TEST_APP_URL not set but CI is — the RLS isolation suite must run in CI, not skip; check the `backend` job's env in .github/workflows/ci.yml")
+		}
 		t.Skip("RLS_TEST_ADMIN_URL / RLS_TEST_APP_URL not set — skipping the RLS isolation suite")
 	}
 	ctx := context.Background()
