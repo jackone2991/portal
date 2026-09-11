@@ -73,13 +73,13 @@ was checked, and code moves.
    `api-client.ts` still says "once `make openapi` runs". *Closes when:* the
    `lib/*.ts` clients import `components["schemas"][…]`, or the spec's `info`
    block stops promising a generated client.
-8. **HTTP contracts are unasserted.** No test checks 404-not-403 on cross-owner
-   access over HTTP, an RFC 7807 body from a module handler, or delete-twice →
-   404 ([TRACEABILITY-MATRIX](../reference/TRACEABILITY-MATRIX.md) CC-1, CC-3,
-   CC-8). The two `httptest` suites (`platform/server`, `tenant/middleware`)
-   cover the writer and the transaction wrapper, not a domain route. *Closes
-   when:* `comic` and `bank` have handler tests asserting those three rules
-   (audit Tier A-4).
+8. **HTTP contracts are asserted for comic and bank only.** `comic/http_test.go`
+   and `bank/http_test.go` (2026-09-11) drive the real router over the fakes
+   and pin 404-not-403 on cross-owner access, the RFC 7807 body, and
+   delete-twice → 404 ([TRACEABILITY-MATRIX](../reference/TRACEABILITY-MATRIX.md)
+   CC-1, CC-3, CC-8). The pattern is ~100 lines per module. *Closes when:*
+   movie, music, story, journal, people, notify, layout and social carry the
+   same two tests. (Audit Tier A-4 asked for comic + bank; done.)
 9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
    (matrix SPEC-01 P0.1/P0.2), and `comic.RunImport` — the largest function in
    that module, reachable only with an object store, a tenant runner, a real

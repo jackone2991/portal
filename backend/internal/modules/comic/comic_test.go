@@ -112,6 +112,9 @@ func (r *fakeRepo) SetStatus(_ context.Context, id uuid.UUID, status string) (Co
 	return *c, nil
 }
 func (r *fakeRepo) DeleteComic(_ context.Context, id uuid.UUID) error {
+	if _, ok := r.comics[id]; !ok {
+		return ErrNotFound // mirrors the adapter: :execrows == 0 → not found
+	}
 	delete(r.comics, id)
 	return nil
 }

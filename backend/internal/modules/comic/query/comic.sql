@@ -48,7 +48,9 @@ RETURNING *;
 -- name: UpdateComicStatus :one
 UPDATE comics SET status = $2, updated_at = now() WHERE id = $1 RETURNING *;
 
--- name: DeleteComic :exec
+-- name: DeleteComic :execrows
+-- :execrows so the adapter can tell "deleted" from "was not there" — a second
+-- DELETE must answer 404, not 204 (CC-8).
 DELETE FROM comics WHERE id = $1;
 
 -- ══ Chapters ════════════════════════════════════════════════════════════
