@@ -36,8 +36,9 @@ was checked, and code moves.
    edited. Evidence: [ADR-07 § Consequences](../adr/07-tenancy-rls-model.md),
    `/CLAUDE.md` § Working in this repo. Do **not** change `DATABASE_URL` as a
    side effect of a docs task.
-2. **A dev credential was committed** in `docs/testing/SESSION-HANDOFF-2026-07-12.md`
-   (added `f11cf3f` 2026-07-19, deleted `b54654e` 2026-09-11). It is still in
+2. **A dev credential was committed** in a session note under `docs/testing/`
+   (added `f11cf3f` 2026-07-19, deleted `b54654e` 2026-09-11; the path is
+   deliberately not repeated here — the repository is public). It is still in
    history. *Closes when:* the operator confirms whether that password is valid
    on the host Postgres cluster and rotates it if so. History is **not**
    purged: before rotation a purge is false safety, after rotation the copy in
@@ -101,6 +102,13 @@ was checked, and code moves.
 14. **Rollback errors discarded** in `platform/db/db.go` (3 sites) — audit §5
     bug 8. Lower severity than the commit case (fixed) but hides connection
     death. *Closes when:* they are logged.
+14a. **The pgx idle-connection fix lives only in this deployment's `.env`.**
+    `host.docker.internal`'s NAT drops idle connections and the symptom is a
+    silent 401 on every authenticated route; the cure is
+    `pool_max_conn_idle_time=60s&pool_health_check_period=30s&pool_max_conn_lifetime=30m`
+    on `DATABASE_URL`. `.env.example` does not carry it and `platform/db.NewPool`
+    does not set it, so a fresh clone gets the bug back. *Closes when:* `NewPool`
+    sets the three pool options in code (URL params then become optional).
 15. **`/calendar` and `/weather` are not in the auth middleware matcher**
     (`frontend/src/middleware.ts`) — audit §5 bug 9. *Closes when:* the
     matcher lists every `(app)` route, or matches the group.
@@ -228,7 +236,7 @@ personal org.
 - §4.6 **MILESTONE_CHECKS cited as live** (all sites), **`/auth/callback`
   drift claim**, **ADR status lines disagree**, **`backlog.md` inverted**,
   **`facebook-comparison.md` unlabelled**, **TRACEABILITY-MATRIX names zero
-  tests**, **SESSION-HANDOFF committed with a credential** (file deleted;
+  tests**, **a session note committed with a credential** (file deleted;
   rotation is P0 line 2) — all closed by the ADR-11 work of 2026-09-11.
 - §6 Tier A-3 **`internal/platform/server`** — exists.
 - §6 Tier C-10 **stale module READMEs** — *not* closed; line 35.

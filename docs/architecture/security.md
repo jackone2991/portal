@@ -6,7 +6,7 @@
 > permission decisions (authz), and tenant isolation (data segregation).
 >
 > **Companion docs:**
-> - [archivetech.md](deferred/access-policies.md) — full functional roadmap (UI, modules, phasing)
+> - [deferred/access-policies.md](deferred/access-policies.md) (was `archivetech.md`) — full functional roadmap (UI, modules, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
 > - [ADR-02](../adr/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
 > - [ADR-06](../adr/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
@@ -27,7 +27,7 @@
 
 ## 0. Decision log
 
-The settled answers to the open questions raised in `archivetech.md §9`:
+The settled answers to the open questions raised in `access-policies.md §9` (then `archivetech.md`):
 
 | # | Question | Decision |
 |---|----------|----------|
@@ -180,7 +180,7 @@ A **Tenant** is the top-level data isolation boundary. In Portal, a Tenant ≡ a
                  └────────┬─────────┘
                           ▼
                  ┌──────────────────┐
-                 │   User Group     │  see archivetech.md §3.1
+                 │   User Group     │  see access-policies.md §3.1
                  └────────┬─────────┘
                           ▼
                  ┌──────────────────┐
@@ -288,7 +288,7 @@ The `superadmin` role is *system-level*, not tenant-level. It exists in a virtua
 
 ### 4.1 Access-control model recap
 
-(Detailed in `archivetech.md §2`. Repeated here as the unit-of-decision for this document.)
+(Detailed in `access-policies.md §2`. Repeated here as the unit-of-decision for this document.)
 
 ```text
         Group hierarchy             Policies (reusable bundles)
@@ -365,7 +365,7 @@ Per decision-log #1. The `DELETE /admin/groups/{id}` endpoint:
 
 1. Requires permission `rbac:role:write` (or equivalent group-management perm) — standard authz.
 2. Additionally requires step-up: either header `X-Step-Up-Token: <6 digits>` OR a session flag set within the last 5 min.
-3. On success: cascade deletes children (per `archivetech.md`), bump `token_version` for all members of all affected groups, audit `rbac.group.deleted` with a metadata field listing every cascaded child group.
+3. On success: cascade deletes children (per `access-policies.md`), bump `token_version` for all members of all affected groups, audit `rbac.group.deleted` with a metadata field listing every cascaded child group.
 4. If the actor lacks TOTP enrolment, the endpoint returns `403 totp_required` and the frontend redirects to `/account/security` to enrol.
 
 This same pattern (`requireStepUp`) wraps every other destructive op:

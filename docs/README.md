@@ -37,6 +37,7 @@ frontend, Docker Compose behind Traefik.
 | [`/shared/openapi.yaml`](../shared/openapi.yaml) | The API contract (ADR-10) |
 | [`/scraper/README.md`](../scraper/README.md) | The comic scraper service |
 | [`/.design-sync/NOTES.md`](../.design-sync/NOTES.md) | Design-sync harness facts and capture techniques |
+| [`/.continue/rules/CONTINUE.md`](../.continue/rules/CONTINUE.md) | Orientation for the Continue IDE agent — a pointer to the files above, owns nothing |
 
 ## Reading order for a new contributor
 

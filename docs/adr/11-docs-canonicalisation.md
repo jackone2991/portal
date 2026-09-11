@@ -136,12 +136,17 @@ again.
 - A relative-link check runs in CI as its own job, blocking
   (`scripts/check-links.sh`, job `link-check`). The audit counted 69 broken
   relative links by hand; the script found 95 — the 26 it missed are what a
-  rule that is not checked looks like.
+  rule that is not checked looks like. Three more presence checks joined it on
+  the same day, each for a defect class the link checker cannot see: a status
+  header on every `docs/` file (41 lacked one), retired names cited as if alive
+  (a third agent-instruction file, `.continue/rules/CONTINUE.md`, still called
+  `MILESTONE_CHECKS.md` "live status"), and traceability-matrix evidence
+  naming tests that exist.
 
 ## Action items
 
-- [x] Delete `docs/testing/SESSION-HANDOFF-2026-07-12.md` (committed with
-      credentials; `b54654e`). Rotation is the operator's call — P0 in backlog.
+- [x] Delete the session note under `docs/testing/` that was committed with dev
+      credentials (`b54654e`). Rotation is the operator's call — P0 in backlog.
 - [x] This document.
 - [x] `docs/README.md`, `STYLE.md`, `CLAUDE.md` per Consequences.
 - [x] Move `guides/backup-restore.md` and `guides/rls-cutover.md` to

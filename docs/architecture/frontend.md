@@ -1020,5 +1020,5 @@ These aren't blocking but each needs an answer when the relevant phase opens:
 
 - **[feature.md](../product/feature-inventory.md)** — system-wide design; this doc expands the `frontend/` slice.
 - **[diagrams.md](diagrams.md)** — visual architecture; see "System landscape" diagram for frontend's place in the system, "Authenticated request flow" for the cookie path.
-- **[archivetech.md](deferred/access-policies.md)** — UI mocks anh1/2/3 referenced in §6.1 admin pages.
+- **[deferred/access-policies.md](deferred/access-policies.md)** (was `archivetech.md`) — UI mocks anh1/2/3 referenced in §6.1 admin pages.
 - **[CLAUDE.md](../../CLAUDE.md)** — backend conventions; the frontend's `frontend/CLAUDE.md` (Phase 0 deliverable) will mirror its tone.

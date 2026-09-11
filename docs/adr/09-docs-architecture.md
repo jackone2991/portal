@@ -11,18 +11,18 @@
 days later in `f11cf3f`, and the status tracker it deferred to went with them.
 ADR-11 records what replaced each.*
 
-The documentation tree had grown organically: a flat `doc/en/` mixing genres — a
-decision log (`feature.md`), design specs (`frontend.md`, `authoration.md`), gap
-analyses (`missing-features.md`, `facebook-comparison.md`), deferred designs
-(`archivetech*.md`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
-`doc/vi/`. Three pressures broke it:
+The documentation tree had grown organically: a flat `doc/en/` (retired) mixing genres — a
+decision log (`feature.md`, then; now `product/feature-inventory.md`), design specs (`frontend.md`, `authoration.md` — renamed `security.md`), gap
+analyses (`missing-features.md` — deleted; `facebook-comparison.md`), deferred designs
+(`archivetech*.md` — renamed under `architecture/deferred/`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
+`doc/vi/` (retired). Three pressures broke it:
 
 1. **Mirror tax.** Every edit cost double; drift between mirrors had begun. On
    2026-07-07 the owner switched working language to English only.
 2. **Genre confusion.** Normative (ADRs, module contract), aspirational (long-horizon
    specs), historical (comparisons), and living (backlog) documents were visually
    indistinguishable; the project already needed a standing warning ("trust
-   `MILESTONE_CHECKS.md` over stale doc sections").
+   `MILESTONE_CHECKS.md` over stale doc sections" — a file since deleted in `f11cf3f`).
 3. **New genres arrived** (brainstorm briefs, implementation-ready specs) with no
    structural home.
 

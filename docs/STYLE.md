@@ -27,6 +27,11 @@ file** was checked; a file nobody has checked as a whole says
 edited". There is no per-section variant. CI checks that the field is present
 (`scripts/check-doc-headers.sh`); it does not judge the value.
 
+The four docs checks — links, headers, retired names, and the traceability
+matrix's evidence cells (`scripts/check-matrix-evidence.py`) — run together as
+the `link-check` job. Each is presence-only by design: a machine can prove a
+citation resolves, not that a sentence is true.
+
 Audits (`product/analysis/`) additionally carry `**Triaged:** YYYY-MM-DD →
 backlog.md` once their findings have been turned into backlog lines. Header
 lines and link targets are the only things ever edited in an audit.
@@ -56,7 +61,11 @@ Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE
   rather than the number: `find backend -name '*_test.go' | wc -l` stays true;
   "14 test files" was wrong within a month.
 - A document that no longer exists is cited by its **deleting commit**
-  (`` `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) ``), never linked.
+  (`` `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) ``), never linked. CI
+  (`scripts/check-retired-names.sh`) refuses a retired name on a line that
+  carries no such cue — "deleted in", "then `…`", "renamed", "retired", a
+  `§` citation into a renamed document. Inside an ADR only the fact layer is
+  checked; Decision, Options and Trade-offs may name what they knew.
 
 ## ADR shape (binding)
 

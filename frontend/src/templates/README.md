@@ -67,6 +67,6 @@ Source: `template-main/portal/resources/views/v1/` (Crumina "Olympus" theme).
 - **Popups** and the **SVG sprite** are placeholders; port the Blade markup /
   icon `<symbol>`s when those features are built.
 - Many views are skeletons — the product **v1 scope cut**
-  (`doc/en/architecture/01-v1-scope-cut.md`) defers domain CRUD. This template
+  (`docs/adr/01-v1-scope-cut.md`) defers domain CRUD. This template
   set is the presentation scaffold; data wiring lands per the roadmap. (Note:
   the *template* version "v1" is unrelated to the *product* "v1" milestone.)

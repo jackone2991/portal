@@ -158,7 +158,7 @@ jobs:
   # (or be failed by) the Go toolchain. Blocking: a broken relative link is a
   # build failure, same as stale codegen.
   link-check:
-    name: Docs (relative links resolve · status headers present)
+    name: Docs (links · status headers · retired names · matrix evidence)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -168,3 +168,11 @@ jobs:
       # `Last verified` is a date or the literal `never`. Presence only.
       - name: Check every docs/ document has a status header
         run: bash scripts/check-doc-headers.sh
+      # The link checker cannot see a prose mention of a deleted file. A deny-
+      # list of retired names, allowed only with a retirement cue on the line.
+      - name: Check no retired name is cited as if it still existed
+        run: bash scripts/check-retired-names.sh
+      # Every `file_test.go: TestX` in the traceability matrix must resolve, and
+      # every ✅ row must name its proof. Presence, not sufficiency.
+      - name: Check the traceability matrix names tests that exist
+        run: python3 scripts/check-matrix-evidence.py
