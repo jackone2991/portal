@@ -1,17 +1,20 @@
 # ADR-03: Single-VPS topology and compose-profile envelope for v1
 
-**Status:** Accepted (see Update 2026-07-06)
-**Date:** 2026-05-24
+**Status:** **accepted** 2026-05-24
+**Last verified:** 2026-09-11
 **Deciders:** kirito
-**Affects:** [docker-compose.yml](../../docker-compose.yml), [Makefile](../../Makefile), [feature.md D-8 (observability)], [feature.md D-36/D-39 (live + calls)]
-
-## Update (2026-07-06) — Authentik removed (ADR-06); service set as-built
-
-The core decision stands: single VPS (CCX23), profiles `observability`/`live`/`calls` remain off. But [ADR-06](./06-local-auth-model.md) (2026-07-05) replaced OIDC with local password auth, so `authentik-server`/`authentik-worker`/`mailpit` **never shipped** — every Authentik/Mailpit/OIDC mention below is historical. As-built compose set: `traefik`, `postgres`, `pgbouncer`, `dragonfly` (run with `--default_lua_flags=allow-undeclared-keys` for Asynq), `minio` + `minio-setup` (dev-only, per [ADR-04 update 2026-06-06](./04-storage-tier-budget.md)), `api`, `worker`, `frontend`. With Authentik gone the RAM floor is ~1 GB lower than analysed below; the CCX23 sizing is unchanged (extra headroom). Storage split as-built: no Authentik volume; dev uploads land in MinIO on the `./data/minio` bind-mount — direct-to-R2 applies to deployed environments only (ADR-04).
+**Affects:** [docker-compose.yml](../../docker-compose.yml), [Makefile](../../Makefile), [D-8] (observability), [D-36]/[D-39] (live + calls) in [feature-inventory.md](../product/feature-inventory.md)
 
 ## Context
 
-`docker-compose.yml` currently brings up Traefik + Postgres + PgBouncer + Dragonfly + MinIO + API + Worker + Frontend. The corpus implies additional services land progressively: Authentik (OIDC), Mailpit (dev email), a 5-service observability stack ([D-8]: Loki, Promtail, Prometheus, Tempo, Grafana, GlitchTip), mediamtx (live ingest, [D-36]), LiveKit (group calls, [D-39]), and FFmpeg-bound workers under bursty load.
+*As found on 2026-05-24. Two things changed after the decision and are
+reflected below: [ADR-06](./06-local-auth-model.md) (2026-07-05) removed
+Authentik before it ever shipped, and on 2026-08-21 Postgres moved out of
+compose onto the host cluster. The sizing analysis in this section and in
+Trade-offs rests on Authentik; it is kept as written because it is why CCX23
+was chosen.*
+
+`docker-compose.yml` then brought up Traefik + Postgres + PgBouncer + Dragonfly + MinIO + API + Worker + Frontend. The corpus implied additional services landing progressively: Authentik (OIDC), Mailpit (dev email), a 5-service observability stack ([D-8]: Loki, Promtail, Prometheus, Tempo, Grafana, GlitchTip), mediamtx (live ingest, [D-36]), LiveKit (group calls, [D-39]), and FFmpeg-bound workers under bursty load.
 
 The constraint envelope is **single VPS, ≤ $100/mo**. At reasonable VPS prices, this translates to:
 
@@ -30,32 +33,31 @@ If the observability stack ([D-8]) is brought up, add ~1.1 GB. If LiveKit + medi
 
 ## Decision
 
-**v1 runs on Hetzner CCX23 (4 vCPU / 16 GB / 160 GB) or equivalent (~$30/mo). The following compose profiles are explicitly *off* for v1:**
+**v1 runs on Hetzner CCX23 (4 vCPU / 16 GB / 160 GB) or equivalent (~$30/mo). The following are explicitly *out* for v1** — and none of them exists in `docker-compose.yml`: the file has no `profiles:` key at all, so "off" means "not written", not "behind a flag":
 
-- `--profile observability` (Loki/Prometheus/Tempo/Grafana/GlitchTip) — defer until traffic justifies it. v1 runs with stdout JSON logs.
-- `--profile live` (mediamtx) — live streaming is Phase 10. Not v1.
-- `--profile calls` (LiveKit + coturn) — voice/video is Phase 12. Not v1.
+- observability (Loki/Prometheus/Tempo/Grafana/GlitchTip) — defer until traffic justifies it. v1 runs with stdout JSON logs.
+- live (mediamtx) — live streaming is Phase 10. Not v1.
+- calls (LiveKit + coturn) — voice/video is Phase 12. Not v1.
 
-**The v1 service set is:**
+**The v1 service set, as built** (`grep -E '^  [a-z][a-z0-9_-]+:$' docker-compose.yml`; as decided it also carried `authentik-server` + `authentik-worker`, which ADR-06 removed before they shipped, and `postgres` + `pgbouncer`, which moved to the host on 2026-08-21):
 
 | Service | Role | RAM (idle) | Notes |
 | --- | --- | --- | --- |
 | `traefik` | TLS terminator + reverse proxy | ~50 MB | Single edge; routes by Host + path |
-| `postgres` | Database | ~500 MB | shared_buffers tuned to 25% of RAM (4 GB) |
-| `pgbouncer` | Connection pool | ~30 MB | Transaction-pool mode |
-| `dragonfly` | Redis-compatible cache + Asynq broker | ~256 MB | Bounded with `--maxmemory` (see action items) |
+| *(host)* Postgres 18 | Database | — | **Not in compose.** Runs on the host cluster, reached at `host.docker.internal:5432`; `make up` does not start it. `postgres`/`pgbouncer` are commented out in the compose file with the rollback recipe; the `postgres_data` volume is retained. |
+| `dragonfly` | Redis-compatible cache + Asynq broker | ~256 MB | `--default_lua_flags=allow-undeclared-keys` (Asynq's Lua needs it); **no `--maxmemory` cap** (action item 1) |
+| `minio` + `minio-setup` | Dev S3 origin, bind-mounted at `./data/minio` | ~150 MB | Dev only; prod is R2 ([ADR-04](./04-storage-tier-budget.md)) |
+| `mailpit` | Dev SMTP sink + web UI (`mail.${APP_DOMAIN}`) | ~30 MB | `SMTP_HOST=mailpit` in `.env.example`; prod points `SMTP_*` at a real relay and drops it. Shipped for Portal's own mail (password reset, notify), not for Authentik. |
 | `api` | Go HTTP server (`cmd/api`) | ~150 MB | Single replica |
-| `worker` | Asynq consumer (`cmd/worker`) | ~150 MB idle, 1–2 GB during transcode | TRANSCODE_CONCURRENCY=1 in v1 |
+| `worker` | Asynq consumer (`cmd/worker`) | ~150 MB idle, 1–2 GB during transcode | Three servers; the heavy pool is `heavyConcurrency = 1` (a const, not an env knob) |
+| `scraper` | Python comic scraper (FastAPI + headless Chrome) | Chrome-sized | Not in the original decision; see `scraper/README.md` |
 | `frontend` | Next.js SSR | ~250 MB | Single replica |
-| `authentik-server` | OIDC IdP | ~700 MB | New addition for v1 |
-| `authentik-worker` | Authentik background tasks | ~300 MB | Required by Authentik |
-| `mailpit` | Dev SMTP (Authentik password-reset emails) | ~30 MB | Replace with real SMTP in prod |
 
-Floor ~2.4 GB idle, ~4 GB under load. Headroom on a 16 GB VPS is ample for v1 and gives room to add the observability profile in Phase 0.5 without resizing.
+Headroom on a 16 GB VPS is ample for v1 and gives room to add observability without resizing.
 
 **Cloudflare R2** is the only off-VPS dependency (storage origin; see [ADR-04](./04-storage-tier-budget.md)). DNS via Cloudflare is assumed (free tier sufficient).
 
-**Storage** on the VPS itself is split: Postgres data + Authentik data + Dragonfly snapshots on a volume; uploads bypass MinIO and go directly to R2 — saves the disk that would otherwise hold replicated assets.
+**Storage** on the VPS itself: Dragonfly snapshots and the MinIO bind-mount live on the box (Postgres data lives with the host cluster). Dev uploads land in MinIO; deployed environments upload straight to R2 (ADR-04), which is what saves the disk that would otherwise hold replicated assets.
 
 ## Options considered
 
@@ -107,38 +109,36 @@ Floor ~2.4 GB idle, ~4 GB under load. Headroom on a 16 GB VPS is ample for v1 an
 
 The pivotal question is the **memory pressure from Authentik plus a transcode burst**. Without Authentik, an 8 GB VPS would do. With Authentik, 16 GB is the floor. The alternative (skipping Authentik in favour of a hand-rolled local password store) trades ~1 GB of RAM for 3 days of solo-dev time writing password storage + reset flow + email templates + lockout logic; the time is more valuable than the RAM.
 
-> **Update (2026-07-06):** [ADR-06](./06-local-auth-model.md) reversed this trade — Portal now owns credentials (Argon2id local password auth) and Authentik was removed from the stack. The memory-pressure analysis above no longer binds the VPS sizing.
-
 Cloudflare R2 saving the VPS disk is the second-largest decision. Storing assets locally on the VPS means provisioning ≥240 GB for any meaningful library, which forces CCX33 minimum and a backup strategy (R2 replication or rsync). Sending uploads directly to R2 sidesteps both — see [ADR-04](./04-storage-tier-budget.md).
 
 Disabling the observability profile for v1 is the cheapest call in this ADR. Loki + Prometheus + Tempo + Grafana + GlitchTip cost 5 services and ~1.1 GB for telemetry no one is reading in week 1. `docker compose logs api worker` covers the demo loop.
 
 ## Consequences
 
-**What becomes easier:**
+**What became easier:**
 
-- The deploy script is *one* `docker compose up -d` invocation; no profile flags to remember.
-- Cost ceiling is predictable: $30/mo VPS + ~$5/mo R2 + Cloudflare free tier = ~$35/mo well under budget.
-- Authentik + Mailpit being in the stack from day one means the OIDC flow is testable end-to-end during development (no "wire OIDC later" debt).
+- Deploying is `make up` (`docker compose up -d`, no profile flags — there are no profiles to forget). There is no deploy script beyond the Makefile.
+- Cost ceiling is predictable: $30/mo VPS + ~$5/mo R2 + Cloudflare free tier = ~$35/mo, well under budget.
+- Mailpit in the stack from day one means every mail path (password reset, notification email) is testable end-to-end in dev.
 
-**What becomes harder:**
+**What became harder:**
 
-- No observability — when the demo breaks at the customer's site, the only diagnostics are container logs. Schedule the observability profile for the Phase 0.5 sprint.
-- TRANSCODE_CONCURRENCY=1 means a slow source video can block the queue. Acceptable for v1 (single demo user); becomes a real bottleneck under multi-tenant usage. Phase 1 must add the per-tenant quota wiring [D-13].
-- Authentik adds an entire database schema and admin surface to learn. The Authentik deployment recipe lives in `docs/operations/authentik.md` (referenced in [D-28]) — write at least a stub during the v1 sprint so the next deploy isn't a treasure hunt. *(Moot — Authentik removed, ADR-06.)*
+- No observability — when the demo breaks at the customer's site, the only diagnostics are container logs (`docker compose logs api worker`). Still true on 2026-09-11.
+- Heavy-queue concurrency of 1 means a slow source video blocks the transcode queue. Acceptable for v1 (single demo user); becomes a real bottleneck under multi-tenant usage. The per-tenant quota wiring [D-13] has not landed.
+- Postgres on the host means `make up` does not give you a database; the host cluster must be running and reachable at `host.docker.internal:5432`, and tuning lives with the host, not in compose.
 
 **What we'll need to revisit:**
 
-- When Phase 1 lands tenancy + RLS, the observability profile should land in the same sprint so per-tenant request latency is measurable from day one [D-8].
-- When Phase 10 lands live streaming, mediamtx + concurrent transcodes will push the VPS over 16 GB. Plan the CCX33 upgrade (or split to a media-dedicated VPS) ahead of that sprint.
-- The backup strategy [D-10] (pgbackrest + R2 replication + Dragonfly BGSAVE) is not v1, but should land before any external user touches the system. Add to Phase 0.5.
+- When live streaming lands, mediamtx + concurrent transcodes will push the VPS over 16 GB. Plan the CCX33 upgrade (or split to a media-dedicated VPS) ahead of that sprint.
+- The backup strategy [D-10] shipped as the `ops` module (SPEC-09: `ops:backup_database`, retention, restore drill — [docs/operations/backup-restore.md](../operations/backup-restore.md)). Dragonfly snapshots are not part of it.
+- Observability was to land with tenancy so per-tenant latency is measurable from day one [D-8]. Tenancy landed (ADR-07); observability did not.
 
 ## Action items
 
-1. [ ] Set `dragonfly` `command: ["--logtostderr", "--cluster_mode=emulated", "--maxmemory=2GB"]` in docker-compose to cap memory before it competes with FFmpeg. **Partially superseded (2026-07-06):** shipped command is `["--logtostderr", "--default_lua_flags=allow-undeclared-keys"]` (required by Asynq); the `--maxmemory` cap is still open.
-2. [x] ~~Add `authentik-server`, `authentik-worker`, and `mailpit` services to `docker-compose.yml`. Use Authentik's published recipe; gate them behind no profile (they're always-on for v1).~~ **Obsolete per ADR-06 (2026-07-05):** Authentik dropped; Portal owns credentials.
-3. [ ] Document the disabled profiles in `docker-compose.yml` with a one-line comment: `# v1 disables --profile observability, --profile live, --profile calls — see doc/en/architecture/03-single-vps-topology.md`.
-4. [ ] Add a `Makefile` target `make deploy-v1` that runs `docker compose up -d` with NO profile flags — prevents accidental observability/live in v1.
-5. [ ] Set Postgres `shared_buffers = 4GB`, `effective_cache_size = 10GB`, `max_connections = 50` (PgBouncer pools below it). Document in `docs/operations/postgres-tuning.md` stub.
-6. [ ] In the v1 deployment doc (`docs/operations/deployment.md` — currently absent), record the VPS sizing decision and the rationale for disabled profiles. Cross-reference this ADR.
-7. [ ] Set `TRANSCODE_CONCURRENCY=1` and `MAX_CONCURRENT_TRANSCODES_PER_USER=1` in `.env.example` for v1; bump later when quotas land [D-13]. **Still open (2026-07-06):** `cmd/worker/main.go` currently hardcodes Asynq `Concurrency: 4`; no env knob yet.
+1. [ ] Cap Dragonfly memory before it competes with FFmpeg. Shipped command is `["--logtostderr", "--default_lua_flags=allow-undeclared-keys"]` (Asynq needs the Lua flag); `--maxmemory` is still absent.
+2. [x] ~~Add `authentik-server`, `authentik-worker`, and `mailpit` services.~~ Obsolete per ADR-06: Authentik dropped. `mailpit` shipped on its own merits.
+3. [ ] Document the out-of-scope services in `docker-compose.yml` with a one-line comment pointing at this ADR (`docs/adr/03-single-vps-topology.md`). Not done; the file has no such comment.
+4. [ ] `make deploy-v1` — not done, and moot: with no `profiles:` in the file, plain `make up` cannot bring up anything it shouldn't.
+5. [x] Postgres tuning values (`shared_buffers = 4GB`, `effective_cache_size = 10GB`, `max_connections = 50`) are recorded in [docs/operations/postgres-tuning.md](../operations/postgres-tuning.md). They now apply to the host cluster; the "PgBouncer pools below this" note there is stale (there is no PgBouncer).
+6. [ ] `docs/operations/deployment.md` — still absent. The VPS sizing rationale lives only here.
+7. [x] Transcode concurrency is 1 — as a compile-time constant (`heavyConcurrency` in `cmd/worker/main.go`), which is the OOM guard SPEC-01 P0.1 relies on. Image processing has the env knob (`IMAGE_CONCURRENCY`, default 3, in `.env.example`). `MAX_CONCURRENT_TRANSCODES_PER_USER` does not exist; per-user limits wait on [D-13].
