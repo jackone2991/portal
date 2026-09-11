@@ -12,6 +12,8 @@ import { MediaIndexView } from "./views/library/media/MediaIndexView";
 import { MediaDetailView } from "./views/library/media/MediaDetailView";
 import { MusicIndexView } from "./views/library/music/MusicIndexView";
 import { MusicDetailView } from "./views/library/music/MusicDetailView";
+import { PlaylistsView } from "./views/library/music/PlaylistsView";
+import { PlaylistDetailView } from "./views/library/music/PlaylistDetailView";
 import { DashboardView as BankDashboardView } from "./views/bank/DashboardView";
 import { TransactionsView as BankTransactionsView } from "./views/bank/TransactionsView";
 import { AccountsView as BankAccountsView } from "./views/bank/AccountsView";
@@ -48,6 +50,8 @@ export const v1: TemplateManifest = {
     libraryMediaDetail: MediaDetailView,
     libraryMusic: MusicIndexView,
     libraryMusicDetail: MusicDetailView,
+    libraryMusicPlaylists: PlaylistsView,
+    libraryMusicPlaylistDetail: PlaylistDetailView,
     bankDashboard: BankDashboardView,
     bankTransactions: BankTransactionsView,
     bankAccounts: BankAccountsView,

@@ -64,9 +64,18 @@ export type ProblemType =
   | "account/last-approver"
   | "layout/validation"
   | "layout/unknown-widget"
-  | "music/lookup-disabled";
+  | "music/lookup-disabled"
+  | "music/playlist-not-found"
+  | "music/playlist-exists"
+  | "music/invalid-playlist";
 
 export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
+  // Playlists (0041). The server sends a `detail` on all three, so — like the
+  // account entries below — these are the floor, not what you normally see.
+  "music/playlist-not-found": "This playlist doesn't exist or was already removed.",
+  "music/playlist-exists": "You already have a playlist with that name.",
+  "music/invalid-playlist": "A playlist name needs 1-120 characters.",
+
   "media/unsupported-format":
     "This file format isn't supported. Try converting it and uploading again.",
   "media/file-too-large": "This file is too large to upload.",

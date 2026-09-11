@@ -439,6 +439,23 @@ export async function createPlaylist(name: string, description?: string): Promis
   });
 }
 
+/**
+ * Rename, or set/clear the description.
+ *
+ * The PATCH contract treats an absent key as "leave alone" and an explicit
+ * `null` as "clear", so only send what actually changed — passing the whole
+ * object back would clobber a description this form does not show.
+ */
+export async function renamePlaylist(
+  id: string,
+  patch: { name?: string; description?: string | null },
+): Promise<Playlist> {
+  return api<Playlist>(`/api/v1/playlists/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
 export async function deletePlaylist(id: string): Promise<void> {
   await api<void>(`/api/v1/playlists/${id}`, { method: "DELETE" });
 }

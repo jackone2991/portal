@@ -52,6 +52,10 @@ export interface TemplateManifest {
     libraryMusic: ComponentType;
     /** Music vertical — one track: metadata, edit, publish, play. */
     libraryMusicDetail: ComponentType<{ id: string }>;
+    /** Music vertical (0041) — the caller's playlists. */
+    libraryMusicPlaylists: ComponentType;
+    /** Music vertical (0041) — one playlist, in playlist order. */
+    libraryMusicPlaylistDetail: ComponentType<{ id: string }>;
     /** SPEC-03 §8 — personal ledger (bank): dashboard, transactions, accounts, budgets. */
     bankDashboard: ComponentType;
     bankTransactions: ComponentType;

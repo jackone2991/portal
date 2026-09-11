@@ -358,6 +358,18 @@ export function MusicIndexView() {
             Nhập nhiều bài
           </button>
         )}
+
+        {/* The way into playlists. It sits with the actions rather than the tabs
+            because a playlist is not a third view of this list — it is a place
+            the selection toolbar sends tracks to. */}
+        <Link
+          href={"/library/music/playlists" as Route}
+          className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+          style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+        >
+          <Icon name="music-open-playlist-icon" size={13} />
+          Playlist
+        </Link>
       </div>
 
       {rowErr && <Banner onDismiss={() => setRowErr(null)}>{rowErr}</Banner>}
