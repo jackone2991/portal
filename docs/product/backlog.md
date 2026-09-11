@@ -1,137 +1,221 @@
-# Missing Features — Gap Analysis / Backlog
+# Backlog
 
-> **⚠️ ARCHIVED — do not plan from this file (2026-08-25).**
->
-> This gap analysis predates [ADR-08](../adr/08-life-os-pivot.md)'s life-OS pivot
-> and several rows are now inverted: §1 claims brute-force lockout works (it does
-> not — the limiter has zero importers), §2 calls the thumbnail worker a stub (it
-> is real), §4 calls movie/music/story/comic "just `module.go` + an `api/` stub"
-> (all four are full verticals), and §10 says Bank is deferred pending MFA (SPEC-03
-> shipped it). Its "Suggested next order (P1)" is pre-pivot and should not be
-> followed.
->
-> Live yardsticks: [vision.md](vision.md) + `specs/`. Current state and a
-> sequenced next-order list:
-> [analysis/remaining-work-2026-08-25.md](analysis/remaining-work-2026-08-25.md).
+**Status:** current · **Last verified:** 2026-09-11
 
+The live, triaged list of open work. One line per item; the line says what is
+wrong, where the evidence is, and what closes it. Ordering inside a tier is
+priority. Anything not listed here is either done, deliberately deferred
+(§ Deferred), or has not been found yet.
 
+**How this file is maintained** (ADR-11 rule 6 / [docs/README.md](../README.md)
+§ analysis): every audit in [analysis/](analysis/) must either produce lines here
+or be closed with a reason. This revision triaged the whole of
+[analysis/remaining-work-2026-08-25.md](analysis/remaining-work-2026-08-25.md)
+(every numbered item in its §3–§6) plus the open action items from the ADR
+re-grade of 2026-09-11. Items the audit raised that were already closed by the
+time of triage are listed once under § Closed so the audit can be checked off
+line by line. The previous `backlog.md` (a 2026-07 Facebook-parity gap analysis,
+archived in place on 2026-08-25) was replaced wholesale on 2026-09-11;
+`git log --follow -- docs/product/backlog.md` finds it.
 
-**Last verified:** 2026-07-06 — snapshot taken after the v1 demo loop closed; see `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) for the living status tracker.
-
-What is built today vs. what the spec ([feature.md](feature-inventory.md)) describes. This is
-the **backlog after the v1 demo loop closed** (auth → upload → transcode → HLS
-playback → logout). Use it to pick the next thing to build.
-
-**Legend:** ✅ done · ◐ partial (UI-only or schema-only) · ○ not started · ⛔ deferred (out of v1 scope, [ADR-01](../adr/01-v1-scope-cut.md)).
-**Priority:** `P1` = obvious next step / unblocks a shipped surface · `P2` = soon · `P3` = later.
-
-> The recurring theme: **the Olympus UI shell is shipped, but most of it is
-> sample data + local-only actions.** The biggest wins are wiring existing screens
-> to real backends (posts, friends, messages, notifications, search).
+Verify a line before working it — `Last verified` is the date the *whole file*
+was checked, and code moves.
 
 ---
 
-## 0. Baseline — what actually works
-- ✅ Local password auth (login/register/refresh/logout, remember-me, brute-force lockout, RBAC engine, audit).
-- ✅ Media slice: upload → `ffmpeg` HLS → `ready` → Vidstack playback (`/upload`).
-- ✅ Object storage (`platform/storage`, MinIO/R2), Asynq worker, Postgres+PgBouncer+Dragonfly, Traefik, CI + tests.
-- ✅ Olympus light-theme UI shell (header, left menu, right friends panel, newsfeed, profile/notification dropdowns).
+## P0 — security and correctness
 
----
+1. **RLS is decorative on every fresh install.** `.env.example` defaults
+   `DATABASE_URL` to `portal` (a superuser, bypasses every policy); `make up`
+   copies it to `.env`. This deployment's `.env` was cut over to `portal_app`
+   on 2026-08-25 and RLS is live here — nowhere else. *Closes when:* the
+   example default is `portal_app`, after a run against real data proves no
+   query relied on superuser rights (a query that did will fail at the role
+   switch, not before). Then re-word the `0019`/`0020` migration headers in
+   the next migration that touches those tables — applied files are not
+   edited. Evidence: [ADR-07 § Consequences](../adr/07-tenancy-rls-model.md),
+   `/CLAUDE.md` § Working in this repo. Do **not** change `DATABASE_URL` as a
+   side effect of a docs task.
+2. **A dev credential was committed** in `docs/testing/SESSION-HANDOFF-2026-07-12.md`
+   (added `f11cf3f` 2026-07-19, deleted `b54654e` 2026-09-11). It is still in
+   history. *Closes when:* the operator confirms whether that password is valid
+   on the host Postgres cluster and rotates it if so. History is **not**
+   purged: before rotation a purge is false safety, after rotation the copy in
+   history is harmless.
+3. **The RLS test suite does not run in CI.** `platform/db/rls*_test.go` (19
+   tests) are gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `ci.yml` sets
+   neither, so the isolation guarantee the architecture rests on is verified
+   only by hand. *Closes when:* the `backend` job starts a Postgres service,
+   applies migrations, and sets both URLs. (Audit §3.1 "no test opens a Postgres
+   connection" — the tests now exist; the CI run does not.)
+4. **`comic.SaveProgress` skips the published-or-owner gate** — audit §5 bug 5.
+   `comic/service.go` `SaveProgress` validates chapter↔comic and page↔chapter
+   membership but never applies the visibility check `ReaderPagesVisible`
+   does; the route has no owner guard. An existence oracle over other users'
+   drafts, plus junk rows. RLS under `portal_app` limits the blast radius but
+   does not close it (the row is the caller's own tenant). *Closes when:* the
+   handler calls the same gate and a test in `comic_test.go` proves a draft of
+   another user is 404.
+5. **`media/api.SignedURL` returns `("", nil)`** — audit §5 bug 7. A caller gets
+   a valid-looking empty URL and no error. `movie`/`music` are its intended
+   consumers. *Closes when:* it either signs or returns an error.
 
-## 1. Account & Auth — module built, features missing
-The auth core is solid; these are the surrounding account features (several have UI already).
-- ○ **P1** Password reset (`forgot` / `reset` with emailed single-use token) — needs the notification module. Today: admin/CLI only.
-- ○ **P1** Change password (authenticated) — UI menu item exists ("Profile Settings"), no endpoint.
-- ○ **P2** Sessions / devices page — `GET /me/sessions` + revoke a specific session (query `ListActiveRefreshTokensForUser` already exists; no handler/UI).
-- ○ **P2** MFA / TOTP enrol + step-up (`/auth/totp/*`) — speced ([D-27]/[D-28]), no code. Needed before the bank module.
-- ○ **P2** Email verification on register.
-- ○ **P3** "Login with Google" (social login) — now Portal-owned (ADR-06), previously an IdP one-liner.
-- ○ **P2** Profile: real `users` profile fields (avatar upload, bio, locale/timezone editing) + a Profile page. Avatars are initials-only today.
-- ○ **P2** Admin: user list / disable / role assignment UI + endpoints (`users:*`, `rbac:role:*` perms exist; no handlers/pages).
+## P1 — contract and coverage
 
-## 2. Media — slice built, gaps
-- ○ **P1** Thumbnail worker — `worker.HandleThumbnail` is still a stub (extract a frame → upload → store).
-- ○ **P1** Asset management: `DELETE /assets/{id}` (+ purge storage), rename/metadata edit; a media **library page** (list beyond the small `/upload` list).
-- ○ **P2** Multi-rendition HLS ladder (240/480/720/1080) + master playlist — today is a single rendition.
-- ○ **P2** Playback access control — HLS is currently **public**; add signed/short-lived playback or per-asset visibility.
-- ○ **P2** Direct presigned upload for prod (browser→bucket): add a browser-reachable `PublicEndpoint` (Traefik route for MinIO's S3 API / R2 host). Dev uses the API-proxied path.
-- ○ **P3** `media:asset_ready` event emit + a subscriber (wires into the domain verticals below).
-- ○ **P3** Audio/image asset kinds (schema allows `audio`/`image`; pipeline only handles video).
+6. **No handler implements the generated `ServerInterface`** (ADR-10 action
+   item). Every handler is hand-written plain-chi; the `openapi` CI job proves
+   codegen matches the spec, not that handlers do. *Closes when:* one module is
+   retrofitted and the pattern is documented in `backend/MODULES.md`.
+7. **The frontend does not consume `types.gen.ts`** (ADR-10). One importer
+   (`lib/comic-sync.ts`); every other `lib/*.ts` hand-declares its types and
+   `api-client.ts` still says "once `make openapi` runs". *Closes when:* the
+   `lib/*.ts` clients import `components["schemas"][…]`, or the spec's `info`
+   block stops promising a generated client.
+8. **HTTP contracts are unasserted.** No test checks 404-not-403 on cross-owner
+   access over HTTP, an RFC 7807 body from a module handler, or delete-twice →
+   404 ([TRACEABILITY-MATRIX](../reference/TRACEABILITY-MATRIX.md) CC-1, CC-3,
+   CC-8). The two `httptest` suites (`platform/server`, `tenant/middleware`)
+   cover the writer and the transaction wrapper, not a domain route. *Closes
+   when:* `comic` and `bank` have handler tests asserting those three rules
+   (audit Tier A-4).
+9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
+   (matrix SPEC-01 P0.1/P0.2). *Closes when:* the image pipeline's cap/variant/
+   orientation rules and the poster's audio-skip are unit-tested against fixtures.
+10. **`make test` fails** — `vitest run` with zero test files exits non-zero;
+    CI never runs it (audit §3.1, Tier C-13). *Closes when:* either a first
+    frontend test exists or `--passWithNoTests` is set, and `pnpm test` is in
+    the `frontend` CI job.
+11. **oapi-codegen is pinned in CI but not locally** (ADR-10). No `tool`
+    directive in `backend/go.mod`; a developer on another version produces a
+    diff the gate rejects. *Closes when:* `go.mod` carries the tool directive
+    and `make openapi` uses `go tool oapi-codegen`.
+12. **No spec lint** (ADR-10 decision item 5a). The `openapi` job parses the
+    YAML and diffs codegen; nothing checks the spec for structural mistakes.
+    *Closes when:* `redocly lint` or `vacuum` runs in the job.
+13. **Bank and comic never assert their own event emits** (matrix SPEC-03 P0.7,
+    SPEC-02 P1.9). Consumers are tested; `emitTx` / `chapter_published` are
+    not. *Closes when:* each service test asserts the publish.
+14. **Rollback errors discarded** in `platform/db/db.go` (3 sites) — audit §5
+    bug 8. Lower severity than the commit case (fixed) but hides connection
+    death. *Closes when:* they are logged.
+15. **`/calendar` and `/weather` are not in the auth middleware matcher**
+    (`frontend/src/middleware.ts`) — audit §5 bug 9. *Closes when:* the
+    matcher lists every `(app)` route, or matches the group.
+16. **Tenant-prefixed object keys never happened** (ADR-04 decision item 4).
+    Keys are `uploads/<id>/…` and `hls/<id>`; isolation is by RLS on `assets`
+    and by presigned URLs, not by prefix. *Closes when:* a decision is recorded —
+    either the prefix is dropped from ADR-04 as unnecessary under RLS, or a
+    migration of every object is scheduled.
+17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
+    depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
 
-## 3. Social layer — UI shipped, backend missing (the big gap)
-Every item here has a **screen already built with sample data**; none has a backend. See [feature.md §9](feature-inventory.md).
-- ○ **P1** **Posts / newsfeed API** — the composer posts to local state only. Need `posts` table + create/list/feed endpoints + wire `HomeView` composer & feed.
-- ○ **P1** **Comments, likes/reactions, shares** on posts — counters are static.
-- ○ **P1** **Friend graph** — friend requests (the header dropdown), accept/decline, friends list, "Friend Suggestions", friend groups (Close Friends/Family/Uncategorized). All sample data.
-- ○ **P1** **Notifications (real)** — the bell dropdown + "Activity Feed" are hard-coded; need a notifications store + `GET /me/notifications` + SSE/poll + web-push.
-- ○ **P1** **Messaging / chat** — "Olympus Chat" bar + messages dropdown are decorative; need conversations/messages + realtime.
-- ○ **P1** **Search** — the header "Search here people or pages…" and "Find Friends" have no backend/results page.
-- ○ **P2** **Communities / Favourite Pages** — left-menu "Fav Pages Feed" + "Pages You May Like" widget; no pages entity.
-- ○ **P2** **Events / birthdays / calendar** — left-menu "Calendar and Events" / "Friends Birthdays" + Birthday card + calendar widget are static.
-- ○ **P2** **Weather widget** — static; wire a weather API (or drop for v1).
-- ○ **P3** Profile pages (about/photos/videos/friends), stories (24h ephemeral), follow graph, hashtags/mentions, bookmarks, feed ranking, moderation — all in §9, none started.
+## P2 — specced, not built (from audit §3.3, still absent 2026-09-11)
 
-## 4. Domain verticals — skeleton only
-`movie` / `music` / `story` / `comic` are just `module.go` + an `api/` stub (no queries, handlers, migrations, or real UI). `/library/comic` and `/library/novel/[id]` render placeholder views.
-- ○ **P2** **Movies** ([feature.md §4]): `movies` schema + CRUD + list/detail pages, playback wired to a media asset, publish flow.
-- ○ **P2** **Music** (§5): tracks/playlists + player (the "Music & Playlists" menu item).
-- ○ **P2** **Stories** (§6): chapters/reader (the novel detail view is a skeleton).
-- ○ **P2** **Comics** (§7): pages/reader (the comic index view is a skeleton).
-- Each needs: migration (`000N_<name>_…`), `query/`, repository, service/handler, `MountHTTP`, and a real frontend view. They all depend on **media** for assets (already available).
+18. SPEC-05 P1.5 **journal photo attachments** — `asset_ids` column exists, the
+    handler fails closed on it, and the frontend works around it by encoding
+    photo + location links **inside the markdown body**
+    (`frontend/src/lib/attachments.ts`). That is a shipped UX resting on a
+    workaround; the P1.5 backend would let the body stop carrying structure.
+    The highest-value single P1 left (audit D-17).
+19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
+    `journal:backfill_stream`.
+20. SPEC-06 **stream is blind to movie/music/story publishes** — `notify`
+    consumes `movie:published` / `music:track_published` / `story:published`;
+    `journal` does not, so publishing one produces a bell but no stream card.
+21. SPEC-04 P1.1 **Web Push** (table exists, handler is a stub), P1.2 **SSE**,
+    P1.3 **notification preferences** route (table exists), P1.4
+    **`account.security_alert`** on refresh-reuse. P2 `notify:purge_old` is
+    registered and never scheduled — dead code until a `scheduler.Register`.
+22. SPEC-03 P1.10 **receipt attachments**, P1.12 **`bank:budget_exceeded`**,
+    P1.13 **structured transfer fees** (`fee_amount`). (P1.11 monthly report:
+    `GET /bank/report` and `/bank/reports` shipped with 0042 — check the spec's
+    acceptance before calling it done.)
+23. SPEC-10 phases 2–8 — savings goals, recurring, credit-card cycles,
+    investments/net worth, automation rules, splits/tags, shared ledgers — in
+    the order the spec gives. Phase 1 (debts) shipped `017ebfe`.
+24. SPEC-02 P1.8 **bookmarks** (`comic_bookmarks`) — note the P-number collision
+    with the shipped external-source sync (audit §4.6); fix the spec numbering
+    when this is picked up.
+25. SPEC-07 P2 **comic leg of `/continue`** — `handleContinue` calls only
+    `mediaMod.API().Continue`.
+26. SPEC-08 P1.6 **interactions log**, P1.7 **avatar reap** (`people` is not
+    subscribed to `media:asset_deleted`).
+27. SPEC-09 P1.7 **owner takeout** (`ops_exports`, `/me/export`, `ops:takeout`);
+    P1.6 queue console.
+28. **Movie and story have no frontend.** `NovelDetailView.tsx` is still the
+    26-line placeholder; no `/movies` route exists. Music got its UI
+    (library, import, playlists, player) in 0038–0041. Finish these to the
+    music standard or revert them (audit Tier D-14) — do not leave them.
+29. **Story reading progress** and **movie/story FTS** (module READMEs' genuinely
+    open items) — FTS is explicitly not now (no corpus at n=1).
+30. **`docs/operations/deployment.md` and `r2-setup.md`** do not exist (ADR-03
+    item 6, ADR-04 item 7). The VPS sizing rationale and the R2 CORS JSON live
+    nowhere but the ADRs.
+31. **Dragonfly `--maxmemory` cap** (ADR-03 item 1) and the worker `/tmp` cap
+    (ADR-04 item 6) — both absent; the OOM guard is `heavyConcurrency = 1`.
+32. **Prove the restore drill against a real nightly dump and record the date**
+    (SPEC-09 P0.4; audit Tier D-16). The script exists; whether it has ever
+    passed is not in the tree.
+33. **`frontend/src/templates/README.md` still describes OIDC auth** and
+    `frontend/CLAUDE.md` names React Hook Form as the form-state owner
+    (D-32) — RHF is not in `package.json`. D-33 "RSC-first" is inverted in
+    practice (65 `"use client"` files). Either fix the docs or the code;
+    currently both claim the other.
+34. **`feature-inventory.md` has no `D-30`** (sequence jumps D-29 → D-31) and
+    still writes `app.tenant_id` in three §18 bullets under a superseding note.
+35. **Module `README.md` "Open work" sections** — audit §4.5 listed seven that
+    name migrations that do not exist and work that is done. Not re-verified
+    line by line in this triage; treat each as suspect until its
+    `Last verified` is bumped.
+36. **`docs/testing/TEST-PLAN.md`** still describes a container-backed L2
+    integration layer that does not exist, says `make up` starts Postgres and
+    PgBouncer, and says CI runs `vitest` (audit §4.6). Correct it when line 3
+    or line 10 lands, since both change what is true.
 
-## 5. Notifications module (`notify:*`) — not started
-- ○ **P1** New module owning the reserved `notify:*` tasks ([MODULES.md §5.2](../../backend/MODULES.md)): email (SMTP/provider), web-push, in-app. Unblocks password reset, friend-request/notification delivery, refresh-reuse alerts. `account` already stubs `RegisterTasks` for it.
+## Deferred — not a gap (ADR-01 as re-affirmed by ADR-08; audit §7)
 
-## 6. Multi-tenancy & RLS — deferred (⛔ for v1)
-- ⛔ `tenant` module (organizations, memberships), Postgres **RLS** bootstrap, `cmd/sysjobs` (BYPASSRLS). Skeleton only; explicitly cut from v1 ([ADR-01](../adr/01-v1-scope-cut.md), [feature.md §2]). Revisit if multi-org is needed.
+Social layer beyond `social` connections (posts, feed ranking, messaging,
+groups) · advanced social (D-35) · creator economy (D-40) · marketplace · ML
+safety (D-38) · LiveKit/mediamtx (D-36/D-39) · the observability stack (D-8;
+ADR-07's "same sprint as tenancy" coupling is dropped, not ignored) · real bank
+integration and with it MFA/TOTP (D-27/D-28 gate on credentials the ledger does
+not hold) · full-text search (no corpus at n=1) · native apps, i18n, push
+providers (D-5/D-6) · ADR-07 steps 5–7 (`switch-tenant`, `/admin/organizations`,
+per-tenant `user_roles`, `/t/{org}` prefix, `cmd/sysjobs`) at one user with one
+personal org.
 
-## 7. Platform / Ops
-- ○ **P2** Wire the existing `platform/middleware` IP rate-limiter onto `/auth/*` at the router (built, unused).
-- ○ **P3** Observability stack (metrics/logs/traces) — cut for v1 (`--profile observability`), 5-service stack in the long-horizon spec.
-- ○ **P3** `cmd/sysjobs` binary (cross-tenant batch) — planned, not present.
-- ○ **P3** Backups / retention (Postgres dumps, R2 lifecycle), health/readiness beyond `/healthz`.
+## Closed since the 2026-08-25 audit (so it can be checked off)
 
-## 8. Frontend — pages & wiring
-- ◐ **P1** Placeholder actions made real: profile dropdown (Profile Settings, Create Fav Page, status), notification/friend "Settings"/"⋯", left-menu items with no route (Friend Groups, Weather App, Community Badges, Account Stats, Manage Widgets).
-- ○ **P1** Header **search** input + results page; **Find Friends** page.
-- ○ **P2** Missing pages: Profile, Account Settings, Messages, Friends, Events, Communities, Notifications, Search results, real Library detail pages.
-- ○ **P3** Replace all UI **sample data** with API calls as the modules above land.
-- ○ **P3** Bundle hls.js (Vidstack currently loads it from CDN → needs internet for playback).
-- ○ **P3** Frontend tests (none yet); a11y pass on the dropdowns/menus.
-
-## 9. API contract (OpenAPI)
-- ○ **P2** `shared/openapi.yaml` exists but handlers are **hand-written** and the generated stubs (`internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) are **not generated/committed**. The spec's auth paths have since been reconciled (`/auth/register` added, retired `/auth/callback` removed), so the remaining gap is that CI's `openapi` job only checks the spec **parses**, not that it matches the handlers — real spec↔handler drift can still slip through. Decide: adopt `oapi-codegen`/`openapi-typescript` (then wire full openapi-drift in CI), or drop the spec as the source of truth.
-
-## 10. Deferred big modules (⛔ out of v1)
-Speced in feature.md, explicitly cut by [ADR-01]:
-- ⛔ **Bank / Personal Finance** (§8) — accounts, transactions, budgets, net worth; needs MFA/step-up first.
-- ⛔ **Creator economy & monetisation** (§10), **Marketplace / commerce** (§11).
-- ⛔ **Advanced social** (§9.13–9.37): reels, live streaming, audio rooms, karma, wiki, AMAs, verification, etc.
-- ⛔ **ML safety / trust & safety dashboard** (§12.3), **company microsite** (§13).
-
----
-
-## Suggested next order (P1)
-1. **Notifications module** (`notify:*` + email) — unblocks password reset and every social notification.
-2. **Posts + comments/likes** — makes the newsfeed real (the flagship screen).
-3. **Friend graph** — friend requests/accept + friends list (wires the header dropdown + right panel).
-4. **Search** — people/pages, header input + results.
-5. **First domain vertical (Movies)** — proves the media→domain pattern end-to-end.
-6. **Media**: thumbnail worker + delete + library page.
-
-
-Tôi phân tích toàn bộ gaps để tránh tạo spec thừa/trùng:
-
-Gap trong audit	Cần spec mới?
-Notification (ưu tiên #2)	✅ SPEC-04 (chưa có, backbone)
-Hoàn thiện media (thumbnail, DELETE, asset_ready) — ưu tiên #3	❌ Đã nằm trong SPEC-01 (P0.2 / P0.3 / P1.2)
-CI drift-check OpenAPI	❌ Việc CI, không phải product spec
-Social backend (feed/friends/chat)	◐ Rất lớn → cần nhiều spec, và phụ thuộc backbone; để sau
-Time domain / Learning	◐ Life-OS pillar, xa hơn; mới ở mức brief
-Bước tiếp (nếu bạn muốn)
-Các spec mà audit ngụ ý cho tương lai — tôi có thể viết tiếp khi bạn cần:
-
-SPEC-05: Social feed (posts/reactions/comments) — nền của tầng social.
-SPEC-06: Friend graph (request/accept/suggestions/groups).
-SPEC-07: Time domain (calendar/tasks/reminders — tiêu thụ notification).
+- §5 bug 1 **silent commit failure** — `require_tenant.go` now commits before
+  the response is released; `require_tenant_test.go: TestMutatingRequestCommitFailureBecomes500`.
+- §5 bug 2 **`imageSrv.Shutdown()`** — present in `cmd/worker/main.go`.
+- §5 bug 3 / §3.1 **no brute-force protection on `/auth/login`** — the audit
+  looked at `platform/middleware/ratelimit.go` (no importers) and missed the
+  handler's own guard: `loginThrottled` / `recordLoginFailure` in
+  `account/handler/auth.go` (5 failures per 15 min per IP and per account,
+  Redis-backed, 429), wired since `05b6cf7` 2026-07-05. **Still untested.**
+- §5 bug 4 / §4.1 **media worker at RLS cutover** — `media.Deps` carries the
+  tenant scope; `rls_test.go: TestRLSVariantInsertResolvesTenantFromTheScope`.
+- §5 bug 6 **`HasPermission` returns false** — implemented when the layout
+  module needed it (0036).
+- §3.1 **RFC 7807 not the contract** — `platform/server.Problem` is the single
+  writer since `ac4f71d` 2026-08-25; the four shims delegate.
+- §3.1 **~30 endpoints outside OpenAPI** — the spec is 111 paths with tags for
+  every module including movies/music/stories/tenant/platform.
+- §3.2 **cutover chain** steps 1 (runtime), 4, 8 — done here 2026-08-25;
+  ADR-07 re-graded.
+- §3.3 SPEC-01 P1.1 `PATCH /assets/{id}` — mounted (visibility only, 0032); metadata edit itself is still open, folded into the matrix's P1.1 ⚠.
+- §3.4 **music** is no longer half-built (0038–0041); movie/story still are
+  (line 28).
+- §4.2 **`events.md` wrong** — re-derived 2026-08-25.
+- §4.3 **`.env.example` points at dead hosts** — hosts fixed
+  (`host.docker.internal`); the *role* default is P0 line 1.
+- §4.4 **refresh TTL 30 d vs 24 h** — CLAUDE.md and ADR-06 say 24h.
+- §4.6 **MILESTONE_CHECKS cited as live** (all sites), **`/auth/callback`
+  drift claim**, **ADR status lines disagree**, **`backlog.md` inverted**,
+  **`facebook-comparison.md` unlabelled**, **TRACEABILITY-MATRIX names zero
+  tests**, **SESSION-HANDOFF committed with a credential** (file deleted;
+  rotation is P0 line 2) — all closed by the ADR-11 work of 2026-09-11.
+- §6 Tier A-3 **`internal/platform/server`** — exists.
+- §6 Tier C-10 **stale module READMEs** — *not* closed; line 35.
+- §6 Tier C-12 **retire the old backlog / label facebook-comparison** — this file.

@@ -2,7 +2,7 @@
 
 **Status:** **accepted** 2026-07-11 (drafted 2026-07-08, from the 2026-07-08 gap audit)
 **Last verified:** 2026-09-11
-**Relates to:** [backlog §9](../product/backlog.md) · specs/README "API contract" convention · [ADR-09](09-docs-architecture.md) canonical-source rule · `backend/MODULES.md` (which still does not state the rule — see action items)
+**Relates to:** backlog §9 as it stood in 2026-07 (that file was replaced on 2026-09-11; `git log --follow -- docs/product/backlog.md`) · specs/README "API contract" convention · [ADR-09](09-docs-architecture.md) canonical-source rule · `backend/MODULES.md` § 8 (states the rule since 2026-09-11)
 
 ## Context
 
@@ -148,10 +148,11 @@ What followed, checked against the tree on 2026-09-11:
   a review question.
 - The spec's own `info`-block claim ("stubs and client are generated from it")
   is true. CLAUDE.md's "don't hand-edit generated files" protects real files.
-- **MODULES.md §8 did not gain its step.** `grep -ci openapi backend/MODULES.md`
-  is 0; a new module that follows the checklist today still fails the `openapi`
-  job. ADR-09's canonical-source rule holds: the contract stays at
-  `shared/openapi.yaml`; `docs/reference/` points at it.
+- **MODULES.md §8 gained its step on 2026-09-11** — two months after this ADR
+  said it would (`grep -ci openapi backend/MODULES.md` was 0 until then; a new
+  module that followed the checklist failed the `openapi` job). ADR-09's
+  canonical-source rule holds: the contract stays at `shared/openapi.yaml`;
+  `docs/reference/` points at it.
 
 ## Action items
 
@@ -173,8 +174,8 @@ What followed, checked against the tree on 2026-09-11:
 - [x] Every spec since SPEC-01 added its paths spec-first (the gate makes the
       alternative fail CI). The "cutover PR before SPEC-01" as scoped — handlers
       onto `ServerInterface` — never landed; only the gate did.
-- [ ] `backend/MODULES.md` §8: add "add paths to `shared/openapi.yaml`;
-      `make openapi`; commit the generated files" (ADR-11 backlog).
+- [x] `backend/MODULES.md` §8: "declare the endpoints in `shared/openapi.yaml`
+      first; `make openapi`; commit the generated files" (2026-09-11).
 - [x] CLAUDE.md generated-files note names the real files.
 - [ ] Make the frontend consume `types.gen.ts` beyond `comic-sync.ts`, or
       strike the "typed client" claim from the spec's `info` block.

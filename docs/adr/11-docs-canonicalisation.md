@@ -147,14 +147,14 @@ again.
 - [x] Move `guides/backup-restore.md` and `guides/rls-cutover.md` to
       `operations/`; `testing/TRACEABILITY-MATRIX.md` to `reference/`.
 - [x] Fix the broken relative links (95 → 0), then enable the link-check job.
-- [ ] Rewrite the fact layer of ADR-01…10 (ADR-10 and ADR-03 first — they
+- [x] Rewrite the fact layer of ADR-01…10 (ADR-10 and ADR-03 first — they
       carry 23 of the 79 — then review before the rest).
 - [x] Move ADR-00 to `analysis/`.
-- [ ] Re-grade `TRACEABILITY-MATRIX.md` against the `_test.go` files that
+- [x] Re-grade `TRACEABILITY-MATRIX.md` against the `_test.go` files that
       exist, with an `Evidence` column (`file:func`) — a ✅ with no evidence is
       what produced 47 rows at 100%.
-- [ ] Replace the archived `product/backlog.md` with a live one triaged from
+- [x] Replace the archived `product/backlog.md` with a live one triaged from
       the 2026-08-25 audit; RLS `.env.example` default and credential rotation
       lead it.
-- [ ] `backend/MODULES.md` § 8: add the OpenAPI step the new-module checklist
+- [x] `backend/MODULES.md` § 8: add the OpenAPI step the new-module checklist
       is missing (a module that follows the checklist today still fails CI).

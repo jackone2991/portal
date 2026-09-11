@@ -281,6 +281,8 @@ Other modules that need to **read** another's table must:
 
 Joining across owners is forbidden. If a query needs data from two owners, refactor to a service-level call that orchestrates both APIs.
 
+**Tenant-scoped tables carry RLS from birth** ([ADR-07](../docs/adr/07-tenancy-rls-model.md)): the migration that creates the table also runs `ALTER TABLE … ENABLE ROW LEVEL SECURITY`, `ALTER TABLE … FORCE ROW LEVEL SECURITY`, and creates the `tenant_isolation` policy on `tenant_id = current_setting('app.current_tenant')::uuid` (both `USING` and `WITH CHECK`). A table without a policy is readable by every tenant the moment the app connects as `portal_app`; a policy added in a later migration leaves a window in history where it was not. Queries against such a table run only inside a request transaction opened by `RequireTenant` / `db.BeginTenantScope` — an unscoped read errors outright rather than leaking.
+
 ### What about views?
 
 Read-only **denormalized projection views** are allowed across owners, *as long as* they are owned by exactly one module. Example: a "discovery" module might own a materialized view that joins movies + music + stories for global search. The view is then a contract — its source modules emit events, the discovery module rebuilds.
@@ -334,10 +336,12 @@ Checklist:
          emit_json_tags: true
          emit_interface: true
    ```
-4. Write the first migration `000N_<name>_init.up.sql` + matching `down.sql`.
-5. In `cmd/api/main.go`, construct the module and call `MountHTTP` under the right middleware chain.
-6. In `cmd/worker/main.go`, call `RegisterTasks`.
-7. Add `internal/modules/<name>/README.md` documenting: what the module owns, which modules it talks to, which events it emits/subscribes.
+4. Write the first migration `000N_<name>_init.up.sql` + matching `down.sql`. Every tenant-scoped table gets `ENABLE` + `FORCE ROW LEVEL SECURITY` and a `tenant_isolation` policy **in the same migration** (§6).
+5. **Declare the endpoints in `shared/openapi.yaml` first**, then run `make openapi` and commit the regenerated `backend/internal/handler/api.gen.go` + `frontend/src/lib/types.gen.ts` alongside the handlers. The spec is the contract ([ADR-10](../docs/adr/10-openapi-contract-direction.md)); CI's `openapi` job regenerates and fails on any diff, so a module whose paths are not in the spec — or whose codegen is stale — does not merge. Error bodies are RFC 7807 via `platform/server.Problem`; problem-type URIs are `<module>/<slug>` and the frontend catalogue in `frontend/src/lib/problems.ts` gets a line per new type.
+6. In `cmd/api/main.go`, construct the module and call `MountHTTP` under the right middleware chain.
+7. In `cmd/worker/main.go`, call `RegisterTasks` — on the **right Asynq server** (heavy / image / light; see `/CLAUDE.md` § Job queue). Cross-tenant sweeps go through `ForEachTenant`, never an unscoped query.
+8. Add the module's isolation block to `backend/.golangci.yml` (depguard; the template comment is in the file) — §4 is only enforced for modules that are listed.
+9. Add `internal/modules/<name>/README.md` documenting: what the module owns, which modules it talks to, which events it emits/subscribes. Register the events in `docs/reference/events.md`.
 
 ---
 
