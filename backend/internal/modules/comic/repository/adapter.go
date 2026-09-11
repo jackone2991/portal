@@ -121,8 +121,17 @@ func (a *Adapter) SetStatus(ctx context.Context, id uuid.UUID, status string) (c
 	return toComic(row), nil
 }
 
+// DeleteComic reports ErrNotFound when no row was deleted, so a repeated
+// DELETE is 404 rather than a silent 204 (CC-8).
 func (a *Adapter) DeleteComic(ctx context.Context, id uuid.UUID) error {
-	return a.q.DeleteComic(ctx, pgUUID(id))
+	n, err := a.q.DeleteComic(ctx, pgUUID(id))
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return comic.ErrNotFound
+	}
+	return nil
 }
 
 func (a *Adapter) OwnerByComic(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {

@@ -53,11 +53,14 @@ dev-frontend:
 
 # ── Database ────────────────────────────────────────────────────
 .PHONY: migrate migrate-down migrate-new sqlc
-migrate: ## Apply all pending migrations
-	cd backend && migrate -path db/migrations -database "$$DATABASE_URL" up
+# Migrations run as the schema owner (`portal`), never as the app role
+# (`portal_app` cannot CREATE TABLE or a policy). MIGRATE_DATABASE_URL is the
+# owner DSN; DATABASE_URL is the fallback for environments that predate it.
+migrate: ## Apply all pending migrations (as the schema owner)
+	cd backend && migrate -path db/migrations -database "$${MIGRATE_DATABASE_URL:-$$DATABASE_URL}" up
 
 migrate-down: ## Roll back the last migration
-	cd backend && migrate -path db/migrations -database "$$DATABASE_URL" down 1
+	cd backend && migrate -path db/migrations -database "$${MIGRATE_DATABASE_URL:-$$DATABASE_URL}" down 1
 
 migrate-new: ## Create a new migration: make migrate-new name=add_movies
 	@test -n "$(name)" || (echo "usage: make migrate-new name=<snake_case>"; exit 1)

@@ -120,12 +120,14 @@ superuser and bypasses every policy.
   (`grep DATABASE_URL .env`; cutover 2026-08-25, [runbook](../operations/rls-cutover.md)).
   Here, RLS is live. `BACKUP_DATABASE_URL` stays on `portal` on purpose —
   `pg_dump` must see every tenant.
-- **`.env.example` still defaults `DATABASE_URL` to `portal`.** `make up` copies
-  it to `.env` on a fresh checkout, so every new environment starts with
-  tenant isolation that is decorative. This is the P0 in
-  [product/backlog.md](../product/backlog.md). It is not changed in passing:
-  a query that quietly relied on superuser rights fails the moment the role
-  changes, and that has to be tried against real data.
+- **`.env.example` defaults `DATABASE_URL` to `portal_app`** since 2026-09-11
+  (with the placeholder password `0019` seeds), so a fresh `make up` starts
+  enforced. The evidence that no query relied on superuser rights: this
+  deployment ran as `portal_app` from 2026-08-25 through the SPEC-10 debts
+  work, and the 19 RLS tests pass against the live cluster
+  (`go test ./internal/platform/db -run TestRLS`, run 2026-09-11). The
+  superuser `portal` is used only by `MIGRATE_DATABASE_URL` (`make migrate`)
+  and `BACKUP_DATABASE_URL` (`pg_dump`).
 - Three comments in the tree still describe the pre-cutover state as current
   and should be read as history, not status: the `platform/db/db.go` package
   comment ("set but unenforced because the app connects as a superuser") and
@@ -156,6 +158,6 @@ superuser and bypasses every policy.
 7. [ ] `cmd/sysjobs` + `internal/sysrepository` — not written; `ForEachTenant` made it unnecessary so far. The depguard rule stays.
 8. [x] RLS isolation tests (8 in `rls_test.go`, plus media and social suites). MODULES.md § 6 checklist entry — **not done**.
 9. [ ] Observability profile — not landed. `feature-inventory.md` GUC bullets — still `app.tenant_id` under a superseding note.
-10. [ ] Flip `.env.example`'s `DATABASE_URL` default to `portal_app` after a run against real data (backlog P0); then correct the `0019`/`0020` header language in the next migration that touches those tables, not by editing applied files.
+10. [x] `.env.example`'s `DATABASE_URL` defaults to `portal_app` (2026-09-11), `MIGRATE_DATABASE_URL` added for the owner DSN. The `0019`/`0020` header language ("INERT until …") is corrected in the next migration that touches those tables, not by editing applied files.
 
 **Exit (as built):** a request under `/api/v1/…` is tenant-scoped end-to-end through `RequireTenant`; a raw query on `portal_app` cannot read another tenant's rows (tested, out of CI); there is no `/t/` prefix to make optional; cross-tenant work goes through `ForEachTenant` in the worker, not a BYPASSRLS role.

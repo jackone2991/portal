@@ -29,7 +29,9 @@ type Querier interface {
 	// ══ Pages ═══════════════════════════════════════════════════════════════
 	CreatePage(ctx context.Context, arg CreatePageParams) (ComicPage, error)
 	DeleteChapter(ctx context.Context, id pgtype.UUID) error
-	DeleteComic(ctx context.Context, id pgtype.UUID) error
+	// :execrows so the adapter can tell "deleted" from "was not there" — a second
+	// DELETE must answer 404, not 204 (CC-8).
+	DeleteComic(ctx context.Context, id pgtype.UUID) (int64, error)
 	DeletePage(ctx context.Context, id pgtype.UUID) error
 	// ══ media:asset_deleted consumer (P0.6) ═════════════════════════════════
 	DeletePagesByAsset(ctx context.Context, assetID pgtype.UUID) error
