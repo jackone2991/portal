@@ -184,3 +184,6 @@ Postgres chạy trên HOST (PG 18), không nằm trong docker-compose:
     đường kết nối thật lấy từ DATABASE_URL.
 ⚠️  COOKIE_SECURE=false đang bật để test bằng điện thoại qua http trong LAN.
     KHÔNG được để giá trị này khi lên production.
+
+
+Tính công thức tính lãi theo tháng âm lịch với có tháng 30,31 
