@@ -884,7 +884,11 @@ func writeBankErr(w http.ResponseWriter, err error) {
 	case errors.Is(err, ErrIsTransferLeg):
 		server.Problem(w, http.StatusConflict, "bank/is-transfer-leg", "Transfer leg", "edit or delete this via /bank/transfers/{transfer_id}")
 	case errors.Is(err, ErrCategoryInUse):
-		server.Problem(w, http.StatusConflict, "bank/category-in-use", "Category in use", "reassign its transactions with ?reassign_to= before deleting")
+		// The detail is what the user reads — the frontend prefers it over its own
+		// catalog — so it must not name a query parameter. How to do it is the
+		// client's business; what is wrong is the caller's.
+		server.Problem(w, http.StatusConflict, "bank/category-in-use", "Category in use",
+			"this category still has transactions — move them to another category first")
 	case errors.Is(err, ErrSameAccountTransfer):
 		server.Problem(w, http.StatusUnprocessableEntity, "bank/same-account-transfer", "Same-account transfer", "from and to accounts must differ")
 	case errors.Is(err, ErrCurrencyMismatch):

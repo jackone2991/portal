@@ -93,6 +93,13 @@ export function DashboardView() {
           >
             Ví
           </Link>
+          <Link
+            href={"/bank/categories" as Route}
+            className="rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+            style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+          >
+            Danh mục
+          </Link>
           <button
             type="button"
             onClick={() => setAdding(true)}
