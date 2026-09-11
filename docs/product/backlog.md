@@ -25,24 +25,9 @@ was checked, and code moves.
 
 ## P0 — security and correctness
 
-1. **RLS is decorative on every fresh install.** `.env.example` defaults
-   `DATABASE_URL` to `portal` (a superuser, bypasses every policy); `make up`
-   copies it to `.env`. This deployment's `.env` was cut over to `portal_app`
-   on 2026-08-25 and RLS is live here — nowhere else. *Closes when:* the
-   example default is `portal_app`, after a run against real data proves no
-   query relied on superuser rights (a query that did will fail at the role
-   switch, not before). Then re-word the `0019`/`0020` migration headers in
+1. **Re-word the `0019`/`0020` migration headers** ("**INERT** until …") in
    the next migration that touches those tables — applied files are not
-   edited. Evidence: [ADR-07 § Consequences](../adr/07-tenancy-rls-model.md),
-   `/CLAUDE.md` § Working in this repo. Do **not** change `DATABASE_URL` as a
-   side effect of a docs task.
-2. **A dev credential was committed** in a session note under `docs/testing/`
-   (added `f11cf3f` 2026-07-19, deleted `b54654e` 2026-09-11; the path is
-   deliberately not repeated here — the repository is public). It is still in
-   history. *Closes when:* the operator confirms whether that password is valid
-   on the host Postgres cluster and rotates it if so. History is **not**
-   purged: before rotation a purge is false safety, after rotation the copy in
-   history is harmless.
+   edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
 2a. **CI has been red on `main` since 2026-07-23 — and on every PR since.**
    `frontend/pnpm-lock.yaml` was deleted in `edadf28` (2026-07-08); the
    `frontend` and `openapi` jobs still cache on it (`setup-node`,
@@ -208,6 +193,19 @@ per-tenant `user_roles`, `/t/{org}` prefix, `cmd/sysjobs`) at one user with one
 personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
+
+- P0 **RLS decorative on every fresh install** — closed 2026-09-11:
+  `.env.example` defaults `DATABASE_URL` to `portal_app` with the password
+  `0019` seeds; `MIGRATE_DATABASE_URL` (owner) added and `make migrate` uses
+  it; `BACKUP_DATABASE_URL` stays on `portal`. Evidence the switch is safe:
+  this deployment ran as `portal_app` from 2026-08-25 through today's SPEC-10
+  work, and all 19 RLS tests pass against the live cluster as `portal_app`.
+- P0 **committed dev credential** — closed 2026-09-11. It was the password of
+  local *application* accounts (`@portal.localhost`), not a Postgres role; two
+  of them still used it, one holding Super Admin. Both rotated to random
+  passwords with a one-off tool (Argon2id via the account module's own
+  hasher), `token_version` bumped and every refresh token revoked, the tool
+  deleted. History not purged — the exposed value now opens nothing.
 
 - §5 bug 5 **`comic.SaveProgress` skips the visibility gate** — closed
   2026-09-11: `SaveProgress` now calls `GetComic` (published-or-owner) before
