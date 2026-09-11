@@ -61,7 +61,9 @@ DEFAULT resolve it from the enclosing scope.
 # 1. Confirm the schema is fully migrated (expects 30 or higher).
 psql -U portal -d portal -c 'select version from schema_migrations;'
 
-# 2. Give portal_app a login. Migration 0019 creates the role but not a password.
+# 2. Set portal_app's password. Migration 0019 creates the role WITH LOGIN and
+#    the placeholder 'change-me-portal-app' (which .env.example uses); replace it
+#    on anything that is not a throwaway dev cluster.
 psql -U portal -d portal -c "ALTER ROLE portal_app WITH LOGIN PASSWORD '<password>';"
 
 # 3. Prove isolation actually holds BEFORE flipping anything.
