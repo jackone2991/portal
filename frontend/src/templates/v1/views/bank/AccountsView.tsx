@@ -8,6 +8,7 @@ import {
   createAccount,
   deleteAccount,
   formatVND,
+  isWallet,
   listAccounts,
   updateAccount,
   type AccountType,
@@ -82,8 +83,11 @@ export function AccountsView() {
       ),
   });
 
-  const active = accounts.filter((a) => !a.archived);
-  const archived = accounts.filter((a) => a.archived);
+  // Debt accounts are excluded outright: they are managed on /bank/debts, and
+  // the Archive/Delete offered here would orphan the terms beside them.
+  const wallets = accounts.filter(isWallet);
+  const active = wallets.filter((a) => !a.archived);
+  const archived = wallets.filter((a) => a.archived);
   const total = active.reduce((s, a) => s + a.balance, 0);
 
   return (

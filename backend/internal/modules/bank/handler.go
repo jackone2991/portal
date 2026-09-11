@@ -889,6 +889,20 @@ func writeBankErr(w http.ResponseWriter, err error) {
 		// client's business; what is wrong is the caller's.
 		server.Problem(w, http.StatusConflict, "bank/category-in-use", "Category in use",
 			"this category still has transactions — move them to another category first")
+	case errors.Is(err, ErrDebtNotFound):
+		server.Problem(w, http.StatusNotFound, "bank/not-found", "Not Found", "resource not found")
+	case errors.Is(err, ErrDebtNotEmpty):
+		server.Problem(w, http.StatusConflict, "bank/debt-not-settled", "Debt not settled",
+			"this debt still has an outstanding balance — settle it before closing it out")
+	case errors.Is(err, ErrDebtClosed):
+		server.Problem(w, http.StatusConflict, "bank/debt-closed", "Debt closed",
+			"this debt is closed — reopen it before recording anything against it")
+	case errors.Is(err, ErrNothingToAccrue):
+		server.Problem(w, http.StatusConflict, "bank/nothing-to-accrue", "Nothing to accrue",
+			"interest is already posted up to this date")
+	case errors.Is(err, ErrDebtNoInterest):
+		server.Problem(w, http.StatusUnprocessableEntity, "bank/debt-no-interest", "No interest terms",
+			"this debt carries no interest, so there is nothing to accrue")
 	case errors.Is(err, ErrSameAccountTransfer):
 		server.Problem(w, http.StatusUnprocessableEntity, "bank/same-account-transfer", "Same-account transfer", "from and to accounts must differ")
 	case errors.Is(err, ErrCurrencyMismatch):

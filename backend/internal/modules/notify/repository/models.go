@@ -77,6 +77,32 @@ type BankCategory struct {
 	Color    *string     `json:"color"`
 }
 
+type BankDebt struct {
+	ID              pgtype.UUID        `json:"id"`
+	UserID          pgtype.UUID        `json:"user_id"`
+	AccountID       pgtype.UUID        `json:"account_id"`
+	Counterparty    string             `json:"counterparty"`
+	Direction       string             `json:"direction"`
+	Principal       int64              `json:"principal"`
+	InterestRateBps int32              `json:"interest_rate_bps"`
+	InterestMethod  string             `json:"interest_method"`
+	OpenedOn        pgtype.Date        `json:"opened_on"`
+	DueOn           pgtype.Date        `json:"due_on"`
+	ClosedAt        pgtype.Timestamptz `json:"closed_at"`
+	Note            *string            `json:"note"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	TenantID        pgtype.UUID        `json:"tenant_id"`
+}
+
+type BankDebtReminder struct {
+	DebtID   pgtype.UUID        `json:"debt_id"`
+	DueOn    pgtype.Date        `json:"due_on"`
+	LeadDays int32              `json:"lead_days"`
+	SentAt   pgtype.Timestamptz `json:"sent_at"`
+	TenantID pgtype.UUID        `json:"tenant_id"`
+}
+
 type BankImportBatch struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`

@@ -35,8 +35,24 @@ type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (BankAccount, error)
 	// ══ Categories (P0.4) ═══════════════════════════════════════════════════
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (BankCategory, error)
+	// bank debt queries (SPEC-10 phase 1, migration 0043). sqlc input only.
+	//
+	// The money is NOT here: it lives in the linked bank_accounts row and its
+	// transactions. These statements own the TERMS and nothing else, which is why
+	// there is no "outstanding" column to keep in step with anything.
+	CreateDebt(ctx context.Context, arg CreateDebtParams) (BankDebt, error)
 	// ══ Transactions (P0.2 / P0.3) ══════════════════════════════════════════
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (BankTransaction, error)
+	// What is still owed, DERIVED from the linked account exactly as a wallet
+	// balance is (SPEC-03 P0.1) — same arithmetic as ListAccountBalances, so the two
+	// can never disagree about what a movement did. Sign is normalised by the caller
+	// against `direction`.
+	DebtOutstanding(ctx context.Context, id pgtype.UUID) (int64, error)
+	// Reminder sweep: open, dated debts falling due in a window, minus the ones a
+	// reminder has already gone out for at this lead time. No user filter: the
+	// worker runs inside ONE tenant's scope at a time (ForEachTenant), and RLS is
+	// what bounds the rows — the same fence a request gets.
+	DebtsDueBetween(ctx context.Context, arg DebtsDueBetweenParams) ([]BankDebt, error)
 	// Owner-scoped. The service refuses when the account still has transactions
 	// (409 bank/account-not-empty); the plain FK is the DB backstop.
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) (pgtype.UUID, error)
@@ -45,6 +61,9 @@ type Querier interface {
 	// the ON DELETE SET NULL FK; budgets cascade. The service handles reassignment
 	// of this category's own transactions in the same tx before calling this.
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) (pgtype.UUID, error)
+	// The linked account cascades (0043). The service refuses this while the
+	// balance is non-zero — deleting money you still owe is not a UI affordance.
+	DeleteDebt(ctx context.Context, arg DeleteDebtParams) (pgtype.UUID, error)
 	DeleteTransaction(ctx context.Context, arg DeleteTransactionParams) (pgtype.UUID, error)
 	// Remove every row of a transfer atomically (both legs, plus a fee row if any).
 	DeleteTransferByID(ctx context.Context, arg DeleteTransferByIDParams) error
@@ -52,10 +71,18 @@ type Querier interface {
 	// Derived balance = opening_balance + Σcredits − Σdebits (never stored, P0.1).
 	// ::bigint keeps sqlc from inferring int4 (VND balances overflow int32).
 	GetAccountBalance(ctx context.Context, arg GetAccountBalanceParams) (int64, error)
+	GetDebt(ctx context.Context, arg GetDebtParams) (BankDebt, error)
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (BankTransaction, error)
 	// Own or seed (user_id IS NULL). Used for attach validation (P0.2) and GET; a
 	// foreign category id resolves to no row → 404 (existence never leaks).
 	GetVisibleCategory(ctx context.Context, arg GetVisibleCategoryParams) (BankCategory, error)
+	// When interest was last posted on this debt, or NULL if never.
+	//
+	// Derived, not stored: on a debt's own account a CATEGORISED transaction can
+	// only be an accrual, because every principal movement is a transfer leg and
+	// those carry no category. Accruing from opened_on every time would charge the
+	// same period twice on the second accrual.
+	LastAccrualOn(ctx context.Context, accountID pgtype.UUID) (pgtype.Date, error)
 	// Every account with its current derived balance (dashboard P0.6 + list). Always
 	// current — never month-scoped (§11 opening-balance rule).
 	ListAccountBalances(ctx context.Context, userID pgtype.UUID) ([]ListAccountBalancesRow, error)
@@ -70,12 +97,21 @@ type Querier interface {
 	ListBudgetsForMonth(ctx context.Context, arg ListBudgetsForMonthParams) ([]ListBudgetsForMonthRow, error)
 	// Own + seed, ordered so parents precede their children for tree assembly.
 	ListCategories(ctx context.Context, userID pgtype.UUID) ([]BankCategory, error)
+	// Open first, then by due date (undated last), then newest. A settled debt is
+	// kept — its transactions are real history — so it sorts to the bottom rather
+	// than disappearing.
+	ListDebts(ctx context.Context, userID pgtype.UUID) ([]BankDebt, error)
 	// Keyset page, newest first (occurred_at DESC, id DESC). Optional account/month/
 	// category filters (a NULL arg skips its clause). A NULL cursor starts at the top.
 	ListTransactionsByUserCursor(ctx context.Context, arg ListTransactionsByUserCursorParams) ([]BankTransaction, error)
 	// ══ Transfers (P0.3) ════════════════════════════════════════════════════
 	// All rows sharing a transfer_id, owner-scoped (the pair, plus any P1.13 fee row).
 	ListTransferLegs(ctx context.Context, arg ListTransferLegsParams) ([]BankTransaction, error)
+	// Idempotent by primary key: an hourly sweep must not announce the same debt
+	// twenty-four times a day.
+	// tenant_id is omitted on purpose: the sweep runs inside a tenant scope, so the
+	// column DEFAULT resolves it, exactly like every other write in a request.
+	MarkDebtReminded(ctx context.Context, arg MarkDebtRemindedParams) error
 	// ══ Dashboard (P0.6) ════════════════════════════════════════════════════
 	// Month income/expense totals, excluding pure transfer legs (transfer_id set AND
 	// category_id NULL) — NOT `WHERE transfer_id IS NULL`, which would wrongly drop a
@@ -92,6 +128,12 @@ type Querier interface {
 	// Dashboard: the 10 most recently ENTERED rows (created_at DESC — a future-dated
 	// entry must not pin the list, P0.6).
 	RecentTransactions(ctx context.Context, arg RecentTransactionsParams) ([]BankTransaction, error)
+	// The income side of an accrual: interest owed TO me. 0042 already seeds 'Lãi',
+	// so there is nothing to create — only to find.
+	SeedIncomeInterestCategory(ctx context.Context) (pgtype.UUID, error)
+	// The shared 'Lãi vay' seed (0043). Returned so an accrual has a category to
+	// attach to without the caller hard-coding an id.
+	SeedInterestCategory(ctx context.Context) (pgtype.UUID, error)
 	// Partial update of {name, archived}. currency is immutable (P0.1) so it is not
 	// updatable here. NULL arg leaves the column unchanged.
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (BankAccount, error)
@@ -99,6 +141,10 @@ type Querier interface {
 	// kind is immutable; only {name, parent_id} change. A NULL name leaves it; the
 	// service passes parent_id explicitly (clearing to top-level is a real value).
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (BankCategory, error)
+	// Terms only. The principal is immutable after creation: it is the agreed
+	// amount, and editing it would silently rewrite what "đã trả 6/10" means for
+	// every payment already recorded.
+	UpdateDebt(ctx context.Context, arg UpdateDebtParams) (BankDebt, error)
 	// Owner-scoped partial update. The service blocks transfer legs (409) before
 	// calling this, so it only ever edits ordinary rows.
 	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (BankTransaction, error)

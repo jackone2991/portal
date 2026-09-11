@@ -64,6 +64,8 @@ export interface TemplateManifest {
     bankReports: ComponentType;
     /** SPEC-03 P0.4 — the ledger's taxonomy: icons, colours, parents. */
     bankCategories: ComponentType;
+    /** SPEC-10 phase 1 — debts and loans, kept out of income/expense. */
+    bankDebts: ComponentType;
     /** SPEC-08 P0.5 — people registry (contacts + birthdays). */
     peopleList: ComponentType;
     peopleDetail: ComponentType<{ id: string }>;

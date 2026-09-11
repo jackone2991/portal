@@ -8,7 +8,31 @@
 
 import { api } from "./api-client";
 
-export type AccountType = "cash" | "checking" | "savings" | "credit_card" | "ewallet" | "other";
+export type AccountType =
+  | "cash"
+  | "checking"
+  | "savings"
+  | "credit_card"
+  | "ewallet"
+  | "other"
+  // SPEC-10 phase 1: a debt owns an account so its balance is derived like any
+  // other. These are NOT wallets — see isWallet below.
+  | "loan_payable"
+  | "loan_receivable";
+
+/**
+ * A debt's account is real money in the ledger, but it is not a wallet: you do
+ * not spend from it, archive it, or count it in "how much do I have".
+ *
+ * Every wallet-shaped surface filters through this. Skipping it is how a debt
+ * ends up in the wallet list offering an Archive button that would orphan it.
+ */
+export function isDebtAccount(a: { type: AccountType }): boolean {
+  return a.type === "loan_payable" || a.type === "loan_receivable";
+}
+export function isWallet(a: { type: AccountType }): boolean {
+  return !isDebtAccount(a);
+}
 export type CategoryKind = "income" | "expense";
 export type Direction = "debit" | "credit";
 
@@ -313,4 +337,102 @@ export function dayLabel(isoDate: string): string {
 /** Signed amount for display: a debit leaves the wallet. */
 export function signedAmount(t: { amount: number; direction: Direction }): number {
   return t.direction === "debit" ? -t.amount : t.amount;
+}
+
+// ── debts & loans (SPEC-10 phase 1, migration 0043) ───────────────────
+
+export type DebtDirection = "borrowed" | "lent";
+export type InterestMethod = "none" | "simple" | "compound";
+/** What a movement means in the user's words, not the ledger's. */
+export type DebtMovementKind = "borrow" | "repay" | "lend" | "collect";
+
+/**
+ * One debt. `outstanding` and `settled` are DERIVED server-side from the
+ * linked account's transactions — there is no stored balance to drift.
+ *
+ * `projected_interest` is a preview, never written: what the debt's own terms
+ * would accrue between the last posting and `due_on`.
+ */
+export interface Debt {
+  id: string;
+  account_id: string;
+  counterparty: string;
+  direction: DebtDirection;
+  principal: number;
+  outstanding: number;
+  settled: number;
+  interest_rate_bps: number;
+  interest_method: InterestMethod;
+  projected_interest: number;
+  opened_on: string;
+  due_on: string | null;
+  note: string | null;
+  closed: boolean;
+}
+
+export async function listDebts(): Promise<Debt[]> {
+  const r = await api<{ debts: Debt[] }>("/api/v1/bank/debts");
+  return r.debts ?? [];
+}
+
+export async function getDebt(id: string): Promise<Debt> {
+  return api<Debt>(`/api/v1/bank/debts/${id}`);
+}
+
+/**
+ * Opens the debt AND posts the principal movement in one call — `wallet_id` is
+ * the account the money moves to or from, and it is required: a debt with no
+ * movement is a number with no history.
+ */
+export async function createDebt(body: {
+  counterparty: string;
+  direction: DebtDirection;
+  principal: number;
+  wallet_id: string;
+  opened_on: string;
+  due_on?: string | null;
+  interest_rate_bps?: number;
+  interest_method?: InterestMethod;
+  note?: string | null;
+}): Promise<Debt> {
+  return api<Debt>("/api/v1/bank/debts", { method: "POST", body: JSON.stringify(body) });
+}
+
+/** Terms only — the principal is immutable once agreed. */
+export async function updateDebt(
+  id: string,
+  body: {
+    counterparty?: string;
+    interest_rate_bps?: number;
+    interest_method?: InterestMethod;
+    due_on?: string | null;
+    note?: string | null;
+    closed?: boolean;
+  },
+): Promise<Debt> {
+  return api<Debt>(`/api/v1/bank/debts/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
+export async function deleteDebt(id: string): Promise<void> {
+  await api<void>(`/api/v1/bank/debts/${id}`, { method: "DELETE" });
+}
+
+/** A repayment or a collection. Posts a transfer pair, never a flow. */
+export async function addDebtMovement(
+  id: string,
+  body: { kind: DebtMovementKind; wallet_id: string; amount: number; occurred_at?: string; note?: string | null },
+): Promise<void> {
+  await api<unknown>(`/api/v1/bank/debts/${id}/movements`, { method: "POST", body: JSON.stringify(body) });
+}
+
+/**
+ * Post interest up to a date. It IS a flow — an expense on money you owe,
+ * income on money owed to you — so unlike a movement it shows up in the month's
+ * totals. Answers 409 `bank/nothing-to-accrue` if it is already posted to then.
+ */
+export async function accrueDebtInterest(id: string, upTo: string): Promise<void> {
+  await api<unknown>(`/api/v1/bank/debts/${id}/accrue`, {
+    method: "POST",
+    body: JSON.stringify({ up_to: upTo }),
+  });
 }

@@ -225,7 +225,18 @@ func run() error {
 	// ── Bank module (worker side) ───────────────────────────────────
 	// No P0 tasks — the wiring exists so SPEC-06's stream consumer of
 	// bank:transaction_* attaches here without touching cmd/worker's shape.
-	bankMod, err := bank.New(bank.Deps{Repo: bankrepo.NewAdapter(conn, tdb.RunInTx)})
+	// Debts (SPEC-10 phase 1) need three things on the worker side: the same
+	// adapter as a second interface, a way into the notification system, and a
+	// tenant walk — the reminder sweep visits tenants, not callers.
+	bankAdapter := bankrepo.NewAdapter(conn, tdb.RunInTx)
+	bankMod, err := bank.New(bank.Deps{
+		Repo:   bankAdapter,
+		Debts:  bankAdapter,
+		Notify: asynqClient,
+		ForEachTenant: func(ctx context.Context, fn func(context.Context) error) error {
+			return forEachTenant(ctx, tenantStore, tdb, bankapi.TaskScanDebtsDue, fn)
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("bank module: %w", err)
 	}
@@ -394,7 +405,7 @@ func run() error {
 	// :on_asset_ready — all light, IO-bound, weight-1 "default" queue.
 	notifyMod.RegisterTasks(lightMux)
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
-	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
+	bankMod.RegisterTasks(lightMux)    // bank:scan_debts_due (daily debt-due sweep, SPEC-10)
 	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
 	movieMod.RegisterTasks(lightMux)   // movie:on_asset_deleted (media:asset_deleted consumer)
 	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted + music:import_zip (0038)
@@ -433,6 +444,12 @@ func run() error {
 	if _, err := scheduler.Register("0 3 * * *",
 		asynq.NewTask(opsapi.TaskBackupDatabase, nil), asynq.Queue("default")); err != nil {
 		return fmt.Errorf("register ops backup schedule: %w", err)
+	}
+	// Daily debt-due sweep at 07:00 UTC (SPEC-10 phase 1) — notifies at 7 days,
+	// 1 day and on the day, each at most once per (debt, due date, lead).
+	if _, err := scheduler.Register("0 7 * * *",
+		asynq.NewTask(bankapi.TaskScanDebtsDue, nil), asynq.Queue("default")); err != nil {
+		return fmt.Errorf("register debt-due schedule: %w", err)
 	}
 	// Daily birthday scan at 06:00 UTC (SPEC-08 P0.4) — emits people:birthday_upcoming.
 	if _, err := scheduler.Register("0 6 * * *",

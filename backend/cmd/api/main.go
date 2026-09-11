@@ -423,7 +423,9 @@ func run() error {
 
 	// ── Bank module (personal ledger: /bank/*) ──────────────────────
 	bankMod, err := bank.New(bank.Deps{
-		Repo:        bankrepo.NewAdapter(conn, tdb.RunInTx),
+		Repo: bankrepo.NewAdapter(conn, tdb.RunInTx),
+		// Same adapter, second interface: debts (SPEC-10 phase 1) live in their own files.
+		Debts:       bankrepo.NewAdapter(conn, tdb.RunInTx),
 		Events:      mediaEvents, // shared fan-out publisher; bank:transaction_* is emit-only
 		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {

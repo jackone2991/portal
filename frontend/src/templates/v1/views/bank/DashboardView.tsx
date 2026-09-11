@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   currentMonth,
   dayLabel,
+  isWallet,
   formatVND,
   getDashboard,
   getReport,
@@ -64,7 +65,10 @@ export function DashboardView() {
     [dash.data],
   );
 
-  const openAccounts = (dash.data?.accounts ?? []).filter((a) => !a.archived);
+  // Wallets only: a liability belongs on the debts screen, and folding it into
+  // "tổng số dư" would answer a question nobody asked here (net worth is
+  // SPEC-10 phase 5, and it needs assets too).
+  const openAccounts = (dash.data?.accounts ?? []).filter((a) => !a.archived && isWallet(a));
   const net = (dash.data?.income ?? 0) - (dash.data?.expense ?? 0);
 
   // Budget bars: only categories with no budgeted ancestor, so a parent and its
@@ -92,6 +96,13 @@ export function DashboardView() {
             style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
           >
             Ví
+          </Link>
+          <Link
+            href={"/bank/debts" as Route}
+            className="rounded-lg border px-3 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
+            style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+          >
+            Nợ
           </Link>
           <Link
             href={"/bank/categories" as Route}
@@ -352,6 +363,8 @@ export const ACCOUNT_TYPE_LABEL: Record<string, string> = {
   credit_card: "Thẻ tín dụng",
   ewallet: "Ví điện tử",
   other: "Khác",
+  loan_payable: "Khoản nợ",
+  loan_receivable: "Cho vay",
 };
 
 function SectionHead({ title, href }: { title: string; href?: string }) {

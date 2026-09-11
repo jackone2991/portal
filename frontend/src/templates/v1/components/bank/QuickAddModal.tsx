@@ -8,6 +8,7 @@ import {
   createTransaction,
   createTransfer,
   formatVND,
+  isWallet,
   listAccounts,
   listCategories,
   today,
@@ -48,7 +49,9 @@ export function QuickAddModal({ onClose, defaultMode = "expense" }: { onClose: (
   const categories = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
 
   const openAccounts = useMemo(
-    () => (accounts.data ?? []).filter((a) => !a.archived),
+    // Wallets only — booking "Ăn uống" against a debt account would be a
+    // categorised flow on a liability, which is what an accrual is, not a spend.
+    () => (accounts.data ?? []).filter((a) => !a.archived && isWallet(a)),
     [accounts.data],
   );
   const account = accountId ?? openAccounts[0]?.id ?? null;

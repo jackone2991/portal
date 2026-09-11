@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	bankapi "github.com/portal/backend/internal/modules/bank/api"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	"github.com/portal/backend/internal/platform/server"
 )
 
@@ -27,6 +28,13 @@ const (
 type Service struct {
 	repo   Repository
 	events EventPublisher
+
+	// Debts (SPEC-10 phase 1). The same adapter as repo; a separate field so the
+	// feature stays in its own files. Nil ⇒ the debt routes are not mounted.
+	debts DebtRepository
+	// notify reaches the notification system the only sanctioned way
+	// (notifyapi.Enqueue). Nil ⇒ due-date reminders are simply not sent.
+	notify notifyapi.Enqueuer
 }
 
 // TxListResult is a keyset page of transactions plus the next cursor ("" = last).
