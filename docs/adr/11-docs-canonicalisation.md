@@ -119,12 +119,13 @@ again.
 ## Consequences
 
 - ADR numbering: `00` is retired permanently.
-  [00-architecture-review.md](../product/analysis/architecture-review-2026-07.md)
-  was never a decision record — it is a dated review of the architecture as
-  found on 2026-07-07, all eleven of its false statements are descriptions of
-  that day, and by the genre rules it belongs in `analysis/`. Moved, body
-  untouched, status `historical`. STYLE.md says numbers are never reused, so
-  the next ADR is 12.
+  [00-architecture-review.md](00-architecture-review.md) was never a decision
+  record — it is a dated review of the architecture as found on 2026-07-07,
+  all eleven of its false statements are descriptions of that day, and by the
+  genre rules it belongs in `analysis/`. It moves to
+  `product/analysis/architecture-review-2026-07.md` (body untouched, status
+  `historical`) as an action item below. STYLE.md says numbers are never
+  reused, so the next ADR is 12.
 - `docs/README.md` gains rules for `testing/`, `operations/` and `analysis/`
   (three folders that existed on disk without a declared genre), a reading-
   order line that puts the newest audit **before** every other document, and
