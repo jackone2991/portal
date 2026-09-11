@@ -16,11 +16,44 @@ concurrency:
 
 jobs:
   backend:
+    # The job name is a required status check on `main` (branch protection keys
+    # on it). Rename it here and every PR is blocked until the rule is updated.
     name: Backend (sqlc · build · vet · test)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    # The RLS isolation suite (platform/db/rls*_test.go) is the only proof that
+    # tenant B cannot read tenant A's rows on the portal_app role — a claim about
+    # PostgreSQL policy evaluation that no in-memory fake can model. So the job
+    # gets a throwaway Postgres, built from nothing but db/migrations; that also
+    # proves the migration chain applies from zero, which the deployment (only
+    # ever applying the newest file) never re-checks. Same major as the host
+    # cluster the deployment runs on.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: portal
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: portal
+        ports:
+          - 5432:5432
+        # -h forces TCP: the image's temporary initdb server answers on the
+        # unix socket too, and "healthy" must mean the real one.
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U portal -d portal"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # `portal` owns the schema (superuser): applies migrations, seeds fixtures.
+      # `portal_app` is what migration 0019 creates — NOSUPERUSER NOBYPASSRLS,
+      # with the placeholder password .env.example ships — and rls_test.go's
+      # role probe refuses anything that could bypass RLS, so the suite cannot
+      # pass vacuously against the owner.
+      RLS_TEST_ADMIN_URL: postgres://portal:change-me@127.0.0.1:5432/portal?sslmode=disable
+      RLS_TEST_APP_URL: postgres://portal_app:change-me-portal-app@127.0.0.1:5432/portal?sslmode=disable
     steps:
       - uses: actions/checkout@v4
 
@@ -42,10 +75,17 @@ jobs:
       - name: Generate repositories from queries
         run: sqlc generate
 
+      # Same tool `make migrate` wraps, pinned. The postgres driver is a build
+      # tag, not a default — without it the binary knows no databases.
+      - name: Install golang-migrate
+        run: go install -tags postgres github.com/golang-migrate/migrate/v4/cmd/migrate@v4.17.1
+      - name: Apply every migration to the throwaway database
+        run: migrate -path db/migrations -database "$RLS_TEST_ADMIN_URL" up
+
       - name: Build + vet + test
-        # Tests that need external services skip themselves when unpointed:
-        # platform/storage (S3_ENDPOINT) and platform/db RLS suites
-        # (RLS_TEST_ADMIN_URL / RLS_TEST_APP_URL). `go test ./...` stays hermetic.
+        # The RLS suite is pointed (env above) and, because CI=true, refuses to
+        # skip if it ever finds itself unpointed. platform/storage (S3_ENDPOINT)
+        # still skips itself — there is no object store here.
         run: |
           go build ./...
           go vet ./...

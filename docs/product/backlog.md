@@ -28,24 +28,6 @@ was checked, and code moves.
 1. **Re-word the `0019`/`0020` migration headers** ("**INERT** until …") in
    the next migration that touches those tables — applied files are not
    edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
-2a. **CI has been red on `main` since 2026-07-23 — and on every PR since.**
-   `frontend/pnpm-lock.yaml` was deleted in `edadf28` (2026-07-08); the
-   `frontend` and `openapi` jobs still cache on it (`setup-node`,
-   `cache-dependency-path: frontend/pnpm-lock.yaml`) and fail at setup before
-   running anything. So the ADR-10 drift gate has never executed, the
-   frontend has not been type-checked in CI for two months, and with `main`
-   unprotected nothing noticed. The repo is also split on package manager:
-   Makefile, Dockerfile and CI say pnpm; the tracked lockfile is npm's
-   `package-lock.json`; local `node_modules` is npm-shaped; the Dockerfile
-   falls back to an **unpinned** `pnpm install`. *Closes when:* one package
-   manager is chosen, its lockfile is committed and the other deleted, the
-   CI cache path matches, and a run on `main` is green.
-3. **The RLS test suite does not run in CI.** `platform/db/rls*_test.go` (19
-   tests) are gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `ci.yml` sets
-   neither, so the isolation guarantee the architecture rests on is verified
-   only by hand. *Closes when:* the `backend` job starts a Postgres service,
-   applies migrations, and sets both URLs. (Audit §3.1 "no test opens a Postgres
-   connection" — the tests now exist; the CI run does not.)
 
 ## P1 — contract and coverage
 
@@ -194,6 +176,19 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
+  starts a `postgres:18` service, applies every migration to it with
+  `golang-migrate` (so the chain is also proven from zero on each push), and
+  sets `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `rls_test.go: setup` fails
+  instead of skipping when `CI` is set and the URLs are not, so the gate
+  cannot lapse silently. Verified locally first: fresh database, 43
+  migrations, 19/19 green as `portal_app`.
+- P0 **CI red on `main` since 2026-07-23** — closed 2026-09-11 (`a30b887`,
+  `0df5a11`): pnpm is the one package manager, `frontend/pnpm-lock.yaml` is
+  tracked and `package-lock.json` deleted, the `setup-node` cache path
+  matches, `main` green at `4c0049c`; `main` is now branch-protected on all
+  five jobs. Residue, not a gap: the Dockerfile still falls back to
+  `|| pnpm install` when the frozen install fails.
 - P0 **RLS decorative on every fresh install** — closed 2026-09-11:
   `.env.example` defaults `DATABASE_URL` to `portal_app` with the password
   `0019` seeds; `MIGRATE_DATABASE_URL` (owner) added and `make migrate` uses
