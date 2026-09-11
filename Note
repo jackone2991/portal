@@ -184,3 +184,353 @@ Postgres chạy trên HOST (PG 18), không nằm trong docker-compose:
     đường kết nối thật lấy từ DATABASE_URL.
 ⚠️  COOKIE_SECURE=false đang bật để test bằng điện thoại qua http trong LAN.
     KHÔNG được để giá trị này khi lên production.
+
+
+================================================================================
+KẾ HOẠCH: CANONICAL HOÁ HỆ TÀI LIỆU  (chốt 2026-09-11 — CHƯA THỰC THI)
+================================================================================
+
+Nguồn: phiên grilling 2026-09-11, 37 quyết định đã chốt. Chưa sửa file nào.
+Nhánh dự kiến: `docs/architecture-cleanup`, tách từ **`music`** (KHÔNG tách từ
+`main`: kế hoạch phải sửa `shared/openapi.yaml`, mà `music` đã viết lại 4.719
+dòng của chính file đó — tách từ main là tự tạo conflict trong file có CI gate
+kèm 2 file generated đi theo).
+
+Số liệu nền: agent đã quét 11 ADR → **79 phát biểu sai**, không ADR nào còn
+đúng hoàn toàn. Quét link toàn repo (trừ template-main) → **69 link tương đối
+vỡ**.
+
+
+── ⚠️ HAI ĐIỂM PHẢI KIỂM TRƯỚC KHI LÀM ─────────────────────────────────────────
+
+[1] RLS: hai nguồn nói ngược nhau, và `.env` không có trong checkout này.
+
+    Note dòng 181 nói: DATABASE_URL trỏ `portal_app`, "đã cutover RLS 2026-08-25".
+    Bốn nguồn khác nói ngược:
+      - `.env.example:29`  DATABASE_URL mặc định là `portal` (superuser);
+                           `portal_app` chỉ là dòng comment ở `:41`
+      - `.env.example:36-40`  "tenant isolation is decorative"
+      - `platform/db/db.go:7-8`  "unenforced because the app connects as a superuser"
+      - header migration `0019`/`0020`  ghi INERT
+      - `docs/guides/rls-cutover.md:100-103`  "Steps 5–6 were NOT run"
+    Và ADR-07:3,11-12 khẳng định "RLS is enforced, not inert".
+
+    Đã kiểm 2026-09-11: **`.env` KHÔNG tồn tại trong repo này** → không xác minh
+    được máy này đang chạy role nào.
+
+    → Việc cần làm, theo thứ tự:
+      a) Mở `.env` trên máy đang chạy, xem DATABASE_URL dùng `portal` hay `portal_app`.
+      b) Dù kết quả thế nào: **`.env.example` vẫn mặc định `portal`**, nghĩa là
+         MỌI môi trường mới (`make up` tự tạo .env từ .env.example) đều nhận RLS
+         ở trạng thái decorative. Đây là phát hiện độc lập với câu (a) và cần sửa.
+      c) Sửa đúng một nguồn thành sự thật, 4 nguồn còn lại trỏ về nó — đừng để
+         5 file tự khai trạng thái RLS.
+    → P0 trong backlog mới. KHÔNG tự đổi DATABASE_URL trong phiên dọn tài liệu:
+      đổi role kết nối có thể làm sập API nếu query nào đang dựa vào quyền
+      superuser, cần chạy thử trên dữ liệu thật.
+
+[2] Credential đã bị commit.
+
+    `docs/testing/SESSION-HANDOFF-2026-07-12.md` (148 dòng) tự khai ở header:
+    "Local working note — NOT committed (contains dev test creds)" — nhưng nó ĐÃ
+    được commit. Có password (:38), secrets (:36), token (:46/:50/:52).
+    Đã kiểm: token 16 ký tự ở :38 KHÔNG xuất hiện ở file nào khác trong repo
+    (không có trong .env.example, không ở đâu khác).
+    → Xoá file. Rotate nếu nó còn hiệu lực trên host Postgres cluster (chỉ người
+      vận hành biết). KHÔNG purge git history: chưa rotate thì purge là an toàn
+      giả, mà rotate rồi thì bản trong history thành vô hại.
+    → Một dòng P0 trong backlog: "verify/rotate dev DB credential leaked in f11cf3f".
+
+
+── 6 NGUYÊN TẮC SINH RA MỌI VIỆC CÒN LẠI ───────────────────────────────────────
+
+1. Mỗi sự thật có đúng MỘT chủ sở hữu sống:
+     `CLAUDE.md`          → trạng thái triển khai
+     `docs/README.md`     → định tuyến genre (thứ này đặt ở thư mục nào)
+     `docs/STYLE.md`      → bút pháp (status header, naming, linking, formatting)
+     `backend/MODULES.md` → hợp đồng module
+2. Không archive-in-place. Không maintain nữa → XOÁ, và dẫn commit đã xoá.
+   Git history là archive.
+3. ADR KHÔNG còn bất biến. Sửa tại chỗ theo tầng:
+     - mệnh đề SỰ THẬT (mô tả hiện trạng, đường dẫn, action item) → viết lại
+     - "Options considered" + "Trade-offs" + tường thuật quyết định → GIỮ NGUYÊN
+4. Dấu hiệu duy nhất cho "đã đối chiếu với code" là trường đã có trong
+   STYLE.md:16-18 → `**Last verified:** YYYY-MM-DD`. Không phát minh changelog mới.
+5. Số đếm trong văn xuôi bị thay bằng lệnh sinh ra nó (đã là luật STYLE.md:38-40).
+6. `product/analysis/` vẫn BẤT BIẾN — audit chỉ được đánh nhãn, không sửa thân.
+
+
+── CHẶNG 1: CƠ HỌC ─────────────────────────────────────────────────────────────
+
+1.1  Commit riêng, đi đầu: xoá `docs/testing/SESSION-HANDOFF-2026-07-12.md`.
+
+1.2  Viết `docs/adr/11-docs-canonicalisation.md` (số kế tiếp là 11 vì `00` nghỉ
+     vĩnh viễn — xem 2.2). Ghi lại: bỏ tính bất biến của ADR, chính sách
+     xoá-thay-archive, chủ sở hữu từng loại sự thật, `Last verified` làm dấu.
+     PHẢI viết TRƯỚC Chặng 2, vì Chặng 2 thi hành đúng chính sách file này tuyên bố.
+     Đây cũng là lớp "vì sao" duy nhất còn lại sau khi 11 ADR bị viết lại.
+
+1.3  `docs/README.md`:
+       + thêm hàng map cho `testing/` và `operations/` (đang tồn tại trên đĩa mà
+         không được khai báo ở đâu — kể cả ADR-09)
+       + 3 genre rule mới:
+           testing/    → "A test plan, a per-spec test-case document, or a dated test run."
+           operations/ → "A runbook for operating the deployed system."
+           analysis/   → "A dated point-in-time audit. Never updated; superseded by a newer one."
+         (guides/ = "A how-to for working on the repo" — ranh giới với operations/)
+       + đổi genre rule archive → "Anything no longer maintained → DELETE it;
+         git history is the archive" + quy ước ghi commit đã xoá
+       + dòng 8-14 co lại còn 1 câu trỏ `/CLAUDE.md` § Current status
+       + thêm vào Reading order: đọc audit mới nhất trong `analysis/` TRƯỚC khi
+         tin bất cứ tài liệu nào khác
+       + xoá link `archive/` (đang vỡ)
+       + sửa "ADRs (00–10)" → 01–11
+
+1.4  `docs/STYLE.md`:
+       - XOÁ hẳn §Genre discipline (dòng 43-47) → trùng và lệch với docs/README.md
+         (nó liệt kê 6 genre, README có 7 và sắp thành 10). Giữ lại câu giá trị
+         nhất bằng cách chuyển ý sang README hoặc §ADR shape: "nếu một spec bắt
+         đầu tích luỹ rationale có alternatives thì tách ADR ra".
+       - §Language (dòng 7-8): xoá khẳng định `docs/archive/vi-2026-07/`
+       - §Naming (dòng 31-32): xoá exception cho archive folder date-stamped
+       - §Lifecycle (dòng 67-69): "move to archive/" → "delete + cite commit"
+       - §ADR shape (dòng 49-53): bỏ "immutable once accepted", thay bằng chính
+         sách canonical + `Last verified`
+       - dòng 21-22: xoá ví dụ "see MILESTONE_CHECKS for status" (file đã chết —
+         audit 2026-08-25 liệt kê 5 chỗ và BỎ SÓT chỗ này)
+
+1.5  `CLAUDE.md` (giấy phép: sửa số đếm + đường dẫn chết; diễn giải thì hỏi):
+       - xoá khẳng định archive `docs/archive/vi-2026-07/` "never update it"
+       - xoá ghi chú đã sai: "docs/README.md still links it (stale; ignore)" —
+         docs/README.md KHÔNG còn link nó như tracker sống
+       - "14 `_test.go` files" → thay bằng lệnh `find backend -name '*_test.go' | wc -l`
+         (thực tế 2026-09-11: **30**). Giữ danh sách module có test.
+       - module count: dòng 57 "(13, all wired)", dòng 78 "all 12 modules",
+         dòng 165 "All 12 modules" → thực tế trên đĩa **14**
+         (account bank comic journal layout media movie music notify ops people
+         social story tenant). Thay số bằng lệnh, giữ danh sách tên.
+       - thêm cảnh báo RLS theo kết quả kiểm ở mục [1]
+
+1.6  `docs/reference/README.md:12` + `docs/product/feature-inventory.md:3`:
+     bỏ dẫn `MILESTONE_CHECKS.md`.
+
+1.7  `docs/product/analysis/facebook-comparison.md`: KHÔNG sửa thân. Thêm
+     `**Last verified:** 2026-09-11` + 1 dòng ghi `MILESTONE_CHECKS.md` đã bị xoá
+     ở `f11cf3f`. (Đánh dấu, không phải sửa — citation vẫn chết, chỉ là có nhãn.)
+
+1.8  Di chuyển file (dùng `git mv`) + sửa TẤT CẢ inbound ref:
+       `docs/guides/backup-restore.md` → `docs/operations/backup-restore.md`
+         inbound (5): `backend/internal/modules/ops/README.md:51`,
+                      `backend/scripts/restore-drill.sh:3`,
+                      `docs/product/specs/SPEC-09-platform-ops.md:143`,
+                      `docs/testing/TEST-CASES-SPEC-09-ops.md:47`,
+                      `CLAUDE.md:190`
+       `docs/guides/rls-cutover.md` → `docs/operations/rls-cutover.md`
+         inbound (3): `backend/internal/modules/tenant/README.md:33`,
+                      `shared/openapi.yaml:3508`  ← CI GATE
+                      `docs/adr/07-tenancy-rls-model.md:12`
+         → sửa openapi.yaml thì PHẢI chạy `make openapi` và commit
+           `api.gen.go` + `types.gen.ts`, nếu không job `openapi` fail.
+       `docs/testing/TRACEABILITY-MATRIX.md` → `docs/reference/TRACEABILITY-MATRIX.md`
+         inbound (3): `docs/testing/README.md:14`, `docs/testing/TEST-PLAN.md:19`,
+                      `CLAUDE.md:26`
+     (sau khi chuyển, `guides/` chỉ còn `getting-started.md`, `operations/` có 3 file)
+
+1.9  Sửa ~69 link tương đối vỡ. Nhóm lớn nhất là MỘT lỗi cơ học lặp lại: header
+     **Affects** của ADR-03:6, ADR-04:6, ADR-05:6, ADR-06:6 dùng `../../../` —
+     độ sâu đúng từ `docs/adr/` là `../../`. Các ca khác:
+       `docs/adr/09:30,61,84` → `../MIGRATION.md`  — file ĐÃ TỪNG CÓ, xoá ở `f11cf3f`,
+                                không có kế thừa → bỏ link, giữ tên trong backtick,
+                                dẫn commit
+       `docs/adr/10:6`        → `../product/delivery-plan.md` — đã xoá ở `efb8a70`;
+                                kiểm `backlog.md` có mục "Sprint 1 §A" không:
+                                CÓ → trỏ lại, KHÔNG → xử như MIGRATION.md
+       `docs/adr/07:22`       → `../feature.md` — CHƯA TỪNG TỒN TẠI; tài liệu thật là
+                                `../product/feature-inventory.md` → trỏ lại.
+                                5 chỗ nhắc plain-text `feature.md §2`/`§18`: GIỮ
+                                NGUYÊN (dịch `§N` → `[D-NN]` là đoán ý ADR, đã loại)
+       `docs/adr/08`          → các path in-text viết thiếu `../`, từ `docs/adr/`
+                                resolve thành `docs/adr/product/…`
+       `backend/internal/modules/account/README.md` → `doc/en/architecture/06-…`
+                                (cây `doc/en` đã nghỉ) → trỏ `docs/adr/06-local-auth-model.md`
+     Quy tắc chung: có kế thừa → trỏ lại; không có → bỏ link + dẫn commit đã xoá.
+
+1.10 CI job MỚI, dạng CHẶN: link-check. Job riêng (KHÔNG nhồi vào job `lint` —
+     job đó là depguard/module-boundary cho Go). ~20 dòng shell, không cần mạng,
+     chỉ link tương đối, không kiểm anchor, loại trừ `template-main/`.
+     Bật SAU khi 1.9 xong (bật trước là fail ngay 69 link).
+     Repo hiện KHÔNG có công cụ markdown nào (không lychee/markdownlint/…).
+     CI hiện có 4 job: backend, lint, openapi, frontend.
+
+     → DỪNG, báo số link cuối, rồi mới sang Chặng 2.
+
+
+── CHẶNG 2: 79 MỆNH ĐỀ SAI TRONG 11 ADR (checkpoint) ───────────────────────────
+
+Cắt theo tầng ở nguyên tắc 3. Làm **ADR-10 và ADR-03 TRƯỚC** (2 file nặng nhất),
+DỪNG để review, rồi mới chạy 9 file còn lại — ranh giới "sự thật" vs "tường
+thuật quyết định" không máy móc, cắt quá tay thì sửa 2 file dễ hơn sửa 11.
+
+  ADR    Sai   Ghi chú
+  ────── ───── ────────────────────────────────────────────────────────────────
+  10     12    Nặng nhất. "No generated code exists / api.gen.go chưa từng được
+               generate" (thực: đã commit, 10.367 dòng) · "~730 lines, 12 paths"
+               (thực: 5.137 dòng, 111 path) · "All 12 handlers hand-written
+               (6 account, 6 media)" · "CI does not gate drift" (đã gate) ·
+               "the contract already lies / writeErr" (đã đóng 2026-08-27) ·
+               6 action item `[ ]` mà phần lớn đã xong
+  03     11    Sai từ dòng đầu. "as-built: postgres, pgbouncer" (đã comment out
+               2026-08-21, Postgres chạy trên host PG18) · "mailpit never shipped"
+               (đang chạy, docker-compose.yml:187-197) · thiếu `scraper` ·
+               "profiles observability/live/calls off" (KHÔNG có `profiles:` nào
+               trong compose, các service đó không tồn tại) · "uploads bypass
+               MinIO → R2" (thực: MinIO bind-mount) · "deploy script is one
+               docker compose up" (không có script) · action item #7 "no env knob
+               for concurrency" (có: IMAGE_CONCURRENCY, cmd/worker/main.go:374)
+  00     11    → xem 2.2, file này KHÔNG canonical hoá mà CHUYỂN ĐI
+  09      9    `MIGRATION.md` (bản mapping của chính nó) đã bị xoá · archive ·
+               MILESTONE_CHECKS ×3 · cây khai `product/checklist` (không có) ·
+               Status vẫn "proposed" trong khi restructure đã ship · dòng 43 tự
+               đặt luật bất biến mà ADR-07 đã vi phạm sẵn
+  07      7    Headline "RLS is enforced, not inert" → xem mục [1] · "no tenant_id
+               column anywhere today" (0020 thêm vào 17 bảng) · "connects direct
+               to postgres:5432" · "prod pools through PgBouncer" (đã xoá hẳn) ·
+               "platform/db/ is empty today" (db.go có NewPool/BeginTenantScope/…) ·
+               step 1,4,8 `[ ]` mà đã xong (8 test pass trong platform/db/rls_test.go)
+  05      6    "0001…0007 (v7 applied)" (thực: 0001–0042, 84 file) · "repository/
+               dirs are empty" (mỗi module 5–10 file) · "cmd/api still has TODO
+               mount OpenAPI handlers" (main.go mount 14 module) · "CI landed with
+               sqlc-drift" (không có) · "accountMod.RegisterTasks" (account không
+               có method này)
+  01      5    "openapi drifts: missing /auth/register, stale /auth/callback"
+               (register có ở openapi.yaml:121; không có path /auth/callback) ·
+               "CI landed with sqlc-drift" · "Everything in Phases 1,3-12 deferred.
+               No tenants/movies/music/stories/comics/bank/social/notifications"
+               (tất cả đã ship)
+  08      5    Nội dung ĐÚNG, chỉ Status + toàn bộ checkbox cũ: Status vẫn
+               "proposed", 4 action item `[ ]` đều đã xong
+  04      5    "MinIO removed only in docker-compose.prod.yml" (file đó KHÔNG tồn
+               tại) · "compose loses one service" (thực +1: minio + minio-setup) ·
+               "org/<tid> prefix deferred until tenancy lands" (tenancy đã land,
+               key vẫn chưa prefix — media/service.go:77,280) · "(docs/operations/
+               does not exist yet)" (đã có)
+  02      4    3/4 chỉ là rename `archivetech.md` → `docs/architecture/deferred/
+               access-policies.md` · 1 điều kiện bị đảo: "khi xây admin UI thì
+               màn hình là policies+groups, không phải roles" — admin UI roles/
+               permissions ĐÃ ship
+  06      4    Chính xác nhất. **Giả thuyết TTL 30d của tôi SAI** — ADR-06 ghi
+               `REFRESH_TOKEN_TTL=24h`, khớp `config.go:37-38`. Các claim OIDC/
+               Argon2id/cookie đều đúng. 4 cái sai đều ngoại biên (openapi drift
+               claim, password-reset "chưa build" — đã ship ở 0010)
+
+  2.1  4 class xuyên suốt, sửa một lượt:
+         - `MILESTONE_CHECKS.md` là "living tracker": ADR-00×3, 01×2, 05×3, 09×3
+           + `STYLE.md:21-22` + `reference/README.md:12` + `feature-inventory.md:3`
+         - "CI gates **sqlc** drift": ADR-01:11, ADR-05:14, ADR-10:30 — CHƯA BAO
+           GIỜ đúng. Chỉ OpenAPI codegen bị drift-gate; sqlc output không commit
+           (.gitignore:32)
+         - "postgres + pgbouncer chạy trong compose": ADR-00:77, ADR-03:10/14/42-46,
+           ADR-07:31/68
+         - link `../../../` trong header **Affects**: ADR-03:6, 04:6, 05:6, 06:6
+       Hai ADR còn Status "proposed" dù đã ship: **08** và **09** → flip.
+
+  2.2  ADR-00 KHÔNG phải một ADR — nó là "architecture **review**", cả 11 phát
+       biểu sai đều là mô tả hiện trạng, nó không quyết định gì. Theo genre rule
+       mới, dated point-in-time audit thuộc `analysis/`.
+       → `git mv docs/adr/00-architecture-review.md
+             docs/product/analysis/architecture-review-2026-07.md`
+         (commit đầu tiên của file: 2026-07-07)
+         `**Status:** historical`, **thân giữ nguyên văn** (audit bất biến),
+         số `00` trong `adr/` NGHỈ VĨNH VIỄN (STYLE.md: số không tái sử dụng).
+
+  2.3  ADR-07 + `CLAUDE.md`: nói đúng trạng thái RLS theo kết quả kiểm ở mục [1].
+
+
+── CHẶNG 3 ─────────────────────────────────────────────────────────────────────
+
+3.1  `TRACEABILITY-MATRIX.md` (đã chuyển sang `reference/` ở 1.8):
+     9 bảng, cột `Req │ Summary │ Test cases │ Pri │ Cov │ Result`, **47 dòng
+     yêu cầu**. Hiện Cov = 100% ✅ toàn bộ, không có ⚠/✖, Result rỗng, và 436
+     `TC-` id KHÔNG map tới một `_test.go` nào.
+     → Đánh lại Cov theo bằng chứng: ✅ chỉ khi một `_test.go` cụ thể chứng minh
+       được yêu cầu · ⚠ module có test nhưng không phủ yêu cầu này · ✖ module
+       không có test.
+     → THÊM CỘT `Evidence` ghi `file:func`. Đây là phần làm nó không mục lại —
+       một dấu ✅ không kèm `file:func` chính là thứ đã tạo ra 47 dòng 100% ✅.
+     → Đối chiếu với 30 file `_test.go` thực tế. Module CÓ test thật: account
+       (rbac/password/reset/handler), bank, comic, journal, media, notify, ops
+       (retention/state), people, social, story, tenant/middleware, platform
+       (db/rls ×4, events, server, storage).
+     → Banner `⚠️ (added 2026-08-25)` GIỮ LẠI (nó là ghi chú có ngày, và nó đã
+       nói đúng); thêm `Last verified` mới.
+
+3.2  `docs/product/backlog.md` hiện là file ARCHIVED (banner của chính nó:
+     "do not plan from this file", 2026-08-25) nhưng vẫn chiếm cái TÊN mà
+     `CLAUDE.md` và `docs/README.md` giới thiệu là "backlog".
+     → Xoá nó (git history là archive, dẫn commit), viết `backlog.md` MỚI,
+       `**Status:** current`, nội dung từ triage TOÀN BỘ audit
+       `analysis/remaining-work-2026-08-25.md` — một dòng cho mỗi đầu mục (không
+       tách tới sub-bullet), phần tài liệu đánh dấu do phiên này đóng.
+     → P0 dẫn đầu: (1) RLS — mục [1]; (2) verify/rotate cred — mục [2].
+
+3.3  `backend/MODULES.md` §8: `grep -ni openapi backend/MODULES.md` → **0 hit**,
+     trong khi ADR-10 (dòng 4,12,83) và `CLAUDE.md` đều khẳng định file này nhắc
+     lại quy tắc "OpenAPI is contract". Checklist 7 bước cho module mới KHÔNG có
+     bước openapi → một module mới hôm nay đi hết checklist rồi vẫn fail CI.
+     → Thêm quy tắc + bước openapi vào §8 (đúng action item #6 của ADR-10, đang `[ ]`).
+     → Làm đúng MỘT file thì hai tài liệu kia thành đúng, rẻ hơn sửa hai file để
+       thừa nhận một thiếu sót rồi vẫn để module mới sập CI.
+
+3.4  Quy tắc mới cho `analysis/` (để audit không bị bỏ quên lần nữa): mỗi audit
+     khi được nhận phải sinh ra VIỆC (dòng trong `backlog.md`) hoặc bị ĐÓNG kèm
+     lý do; thân audit vẫn never-updated. Lý do quy tắc này tồn tại: audit
+     2026-08-25 đã nêu đúng gần hết các lỗi trên, kèm số dòng, rồi nằm im 17 ngày
+     trong một thư mục mà cả `docs/README.md` lẫn ADR-09 đều không khai báo.
+
+
+── KHÔNG LÀM (đã loại có chủ đích) ─────────────────────────────────────────────
+
+  · KHÔNG cutover RLS, KHÔNG đổi `DATABASE_URL` trong phiên dọn tài liệu
+  · KHÔNG purge git history, KHÔNG rotate cred thay người vận hành
+  · KHÔNG viết `CONTEXT.md` — genre rules trong `docs/README.md` CHÍNH LÀ glossary
+    của domain tài liệu; thêm glossary thứ tư trong lúc đang sửa lệch giữa ba cái
+    là tự đánh mình
+  · KHÔNG dịch trích dẫn `§N` → `[D-NN]` trong thân ADR (là đoán ý, không phải sửa)
+  · KHÔNG sửa cột Cov thành "coverage thật" ngoài phạm vi bằng chứng test có sẵn
+  · KHÔNG chạm `template-main/` (reference material)
+  · KHÔNG tạo README.md cho `guides/` và `operations/` chỉ để thoả một linter
+    (1 và 3 file — index không thêm giá trị)
+  · KHÔNG viết ADR riêng cho việc "status truth chuyển từ file sang code" —
+    đã quyết ở `f11cf3f` 2 tháng trước, viết bây giờ là khảo cổ
+
+
+── PHỤ LỤC: DỮ KIỆN ĐÃ KIỂM CHỨNG 2026-09-11 ───────────────────────────────────
+
+  · `docs/archive/` KHÔNG tồn tại — xoá ở `f11cf3f` (2026-07-19), 33 file /
+    8.200 dòng. Vẫn bị khẳng định là "frozen, never update" ở 4 nơi:
+    `docs/README.md:17` (link vỡ), `CLAUDE.md`, `ADR-09:34-35`, `STYLE.md:7-8`
+  · `MILESTONE_CHECKS.md` xoá cùng commit đó
+  · `docs/MIGRATION.md` từng tồn tại, xoá ở `f11cf3f`
+  · `docs/product/delivery-plan.md` từng tồn tại, xoá ở `efb8a70`
+  · `docs/feature.md` và `docs/product/checklist` CHƯA TỪNG tồn tại
+  · docs/ có 7 mục trên đĩa: adr, architecture, guides, operations, product,
+    reference, testing. ADR-09 khai 5 + archive. `docs/README.md` map 5 hàng.
+    `guides/` và `operations/` là 2 mục duy nhất không có README.md
+  · test `_test.go` thực tế: **30**  (CLAUDE.md nói 14 · matrix banner nói 20)
+  · module trên đĩa: **14**  (CLAUDE.md nói 13 / 12 / 12)
+  · `STYLE.md:49-53` vốn đã gắn nhãn `(binding)`: "ADRs are immutable — correct
+    them by a dated addendum note" → luật này đã bị ADR-07 vi phạm sẵn trước
+    phiên này (ADR-07:6-8 "used to read … Both were false"), nên Chặng 2 không
+    phá vỡ một luật đang sống mà chính thức hoá một thực hành đã có
+  · `STYLE.md:38-40` vốn đã cấm: "write it as verifiable rather than asserting a
+    number that will rot" → các con số 14/13/12 đang vi phạm luật đã viết
+
+
+── NHỮNG QUYẾT ĐỊNH BỊ ĐẢO TRONG PHIÊN (để không có gì ngầm định) ──────────────
+
+  · "giữ nguyên văn thân ADR-09, sửa bằng Update note"  → bị thay bằng canonical
+    hoá tại chỗ theo tầng
+  · cơ chế "dated update note"  → bị thay bằng trường `Last verified` đã có sẵn
+  · giả thuyết "ADR-06 ghi REFRESH_TTL 30d"  → SAI, ADR-06 ghi 24h và đúng
+  · "audit 2026-08-25 liệt kê 5 chỗ MILESTONE_CHECKS"  → thiếu `STYLE.md`
+  · "RLS inert" (kết luận của agent)  → chưa kết luận được, xem mục [1]
