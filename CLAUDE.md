@@ -11,20 +11,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project scope & constraints (read before planning work)
 
-Everything below describes the **full, multi-year platform** — it is NOT the current scope. An evaluation pass ([docs/adr/](docs/adr/), ADRs 00–10) cut v1 down to a hard envelope: **1 developer · single VPS · ≤ $100/mo.** That envelope still holds, but the *module* scope has since expanded well past the original video-only cut — see "Current status". Social, creator economy, and marketplace remain out.
+Everything below describes the **full, multi-year platform** — it is NOT the current scope. An evaluation pass ([docs/adr/](docs/adr/), ADRs 01–10) cut v1 down to a hard envelope: **1 developer · single VPS · ≤ $100/mo.** That envelope still holds, but the *module* scope has since expanded well past the original video-only cut — see "Current status". Social, creator economy, and marketplace remain out.
 
 - **The original v1 (Phase 0 wiring + one video-upload happy path) is long closed.** ([01-v1-scope-cut.md](docs/adr/01-v1-scope-cut.md) scoped it.) That loop — local password sign-in → authenticated Next.js home → upload mp4 → MinIO (dev) / R2 (prod) → worker transcodes to HLS → `assets.status = ready` → Vidstack playback → revocable logout — still works and is the regression baseline. Everything since followed [ADR-08](docs/adr/08-life-os-pivot.md)'s life-OS pivot through SPEC-01…09.
 - **Phase 0 wiring is closed, not a pending blocker** ([05-phase0-wiring-order.md](docs/adr/05-phase0-wiring-order.md) has the original plan/sequencing — useful for the *shape* of the work but stale on status): migrations audited/split, `make sqlc` run, repository adapters written, `account.New(...)` + `media.New(...)` constructed and mounted in `cmd/api/main.go`, local auth end-to-end, frontend auth gate wired. See "Current status" below for what's actually left.
 - **Still deferred:** social (+ advanced social), creator economy, marketplace, ML safety, LiveKit/mediamtx, the 5-service observability stack. *(Bank is no longer deferred — it shipped as the `bank` module per [SPEC-03](docs/product/specs/SPEC-03-finance-ledger.md).)* Compose profiles `--profile observability`, `--profile live`, and `--calls` stay disabled.
 - **Storage:** dev runs MinIO bind-mounted to `./data/minio`; prod uses R2. Same `platform/storage` S3-compatible client code either way ([ADR-04](docs/adr/04-storage-tier-budget.md) — the title says "R2-only" but its 2026-06-06 update note keeps MinIO for local dev, since presigned-URL uploads need an S3-speaking origin).
 
-**Docs live in [docs/](docs/)** — restructured 2026-07-07 into a Diátaxis-style tree ([ADR-09](docs/adr/09-docs-architecture.md)); the old flat `doc/en` + `doc/vi` mirror is retired. **English-only now** — the frozen Vietnamese mirror is read-only in `docs/archive/vi-2026-07/`; never update it. Map:
+**Docs live in [docs/](docs/)** — restructured 2026-07-07 into a Diátaxis-style tree ([ADR-09](docs/adr/09-docs-architecture.md)); the old flat `doc/en` + `doc/vi` mirror is retired (deleted in `f11cf3f`; git history is the archive — there is no `docs/archive/`). **English-only.** How these documents are kept true — one owner per fact, ADRs corrected in place, `Last verified` as the only freshness mark — is [ADR-11](docs/adr/11-docs-canonicalisation.md). Map:
 
-- **[docs/adr/](docs/adr/)** — decision records 00–10 (`NN-*.md`). [ADR-08](docs/adr/08-life-os-pivot.md) repositioned Portal from Facebook-parity to a *life OS* (finance/time/etc.); [docs/product/vision.md](docs/product/vision.md) is the current yardstick. [ADR-10](docs/adr/10-openapi-contract-direction.md) made spec-first codegen CI-enforced.
+- **[docs/adr/](docs/adr/)** — decision records 01–11 (`NN-*.md`; `00` was an architecture *review*, not a decision, and lives in `docs/product/analysis/`). [ADR-08](docs/adr/08-life-os-pivot.md) repositioned Portal from Facebook-parity to a *life OS* (finance/time/etc.); [docs/product/vision.md](docs/product/vision.md) is the current yardstick. [ADR-10](docs/adr/10-openapi-contract-direction.md) made spec-first codegen CI-enforced.
 - **[docs/product/](docs/product/)** — `feature-inventory.md` (decisions `D-1`…`D-41` — cite these IDs), `backlog.md` (gap analysis), `vision.md`, `specs/` (implementation-ready SPEC-01…09), `briefs/` (per-spec framing, `00`…`09`), `analysis/` (point-in-time audits).
 - **[docs/architecture/](docs/architecture/)** — `diagrams.md` (Mermaid), `security.md` (auth/RBAC design, was `authoration.md`), `frontend.md`, and `deferred/access-policies.md` (the competing RBAC vision — see the schism note in the Account section).
-- **[docs/testing/](docs/testing/)** — `TEST-PLAN.md`, `TRACEABILITY-MATRIX.md`, per-spec `TEST-CASES-SPEC-0N-*.md`, dated test runs.
-- **[docs/guides/](docs/guides/)** dev setup + backup/restore · **[docs/operations/](docs/operations/)** Postgres tuning · **[docs/reference/](docs/reference/)** Asynq event/task registry.
+- **[docs/testing/](docs/testing/)** — `TEST-PLAN.md`, per-spec `TEST-CASES-SPEC-0N-*.md`, dated test runs. The requirement→test map is [docs/reference/TRACEABILITY-MATRIX.md](docs/reference/TRACEABILITY-MATRIX.md).
+- **[docs/guides/](docs/guides/)** dev setup · **[docs/operations/](docs/operations/)** runbooks — backup/restore, RLS cutover, Postgres tuning · **[docs/reference/](docs/reference/)** Asynq event/task registry, traceability matrix.
 
 ## Stack & decisions
 
@@ -54,7 +54,7 @@ Layout:
 
 ```
 backend/internal/
-├── modules/             ← one bounded context per subdir (13, all wired)
+├── modules/             ← one bounded context per subdir (`ls -d backend/internal/modules/*/ | wc -l`; all wired)
 │   ├── account/         users, local password/JWT auth, RBAC, sessions, audit
 │   ├── tenant/          organizations, memberships, RLS bootstrap
 │   ├── media/           assets + transcode/image/thumbnail workers (shared infra)
@@ -75,7 +75,7 @@ Inside each module: `module.go` (the `New(Deps) *Module` constructor + `MountHTT
 - One documented exception to "api-only": `cmd/api` may grab `account.Module.Engine()` to build module-specific `RequirePermission` middleware. Other modules MUST NOT import `account/rbac` directly.
 - Cross-module async coupling is via Asynq events named `<emitting-module>:<event>` (e.g. `media:asset_ready`). No shared transactions across modules.
 - Schema ownership is per-module; reading another module's tables goes through its `api/` or via events, never a raw JOIN.
-- **These boundaries are CI-enforced.** [backend/.golangci.yml](backend/.golangci.yml) (depguard) + the `lint` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) fail the build on: importing `internal/sysrepository` outside `cmd/sysjobs`, `platform/` importing any module, non-`account` code importing `account/rbac`, and cross-module internal imports. There's a per-module isolation rule for all 12 modules; a new module adds its own block (template comment is in the file).
+- **These boundaries are CI-enforced.** [backend/.golangci.yml](backend/.golangci.yml) (depguard) + the `lint` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) fail the build on: importing `internal/sysrepository` outside `cmd/sysjobs`, `platform/` importing any module, non-`account` code importing `account/rbac`, and cross-module internal imports. There's a per-module isolation rule for every module; a new module adds its own block (template comment is in the file).
 
 Adding a new module: follow the checklist in `backend/MODULES.md` §8 (create the subtree, add an `sqlc.yaml` block, write the migration with `000N_<name>_…` prefix, wire into both `cmd/api/main.go` and `cmd/worker/main.go`).
 
@@ -160,13 +160,13 @@ Never check permissions ad-hoc. Always go through `rbac.Engine.Authorize` / `rba
 
 ## Current status
 
-**Verify status against the code, not against prose.** There is no status-tracker file — `MILESTONE_CHECKS.md` was deleted in commit `f11cf3f`, and `docs/README.md` still links it (stale; ignore). The reliable signals:
+**Verify status against the code, not against prose.** There is no status-tracker file — `MILESTONE_CHECKS.md` was deleted in commit `f11cf3f`. The reliable signals:
 
-- **Is a module wired?** It is constructed *and* mounted in [backend/cmd/api/main.go](backend/cmd/api/main.go) (`<name>.New(...)` plus `<name>Mod.MountHTTP(r)`), and its `repository/` dir is populated. **All 12 modules currently pass both checks** — `account bank comic journal layout media movie music notify ops people story tenant`. An empty `repository/` is the concrete signal a module is inert, not its `README.md`.
+- **Is a module wired?** It is constructed *and* mounted in [backend/cmd/api/main.go](backend/cmd/api/main.go) (`<name>.New(...)` plus `<name>Mod.MountHTTP(r)`), and its `repository/` dir is populated. **Every module on disk currently passes both checks** (`ls -d backend/internal/modules/*/` — at last verification: `account bank comic journal layout media movie music notify ops people social story tenant`). An empty `repository/` is the concrete signal a module is inert, not its `README.md`.
 - **What runs in the background?** [backend/cmd/worker/main.go](backend/cmd/worker/main.go) — the `publisher.Subscribe(...)` calls are the cross-module event wiring, and each `Register*Tasks` call shows which of the three servers owns a task.
 - **ADRs and per-module `README.md` "open work" sections are point-in-time**, written when the decision was made, and several have gone stale (e.g. `media/README.md` still says the FFmpeg pipeline "logs and returns nil" — untrue). Prefer the code, then `git log`, over any document's status claim.
 
-**Tests:** 14 `_test.go` files — `account` (rbac / password / reset / handler), `bank`, `comic`, `journal`, `media`, `notify`, `ops` (retention / state), `people`, `platform/events`, and `platform/storage` (integration, gated on `S3_ENDPOINT`). Run `make test-backend`.
+**Tests:** `find backend -name '*_test.go' | wc -l` (31 at last verification) across `account` (auth / handler / rbac), `bank`, `comic`, `journal`, `layout`, `media`, `movie`, `music`, `notify`, `ops`, `people`, `social`, `story`, `tenant/middleware`, and `platform/{db,events,server,storage}` (`storage` is an integration test gated on `S3_ENDPOINT`; `db` holds the RLS tests). Run `make test-backend`.
 
 **Known drift — OpenAPI, narrower than it used to be.** [ADR-10](docs/adr/10-openapi-contract-direction.md) landed spec-first for real: `backend/internal/handler/api.gen.go` and `frontend/src/lib/types.gen.ts` are **committed**, and CI's `openapi` job runs `make openapi` then `git diff --exit-code`, so stale codegen now fails the build. What remains: **no handler implements the generated `ServerInterface` yet** (`api.gen.go` is its only referent in the tree). Handlers are still hand-written plain-chi, retrofitted module-by-module as each is touched. So the spec is guaranteed in sync with the *generated code*, not with *handler behaviour* — verify response shapes against the handler. (The long-standing example — handlers emitting `{code, message}` via a local `writeErr` — is **closed as of 2026-08-27**: `internal/platform/server` is now the single error writer, the four surviving `writeErr`/`writeError` shims delegate to `server.Problem`, and the last raw emitters in `account/middleware`, `platform/middleware/ratelimit.go` and `cmd/api`'s `/continue` route were retrofitted. `schemas/Error` is deprecated and referenced by no operation.)
 
@@ -187,7 +187,7 @@ All from repo root via the [Makefile](Makefile):
 | `make lint` | `golangci-lint run` + `pnpm lint` |
 | `make certs` | Issue locally-trusted TLS certs for `*.portal.localhost` via `mkcert` (local HTTPS dev) |
 | `make build` | Build production images for `api`, `worker`, `frontend` |
-| `make restore-drill` | Exercise the backup/restore path end-to-end (see [docs/guides/backup-restore.md](docs/guides/backup-restore.md); `cmd/opsenqueue` triggers the backup task on demand) |
+| `make restore-drill` | Exercise the backup/restore path end-to-end (see [docs/operations/backup-restore.md](docs/operations/backup-restore.md); `cmd/opsenqueue` triggers the backup task on demand) |
 
 Also defined: `env`, `logs`, `ps`, `restart`, `dev-api` / `dev-worker` / `dev-frontend`, `openapi-go` / `openapi-ts`, `help`.
 
@@ -201,6 +201,7 @@ Single Go test: `cd backend && go test ./internal/modules/account/rbac -run Test
 - **Never reach back to add a column to another module's table** — the owning module ships the migration after coordination.
 - **System roles are protected.** Migration `0002_account_rbac` marks the seven default roles `is_system = true`; the `UpdateRole` / `DeleteRole` queries refuse to touch them. Don't override that flag without thinking about disaster recovery.
 - **Cookie flags are environment-sensitive.** `COOKIE_SECURE=true` is the default; only flip to `false` for plain-`http://localhost` development. Do not commit a `.env` with `COOKIE_SECURE=false`.
+- **RLS is enforced only when the app connects as `portal_app`** (NOSUPERUSER, NOBYPASSRLS — created by migration 0019). `docker-compose.yml` reads `DATABASE_URL` from `.env`; the checked deployment (2026-09-11) points it at `portal_app`, so the tenant policies on the 17 fenced tables are live there. **`.env.example` still defaults to `portal`, a superuser that bypasses every policy** — so a fresh `make up` (which copies `.env.example` to `.env`) gets tenant isolation that is decorative. Verify with `grep DATABASE_URL .env`; the cutover steps are [docs/operations/rls-cutover.md](docs/operations/rls-cutover.md). Fixing the example default is a backlog P0, not something to do in passing: a query that quietly relied on superuser rights fails the moment the role changes.
 - **`internal/sysrepository` (BYPASSRLS) is restricted to `cmd/sysjobs`** — enforced by depguard ([backend/.golangci.yml](backend/.golangci.yml) + CI `lint` job). Bypassing RLS in the API path would be catastrophic. (The package doesn't exist yet; the rule is a standing guardrail for when it lands.)
 
 <!-- gitnexus:start -->
