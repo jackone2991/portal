@@ -47,7 +47,7 @@ func TestVerifyPasswordMalformed(t *testing.T) {
 		"",
 		"plain",
 		"$argon2id$v=19$m=65536,t=3,p=2$onlysalt", // missing key segment
-		"$bcrypt$whatever",                          // wrong algorithm
+		"$bcrypt$whatever",                        // wrong algorithm
 	} {
 		if ok, err := VerifyPassword("x", bad); ok || err == nil {
 			t.Errorf("VerifyPassword(_, %q) = %v, %v; want false, non-nil", bad, ok, err)

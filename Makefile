@@ -71,10 +71,14 @@ sqlc: ## Generate Go from SQL (db/queries/*.sql -> internal/repository/)
 openapi: openapi-go openapi-ts ## Regenerate Go server + TS client from shared/openapi.yaml
 
 openapi-go:
-	cd backend && oapi-codegen -config oapi-codegen.yaml ../shared/openapi.yaml > internal/handler/api.gen.go
+# oapi-codegen.yaml already sets `output: internal/handler/api.gen.go`, so the tool
+# writes the file itself. The old `> internal/handler/api.gen.go` redirect only
+# worked by accident: the shell truncated the file, then the tool wrote it again.
+	cd backend && oapi-codegen -config oapi-codegen.yaml ../shared/openapi.yaml
 
 openapi-ts:
-	cd frontend && pnpm openapi-typescript ../shared/openapi.yaml -o src/lib/types.gen.ts
+# Delegates to the package.json script so the command lives in one place.
+	cd frontend && pnpm run openapi
 
 # ── Backups / DR (SPEC-09) ──────────────────────────────────────
 .PHONY: restore-drill

@@ -1,44 +1,50 @@
 # ADR-10 — OpenAPI Contract Direction (spec-first, enforced)
 
 **Status:** **accepted** 2026-07-11 (drafted 2026-07-08, from the 2026-07-08 gap audit)
-**Relates to:** [backlog §9](../product/backlog.md) · specs/README "API contract" convention · [ADR-09](09-docs-architecture.md) canonical-source rule · `backend/MODULES.md` ("OpenAPI is contract")
-
-> **Update 2026-07-11 (Sprint 1 foundation gate).** Accepted and execution started: the generated code is committed (`backend/internal/handler/api.gen.go`, `frontend/src/lib/types.gen.ts`) and CI now gates codegen drift (the `openapi` job runs `make openapi` then `git diff --exit-code`, mirroring the sqlc gate). Retrofitting the hand-written handlers onto the generated `ServerInterface` proceeds per module as each is touched (see [delivery-plan.md](../product/delivery-plan.md) Sprint 1 §A); the drift gate makes the direction non-optional from here.
+**Last verified:** 2026-09-11
+**Relates to:** backlog §9 as it stood in 2026-07 (that file was replaced on 2026-09-11; `git log --follow -- docs/product/backlog.md`) · specs/README "API contract" convention · [ADR-09](09-docs-architecture.md) canonical-source rule · `backend/MODULES.md` § 8 (states the rule since 2026-09-11)
 
 ## Context
 
-`shared/openapi.yaml` (OpenAPI 3.1, ~730 lines, 12 paths) declares itself the
-source of truth — its `info` block says *"Server stubs (Go) and the TypeScript
-client are both generated from it,"* and CLAUDE.md + MODULES.md repeat the rule.
-On disk that claim is aspirational, not real:
+*The state this decision was made against, as the 2026-07-08 audit found it.
+Where it stands now is under Consequences and Action items.*
 
-- **No generated code exists.** `backend/internal/handler/api.gen.go` and
-  `frontend/src/lib/types.gen.ts` are `.gitignore`d and have **never been
-  generated or committed** — `internal/handler/` does not exist. `make openapi`
-  is fully wired (oapi-codegen `chi-server` + `openapi-typescript`, config in
-  `backend/oapi-codegen.yaml`) but has apparently never been run in anger.
-- **All 12 handlers are hand-written plain-chi** (6 account, 6 media) with zero
-  `ServerInterface` — `grep -rn ServerInterface backend/` returns nothing. The
-  hand-written `frontend/src/lib/api-client.ts` still carries a TODO to switch to
-  the generated types.
-- **The contract already lies.** Handlers emit the legacy `{code, message}` error
-  body via a local `writeErr`, but the spec mandates RFC 7807 `Problem`. The
-  auth-path drift (`/auth/register`, retired `/auth/callback`) was fixed by hand;
-  the error-shape drift persists.
-- **CI does not gate drift.** The `openapi` job only asserts the YAML parses and
-  has `openapi`/`info`/`paths` keys (a ~10-line Python check). It runs no lint, no
-  codegen, no spec-vs-handler comparison. By contrast the `backend` job **does**
-  gate sqlc drift (`sqlc generate` then `git diff`). OpenAPI is the asymmetric hole.
+`shared/openapi.yaml` (OpenAPI 3.1, then ~730 lines, 12 paths) declared itself
+the source of truth — its `info` block said *"Server stubs (Go) and the
+TypeScript client are both generated from it,"* and CLAUDE.md repeated the rule.
+On disk that claim was aspirational, not real:
 
-The forcing function: **SPEC-01/02/03 (and SPEC-04) are about to add ~30 endpoints**
-across media/comic/bank/notify onto a contract nothing machine-checks. Each spec's
-Definition of Done says *"fix the drift in the same or an earlier PR"* — but there
-is no mechanism to enforce that, so it will rot. Two facts make timing decisive:
-the generated side is **greenfield** (nothing committed to reconcile or delete),
-and the handler count is at its **all-time low** (12, two wired modules). This is
-the cheapest this decision will ever be; every week of deferral raises the price.
+- **No generated code existed.** `backend/internal/handler/api.gen.go` and
+  `frontend/src/lib/types.gen.ts` were `.gitignore`d and had never been
+  generated or committed — `internal/handler/` did not exist. `make openapi`
+  was fully wired (oapi-codegen `chi-server` + `openapi-typescript`, config in
+  `backend/oapi-codegen.yaml`) but had never been run in anger.
+- **All 12 handlers were hand-written plain-chi** (6 account, 6 media) with zero
+  `ServerInterface` — `grep -rn ServerInterface backend/` returned nothing. The
+  hand-written `frontend/src/lib/api-client.ts` carried a TODO to switch to the
+  generated types.
+- **The contract already lied.** Handlers emitted the legacy `{code, message}`
+  error body via a local `writeErr`, but the spec mandated RFC 7807 `Problem`.
+  The auth-path drift (`/auth/register`, retired `/auth/callback`) had been fixed
+  by hand; the error-shape drift persisted.
+- **CI did not gate drift — of anything.** The `openapi` job only asserted the
+  YAML parsed and had `openapi`/`info`/`paths` keys (a ~10-line Python check): no
+  lint, no codegen, no spec-vs-handler comparison. (The audit also credited the
+  `backend` job with an sqlc drift gate to mirror. It had none: sqlc output is
+  `.gitignore`d and regenerated on every build, so there was nothing to diff.
+  The *pattern* — regenerate, then `git diff --exit-code` — was still the right
+  one; it just had no precedent in this repo.)
 
-The underlying decision (backlog §9) was never actually made: *adopt
+The forcing function: **SPEC-01/02/03 (and SPEC-04) were about to add ~30
+endpoints** across media/comic/bank/notify onto a contract nothing
+machine-checked. Each spec's Definition of Done said *"fix the drift in the same
+or an earlier PR"* — but there was no mechanism to enforce that, so it would
+rot. Two facts made timing decisive: the generated side was **greenfield**
+(nothing committed to reconcile or delete), and the handler count was at its
+**all-time low** (12, two wired modules). This was the cheapest the decision
+would ever be; every week of deferral raised the price.
+
+The underlying decision (backlog §9) had never actually been made: *adopt
 oapi-codegen/openapi-typescript, or drop the spec as source of truth.* It is
 expensive to reverse and touches every module — hence an ADR.
 
@@ -108,28 +114,74 @@ from the spec fails CI — the specs' DoD becomes mechanical, not aspirational.
 
 ## Consequences
 
-- **backlog §9 closes** (the open P2 either/or is resolved).
-- **specs/README's "fix drift in the same or earlier PR" gains teeth** — it becomes
-  a CI gate, not a good intention; the specs' DoD is enforceable.
+What followed, checked against the tree on 2026-09-11:
+
+- **The drift gate exists in `ci.yml` — and has never run to its diff step.**
+  `api.gen.go` (10,367 lines) and `types.gen.ts` (8,305 lines) have been
+  committed since `6160f8e` (2026-07-12); `.gitignore` excludes sqlc output
+  only; the `openapi` job is written to run `make openapi` then
+  `git diff --exit-code`. But `frontend/pnpm-lock.yaml` was deleted in
+  `edadf28` (2026-07-08) while the job's `setup-node` step still caches on
+  it, so the job — and the `frontend` job with it — has failed at setup on
+  **every run since**, on `main` and on every PR (`gh run list`). With no
+  branch protection, red CI blocked nothing. "Stale codegen fails the build"
+  has been true on paper only; whether committed codegen matches the spec has
+  been checked by hand. Backlog P0.
+- **Spec-first held for every module that came after.** The spec is now
+  `wc -l shared/openapi.yaml` lines (5,137 at last check) and
+  `python3 -c "import yaml;print(len(yaml.safe_load(open('shared/openapi.yaml'))['paths']))"`
+  paths (111), tagged for every wired module — account/admin, media, movies,
+  music, stories, comic, bank, journal, notifications, layout, ops, people,
+  social, tenant, platform. The "~2 of ~7 modules" gap closed.
+- **The error contract stopped lying — but by a different route.**
+  `internal/platform/server.Problem` became the single RFC 7807 writer on
+  2026-08-25; the four surviving `writeErr`/`writeError` shims (account, media,
+  notify, tenant) delegate to it, and `schemas/Error` is deprecated with no
+  referent. This landed without the `ServerInterface` cutover it was scoped
+  under.
+- **No handler implements the generated `ServerInterface`.** `api.gen.go` is
+  its only referent in the tree (`grep -rln ServerInterface backend`). Every
+  handler is still hand-written plain-chi. The gate therefore proves the
+  generated code matches the spec, **not** that handler behaviour does — a
+  response shape must still be verified against the handler.
+- **The frontend is not typed end-to-end.** `types.gen.ts` is committed, but
+  `grep -rl 'from "./types.gen"' frontend/src` finds one importer
+  (`lib/comic-sync.ts`); `api-client.ts` still opens with "once `make openapi`
+  runs …" and the other `lib/*.ts` modules hand-declare their types. The typed
+  client the decision promised is available and unused.
+- **backlog §9 closed** (the either/or is resolved). The specs' DoD is
+  enforceable for *path presence and schema shape*; handler conformance stays
+  a review question.
 - The spec's own `info`-block claim ("stubs and client are generated from it")
-  stops being false.
-- CLAUDE.md's "don't hand-edit generated files" now has real files to protect
-  (`api.gen.go`, `types.gen.ts` are already named there).
-- `frontend/src/lib/api-client.ts`'s standing TODO resolves; the client is typed.
-- **The new-module checklist (MODULES.md §8) gains a step:** "add paths to
-  `shared/openapi.yaml`; `make openapi`; commit the generated files."
-- ADR-09's canonical-source rule holds: the contract stays at `shared/openapi.yaml`
-  next to what it governs; `docs/reference/` keeps pointing at it, not copying it.
+  is true. CLAUDE.md's "don't hand-edit generated files" protects real files.
+- **MODULES.md §8 gained its step on 2026-09-11** — two months after this ADR
+  said it would (`grep -ci openapi backend/MODULES.md` was 0 until then; a new
+  module that followed the checklist failed the `openapi` job). ADR-09's
+  canonical-source rule holds: the contract stays at `shared/openapi.yaml`;
+  `docs/reference/` points at it.
 
 ## Action items
 
-- [ ] Accept this ADR (owner) and flip status to accepted.
-- [ ] Pin oapi-codegen (`tools.go` / `go.mod` tool directive); un-`.gitignore`
-      `api.gen.go` + `types.gen.ts`.
-- [ ] `make openapi`; refactor account + media handlers onto the generated
-      `ServerInterface`; add the module-wide `Problem` error helper.
-- [ ] Replace the CI `openapi` parse-check with lint + regenerate-and-diff (Go + TS),
-      mirroring the `backend` job's sqlc gate.
-- [ ] Land the cutover PR **before SPEC-01**; thereafter each spec adds its paths
-      spec-first.
-- [ ] Update MODULES.md §8 checklist + the CLAUDE.md generated-files note.
+- [x] Accept this ADR and flip status to accepted (2026-07-11).
+- [x] Un-`.gitignore` `api.gen.go` + `types.gen.ts`; commit them (`6160f8e`).
+- [ ] Pin oapi-codegen for **local** runs. CI pins `oapi-codegen@v2.7.2`
+      (`.github/workflows/ci.yml`) and `openapi-typescript ^7.4.0`
+      (`frontend/package.json`), but `backend/go.mod` has no `tool` directive
+      and there is no `tools.go`, so `make openapi` on a developer machine uses
+      whatever version is on `PATH` — and a version skew produces a diff the
+      gate rejects.
+- [x] `make openapi` runs; `Problem` error helper exists
+      (`internal/platform/server`, 2026-08-25).
+- [ ] Refactor handlers onto the generated `ServerInterface` — **none done**,
+      account and media included. Retrofit per module as each is touched.
+- [x] CI regenerate-and-diff for Go + TS (`openapi` job, `6160f8e`).
+- [ ] Replace the parse-check with a real lint (`redocly lint` / `vacuum`) —
+      the job still only checks that the YAML parses.
+- [x] Every spec since SPEC-01 added its paths spec-first (the gate makes the
+      alternative fail CI). The "cutover PR before SPEC-01" as scoped — handlers
+      onto `ServerInterface` — never landed; only the gate did.
+- [x] `backend/MODULES.md` §8: "declare the endpoints in `shared/openapi.yaml`
+      first; `make openapi`; commit the generated files" (2026-09-11).
+- [x] CLAUDE.md generated-files note names the real files.
+- [ ] Make the frontend consume `types.gen.ts` beyond `comic-sync.ts`, or
+      strike the "typed client" claim from the spec's `info` block.

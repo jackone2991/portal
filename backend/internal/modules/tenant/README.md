@@ -26,7 +26,9 @@ Owns the **organization** entity (the tenant boundary) and the middleware that p
 
 ## Open work
 
-- Migration `0004_tenant_organizations.up.sql` + RLS scaffolding
-- `RequireTenant` middleware (skeleton in [authoration.md §10.1](../../../../authoration.md))
-- `POST /auth/switch-tenant` flow with TOTP step-up
-- Tenant lifecycle endpoints (onboarding, suspension, hard-delete cron in `cmd/sysjobs/`)
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+

@@ -351,18 +351,114 @@ func (a *Adapter) StartImport(ctx context.Context, id uuid.UUID, total int) erro
 }
 
 // UpdateImportProgress / FinishImport pass the report json as TEXT (not []byte):
-// under QueryExecModeExec pgx encodes []byte as bytea, which a jsonb column rejects.
+// under QueryExecModeExec pgx encodes []byte as bytea, which a jsonb column
+// rejects. The queries now cast ::text::jsonb so sqlc types the param as string,
+// which is why these can use the generated methods instead of raw SQL.
 func (a *Adapter) UpdateImportProgress(ctx context.Context, id uuid.UUID, succeeded, failed int, report []comic.ImportFileResult) error {
-	b, _ := json.Marshal(report)
-	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET succeeded=$2, failed=$3, report=$4::jsonb, updated_at=now() WHERE id=$1`,
-		pgUUID(id), int32(succeeded), int32(failed), string(b))
-	return err
+	return a.q.UpdateImportProgress(ctx, UpdateImportProgressParams{
+		ID: pgUUID(id), Succeeded: int32(succeeded), Failed: int32(failed), Report: reportText(report),
+	})
 }
 
 func (a *Adapter) FinishImport(ctx context.Context, id uuid.UUID, status string, succeeded, failed int, report []comic.ImportFileResult, errMsg *string) error {
-	b, _ := json.Marshal(report)
-	_, err := a.db.Exec(ctx, `UPDATE comic_imports SET status=$2, succeeded=$3, failed=$4, report=$5::jsonb, error=$6, updated_at=now() WHERE id=$1`,
-		pgUUID(id), status, int32(succeeded), int32(failed), string(b), errMsg)
+	return a.q.FinishImport(ctx, FinishImportParams{
+		ID: pgUUID(id), Status: status, Succeeded: int32(succeeded), Failed: int32(failed),
+		Report: reportText(report), Error: errMsg,
+	})
+}
+
+// reportText marshals the per-file results for the jsonb column. A marshal
+// failure degrades to an empty array rather than losing the whole progress
+// write — the report is diagnostic, the counters are not.
+func reportText(report []comic.ImportFileResult) string {
+	b, err := json.Marshal(report)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+// ── sync sources (P1.8) — raw queries (no sqlc for this table) ─────────
+
+const syncSourceCols = `id, comic_id, owner_user_id, source_url, source_site, chapters_hint, last_status, last_import_id, last_error, last_synced_at, total_chapters, scraped_chapters, created_at, updated_at`
+
+func scanSyncSource(row pgx.Row) (comic.SyncSource, error) {
+	var id, comicID, ownerID, importID pgtype.UUID
+	var lastErr pgtype.Text
+	var syncedAt pgtype.Timestamptz
+	var total, scraped int32
+	var s comic.SyncSource
+	if err := row.Scan(&id, &comicID, &ownerID, &s.SourceURL, &s.SourceSite, &s.ChaptersHint, &s.LastStatus, &importID, &lastErr, &syncedAt, &total, &scraped, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		return comic.SyncSource{}, err
+	}
+	s.ID, s.ComicID, s.OwnerUserID, s.LastImportID = uuidFrom(id), uuidFrom(comicID), uuidFrom(ownerID), uuidPtr(importID)
+	s.TotalChapters, s.ScrapedChapters = int(total), int(scraped)
+	if lastErr.Valid {
+		e := lastErr.String
+		s.LastError = &e
+	}
+	if syncedAt.Valid {
+		t := syncedAt.Time
+		s.LastSyncedAt = &t
+	}
+	return s, nil
+}
+
+func (a *Adapter) CreateSyncSource(ctx context.Context, comicID, ownerID uuid.UUID, sourceURL, site, chaptersHint string) (comic.SyncSource, error) {
+	return scanSyncSource(a.db.QueryRow(ctx,
+		`INSERT INTO comic_sync_sources (comic_id, owner_user_id, source_url, source_site, chapters_hint) VALUES ($1,$2,$3,$4,$5) RETURNING `+syncSourceCols,
+		pgUUID(comicID), pgUUID(ownerID), sourceURL, site, chaptersHint))
+}
+
+func (a *Adapter) ListSyncSources(ctx context.Context, comicID uuid.UUID) ([]comic.SyncSource, error) {
+	rows, err := a.db.Query(ctx, `SELECT `+syncSourceCols+` FROM comic_sync_sources WHERE comic_id=$1 ORDER BY created_at`, pgUUID(comicID))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []comic.SyncSource
+	for rows.Next() {
+		s, err := scanSyncSource(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
+func (a *Adapter) GetSyncSource(ctx context.Context, id uuid.UUID) (comic.SyncSource, error) {
+	s, err := scanSyncSource(a.db.QueryRow(ctx, `SELECT `+syncSourceCols+` FROM comic_sync_sources WHERE id=$1`, pgUUID(id)))
+	if err != nil {
+		return comic.SyncSource{}, mapNotFound(err)
+	}
+	return s, nil
+}
+
+// UpdateSyncProgress stores overall chapter progress on the source (batched sync).
+func (a *Adapter) UpdateSyncProgress(ctx context.Context, id uuid.UUID, scraped, total int) error {
+	_, err := a.db.Exec(ctx, `UPDATE comic_sync_sources SET scraped_chapters=$2, total_chapters=$3, updated_at=now() WHERE id=$1`,
+		pgUUID(id), int32(scraped), int32(total))
+	return err
+}
+
+// SetSyncLastImport points the source at the current batch's import job (so the UI
+// can optionally follow it) without disturbing the other progress fields.
+func (a *Adapter) SetSyncLastImport(ctx context.Context, id, importID uuid.UUID) error {
+	_, err := a.db.Exec(ctx, `UPDATE comic_sync_sources SET last_import_id=$2, updated_at=now() WHERE id=$1`,
+		pgUUID(id), pgUUID(importID))
+	return err
+}
+
+func (a *Adapter) DeleteSyncSource(ctx context.Context, id uuid.UUID) error {
+	_, err := a.db.Exec(ctx, `DELETE FROM comic_sync_sources WHERE id=$1`, pgUUID(id))
+	return err
+}
+
+func (a *Adapter) UpdateSyncStatus(ctx context.Context, id uuid.UUID, status string, importID *uuid.UUID, errMsg *string, synced bool) error {
+	_, err := a.db.Exec(ctx,
+		`UPDATE comic_sync_sources SET last_status=$2, last_import_id=COALESCE($3, last_import_id), last_error=$4, last_synced_at = CASE WHEN $5 THEN now() ELSE last_synced_at END, updated_at=now() WHERE id=$1`,
+		pgUUID(id), status, optUUID(importID), errMsg, synced)
 	return err
 }
 

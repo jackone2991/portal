@@ -1,5 +1,8 @@
 {
   "cells": {
-    "CreatePost": { "verdict": "good", "note": "Tabbed create-post box: Status tab active with accent underline, Multimedia and Blog Post tabs with sprite icons, MV avatar + 'Share what you are thinking here...' textarea, footer photo/tag/location icon buttons, Preview button and the accent-gradient 'Post Status' submit. Fully styled and complete." }
+    "Empty": { "verdict": "good", "note": "Placeholder copy shows, Post Status correctly disabled." },
+    "Drafting": { "verdict": "good", "note": "Draft text, avatar initials, accent submit all render." },
+    "Submitting": { "verdict": "good", "note": "Button swaps to 'Posting…' and disables." },
+    "WithError": { "verdict": "good", "note": "Error banner renders above the field in the red tone." }
   }
 }

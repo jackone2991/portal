@@ -64,16 +64,28 @@ for its API and examples. `<Icon name>` values are Olympus sprite ids —
 
 - **`MasterBase`** = app shell (header + left nav + content + right rail);
   **`MasterPublic`** = auth/public shell — both take `children`.
-- **`*View`** components (`HomeView`, `LoginView`, `RegisterView`, `AuthLanding`,
-  `ComicIndexView`, `NovelDetailView`, `UploadStudio`) are self-contained screens;
-  `AuthForm` takes `defaultTab?: "login" | "register"`.
+- **`*View`** components are self-contained screens — compose them as the single
+  child of a master shell, don't rebuild their internals:
+  - *social / auth*: `HomeView`, `LoginView`, `RegisterView`, `AuthLanding`
+    (`AuthForm` takes `defaultTab?: "login" | "register"`), `UploadStudio`
+  - *library*: `ComicIndexView`, `ComicDetailView`, `ComicReaderView`,
+    `NovelDetailView`, `MediaIndexView`, `MediaDetailView`, `ContinueRail`
+  - *life OS*: `DashboardView`, `TransactionsView`, `AccountsView`, `BudgetsView`
+    (bank) · `CalendarView` · `WeatherView` · `PeopleIndexView`, `PersonDetailView`
+- **Screens fetch their own data** via TanStack Query (`D-32`) — most take only an
+  `id`, not the record. Mount them under a `QueryClientProvider`; with no API
+  reachable they render their real empty / "not found" state rather than failing.
+- **Money is integer minor units on the wire** (`D-41`). Render it with
+  `MoneyDisplay` (`amount`, optional `currency`, `signed` for +/- ledger colour)
+  and take it with `MoneyInput` (`value`, `onChange(minor)`) — never format VND
+  by hand.
 - Dropdowns (`FriendRequestsMenu`, `MessagesMenu`, `NotificationsMenu`) take
   `open` + `onToggle`; frame them against a `--tpl-header`-dark bar.
 
 # PortalUI (portal-frontend@0.1.0)
 
 This design system is the published portal-frontend React library, bundled as a single
-browser global. All 54 components are the real upstream code.
+browser global. All 98 components are the real upstream code.
 
 ## Where things are
 
@@ -97,8 +109,8 @@ Add these two lines to your page once (React must be on the page first):
 Components are then available at `window.PortalUI.*`. Mount into a dedicated child node (e.g. `<div id="ds-root">`), not the host page's own React root, so the two trees don't collide:
 
 ```jsx
-const { ActivityFeed } = window.PortalUI;
-ReactDOM.createRoot(document.getElementById('ds-root')).render(<ActivityFeed />);
+const { AccountsView } = window.PortalUI;
+ReactDOM.createRoot(document.getElementById('ds-root')).render(<AccountsView />);
 ```
 
 Wrap the tree in the provider — most components read theme/i18n from context:
@@ -109,23 +121,37 @@ Wrap the tree in the provider — most components read theme/i18n from context:
 
 ## Tokens
 
-250 CSS custom properties from portal-frontend. Names are
+287 CSS custom properties from portal-frontend. Names are
 preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (this DS ships one compiled stylesheet rather than separate token files).
 
-- **color** (48): `--cue-color`, `--cue-bg-color`, `--cue-text-align`, …
+- **color** (66): `--cue-color`, `--cue-bg-color`, `--cue-text-align`, …
 - **spacing** (14): `--overlay-padding`, `--cue-padding-x`, `--cue-padding-y`, …
-- **typography** (23): `--cue-default-font-size`, `--cue-font-size`, `--cue-line-height`, …
-- **radius** (6): `--root-border-radius`, `--item-border-radius`, `--radius-md`, …
+- **typography** (24): `--cue-default-font-size`, `--cue-font-size`, `--cue-line-height`, …
+- **radius** (7): `--root-border-radius`, `--item-border-radius`, `--radius-sm`, …
 - **shadow** (7): `--tw-shadow`, `--tw-ring-shadow`, `--tw-ring-offset-shadow`, …
-- **other** (152): `--size`, `--cue-width`, `--cue-top`, …
+- **other** (169): `--size`, `--cue-width`, `--cue-top`, …
 
 ## Components
+
+### bank
+- `AccountsView`
+- `BackLink`
+- `BudgetsView`
+- `CategoryChip`
+- `DashboardView`
+- `MonthPager`
+- `QuickAddModal`
+- `ReportsView`
+- `TransactionsView`
 
 ### widget
 - `ActivityFeed`
 - `BirthdayCard`
 - `CalendarWidget`
+- `ContinueWidget`
+- `FinanceWidget`
 - `FriendSuggestions`
+- `MusicWidget`
 - `PagesWidget`
 - `PersonalInfoWidget`
 - `WeatherWidget`
@@ -133,12 +159,23 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### popup
 - `AddBook`
+- `AttachPhotoPopup`
 - `ChatResponsive`
 - `ChoseFromMyPhoto`
+- `PlacePickerPopup`
 - `UpdateHeaderPhoto`
+
+### admin
+- `AdminLayoutView`
+- `AdminRolesView`
+- `AdminUsersView`
 
 ### music
 - `AudioPlayer`
+- `BulkImportModal`
+- `MusicDetailView`
+- `MusicIndexView`
+- `NowPlayingBar`
 - `PlaylistWidget`
 - `TrackItem`
 
@@ -150,12 +187,17 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 
 ### general
 - `Avatar`
+- `CategoryDonut`
 - `Composer`
 - `FriendRequestsMenu`
 - `Icon`
 - `MessagesMenu`
+- `MoneyDisplay`
+- `MoneyInput`
 - `NotificationsMenu`
 - `Post`
+- `TransactionRow`
+- `TrendBars`
 
 ### social
 - `BadgeCard`
@@ -166,17 +208,36 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 ### blog
 - `BlogCard`
 
+### calendar
+- `CalendarView`
+
+### reader
+- `ChapterMenu`
+- `PagedReader`
+- `ReaderChrome`
+- `ReaderHelp`
+- `ReaderSettings`
+- `StripReader`
+
 ### comic
+- `ComicDetailView`
 - `ComicIndexView`
+- `ComicReaderView`
 
 ### comment
 - `CommentForm`
 - `CommentItem`
 - `CommentThread`
 
+### library
+- `ContinueRail`
+
 ### profile
 - `ControlBlockButtons`
 - `ProfileHeader`
+
+### journal
+- `EntryCard`
 
 ### form
 - `FormField`
@@ -195,11 +256,20 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 - `MasterBase`
 - `MasterPublic`
 
+### media
+- `MediaDetailView`
+- `MediaIndexView`
+
 ### novel
 - `NovelDetailView`
 
+### people
+- `PeopleIndexView`
+- `PersonDetailView`
+
 ### post
 - `PostControlButtons`
+- `PostOptionsMenu`
 - `ReactionBar`
 
 ### menu
@@ -207,8 +277,14 @@ preserved verbatim from upstream. They are declared inside `_ds_bundle.css` (thi
 - `SidebarLeft`
 - `SidebarRight`
 
+### stream
+- `StreamItemCard`
+
 ### headers
 - `TopMenu`
 
 ### upload
 - `UploadStudio`
+
+### weather
+- `WeatherView`

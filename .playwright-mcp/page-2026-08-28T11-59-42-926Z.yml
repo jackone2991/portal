@@ -1,0 +1,168 @@
+- generic [ref=f34e1]:
+  - generic [ref=f34e2]:
+    - banner [ref=f34e5]:
+      - generic [ref=f34e6]:
+        - link "Portal — Newsfeed" [ref=f34e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f34e11]: Portal
+        - generic [ref=f34e12]:
+          - generic [ref=f34e13]: Newsfeed
+          - searchbox [ref=f34e15]
+          - link "Find Friends" [ref=f34e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f34e17]:
+            - button "Friend requests" [ref=f34e19]
+            - button "Messages" [ref=f34e23]:
+              - generic [ref=f34e26]: "2"
+            - button "Notifications" [ref=f34e28]:
+              - generic [ref=f34e188]: "18"
+            - button "Dev creator" [ref=f34e189]:
+              - generic [ref=f34e33]:
+                - generic [ref=f34e34]: Dev
+                - generic [ref=f34e35]: creator
+              - generic [ref=f34e36]: D
+    - complementary [ref=f34e41]:
+      - generic [ref=f34e42]:
+        - button "Collapse Menu" [ref=f34e43]
+        - link "Newsfeed" [ref=f34e49] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f34e54] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f34e59] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f34e64] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f34e69] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f34e74]
+        - link "Music & Playlists" [ref=f34e79] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f34e84] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f34e89] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f34e94]
+        - button "Friends Birthdays" [ref=f34e99]
+        - button "Account Stats" [ref=f34e104]
+        - link "Người dùng" [ref=f34e109] [cursor=pointer]:
+          - /url: /admin/users
+        - link "Vai trò & quyền" [ref=f34e114] [cursor=pointer]:
+          - /url: /admin/roles
+        - link "Menu & Widget" [ref=f34e119] [cursor=pointer]:
+          - /url: /admin/layout
+      - generic [ref=f34e124]:
+        - generic [ref=f34e125]:
+          - generic [ref=f34e126]: Profile Completion
+          - generic [ref=f34e127]: 76%
+        - paragraph [ref=f34e130]:
+          - text: Complete
+          - link "your profile" [ref=f34e131] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f34e132]:
+      - generic [ref=f34e133]:
+        - generic [ref=f34e190]:
+          - generic [ref=f34e191]:
+            - generic [ref=f34e192]: Close Friends
+            - link "Settings" [ref=f34e193] [cursor=pointer]:
+              - /url: /people?circle=close_friend
+          - paragraph [ref=f34e194]: No one in this circle yet.
+        - generic [ref=f34e195]:
+          - generic [ref=f34e196]:
+            - generic [ref=f34e197]: My Family
+            - link "Settings" [ref=f34e198] [cursor=pointer]:
+              - /url: /people?circle=family
+          - paragraph [ref=f34e199]: No one in this circle yet.
+        - generic [ref=f34e200]:
+          - generic [ref=f34e201]:
+            - generic [ref=f34e202]: Có thể bạn biết
+            - link "Settings" [ref=f34e203] [cursor=pointer]:
+              - /url: /people?circle=suggestions
+          - list [ref=f34e204]:
+            - listitem [ref=f34e205]:
+              - link [ref=f34e206] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e207]: A
+                - paragraph [ref=f34e209]: admin
+            - listitem [ref=f34e210]:
+              - link [ref=f34e211] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e212]: AU
+                - paragraph [ref=f34e214]: Admin User
+            - listitem [ref=f34e215]:
+              - link [ref=f34e216] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e217]: CT
+                - paragraph [ref=f34e219]: Cal Test
+            - listitem [ref=f34e220]:
+              - link [ref=f34e221] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e222]: DU
+                - paragraph [ref=f34e224]: Demo User
+            - listitem [ref=f34e225]:
+              - link [ref=f34e226] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e227]: DT
+                - paragraph [ref=f34e229]: Dogfood Tester
+            - listitem [ref=f34e230]:
+              - link [ref=f34e231] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e232]: J
+                - paragraph [ref=f34e234]: Jack
+            - listitem [ref=f34e235]:
+              - link [ref=f34e236] [cursor=pointer]:
+                - /url: /people?circle=suggestions
+                - generic [ref=f34e237]: ND
+                - paragraph [ref=f34e239]: Newsfeed Demo
+      - generic [ref=f34e135]:
+        - textbox "Search people..." [ref=f34e136]
+        - button "Collapse people panel" [ref=f34e137]
+      - link "People" [ref=f34e140] [cursor=pointer]:
+        - /url: /people
+    - main [ref=f34e144]:
+      - generic [ref=f34e146]:
+        - generic [ref=f34e147]:
+          - heading "Nhạc" [level=1] [ref=f34e148]
+          - generic [ref=f34e149]:
+            - button "Thư viện" [ref=f34e150]
+            - button "Của tôi" [active] [ref=f34e151]
+        - generic [ref=f34e152]:
+          - button "Phát tất cả" [ref=f34e153]
+          - button "Thêm bài hát" [ref=f34e240]
+          - button "Nhập nhiều bài" [ref=f34e241]
+        - list [ref=f34e242]:
+          - listitem [ref=f34e243]:
+            - generic [ref=f34e244]: "1"
+            - button "Phát Track 3" [ref=f34e245]
+            - generic [ref=f34e249]:
+              - link "Track 3" [ref=f34e250] [cursor=pointer]:
+                - /url: /library/music/306b9538-b854-4e82-8548-5a4dfbef4684
+              - paragraph [ref=f34e251]: Tester
+            - generic [ref=f34e252]: nháp
+            - generic [ref=f34e253]:
+              - button "Đăng" [ref=f34e254]
+              - button "Xoá Track 3" [ref=f34e255]
+          - listitem [ref=f34e258]:
+            - generic [ref=f34e259]: "2"
+            - button "Phát Track 2" [ref=f34e260]
+            - generic [ref=f34e264]:
+              - link "Track 2" [ref=f34e265] [cursor=pointer]:
+                - /url: /library/music/2eb3e918-987f-4ea1-8c4d-b1c34c82b9cc
+              - paragraph [ref=f34e266]: Tester
+            - generic [ref=f34e267]: nháp
+            - generic [ref=f34e268]:
+              - button "Đăng" [ref=f34e269]
+              - button "Xoá Track 2" [ref=f34e270]
+          - listitem [ref=f34e273]:
+            - generic [ref=f34e274]: "3"
+            - button "Phát Track 1" [ref=f34e275]
+            - generic [ref=f34e279]:
+              - link "Track 1" [ref=f34e280] [cursor=pointer]:
+                - /url: /library/music/dcd3d2d4-9554-489f-9dbc-75d2c635b75d
+              - paragraph [ref=f34e281]: Tester
+            - generic [ref=f34e282]: nháp
+            - generic [ref=f34e283]:
+              - button "Đăng" [ref=f34e284]
+              - button "Xoá Track 1" [ref=f34e285]
+    - button "Go to top"
+  - alert [ref=f34e187]

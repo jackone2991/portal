@@ -59,6 +59,14 @@ type Storage interface {
 	// upload-complete magic-byte sniff so the API never pulls a whole 50 MB body
 	// just to read a 12-byte header. The caller MUST close the returned reader.
 	GetRange(ctx context.Context, key string, n int64) (io.ReadCloser, error)
+	// GetByteRange streams [start, end] INCLUSIVE, the HTTP Range convention. A
+	// negative end means "to the end of the object".
+	//
+	// Distinct from GetRange, which only ever reads a prefix: seeking needs an
+	// arbitrary window. Without this the API cannot answer a Range request, the
+	// browser sets `seekable` to [0,0], and every scrub on an audio or video
+	// element is silently refused.
+	GetByteRange(ctx context.Context, key string, start, end int64) (io.ReadCloser, error)
 	// Size returns an object's byte length (a HEAD). ErrNotFound if absent.
 	Size(ctx context.Context, key string) (int64, error)
 	// Delete removes an object. Deleting a missing key is not an error.

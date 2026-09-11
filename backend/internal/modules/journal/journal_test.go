@@ -278,20 +278,11 @@ func newStreamSvc() (*Service, *fakeRepo) {
 func TestStreamIdempotency(t *testing.T) {
 	svc, f := newStreamSvc()
 	ctx := context.Background()
-	payload := []byte(`{"asset_id":"` + uuid.NewString() + `","owner_user_id":"` + uuid.NewString() + `","title":"clip"}`)
-	_ = svc.OnAssetReady(ctx, payload)
-	_ = svc.OnAssetReady(ctx, payload) // Asynq redelivery
+	payload := []byte(`{"asset_id":"` + uuid.NewString() + `","user_id":"` + uuid.NewString() + `","title":"clip"}`)
+	_ = svc.OnPlaybackCompleted(ctx, payload)
+	_ = svc.OnPlaybackCompleted(ctx, payload) // Asynq redelivery
 	if f.streamCount() != 1 {
 		t.Fatalf("stream items = %d, want 1 (idempotent)", f.streamCount())
-	}
-}
-
-func TestStreamImportSkipped(t *testing.T) {
-	svc, f := newStreamSvc()
-	payload := []byte(`{"asset_id":"` + uuid.NewString() + `","owner_user_id":"` + uuid.NewString() + `","origin":"import"}`)
-	_ = svc.OnAssetReady(context.Background(), payload)
-	if f.streamCount() != 0 {
-		t.Fatalf("import asset produced %d items, want 0 (flood guard)", f.streamCount())
 	}
 }
 
@@ -315,8 +306,11 @@ func TestStreamAssetDeletedRemoves(t *testing.T) {
 	ctx := context.Background()
 	asset := uuid.NewString()
 	owner := uuid.NewString()
-	_ = svc.OnAssetReady(ctx, []byte(`{"asset_id":"`+asset+`","owner_user_id":"`+owner+`","title":"clip"}`))
 	_ = svc.OnPlaybackCompleted(ctx, []byte(`{"asset_id":"`+asset+`","user_id":"`+owner+`","title":"clip"}`))
+	// A second event type on the SAME ref, seeded directly: the point of this
+	// test is that the delete sweeps every event_type for a ref, and only one
+	// media event is projected now.
+	_ = svc.insertSystem(ctx, []byte(`{}`), owner, "media", "media:archived", asset, time.Now())
 	if f.streamCount() != 2 {
 		t.Fatalf("setup = %d items, want 2", f.streamCount())
 	}

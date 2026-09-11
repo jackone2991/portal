@@ -28,6 +28,10 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 		DisplayName:  in.DisplayName,
 		Relationship: in.Relationship,
 		NoteMd:       in.NoteMd,
+		Circle:       in.Circle,
+	}
+	if in.LinkedUserID != nil {
+		p.LinkedUserID = pgUUID(*in.LinkedUserID)
 	}
 	if in.Birthday != nil {
 		p.BirthMonth = i32p(in.Birthday.Month)
@@ -36,13 +40,35 @@ func (a *Adapter) CreatePerson(ctx context.Context, in people.CreatePersonInput)
 		p.BirthCalendar = in.Birthday.Calendar
 	}
 	if len(in.Contact) > 0 {
-		p.Contact = []byte(in.Contact)
+		p.Contact = contactText(in.Contact) // text, not []byte — see contactText
 	}
 	row, err := a.q.CreatePerson(ctx, p)
 	if err != nil {
+		// The INSERT is ON CONFLICT DO NOTHING on 0035's
+		// people_persons_linked_user_idx, so an account already in the registry
+		// comes back as "no rows". Letting the unique raise instead would abort
+		// the request's tenant transaction and turn this 409 into a 500 at
+		// COMMIT — the middleware discards a success it cannot commit.
+		if errors.Is(err, pgx.ErrNoRows) {
+			return people.Person{}, people.ErrDuplicate
+		}
 		return people.Person{}, err
 	}
 	return toPerson(row), nil
+}
+
+func (a *Adapter) ListLinkedUserIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := a.q.ListLinkedUserIDs(ctx, pgUUID(userID))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]uuid.UUID, 0, len(rows))
+	for _, r := range rows {
+		if id := uuidPtr(r); id != nil {
+			out = append(out, *id)
+		}
+	}
+	return out, nil
 }
 
 func (a *Adapter) GetPerson(ctx context.Context, userID, id uuid.UUID) (people.Person, error) {
@@ -54,9 +80,13 @@ func (a *Adapter) GetPerson(ctx context.Context, userID, id uuid.UUID) (people.P
 }
 
 func (a *Adapter) ListPeople(ctx context.Context, in people.ListInput) ([]people.Person, error) {
-	rows, err := a.q.ListPeople(ctx, ListPeopleParams{
+	q := ListPeopleParams{
 		UserID: pgUUID(in.UserID), CursorName: in.CursorName, CursorID: pgUUID(in.CursorID), Lim: int32(in.Limit),
-	})
+	}
+	if in.Circle != "" {
+		q.Circle = &in.Circle
+	}
+	rows, err := a.q.ListPeople(ctx, q)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +105,12 @@ func (a *Adapter) UpdatePerson(ctx context.Context, in people.UpdatePersonInput)
 		SetNote:         in.SetNote,
 		NoteMd:          in.NoteMd,
 		SetBirthday:     in.SetBirthday,
+		Circle:          in.Circle,
 		ID:              pgUUID(in.ID),
 		UserID:          pgUUID(in.UserID),
 	}
 	if len(in.Contact) > 0 {
-		p.Contact = []byte(in.Contact)
+		p.Contact = contactText(in.Contact) // text, not []byte — see contactText
 	}
 	if in.SetBirthday && in.Birthday != nil {
 		p.BirthMonth = i32p(in.Birthday.Month)
@@ -173,6 +204,7 @@ func toPerson(r PeoplePerson) people.Person {
 	p := people.Person{
 		ID: uuidFrom(r.ID), DisplayName: r.DisplayName, Relationship: r.Relationship,
 		Contact: json.RawMessage(r.Contact), NoteMd: r.NoteMd, AvatarAssetID: uuidPtr(r.AvatarAssetID),
+		Circle: r.Circle, LinkedUserID: uuidPtr(r.LinkedUserID),
 		CreatedAt: r.CreatedAt.Time, UpdatedAt: r.UpdatedAt.Time,
 	}
 	if r.BirthMonth != nil && r.BirthDay != nil {
@@ -214,4 +246,12 @@ func i32ToIntP(p *int32) *int {
 	}
 	x := int(*p)
 	return &x
+}
+
+// contactText hands the contact json to pgx as text. Under QueryExecModeExec pgx
+// picks the wire OID from the Go type, so a []byte would go out as bytea and the
+// jsonb column would reject it with SQLSTATE 22P02.
+func contactText(c json.RawMessage) *string {
+	s := string(c)
+	return &s
 }

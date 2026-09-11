@@ -1,29 +1,19 @@
 # ADR-04: Storage tier — R2 only for v1; defer MinIO origin to multi-region phase
 
-**Status:** Accepted (see Updates 2026-06-06, 2026-07-06)
-**Date:** 2026-05-24
+**Status:** **accepted** 2026-05-24 · refined 2026-06-06 (dev keeps MinIO; R2-only applies to deployed environments)
+**Last verified:** 2026-09-11
 **Deciders:** kirito
-**Affects:** [docker-compose.yml](../../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1] (system landscape)
-
-## Update (2026-06-06) — local dev runs MinIO on a local folder; R2-only still applies to deployed environments
-
-The R2-only decision below stands **for deployed environments** (staging/prod): no MinIO origin tier, no replication. For **local development**, the dev `docker-compose.yml` keeps MinIO as the S3-compatible origin, **bound to the local folder `./data/minio`** (a bind-mount, not a named volume), with a one-shot `minio-setup` (`mc`) that creates the media bucket.
-
-Rationale: the media upload flow uses **presigned URLs** (the browser PUTs directly to the store). A plain local-filesystem driver cannot issue presigned URLs, which would force a second, dev-only upload path (client → API → disk) and make dev diverge from prod. MinIO speaks S3, so dev keeps the exact presigned flow and **going live is an `.env` change only** — repoint `S3_ENDPOINT` + `S3_ACCESS_KEY`/`S3_SECRET_KEY` at R2 and set `S3_USE_PATH_STYLE=false`. No code difference; `platform/storage/` stays a single S3 client.
-
-Net: **dev = MinIO (local folder) · prod = R2.** This *refines*, not reverses, the decision below. Action items 1–2 are superseded accordingly: MinIO is removed only from the prod overlay (`docker-compose.prod.yml`); the dev base keeps it on a bind-mount.
-
-## Update (2026-07-06) — implemented; deltas from the decision text
-
-- **Shipped:** `backend/internal/platform/storage/` is a single aws-sdk-go-v2 S3 client (`BaseEndpoint` + `UsePathStyle`, tested in `s3_test.go`); `.env.example` carries the `S3_*` block (names are `S3_ACCESS_KEY`/`S3_SECRET_KEY`).
-- **Upload paths:** `POST /api/v1/assets` returns a presigned PUT (the prod path); dev also uses an API-proxied `PUT /api/v1/assets/{id}/source` — "the API never holds upload bytes" holds for the presigned path only.
-- **Playback:** v1 serves HLS through the API's public proxy `GET /api/v1/assets/{id}/hls/*`, not directly from R2/edge; direct-edge fetch remains the deployed-prod target.
-- **Object keys as-built:** `uploads/<id>/original<ext>` and `hls/<assetID>` — the `org/<tid>` tenant prefix in Decision item 4 is deferred until tenancy lands.
-- The Authentik reference in "Why MinIO existed" item 3 is retired ([ADR-06](./06-local-auth-model.md)).
+**Affects:** [docker-compose.yml](../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1](../architecture/diagrams.md) (system landscape)
 
 ## Context
 
-`diagrams.md` §1 draws a two-tier storage architecture:
+*As found on 2026-05-24, with one refinement made on 2026-06-06 that the
+Decision section now carries: the title says "R2 only", and that holds for
+staging/prod; local development keeps MinIO, because the upload flow is
+presigned-URL and a filesystem driver cannot sign a URL. What is built is
+under Consequences.*
+
+`diagrams.md` §1 drew a two-tier storage architecture:
 
 - **MinIO origin** running on the VPS, holding the canonical bytes (`org/<tid>/assets/source/<id>.mp4`, `org/<tid>/assets/hls/<id>/`).
 - **Cloudflare R2 edge** in front, with origin-pull on cache miss. Continuous replication via `mc admin replicate` keeps R2 hot.
@@ -32,7 +22,7 @@ This is the right architecture for a self-hosted multi-region SaaS with strict d
 
 ### The cost of two storage tiers on a single VPS
 
-| Cost component | MinIO + R2 (current diagram) | R2 only (proposed) |
+| Cost component | MinIO + R2 (the diagram) | R2 only (proposed) |
 | --- | --- | --- |
 | VPS disk for assets | 100–500 GB ($5–25/mo extra disk on Hetzner) | 0 GB |
 | MinIO service | ~150 MB RAM | 0 MB |
@@ -43,11 +33,11 @@ This is the right architecture for a self-hosted multi-region SaaS with strict d
 
 ### Why MinIO existed in the design
 
-Three legitimate reasons, none of which apply to v1:
+Three legitimate reasons, none of which applied to v1:
 
 1. **Data sovereignty** — some operators legally cannot send user data to Cloudflare. v1 has one operator (you) and is hosted at a Hetzner site that already isn't sovereignty-compliant for many jurisdictions.
 2. **Cost ceiling under huge bandwidth** — at very high egress (>10 TB/mo), running your own origin with a cheaper CDN can beat R2. v1 demo egress is measured in MB.
-3. **Air-gapped operation** — some self-hosters can't reach the public internet from the VPS. Not v1; the VPS already needs internet for Authentik OIDC flows, image pulls, and DNS. *(Authentik since removed — ADR-06; image pulls and DNS still apply.)*
+3. **Air-gapped operation** — some self-hosters can't reach the public internet from the VPS. Not v1; the VPS already needs internet for image pulls and DNS (and, when this was written, for Authentik OIDC — since removed by [ADR-06](./06-local-auth-model.md)).
 
 ### What R2 alone gets you
 
@@ -64,14 +54,16 @@ A v1 demo with 5 GB of stored assets and 100k requests/mo costs ~$0.
 
 ## Decision
 
-**v1 uses Cloudflare R2 as the single storage tier. MinIO is removed from `docker-compose.yml` for v1.** The `platform/storage/` abstraction stays a generic S3 interface (it's already that), so re-introducing MinIO origin in a future phase is a config change, not a code change.
+**Deployed environments use Cloudflare R2 as the single storage tier — no MinIO origin, no replication. Local development keeps MinIO as the S3-speaking origin, bind-mounted at `./data/minio`, with a one-shot `minio-setup` (`mc`) that creates the bucket.** The `platform/storage/` abstraction is one generic S3 client either way, so going live is an `.env` change — repoint `S3_ENDPOINT` + `S3_ACCESS_KEY`/`S3_SECRET_KEY` at R2 and set `S3_USE_PATH_STYLE=false` — and re-introducing a MinIO origin in a future phase is config, not code.
+
+(As decided on 2026-05-24 the text read "MinIO is removed from `docker-compose.yml` for v1". The 2026-06-06 refinement kept it for dev because the media upload flow uses **presigned URLs** — the browser PUTs directly to the store — and a plain local-filesystem driver cannot issue one; dropping MinIO would have forced a second, dev-only upload path and made dev diverge from prod.)
 
 Concretely:
 
-1. The Go S3 client points at `https://<account>.r2.cloudflarestorage.com` instead of `minio:9000`. Same SDK calls.
-2. Uploads go directly from the API to R2 via presigned URL — the browser PUTs to R2, the API just signs.
-3. The transcode worker reads/writes R2. FFmpeg input/output uses `s3fs`-style streaming via the SDK or via temporary local files in `/tmp` (tmpfs-backed).
-4. R2 buckets are tenant-prefixed exactly as the spec already plans: `org/<tid>/assets/source/`, `org/<tid>/assets/hls/`. The prefix scheme is bucket-agnostic.
+1. The Go S3 client points at `https://<account>.r2.cloudflarestorage.com` in deployed environments and at `minio:9000` in dev. Same SDK calls.
+2. Uploads go directly from the browser to the store via presigned URL — the API just signs.
+3. The transcode worker reads/writes the store. FFmpeg input/output uses `s3fs`-style streaming via the SDK or via temporary local files in `/tmp` (tmpfs-backed).
+4. Buckets are tenant-prefixed exactly as the spec already plans: `org/<tid>/assets/source/`, `org/<tid>/assets/hls/`. The prefix scheme is bucket-agnostic.
 5. **No replication.** R2 is the source of truth in v1. A weekly export job (Asynq cron) copies to a second R2 bucket (or off-Cloudflare S3) for disaster recovery; ship in Phase 0.5 if any external data lands.
 6. **CORS on R2** must allow the frontend origin (`https://${APP_DOMAIN}`) for direct browser PUT; document in the deployment guide.
 
@@ -139,32 +131,32 @@ The cost of NOT removing MinIO from v1 is concrete: ~$15/mo disk + 150 MB RAM + 
 
 ## Consequences
 
-**What becomes easier:**
+What is built (2026-09-11):
 
-- `docker-compose.yml` loses one service. The VPS budget loosens.
-- The storage interface in `platform/storage/` is simpler — no replication monitoring, no failover logic.
-- Frontend uploads to R2 directly (presigned PUT) bypass the API for the data plane — API only signs URLs, never holds upload bytes in memory.
-- Viewers always fetch from the Cloudflare edge — global latency floor without operator effort.
-
-**What becomes harder:**
-
-- R2 outage = playback outage. Accept it for v1.
-- Data sovereignty story is "your bytes are on Cloudflare R2 in their default region" — if any operator needs different, they have to add MinIO themselves. Document this honestly in the v1 deployment guide.
-- The frontend's CORS configuration on R2 buckets is one more thing to get right (a misconfig produces opaque browser errors). Capture the exact JSON in `docs/operations/r2-setup.md`.
+- **`docker-compose.yml` gained a service rather than losing one:** `minio` + `minio-setup`, dev-only, bind-mounted at `./data/minio`. There is no `docker-compose.prod.yml` (only `docker-compose.override.yml`, the local-TLS overlay), so "remove MinIO in the prod overlay" is done by not deploying the dev file's MinIO — an `.env` pointing at R2 is the whole switch.
+- `backend/internal/platform/storage/` is a single aws-sdk-go-v2 S3 client (`BaseEndpoint` + `UsePathStyle`, tested in `s3_test.go` when `S3_ENDPOINT` is set); `.env.example` carries the `S3_*` block (`S3_ACCESS_KEY`/`S3_SECRET_KEY`, MinIO-shaped defaults, R2 values in comments).
+- **Upload paths:** `POST /api/v1/assets` returns a presigned PUT (the prod path); dev also has an API-proxied `PUT /api/v1/assets/{id}/source`. "The API never holds upload bytes" holds for the presigned path only.
+- **Playback goes through the API, not the edge:** `GET /api/v1/assets/{id}/hls/*` proxies HLS, and `/assets/{id}/original` is a `ServeContent` range route (see `/CLAUDE.md`). Direct-edge fetch remains the deployed-prod target; "viewers always fetch from the Cloudflare edge" is not what runs today.
+- **Object keys are not tenant-prefixed.** As built: `uploads/<id>/original<ext>` and `hls/<assetID>` (`media/service.go`). Decision item 4 was deferred "until tenancy lands"; tenancy landed ([ADR-07](./07-tenancy-rls-model.md), migrations 0018–0020) and the keys did not change. Isolation is by the `assets` row (RLS) and by presigned URLs, not by key prefix — a bucket listing shows every tenant's objects together.
+- R2 outage = playback outage in deployed environments. Accepted for v1; still true.
+- Data sovereignty story is "your bytes are on Cloudflare R2 in their default region". Not documented in any deployment guide, because there is no deployment guide (ADR-03 action item 6).
+- R2 CORS: no `docs/operations/r2-setup.md`; the exact JSON is not captured anywhere in the repo.
 
 **What we'll need to revisit:**
 
-- When the first sovereignty-sensitive operator appears, re-introduce MinIO as a per-tenant configurable origin. The `platform/storage/` interface should support this without code changes (it already does — `Endpoint` is config).
+- When the first sovereignty-sensitive operator appears, re-introduce MinIO as a per-tenant configurable origin. The `platform/storage/` interface supports this without code changes (`Endpoint` is config).
 - When R2 monthly cost exceeds the VPS line item (>~$60/mo), evaluate Backblaze B2 + Cloudflare bandwidth-alliance for storage tier and Backblaze for origin.
 - When the first non-Cloudflare destination needs to fetch assets (e.g. a partner integration), the R2 egress-to-internet fees apply. Plan a signed-URL + Cloudflare Worker proxy if this becomes a hot path.
+- Tenant-prefixed keys: decide whether the prefix is still wanted now that RLS does the isolation. If yes, it is a migration of every existing object; the longer it waits the larger that is.
 
 ## Action items
 
-1. [x] ~~Remove the `minio` service block from `docker-compose.yml` for v1.~~ **Revised (Update 2026-06-06):** keep MinIO in the dev compose bound to `./data/minio`; remove it only in `docker-compose.prod.yml`.
-2. [x] ~~Remove `volumes.minio_data` from `docker-compose.yml`.~~ Done a different way: switched MinIO to a `./data/minio` bind-mount (the named volume is gone).
-3. [x] Add `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_USE_PATH_STYLE=false` to `.env.example` with R2-shaped placeholders. **Done (2026-07-06)** — env names are `S3_ACCESS_KEY`/`S3_SECRET_KEY` (not `*_ACCESS_KEY_ID`); defaults are MinIO-shaped with R2 values in comments, `S3_USE_PATH_STYLE=true` for dev.
-4. [x] In `backend/internal/platform/storage/`, ensure the S3 client constructor reads endpoint + region from config (not hard-coded to MinIO). If the package is still empty, scaffold it as a thin wrapper over `aws-sdk-go-v2/service/s3`. **Done (2026-07-06)** — aws-sdk-go-v2 wrapper reading endpoint/region/path-style from config.
-5. [x] In `cmd/api`, the upload handler signs PUTs (`s3:PutObject`, 5-minute expiry) and returns the URL + key to the frontend; the frontend uploads directly to R2. **Done (2026-07-06)** — `POST /api/v1/assets` presigns PUT; dev also has API-proxied `PUT /assets/{id}/source`.
-6. [x] In the transcode worker, source download uses presigned GET; HLS segments are uploaded via the SDK directly. Cap the worker's `/tmp` usage at 10 GB. **Done (2026-07-06)** except the 10 GB `/tmp` cap — still open.
-7. [ ] Write a one-page `docs/operations/r2-setup.md` with: bucket creation, CORS config (allow `${APP_DOMAIN}`), lifecycle rules (none for v1), how to mint the R2 token with `Object Read & Write` scope. *(`docs/operations/` does not exist yet.)*
-8. [ ] In `diagrams/system-landscape.md` (this ADR set), the v1-scoped diagram already shows R2-only; keep `diagrams.md` (the full vision) as-is — it shows the destination architecture.
+1. [x] ~~Remove the `minio` service block for v1.~~ Revised 2026-06-06: MinIO stays in the dev compose on a `./data/minio` bind-mount; deployed environments simply point `S3_*` at R2.
+2. [x] ~~Remove `volumes.minio_data`.~~ Done differently: bind-mount; the named volume is gone.
+3. [x] `S3_*` block in `.env.example` (names are `S3_ACCESS_KEY`/`S3_SECRET_KEY`; `S3_USE_PATH_STYLE=true` for dev).
+4. [x] `platform/storage/` reads endpoint/region/path-style from config — aws-sdk-go-v2 wrapper.
+5. [x] `POST /api/v1/assets` presigns PUT; dev also has API-proxied `PUT /assets/{id}/source`.
+6. [ ] Worker `/tmp` usage cap (10 GB) — not done. `os.MkdirTemp` per job in `media/worker/{transcode,process_image,thumbnail}.go`, no cap; the guard against disk exhaustion is `heavyConcurrency = 1`.
+7. [ ] `docs/operations/r2-setup.md` (bucket creation, CORS JSON, lifecycle rules, token scope) — not written. `docs/operations/` exists now; the file does not.
+8. [x] [`diagrams/system-landscape.md`](diagrams/system-landscape.md) shows the v1 R2-only shape; [`architecture/diagrams.md`](../architecture/diagrams.md) keeps the destination architecture.
+9. [ ] Tenant-prefixed object keys (Decision item 4) — never implemented; see "revisit" above.

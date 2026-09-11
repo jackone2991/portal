@@ -1,5 +1,7 @@
 # 08 — People Registry (contacts + birthdays, n=1)
 
+**Status:** current · **Last verified:** never
+
 **Module:** `people` (new — not scaffolded) · **Effort:** ~4.5 days · **Depends on:** nothing hard; avatars want spec 01, birthday *delivery* wants SPEC-04 — both degrade gracefully.
 **Unlocks:** "mom's birthday in 3 days" — the canonical life-stream example from brief 00; real data for the `BirthdayCard` widget; the social facet at n=1.
 **Provenance:** Monica-CRM pattern (contacts as *data*, not user accounts) — researched 2026-07-10. **Spec:** [SPEC-08](../specs/SPEC-08-people-registry.md).

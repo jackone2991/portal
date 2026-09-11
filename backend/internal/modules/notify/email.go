@@ -38,6 +38,13 @@ func renderEmail(typ, title, name, addr string, data map[string]any) EmailMessag
 			detail = "We revoked your active sessions as a precaution. If this wasn't you, reset your password now."
 		}
 		body = fmt.Sprintf("%s,\n\n%s\n", greeting, detail)
+	case notifyapi.TypeRegistrationPending:
+		who := firstNonEmpty(dataString(data, "email"), "Someone")
+		subject = "A Portal account is waiting for approval"
+		body = fmt.Sprintf(
+			"%s,\n\n%s registered for Portal and cannot sign in until an "+
+				"administrator approves the account.\n\n%s\n",
+			greeting, who, dataString(data, "href"))
 	case notifyapi.TypeMediaAssetReady:
 		subject = "Your upload is ready"
 		if strings.TrimSpace(title) != "" {

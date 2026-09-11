@@ -19,6 +19,7 @@ import (
 	tenantapi "github.com/portal/backend/internal/modules/tenant/api"
 	tenantmw "github.com/portal/backend/internal/modules/tenant/middleware"
 	platformdb "github.com/portal/backend/internal/platform/db"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Deps for the tenant module.
@@ -46,6 +47,13 @@ func New(d Deps) (*Module, error) {
 // today it guards /me/organizations as the reference wiring.
 func (m *Module) RequireTenant() func(http.Handler) http.Handler {
 	return tenantmw.RequireTenant(m.deps.DB, m.deps.Store, m.deps.CurrentUser)
+}
+
+// OptionalTenant is RequireTenant that lets anonymous requests through unscoped.
+// For routes that serve both the public and the signed-in caller — the media
+// variant/HLS proxies. See tenantmw.OptionalTenant.
+func (m *Module) OptionalTenant() func(http.Handler) http.Handler {
+	return tenantmw.OptionalTenant(m.deps.DB, m.deps.Store, m.deps.CurrentUser)
 }
 
 // MountHTTP wires GET /me/organizations (the caller's orgs). It runs through
@@ -84,8 +92,9 @@ func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
 
 func (m *Module) API() tenantapi.API { return m.publicAPI }
 
+// writeErr answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_, _ = w.Write([]byte(`{"code":"` + code + `","message":"` + msg + `"}`))
+	server.Problem(w, status, server.ProblemType("tenant", code), http.StatusText(status), msg)
 }

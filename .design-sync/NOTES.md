@@ -30,7 +30,20 @@ library**, so the sync runs in **synth-entry** mode with several shims.
   follow the stub-package symlinks and loop). Regenerable, gitignored; re-run
   before each converter build **and `cp` it into the stub package dir** (above).
 - **next/link shim** — `frontend/.ds-shims/next-link.tsx` renders a plain `<a>`;
-  wired via `frontend/tsconfig.ds.json` paths (cfg.tsconfig). Only next/link is used.
+  wired via `frontend/tsconfig.ds.json` paths (cfg.tsconfig).
+- **next/navigation shim** (added 2026-08-24) — `frontend/.ds-shims/next-navigation.tsx`,
+  wired through the same paths map. `useRouter`/`usePathname`/`useSearchParams` read
+  the App Router context, which only a running Next app mounts; standalone they throw
+  `invariant expected app router to be mounted` and blank the whole card. That single
+  missing alias took out `TopMenu`, `MasterBase`, `SidebarCenter`, `NotificationsMenu`
+  and `ComicIndexView` at once. `usePathname()` returns `"/"` so active-nav logic
+  stays on its default branch instead of highlighting an arbitrary entry.
+- **QueryClientProvider** (added 2026-08-24) — `DSProvider` now wraps every card in
+  one. Server state is TanStack Query's (`D-32`), so any view that loads data throws
+  `No QueryClient set` without it. `retry: false` is load-bearing: previews have no
+  API origin, so every query fails, and the default exponential backoff would leave
+  the card stuck in `isLoading` past the screenshot instead of showing the real
+  empty/error state. See also `DSQuerySeed` under Re-sync risks.
 - **process shim** — several components read `process.env.NEXT_PUBLIC_API_BASE_URL`
   at module top level; in the browser IIFE `process` is undefined → the whole
   bundle throws. `frontend/.ds-shims/ds-provider.tsx` defines `globalThis.process`
@@ -42,16 +55,126 @@ library**, so the sync runs in **synth-entry** mode with several shims.
   system Chrome via `export DS_CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`.
   playwright JS is in `.ds-sync` (installed with `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`).
 
+## Staged converter scripts are COMMITTED in this repo (added 2026-08-26)
+
+Contrary to the skill's default, `.ds-sync/` and `ds-bundle/` are **tracked by git**
+here, not gitignored. Two consequences:
+
+- Re-copying the staged scripts (`cp -r "<skill-base-dir>"/… .ds-sync/`) shows up as a
+  normal git diff, so **you can always see exactly what a converter upgrade changed** —
+  do the re-copy, then `git status .ds-sync/` before trusting it. That is also the only
+  thing that makes a local patch to a staged script visible instead of silently lost.
+- There *was* one such local patch: `package-validate.mjs` had `import('typescript')`
+  swapped for `import('ts-morph')` (TS v7 exposes no JS API on its root export). **It
+  landed upstream in skill bundle 2.1.245 — do not re-apply it.** Verified 2026-08-26:
+  the fresh copy already reads `const { ts } = await import('ts-morph')`.
+
 ### Full build command
 ```sh
 cd frontend && node .ds-compile-css.mjs && cd ..
 node .ds-sync/package-build.mjs --config .design-sync/config.json --node-modules frontend/node_modules --out ./ds-bundle
-export DS_CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+export DS_CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"   # macOS only — see Windows below
 node .ds-sync/package-validate.mjs ./ds-bundle
 ```
 
+Or, on a re-sync, the one-command driver (preferred — it also writes `.sync-diff.json`,
+which the upload's `deletes` list must come from):
+```sh
+node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules frontend/node_modules \
+  --out ./ds-bundle --remote .design-sync/.cache/remote-sync.json
+```
+
+## Windows setup (added 2026-08-24 — the section above was written on macOS)
+
+**The repo's `node_modules` trees are an Apple-Silicon install.** They are shared
+across machines, so on Windows every native binary is missing and each one fails as
+a different-looking error. `npm install` in `frontend/` is NOT safe to run casually
+(no lockfile by design), so fetch just the missing binaries:
+```sh
+cd <scratch> && npm pack lightningcss-win32-x64-msvc@1.32.0
+tar -xzf /c/<scratch>/lightningcss-win32-x64-msvc-1.32.0.tgz \
+  -C /d/.../frontend/node_modules/lightningcss-win32-x64-msvc --strip-components=1
+# same for @tailwindcss/oxide-win32-x64-msvc@4.3.2
+```
+Pin the versions to whatever `lightningcss/package.json` and `@tailwindcss/oxide/package.json`
+report — a mismatch fails the same way as absence. `.ds-sync/node_modules` is a
+*separate* Apple-Silicon tree and needs its own repair:
+`cd .ds-sync && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install` (adds `@esbuild/win32-x64`).
+Still missing, and not needed by design-sync: `@rollup/rollup-win32-x64-msvc` (this is
+what blocks `vitest`), `@next/swc-win32-x64-msvc`, `@img/sharp-win32-x64`.
+
+**The stub package must use junctions, not `ln -s`.** Git Bash `ln -s` on Windows
+silently makes a *copy*. The Jul-12 stub was therefore a frozen snapshot: 59 source
+files against 84 real ones, so the converter cheerfully rebuilt six-week-old
+components and nothing anywhere said so. Recreate it from PowerShell:
+```powershell
+$stub="...\frontend\node_modules\portal-frontend"; $fe="...\frontend"
+Remove-Item -Recurse -Force "$stub\src","$stub\.ds-shims"
+New-Item -ItemType Junction -Path "$stub\src"       -Target "$fe\src"
+New-Item -ItemType Junction -Path "$stub\.ds-shims" -Target "$fe\.ds-shims"
+New-Item -ItemType HardLink -Path "$stub\tsconfig.ds.json" -Target "$fe\tsconfig.ds.json"
+Copy-Item "$fe\.ds-compiled.css" "$stub\.ds-compiled.css" -Force   # real copy — cssEntry is PKG_DIR-bound
+```
+`tsconfig.ds.json` is a **hard link on purpose**: it started as a copy, and editing
+`frontend/tsconfig.ds.json` to register the `next/navigation` shim then left the stub
+holding the old paths map — the shim silently did not apply and burned a full
+build cycle diagnosing a "fix that didn't work". Junctions/hard links need no admin
+rights. **Verify before every build** (cheap, and it is the failure that hides best):
+`ls frontend/node_modules/portal-frontend/src/templates/v1 | wc -l` must match the real tree.
+
+**Render browser — no `DS_CHROMIUM_PATH` needed.** `.ds-sync`'s playwright (1.61.1)
+pins chromium build **1228**, and `%LOCALAPPDATA%\ms-playwright\chromium-1228` is
+already present, so the render check runs natively. (System Chrome is at
+`C:\Program Files\Google\Chrome\Application\chrome.exe` if a future version ever
+diverges from the cache.)
+
+**Two shell gotchas that cost time here:**
+- Git Bash `tar -xzf "C:/…"` fails with `Cannot connect to C: resolve failed` — it
+  reads `C:` as a remote host. Use `/c/…`.
+- `node -e` given a `/d/…` path resolves it as `D:\d\…`. Inside node, use `D:/…`.
+
 ## Re-sync risks
 
+- **NEVER hand-derive a delete list for this project.** The DS project holds content the
+  converter does not produce and must not remove: `templates/` (designs *built in Claude
+  Design* with this DS — as of 2026-08-26: access-control, music-library, music-player,
+  newsfeed, settings-form), `uploads/` (images pasted into the design tool), and
+  `_ds_manifest.json` + `_adherence.oxlintrc.json` (**regenerated by the app's
+  self-check**, never uploaded by us). The skill's no-anchor path says to review
+  `list_files` for "files this build doesn't produce" and delete them — doing that here
+  would destroy the user's designs. Always take `upload.deletePaths` **verbatim** from the
+  anchored diff; if the anchor is ever missing, stop and ask rather than deriving.
+- **`.design-sync/.cache/remote-sync.json` in the repo is not necessarily the live anchor.**
+  It is whatever was fetched *at the start* of some past run — the Aug-24 copy was written
+  before that run's final upload and described only 54 of 79 components. Trusting it makes
+  the driver re-verify components that were already verified-by-upload. Re-fetch
+  `_ds_sync.json` from the project each run; after a completed upload,
+  `ds-bundle/_ds_sync.json` is byte-equivalent to it and can be `cp`'d across safely.
+- **69 of 79 `.d.ts` files carry no real props** (`[key: string]: unknown`). This is
+  the biggest quality gap in the sync and it is structural, not a bug: `[NO_DIST]`
+  synth-entry mode means ts-morph has nothing to parse (`[DTS] parsed 0 .d.ts files`),
+  so props exist only for the components hand-written into `cfg.dtsPropsFor`. The
+  `.d.ts` IS the API contract the design agent codes against, so those 69 tell it
+  "any prop is fine". Real fix: emit declarations (`tsc --emitDeclarationOnly` over
+  `templates/v1` into the stub package) and point the converter at a built entry —
+  that repairs all 79 at once. Stopgap: keep adding `cfg.dtsPropsFor` entries.
+- **Authored previews are pinned to upstream component APIs and WILL rot.**
+  `Composer` proved it this run: it went from `{displayName, onPost}` to a fully
+  controlled `{displayName, bodyMd, onBodyMdChange, onSubmit, submitting?, error?}`,
+  and the old preview died on `bodyMd.trim()` of `undefined`. On re-sync, any
+  `✗ [RENDER] … root empty` on a component that used to work is this first, not a
+  converter problem — diff the props before anything else.
+- **Three views are carded only because their query cache is seeded**:
+  `ContinueRail`, `PersonDetailView`, `MediaDetailView` fetch their own data and take
+  no data props (`ContinueRail` returns literal `null` when empty), so their previews
+  seed `["continue-items"]`, `["person", id]`, `["assets", id]`(+`"progress"`) through
+  `DSQuerySeed`. Those fixtures are copies of `ContinueItem` / `Person` / `MediaAsset`
+  — change those wire types and the cards silently show the "not found" branch again.
+  `MediaDetailView`'s HLS URL never resolves; the card is the player chrome by design.
+- **`DSQuerySeed` must stay in `.ds-shims/ds-provider.tsx`** (i.e. exported from the
+  bundle). Previews externalize only react and the DS package, so a preview importing
+  `@tanstack/react-query` itself gets a SECOND copy whose provider context the bundled
+  components cannot see — it fails "No QueryClient set" exactly as if unwrapped.
 - **The 4 popups are now implemented** (`AddBook`, `ChatResponsive`,
   `ChoseFromMyPhoto`, `UpdateHeaderPhoto`) on a shared `Modal` shell
   (`components/popup/Modal.tsx`, controlled `open`/`onClose`). They render as fixed
@@ -88,8 +211,17 @@ node .ds-sync/package-validate.mjs ./ds-bundle
 ## Known render warns (recorded — not new next time)
 
 - `[TOKENS_MISSING]` ~36 `--media-*` / `--cue-*` vars — Vidstack player CSS vars,
-  injected at runtime by `@vidstack/react`; only relevant to a player state no card
-  renders. Non-blocking, expected.
+  injected at runtime by `@vidstack/react`. Non-blocking, expected. (Since 2026-08-24
+  `MediaDetailView` does card a real player, so these now matter to one card — it
+  still renders correctly because vidstack defines them at runtime.)
+- `[GRID_OVERFLOW]` — all nine known cases are answered by `cfg.overrides` and should
+  NOT re-fire: `cardMode: "single"` for the fixed/portal overlays (`AddBook`,
+  `ChatResponsive`, `ChoseFromMyPhoto`, `UpdateHeaderPhoto`, `HelloPreloader`,
+  `MasterBase`) and `cardMode: "column"` for the too-wide rows (`CommentItem`,
+  `ReactionBar`, `SidebarCenter`). If one re-fires, its `primaryStory` export was
+  renamed. Note these can only be *seen* once a component renders — `MasterBase` and
+  `SidebarCenter` only surfaced after the `next/navigation` shim un-blanked them, so
+  expect a fresh crop of these the first time a batch of broken cards is fixed.
 
 ## Component groups (derived from src paths; `ui/` is a generic dir → `general`)
 
@@ -100,3 +232,103 @@ node .ds-sync/package-validate.mjs ./ds-bundle
   ComicIndexView (comic), NovelDetailView (novel), UploadStudio (upload)
 - **partials**: GoToTop, HelloPreloader
 - **popup**: AddBook, ChatResponsive, ChoseFromMyPhoto, UpdateHeaderPhoto
+
+## Run 2026-09-10 — what landed, and what is still open
+
+**Landed.** 19 new components (bank/music/admin/popup verticals), 100 → 98 cards
+after two exclusions. 7 authored previews written this run: `CategoryChip`,
+`CategoryDonut`, `TrendBars`, `TransactionRow`, `MonthPager`, `MusicWidget`,
+`QuickAddModal` — 20 cells, all graded good. Render check 98/98 clean.
+
+**Excluded as cards** (`componentSrcMap: null`, still in the bundle) — same
+reasoning as `SessionKeeper` / `SvgSprite`: `MusicPlayerProvider` (context only,
+no UI) and `NowPlayingSpacer` (renders an invisible `h-24` div).
+
+### Floor cards: none left (2026-09-10, second pass)
+
+All 18 remaining floor cards were authored in four waves — reader (6), widget (4),
+music/popup/post (5), comic/journal/stream (3). **`.design-sync/previews/` now
+covers every carded component (70 files), and the render check reports 0 fallback
+cards.** A future component arrives as a floor card and is the standing offer.
+
+Note the earlier version of this section listed the wrong set: it was derived from
+"has no authored preview", but a component with no preview still gets ONE render
+attempt with `.d.ts` crash-prevention props, and most of them render fine that
+way. Only the ones whose root comes up EMPTY fall back to the typographic card —
+`fallbackCard: true` in `.render-check.json` is the authoritative list.
+
+### Preview techniques added this pass (reuse these)
+
+- **Seed the cache, don't fight the component.** Every widget that was blank
+  (`BirthdayCard`, `CalendarWidget`, `ContinueWidget`, `FinanceWidget`,
+  `MusicWidget`) returns `null` on empty/failed data. `DSQuerySeed` with the real
+  query key is the whole fix. `CalendarWidget` needs TWO caches — `["time-config"]`
+  as well, because the app never trusts the browser clock and renders nothing
+  until it knows the server instant.
+- **Click into internal state.** `PostOptionsMenu` (menu open), `AttachPhotoPopup`
+  (gallery pane) and `BulkImportModal` (zip mode) all hide their interesting half
+  behind internal state with no prop. The previews click the real trigger on mount
+  via a ref — driving the component through its own DOM, never its internals.
+  Without this, `AttachPhotoPopup`'s two cells were byte-identical.
+- **Stand-in images for anything behind `variantURL()`.** `PagedReader`,
+  `StripReader` and `ComicReaderView` render comic pages from the media API, which
+  a preview cannot reach; unpatched, every page hits the component's own
+  "⚠ Trang không tải được" branch. The previews intercept `img` src at the DOM
+  level and substitute a drawn SVG page. **Derive it from the asset id in the URL,
+  not a counter** — with identical pages an RTL spread is indistinguishable from
+  an LTR one and the two cells grade as identical.
+- **A clipping stage for anything that hides by translating.** `ReaderChrome`'s
+  immersive cell showed both bars half-slid until the stage got `overflow:hidden`;
+  it read as a layout bug rather than a state.
+
+### `NowPlayingBar` — now carded (supersedes the note below)
+
+It IS possible, and the earlier decision to skip it was wrong. Two separate error
+paths have to be neutralised, and missing the second cost a capture round:
+1. `HTMLMediaElement.play()` must resolve — otherwise the rejected promise sets
+   "Playback was blocked".
+2. the `<audio>` src must be swapped for a tiny silent WAV data-URI — a src that
+   404s fires the element's `error` event, a DIFFERENT branch, which paints
+   "This track could not be played."
+With both patched the bar renders normally. A `primeQueue(tracks, index)` action
+on the provider would still be the clean fix and would let both patches go.
+
+### Harness facts learned this run (save the next run the debugging)
+
+
+- **The capture harness runs a fixed clock at 2024-05-15.** Any preview calling
+  `new Date()` renders that date, and any component comparing against "today"
+  branches from it. `MonthPager`'s two cells are named for the STATE they show
+  (`Current` / `AwayFromToday`), not for a date, precisely because of this.
+- **`[RENDER_BLANK]` on a query-driven widget is almost always an unseeded
+  cache**, not a broken component: `MusicWidget` returns `null` on `isError`, and
+  with `retry:false` every preview query errors. Seeding `["tracks","widget"]`
+  fixed it outright.
+- **`[GRID_OVERFLOW]` fires on newly authored previews, one run late** — it can
+  only be seen once a component renders, so expect a fresh crop the run after any
+  batch of new cards. `CategoryDonut`, `TransactionRow`, `TrendBars` all needed
+  `{cardMode:"column"}` this run.
+- **`.design-sync/.cache/remote-sync.json` in the repo was stale again**
+  (`eb0ebfb92c3b` vs the live `2294132f5e78`). `ds-bundle/_ds_sync.json` DID match
+  the live anchor byte-for-byte, so `cp`-ing it across was safe — but check the
+  three hashes (`bundleSha12`, `auxSha`, `scriptsSha`) before trusting it.
+- **Windows stub package survived** untouched since Aug: junctions still live,
+  97/97 `.tsx` mirrored. Only `.ds-compiled.css` needed regenerating + re-copying.
+- **The `.d.ts` gap is unchanged and still the biggest quality issue**: the 19 new
+  components all carry `[key: string]: unknown` unless hand-written into
+  `cfg.dtsPropsFor`. The structural fix (emit real declarations) is still the
+  right one and still not done.
+
+- **`[GRID_OVERFLOW]` always arrives one run late, and in two flavours.** After the
+  second wave of new cards it fired on seven components at once. `wide` wants
+  `{cardMode:"column"}` (EntryCard, StreamItemCard); `escape (fixed/portal)` wants
+  `{cardMode:"single", primaryStory:"X"}` (NowPlayingBar, ChapterMenu, ReaderChrome,
+  ReaderHelp, ReaderSettings). Batch them into one targeted rebuild as the warn says.
+- **Git Bash `tr -d '
+'` leaves the CR.** A base64 blob piped from a file into a
+  preview string carried a stray `` and esbuild reported "Unterminated string
+  literal" pointing at a 1100-char line. Strip `` too.
+- **The capture browser HAS network.** `PlacePickerPopup` renders real
+  OpenStreetMap tiles. That makes its two cards excellent AND makes them the one
+  place in this sync whose content depends on an outside service — if OSM is
+  unreachable or rate-limits, those cards degrade to chrome over blank tiles.

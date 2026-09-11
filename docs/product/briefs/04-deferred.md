@@ -1,5 +1,7 @@
 # 04 — Deferred / Parking Lot
 
+**Status:** current · **Last verified:** never
+
 Consciously set aside in the 2026-07-07 brainstorm. Each item lists **why** and its
 **re-entry condition** — the trigger that puts it back on the table. This file exists
 to prevent re-litigating these decisions every session.

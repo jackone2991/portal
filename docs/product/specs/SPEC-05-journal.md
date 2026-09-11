@@ -1,6 +1,6 @@
 # SPEC-05 — Journal (life-stream write path)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
 **Module:** `journal` (new — not scaffolded) · **Depends on:** nothing hard ([ADR-10](../../adr/10-openapi-contract-direction.md) codegen cutover preferred first; P1.5 photo attachments need SPEC-01)
 **Upstream:** [briefs/05-journal-life-stream.md](../briefs/05-journal-life-stream.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), backlog §3 P1, [MODULES.md](../../../backend/MODULES.md) §8
 **Downstream consumers:** SPEC-06 (stream projection reads this table; its projection rows are maintained transactionally in this module's service — journal:entry_created stays emit-only, see P0.3), SPEC-09 P1.7 (takeout exports it).

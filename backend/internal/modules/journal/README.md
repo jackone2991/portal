@@ -26,5 +26,9 @@ Owns the life-stream **write path** (SPEC-05): human-authored journal entries.
 
 ## Open work
 
-- P1.5 photo attachments (`asset_ids uuid[]`, validated via `mediaapi`; subscribe to `media:asset_deleted`).
-- SPEC-06: `stream_items` projection written transactionally on entry create + the `GET /stream` read path.
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+

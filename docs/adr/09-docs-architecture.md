@@ -1,46 +1,62 @@
 # ADR-09 — Documentation Architecture
 
-**Status:** proposed (drafted 2026-07-07)
+**Status:** **accepted** — drafted 2026-07-07, the tree it describes shipped the same day; three of its bundled policies were replaced by [ADR-11](11-docs-canonicalisation.md) on 2026-09-11 (marked below)
+**Last verified:** 2026-09-11
 **Supersedes:** the "docs are bilingual" convention (CLAUDE.md / project rules) and the `doc/en`+`doc/vi` layout.
 
 ## Context
 
-The documentation tree grew organically: a flat `doc/en/` mixing genres — a
-decision log (`feature.md`), design specs (`frontend.md`, `authoration.md`), gap
-analyses (`missing-features.md`, `facebook-comparison.md`), deferred designs
-(`archivetech*.md`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
-`doc/vi/`. Three pressures broke it:
+*As found on 2026-07-07. The restructure ran that day; its own migration map
+(`MIGRATION.md`) and the frozen Vietnamese mirror it created were deleted twelve
+days later in `f11cf3f`, and the status tracker it deferred to went with them.
+ADR-11 records what replaced each.*
 
-1. **Mirror tax.** Every edit costs double; drift between mirrors had begun. On
+The documentation tree had grown organically: a flat `doc/en/` (retired) mixing genres — a
+decision log (`feature.md`, then; now `product/feature-inventory.md`), design specs (`frontend.md`, `authoration.md` — renamed `security.md`), gap
+analyses (`missing-features.md` — deleted; `facebook-comparison.md`), deferred designs
+(`archivetech*.md` — renamed under `architecture/deferred/`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
+`doc/vi/` (retired). Three pressures broke it:
+
+1. **Mirror tax.** Every edit cost double; drift between mirrors had begun. On
    2026-07-07 the owner switched working language to English only.
 2. **Genre confusion.** Normative (ADRs, module contract), aspirational (long-horizon
-   specs), historical (comparisons), and living (backlog) documents are visually
-   indistinguishable; the project already needs a standing warning ("trust
-   MILESTONE_CHECKS over stale doc sections").
+   specs), historical (comparisons), and living (backlog) documents were visually
+   indistinguishable; the project already needed a standing warning ("trust
+   `MILESTONE_CHECKS.md` over stale doc sections" — a file since deleted in `f11cf3f`).
 3. **New genres arrived** (brainstorm briefs, implementation-ready specs) with no
    structural home.
 
 ## Decision
 
 Adopt a **Diátaxis-informed** tree rooted at `docs/` (the ecosystem-standard root),
-with genre-separated sections and an explicit lifecycle:
+with genre-separated sections and an explicit lifecycle.
 
-`docs/{adr, product{vision, feature-inventory, backlog, checklist, analysis,
-briefs, specs}, architecture{…, deferred/}, guides, reference, archive}` — full
-mapping in [MIGRATION.md](../MIGRATION.md).
+As built (`ls docs/`): `adr/`, `product/{vision, feature-inventory, backlog,
+analysis/, briefs/, specs/}`, `architecture/{…, deferred/}`, `guides/`,
+`operations/`, `reference/`, `testing/`. The 2026-07-07 text also listed
+`product/checklist` and `archive/`: the checklist was deleted in `efb8a70`, the
+archive in `f11cf3f`; `operations/` and `testing/` existed on disk without being
+declared here until [docs/README.md](../README.md) gained their genre rules
+(ADR-11). The full old→new mapping was `MIGRATION.md` (deleted in `f11cf3f`).
 
 Policies bundled into this decision:
 
-- **English is canonical.** The Vietnamese mirror is frozen at
-  `docs/archive/vi-2026-07/` and never updated. The bilingual rule in CLAUDE.md is
-  replaced by a pointer to this ADR.
-- **Living status stays out of docs/**: `MILESTONE_CHECKS.md` remains at the repo
-  root as the single status truth; documents defer to it instead of restating state.
+- **English is canonical.** *Standing.* The bilingual rule in CLAUDE.md is
+  replaced by a pointer to this ADR. (The frozen Vietnamese mirror at
+  `docs/archive/vi-2026-07/` that this bullet created was deleted in `f11cf3f`;
+  git history holds it.)
+- **Living status stays out of `docs/`.** *Standing in spirit, changed in
+  mechanism:* `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; status is now
+  verified against the code, with `/CLAUDE.md` § Current status as the one
+  written owner (ADR-11 rule 1). Documents still defer instead of restating.
 - **Canonical-source rule**: contracts live next to what they govern
   (`backend/MODULES.md`, `shared/openapi.yaml`); `docs/reference/` points at them
-  rather than copying them.
-- Every document carries a status header (`STYLE.md`); ADRs are immutable once
-  accepted (supersede or add dated revision notes).
+  rather than copying them. *Standing.*
+- Every document carries a status header (`STYLE.md`). *Standing.* ~~ADRs are
+  immutable once accepted (supersede or add dated revision notes).~~ *Withdrawn
+  by ADR-11:* ADRs are corrected in place by layer; `Last verified` is the only
+  freshness mark. ADR-07 had already broken the immutability rule out of
+  necessity before it was withdrawn.
 
 ## Options considered
 
@@ -58,7 +74,7 @@ Policies bundled into this decision:
 ## Trade-offs
 
 - One-time link breakage across the repo; mitigated by the migration script + grep
-  checklist in MIGRATION.md, and by citing decisions via stable IDs (`D-N`, `ADR-N`)
+  checklist in `MIGRATION.md` (deleted in `f11cf3f`), and by citing decisions via stable IDs (`D-N`, `ADR-N`)
   going forward.
 - Vietnamese-speaking future contributors lose maintained VI docs; accepted —
   the archive remains readable, and code/API-level naming was always English.
@@ -68,19 +84,24 @@ Policies bundled into this decision:
 
 ## Consequences
 
-- CLAUDE.md and the project instructions must be updated: bilingual rule removed,
-  `doc/*` paths → `docs/*` (action item — instructions currently contradict this ADR
-  until edited).
-- The standing "trust MILESTONE_CHECKS" warning gets structural support: genres and
-  status headers make staleness visible.
+- CLAUDE.md and the project instructions were updated: bilingual rule removed,
+  `doc/*` paths → `docs/*`. (One `doc/en/…` link in `account/README.md` and
+  the scope comment in `cmd/api/main.go` survived until the 2026-09-11 sweep,
+  ADR-11.)
+- The standing "trust MILESTONE_CHECKS" warning got structural support and then
+  lost its object; the warning is now "verify against the code" in `/CLAUDE.md`.
 - New-document authors have exactly one correct location per genre
-  (`docs/README.md` "Genre rules"), ending ad-hoc placement.
-- Optional follow-up: CI link check (`lychee`) over `docs/` to keep the tree honest.
+  (`docs/README.md` "Genre rules"). Two folders (`operations/`, `testing/`)
+  were created without one for two months — the rules now cover them.
+- The optional CI link check became mandatory and blocking:
+  `scripts/check-links.sh` in the `link-check` job (ADR-11). It found 95
+  broken relative links when first run.
 
 ## Action items
 
-- [ ] Accept this ADR (owner).
-- [ ] Run `migrate-docs.sh` on a branch; drop in the bundle's new files.
-- [ ] Fix inbound links (MIGRATION.md step 3) and update CLAUDE.md / project
-      instructions (language rule + paths).
-- [ ] Add `docs/` link-check to CI (optional, P3).
+- [x] Accept this ADR — executed 2026-07-07; status field corrected 2026-09-11.
+- [x] `migrate-docs.sh` run; bundle files dropped in (2026-07-07).
+- [x] Inbound links fixed (the last two on 2026-09-11) and CLAUDE.md / project
+      instructions updated (language rule + paths).
+- [x] `docs/` link-check in CI — landed as a blocking job under ADR-11, not as
+      the optional P3 `lychee` pass proposed here.

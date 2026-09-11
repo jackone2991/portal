@@ -39,15 +39,15 @@ type CreateRefreshTokenInput struct {
 }
 
 type RefreshTokenRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	TokenHash     []byte
-	ExpiresAt     time.Time
-	CreatedAt     time.Time
-	RevokedAt     sql.NullTime
-	RevokeReason  sql.NullString
-	ReplacedByID  *uuid.UUID
-	ParentID      *uuid.UUID
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	TokenHash    []byte
+	ExpiresAt    time.Time
+	CreatedAt    time.Time
+	RevokedAt    sql.NullTime
+	RevokeReason sql.NullString
+	ReplacedByID *uuid.UUID
+	ParentID     *uuid.UUID
 }
 
 // RefreshManager handles issue, rotate, and revoke for refresh tokens.

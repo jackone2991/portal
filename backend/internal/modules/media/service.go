@@ -3,7 +3,6 @@ package media
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +18,7 @@ import (
 
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
+	"github.com/portal/backend/internal/platform/server"
 	"github.com/portal/backend/internal/platform/storage"
 )
 
@@ -76,9 +76,17 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	ext := pickExt(filename, contentType)
 	sourceKey := fmt.Sprintf("uploads/%s/original%s", id, ext)
 
+	// `video` is the fallback, not a guess we are confident in: browsers send an
+	// empty content type often enough that defaulting anywhere else would break
+	// the original upload path. `audio` matters because the music vertical
+	// streams the stored original — an audio file misfiled as video would be fed
+	// to the HLS encoder and never show up under ?kind=audio.
 	kind := "video"
-	if strings.HasPrefix(contentType, "image/") {
+	switch {
+	case strings.HasPrefix(contentType, "image/"):
 		kind = "image"
+	case strings.HasPrefix(contentType, "audio/"):
+		kind = "audio"
 	}
 
 	asset, err := s.repo.CreateAsset(ctx, CreateAssetInput{
@@ -103,11 +111,11 @@ func (s *Service) CreateUploadSession(ctx context.Context, ownerID uuid.UUID, fi
 	return &UploadSession{Asset: asset, URL: pre.URL, Method: pre.Method, Headers: pre.Headers}, nil
 }
 
-// IngestImage ingests raw image bytes as a media asset, running the same pipeline
+// Ingest stores raw bytes as a media asset, running the same pipeline
 // as a browser upload (create → store → complete, which enqueues process_image).
 // Returns the new asset id. Callers (e.g. the comic zip-import worker) run this
 // inside a tenant-scoped ctx so the asset + its variants land in the right tenant.
-func (s *Service) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+func (s *Service) Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
 	sess, err := s.CreateUploadSession(ctx, ownerID, filename, contentType, int64(len(data)))
 	if err != nil {
 		return uuid.Nil, err
@@ -180,10 +188,47 @@ func (s *Service) CompleteUpload(ctx context.Context, ownerID, assetID uuid.UUID
 		return err
 	}
 
-	if asset.Kind == "image" {
+	switch asset.Kind {
+	case "image":
 		return s.completeImage(ctx, asset, size)
+	case "audio":
+		return s.completeAudio(ctx, asset, size)
 	}
 	return s.completeVideo(ctx, asset)
+}
+
+// completeAudio marks an audio upload ready as-is — there is no transcode step.
+// The music vertical plays the stored original through GET /assets/{id}/original,
+// so a second encoded copy would cost disk and CPU and buy nothing; `hlsURL`
+// already returns "" for any non-video kind, so no playback URL is implied.
+//
+// The size re-check mirrors completeImage (belt-and-braces behind the presign
+// policy), and `media:asset_ready` is emitted here rather than from a worker
+// because no worker ever sees this asset — without it, audio uploads would be
+// the one kind that silently produces no notification and no life-stream card.
+func (s *Service) completeAudio(ctx context.Context, asset Asset, size int64) error {
+	if size > maxUploadBytes {
+		_ = s.store.Delete(ctx, asset.SourceKey)
+		_ = s.repo.MarkFailed(ctx, asset.ID, "file too large: exceeds the 50 MB limit")
+		return ErrFileTooLarge
+	}
+	// No output prefix, and no probed dimensions — duration is reported by the
+	// browser's own media element at playback time.
+	if err := s.repo.MarkReady(ctx, asset.ID, "", nil, nil, nil); err != nil {
+		return err
+	}
+	if s.events != nil {
+		if err := s.events.Publish(ctx, "media:asset_ready", map[string]any{
+			"asset_id":      asset.ID.String(),
+			"kind":          asset.Kind,
+			"owner_user_id": asset.OwnerID.String(),
+			"title":         asset.Title,
+			"origin":        asset.Origin,
+		}); err != nil {
+			log.Warn().Err(err).Str("asset", asset.ID.String()).Msg("asset_ready: publish failed")
+		}
+	}
+	return nil
 }
 
 func (s *Service) completeImage(ctx context.Context, asset Asset, size int64) error {
@@ -217,8 +262,9 @@ func (s *Service) completeImage(ctx context.Context, asset Asset, size int64) er
 		return err
 	}
 	task, err := worker.NewProcessImageTask(worker.ProcessImagePayload{
-		AssetID:   asset.ID.String(),
-		SourceKey: asset.SourceKey,
+		AssetID:     asset.ID.String(),
+		SourceKey:   asset.SourceKey,
+		OwnerUserID: asset.OwnerID.String(),
 	})
 	if err != nil {
 		return err
@@ -233,9 +279,10 @@ func (s *Service) completeVideo(ctx context.Context, asset Asset) error {
 	}
 	outputKey := fmt.Sprintf("hls/%s", asset.ID)
 	task, err := worker.NewTranscodeTask(worker.TranscodePayload{
-		AssetID:   asset.ID.String(),
-		SourceKey: asset.SourceKey,
-		OutputKey: outputKey,
+		AssetID:     asset.ID.String(),
+		SourceKey:   asset.SourceKey,
+		OutputKey:   outputKey,
+		OwnerUserID: asset.OwnerID.String(),
 	})
 	if err != nil {
 		return err
@@ -309,6 +356,33 @@ func (s *Service) DeleteAsset(ctx context.Context, id uuid.UUID) error {
 	return s.purgeAsset(ctx, asset)
 }
 
+// OriginalContent returns the uploaded original as a SEEKABLE reader, plus what
+// http.ServeContent needs to answer a Range request.
+//
+// Separate from DownloadOriginal because the two callers want different things:
+// a cross-module consumer (the music enrichment pass) just streams the bytes,
+// while the HTTP route has to support seeking or every audio and video element
+// pointed at it is unscrubbable. The caller MUST close the reader.
+func (s *Service) OriginalContent(ctx context.Context, ownerID, id uuid.UUID) (io.ReadSeekCloser, string, string, time.Time, error) {
+	asset, err := s.owned(ctx, ownerID, id)
+	if err != nil {
+		return nil, "", "", time.Time{}, err
+	}
+	if asset.Status == StatusDeleting {
+		return nil, "", "", time.Time{}, ErrNotFound
+	}
+	if asset.Status == StatusUploading {
+		return nil, "", "", time.Time{}, ErrNotReady // the source object may be partial
+	}
+
+	filename := asset.OriginalFilename
+	if filename == "" {
+		filename = asset.ID.String()
+	}
+	return newObjectReader(ctx, s.store, asset.SourceKey, asset.SizeBytes),
+		asset.MimeType, filename, asset.CreatedAt, nil
+}
+
 // DownloadOriginal streams the byte-identical uploaded original for the owner
 // (P0.5). Returns the reader, its content type and the download filename.
 func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error) {
@@ -351,33 +425,33 @@ func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (
 // ServeVariant streams a derived variant object (WebP). Public/unauthenticated,
 // like /hls/* — variants carry no EXIF/GPS (all metadata stripped). Missing or
 // deleting assets, and unknown variant names, resolve to ErrNotFound.
-func (s *Service) ServeVariant(ctx context.Context, id uuid.UUID, variant string) (io.ReadCloser, string, error) {
+func (s *Service) ServeVariant(ctx context.Context, id uuid.UUID, variant string) (Content, error) {
 	switch variant {
 	case "thumb", "medium", "poster":
 	default:
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 
 	asset, err := s.repo.GetAsset(ctx, id)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
 	if asset.Status == StatusDeleting {
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 
 	v, err := s.repo.GetVariant(ctx, id, variant)
 	if err != nil {
-		return nil, "", err // ErrNotFound if absent
+		return Content{}, err // ErrNotFound if absent
 	}
 	rc, err := s.store.Get(ctx, v.StorageKey)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, "", ErrNotFound
+			return Content{}, ErrNotFound
 		}
-		return nil, "", err
+		return Content{}, err
 	}
-	return rc, "image/webp", nil
+	return Content{Body: rc, ContentType: "image/webp", Public: asset.Visibility == VisibilityPublic}, nil
 }
 
 // PurgeOrphans is the hourly janitor body (P0.3): re-purge tombstoned assets past
@@ -416,24 +490,44 @@ func (s *Service) AssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, erro
 
 // HLSObject streams a file (manifest or segment) from an asset's HLS output.
 // Public (playback is unauthenticated for v1); path is sanitised against traversal.
-func (s *Service) HLSObject(ctx context.Context, assetID uuid.UUID, sub string) (io.ReadCloser, string, error) {
+// SetVisibility flips an asset between private and public (0032). Authorised
+// twice over — by the UPDATE policy and by the statement's own owner predicate —
+// because this is the write that can publish a private file. A caller who may
+// not touch the row gets ErrNotFound, indistinguishable from a missing id.
+func (s *Service) SetVisibility(ctx context.Context, ownerID, id uuid.UUID, visibility string) (Asset, error) {
+	return s.repo.SetAssetVisibility(ctx, ownerID, id, visibility)
+}
+
+// Content is one stored object plus what the caller needs to cache it safely.
+//
+// Public mirrors the owning asset's visibility. It is the only thing that may
+// put a media response in a SHARED cache: a private asset served with
+// "Cache-Control: public" could be handed by a proxy to someone the RLS
+// policies just went to the trouble of excluding.
+type Content struct {
+	Body        io.ReadCloser
+	ContentType string
+	Public      bool
+}
+
+func (s *Service) HLSObject(ctx context.Context, assetID uuid.UUID, sub string) (Content, error) {
 	asset, err := s.repo.GetAsset(ctx, assetID)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
 	if asset.Status != StatusReady || asset.OutputPrefix == "" {
-		return nil, "", ErrNotReady
+		return Content{}, ErrNotReady
 	}
 	clean := path.Clean("/" + sub) // collapse .. and leading slashes
 	if clean == "/" || strings.Contains(clean, "..") {
-		return nil, "", ErrNotFound
+		return Content{}, ErrNotFound
 	}
 	key := asset.OutputPrefix + clean // clean starts with "/"
 	rc, err := s.store.Get(ctx, key)
 	if err != nil {
-		return nil, "", err
+		return Content{}, err
 	}
-	return rc, contentTypeFor(sub), nil
+	return Content{Body: rc, ContentType: contentTypeFor(sub), Public: asset.Visibility == VisibilityPublic}, nil
 }
 
 // ── purge internals ─────────────────────────────────────────────────
@@ -672,26 +766,17 @@ func expandStatuses(status string) []string {
 
 // encodeCursor / decodeCursor form the opaque keyset cursor "<created_at>|<id>".
 func encodeCursor(a Asset) string {
-	raw := a.CreatedAt.UTC().Format(time.RFC3339Nano) + "|" + a.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(a.CreatedAt.UTC().Format(time.RFC3339Nano), a.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("media: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

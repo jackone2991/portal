@@ -1,0 +1,108 @@
+- generic [active] [ref=f44e1]:
+  - generic [ref=f44e2]:
+    - generic [ref=f44e3]: Loading …
+    - banner [ref=f44e5]:
+      - generic [ref=f44e6]:
+        - link "Portal — Newsfeed" [ref=f44e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f44e11]: Portal
+        - generic [ref=f44e12]:
+          - generic [ref=f44e13]: Newsfeed
+          - searchbox [ref=f44e15]
+          - link "Find Friends" [ref=f44e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f44e17]:
+            - button "Friend requests" [ref=f44e19]
+            - button "Messages" [ref=f44e23]:
+              - generic [ref=f44e26]: "2"
+            - button "Notifications" [ref=f44e28]
+            - button "Guest Member" [ref=f44e32]:
+              - generic [ref=f44e33]:
+                - generic [ref=f44e34]: Guest
+                - generic [ref=f44e35]: Member
+              - generic [ref=f44e36]: G
+    - complementary [ref=f44e41]:
+      - generic [ref=f44e42]:
+        - button "Collapse Menu" [ref=f44e43]
+        - link "Newsfeed" [ref=f44e49] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=f44e54] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=f44e59] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=f44e64] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=f44e69] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=f44e74]
+        - link "Music & Playlists" [ref=f44e79] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=f44e84] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=f44e89] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=f44e94]
+        - button "Friends Birthdays" [ref=f44e99]
+        - button "Account Stats" [ref=f44e104]
+      - generic [ref=f44e109]:
+        - generic [ref=f44e110]:
+          - generic [ref=f44e111]: Profile Completion
+          - generic [ref=f44e112]: 76%
+        - paragraph [ref=f44e115]:
+          - text: Complete
+          - link "your profile" [ref=f44e116] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=f44e117]:
+      - paragraph [ref=f44e119]: Loading people…
+      - generic [ref=f44e120]:
+        - textbox "Search people..." [ref=f44e122]
+        - button "Collapse people panel" [ref=f44e123]
+      - link "People" [ref=f44e126] [cursor=pointer]:
+        - /url: /people
+    - main [ref=f44e130]:
+      - generic [ref=f44e132]:
+        - generic [ref=f44e133]:
+          - heading "Sổ thu chi" [level=1] [ref=f44e134]
+          - generic [ref=f44e135]:
+            - link "Báo cáo" [ref=f44e136] [cursor=pointer]:
+              - /url: /bank/reports
+            - link "Ví" [ref=f44e137] [cursor=pointer]:
+              - /url: /bank/accounts
+            - button "+ Ghi chép" [ref=f44e138]
+        - generic [ref=f44e139]:
+          - button "Tháng trước" [ref=f44e140]: ‹
+          - generic [ref=f44e141]:
+            - generic [ref=f44e142]: Tháng 8, 2026
+            - textbox "Chọn tháng" [ref=f44e143] [cursor=pointer]: 2026-08
+          - button "Tháng sau" [ref=f44e144]: ›
+        - generic [ref=f44e145]:
+          - generic [ref=f44e146]:
+            - paragraph [ref=f44e147]: Tổng số dư
+            - paragraph [ref=f44e148]: 0đ
+          - generic [ref=f44e149]:
+            - generic [ref=f44e150]:
+              - paragraph [ref=f44e151]: Thu
+              - paragraph [ref=f44e152]: "0"
+            - generic [ref=f44e153]:
+              - paragraph [ref=f44e154]: Chi
+              - paragraph [ref=f44e155]: "0"
+            - generic [ref=f44e156]:
+              - paragraph [ref=f44e157]: Còn lại
+              - paragraph [ref=f44e158]: "0"
+        - generic [ref=f44e159]:
+          - generic [ref=f44e160]:
+            - heading "Chi tiêu theo danh mục" [level=2] [ref=f44e161]
+            - link "Xem tất cả" [ref=f44e162] [cursor=pointer]:
+              - /url: /bank/reports
+          - generic [ref=f44e164]:
+            - generic [ref=f44e165]: Chưa có dữ liệu
+            - list
+        - generic [ref=f44e167]:
+          - generic [ref=f44e168]:
+            - heading "Giao dịch gần đây" [level=2] [ref=f44e169]
+            - link "Xem tất cả" [ref=f44e170] [cursor=pointer]:
+              - /url: /bank/transactions
+          - generic [ref=f44e171]: Đang tải…
+    - button "Go to top"
+  - alert [ref=f44e172]

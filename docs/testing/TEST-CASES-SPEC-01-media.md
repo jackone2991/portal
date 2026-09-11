@@ -1,5 +1,7 @@
 # Test Cases — SPEC-01 Media Image Pipeline + Asset Management
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-01](../product/specs/SPEC-01-media-image-pipeline.md) · **Module:** `media`
 **Prefix:** `TC-MEDIA-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
 

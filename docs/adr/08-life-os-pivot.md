@@ -1,12 +1,16 @@
 # ADR-08 — Life-OS Positioning + Finance Ledger Scope
 
-**Status:** proposed (drafted 2026-07-07, from the 2026-07-07 brainstorm)
-**Amends:** [ADR-01](01-v1-scope-cut.md) · **Relates to:** D-27/D-28 (step-up/MFA), [ADR-06](06-local-auth-model.md)
+**Status:** **accepted** — drafted 2026-07-07 from that day's brainstorm; executed from 2026-07-12 (`6160f8e` SPEC-01/02, `66c036f` SPEC-03 ledger), never formally flipped until 2026-09-11
+**Last verified:** 2026-09-11
+**Amends:** [ADR-01](01-v1-scope-cut.md) · **Relates to:** D-27/D-28 (step-up/MFA), [ADR-06](06-local-auth-model.md) · yardstick: [product/vision.md](../product/vision.md)
 
 ## Context
 
-Portal's post-v1 gap analyses (`product/backlog.md`,
-`product/analysis/facebook-comparison.md`) measure the product against Facebook.
+*As found on 2026-07-07. This is the decision the whole SPEC-01…10 line
+descends from; everything below the Decision holds as written.*
+
+Portal's post-v1 gap analyses (`product/backlog.md` as it then was,
+`product/analysis/facebook-comparison.md`) measured the product against Facebook.
 That yardstick made sense while porting the Olympus UI, but it embeds an
 assumption Portal does not satisfy: Facebook's features derive value from network
 effects, while Portal is self-hosted, single-VPS, and starts from **one user**.
@@ -23,8 +27,8 @@ Two existing architectural assets make an integrated life platform more than a
 bundle of clones: the **event bus** (hard rule: modules couple only via Asynq
 `<module>:<event>`) and **one identity + RBAC** across all domains.
 
-The immediate scope tension: the owner wants **money** first, but ADR-01 defers
-"bank" wholesale, and D-27/D-28 gate bank behind MFA/step-up.
+The immediate scope tension: the owner wanted **money** first, but ADR-01 deferred
+"bank" wholesale, and D-27/D-28 gated bank behind MFA/step-up.
 
 ## Decision
 
@@ -77,25 +81,40 @@ The immediate scope tension: the owner wants **money** first, but ADR-01 defers
 
 ## Consequences
 
-- Backlog re-rank (recorded in `product/backlog.md`): friend graph, messaging,
-  people search, email password-reset **demoted**; notifications re-motivated as
-  life-stream backbone; `media:asset_ready` event emission promoted.
-- Event names `bank:*`, `comic:*` join the registry (`reference/events.md`);
-  `notify:*` remains reserved for the notification module.
-- Admin wildcard permissions technically reach finance data. For now this is the
-  owner-operator themselves; before any multi-user deployment, revisit whether
-  `bank:*` should be excluded from generic wildcard grants (flagged in SPEC-03 §P0.8).
-- "Posts" change meaning: the first real post type is a journal/life event, not a
-  status update — affects the future posts spec, not current work.
-- ADR-01 remains in force for everything else it defers (multi-tenancy/RLS,
-  marketplace, creator economy, observability, LiveKit).
+What followed (2026-09-11):
+
+- **The build order ran as decided and kept going:** SPEC-01 (media image
+  pipeline) → SPEC-02 (comic) → SPEC-03 (ledger) landed 2026-07-12; SPEC-04
+  (notify), 05/06 (journal + life stream), 07, 08 (people/birthdays), 09 (ops)
+  and 10 (ledger expansion: debts first) followed. The `bank` module is the
+  finance ledger; real bank integration (credentials, API sync, money
+  movement) is still deferred, exactly as item 3 said.
+- **The life stream exists:** `journal` projects `media:asset_ready`,
+  `comic:chapter_published`, `bank:transaction_created` and the rest into the
+  stream (SPEC-06). `bank:*`, `comic:*`, `journal:*`, `people:*` are in
+  [`reference/events.md`](../reference/events.md); `notify:*` stayed reserved
+  for the notification module, which shipped.
+- **Backlog re-rank:** happened in the July backlog. That file has since been
+  archived-in-place (2026-08-25) and is replaced under ADR-11 by a live one
+  triaged from the 2026-08-25 audit. Of the demoted items, email password-reset
+  came back and shipped (`0010`, SPEC-04); friend graph shipped a first slice as
+  the `social` module (`0037`); messaging and people search did not.
+- **Admin wildcard permissions still reach finance data.** `bank:*` is not
+  excluded from `*`; there is one operator. SPEC-03 §P0.8 still carries the
+  flag for any multi-user deployment.
+- **MFA/TOTP is still the named unlock for real bank integration** and is not
+  built (ADR-06). The ledger — including debts and interest accrual (SPEC-10) —
+  runs under password-only auth, as the trade-off accepted.
+- "Posts" changed meaning as predicted: the journal entry is the first real
+  post type.
+- ADR-01 remains in force for what it still defers: marketplace, creator
+  economy, observability, LiveKit/mediamtx. Multi-tenancy/RLS is no longer on
+  that list — ADR-07 executed.
 
 ## Action items
 
-- [ ] Accept this ADR (owner) and flip status to accepted.
-- [ ] Update `product/backlog.md` ordering note to point at `product/briefs/` +
-      `product/specs/`.
-- [ ] Add the historical-status header to `product/analysis/facebook-comparison.md`.
-- [ ] Build order: SPEC-01 → SPEC-02 → SPEC-03; notification module scheduled next.
-- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank
-      feature is proposed.
+- [x] Accept this ADR. (Executed from 2026-07-12; status field corrected 2026-09-11.)
+- [x] `product/backlog.md` ordering note points at `product/briefs/` + `product/specs/` — then the whole file was archived; the ADR-11 replacement carries the pointer.
+- [x] Historical-status header on `product/analysis/facebook-comparison.md` (label only; body untouched — analysis is immutable).
+- [x] Build order SPEC-01 → SPEC-02 → SPEC-03; notification module next. All four shipped.
+- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-10's eight items are all manual-entry.

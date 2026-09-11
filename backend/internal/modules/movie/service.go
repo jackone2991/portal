@@ -2,8 +2,6 @@ package movie
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -13,6 +11,7 @@ import (
 
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	movieapi "github.com/portal/backend/internal/modules/movie/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Service holds the movie business logic. Construct via the module.
@@ -200,26 +199,17 @@ func validTitle(s string) bool {
 }
 
 func encodeCursor(m Movie) string {
-	raw := m.UpdatedAt.UTC().Format(time.RFC3339Nano) + "|" + m.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(m.UpdatedAt.UTC().Format(time.RFC3339Nano), m.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("movie: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

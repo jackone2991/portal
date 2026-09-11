@@ -9,7 +9,7 @@ RSC rendering decision tree ([D-33]). The prose spec is
 ## Stack
 
 Next.js 15 (App Router, RSC) · TypeScript · Tailwind v4 · TanStack Query · Zustand
-· React Hook Form · Vidstack (HLS). Presentation lives in a version-switched
+· React Hook Form *(NOT INSTALLED — not in package.json, zero imports; every form hand-rolls `useState`. Either add the dependency or drop this row.)* · Vidstack (HLS). Presentation lives in a version-switched
 `src/templates/v{N}/` tree selected by `NEXT_PUBLIC_TEMPLATE_VERSION` via
 `templates/registry.ts` — read [src/templates/README.md](src/templates/README.md)
 before adding a page or cutting a `v2`.
@@ -47,6 +47,30 @@ function useAssets() {
 
 If you catch yourself writing `setX(await fetch(...))` into a store, stop and
 reach for `useQuery` / `useMutation` instead.
+
+## Cursor lists: `useInfiniteQuery` + the scroll sentinel
+
+Every list endpoint in this API is keyset-paginated: it answers with a page plus
+a `next_cursor`, and **the page default is 30** (`defaultLimit` in each module's
+`types.go`; `limit` is capped at 50). A plain `useQuery` against one of these
+silently truncates — the view renders exactly 30 rows and has nothing to say
+about the rest, which reads as "the feature only loaded some of my data".
+
+So: any list backed by a `next_cursor` uses `useInfiniteQuery`, and loads the
+next page on scroll via `useInfiniteScroll` (`src/lib/use-infinite-scroll.ts`)
+rather than a "load more" button. Two details in that hook are easy to get wrong
+and are commented there — it rebuilds the observer after every page (an
+`IntersectionObserver` reports *changes*, so a list shorter than the viewport
+would otherwise stall one page in), and it fetches ahead of the fold.
+
+Two things that follow from paginating, and are the usual bugs:
+
+- **A "select/play/export all" action cannot use the rendered array** — that is
+  only the pages fetched so far. Walk the cursor to the end first (see
+  `fetchAllTracks` in `src/lib/music.ts`) and bound it, or the button's name is a
+  lie the moment the list is longer than one page.
+- **Show the loaded count with a `+` while more remain.** "30" on its own reads
+  as the whole library.
 
 ## Rendering: RSC-first [D-33]
 

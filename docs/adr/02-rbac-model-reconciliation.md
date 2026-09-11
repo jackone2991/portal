@@ -1,38 +1,41 @@
 # ADR-02: Reconcile RBAC — role hierarchy (built) vs policy bundles (specced)
 
-**Status:** Accepted
-**Date:** 2026-05-24
+**Status:** **accepted** 2026-05-24
+**Last verified:** 2026-09-11
 **Deciders:** kirito
 **Supersedes:** N/A (first decision in this area)
-**Affects:** [feature.md D-26], [archivetech.md §2, §3.3]
-
-> **Update (2026-07-06):** Accepted and shipped — v1 runs on the role-hierarchy model exactly as decided here; the policy-bundle/user-group layer and file-gating remain deferred.
-> - [ADR-06](./06-local-auth-model.md) (2026-07-05) removed Authentik: the `user_oidc_roles` (synced from Authentik groups) input in Spec A and the `user_roles ∪ user_oidc_roles` term in step 1 of the composition rule are retired (the table was dropped by migration `0006`); effective permissions come from `user_roles` + role ancestors only. All other Spec A mechanics (grammar, two-channel revocation, `rbac:perms:<userID>:v<N>` cache key) are unchanged.
-> - `rbac.Matches` has since been fixed so a wildcard-action grant like `movies:*` covers every scope including `:own` — consistent with, not contradicting, this ADR.
+**Affects:** [D-26] in [feature-inventory.md](../product/feature-inventory.md), [access-policies.md §2, §3.3](../architecture/deferred/access-policies.md) (then `archivetech.md`)
 
 ## Context
 
-The project has **two specs for access control that contradict each other**, and code exists for one of them.
+*As found on 2026-05-24. v1 shipped on the role-hierarchy model exactly as
+decided here; the policy-bundle/user-group layer and file-gating remain
+deferred and have no code. One input has since gone: [ADR-06](./06-local-auth-model.md)
+removed Authentik, and migration `0006` dropped `user_oidc_roles`, so effective
+permissions come from `user_roles` + role ancestors only. The composition rule
+in Trade-offs still names that table; it is kept as written.*
+
+The project had **two specs for access control that contradicted each other**, and code existed for one of them.
 
 ### Spec A — Role hierarchy (CLAUDE.md + feature.md + actual code)
 
 - Permission grammar: `<resource>:<action>[:<scope>]` with `*` / `:any` / `:own` wildcards.
 - Grants flow through **roles**. `roles.parent_id` forms an adjacency-list hierarchy: `guest → user → creator → editor → moderator → admin → superadmin`.
-- Effective permission set = walk role ancestors via recursive CTE, union with directly-assigned `user_roles`, union with `user_oidc_roles` (synced from Authentik groups). [D-26]
+- Effective permission set = walk role ancestors via recursive CTE, union with directly-assigned `user_roles`, union with `user_oidc_roles` (synced from Authentik groups — retired with ADR-06). [D-26]
 - Implemented in `backend/internal/modules/account/rbac/`.
 - Two-channel revocation: `users.token_version` (instant logout-all) + `refresh_tokens.revoked_at` (chain revoke).
 - Cache key `rbac:perms:<userID>:v<N>` namespaced by `token_version`.
 
-### Spec B — Policy bundles (archivetech.md)
+### Spec B — Policy bundles (`archivetech.md`, now `docs/architecture/deferred/access-policies.md`)
 
 - Same permission grammar at the leaf.
 - Grants flow through **policies** (reusable named bundles like "Radiologist", "Read-Only Auditor"). Policies attach to **user groups** or directly to **users**.
 - User groups form their own hierarchy (`user_groups.parent_id`); a user inherits every active policy attached to any ancestor group plus their own per-user policies.
 - **File-gated permissions**: certain permissions inside a policy require an uploaded file (license, certificate) to be effective. Admin review queue. File expiry → permission silently disappears.
 - Conflict resolution: **deny-wins** (AWS IAM / OPA semantics).
-- archivetech.md §1 declares "the spec wins, adjust code, not the other way around" — meaning if this is accepted, the existing role-hierarchy code is wrong.
+- Its §1 declared "the spec wins, adjust code, not the other way around" — meaning if it were accepted, the existing role-hierarchy code was wrong.
 
-### Why this is a real conflict
+### Why this was a real conflict
 
 These are not two views of one model. They're two different models with different primary entities (roles vs policies), different group concepts (the system roles in spec A are not the same thing as user groups in spec B), different cache invalidation flows (file-gating in B has no analogue in A), and different audit semantics (spec B logs "permission became ineffective" events that spec A has no concept of).
 
@@ -121,28 +124,28 @@ Steps 1, 3, and 5 (without deny) are what currently exists. Steps 2 and 4 are th
 
 ## Consequences
 
-**What becomes easier:**
+**What became easier:**
 
-- v1 ships on time. The 7-step demo is unaffected by this decision.
-- Existing tests in `backend/internal/modules/account/rbac/permission_test.go` stay green.
-- When policies are added, the existing code is unchanged — the new code is purely additive (new tables, new resolution stage).
+- v1 shipped on time; the 7-step demo was unaffected.
+- The tests in `backend/internal/modules/account/rbac/` stayed green, and `rbac.Matches` was later fixed so a wildcard-action grant like `movies:*` covers every scope including `:own` — consistent with, not contradicting, this ADR.
+- When policies are added, the existing code is unchanged — the new code is purely additive (new tables, new resolution stage). Nothing has been added yet.
 
-**What becomes harder:**
+**What became harder:**
 
-- archivetech.md needs a header note (or supersedence ADR) saying its RBAC section is **layered on top of**, not **replacement for**, the role hierarchy. Without it, the next reader sees contradiction.
-- Future contributors will see two grant concepts and need this ADR to know how they compose. Make sure the composition rule above is also reflected in `backend/internal/modules/account/README.md` once it's written.
-- The "deny-wins" promise commits us to a particular semantics. If a future explicit-deny implementation forgets that promise, hard-to-debug security regressions become possible.
+- `access-policies.md` carries the header note saying its RBAC section is **layered on top of**, not **replacement for**, the role hierarchy (done 2026-07-06).
+- Future contributors see two grant concepts and need this ADR to know how they compose. The composition rule is **not** in `backend/internal/modules/account/README.md` (action item 2 is open); this ADR is the only place it is written.
+- The "deny-wins" promise commits us to a particular semantics. No explicit-deny implementation exists; the promise stands.
 
-**What we'll need to revisit:**
+**What we said we'd revisit — and what happened instead:**
 
-- When the admin UI from `anh1/2/3.png` is built, the screens are for **policies + groups**, not roles. The UI work pulls Spec B's tables forward. Plan a Policy/Group sprint when those mocks reach the top of the backlog (post-v1, likely Phase 1.5 or Phase 7's social-page-role work).
-- File-gated permissions require object storage for the uploaded licenses + an admin review queue + cron-based expiry checks. These are independent enough to ship as their own phase (Phase 3 in archivetech.md), and gating that phase on the policy layer existing is the right ordering.
-- The role-hierarchy adjacency list has a CHECK preventing self-cycles only; deeper cycles are prevented at the app layer. When policies and groups land, the same self-only DB CHECK will be insufficient — make sure the policy/group migration includes proper cycle prevention (or the app-layer check is hardened with explicit tests).
+- The admin UI was built for **roles**, not for policies + groups: `/api/v1/admin/*` and the `AdminRolesView` / `AdminUsersView` screens (role × permission matrix, approval queue, user directory — see `/CLAUDE.md` § Admin console). Roles became editable, which is why `/auth/me` returns effective permission codes. The `anh1/2/3.png` mocks did not pull Spec B's tables forward; if a Policy/Group sprint happens it starts from a shipped roles UI, not a blank one.
+- File-gated permissions (object storage for licenses + review queue + expiry checks) remain their own future phase, gated on the policy layer existing.
+- Cycle prevention: `roles` still has the self-only DB CHECK with deeper cycles caught at the app layer. The policy/group migration, when written, must include proper cycle prevention.
 
 ## Action items
 
-1. [x] Add a 5-line note to the top of `archivetech.md` referencing this ADR and stating that its RBAC model is the *deferred Phase 1.5+ layer*, not the v1 model. **No** silent contradiction. *(done 2026-07-06 — banner added to archivetech.md)*
-2. [ ] Add the composition rule (the 6-line pseudocode above) to `backend/internal/modules/account/README.md` (or a stub if the README doesn't exist) so the relationship is visible from the code.
-3. [ ] Reserve the depguard rule for `internal/modules/policy/` and `internal/modules/usergroup/` so when those modules land, depguard already knows they exist (avoids "module not in allowlist" churn).
-4. [ ] Open a tracking issue "RBAC Phase 1.5: policy bundles + user groups (ADR-02 layered model)" so the deferred work is visible without being scheduled.
-5. [ ] After v1 ships, before any admin UI work begins, schedule the Policy/Group sprint. The composition rule from this ADR is the contract that sprint implements.
+1. [x] Header note on `access-policies.md` referencing this ADR (2026-07-06).
+2. [ ] Add the composition rule to `backend/internal/modules/account/README.md` — not done (`grep -c effective_permissions backend/internal/modules/account/README.md` is 0).
+3. [ ] Reserve depguard rules for `internal/modules/policy/` and `internal/modules/usergroup/` — not done; `backend/.golangci.yml` names neither.
+4. [ ] Tracking issue for "RBAC Phase 1.5: policy bundles + user groups" — there is no issue tracker; the deferral is recorded here and in `/CLAUDE.md` § RBAC schism.
+5. [ ] Policy/Group sprint "before any admin UI work begins" — overtaken: the roles admin UI shipped first (0031/0036 era). The sprint, if scheduled, layers onto it.

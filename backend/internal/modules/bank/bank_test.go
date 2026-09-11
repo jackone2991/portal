@@ -452,6 +452,57 @@ func (r *fakeRepo) MonthFlowTotals(_ context.Context, userID uuid.UUID, month ti
 	return income, expense, nil
 }
 
+// CategorySpendForMonth mirrors the SQL: child categories roll up into their
+// parent, and pure transfer legs are excluded.
+func (r *fakeRepo) CategorySpendForMonth(_ context.Context, userID uuid.UUID, month time.Time) ([]CategoryTotal, error) {
+	byCat := map[uuid.UUID]*CategoryTotal{}
+	order := []uuid.UUID{}
+	for _, t := range r.txns {
+		if t.userID != userID || !sameMonth(t.occurredAt, month) || t.categoryID == nil {
+			continue
+		}
+		if t.transferID != nil && t.categoryID == nil {
+			continue
+		}
+		c := r.cats[*t.categoryID]
+		if c == nil {
+			continue
+		}
+		if c.parentID != nil {
+			if p := r.cats[*c.parentID]; p != nil {
+				c = p
+			}
+		}
+		agg, ok := byCat[c.id]
+		if !ok {
+			agg = &CategoryTotal{CategoryID: c.id, Name: c.name, Kind: c.kind}
+			byCat[c.id] = agg
+			order = append(order, c.id)
+		}
+		agg.Total += t.amount
+		agg.TxCount++
+	}
+	out := make([]CategoryTotal, 0, len(order))
+	for _, id := range order {
+		out = append(out, *byCat[id])
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Total > out[j].Total })
+	return out, nil
+}
+
+func (r *fakeRepo) MonthlyFlowSeries(ctx context.Context, userID uuid.UUID, endMonth time.Time, months int) ([]MonthFlow, error) {
+	out := make([]MonthFlow, 0, months)
+	for i := months - 1; i >= 0; i-- {
+		m := endMonth.AddDate(0, -i, 0)
+		income, expense, err := r.MonthFlowTotals(ctx, userID, m)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, MonthFlow{Month: m, Income: income, Expense: expense})
+	}
+	return out, nil
+}
+
 // ── test fixtures ────────────────────────────────────────────────────
 
 func newSvc() (*Service, *fakeRepo) {
@@ -480,6 +531,78 @@ func mustAccount(t *testing.T, s *Service, user uuid.UUID, name string, opening 
 }
 
 // ── tests ────────────────────────────────────────────────────────────
+
+// The report is what the month screen draws, so the three things it must get
+// right are: children roll up into their parent (a donut of 30 slivers says
+// nothing), income and expense never mix in one chart, and moving money between
+// your own wallets is not spending.
+func TestReportRollsUpChildrenAndSplitsByKind(t *testing.T) {
+	svc, repo := newSvc()
+	ctx := context.Background()
+	user := uuid.New()
+	month := date(2026, 8, 1)
+
+	acct := mustAccount(t, svc, user, "Ví", 0)
+	other := mustAccount(t, svc, user, "Ngân hàng", 0)
+
+	food := repo.seedCategory("Ăn uống", KindExpense, nil)
+	coffee := repo.seedCategory("Cà phê", KindExpense, &food)
+	dining := repo.seedCategory("Ăn ngoài", KindExpense, &food)
+	salary := repo.seedCategory("Lương", KindIncome, nil)
+
+	spend := func(cat uuid.UUID, amount int64, dir string) {
+		t.Helper()
+		if _, err := svc.CreateTransaction(ctx, CreateTransactionInput{
+			UserID: user, AccountID: acct, CategoryID: &cat,
+			Amount: amount, Direction: dir, OccurredAt: date(2026, 8, 10),
+		}); err != nil {
+			t.Fatalf("create transaction: %v", err)
+		}
+	}
+	spend(coffee, 50_000, DirDebit)
+	spend(dining, 250_000, DirDebit)
+	spend(salary, 20_000_000, DirCredit)
+
+	// A transfer between the user's own wallets: not income, not expense.
+	if _, err := svc.CreateTransfer(ctx, TransferParams{
+		UserID: user, FromAccount: acct, ToAccount: other,
+		Amount: 1_000_000, OccurredAt: date(2026, 8, 11),
+	}); err != nil {
+		t.Fatalf("create transfer: %v", err)
+	}
+
+	rep, err := svc.Report(ctx, user, month)
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+
+	if len(rep.Expenses) != 1 {
+		t.Fatalf("expense slices = %d, want 1 (children roll up into Ăn uống): %+v", len(rep.Expenses), rep.Expenses)
+	}
+	if got := rep.Expenses[0]; got.CategoryID != food || got.Total != 300_000 || got.TxCount != 2 {
+		t.Errorf("rolled-up slice = %+v, want Ăn uống total 300000 over 2 txns", got)
+	}
+	if len(rep.Incomes) != 1 || rep.Incomes[0].Total != 20_000_000 {
+		t.Errorf("income slices = %+v, want one Lương slice of 20000000", rep.Incomes)
+	}
+	if rep.Expense != 300_000 || rep.Income != 20_000_000 {
+		t.Errorf("totals = income %d expense %d, want 20000000/300000 — the transfer must not count",
+			rep.Income, rep.Expense)
+	}
+
+	if len(rep.Trend) != trendMonths {
+		t.Fatalf("trend = %d months, want %d", len(rep.Trend), trendMonths)
+	}
+	last := rep.Trend[len(rep.Trend)-1]
+	if !sameMonth(last.Month, month) || last.Expense != 300_000 {
+		t.Errorf("trend must end at the reported month with its totals, got %+v", last)
+	}
+	// Empty months are present with zeroes rather than missing — a trend that
+	// silently drops them draws a misleading line.
+	if first := rep.Trend[0]; first.Income != 0 || first.Expense != 0 {
+		t.Errorf("leading empty month = %+v, want zeroes", first)
+	}
+}
 
 func TestDerivedBalanceReconciles(t *testing.T) {
 	svc, _ := newSvc()

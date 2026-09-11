@@ -2,175 +2,232 @@
 
 import { useMemo, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "@/lib/api-client";
+import { problemDisplayMessage } from "@/lib/problems";
+import { useInfiniteScroll } from "@/lib/use-infinite-scroll";
 import {
-  type Direction,
-  createTransaction,
+  currentMonth,
+  dayLabel,
   deleteTransaction,
+  deleteTransfer,
+  formatVND,
   listAccounts,
   listCategories,
   listTransactions,
+  signedAmount,
+  type BankTransaction,
 } from "@/lib/bank";
-import { problemDisplayMessage } from "@/lib/problems";
-import { ApiError } from "@/lib/api-client";
-import { MoneyDisplay, MoneyInput } from "../../components/ui/Money";
+import { BackLink } from "../../components/bank/BackLink";
+import { QuickAddModal } from "../../components/bank/QuickAddModal";
+import { MonthPager } from "./MonthPager";
+import { groupByDay, TransactionRow } from "./DashboardView";
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
+/**
+ * The full ledger history for a month, grouped by day.
+ *
+ * Grouping is not decoration: a spending log is read as "what did Tuesday cost",
+ * and a flat list makes the reader find the day boundaries themselves. Each day
+ * carries its net so the common question is answered without arithmetic.
+ *
+ * Paginates on scroll (`useInfiniteScroll`) rather than a button — see
+ * frontend/CLAUDE.md; the API is keyset-paginated and a month of daily spending
+ * runs well past one page.
+ */
 export function TransactionsView() {
   const qc = useQueryClient();
-  const { data: accounts = [] } = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
-  const { data: categories = [] } = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
 
-  const [monthFilter, setMonthFilter] = useState("");
-  const [accountFilter, setAccountFilter] = useState("");
-
-  const list = useInfiniteQuery({
-    queryKey: ["bank", "transactions", { month: monthFilter, account: accountFilter }],
-    queryFn: ({ pageParam }) =>
-      listTransactions({ cursor: pageParam || undefined, month: monthFilter || undefined, account: accountFilter || undefined }),
-    initialPageParam: "",
-    getNextPageParam: (last) => last.next_cursor || undefined,
-  });
-
-  // quick-add state
-  const active = accounts.filter((a) => !a.archived);
-  const [amount, setAmount] = useState(0);
-  const [direction, setDirection] = useState<Direction>("debit");
+  const [month, setMonth] = useState(currentMonth());
   const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [date, setDate] = useState(today());
-  const [note, setNote] = useState("");
+  const [adding, setAdding] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const kindForDir = direction === "debit" ? "expense" : "income";
-  const pickableCats = useMemo(() => categories.filter((c) => c.kind === kindForDir), [categories, kindForDir]);
-  const accountName = (id: string | null) => accounts.find((a) => a.id === id)?.name ?? "—";
-  const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? null;
+  const accounts = useQuery({ queryKey: ["bank", "accounts"], queryFn: listAccounts });
+  const cats = useQuery({ queryKey: ["bank", "categories"], queryFn: listCategories });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["bank"] });
-  const add = useMutation({
-    mutationFn: () =>
-      createTransaction({
-        account_id: accountId || active[0]?.id || "",
-        category_id: categoryId || pickableCats[0]?.id || "",
-        amount,
-        direction,
-        occurred_at: date,
-        note: note || null,
+  const list = useInfiniteQuery({
+    queryKey: ["bank", "transactions", month, accountId, categoryId],
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      listTransactions({
+        month,
+        account: accountId || undefined,
+        category: categoryId || undefined,
+        cursor: pageParam,
       }),
-    onSuccess: () => {
-      setAmount(0);
-      setNote("");
-      setErr(null);
-      invalidate();
-    },
-    onError: (e) => setErr(e instanceof ApiError ? problemDisplayMessage(e.body) : "Could not save"),
-  });
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteTransaction(id),
-    onSuccess: invalidate,
-    onError: (e) => setErr(e instanceof ApiError ? problemDisplayMessage(e.body) : "Could not delete"),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
   });
 
-  const rows = list.data?.pages.flatMap((p) => p.transactions) ?? [];
+  const rows = useMemo(
+    () => list.data?.pages.flatMap((p) => p.transactions) ?? [],
+    [list.data],
+  );
+  const days = useMemo(() => groupByDay(rows), [rows]);
+
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: () => list.fetchNextPage(),
+    hasMore: list.hasNextPage,
+    isLoading: list.isFetchingNextPage,
+  });
+
+  const catById = useMemo(() => new Map((cats.data ?? []).map((c) => [c.id, c] as const)), [cats.data]);
+  const acctById = useMemo(() => new Map((accounts.data ?? []).map((a) => [a.id, a] as const)), [accounts.data]);
+
+  const remove = useMutation({
+    // Deleting one leg of a transfer would leave the other stranded and the two
+    // wallet balances permanently out of step, so a transfer is removed whole.
+    mutationFn: (t: BankTransaction) =>
+      t.transfer_id ? deleteTransfer(t.transfer_id) : deleteTransaction(t.id),
+    onMutate: () => setErr(null),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
+    onError: (e) =>
+      setErr(e instanceof ApiError ? problemDisplayMessage(e.body) : "Không xoá được giao dịch."),
+  });
+
+  const monthNet = rows.reduce((s, t) => s + (t.is_transfer ? 0 : signedAmount(t)), 0);
 
   return (
-    <main className="mx-auto max-w-3xl p-6 text-white">
-      <h1 className="mb-6 text-2xl font-bold">Transactions</h1>
-
-      {/* quick-add */}
-      <form
-        className="mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-800 bg-gray-900 p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (amount > 0) add.mutate();
-        }}
-      >
-        <div className="col-span-2 flex gap-2">
-          <button
-            type="button"
-            className={`flex-1 rounded-md py-2 text-sm font-medium ${direction === "debit" ? "bg-red-600" : "bg-gray-800"}`}
-            onClick={() => { setDirection("debit"); setCategoryId(""); }}
-          >
-            Expense
-          </button>
-          <button
-            type="button"
-            className={`flex-1 rounded-md py-2 text-sm font-medium ${direction === "credit" ? "bg-green-600" : "bg-gray-800"}`}
-            onClick={() => { setDirection("credit"); setCategoryId(""); }}
-          >
-            Income
-          </button>
+    <section className="pb-8">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <BackLink />
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--tpl-heading)" }}>
+            Giao dịch
+          </h1>
         </div>
-        <div className="col-span-2">
-          <MoneyInput value={amount} onChange={setAmount} placeholder="Amount" />
-        </div>
-        <select className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-          <option value="">{active[0] ? `Account: ${active[0].name}` : "No account"}</option>
-          {active.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
-          ))}
-        </select>
-        <select className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          <option value="">{pickableCats[0] ? `Category: ${pickableCats[0].name}` : "No category"}</option>
-          {pickableCats.map((c) => (
-            <option key={c.id} value={c.id}>{c.parent_id ? "· " : ""}{c.name}</option>
-          ))}
-        </select>
-        <input type="date" className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2" value={date} onChange={(e) => setDate(e.target.value)} />
-        <input className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-        <button type="submit" disabled={add.isPending || amount <= 0 || active.length === 0} className="col-span-2 rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500 disabled:opacity-50">
-          Add transaction
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="rounded-lg px-4 py-2 text-sm font-bold text-white transition hover:opacity-90"
+          style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
+        >
+          + Ghi chép
         </button>
-        {active.length === 0 && <p className="col-span-2 text-sm text-yellow-500">Create an account first.</p>}
-        {err && <p className="col-span-2 text-sm text-red-400">{err}</p>}
-      </form>
+      </header>
 
-      {/* filters */}
-      <div className="mb-4 flex gap-2">
-        <input type="month" className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} />
-        <select className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm" value={accountFilter} onChange={(e) => setAccountFilter(e.target.value)}>
-          <option value="">All accounts</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
+      <MonthPager month={month} onChange={setMonth} />
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Filter value={accountId} onChange={setAccountId} label="Tất cả ví">
+          {(accounts.data ?? []).map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
           ))}
-        </select>
+        </Filter>
+        <Filter value={categoryId} onChange={setCategoryId} label="Tất cả danh mục">
+          {(cats.data ?? []).map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.icon ? `${c.icon} ` : ""}
+              {c.name}
+            </option>
+          ))}
+        </Filter>
       </div>
 
-      {/* list */}
-      <ul className="divide-y divide-gray-800 rounded-lg border border-gray-800 bg-gray-900">
-        {rows.map((t) => (
-          <li key={t.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>{categoryName(t.category_id) ?? (t.is_transfer ? "Transfer" : "—")}</span>
-                {t.is_transfer && <span className="rounded bg-indigo-900 px-1.5 py-0.5 text-[10px] uppercase text-indigo-300">transfer</span>}
-              </div>
-              <div className="text-xs text-gray-500">
-                {t.occurred_at} · {accountName(t.account_id)}
-                {t.note ? ` · ${t.note}` : ""}
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <MoneyDisplay amount={t.direction === "credit" ? t.amount : -t.amount} signed className="text-sm font-medium" />
-              {!t.is_transfer && (
-                <button className="text-xs text-red-400 hover:text-red-300" onClick={() => remove.mutate(t.id)}>
-                  ✕
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
-        {rows.length === 0 && !list.isLoading && <li className="px-4 py-6 text-center text-gray-500">No transactions.</li>}
-      </ul>
-
-      {list.hasNextPage && (
-        <button className="mt-4 w-full rounded-md border border-gray-700 py-2 text-sm text-gray-300 hover:bg-gray-800" onClick={() => list.fetchNextPage()} disabled={list.isFetchingNextPage}>
-          {list.isFetchingNextPage ? "Loading…" : "Load more"}
-        </button>
+      {err && (
+        <p
+          className="mt-3 rounded-lg border px-3 py-2 text-sm"
+          style={{ borderColor: "rgba(239,68,68,.4)", background: "rgba(239,68,68,.08)", color: "#ef4444" }}
+        >
+          {err}
+        </p>
       )}
-    </main>
+
+      {list.isPending ? (
+        <p className="mt-6 text-sm" style={{ color: "var(--tpl-muted)" }}>
+          Đang tải…
+        </p>
+      ) : rows.length === 0 ? (
+        <div
+          className="mt-6 rounded-2xl border border-dashed py-12 text-center text-sm"
+          style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+        >
+          Không có giao dịch nào trong tháng này.
+        </div>
+      ) : (
+        <>
+          <p className="mt-4 text-xs" style={{ color: "var(--tpl-muted)" }}>
+            {/* Transfers are excluded from the net — moving your own money is
+                neither income nor spending. */}
+            Chênh lệch tháng:{" "}
+            <span className="font-bold tabular-nums" style={{ color: monthNet < 0 ? "#ef4444" : "#22c55e" }}>
+              {monthNet > 0 ? "+" : ""}
+              {formatVND(monthNet)}
+            </span>
+          </p>
+
+          <div className="mt-2 space-y-3">
+            {days.map(([day, dayRows]) => {
+              const net = dayRows.reduce((s, t) => s + (t.is_transfer ? 0 : signedAmount(t)), 0);
+              return (
+                <div
+                  key={day}
+                  className="overflow-hidden rounded-2xl border"
+                  style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)" }}
+                >
+                  <div className="flex items-baseline justify-between px-4 py-2" style={{ background: "var(--tpl-surface-2)" }}>
+                    <span className="text-xs font-bold" style={{ color: "var(--tpl-text)" }}>
+                      {dayLabel(day)}
+                    </span>
+                    <span className="text-xs font-semibold tabular-nums" style={{ color: net < 0 ? "#ef4444" : "#22c55e" }}>
+                      {net > 0 ? "+" : ""}
+                      {formatVND(net)}
+                    </span>
+                  </div>
+                  <ul className="divide-y" style={{ borderColor: "var(--tpl-border)" }}>
+                    {dayRows.map((t) => (
+                      <TransactionRow
+                        key={t.id}
+                        tx={t}
+                        category={t.category_id ? catById.get(t.category_id) ?? null : null}
+                        accountName={acctById.get(t.account_id)?.name ?? ""}
+                        onDelete={() => remove.mutate(t)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          <div ref={sentinelRef} aria-hidden />
+          <p className="mt-4 text-center text-xs" style={{ color: "var(--tpl-muted)" }} aria-live="polite">
+            {list.isFetchingNextPage
+              ? "Đang tải…"
+              : list.hasNextPage
+                ? `Đang hiển thị ${rows.length}+ giao dịch`
+                : `${rows.length} giao dịch`}
+          </p>
+        </>
+      )}
+
+      {adding && <QuickAddModal onClose={() => setAdding(false)} />}
+    </section>
+  );
+}
+
+function Filter({
+  value,
+  onChange,
+  label,
+  children,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={label}
+      className="rounded-lg border px-3 py-1.5 text-sm"
+      style={{ borderColor: "var(--tpl-border)", background: "var(--tpl-surface)", color: "var(--tpl-text)" }}
+    >
+      <option value="">{label}</option>
+      {children}
+    </select>
   );
 }

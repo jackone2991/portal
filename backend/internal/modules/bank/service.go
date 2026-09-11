@@ -2,8 +2,7 @@ package bank
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -12,6 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	bankapi "github.com/portal/backend/internal/modules/bank/api"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 const (
@@ -27,6 +28,13 @@ const (
 type Service struct {
 	repo   Repository
 	events EventPublisher
+
+	// Debts (SPEC-10 phase 1). The same adapter as repo; a separate field so the
+	// feature stays in its own files. Nil ⇒ the debt routes are not mounted.
+	debts DebtRepository
+	// notify reaches the notification system the only sanctioned way
+	// (notifyapi.Enqueue). Nil ⇒ due-date reminders are simply not sent.
+	notify notifyapi.Enqueuer
 }
 
 // TxListResult is a keyset page of transactions plus the next cursor ("" = last).
@@ -151,6 +159,9 @@ func (s *Service) CreateCategory(ctx context.Context, in CreateCategoryInput) (C
 	if in.Kind != KindIncome && in.Kind != KindExpense {
 		return Category{}, ErrValidation
 	}
+	if !validIcon(in.Icon) || !validColor(in.Color) {
+		return Category{}, ErrValidation
+	}
 	if in.ParentID != nil {
 		parent, err := s.repo.GetVisibleCategory(ctx, in.UserID, *in.ParentID)
 		if err != nil {
@@ -170,6 +181,9 @@ func (s *Service) UpdateCategory(ctx context.Context, in UpdateCategoryInput) (C
 	existing, err := s.repo.GetVisibleCategory(ctx, in.UserID, in.ID)
 	if err != nil {
 		return Category{}, err
+	}
+	if !validIcon(in.Icon) || !validColor(in.Color) {
+		return Category{}, ErrValidation
 	}
 	if existing.Seed { // seeds are immutable — owner-mutation matches nothing → 404
 		return Category{}, ErrCategoryNotFound
@@ -517,6 +531,51 @@ func (s *Service) Dashboard(ctx context.Context, userID uuid.UUID, month time.Ti
 	}, nil
 }
 
+// trendMonths is how far back the report's bar chart reaches. Six fits a phone
+// screen without the bars becoming slivers, and covers "is this month unusual?"
+// which is the only question the chart is there to answer.
+const trendMonths = 6
+
+// Report is the month breakdown: totals, per-category slices split by kind, and
+// the trailing trend.
+//
+// The split into Expenses/Incomes happens here rather than in SQL because one
+// query answering both is cheaper than two, and the caller always wants them
+// apart — a donut mixing "Lương" with "Ăn uống" would be meaningless.
+func (s *Service) Report(ctx context.Context, userID uuid.UUID, month time.Time) (Report, error) {
+	month = firstOfMonth(month)
+
+	income, expense, err := s.repo.MonthFlowTotals(ctx, userID, month)
+	if err != nil {
+		return Report{}, err
+	}
+	totals, err := s.repo.CategorySpendForMonth(ctx, userID, month)
+	if err != nil {
+		return Report{}, err
+	}
+	trend, err := s.repo.MonthlyFlowSeries(ctx, userID, month, trendMonths)
+	if err != nil {
+		return Report{}, err
+	}
+
+	rep := Report{
+		Month:    month,
+		Income:   income,
+		Expense:  expense,
+		Expenses: make([]CategoryTotal, 0, len(totals)),
+		Incomes:  make([]CategoryTotal, 0, len(totals)),
+		Trend:    trend,
+	}
+	for _, t := range totals {
+		if t.Kind == KindIncome {
+			rep.Incomes = append(rep.Incomes, t)
+		} else {
+			rep.Expenses = append(rep.Expenses, t)
+		}
+	}
+	return rep, nil
+}
+
 // ── events ───────────────────────────────────────────────────────────
 
 // emitTx publishes one bank:transaction_* event (best-effort, after commit).
@@ -568,6 +627,30 @@ func validName(s string) bool {
 	return n >= 1 && n <= maxNameLen
 }
 
+// validIcon accepts a short grapheme-ish string. The cap matches the DB CHECK
+// (16 chars, not 1): a single emoji can be several code points once ZWJ
+// sequences, variation selectors and skin-tone modifiers are involved, and
+// "👨‍👩‍👧‍👦" is one icon to a human.
+func validIcon(icon *string) bool {
+	if icon == nil {
+		return true
+	}
+	n := len([]rune(*icon))
+	return n >= 1 && n <= 16
+}
+
+// validColor mirrors the DB CHECK. Kept strict — the value ends up in a style
+// attribute, and anything looser than a fixed hex shape would be user text in a
+// stylesheet.
+func validColor(color *string) bool {
+	if color == nil {
+		return true
+	}
+	return hexColorRe.MatchString(*color)
+}
+
+var hexColorRe = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+
 func firstOfMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
 	return time.Date(y, m, 1, 0, 0, 0, 0, time.UTC)
@@ -592,26 +675,17 @@ func transferState(legs []Transaction) (from, to uuid.UUID, amount int64, occurr
 
 // keyset cursor "<occurred_at date>|<id>", base64url.
 func encodeCursor(t Transaction) string {
-	raw := t.OccurredAt.UTC().Format(dateLayout) + "|" + t.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(t.OccurredAt.UTC().Format(dateLayout), t.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("bank: malformed cursor")
-	}
-	at, err := time.Parse(dateLayout, parts[0])
+	at, err := time.Parse(dateLayout, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

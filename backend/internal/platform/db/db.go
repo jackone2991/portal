@@ -4,8 +4,10 @@
 //
 //   - NewPool: a pgxpool configured for PgBouncer transaction pooling.
 //   - BeginTenantScope + WithTx/TxFrom: a per-request transaction that pins
-//     app.current_tenant (RLS reads this GUC in a later increment; today it is
-//     set but unenforced because the app connects as a superuser).
+//     app.current_tenant. RLS reads this GUC and enforces it only when the
+//     binary connects as portal_app (NOBYPASSRLS); as the superuser `portal`
+//     every policy is bypassed. Which role a deployment uses is its
+//     DATABASE_URL — see ADR-07 § Consequences and CLAUDE.md.
 //   - Conn: a context-aware sqlc DBTX that routes each query onto the request
 //     transaction when one is bound, else the pool. One Conn is handed to every
 //     module's repository NewAdapter; when no request tx is present it behaves
@@ -72,20 +74,61 @@ func (d *DB) Pool() *pgxpool.Pool { return d.pool }
 // It structurally satisfies each module's (identical) sqlc DBTX interface.
 func (d *DB) Conn() *Conn { return &Conn{pool: d.pool} }
 
-// BeginTenantScope opens a transaction and pins app.current_tenant on it.
+// Scope is who a transaction acts as. It is pinned onto the connection as the
+// three GUCs the RLS policies read (0020 for the tenant fence, 0032 for the
+// per-user media ACL).
+//
+// UserID zero means "no user" — a backend job, not a person. Such a scope must
+// set Admin, or it can only see rows that are public.
+//
+// Admin means full access inside OrgID: a tenant owner/admin, or a trusted
+// backend scope such as the worker, which processes every member's media and
+// therefore cannot be pinned to one owner.
+type Scope struct {
+	OrgID  uuid.UUID
+	UserID uuid.UUID
+	Admin  bool
+}
+
+// BeginScope opens a transaction and pins the actor on it.
 // set_config(..., true) is transaction-local, so it is correct under PgBouncer
 // transaction pooling and is discarded at COMMIT/ROLLBACK. Bind the returned tx
 // into the request context with WithTx; the caller owns commit/rollback.
-func (d *DB) BeginTenantScope(ctx context.Context, orgID uuid.UUID) (pgx.Tx, error) {
+func (d *DB) BeginScope(ctx context.Context, s Scope) (pgx.Tx, error) {
 	tx, err := d.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		return nil, fmt.Errorf("db: begin tenant scope: %w", err)
 	}
-	if _, err := tx.Exec(ctx, "SELECT set_config('app.current_tenant', $1, true)", orgID.String()); err != nil {
+	// Empty string, not a zero uuid, for "no user": the policies read this with
+	// NULLIF(...,'') so an empty value is NULL and matches nothing, whereas
+	// 00000000-… is a value that could in principle equal an owner_id.
+	user := ""
+	if s.UserID != uuid.Nil {
+		user = s.UserID.String()
+	}
+	admin := "off"
+	if s.Admin {
+		admin = "on"
+	}
+	if _, err := tx.Exec(ctx, `SELECT set_config('app.current_tenant', $1, true),
+	                                  set_config('app.current_user',   $2, true),
+	                                  set_config('app.tenant_admin',   $3, true)`,
+		s.OrgID.String(), user, admin); err != nil {
 		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("db: set tenant guc: %w", err)
 	}
 	return tx, nil
+}
+
+// BeginTenantScope opens a trusted BACKEND scope for orgID: tenant-wide access
+// with no user identity. This is what the worker's sweeps need — they process
+// media belonging to every member of a tenant, so they cannot be pinned to one
+// owner_id.
+//
+// Do not reach for this on a request path that knows its user: use BeginScope
+// with the user, so the media ACL (0032) applies.
+func (d *DB) BeginTenantScope(ctx context.Context, orgID uuid.UUID) (pgx.Tx, error) {
+	return d.BeginScope(ctx, Scope{OrgID: orgID, Admin: true})
 }
 
 // RunInTx runs fn inside a transaction. If the request already opened a tenant

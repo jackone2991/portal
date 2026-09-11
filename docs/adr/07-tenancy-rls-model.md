@@ -1,18 +1,28 @@
-# ADR-07: Multi-tenancy & Row-Level Security model (Phase 1 — deferred from v1)
+# ADR-07: Multi-tenancy & Row-Level Security model
 
-**Status:** Proposed — **deferred**. Phase 1, NOT in v1 scope ([ADR-01](./01-v1-scope-cut.md)). This is a design/plan to execute when Phase 1 starts; **no code lands until then.**
-**Date:** 2026-07-07
+**Status:** **accepted** 2026-07-07 · schema and runtime executed 2026-08-25 (plan steps 1–4, 8); steps 5–7 deferred by scope
+**Last verified:** 2026-09-11
 **Deciders:** kirito
-**Relates:** [ADR-01](./01-v1-scope-cut.md) (v1 cut) · [ADR-02](./02-rbac-model-reconciliation.md) (RBAC) · [ADR-03](./03-single-vps-topology.md) (single-VPS / PgBouncer) · [feature.md §2 + §18 Phase 1](../feature.md) · [D-23] [D-24] [D-25]
+**Relates:** [ADR-01](./01-v1-scope-cut.md) (v1 cut) · [ADR-02](./02-rbac-model-reconciliation.md) (RBAC) · [ADR-03](./03-single-vps-topology.md) (single-VPS) · [feature-inventory.md §2 + §18 Phase 1](../product/feature-inventory.md) · [D-23] [D-24] [D-25] · runbook: [operations/rls-cutover.md](../operations/rls-cutover.md)
 
 ## Context
 
-`feature.md §2` and the Phase 1 roadmap want multi-tenancy — `organizations` + `memberships` — with **Postgres Row-Level Security (RLS) as defense-in-depth** (authoration.md's L2): even a query that forgets `WHERE tenant_id = ?` must not leak cross-tenant data. v1 deferred all of it — there is **no `tenant_id` column anywhere today**, and the app is effectively single-user.
+*As found on 2026-07-07, when this was a plan. Everything the plan needed
+from the schema has since shipped (`0018_tenant_core`, `0019_platform_rls_roles`,
+`0020_platform_rls_enable`, and every tenant-scoped table since carries its own
+policy). Two premises below have moved: Postgres no longer runs in compose
+(host cluster since 2026-08-21) and PgBouncer is gone with it, so "the
+PgBouncer constraint" no longer binds — but the `SET LOCAL`-per-transaction
+design it forced is what shipped, and it is correct without a pooler too.
+Where RLS is actually enforced today is under Consequences; read that before
+trusting any other statement about RLS in this repo.*
 
-Three forces shape the design:
+`feature.md §2` and the Phase 1 roadmap wanted multi-tenancy — `organizations` + `memberships` — with **Postgres Row-Level Security (RLS) as defense-in-depth** (`architecture/security.md`'s L2): even a query that forgets `WHERE tenant_id = ?` must not leak cross-tenant data. v1 had deferred all of it — there was **no `tenant_id` column anywhere** at the time, and the app was effectively single-user.
+
+Three forces shaped the design:
 
 1. **Security posture.** The whole point of RLS is that the *database*, not the handler, is the last line. App-layer scoping alone is one forgotten filter away from a breach.
-2. **The PgBouncer constraint (load-bearing).** Prod pools through **PgBouncer in transaction mode** ([ADR-03](./03-single-vps-topology.md)). RLS needs a per-request session variable; transaction-mode pooling reuses one connection across many transactions, so the naive "`SET app.tenant_id` once per connection" leaks one request's tenant into the next. (v1 dev sidesteps this by connecting **direct to `postgres:5432`** — see `.env` — because pgx's prepared-statement cache also clashes with transaction-mode PgBouncer. Phase 1 must resolve this deliberately.)
+2. **The PgBouncer constraint (load-bearing at the time).** Prod was to pool through **PgBouncer in transaction mode** ([ADR-03](./03-single-vps-topology.md)). RLS needs a per-request session variable; transaction-mode pooling reuses one connection across many transactions, so the naive "`SET app.tenant_id` once per connection" leaks one request's tenant into the next. (Dev sidestepped this by connecting **direct to `postgres:5432`**, because pgx's prepared-statement cache also clashes with transaction-mode PgBouncer.)
 3. **Personal vs. org data.** Most Portal data is *personal* (a user's uploads, feed, bank); only some is org-shared. A **synthetic personal tenant** per user lets every row carry a `tenant_id` and keeps a single code path for both.
 
 ## Decision
@@ -97,22 +107,55 @@ RLS + `FORCE` + fail-closed GUC is the strongest containment for the least code 
 
 ## Consequences
 
-- **New rule:** every tenant-scoped migration must `ENABLE + FORCE` RLS + a `tenant_isolation` policy **in the same migration** that creates the table — add this to the MODULES.md §6 schema-ownership checklist.
-- **Retrofit:** `media.assets` gains `tenant_id` (backfill = each asset's owner's personal tenant + its policy). `users` unchanged (global). `user_roles` gains `org_id`.
-- **Migration numbers:** the roadmap's `0010_rls_enable` predates the media migrations; actual files continue from `0007` → `0008_tenant_core`, `0009_rls_enable`.
-- **GUC-name drift** between the skeleton (`app.current_tenant`) and feature.md (`app.tenant_id`) must be reconciled (this ADR picks `app.current_tenant`).
-- **Testing:** an RLS test that asserts, on the `portal_app` role, tenant B cannot read tenant A's rows even via a raw `SELECT` with no `WHERE`.
+**Where RLS stands (2026-09-11) — the one statement to trust:**
 
-## Implementation plan (when un-deferred)
+RLS is enforced **if and only if the binary's `DATABASE_URL` connects as
+`portal_app`**. The policies exist on every tenant-scoped table
+(`grep -ho 'ALTER TABLE [a-z_]* FORCE ROW LEVEL SECURITY' backend/db/migrations/*.up.sql | sort -u | wc -l`
+— 29 tables at last check) and `portal_app` is `NOSUPERUSER NOBYPASSRLS` and
+does not own them, so `FORCE` binds. But `portal` — the migration role — is a
+superuser and bypasses every policy.
 
-1. [ ] DB roles: `portal_app` (`NOBYPASSRLS`, app connects as this) + `portal_sys` (`BYPASSRLS`, sysjobs only). Migration + compose/env; tables owned by a separate admin/migration role.
-2. [ ] `0008_tenant_core`: `organizations`(+`kind`) + `organization_memberships`; **backfill a `personal` org + owner membership for every existing user**.
-3. [ ] `platform/db.BeginTenantScope(ctx, tenantID)` + pool config for PgBouncer transaction mode (simple/exec protocol), or document the direct-connect fallback. (`platform/db/` is empty today — the pool is built inline in `cmd/api/main.go`.)
-4. [ ] `0009_rls_enable`: `ENABLE + FORCE` RLS + `tenant_isolation` policy on every tenant-scoped table; add `assets.tenant_id` (+ backfill + policy).
-5. [ ] `tenant` module: `RequireTenant` middleware, `GET /me/organizations`, `POST /auth/switch-tenant`, `POST/GET /admin/organizations`; wire in `cmd/api` **before** any domain module.
-6. [ ] Per-tenant RBAC: `user_roles(user_id, org_id, role_id)`; effective-permission query + cache key scoped to the active membership ([ADR-02]).
-7. [ ] `cmd/sysjobs` + `internal/sysrepository` (BYPASSRLS) + the depguard rule that blocks other importers.
-8. [ ] RLS isolation test; MODULES.md §6 checklist entry.
-9. [ ] Land the observability profile in the same sprint ([D-8], [ADR-03]) so per-tenant latency is visible; update `feature.md §2/§18` status + the `app.tenant_id`→`app.current_tenant` fix.
+- **This deployment's `.env`** points `DATABASE_URL` at `portal_app`
+  (`grep DATABASE_URL .env`; cutover 2026-08-25, [runbook](../operations/rls-cutover.md)).
+  Here, RLS is live. `BACKUP_DATABASE_URL` stays on `portal` on purpose —
+  `pg_dump` must see every tenant.
+- **`.env.example` still defaults `DATABASE_URL` to `portal`.** `make up` copies
+  it to `.env` on a fresh checkout, so every new environment starts with
+  tenant isolation that is decorative. This is the P0 in
+  [product/backlog.md](../product/backlog.md). It is not changed in passing:
+  a query that quietly relied on superuser rights fails the moment the role
+  changes, and that has to be tried against real data.
+- Three comments in the tree still describe the pre-cutover state as current
+  and should be read as history, not status: the `platform/db/db.go` package
+  comment ("set but unenforced because the app connects as a superuser") and
+  the headers of migrations `0019` and `0020` ("**INERT** until …"). Applied
+  migrations are not edited; the `db.go` comment is corrected with this ADR.
 
-**Exit (Phase 1):** a request to `/api/v1/t/{org}/…` is tenant-scoped end-to-end; a raw query on the app role cannot read another tenant's rows; single-tenant deployments work without the `/t/` prefix; `sysjobs` (and only `sysjobs`) can cross tenants.
+**What shipped, against the plan:**
+
+- **Rule kept:** every tenant-scoped migration since `0020` has `ENABLE + FORCE` RLS and a `tenant_isolation` policy in the migration that creates the table (every table-creating migration from `0021` to `0043` does). The rule is **not** written into `backend/MODULES.md` § 6 — action item.
+- `media.assets` gained `tenant_id` with backfill and policy (`0020`); `users` is global; `user_roles` did **not** gain `org_id` — RBAC is not tenant-scoped (see below).
+- Migration numbers: the plan's `0008`/`0009` became `0018_tenant_core` / `0020_platform_rls_enable`, with `0019_platform_rls_roles` between them.
+- GUC name: `app.current_tenant` in every migration and in `platform/db`. `feature-inventory.md` still writes `app.tenant_id` in three deliverable bullets under a note that says ADR-07's name supersedes it — legible, not fixed.
+- `platform/db` is real: `NewPool`, `BeginTenantScope`, `WithTx`/`TxFrom`, and `Conn` (a sqlc `DBTX` that routes each query onto the request transaction when one is bound). `QueryExecModeExec` is set — which is also why `[]byte` into a `jsonb` column needs the Go type, not a cast (`jsonb_param_test.go`).
+- **Tenant resolution as built:** no `/t/{tenant}` URL prefix. Routes stay under `/api/v1`; `RequireTenant` (tenant module middleware) resolves the caller's personal org and opens the request transaction. Middleware order is `RequireAuth → RequireTenant → handler`, as designed; only the URL contract differs.
+- **A tenant transaction turns a raised constraint violation into a 500 at COMMIT**, not a 409: the handler's error response is written, then the transaction fails to commit. The house pattern is `ON CONFLICT DO NOTHING` + treat no-rows as conflict, or a pre-check before an UPDATE.
+- **Cross-tenant batch without BYPASSRLS:** `cmd/worker` runs periodic sweeps through `ForEachTenant` (one committed tenant scope per organisation) — `people:scan_birthdays`, `bank:scan_debts_due`. That removed the need for `portal_sys`, `cmd/sysjobs` and `internal/sysrepository`; the role exists (`0019`), the binary and package do not, and depguard keeps the guardrail for when they land.
+- **Testing:** `platform/db/rls_test.go` (+ `rls_media_test.go`, `rls_social_test.go`) assert on the `portal_app` role that tenant B cannot read tenant A's rows via a raw `SELECT`, that a write with no scope fails loudly, and that NULL-tenant shared rows (`bank_categories` seeds) are visible to all. They run only when `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL` are set — CI does not set them, so **CI does not exercise RLS**.
+- The observability profile did not land with tenancy (ADR-03).
+
+## Implementation plan
+
+1. [x] DB roles `portal_app` (`NOBYPASSRLS`) + `portal_sys` (`BYPASSRLS`) — `0019`. Tables owned by `portal`. Runtime cutover to `portal_app` done here 2026-08-25; **not** the `.env.example` default.
+2. [x] `0018_tenant_core`: `organizations`(+`kind`) + `organization_memberships`; personal org + owner membership backfilled for every existing user; `CreatePersonalOrg` on register.
+3. [x] `platform/db.BeginTenantScope` + pool config (`QueryExecModeExec`). The PgBouncer branch is moot — there is no pooler; the app connects direct to the host cluster.
+4. [x] `0020_platform_rls_enable`: `ENABLE + FORCE` + `tenant_isolation` on every tenant-scoped table; `assets.tenant_id` + backfill + policy.
+5. [ ] `tenant` module beyond the personal org: `GET /me/organizations` exists (`listOrganizations`); `POST /auth/switch-tenant` and `/admin/organizations` do not. Deferred at one user, one personal org.
+6. [ ] Per-tenant RBAC (`user_roles(user_id, org_id, role_id)`, cache key scoped to membership) — not done; RBAC is global. Deferred with 5.
+7. [ ] `cmd/sysjobs` + `internal/sysrepository` — not written; `ForEachTenant` made it unnecessary so far. The depguard rule stays.
+8. [x] RLS isolation tests (8 in `rls_test.go`, plus media and social suites). MODULES.md § 6 checklist entry — **not done**.
+9. [ ] Observability profile — not landed. `feature-inventory.md` GUC bullets — still `app.tenant_id` under a superseding note.
+10. [ ] Flip `.env.example`'s `DATABASE_URL` default to `portal_app` after a run against real data (backlog P0); then correct the `0019`/`0020` header language in the next migration that touches those tables, not by editing applied files.
+
+**Exit (as built):** a request under `/api/v1/…` is tenant-scoped end-to-end through `RequireTenant`; a raw query on `portal_app` cannot read another tenant's rows (tested, out of CI); there is no `/t/` prefix to make optional; cross-tenant work goes through `ForEachTenant` in the worker, not a BYPASSRLS role.

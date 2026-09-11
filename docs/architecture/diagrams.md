@@ -1,7 +1,7 @@
 # Portal — System Diagrams
 
 **Status:** current · **Last verified:** 2026-07-07
-**Narrative companion:** [overview.md](overview.md) · live status: [`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md)
+**Narrative companion:** [overview.md](overview.md) · live status: `MILESTONE_CHECKS.md` (deleted in `f11cf3f`)
 
 Visual architecture map in Mermaid (renders on GitHub/GitLab/VS Code/mermaid.live;
 diffable, version-controlled).

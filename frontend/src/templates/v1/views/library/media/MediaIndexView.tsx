@@ -28,10 +28,12 @@ import {
   assetVariantURL,
   deleteAsset,
   listAssets,
+  setAssetVisibility,
   type AssetKind,
   type AssetKindFilter,
   type AssetStatus,
   type AssetStatusFilter,
+  type AssetVisibility,
   type ListAssetsPage,
   type MediaAsset,
 } from "@/lib/media-assets";
@@ -148,10 +150,59 @@ export function MediaIndexView() {
     },
   });
 
+  // Sharing is one PATCH, applied optimistically across every cached filter
+  // combination the way delete is. The pill flips immediately; a rejection puts
+  // the old value back and says why, because "did that work?" must never be a
+  // question the user has to answer by reloading.
+  const visibilityMutation = useMutation({
+    mutationFn: ({ asset, visibility }: { asset: MediaAsset; visibility: AssetVisibility }) =>
+      setAssetVisibility(asset.id, visibility),
+    onMutate: async ({ asset, visibility }) => {
+      await queryClient.cancelQueries({ queryKey: [ASSETS_KEY] });
+      const previous = queryClient.getQueriesData<InfiniteData<ListAssetsPage>>({
+        queryKey: [ASSETS_KEY],
+      });
+      queryClient.setQueriesData<InfiniteData<ListAssetsPage>>(
+        { queryKey: [ASSETS_KEY] },
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              assets: page.assets.map((a) => (a.id === asset.id ? { ...a, visibility } : a)),
+            })),
+          },
+      );
+      setDeleteError(null);
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      setDeleteError(
+        err instanceof ApiError
+          ? problemDisplayMessage(err.body)
+          : "Could not change who can see this asset.",
+      );
+    },
+  });
+
+  function toggleVisibility(asset: MediaAsset) {
+    visibilityMutation.mutate({
+      asset,
+      visibility: asset.visibility === "public" ? "private" : "public",
+    });
+  }
+
   function openDelete(asset: MediaAsset) {
     setDeleteError(null);
     setPendingDelete(asset);
   }
+
+  // The viewer holds a snapshot taken when it opened; re-resolve it from the
+  // list so a visibility flip made inside the modal is reflected in it.
+  const viewerAsset = viewer
+    ? (assets.find((a) => a.id === viewer.asset.id) ?? viewer.asset)
+    : null;
 
   return (
     <section>
@@ -198,6 +249,7 @@ export function MediaIndexView() {
                   setViewer({ asset, mode: asset.kind === "image" ? "lightbox" : "player" })
                 }
                 onDelete={() => openDelete(asset)}
+                onToggleVisibility={() => toggleVisibility(asset)}
               />
             ))}
           </div>
@@ -218,12 +270,14 @@ export function MediaIndexView() {
         </>
       )}
 
-      {viewer && (
+      {viewer && viewerAsset && (
         <ViewerModal
-          asset={viewer.asset}
+          asset={viewerAsset}
           mode={viewer.mode}
           onClose={() => setViewer(null)}
-          onDelete={() => openDelete(viewer.asset)}
+          onDelete={() => openDelete(viewerAsset)}
+          onToggleVisibility={() => toggleVisibility(viewerAsset)}
+          busy={visibilityMutation.isPending}
         />
       )}
 
@@ -262,13 +316,16 @@ function AssetCard({
   asset,
   onOpen,
   onDelete,
+  onToggleVisibility,
 }: {
   asset: MediaAsset;
   onOpen: () => void;
   onDelete: () => void;
+  onToggleVisibility: () => void;
 }) {
   const isFailed = asset.status === "failed";
   const isReady = asset.status === "ready";
+  const isPublic = asset.visibility === "public";
   const label = assetLabel(asset);
 
   return (
@@ -302,7 +359,10 @@ function AssetCard({
         <span className="absolute left-2 top-2">
           <Pill>{KIND_LABEL[asset.kind]}</Pill>
         </span>
-        <span className="absolute right-2 top-2">
+        <span className="absolute right-2 top-2 flex gap-1">
+          {/* Only public is marked. Private is the default and marking it would
+              put a badge on every tile while saying nothing. */}
+          {isPublic && <Pill color="#22c55e">Public</Pill>}
           <StatusPill status={asset.status} />
         </span>
       </button>
@@ -334,6 +394,21 @@ function AssetCard({
             >
               Download original
             </a>
+          )}
+          {isReady && (
+            <button
+              type="button"
+              onClick={onToggleVisibility}
+              title={
+                isPublic
+                  ? "Anyone with the link can view this — click to make it private again"
+                  : "Only you can view this — click to let anyone with the link view it"
+              }
+              className="text-xs font-semibold transition hover:opacity-80"
+              style={{ color: isPublic ? "#22c55e" : "var(--tpl-muted)" }}
+            >
+              {isPublic ? "Public" : "Private"}
+            </button>
           )}
           <button
             type="button"
@@ -381,11 +456,15 @@ function ViewerModal({
   mode,
   onClose,
   onDelete,
+  onToggleVisibility,
+  busy,
 }: {
   asset: MediaAsset;
   mode: "player" | "lightbox";
   onClose: () => void;
   onDelete: () => void;
+  onToggleVisibility: () => void;
+  busy?: boolean;
 }) {
   return (
     <Modal open onClose={onClose} title={assetLabel(asset)} width={mode === "player" ? 880 : 720}>
@@ -416,6 +495,8 @@ function ViewerModal({
           />
         )}
 
+        <ShareRow asset={asset} onToggle={onToggleVisibility} busy={busy} />
+
         <div className="flex items-center justify-between">
           <a
             href={assetOriginalURL(asset.id)}
@@ -437,6 +518,83 @@ function ViewerModal({
         </div>
       </div>
     </Modal>
+  );
+}
+
+/**
+ * Sharing control for one asset. States the consequence in words rather than
+ * relying on a switch's colour: "public" here means a URL that works with no
+ * session at all, which is not a thing to toggle by accident.
+ *
+ * The link it copies is the delivery URL — the variant for an image, the HLS
+ * playlist for a video — because there is no public page for an asset to link
+ * to. It is only offered while the asset is public: handing someone a URL that
+ * 404s for them would be worse than not offering it.
+ */
+function ShareRow({
+  asset,
+  onToggle,
+  busy,
+}: {
+  asset: MediaAsset;
+  onToggle: () => void;
+  busy?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  const isPublic = asset.visibility === "public";
+  const link = asset.kind === "video" && asset.hls_url ? asset.hls_url : assetVariantURL(asset.id, "medium");
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false); // clipboard blocked (no permission / insecure origin)
+    }
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-3 rounded-lg px-4 py-3"
+      style={{ background: "var(--tpl-surface-2)" }}
+    >
+      <span style={{ color: isPublic ? "#22c55e" : "var(--tpl-muted)" }}>
+        <Icon name={isPublic ? "share-icon" : "badge-icon"} size={16} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold" style={{ color: "var(--tpl-heading)" }}>
+          {isPublic ? "Public" : "Private"}
+        </p>
+        <p className="text-xs" style={{ color: "var(--tpl-muted)" }}>
+          {isPublic
+            ? "Anyone with the link can view this, without signing in."
+            : "Only you can view this."}
+        </p>
+      </div>
+
+      {isPublic && (
+        <button
+          type="button"
+          onClick={copy}
+          className="rounded-md border px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--tpl-surface)]"
+          style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
+        >
+          {copied ? "Copied" : "Copy link"}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={busy}
+        className="rounded-md px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        style={{
+          background: isPublic ? "var(--tpl-muted)" : "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))",
+        }}
+      >
+        {isPublic ? "Make private" : "Make public"}
+      </button>
+    </div>
   );
 }
 

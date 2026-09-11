@@ -31,6 +31,15 @@ type Querier interface {
 	// own storage object; this table holds only derived artifacts (SPEC-01 §6).
 	// Upsert so a re-run of the worker (retry / re-process) replaces the row and its
 	// storage key instead of colliding on the (asset_id, variant) unique constraint.
+	//
+	// tenant_id is OMITTED deliberately: the column's DEFAULT is
+	// current_setting('app.current_tenant')::uuid, so it resolves from the enclosing
+	// tenant scope. This used to read `(SELECT tenant_id FROM assets WHERE id = $1)`,
+	// which worked only because the app connects as a superuser that bypasses RLS —
+	// under portal_app the assets policy filters that subquery to zero rows, the
+	// subquery yields NULL, and the NOT NULL constraint kills every variant insert.
+	// The caller (worker.inTenant) is what makes the DEFAULT resolvable; a write
+	// outside a tenant scope now fails loudly rather than writing a wrong tenant.
 	InsertVariant(ctx context.Context, arg InsertVariantParams) (MediaAssetVariant, error)
 	// P0.3 janitor: upload sessions the browser never completed (>24h).
 	ListAbandonedUploads(ctx context.Context) ([]Asset, error)
@@ -50,6 +59,16 @@ type Querier interface {
 	MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) error
 	// P0.3 soft-delete tombstone: excluded from listings until the purge removes it.
 	SetAssetStatusDeleting(ctx context.Context, id pgtype.UUID) error
+	// Flip an asset between 'private' and 'public' (0032).
+	//
+	// The owner predicate is belt AND braces. The 0032 UPDATE policy already
+	// restricts this to the owner or a tenant admin — but FORCE RLS is inert while
+	// DATABASE_URL runs as the superuser `portal`, which is still what .env.example
+	// ships (see its "RLS cutover" section). This is the one write that can make a
+	// private file world-readable; it must not depend on a deployment flag being
+	// flipped. Tenant admins lose the ability to publish someone else's asset here,
+	// which is the right trade for a statement this sharp.
+	SetAssetVisibility(ctx context.Context, arg SetAssetVisibilityParams) (Asset, error)
 	UpsertPlaybackProgress(ctx context.Context, arg UpsertPlaybackProgressParams) error
 }
 

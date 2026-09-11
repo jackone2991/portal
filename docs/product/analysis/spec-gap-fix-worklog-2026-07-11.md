@@ -1,5 +1,7 @@
 # Spec-gap fix worklog — 2026-07-11
 
+**Status:** historical · **Last verified:** 2026-09-11 (label only — the body is a dated record and is not edited; its findings were fixed in the same session, so there is nothing to triage)
+
 **Source:** `spec-gap-review-B` workflow run `wf_0445d142-18c` (29 agents, adversarially verified). 77 confirmed findings (1 critical · 31 major · 45 minor).
 
 ## How to resume (read this first if continuing after a token-out)

@@ -17,6 +17,10 @@ const (
 	EventTransactionCreated = "bank:transaction_created"
 	EventTransactionUpdated = "bank:transaction_updated"
 	EventTransactionDeleted = "bank:transaction_deleted"
+
+	// TaskScanDebtsDue is the daily sweep that announces debts coming due
+	// (SPEC-10 phase 1). Registered on the shared scheduler in cmd/worker.
+	TaskScanDebtsDue = "bank:scan_debts_due"
 )
 
 // TransactionEvent is the bank:transaction_* payload (events.md): ids + the

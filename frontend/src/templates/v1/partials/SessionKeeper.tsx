@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { baseURL as API_BASE } from "@/lib/api-client";
 
 /**
  * Keeps the session alive. The access token (JWT) is short-lived (~5 min); this
@@ -10,9 +11,6 @@ import { useEffect } from "react";
  * detection. On a hard refresh failure (revoked / expired) it clears the marker
  * and redirects to /login.
  */
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
-
 const REFRESH_MS = 4 * 60 * 1000; // refresh a minute before the 5-min access TTL
 const CLAIM_MS = REFRESH_MS - 15_000; // skip if another tab refreshed this recently
 const KEY = "portal_refresh_at";

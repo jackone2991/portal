@@ -2,10 +2,10 @@ package notify
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 const (
@@ -270,6 +271,169 @@ func (s *Service) OnAssetReady(ctx context.Context, task *asynq.Task) error {
 	return s.dispatchIntent(ctx, intent)
 }
 
+// workKind is one catalogue vertical: the payload key carrying the work id, and
+// where a click should land.
+type workKind struct {
+	idKey string
+	label string
+	href  func(id string) string
+}
+
+var workKinds = map[string]workKind{
+	notifyapi.TaskOnMoviePublished: {idKey: "movie_id", label: "A movie", href: func(string) string { return "/library/media" }},
+	notifyapi.TaskOnTrackPublished: {idKey: "track_id", label: "A track", href: func(id string) string { return "/library/music/" + id }},
+	notifyapi.TaskOnStoryPublished: {idKey: "story_id", label: "A story", href: func(id string) string { return "/library/novel/" + id }},
+}
+
+// OnWorkPublished is the handler for all three catalogue publishes. Publishing
+// is a library event, so it belongs in the bell rather than in the life-stream,
+// which is what the three of them used to write to (removed by 0040).
+//
+// dedup_key is the work id, so re-publishing the same thing is silent.
+func (s *Service) OnWorkPublished(ctx context.Context, task *asynq.Task) error {
+	kind, ok := workKinds[task.Type()]
+	if !ok {
+		log.Error().Str("task", task.Type()).Msg("notify: unknown catalogue publish task")
+		return fmt.Errorf("notify: unknown catalogue publish task: %w", asynq.SkipRetry)
+	}
+
+	var p map[string]any
+	if err := json.Unmarshal(task.Payload(), &p); err != nil {
+		log.Error().Err(err).Msg("notify: undecodable catalogue publish payload")
+		return fmt.Errorf("notify: undecodable catalogue publish payload: %w", asynq.SkipRetry)
+	}
+	id, _ := p[kind.idKey].(string)
+	ownerRaw, _ := p["owner_user_id"].(string)
+	owner, err := uuid.Parse(ownerRaw)
+	if id == "" || err != nil || owner == uuid.Nil {
+		log.Error().Str("owner", ownerRaw).Str("id", id).Msg("notify: catalogue publish missing owner or id")
+		return fmt.Errorf("notify: catalogue publish missing owner or id: %w", asynq.SkipRetry)
+	}
+
+	title, _ := p["title"].(string)
+	if strings.TrimSpace(title) == "" {
+		title = kind.label
+	}
+	return s.dispatchIntent(ctx, notifyapi.NotificationIntent{
+		UserID:   owner,
+		Type:     notifyapi.TypeWorkPublished,
+		Title:    title + " is published",
+		DedupKey: id,
+		Data:     map[string]any{"href": kind.href(id)},
+	})
+}
+
+type connectionEvent struct {
+	ConnectionID  string `json:"connection_id"`
+	RequesterID   string `json:"requester_id"`
+	AddresseeID   string `json:"addressee_id"`
+	RequesterName string `json:"requester_name"`
+	AddresseeName string `json:"addressee_name"`
+}
+
+// OnConnectionRequested tells the person being asked. The requester already
+// knows what they did, so only the addressee hears about it.
+func (s *Service) OnConnectionRequested(ctx context.Context, task *asynq.Task) error {
+	return s.connectionNotice(ctx, task, false)
+}
+
+// OnConnectionAccepted closes the loop for the person who asked.
+func (s *Service) OnConnectionAccepted(ctx context.Context, task *asynq.Task) error {
+	return s.connectionNotice(ctx, task, true)
+}
+
+// connectionNotice is both handlers: the only differences are who is told and
+// what it says. dedup_key is the connection id plus the phase, so a redelivered
+// task is a no-op while request-then-accept still produces two entries.
+func (s *Service) connectionNotice(ctx context.Context, task *asynq.Task, accepted bool) error {
+	var ev connectionEvent
+	if err := json.Unmarshal(task.Payload(), &ev); err != nil {
+		log.Error().Err(err).Msg("notify: undecodable connection payload")
+		return fmt.Errorf("notify: undecodable connection payload: %w", asynq.SkipRetry)
+	}
+
+	recipientID, otherName, typ, phase := ev.AddresseeID, ev.RequesterName, notifyapi.TypeConnectionRequested, "requested"
+	if accepted {
+		recipientID, otherName, typ, phase = ev.RequesterID, ev.AddresseeName, notifyapi.TypeConnectionAccepted, "accepted"
+	}
+	recipient, err := uuid.Parse(recipientID)
+	if err != nil || recipient == uuid.Nil {
+		log.Error().Str("recipient", recipientID).Msg("notify: bad connection recipient id")
+		return fmt.Errorf("notify: bad connection recipient id: %w", asynq.SkipRetry)
+	}
+	if strings.TrimSpace(otherName) == "" {
+		otherName = "Someone"
+	}
+
+	title := otherName + " wants to connect with you"
+	if accepted {
+		title = otherName + " accepted your connection request"
+	}
+	return s.dispatchIntent(ctx, notifyapi.NotificationIntent{
+		UserID:   recipient,
+		Type:     typ,
+		Title:    title,
+		DedupKey: ev.ConnectionID + ":" + phase,
+		Data: map[string]any{
+			"connection_id": ev.ConnectionID,
+			"href":          "/people?circle=requests",
+		},
+	})
+}
+
+type comicPublishedEvent struct {
+	ComicID      string `json:"comic_id"`
+	OwnerUserID  string `json:"owner_user_id"`
+	Title        string `json:"title"`
+	ChapterCount int    `json:"chapter_count"`
+}
+
+// OnComicPublished is the notify:on_comic_published handler — one bell entry per
+// publish, carrying the chapter count rather than one entry per chapter. The
+// chapter count is in the dedup key on purpose: re-publishing an unchanged comic
+// is silent, while publishing it again after a sync brought new chapters is
+// worth hearing about once more.
+func (s *Service) OnComicPublished(ctx context.Context, task *asynq.Task) error {
+	var ev comicPublishedEvent
+	if err := json.Unmarshal(task.Payload(), &ev); err != nil {
+		log.Error().Err(err).Msg("notify:on_comic_published: undecodable payload")
+		return fmt.Errorf("notify:on_comic_published: undecodable payload: %w", asynq.SkipRetry)
+	}
+	ownerID, err := uuid.Parse(ev.OwnerUserID)
+	if err != nil || ownerID == uuid.Nil {
+		log.Error().Str("owner", ev.OwnerUserID).Msg("notify:on_comic_published: bad owner id")
+		return fmt.Errorf("notify:on_comic_published: bad owner id: %w", asynq.SkipRetry)
+	}
+
+	intent := notifyapi.NotificationIntent{
+		UserID:   ownerID,
+		Type:     notifyapi.TypeComicPublished,
+		Title:    comicPublishedTitle(ev.Title, ev.ChapterCount),
+		DedupKey: ev.ComicID + ":" + strconv.Itoa(ev.ChapterCount),
+		Data: map[string]any{
+			"comic_id":      ev.ComicID,
+			"chapter_count": ev.ChapterCount,
+			"href":          "/library/comic/" + ev.ComicID,
+		},
+	}
+	return s.dispatchIntent(ctx, intent)
+}
+
+func comicPublishedTitle(title string, chapters int) string {
+	name := strings.TrimSpace(title)
+	if name == "" {
+		name = "A comic"
+	}
+	switch {
+	case chapters <= 0:
+		return name + " is published"
+	case chapters == 1:
+		return name + " is published — 1 chapter"
+	default:
+		return name + " is published — " + strconv.Itoa(chapters) + " chapters"
+	}
+}
+
 func assetReadyTitle(title, kind string) string {
 	if strings.TrimSpace(title) == "" {
 		switch kind {
@@ -367,26 +531,17 @@ func (s *Service) recordEmailSent(ctx context.Context) {
 // ── cursor helpers (keyset "<created_at>|<id>", base64url) ──────────
 
 func encodeCursor(n Notification) string {
-	raw := n.CreatedAt.UTC().Format(time.RFC3339Nano) + "|" + n.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(n.CreatedAt.UTC().Format(time.RFC3339Nano), n.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("notify: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

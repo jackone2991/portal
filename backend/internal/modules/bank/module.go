@@ -13,6 +13,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	bankapi "github.com/portal/backend/internal/modules/bank/api"
+	notifyapi "github.com/portal/backend/internal/modules/notify/api"
+	"time"
 )
 
 // Deps are the bank module's dependencies. cmd/api fills the HTTP side (Repo,
@@ -20,8 +23,17 @@ import (
 // emit-only bank:transaction_* family); cmd/worker constructs it with just Repo
 // (P0 registers no tasks — the wiring exists for SPEC-06's future consumers).
 type Deps struct {
-	Repo   Repository
+	Repo Repository
+	// Debts is the debt persistence surface (SPEC-10 phase 1). The same adapter
+	// implements it; nil leaves the debt routes unmounted.
+	Debts  DebtRepository
 	Events EventPublisher // optional: bank:transaction_* (nil → no-op)
+	// Notify is how debt reminders reach the user (notifyapi.Enqueue). Nil ⇒ the
+	// sweep still runs and marks nothing, which is the same as not scheduling it.
+	Notify notifyapi.Enqueuer
+	// ForEachTenant runs fn once inside every tenant's scope. The reminder sweep
+	// needs it: it walks tenants, not a caller, and every bank table is fenced.
+	ForEachTenant func(ctx context.Context, fn func(context.Context) error) error
 
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -40,7 +52,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("bank: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, events: d.Events}
+	svc := &Service{repo: d.Repo, events: d.Events, debts: d.Debts, notify: d.Notify}
 	return &Module{
 		deps:    d,
 		svc:     svc,
@@ -89,13 +101,46 @@ func (m *Module) MountHTTP(r chi.Router) {
 			r.With(m.perm("bank-budgets:write:own")).Put("/", m.handler.SetBudget)
 		})
 
+		// Debts and loans (SPEC-10 phase 1). Mounted only when a debt repository
+		// is wired, so a binary without one has no dead routes. Every movement
+		// goes through the transfer path, which is why there is no debt-specific
+		// transaction route here.
+		if m.deps.Debts != nil {
+			r.Route("/debts", func(r chi.Router) {
+				r.With(m.perm("bank-transactions:read:own")).Get("/", m.handler.ListDebts)
+				r.With(m.perm("bank-transactions:read:own")).Get("/{id}", m.handler.GetDebt)
+				r.With(m.perm("bank-transactions:write:own")).Post("/", m.handler.CreateDebt)
+				r.With(m.perm("bank-transactions:write:own")).Patch("/{id}", m.handler.UpdateDebt)
+				r.With(m.perm("bank-transactions:delete:own")).Delete("/{id}", m.handler.DeleteDebt)
+				r.With(m.perm("bank-transactions:write:own")).Post("/{id}/movements", m.handler.AddDebtMovement)
+				r.With(m.perm("bank-transactions:write:own")).Post("/{id}/accrue", m.handler.AccrueDebtInterest)
+			})
+		}
+
 		r.With(m.perm("bank-accounts:read:own")).Get("/dashboard", m.handler.Dashboard)
+		// Reads transactions grouped by category, so it carries the transaction
+		// read code rather than the account one.
+		r.With(m.perm("bank-transactions:read:own")).Get("/report", m.handler.Report)
 	})
 }
 
 // RegisterTasks registers no worker tasks at P0. The wiring exists so SPEC-06's
 // stream consumer of bank:transaction_* can attach without touching cmd/worker.
-func (m *Module) RegisterTasks(_ *asynq.ServeMux) {}
+func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
+	// Daily debt-due sweep (SPEC-10 phase 1). Registered on the shared scheduler
+	// in cmd/worker — there is no OS cron in this stack.
+	if m.deps.Debts == nil {
+		return
+	}
+	mux.HandleFunc(bankapi.TaskScanDebtsDue, func(ctx context.Context, _ *asynq.Task) error {
+		now := time.Now()
+		scan := func(ctx context.Context) error { return m.svc.ScanDueDebts(ctx, now) }
+		if m.deps.ForEachTenant == nil {
+			return scan(ctx)
+		}
+		return m.deps.ForEachTenant(ctx, scan)
+	})
+}
 
 func (m *Module) perm(code string) func(http.Handler) http.Handler {
 	if m.deps.RequirePermission == nil {

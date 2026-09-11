@@ -143,7 +143,31 @@ func toTrack(r MusicTrack) music.Track {
 		Status:       r.Status,
 		CreatedAt:    r.CreatedAt.Time,
 		UpdatedAt:    r.UpdatedAt.Time,
+
+		ReleaseYear:   intPtr(r.ReleaseYear),
+		Genre:         r.Genre,
+		MBRecordingID: uuidPtr(r.MbRecordingID),
+		MBReleaseID:   uuidPtr(r.MbReleaseID),
+		LookupStatus:  r.LookupStatus,
+		LookupNote:    r.LookupNote,
+		LookupAt:      timePtr(r.LookupAt),
 	}
+}
+
+func intPtr(n *int32) *int {
+	if n == nil {
+		return nil
+	}
+	v := int(*n)
+	return &v
+}
+
+func timePtr(t pgtype.Timestamptz) *time.Time {
+	if !t.Valid {
+		return nil
+	}
+	v := t.Time
+	return &v
 }
 
 func pgUUID(id uuid.UUID) pgtype.UUID { return pgtype.UUID{Bytes: id, Valid: true} }

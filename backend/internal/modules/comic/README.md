@@ -13,7 +13,9 @@ Owns: comics / manga with chapter → page hierarchy. Each page is an image asse
 
 ## Open work
 
-- Migration `0009_comic_init.up.sql`
-- CRUD + permissions (`comics:read`, `comics:write:own`, `comics:publish`, `comics:delete:any`)
-- Optimised batch endpoint: `GET /comics/{id}/chapters/{n}/pages` returns all page URLs in one round-trip
-- Right-to-left reading order flag for manga
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+

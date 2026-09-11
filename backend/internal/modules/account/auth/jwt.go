@@ -18,10 +18,10 @@ type SigningKey struct {
 
 // Issuer issues access tokens. Construct via NewIssuer.
 type Issuer struct {
-	keys      []SigningKey // index 0 is the active signer
-	issuer    string
-	audience  string
-	ttl       time.Duration
+	keys     []SigningKey // index 0 is the active signer
+	issuer   string
+	audience string
+	ttl      time.Duration
 }
 
 // NewIssuer builds an Issuer. The first key in `keys` becomes the active

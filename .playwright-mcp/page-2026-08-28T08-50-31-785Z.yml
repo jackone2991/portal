@@ -1,0 +1,448 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "Portal — Newsfeed" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e11]: Portal
+        - generic [ref=e12]:
+          - generic [ref=e13]: Newsfeed
+          - searchbox [ref=e15]
+          - link "Find Friends" [ref=e16] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e17]:
+            - button "Friend requests" [ref=e19]:
+              - generic [ref=e22]: "4"
+            - button "Messages" [ref=e24]:
+              - generic [ref=e27]: "2"
+            - button "Notifications" [ref=e29]:
+              - generic [ref=e322]: "1"
+            - button "Newsfeed Demo user" [ref=e323]:
+              - generic [ref=e34]:
+                - generic [ref=e35]: Newsfeed Demo
+                - generic [ref=e36]: user
+              - generic [ref=e37]: ND
+    - complementary [ref=e42]:
+      - generic [ref=e43]:
+        - button "Collapse Menu" [ref=e44]
+        - link "Newsfeed" [ref=e50] [cursor=pointer]:
+          - /url: /
+        - link "Upload Video" [ref=e55] [cursor=pointer]:
+          - /url: /upload
+        - link "Ledger" [ref=e60] [cursor=pointer]:
+          - /url: /bank
+        - link "People" [ref=e65] [cursor=pointer]:
+          - /url: /people
+        - link "Commic" [ref=e70] [cursor=pointer]:
+          - /url: /library/comic
+        - button "Friend Groups" [ref=e75]
+        - link "Music & Playlists" [ref=e80] [cursor=pointer]:
+          - /url: /library/music
+        - link "Weather App" [ref=e85] [cursor=pointer]:
+          - /url: /weather
+        - link "Calendar and Events" [ref=e90] [cursor=pointer]:
+          - /url: /calendar
+        - button "Community Badges" [ref=e95]
+        - button "Friends Birthdays" [ref=e100]
+        - button "Account Stats" [ref=e105]
+        - button "Manage Widgets" [ref=e110]
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - generic [ref=e117]: Profile Completion
+          - generic [ref=e118]: 76%
+        - paragraph [ref=e121]:
+          - text: Complete
+          - link "your profile" [ref=e122] [cursor=pointer]:
+            - /url: "#"
+          - text: so people can know more about you!
+    - complementary [ref=e123]:
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - generic [ref=e127]: Close Friends
+            - button "Settings" [ref=e128]
+          - list [ref=e129]:
+            - listitem [ref=e130]:
+              - generic [ref=e131]: CS
+              - generic [ref=e134]:
+                - paragraph [ref=e135]: Carol Summers
+                - paragraph [ref=e136]: Online
+              - button "Friend options" [ref=e137]
+            - listitem [ref=e140]:
+              - generic [ref=e141]: MB
+              - generic [ref=e144]:
+                - paragraph [ref=e145]: Mathilda Brinker
+                - paragraph [ref=e146]: At work!
+              - button "Friend options" [ref=e147]
+            - listitem [ref=e150]:
+              - generic [ref=e151]: MM
+              - generic [ref=e154]:
+                - paragraph [ref=e155]: Michael Maximoff
+                - paragraph [ref=e156]: Away
+              - button "Friend options" [ref=e157]
+            - listitem [ref=e160]:
+              - generic [ref=e161]: RH
+              - generic [ref=e164]:
+                - paragraph [ref=e165]: Rachel Howlett
+                - paragraph [ref=e166]: Offline
+              - button "Friend options" [ref=e167]
+            - listitem [ref=e170]:
+              - generic [ref=e171]: NK
+              - generic [ref=e174]:
+                - paragraph [ref=e175]: Nina Kraviz
+                - paragraph [ref=e176]: Online
+              - button "Friend options" [ref=e177]
+        - generic [ref=e180]:
+          - generic [ref=e181]:
+            - generic [ref=e182]: My Family
+            - button "Settings" [ref=e183]
+          - list [ref=e184]:
+            - listitem [ref=e185]:
+              - generic [ref=e186]: SH
+              - generic [ref=e189]:
+                - paragraph [ref=e190]: Sarah Hetfield
+                - paragraph [ref=e191]: Online
+              - button "Friend options" [ref=e192]
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - generic [ref=e197]: Uncategorized
+            - button "Settings" [ref=e198]
+          - list [ref=e199]:
+            - listitem [ref=e200]:
+              - generic [ref=e201]: BP
+              - generic [ref=e204]:
+                - paragraph [ref=e205]: Bruce Peterson
+                - paragraph [ref=e206]: Online
+              - button "Friend options" [ref=e207]
+            - listitem [ref=e210]:
+              - generic [ref=e211]: CG
+              - generic [ref=e214]:
+                - paragraph [ref=e215]: Chris Greyson
+                - paragraph [ref=e216]: Away
+              - button "Friend options" [ref=e217]
+            - listitem [ref=e220]:
+              - generic [ref=e221]: NG
+              - generic [ref=e224]:
+                - paragraph [ref=e225]: Nicholas Grisom
+                - paragraph [ref=e226]: Invisible
+              - button "Friend options" [ref=e227]
+            - listitem [ref=e230]:
+              - generic [ref=e231]: JS
+              - generic [ref=e234]:
+                - paragraph [ref=e235]: James Spiegel
+                - paragraph [ref=e236]: Away
+              - button "Friend options" [ref=e237]
+            - listitem [ref=e240]:
+              - generic [ref=e241]: DJ
+              - generic [ref=e244]:
+                - paragraph [ref=e245]: Diana Jones
+                - paragraph [ref=e246]: Online
+              - button "Friend options" [ref=e247]
+      - generic [ref=e250]:
+        - textbox "Search Friends..." [ref=e251]
+        - button "Friend settings" [ref=e252]
+        - button "Collapse friends panel" [ref=e255]
+      - button "Olympus Chat" [ref=e258]
+    - main [ref=e262]:
+      - generic [ref=e264]:
+        - generic [ref=e265]:
+          - generic [ref=e324]:
+            - generic [ref=e325]:
+              - heading "This month" [level=3] [ref=e326]
+              - link "Ledger" [ref=e327] [cursor=pointer]:
+                - /url: /bank
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - generic [ref=e330]: Income
+                - text: "0"
+              - generic [ref=e331]:
+                - generic [ref=e332]: Expense
+                - text: "0"
+          - generic [ref=e266]:
+            - heading "Music" [level=3] [ref=e268]
+            - paragraph [ref=e272]: No published tracks yet.
+            - link "Open music library →" [ref=e274] [cursor=pointer]:
+              - /url: /library/music
+          - link "Hà Nội 32° 32° / 27° Ít mây Cảm giác 38° · Mưa 46% Nay 32° T7 30° CN 33° T2 30° T3 34° T4 34° T5 33°" [ref=e333] [cursor=pointer]:
+            - /url: /weather
+            - generic [ref=e334]:
+              - generic [ref=e335]:
+                - paragraph [ref=e336]: Hà Nội
+                - generic [ref=e338]:
+                  - generic [ref=e339]: 32°
+                  - generic [ref=e340]: 32° / 27°
+                - paragraph [ref=e343]: Ít mây
+                - paragraph [ref=e344]: Cảm giác 38° · Mưa 46%
+              - generic [ref=e345]:
+                - generic [ref=e346]:
+                  - generic [ref=e347]: Nay
+                  - generic [ref=e351]: 32°
+                - generic [ref=e352]:
+                  - generic [ref=e353]: T7
+                  - generic [ref=e357]: 30°
+                - generic [ref=e358]:
+                  - generic [ref=e359]: CN
+                  - generic [ref=e363]: 33°
+                - generic [ref=e364]:
+                  - generic [ref=e365]: T2
+                  - generic [ref=e369]: 30°
+                - generic [ref=e370]:
+                  - generic [ref=e371]: T3
+                  - generic [ref=e375]: 34°
+                - generic [ref=e376]:
+                  - generic [ref=e377]: T4
+                  - generic [ref=e381]: 34°
+                - generic [ref=e382]:
+                  - generic [ref=e383]: T5
+                  - generic [ref=e387]: 33°
+          - generic [ref=e388]:
+            - generic [ref=e389]:
+              - generic [ref=e390]:
+                - button "Năm trước" [ref=e391]: «
+                - button "Tháng trước" [ref=e392]: ‹
+              - button "Tháng 8, 2026" [ref=e393]
+              - generic [ref=e394]:
+                - button "Tháng sau" [ref=e395]: ›
+                - button "Năm sau" [ref=e396]: »
+            - generic [ref=e397]:
+              - generic [ref=e398]: T2
+              - generic [ref=e399]: T3
+              - generic [ref=e400]: T4
+              - generic [ref=e401]: T5
+              - generic [ref=e402]: T6
+              - generic [ref=e403]: T7
+              - generic [ref=e404]: CN
+              - generic [ref=e410]:
+                - generic [ref=e411]: "1"
+                - generic [ref=e412]: "19"
+              - generic [ref=e413]:
+                - generic [ref=e414]: "2"
+                - generic [ref=e415]: "20"
+              - generic [ref=e416]:
+                - generic [ref=e417]: "3"
+                - generic [ref=e418]: "21"
+              - generic [ref=e419]:
+                - generic [ref=e420]: "4"
+                - generic [ref=e421]: "22"
+              - generic [ref=e422]:
+                - generic [ref=e423]: "5"
+                - generic [ref=e424]: "23"
+              - generic [ref=e425]:
+                - generic [ref=e426]: "6"
+                - generic [ref=e427]: "24"
+              - generic [ref=e428]:
+                - generic [ref=e429]: "7"
+                - generic [ref=e430]: "25"
+              - generic [ref=e431]:
+                - generic [ref=e432]: "8"
+                - generic [ref=e433]: "26"
+              - generic [ref=e434]:
+                - generic [ref=e435]: "9"
+                - generic [ref=e436]: "27"
+              - generic [ref=e437]:
+                - generic [ref=e438]: "10"
+                - generic [ref=e439]: "28"
+              - generic [ref=e440]:
+                - generic [ref=e441]: "11"
+                - generic [ref=e442]: "29"
+              - generic [ref=e443]:
+                - generic [ref=e444]: "12"
+                - generic [ref=e445]: "30"
+              - generic [ref=e446]:
+                - generic [ref=e447]: "13"
+                - generic [ref=e448]: 1/7
+              - generic [ref=e449]:
+                - generic [ref=e450]: "14"
+                - generic [ref=e451]: "2"
+              - generic [ref=e452]:
+                - generic [ref=e453]: "15"
+                - generic [ref=e454]: "3"
+              - generic [ref=e455]:
+                - generic [ref=e456]: "16"
+                - generic [ref=e457]: "4"
+              - generic [ref=e458]:
+                - generic [ref=e459]: "17"
+                - generic [ref=e460]: "5"
+              - generic [ref=e461]:
+                - generic [ref=e462]: "18"
+                - generic [ref=e463]: "6"
+              - generic [ref=e464]:
+                - generic [ref=e465]: "19"
+                - generic [ref=e466]: "7"
+              - generic [ref=e467]:
+                - generic [ref=e468]: "20"
+                - generic [ref=e469]: "8"
+              - generic [ref=e470]:
+                - generic [ref=e471]: "21"
+                - generic [ref=e472]: "9"
+              - generic [ref=e473]:
+                - generic [ref=e474]: "22"
+                - generic [ref=e475]: "10"
+              - generic [ref=e476]:
+                - generic [ref=e477]: "23"
+                - generic [ref=e478]: "11"
+              - generic [ref=e479]:
+                - generic [ref=e480]: "24"
+                - generic [ref=e481]: "12"
+              - generic [ref=e482]:
+                - generic [ref=e483]: "25"
+                - generic [ref=e484]: "13"
+              - generic [ref=e485]:
+                - generic [ref=e486]: "26"
+                - generic [ref=e487]: "14"
+              - generic [ref=e488]:
+                - generic [ref=e489]: "27"
+                - generic [ref=e490]: "15"
+              - generic [ref=e491]:
+                - generic [ref=e492]: "28"
+                - generic [ref=e493]: "16"
+              - generic [ref=e494]:
+                - generic [ref=e495]: "29"
+                - generic [ref=e496]: "17"
+              - generic [ref=e497]:
+                - generic [ref=e498]: "30"
+                - generic [ref=e499]: "18"
+              - generic [ref=e500]:
+                - generic [ref=e501]: "31"
+                - generic [ref=e502]: "19"
+            - link "Mở Lịch Âm Dương →" [ref=e504] [cursor=pointer]:
+              - /url: /calendar
+          - generic [ref=e283]:
+            - heading "Discover" [level=3] [ref=e285]
+            - link "Nothing published yet — browse the library." [ref=e286] [cursor=pointer]:
+              - /url: /library/comic
+        - generic [ref=e287]:
+          - generic [ref=e288]:
+            - tablist "Post type" [ref=e289]:
+              - tab "Status" [selected] [ref=e290]
+            - generic [ref=e294]:
+              - generic [ref=e295]:
+                - generic [ref=e296]: ND
+                - textbox "Share what you are thinking here..." [ref=e297]
+              - generic [ref=e298]:
+                - button "Thêm ảnh" [active] [ref=e299]
+                - button "Tag friends (coming soon)" [disabled] [ref=e302]
+                - button "Thêm địa điểm" [ref=e305]
+                - generic [ref=e308]:
+                  - button "Preview" [ref=e309]
+                  - button "Post Status" [disabled] [ref=e310]
+            - dialog "Add Photo" [ref=e505]:
+              - generic [ref=e507]:
+                - generic [ref=e508]:
+                  - heading "Add Photo" [level=6] [ref=e509]
+                  - button "Close" [ref=e510]
+                - generic [ref=e513]:
+                  - generic [ref=e519] [cursor=pointer]:
+                    - generic [ref=e520]: Upload Photo
+                    - generic [ref=e521]: Browse your computer.
+                  - button "Choose from My Photos Choose from your uploaded photos" [ref=e522]:
+                    - generic [ref=e527]:
+                      - generic [ref=e528]: Choose from My Photos
+                      - generic [ref=e529]: Choose from your uploaded photos
+          - article [ref=e530]:
+            - generic [ref=e531]:
+              - button "Like" [disabled] [ref=e532]
+              - button "Comment" [disabled] [ref=e535]
+              - button "Share" [disabled] [ref=e538]
+            - generic [ref=e541]:
+              - generic [ref=e542]: ND
+              - generic [ref=e543]:
+                - paragraph [ref=e544]: Newsfeed Demo
+                - time [ref=e545]: 28 Aug
+              - button "Post options" [ref=e548]
+            - paragraph [ref=e552]: Sáng nay đi bộ quanh hồ, chụp được cái này.
+            - img "photo" [ref=e554]
+            - link "Hoàn Kiếm" [ref=e555] [cursor=pointer]:
+              - /url: https://www.openstreetmap.org/?mlat=21.02857&mlon=105.85064#map=15/21.02857/105.85064
+            - generic [ref=e560]:
+              - generic [ref=e561]: "0"
+              - generic [ref=e565]: Be the first to like this
+              - generic [ref=e566]:
+                - generic [ref=e567]: "0"
+                - generic [ref=e571]: "0"
+          - link [ref=e575] [cursor=pointer]:
+            - /url: /library/media
+            - generic [ref=e580]:
+              - paragraph [ref=e581]: now.png is ready
+              - paragraph [ref=e582]: 28 Aug
+          - article [ref=e586]:
+            - generic [ref=e587]:
+              - button "Like" [disabled] [ref=e588]
+              - button "Comment" [disabled] [ref=e591]
+              - button "Share" [disabled] [ref=e594]
+            - generic [ref=e597]:
+              - generic [ref=e598]: ND
+              - generic [ref=e599]:
+                - paragraph [ref=e600]: Newsfeed Demo
+                - time [ref=e601]: 28 Aug
+              - button "Post options" [ref=e604]
+            - paragraph [ref=e608]: ahihi don goc https:://lamnx.test
+            - generic [ref=e609]:
+              - generic [ref=e610]: "0"
+              - generic [ref=e614]: Be the first to like this
+              - generic [ref=e615]:
+                - generic [ref=e616]: "0"
+                - generic [ref=e620]: "0"
+          - article [ref=e624]:
+            - generic [ref=e625]:
+              - button "Like" [disabled] [ref=e626]
+              - button "Comment" [disabled] [ref=e629]
+              - button "Share" [disabled] [ref=e632]
+            - generic [ref=e635]:
+              - generic [ref=e636]: ND
+              - generic [ref=e637]:
+                - paragraph [ref=e638]: Newsfeed Demo
+                - time [ref=e639]: 28 Aug
+              - button "Post options" [ref=e642]
+            - generic [ref=e645]:
+              - paragraph [ref=e646]: Tuần này đọc được gì
+              - paragraph [ref=e647]: Ba cuốn, một bài báo dài, và một buổi chiều không chạm vào điện thoại.
+            - generic [ref=e648]:
+              - generic [ref=e649]: "0"
+              - generic [ref=e653]: Be the first to like this
+              - generic [ref=e654]:
+                - generic [ref=e655]: "0"
+                - generic [ref=e659]: "0"
+          - article [ref=e663]:
+            - generic [ref=e664]:
+              - button "Like" [disabled] [ref=e665]
+              - button "Comment" [disabled] [ref=e668]
+              - button "Share" [disabled] [ref=e671]
+            - generic [ref=e674]:
+              - generic [ref=e675]: ND
+              - generic [ref=e676]:
+                - paragraph [ref=e677]:
+                  - text: Newsfeed Demo
+                  - generic [ref=e678]: shared a video
+                - time [ref=e679]: 28 Aug
+              - button "Post options" [ref=e682]
+            - paragraph [ref=e686]: Bài này của Iron Maid nghe cực đã — sửa lại cho gọn.
+            - link [ref=e687] [cursor=pointer]:
+              - /url: https://youtube.com/watch?v=excVFQ2TWig
+              - generic [ref=e692]:
+                - paragraph [ref=e693]: youtube.com
+                - paragraph [ref=e694]: youtube.com/watch?v=excVFQ2TWig
+            - generic [ref=e695]:
+              - generic [ref=e696]: "0"
+              - generic [ref=e700]: Be the first to like this
+              - generic [ref=e701]:
+                - generic [ref=e702]: "0"
+                - generic [ref=e706]: "0"
+        - complementary [ref=e312]:
+          - generic [ref=e313]:
+            - heading "People" [level=3] [ref=e315]
+            - link "No people yet — add someone to your registry." [ref=e316] [cursor=pointer]:
+              - /url: /people
+          - generic [ref=e317]:
+            - heading "Recent activity" [level=3] [ref=e319]
+            - list [ref=e710]:
+              - listitem [ref=e711]:
+                - generic [ref=e712]: "\"I"
+                - generic [ref=e713]:
+                  - paragraph [ref=e714]:
+                    - link "\"now.png\" is ready to watch" [ref=e715] [cursor=pointer]:
+                      - /url: /library/69eae454-f92f-4cd1-87b7-ff9f31c9f013
+                  - paragraph [ref=e716]: 2h ago
+                - generic "unread" [ref=e717]
+    - button "Go to top"
+  - alert [ref=e321]

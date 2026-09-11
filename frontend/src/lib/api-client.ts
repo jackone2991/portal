@@ -5,8 +5,24 @@
 // Exported so callers that need a direct URL (e.g. an <img>/<a href> straight
 // to a media variant, rather than a JSON round-trip through `api()`) can build
 // on the same base without redeclaring the env fallback.
-export const baseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+//
+// Resolved from the *current* origin in the browser so one build serves every
+// access path: opening the app on https://portal.localhost (PC) keeps using the
+// baked api.<domain> TLS host, while reaching it over the LAN by raw IP/host
+// (e.g. http://192.168.1.53:3000 from a phone) talks to the API on :8080 of that
+// same host+scheme — no per-URL rebuild, no hardcoded hostname the phone can't
+// resolve. SSR (no window) falls back to the build-time env.
+function resolveBaseURL(): string {
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location;
+    if (hostname !== "portal.localhost") {
+      return `${protocol}//${hostname}:8080`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+}
+
+export const baseURL = resolveBaseURL();
 
 export class ApiError extends Error {
   constructor(

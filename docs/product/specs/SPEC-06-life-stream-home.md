@@ -1,6 +1,6 @@
 # SPEC-06 — Life-Stream Home (read path: projection + dashboard)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
 **Module:** `journal` (extends SPEC-05; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-05 (hard — first content + module home); system events attach as their producers land (SPEC-01 P1.2/P0.3, SPEC-02 P1.9, SPEC-03 P0.7, SPEC-07 P1.5, SPEC-08 P0.4); the widget rail additionally consumes SPEC-04's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
 **Upstream:** [briefs/06-life-stream-home.md](../briefs/06-life-stream-home.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
 **Downstream consumers:** SPEC-04 P2 daily digest (reads this projection), future on-this-day widgets

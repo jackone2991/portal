@@ -48,7 +48,7 @@ Everything else (service, handler, repository, the backup task body) is private.
 
 `make restore-drill` reads `LATEST.json`, downloads + verifies the sha256,
 `pg_restore`s into a scratch DB, and sanity-checks it. Runbook:
-[docs/guides/backup-restore.md](../../../../docs/guides/backup-restore.md).
+[docs/operations/backup-restore.md](../../../../docs/operations/backup-restore.md).
 
 ## Freshness sentinel (P0.5)
 

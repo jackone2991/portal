@@ -59,8 +59,17 @@ type Asset struct {
 	Title            string
 	OriginalFilename string
 	Origin           string
+	Visibility       string
 	CreatedAt        time.Time
 }
+
+// Asset visibility (0032). Private is the default and the only value the upload
+// path ever writes; public is an explicit act by the owner, and it is what lets
+// an asset be read with no session at all.
+const (
+	VisibilityPrivate = "private"
+	VisibilityPublic  = "public"
+)
 
 // Variant is a derived, metadata-stripped artifact (thumb/medium/poster).
 type Variant struct {
@@ -106,6 +115,11 @@ type Repository interface {
 	GetAsset(ctx context.Context, id uuid.UUID) (Asset, error)
 	GetAssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error)
 	GetAssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	// SetAssetVisibility flips private/public for an asset the caller owns.
+	// The 0032 UPDATE policy says the same thing, but the statement carries the
+	// owner too: this is the one write that can make a private file
+	// world-readable, and RLS is inert until the DATABASE_URL cutover.
+	SetAssetVisibility(ctx context.Context, ownerID, id uuid.UUID, visibility string) (Asset, error)
 	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Asset, error)
 	ListByOwnerCursor(ctx context.Context, in ListCursorInput) ([]Asset, error)
 	ListForPurge(ctx context.Context) ([]Asset, error)

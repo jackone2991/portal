@@ -1,5 +1,7 @@
 # Test Cases — SPEC-06 Life-Stream Home
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-06](../product/specs/SPEC-06-life-stream-home.md) · **Module:** `journal`/stream + home
 **Prefix:** `TC-STREAM-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R4 (stream/event correctness)
 

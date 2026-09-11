@@ -1,5 +1,7 @@
 # Test Cases — SPEC-02 Comic Vertical
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-02](../product/specs/SPEC-02-comic-vertical.md) · **Module:** `comic`
 **Prefix:** `TC-COMIC-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Depends on:** SPEC-01 (ready image assets)
 

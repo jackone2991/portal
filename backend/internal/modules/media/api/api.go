@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -73,10 +74,23 @@ type API interface {
 	// Continue returns the active media progress items for the caller.
 	Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error)
 
-	// IngestImage ingests raw image bytes as a media asset (same pipeline as a
-	// browser upload) and returns the new asset id. Used by the comic zip-import
-	// worker; run it inside a tenant-scoped ctx (SPEC-02 P1.7).
-	IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+	// Ingest stores raw bytes as a media asset — the same three-step pipeline a
+	// browser upload runs (session → source → complete) — and returns the new
+	// asset id. `contentType` is what decides the asset KIND, so this one method
+	// serves the comic zip-import (images) and the music zip-import (audio); it
+	// was called IngestImage until music needed it, which was only ever a name.
+	//
+	// Run it inside a tenant-scoped ctx (SPEC-02 P1.7).
+	Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+
+	// OpenOriginal streams back the byte-identical upload, owner-checked. The
+	// caller closes the reader.
+	//
+	// It exists for work that has to re-read a file after the fact — the music
+	// enrichment pass re-opens an audio asset to pull the cover art out of it —
+	// where handing out the storage key instead would leak media's layout into
+	// modules that must not know it.
+	OpenOriginal(ctx context.Context, ownerID, assetID uuid.UUID) (io.ReadCloser, string, error)
 }
 
 type Impl struct {
@@ -84,6 +98,7 @@ type Impl struct {
 	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error)
 	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error)
 	ingestFn   func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
+	openFn     func(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error)
 }
 
 func NewImpl(
@@ -91,13 +106,27 @@ func NewImpl(
 	getAssetFn func(ctx context.Context, id uuid.UUID) (*Asset, error),
 	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error),
 	ingestFn func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error),
+	openFn func(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error),
 ) *Impl {
-	return &Impl{continueFn: continueFn, getAssetFn: getAssetFn, statusesFn: statusesFn, ingestFn: ingestFn}
+	return &Impl{
+		continueFn: continueFn, getAssetFn: getAssetFn,
+		statusesFn: statusesFn, ingestFn: ingestFn, openFn: openFn,
+	}
 }
 
-// IngestImage delegates to the media service (nil-safe: returns an error if the
+// OpenOriginal delegates to the media service. The service's own signature also
+// returns a download filename, which no cross-module caller needs.
+func (a *Impl) OpenOriginal(ctx context.Context, ownerID, assetID uuid.UUID) (io.ReadCloser, string, error) {
+	if a.openFn == nil {
+		return nil, "", errors.New("media: original reads not available")
+	}
+	rc, contentType, _, err := a.openFn(ctx, ownerID, assetID)
+	return rc, contentType, err
+}
+
+// Ingest delegates to the media service (nil-safe: returns an error if the
 // module was built without an ingest function).
-func (a *Impl) IngestImage(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
+func (a *Impl) Ingest(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error) {
 	if a.ingestFn == nil {
 		return uuid.Nil, errors.New("media: ingest not available")
 	}

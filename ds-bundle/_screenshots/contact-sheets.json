@@ -2,30 +2,54 @@
   {
     "sheet": 1,
     "components": [
+      "AccountsView",
       "ActivityFeed",
       "AddBook",
+      "AdminLayoutView",
+      "AdminRolesView",
+      "AdminUsersView",
+      "AttachPhotoPopup",
       "AudioPlayer",
       "AuthForm",
       "AuthLanding",
       "Avatar",
+      "BackLink",
       "BadgeCard",
       "BirthdayCard",
       "BlogCard",
-      "CalendarWidget",
-      "ChatResponsive",
-      "ChoseFromMyPhoto",
-      "ComicIndexView",
-      "CommentForm",
-      "CommentItem",
-      "CommentThread"
+      "BudgetsView"
     ]
   },
   {
     "sheet": 2,
     "components": [
+      "BulkImportModal",
+      "CalendarView",
+      "CalendarWidget",
+      "CategoryChip",
+      "CategoryDonut",
+      "ChapterMenu",
+      "ChatResponsive",
+      "ChoseFromMyPhoto",
+      "ComicDetailView",
+      "ComicIndexView",
+      "ComicReaderView",
+      "CommentForm",
+      "CommentItem",
+      "CommentThread",
       "Composer",
+      "ContinueRail"
+    ]
+  },
+  {
+    "sheet": 3,
+    "components": [
+      "ContinueWidget",
       "ControlBlockButtons",
+      "DashboardView",
+      "EntryCard",
       "EventItem",
+      "FinanceWidget",
       "FormField",
       "FriendCard",
       "FriendRequestItem",
@@ -35,40 +59,75 @@
       "HelloPreloader",
       "HomeView",
       "Icon",
-      "LoginView",
-      "MasterBase",
-      "MasterPublic",
-      "MessagesMenu"
-    ]
-  },
-  {
-    "sheet": 3,
-    "components": [
-      "NotificationsMenu",
-      "NovelDetailView",
-      "PagesWidget",
-      "PersonalInfoWidget",
-      "PlaylistWidget",
-      "Post",
-      "PostControlButtons",
-      "ProfileHeader",
-      "ReactionBar",
-      "RegisterView",
-      "SelectField",
-      "SidebarCenter",
-      "SidebarLeft",
-      "SidebarRight",
-      "TagSelect",
-      "ToggleRow"
+      "LoginView"
     ]
   },
   {
     "sheet": 4,
     "components": [
+      "MasterBase",
+      "MasterPublic",
+      "MediaDetailView",
+      "MediaIndexView",
+      "MessagesMenu",
+      "MoneyDisplay",
+      "MoneyInput",
+      "MonthPager",
+      "MusicDetailView",
+      "MusicIndexView",
+      "MusicWidget",
+      "NotificationsMenu",
+      "NovelDetailView",
+      "NowPlayingBar",
+      "PagedReader",
+      "PagesWidget"
+    ]
+  },
+  {
+    "sheet": 5,
+    "components": [
+      "PeopleIndexView",
+      "PersonalInfoWidget",
+      "PersonDetailView",
+      "PlacePickerPopup",
+      "PlaylistWidget",
+      "Post",
+      "PostControlButtons",
+      "PostOptionsMenu",
+      "ProfileHeader",
+      "QuickAddModal",
+      "ReactionBar",
+      "ReaderChrome",
+      "ReaderHelp",
+      "ReaderSettings",
+      "RegisterView",
+      "ReportsView"
+    ]
+  },
+  {
+    "sheet": 6,
+    "components": [
+      "SelectField",
+      "SidebarCenter",
+      "SidebarLeft",
+      "SidebarRight",
+      "StreamItemCard",
+      "StripReader",
+      "TagSelect",
+      "ToggleRow",
       "TopMenu",
       "TrackItem",
+      "TransactionRow",
+      "TransactionsView",
+      "TrendBars",
       "UpdateHeaderPhoto",
       "UploadStudio",
+      "WeatherView"
+    ]
+  },
+  {
+    "sheet": 7,
+    "components": [
       "WeatherWidget",
       "WidgetCard"
     ]

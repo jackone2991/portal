@@ -17,6 +17,14 @@ type Querier interface {
 	// Owner-scoped. Birthday is month/day + optional year; the notices table is the
 	// daily scan's outbox/dedup (P0.4).
 	// ══ Persons ═════════════════════════════════════════════════════════════
+	// jsonb params are cast text->jsonb so sqlc types them as Go strings. The pool
+	// runs QueryExecModeExec (platform/db): pgx picks the wire OID from the Go type
+	// without describing params, so a []byte goes out as bytea and the jsonb column
+	// rejects it with SQLSTATE 22P02. The cast in SQL alone does NOT fix it — only
+	// the Go param type does; the cast is here to make sqlc emit `string`.
+	// ON CONFLICT rather than letting 0035's (user_id, linked_user_id) unique raise:
+	// a violation aborts the request's tenant transaction, so the 409 the handler
+	// writes would be replaced by a 500 at COMMIT. No rows means already added.
 	CreatePerson(ctx context.Context, arg CreatePersonParams) (PeoplePerson, error)
 	// On a birthday edit/clear, drop current + future notices so a corrected date
 	// can fire fresh this year (P0.2). Past years' history stays.
@@ -26,6 +34,11 @@ type Querier interface {
 	// ══ Birthday notices — outbox/dedup (P0.4) ══════════════════════════════
 	// Reserve the (person, year, threshold) slot; a conflict means it already fired.
 	InsertNotice(ctx context.Context, arg InsertNoticeParams) error
+	// Portal accounts already in the caller's registry. The suggestion list
+	// subtracts these, so someone you added stops being suggested.
+	ListLinkedUserIDs(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error)
+	// circle is an optional filter: NULL means every circle (the People page's
+	// default), a value means one section (what a section's manage link opens).
 	ListPeople(ctx context.Context, arg ListPeopleParams) ([]PeoplePerson, error)
 	// The caller's people that have a (solar) birthday — for the upcoming endpoint.
 	ListSolarBirthdays(ctx context.Context, userID pgtype.UUID) ([]ListSolarBirthdaysRow, error)

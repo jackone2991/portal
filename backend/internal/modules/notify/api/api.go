@@ -23,15 +23,35 @@ const (
 	TaskEmail        = "notify:email"
 	TaskWebPush      = "notify:web_push" // P1.1
 	TaskOnAssetReady = "notify:on_asset_ready"
-	TaskPurgeOld     = "notify:purge_old" // P2
+	// TaskOnComicPublished fires once per comic publish, never per chapter.
+	TaskOnComicPublished = "notify:on_comic_published"
+	// Social connections (0037).
+	TaskOnConnectionRequested = "notify:on_connection_requested"
+	TaskOnConnectionAccepted  = "notify:on_connection_accepted"
+	// Catalogue publishes. Three task names, one handler: they differ only in
+	// which library the click-through lands in.
+	TaskOnMoviePublished = "notify:on_movie_published"
+	TaskOnTrackPublished = "notify:on_track_published"
+	TaskOnStoryPublished = "notify:on_story_published"
+	TaskPurgeOld         = "notify:purge_old" // P2
 )
 
 // Notification type strings — an OPEN registry (see notify/README.md). New types
 // slot in with zero schema change; only these have real producers today.
 const (
-	TypePasswordReset   = "account.password_reset" // email-only, non-mutable, never persisted
-	TypeSecurityAlert   = "account.security_alert" // P1.4 — email + in-app, non-mutable
-	TypeMediaAssetReady = "media.asset_ready"
+	TypePasswordReset       = "account.password_reset" // email-only, non-mutable, never persisted
+	TypeSecurityAlert       = "account.security_alert" // P1.4 — email + in-app, non-mutable
+	TypeMediaAssetReady     = "media.asset_ready"
+	TypeComicPublished      = "comic.published"
+	TypeConnectionRequested = "social.connection_requested"
+	TypeConnectionAccepted  = "social.connection_accepted"
+	TypeWorkPublished       = "catalogue.published"
+	// TypeRegistrationPending goes to everyone who can approve a registration
+	// (migration 0031). Mutable — an approver who does not want it can mute the
+	// type — but it ships with an email channel override, because the recipient
+	// is being told that somebody ELSE is blocked until they act, and a bell
+	// badge only reaches an approver who is already signed in.
+	TypeRegistrationPending = "account.registration_pending"
 )
 
 // Channel identifiers used in NotificationIntent.Channels and preferences.

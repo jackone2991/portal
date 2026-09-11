@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { activeTemplate } from "@/templates/registry";
 
-export const metadata: Metadata = { title: "Accounts" };
+export const metadata: Metadata = { title: "Ví của tôi" };
 
 /** /bank/accounts — list + create/archive (SPEC-03 P0.1). */
 export default function BankAccountsPage() {

@@ -64,8 +64,8 @@ ORDER BY a.archived, a.currency, a.name;
 -- ══ Categories (P0.4) ═══════════════════════════════════════════════════
 
 -- name: CreateCategory :one
-INSERT INTO bank_categories (user_id, parent_id, name, kind)
-VALUES ($1, sqlc.narg('parent_id'), $2, $3)
+INSERT INTO bank_categories (user_id, parent_id, name, kind, icon, color)
+VALUES ($1, sqlc.narg('parent_id'), $2, $3, sqlc.narg('icon'), sqlc.narg('color'))
 RETURNING *;
 
 -- name: GetVisibleCategory :one
@@ -86,7 +86,9 @@ ORDER BY kind, COALESCE(parent_id, id), (parent_id IS NOT NULL), name;
 -- service passes parent_id explicitly (clearing to top-level is a real value).
 UPDATE bank_categories
 SET name      = COALESCE(sqlc.narg('name'), name),
-    parent_id = CASE WHEN @set_parent::boolean THEN sqlc.narg('parent_id') ELSE parent_id END
+    parent_id = CASE WHEN @set_parent::boolean THEN sqlc.narg('parent_id') ELSE parent_id END,
+    icon      = CASE WHEN @set_icon::boolean  THEN sqlc.narg('icon')  ELSE icon  END,
+    color     = CASE WHEN @set_color::boolean THEN sqlc.narg('color') ELSE color END
 WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
@@ -227,3 +229,54 @@ SELECT
         WHERE direction = 'debit'  AND NOT (transfer_id IS NOT NULL AND category_id IS NULL)), 0)::bigint AS expense
 FROM bank_transactions
 WHERE user_id = $1 AND date_trunc('month', occurred_at)::date = $2;
+
+
+-- ══ Reports (Money-Lover-style month view) ══════════════════════════════
+
+-- name: CategorySpendForMonth :many
+-- Per-category totals for one month, for the donut and the breakdown list.
+--
+-- Rolls CHILD categories up into their PARENT (COALESCE(parent_id, id)): a user
+-- who logs "Cà phê" and "Ăn ngoài" wants to see one "Ăn uống" slice, not two
+-- fragments of it. The per-child detail is still reachable — the transaction
+-- list filters by category — but a donut with 30 slivers communicates nothing.
+--
+-- Excludes PURE transfer legs exactly as MonthFlowTotals does: moving money
+-- between your own wallets is not spending, but a transfer FEE (transfer_id and
+-- category_id both set) is, and dropping it would understate the month.
+SELECT
+    COALESCE(p.id, c.id)::uuid    AS category_id,
+    COALESCE(p.name, c.name)      AS name,
+    COALESCE(p.kind, c.kind)      AS kind,
+    COALESCE(p.icon, c.icon)      AS icon,
+    COALESCE(p.color, c.color)    AS color,
+    SUM(t.amount)::bigint         AS total,
+    COUNT(*)::bigint              AS tx_count
+FROM bank_transactions t
+JOIN bank_categories c ON c.id = t.category_id
+LEFT JOIN bank_categories p ON p.id = c.parent_id
+WHERE t.user_id = $1
+  AND date_trunc('month', t.occurred_at)::date = $2
+  AND NOT (t.transfer_id IS NOT NULL AND t.category_id IS NULL)
+GROUP BY COALESCE(p.id, c.id), COALESCE(p.name, c.name), COALESCE(p.kind, c.kind),
+         COALESCE(p.icon, c.icon), COALESCE(p.color, c.color)
+ORDER BY total DESC;
+
+-- name: MonthlyFlowSeries :many
+-- Income/expense per month over a window ending at $2, for the trend bars.
+--
+-- generate_series drives the result, not the transactions, so a month with no
+-- activity comes back as a zero row instead of vanishing — a trend chart that
+-- silently omits empty months draws a misleading line.
+SELECT
+    m.month::date AS month,
+    COALESCE(SUM(t.amount) FILTER (
+        WHERE t.direction = 'credit' AND NOT (t.transfer_id IS NOT NULL AND t.category_id IS NULL)), 0)::bigint AS income,
+    COALESCE(SUM(t.amount) FILTER (
+        WHERE t.direction = 'debit'  AND NOT (t.transfer_id IS NOT NULL AND t.category_id IS NULL)), 0)::bigint AS expense
+FROM generate_series(($2::date - make_interval(months => $3::int - 1)), $2::date, '1 month') AS m(month)
+LEFT JOIN bank_transactions t
+       ON t.user_id = $1
+      AND date_trunc('month', t.occurred_at)::date = m.month::date
+GROUP BY m.month
+ORDER BY m.month;

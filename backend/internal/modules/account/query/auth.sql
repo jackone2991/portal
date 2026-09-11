@@ -24,8 +24,12 @@ WHERE id = $1;
 
 -- name: GetUserAuthSnapshot :one
 -- Minimal projection used by JWT middleware on each request to validate
--- token_version + disabled state. Indexed PK lookup.
-SELECT id, email, display_name, role, token_version, disabled_at
+-- token_version + disabled + approval state. Indexed PK lookup.
+--
+-- approval_status is read here, not just at login, so that revoking an approval
+-- ends the session at once: the middleware re-reads this row on every request,
+-- which is the same channel disabled_at has always used.
+SELECT id, email, display_name, role, token_version, disabled_at, approval_status
 FROM users
 WHERE id = $1;
 
@@ -101,9 +105,13 @@ WHERE expires_at < now() - INTERVAL '30 days';
 -- ── Audit log ─────────────────────────────────────────────────────
 
 -- name: WriteAuditEvent :exec
+-- metadata is cast text->jsonb so sqlc types the param as a Go string. The pool
+-- runs QueryExecModeExec (platform/db), where pgx picks the wire OID from the Go
+-- type without describing params: a []byte goes out as bytea, which a jsonb
+-- column rejects with SQLSTATE 22P02. Sending text lets Postgres parse the JSON.
 INSERT INTO audit_log (
     actor_id, actor_kind, action, target_kind, target_id, metadata, ip, user_agent
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+) VALUES ($1, $2, $3, $4, $5, sqlc.arg('metadata')::text::jsonb, $6, $7);
 
 -- name: ListAuditEvents :many
 SELECT * FROM audit_log

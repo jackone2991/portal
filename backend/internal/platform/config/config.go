@@ -51,9 +51,22 @@ type Config struct {
 	CookieSecure bool   `env:"COOKIE_SECURE"   envDefault:"true"`
 	PostLoginURL string `env:"POST_LOGIN_URL"  envDefault:"/"`
 
+	// BootstrapSuperadminEmail names the account that must hold `superadmin` and
+	// an approved registration. Re-asserted on every API start, and a no-op once
+	// it is true — see bootstrapSuperadmin in cmd/api.
+	//
+	// It exists because migration 0031 turned registration into an approve-first
+	// flow: an install with no superadmin has nobody who can approve anyone, and
+	// the first-account rule in /auth/register only rescues an empty database.
+	// Empty (the default) disables the bootstrap entirely.
+	BootstrapSuperadminEmail string `env:"BOOTSTRAP_SUPERADMIN_EMAIL" envDefault:""`
+
 	// Password reset (SPEC-04 P0.3). PasswordResetURL is the reset-link base the
 	// email points at; the raw token is appended as ?token=.
-	PasswordResetURL string        `env:"PASSWORD_RESET_URL" envDefault:"https://portal.localhost/reset-password"`
+	PasswordResetURL string `env:"PASSWORD_RESET_URL" envDefault:"https://portal.localhost/reset-password"`
+	// ApprovalQueueURL is where the "someone is waiting for approval"
+	// notification points. Empty just drops the link from the message.
+	ApprovalQueueURL string        `env:"APPROVAL_QUEUE_URL" envDefault:"https://portal.localhost/admin/users?status=pending"`
 	PasswordResetTTL time.Duration `env:"PASSWORD_RESET_TTL" envDefault:"1h"`
 
 	// Notification email channel (SPEC-04 P0.3). Dev = Mailpit (no auth). An
@@ -62,6 +75,22 @@ type Config struct {
 	SMTPPort             int    `env:"SMTP_PORT" envDefault:"1025"`
 	SMTPFrom             string `env:"SMTP_FROM" envDefault:"Portal <no-reply@portal.localhost>"`
 	NotifyEmailHourlyCap int    `env:"NOTIFY_EMAIL_HOURLY_CAP" envDefault:"200"` // global send ceiling (budget insurance); 0 = uncapped
+
+	// ── Music catalogue lookup (migration 0039) ──────────────────────────────
+	// The ONLY outbound third-party calls this app makes. Off by default: a
+	// lookup sends the library's artist/title pairs to MusicBrainz, and that is
+	// not a default anyone should inherit without deciding to.
+	//
+	// MusicbrainzContact is mandatory when enabled — their policy requires a
+	// User-Agent with real contact details and answers 403 without one. There is
+	// deliberately no fallback value: a shared fake identity is how every
+	// deployment gets blocked at once. Enabled without a contact stays OFF.
+	MusicbrainzEnabled bool   `env:"MUSICBRAINZ_ENABLED" envDefault:"false"`
+	MusicbrainzContact string `env:"MUSICBRAINZ_CONTACT" envDefault:""`
+	// Overridable for tests and for anyone running a local mirror, which is the
+	// polite way to do this at volume.
+	MusicbrainzBaseURL string `env:"MUSICBRAINZ_BASE_URL" envDefault:"https://musicbrainz.org/ws/2"`
+	CoverArtBaseURL    string `env:"COVERART_BASE_URL"   envDefault:"https://coverartarchive.org"`
 
 	// Browser origins allowed to make credentialed (cookie-bearing) calls to the
 	// API. The frontend login form POSTs cross-subdomain, so the exact origin

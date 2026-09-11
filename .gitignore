@@ -49,6 +49,19 @@ ds-bundle/
 .design-sync/node_modules
 frontend/.ds-compiled.css
 
-# design-sync npm-install byproduct (repo uses pnpm, no lockfile by design)
+# The frontend's package manager is pnpm (Makefile, Dockerfile, CI) and its
+# lockfile IS committed: frontend/pnpm-lock.yaml. An npm lockfile is a
+# byproduct of running npm by mistake (design-sync did) and must not be
+# tracked next to it - two lockfiles, two dependency graphs. Until 2026-09-11
+# the comment here said "no lockfile by design" while CI cached on the pnpm
+# lockfile, which is how the frontend and openapi jobs failed at setup for
+# two months.
 frontend/package-lock.json
 .mcp.json
+# Claude Code local overrides (personal, not shared)
+.claude.local.md
+
+# Scraper service runtime artifacts (SPEC-02 P1.8)
+scraper/__pycache__/
+scraper/downloaded_files/
+scraper/*.log

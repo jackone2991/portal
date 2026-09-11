@@ -2,7 +2,7 @@
 
 **Status:** current · **Last verified:** 2026-07-07
 **Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [../adr/](../adr/README.md)
-**Live implementation status:** [`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md) — trust it over any prose here.
+**Live implementation status:** `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) — trust it over any prose here.
 
 This is the narrative architecture of record. It describes the system in three
 tiers and keeps them separate on purpose:
@@ -49,7 +49,9 @@ always the same: the envelope.
    effective permissions), values are computed from source-of-truth rows (+ cache),
    not maintained as mutable columns.
 6. **Status truth is centralized.** Documents don't restate implementation state;
-   `MILESTONE_CHECKS.md` does. Diagrams tag tiers instead of pretending.
+   the code does, described in one place — `/CLAUDE.md` § Current status
+   (`MILESTONE_CHECKS.md` did this until it was deleted in `f11cf3f`). Diagrams
+   tag tiers instead of pretending.
 
 ## 3. The system, by tier
 

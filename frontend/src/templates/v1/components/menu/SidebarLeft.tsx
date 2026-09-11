@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Route } from "next";
 import { Icon } from "../ui/Icon";
+import { useLayout, type MenuItem } from "@/lib/layout";
 
 /**
  * Left menu — port of `components/menu/sidebarLeft.blade.php` (Olympus).
@@ -12,21 +14,52 @@ import { Icon } from "../ui/Icon";
  * Icons are the authentic Olympus sprite (see SvgSprite / Icon).
  */
 
-const ITEMS: { icon: string; label: string; href?: Route; active?: boolean }[] = [
-  { icon: "newsfeed-icon", label: "Newsfeed", href: "/", active: true },
+/**
+ * The menu comes from `GET /layout`, already filtered to what this caller may
+ * see — the server applies the permission on each row, so an admin-only entry
+ * never reaches a bundle anyone can read.
+ *
+ * FALLBACK is the unrestricted part of the seeded menu, rendered while the query
+ * is in flight or if it fails. Without it the sidebar would be empty on every
+ * cold load and blank forever on an API blip, which is a worse failure than a
+ * slightly stale menu. It deliberately contains no permission-gated row: this
+ * list ships to everyone, so guessing optimistically would flash admin links at
+ * users who do not have them.
+ */
+const FALLBACK: { icon: string; label: string; href?: string }[] = [
+  { icon: "newsfeed-icon", label: "Newsfeed", href: "/" },
   { icon: "multimedia-icon", label: "Upload Video", href: "/upload" },
-  { icon: "stats-icon", label: "Ledger", href: "/bank" as Route },
-  { icon: "happy-faces-icon", label: "People", href: "/people" as Route },
+  { icon: "stats-icon", label: "Ledger", href: "/bank" },
+  { icon: "happy-faces-icon", label: "People", href: "/people" },
   { icon: "albums-icon", label: "Commic", href: "/library/comic" },
   { icon: "happy-faces-icon", label: "Friend Groups" },
-  { icon: "headphones-icon", label: "Music & Playlists", href: "/library/novel/1" as Route },
-  { icon: "weather-icon", label: "Weather App", href: "/weather" as Route },
-  { icon: "calendar-icon", label: "Calendar and Events", href: "/calendar" as Route },
+  { icon: "headphones-icon", label: "Music & Playlists", href: "/library/music" },
+  { icon: "weather-icon", label: "Weather App", href: "/weather" },
+  { icon: "calendar-icon", label: "Calendar and Events", href: "/calendar" },
   { icon: "badge-icon", label: "Community Badges" },
   { icon: "cupcake-icon", label: "Friends Birthdays" },
   { icon: "stats-icon", label: "Account Stats" },
-  { icon: "manage-widgets-icon", label: "Manage Widgets" },
 ];
+
+/** The shape Row renders — the API item and the fallback collapse onto it. */
+interface Entry {
+  key: string;
+  icon: string;
+  label: string;
+  href?: string;
+}
+
+function toEntries(items: MenuItem[] | undefined): Entry[] {
+  if (!items?.length) {
+    return FALLBACK.map((it) => ({ key: it.label, icon: it.icon, label: it.label, href: it.href }));
+  }
+  return items.map((it) => ({
+    key: it.key,
+    icon: it.icon,
+    label: it.label,
+    href: it.href ?? undefined,
+  }));
+}
 
 export function SidebarLeft({
   collapsed,
@@ -35,6 +68,10 @@ export function SidebarLeft({
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const pathname = usePathname();
+  const { data: layout } = useLayout();
+  const items = toEntries(layout?.menu);
+
   return (
     <aside
       className="fixed left-0 z-30 hidden w-[var(--tpl-sidebar-cur)] flex-col border-r bg-white transition-[width] duration-200 xl:flex"
@@ -47,14 +84,14 @@ export function SidebarLeft({
       <div className="flex-1 overflow-y-auto py-3">
         <Row collapsed={collapsed} onClick={onToggle} label="Collapse Menu" icon="menu-icon" />
         <div className="my-2 h-px" style={{ background: "var(--tpl-border)" }} />
-        {ITEMS.map((it) => (
+        {items.map((it) => (
           <Row
-            key={it.label}
+            key={it.key}
             collapsed={collapsed}
             icon={it.icon}
             label={it.label}
-            href={it.href}
-            active={it.active}
+            href={it.href as Route | undefined}
+            active={isActive(pathname, it.href)}
           />
         ))}
       </div>
@@ -82,6 +119,20 @@ export function SidebarLeft({
       )}
     </aside>
   );
+}
+
+/**
+ * Which row the current URL belongs to. "Newsfeed" is the only exact match —
+ * everything else owns its subtree, so `/library/music/<id>` still highlights
+ * "Music & Playlists". Rows with no `href` are decorative and never highlight.
+ *
+ * This used to be a hardcoded `active: true` on Newsfeed, which meant the menu
+ * pointed at the home page from every screen in the app.
+ */
+function isActive(pathname: string, href?: string): boolean {
+  if (!href) return false;
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function Row({

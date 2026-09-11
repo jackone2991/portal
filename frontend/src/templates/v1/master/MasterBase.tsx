@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { ShellProps } from "@/templates/types";
+import { useShellLayout } from "@/lib/shell-layout";
 import { HelloPreloader } from "../partials/HelloPreloader";
 import { GoToTop } from "../partials/GoToTop";
 import { SessionKeeper } from "../partials/SessionKeeper";
@@ -12,6 +13,8 @@ import { SvgSprite } from "../components/footers/SvgSprite";
 import { UpdateHeaderPhoto } from "../components/popup/UpdateHeaderPhoto";
 import { ChoseFromMyPhoto } from "../components/popup/ChoseFromMyPhoto";
 import { ChatResponsive } from "../components/popup/ChatResponsive";
+import { MusicPlayerProvider } from "../components/music/MusicPlayerProvider";
+import { NowPlayingBar, NowPlayingSpacer } from "../components/music/NowPlayingBar";
 
 /**
  * Authenticated app shell — port of `master/master-base.blade.php` (Olympus).
@@ -25,8 +28,15 @@ import { ChatResponsive } from "../components/popup/ChatResponsive";
  * content padding both read — so everything shifts in lockstep.
  */
 export function MasterBase({ children }: ShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const { menuCollapsed, peopleCollapsed, toggleMenu, togglePeople } = useShellLayout();
+
+  // The persisted value only exists in the browser, so the first client render
+  // has to match the server's (both panels open) or React logs a hydration
+  // mismatch. Adopt the stored preference on the next tick instead.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const collapsed = hydrated && menuCollapsed;
+  const rightCollapsed = hydrated && peopleCollapsed;
 
   const rootStyle = {
     background: "var(--tpl-bg)",
@@ -35,6 +45,7 @@ export function MasterBase({ children }: ShellProps) {
   } as CSSProperties;
 
   return (
+    <MusicPlayerProvider>
     <div data-template="v1" className="min-h-screen" style={rootStyle}>
       <HelloPreloader />
       <SessionKeeper />
@@ -42,23 +53,28 @@ export function MasterBase({ children }: ShellProps) {
 
       {/* chrome */}
       <SidebarCenter />
-      <SidebarLeft collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <SidebarRight collapsed={rightCollapsed} onToggle={() => setRightCollapsed((c) => !c)} />
+      <SidebarLeft collapsed={collapsed} onToggle={toggleMenu} />
+      <SidebarRight collapsed={rightCollapsed} onToggle={togglePeople} />
 
       {/* content */}
       <main
         className="min-h-screen transition-[padding] duration-200 xl:pl-[var(--tpl-sidebar-cur)] xl:pr-[var(--tpl-rightbar-cur)]"
         style={{ paddingTop: "var(--tpl-header-h)", color: "var(--tpl-text)" }}
       >
-        <div className="mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5">{children}</div>
+        <div className="mx-auto w-full max-w-[1220px] px-3 py-5 sm:px-5">
+          {children}
+          <NowPlayingSpacer />
+        </div>
       </main>
 
       {/* floating + modals */}
+      <NowPlayingBar />
       <GoToTop />
       <UpdateHeaderPhoto />
       <ChoseFromMyPhoto />
       <ChatResponsive />
       <SvgSprite />
     </div>
+    </MusicPlayerProvider>
   );
 }

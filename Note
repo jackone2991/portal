@@ -8,3 +8,748 @@ https://medium.com/@codesparrow_96165/top-8-best-open-source-development-tools-3
 https://medium.com/@cosmeescobedo/how-to-find-the-slowest-query-in-your-laravel-application-76ba6de04716
 https://javascript.plainenglish.io/learning-isnt-the-key-to-becoming-a-top-developer-it-s-all-about-building-things-f59ba305bac
 https://medium.com/codex/top-5-chrome-extensions-every-developer-must-have-now-f4d80d66a221
+
+claude --resume 2b08524c-7840-495e-995c-05999aa7fb74
+
+
+================================================================================
+DOMAIN & TÀI KHOẢN  (cập nhật 2026-08-26)
+================================================================================
+
+⚠️  FILE NÀY ĐƯỢC GIT THEO DÕI và push lên git@github.com:jackone2991/portal.git
+    → KHÔNG ghi mật khẩu / khoá thật vào đây.
+    Mọi giá trị bí mật nằm trong `.env` (đã gitignore). Dưới đây chỉ ghi
+    TÊN ĐĂNG NHẬP và TÊN BIẾN chứa mật khẩu, không ghi giá trị.
+
+
+── DOMAIN ──────────────────────────────────────────────────────────────────────
+
+Tất cả sinh ra từ APP_DOMAIN=portal.localhost (Traefik route theo biến này).
+Cần chạy `make certs` (mkcert) để có HTTPS tin cậy cho *.portal.localhost.
+
+  https://portal.localhost              Frontend (Next.js)         ← đăng nhập ở đây
+  https://api.portal.localhost          API (Go, chi)
+  https://traefik.portal.localhost      Traefik dashboard          không có auth
+  https://minio.portal.localhost        MinIO console (dev)
+  https://mail.portal.localhost         Mailpit — đọc mail dev (reset mật khẩu…)
+    http://127.0.0.1:8099
+Truy cập trực tiếp / qua LAN (không qua Traefik):
+  http://localhost:3000                 Frontend dev
+  http://localhost:8080                 API dev
+  http://192.168.1.53:3000              Frontend từ điện thoại trong LAN
+  (api-client.ts tự đổi sang <host>:8080 khi hostname != portal.localhost)
+
+Đường dẫn đặc biệt:
+  /admin/users                          Quản trị người dùng + hàng đợi phê duyệt
+                                        đọc: `users:read:any` · duyệt: `users:approve`
+                                        thêm/sửa/khoá: `users:write:any` · xoá: `users:delete:any`
+  /admin/roles                          Ma trận vai trò × quyền (cần `rbac:role:read`)
+  /library/music                        Nhạc — nút "Nhập nhiều bài" có 2 cách:
+                                        chọn nhiều tệp (trình duyệt tải từng tệp,
+                                        tên lấy từ TÊN TỆP) hoặc tải .zip (worker
+                                        giải nén, đọc THẺ nhạc bằng ffprobe nên có
+                                        cả nghệ sĩ + album). Zip: tối đa 4 GB /
+                                        2000 bài / 512 MB mỗi tệp; ảnh bìa và tệp
+                                        lạ bị bỏ qua, không tính lỗi.
+                                        Ảnh bìa nhúng KHÔNG lấy lúc nhập (chậm) —
+                                        nhập xong bấm "Lấy ảnh bìa & thông tin còn
+                                        thiếu" (POST /tracks/imports/{id}/enrich,
+                                        hoặc /tracks/{id}/enrich cho 1 bài). Chỉ
+                                        điền chỗ trống, không ghi đè thứ đã có.
+                                        Năm phát hành / thể loại / bìa album chất
+                                        lượng cao: tra MusicBrainz — MẶC ĐỊNH TẮT.
+                                        Bật: MUSICBRAINZ_ENABLED=true +
+                                        MUSICBRAINZ_CONTACT=<email> rồi restart.
+                                        Tắt thì API trả 503 kèm hướng dẫn, không
+                                        phải 404. Giới hạn 1 req/giây toàn hệ
+                                        thống nên vài trăm bài mất vài phút.
+                                        Điểm khớp < 88 → ghi 'no_match', KHÔNG đoán.
+  /admin/layout                         Sửa menu trái + widget trang chủ
+                                        (cần `system:settings:write`, role admin có sẵn)
+                                        Menu: thêm/sửa/xoá/đổi thứ tự/ẩn thoải mái —
+                                        trừ đúng 1 dòng `admin-layout` (lối vào chính
+                                        màn này) không xoá được, chặn ở SQL chứ không
+                                        chỉ ẩn nút. Widget: chỉ đổi được vị trí/cột/
+                                        nhãn/quyền/ẩn-hiện, KHÔNG thêm/xoá được vì mỗi
+                                        widget là một component trong mã nguồn
+                                        (frontend .../components/widget/registry.ts).
+  /admin/queues                         Asynqmon — cần quyền `queues:read` (role admin)
+  KHÔNG có /swagger/index.html          dự án không có Swagger UI; spec chỉ là file
+                                        shared/openapi.yaml (OpenAPI 3.1, ADR-10)
+
+CORS_ALLOWED_ORIGINS hiện cho phép:
+  https://portal.localhost, http://localhost:3000, http://192.168.1.53:3000
+
+
+── TÀI KHOẢN ỨNG DỤNG ──────────────────────────────────────────────────────────
+
+KHÔNG có tài khoản seed sẵn. Không migration nào tạo user — phải tự đăng ký.
+
+  Đăng ký:  POST /api/v1/auth/register  {email, password, display_name}
+  Đăng nhập: POST /api/v1/auth/login    {email, password}
+
+⚠️  ĐĂNG KÝ PHẢI ĐƯỢC PHÊ DUYỆT (migration 0031). Tài khoản mới ở trạng thái
+    `pending`: mật khẩu đúng vẫn bị /auth/login trả 403 `account/account-pending`
+    cho tới khi ai đó có quyền `users:approve` bấm Duyệt ở /admin/users.
+    `users:approve` KHÔNG được gán cho role nào — chỉ `superadmin` có (qua `*`).
+
+    Ba trạng thái: pending → approved | rejected. Gỡ duyệt một tài khoản đang
+    đăng nhập sẽ cắt phiên ngay lập tức (token_version bump; middleware đọc
+    approval_status mỗi request, /auth/refresh cũng chặn).
+
+    Khi có người đăng ký, MỌI tài khoản có `users:approve` (mặc định = superadmin,
+    đang bật + đã duyệt) nhận thông báo: chuông trong app + email (Mailpit ở dev),
+    kèm link thẳng tới /admin/users?status=pending. Ai không muốn thì Mute loại
+    `account.registration_pending` trong tuỳ chọn thông báo.
+
+    ⚠️  RBAC hiện KHÔNG chia theo tenant — bảng roles/user_roles/permissions không
+        có org_id, `organization_memberships.role` là nhãn riêng ('owner') không
+        liên quan. Nên "superadmin của tenant" chưa tồn tại: fan-out là toàn hệ
+        thống. Muốn chia theo tenant thì phải thêm org_id vào user_roles trước.
+
+    Ai duyệt được trên máy này?
+      - DB trống hoàn toàn → người đăng ký ĐẦU TIÊN tự được duyệt + nhận superadmin.
+      - DB đã có user (trường hợp máy này) → đặt BOOTSTRAP_SUPERADMIN_EMAIL trong
+        .env rồi restart api; mỗi lần khởi động api sẽ cấp superadmin + duyệt cho
+        email đó, và im lặng nếu đã đúng. Hiện đang trỏ admin@portal.localhost.
+
+Portal tự giữ mật khẩu (Argon2id trong users.password_hash) — không có IdP,
+không SSO, không Authentik (ADR-06 đã thay thế thiết kế OIDC cũ).
+
+Token: access JWT 5 phút (cookie portal_access) + refresh 24h (portal_refresh).
+
+Role tự động khi đăng ký: `user`
+  → gán tại backend/internal/modules/account/handler/auth.go:207
+    h.Users.AssignRoleByCode(ctx, user.ID, "user")
+
+Cây role (con kế thừa toàn bộ quyền của cha), seed ở migration 0003_account_rbac:
+  guest → user → creator → editor → moderator → admin → superadmin
+
+Hệ quả cần biết:
+  - `user` CHỈ đọc được (movies:read / music:read / comics:read / stories:read).
+  - Muốn tạo nội dung (tab "Của tôi", thêm truyện/bài hát) phải là `creator`
+    trở lên — vì POST /tracks và GET /tracks/mine cần `music:write:own`.
+  - Muốn vào /admin/queues phải là `admin` (quyền queues:read, seed ở 0012).
+
+⚠️  XOÁ NGƯỜI DÙNG LÀ XOÁ LUÔN NỘI DUNG. Mọi khoá ngoại trỏ vào `users` đều
+    ON DELETE CASCADE — xoá 1 tài khoản là mất luôn assets, comics, movies,
+    music_tracks, stories, sổ bank, journal, people, organizations của họ.
+    Postgres KHÔNG chặn, không có undo. Vì vậy API bắt buộc gửi kèm
+    `confirm_email` khớp email đích (kiểm ở server, không chỉ ở UI), và UI mời
+    dùng "Khoá" trước — khoá đảo lại được, xoá thì không.
+
+    Còn 2 chốt nữa khi xoá/khoá/gỡ duyệt: không tự xoá mình, và không được bỏ
+    người CUỐI CÙNG có `users:approve` (409 `account/last-approver`) — nếu không
+    hệ thống vẫn nhận đăng ký mà vĩnh viễn không ai duyệt được.
+
+Thêm tài khoản từ /admin/users: trạng thái duyệt do QUYỀN CỦA NGƯỜI TẠO quyết
+định, không lấy từ form — người tạo có `users:approve` thì tài khoản dùng được
+ngay, không có thì vẫn là `pending`. Nếu không sẽ là đường vòng qua cửa duyệt.
+Vai trò mặc định `user`; đổi bằng nút "Vai trò" sau.
+
+Nâng quyền: dùng /admin/users → nút "Vai trò" (cần `rbac:role:assign`), hoặc
+/admin/roles để sửa ma trận quyền (cần `rbac:role:write`). Cả hai tự bump
+users.token_version nên cache quyền (rbac:perms:<userID>:v<N>) hết hạn ngay —
+KHÔNG cần UPDATE tay nữa. Bump chỉ giết access token, refresh cookie vẫn sống
+nên người dùng không bị đá ra ngoài.
+
+Hai luật chống leo thang, cả hai đều trả 403 `account/escalation`:
+  - Không cấp/gỡ được quyền mà chính mình không có (nên `admin` KHÔNG tự cấp
+    `users:approve` cho role nào được).
+  - Chỉ người có `*` mới gán/gỡ được role `superadmin`.
+Và không ai sửa được vai trò / trạng thái duyệt của chính mình (`account/self-target`).
+
+Vẫn có thể INSERT tay vào `user_roles` nếu cần (xem query/rbac.sql), nhớ bump
+users.token_version sau đó.
+
+
+── TÀI KHOẢN DỊCH VỤ (mật khẩu xem .env, KHÔNG chép vào đây) ───────────────────
+
+  Dịch vụ              User đăng nhập   Biến chứa mật khẩu
+  ───────────────────  ───────────────  ─────────────────────────────────
+  Postgres (app)       portal_app       DATABASE_URL         ← role RLS, NOSUPERUSER
+  Postgres (owner)     portal           POSTGRES_PASSWORD / BACKUP_DATABASE_URL
+  MinIO console        portal           MINIO_ROOT_PASSWORD
+  MinIO/S3 API         S3_ACCESS_KEY    S3_SECRET_KEY
+  Mailpit              —                không cần đăng nhập
+  Traefik dashboard    —                không có auth (chỉ nên mở ở local)
+
+Postgres chạy trên HOST (PG 18), không nằm trong docker-compose:
+  host.docker.internal:5432, db `portal`
+  (service postgres/pgbouncer trong docker-compose.yml đã bị comment)
+
+⚠️  DATABASE_URL đang trỏ user `portal_app` (đã cutover RLS 2026-08-25).
+    Muốn rollback thì đổi lại thành `portal` — xem docs/guides/rls-cutover.md.
+⚠️  POSTGRES_HOST=postgres trong .env là giá trị cũ còn sót, không còn dùng;
+    đường kết nối thật lấy từ DATABASE_URL.
+⚠️  COOKIE_SECURE=false đang bật để test bằng điện thoại qua http trong LAN.
+    KHÔNG được để giá trị này khi lên production.
+
+
+================================================================================
+KẾ HOẠCH: CANONICAL HOÁ HỆ TÀI LIỆU  (chốt 2026-09-11 — CHƯA THỰC THI)
+================================================================================
+
+Nguồn: phiên grilling 2026-09-11, 37 quyết định đã chốt. Chưa sửa file nào.
+Nhánh dự kiến: `docs/architecture-cleanup`, tách từ **`music`** (KHÔNG tách từ
+`main`: kế hoạch phải sửa `shared/openapi.yaml`, mà `music` đã viết lại 4.719
+dòng của chính file đó — tách từ main là tự tạo conflict trong file có CI gate
+kèm 2 file generated đi theo).
+
+Số liệu nền: agent đã quét 11 ADR → **79 phát biểu sai**, không ADR nào còn
+đúng hoàn toàn. Quét link toàn repo (trừ template-main) → **69 link tương đối
+vỡ**.
+
+
+── ⚠️ HAI ĐIỂM PHẢI KIỂM TRƯỚC KHI LÀM ─────────────────────────────────────────
+
+[1] RLS: hai nguồn nói ngược nhau, và `.env` không có trong checkout này.
+
+    Note dòng 181 nói: DATABASE_URL trỏ `portal_app`, "đã cutover RLS 2026-08-25".
+    Bốn nguồn khác nói ngược:
+      - `.env.example:29`  DATABASE_URL mặc định là `portal` (superuser);
+                           `portal_app` chỉ là dòng comment ở `:41`
+      - `.env.example:36-40`  "tenant isolation is decorative"
+      - `platform/db/db.go:7-8`  "unenforced because the app connects as a superuser"
+      - header migration `0019`/`0020`  ghi INERT
+      - `docs/guides/rls-cutover.md:100-103`  "Steps 5–6 were NOT run"
+    Và ADR-07:3,11-12 khẳng định "RLS is enforced, not inert".
+
+    Đã kiểm 2026-09-11: **`.env` KHÔNG tồn tại trong repo này** → không xác minh
+    được máy này đang chạy role nào.
+
+    → Việc cần làm, theo thứ tự:
+      a) Mở `.env` trên máy đang chạy, xem DATABASE_URL dùng `portal` hay `portal_app`.
+      b) Dù kết quả thế nào: **`.env.example` vẫn mặc định `portal`**, nghĩa là
+         MỌI môi trường mới (`make up` tự tạo .env từ .env.example) đều nhận RLS
+         ở trạng thái decorative. Đây là phát hiện độc lập với câu (a) và cần sửa.
+      c) Sửa đúng một nguồn thành sự thật, 4 nguồn còn lại trỏ về nó — đừng để
+         5 file tự khai trạng thái RLS.
+    → P0 trong backlog mới. KHÔNG tự đổi DATABASE_URL trong phiên dọn tài liệu:
+      đổi role kết nối có thể làm sập API nếu query nào đang dựa vào quyền
+      superuser, cần chạy thử trên dữ liệu thật.
+
+[2] Credential đã bị commit.
+
+    `docs/testing/SESSION-HANDOFF-2026-07-12.md` (148 dòng) tự khai ở header:
+    "Local working note — NOT committed (contains dev test creds)" — nhưng nó ĐÃ
+    được commit. Có password (:38), secrets (:36), token (:46/:50/:52).
+    Đã kiểm: token 16 ký tự ở :38 KHÔNG xuất hiện ở file nào khác trong repo
+    (không có trong .env.example, không ở đâu khác).
+    → Xoá file. Rotate nếu nó còn hiệu lực trên host Postgres cluster (chỉ người
+      vận hành biết). KHÔNG purge git history: chưa rotate thì purge là an toàn
+      giả, mà rotate rồi thì bản trong history thành vô hại.
+    → Một dòng P0 trong backlog: "verify/rotate dev DB credential leaked in f11cf3f".
+
+
+── 6 NGUYÊN TẮC SINH RA MỌI VIỆC CÒN LẠI ───────────────────────────────────────
+
+1. Mỗi sự thật có đúng MỘT chủ sở hữu sống:
+     `CLAUDE.md`          → trạng thái triển khai
+     `docs/README.md`     → định tuyến genre (thứ này đặt ở thư mục nào)
+     `docs/STYLE.md`      → bút pháp (status header, naming, linking, formatting)
+     `backend/MODULES.md` → hợp đồng module
+2. Không archive-in-place. Không maintain nữa → XOÁ, và dẫn commit đã xoá.
+   Git history là archive.
+3. ADR KHÔNG còn bất biến. Sửa tại chỗ theo tầng:
+     - mệnh đề SỰ THẬT (mô tả hiện trạng, đường dẫn, action item) → viết lại
+     - "Options considered" + "Trade-offs" + tường thuật quyết định → GIỮ NGUYÊN
+4. Dấu hiệu duy nhất cho "đã đối chiếu với code" là trường đã có trong
+   STYLE.md:16-18 → `**Last verified:** YYYY-MM-DD`. Không phát minh changelog mới.
+5. Số đếm trong văn xuôi bị thay bằng lệnh sinh ra nó (đã là luật STYLE.md:38-40).
+6. `product/analysis/` vẫn BẤT BIẾN — audit chỉ được đánh nhãn, không sửa thân.
+
+
+── CHẶNG 1: CƠ HỌC ─────────────────────────────────────────────────────────────
+
+1.1  Commit riêng, đi đầu: xoá `docs/testing/SESSION-HANDOFF-2026-07-12.md`.
+
+1.2  Viết `docs/adr/11-docs-canonicalisation.md` (số kế tiếp là 11 vì `00` nghỉ
+     vĩnh viễn — xem 2.2). Ghi lại: bỏ tính bất biến của ADR, chính sách
+     xoá-thay-archive, chủ sở hữu từng loại sự thật, `Last verified` làm dấu.
+     PHẢI viết TRƯỚC Chặng 2, vì Chặng 2 thi hành đúng chính sách file này tuyên bố.
+     Đây cũng là lớp "vì sao" duy nhất còn lại sau khi 11 ADR bị viết lại.
+
+1.3  `docs/README.md`:
+       + thêm hàng map cho `testing/` và `operations/` (đang tồn tại trên đĩa mà
+         không được khai báo ở đâu — kể cả ADR-09)
+       + 3 genre rule mới:
+           testing/    → "A test plan, a per-spec test-case document, or a dated test run."
+           operations/ → "A runbook for operating the deployed system."
+           analysis/   → "A dated point-in-time audit. Never updated; superseded by a newer one."
+         (guides/ = "A how-to for working on the repo" — ranh giới với operations/)
+       + đổi genre rule archive → "Anything no longer maintained → DELETE it;
+         git history is the archive" + quy ước ghi commit đã xoá
+       + dòng 8-14 co lại còn 1 câu trỏ `/CLAUDE.md` § Current status
+       + thêm vào Reading order: đọc audit mới nhất trong `analysis/` TRƯỚC khi
+         tin bất cứ tài liệu nào khác
+       + xoá link `archive/` (đang vỡ)
+       + sửa "ADRs (00–10)" → 01–11
+
+1.4  `docs/STYLE.md`:
+       - XOÁ hẳn §Genre discipline (dòng 43-47) → trùng và lệch với docs/README.md
+         (nó liệt kê 6 genre, README có 7 và sắp thành 10). Giữ lại câu giá trị
+         nhất bằng cách chuyển ý sang README hoặc §ADR shape: "nếu một spec bắt
+         đầu tích luỹ rationale có alternatives thì tách ADR ra".
+       - §Language (dòng 7-8): xoá khẳng định `docs/archive/vi-2026-07/`
+       - §Naming (dòng 31-32): xoá exception cho archive folder date-stamped
+       - §Lifecycle (dòng 67-69): "move to archive/" → "delete + cite commit"
+       - §ADR shape (dòng 49-53): bỏ "immutable once accepted", thay bằng chính
+         sách canonical + `Last verified`
+       - dòng 21-22: xoá ví dụ "see MILESTONE_CHECKS for status" (file đã chết —
+         audit 2026-08-25 liệt kê 5 chỗ và BỎ SÓT chỗ này)
+
+1.5  `CLAUDE.md` (giấy phép: sửa số đếm + đường dẫn chết; diễn giải thì hỏi):
+       - xoá khẳng định archive `docs/archive/vi-2026-07/` "never update it"
+       - xoá ghi chú đã sai: "docs/README.md still links it (stale; ignore)" —
+         docs/README.md KHÔNG còn link nó như tracker sống
+       - "14 `_test.go` files" → thay bằng lệnh `find backend -name '*_test.go' | wc -l`
+         (thực tế 2026-09-11: **30**). Giữ danh sách module có test.
+       - module count: dòng 57 "(13, all wired)", dòng 78 "all 12 modules",
+         dòng 165 "All 12 modules" → thực tế trên đĩa **14**
+         (account bank comic journal layout media movie music notify ops people
+         social story tenant). Thay số bằng lệnh, giữ danh sách tên.
+       - thêm cảnh báo RLS theo kết quả kiểm ở mục [1]
+
+1.6  `docs/reference/README.md:12` + `docs/product/feature-inventory.md:3`:
+     bỏ dẫn `MILESTONE_CHECKS.md`.
+
+1.7  `docs/product/analysis/facebook-comparison.md`: KHÔNG sửa thân. Thêm
+     `**Last verified:** 2026-09-11` + 1 dòng ghi `MILESTONE_CHECKS.md` đã bị xoá
+     ở `f11cf3f`. (Đánh dấu, không phải sửa — citation vẫn chết, chỉ là có nhãn.)
+
+1.8  Di chuyển file (dùng `git mv`) + sửa TẤT CẢ inbound ref:
+       `docs/guides/backup-restore.md` → `docs/operations/backup-restore.md`
+         inbound (5): `backend/internal/modules/ops/README.md:51`,
+                      `backend/scripts/restore-drill.sh:3`,
+                      `docs/product/specs/SPEC-09-platform-ops.md:143`,
+                      `docs/testing/TEST-CASES-SPEC-09-ops.md:47`,
+                      `CLAUDE.md:190`
+       `docs/guides/rls-cutover.md` → `docs/operations/rls-cutover.md`
+         inbound (3): `backend/internal/modules/tenant/README.md:33`,
+                      `shared/openapi.yaml:3508`  ← CI GATE
+                      `docs/adr/07-tenancy-rls-model.md:12`
+         → sửa openapi.yaml thì PHẢI chạy `make openapi` và commit
+           `api.gen.go` + `types.gen.ts`, nếu không job `openapi` fail.
+       `docs/testing/TRACEABILITY-MATRIX.md` → `docs/reference/TRACEABILITY-MATRIX.md`
+         inbound (3): `docs/testing/README.md:14`, `docs/testing/TEST-PLAN.md:19`,
+                      `CLAUDE.md:26`
+     (sau khi chuyển, `guides/` chỉ còn `getting-started.md`, `operations/` có 3 file)
+
+1.9  Sửa ~69 link tương đối vỡ. Nhóm lớn nhất là MỘT lỗi cơ học lặp lại: header
+     **Affects** của ADR-03:6, ADR-04:6, ADR-05:6, ADR-06:6 dùng `../../../` —
+     độ sâu đúng từ `docs/adr/` là `../../`. Các ca khác:
+       `docs/adr/09:30,61,84` → `../MIGRATION.md`  — file ĐÃ TỪNG CÓ, xoá ở `f11cf3f`,
+                                không có kế thừa → bỏ link, giữ tên trong backtick,
+                                dẫn commit
+       `docs/adr/10:6`        → `../product/delivery-plan.md` — đã xoá ở `efb8a70`;
+                                kiểm `backlog.md` có mục "Sprint 1 §A" không:
+                                CÓ → trỏ lại, KHÔNG → xử như MIGRATION.md
+       `docs/adr/07:22`       → `../feature.md` — CHƯA TỪNG TỒN TẠI; tài liệu thật là
+                                `../product/feature-inventory.md` → trỏ lại.
+                                5 chỗ nhắc plain-text `feature.md §2`/`§18`: GIỮ
+                                NGUYÊN (dịch `§N` → `[D-NN]` là đoán ý ADR, đã loại)
+       `docs/adr/08`          → các path in-text viết thiếu `../`, từ `docs/adr/`
+                                resolve thành `docs/adr/product/…`
+       `backend/internal/modules/account/README.md` → `doc/en/architecture/06-…`
+                                (cây `doc/en` đã nghỉ) → trỏ `docs/adr/06-local-auth-model.md`
+     Quy tắc chung: có kế thừa → trỏ lại; không có → bỏ link + dẫn commit đã xoá.
+
+1.10 CI job MỚI, dạng CHẶN: link-check. Job riêng (KHÔNG nhồi vào job `lint` —
+     job đó là depguard/module-boundary cho Go). ~20 dòng shell, không cần mạng,
+     chỉ link tương đối, không kiểm anchor, loại trừ `template-main/`.
+     Bật SAU khi 1.9 xong (bật trước là fail ngay 69 link).
+     Repo hiện KHÔNG có công cụ markdown nào (không lychee/markdownlint/…).
+     CI hiện có 4 job: backend, lint, openapi, frontend.
+
+     → DỪNG, báo số link cuối, rồi mới sang Chặng 2.
+
+
+── CHẶNG 2: 79 MỆNH ĐỀ SAI TRONG 11 ADR (checkpoint) ───────────────────────────
+
+Cắt theo tầng ở nguyên tắc 3. Làm **ADR-10 và ADR-03 TRƯỚC** (2 file nặng nhất),
+DỪNG để review, rồi mới chạy 9 file còn lại — ranh giới "sự thật" vs "tường
+thuật quyết định" không máy móc, cắt quá tay thì sửa 2 file dễ hơn sửa 11.
+
+  ADR    Sai   Ghi chú
+  ────── ───── ────────────────────────────────────────────────────────────────
+  10     12    Nặng nhất. "No generated code exists / api.gen.go chưa từng được
+               generate" (thực: đã commit, 10.367 dòng) · "~730 lines, 12 paths"
+               (thực: 5.137 dòng, 111 path) · "All 12 handlers hand-written
+               (6 account, 6 media)" · "CI does not gate drift" (đã gate) ·
+               "the contract already lies / writeErr" (đã đóng 2026-08-27) ·
+               6 action item `[ ]` mà phần lớn đã xong
+  03     11    Sai từ dòng đầu. "as-built: postgres, pgbouncer" (đã comment out
+               2026-08-21, Postgres chạy trên host PG18) · "mailpit never shipped"
+               (đang chạy, docker-compose.yml:187-197) · thiếu `scraper` ·
+               "profiles observability/live/calls off" (KHÔNG có `profiles:` nào
+               trong compose, các service đó không tồn tại) · "uploads bypass
+               MinIO → R2" (thực: MinIO bind-mount) · "deploy script is one
+               docker compose up" (không có script) · action item #7 "no env knob
+               for concurrency" (có: IMAGE_CONCURRENCY, cmd/worker/main.go:374)
+  00     11    → xem 2.2, file này KHÔNG canonical hoá mà CHUYỂN ĐI
+  09      9    `MIGRATION.md` (bản mapping của chính nó) đã bị xoá · archive ·
+               MILESTONE_CHECKS ×3 · cây khai `product/checklist` (không có) ·
+               Status vẫn "proposed" trong khi restructure đã ship · dòng 43 tự
+               đặt luật bất biến mà ADR-07 đã vi phạm sẵn
+  07      7    Headline "RLS is enforced, not inert" → xem mục [1] · "no tenant_id
+               column anywhere today" (0020 thêm vào 17 bảng) · "connects direct
+               to postgres:5432" · "prod pools through PgBouncer" (đã xoá hẳn) ·
+               "platform/db/ is empty today" (db.go có NewPool/BeginTenantScope/…) ·
+               step 1,4,8 `[ ]` mà đã xong (8 test pass trong platform/db/rls_test.go)
+  05      6    "0001…0007 (v7 applied)" (thực: 0001–0042, 84 file) · "repository/
+               dirs are empty" (mỗi module 5–10 file) · "cmd/api still has TODO
+               mount OpenAPI handlers" (main.go mount 14 module) · "CI landed with
+               sqlc-drift" (không có) · "accountMod.RegisterTasks" (account không
+               có method này)
+  01      5    "openapi drifts: missing /auth/register, stale /auth/callback"
+               (register có ở openapi.yaml:121; không có path /auth/callback) ·
+               "CI landed with sqlc-drift" · "Everything in Phases 1,3-12 deferred.
+               No tenants/movies/music/stories/comics/bank/social/notifications"
+               (tất cả đã ship)
+  08      5    Nội dung ĐÚNG, chỉ Status + toàn bộ checkbox cũ: Status vẫn
+               "proposed", 4 action item `[ ]` đều đã xong
+  04      5    "MinIO removed only in docker-compose.prod.yml" (file đó KHÔNG tồn
+               tại) · "compose loses one service" (thực +1: minio + minio-setup) ·
+               "org/<tid> prefix deferred until tenancy lands" (tenancy đã land,
+               key vẫn chưa prefix — media/service.go:77,280) · "(docs/operations/
+               does not exist yet)" (đã có)
+  02      4    3/4 chỉ là rename `archivetech.md` → `docs/architecture/deferred/
+               access-policies.md` · 1 điều kiện bị đảo: "khi xây admin UI thì
+               màn hình là policies+groups, không phải roles" — admin UI roles/
+               permissions ĐÃ ship
+  06      4    Chính xác nhất. **Giả thuyết TTL 30d của tôi SAI** — ADR-06 ghi
+               `REFRESH_TOKEN_TTL=24h`, khớp `config.go:37-38`. Các claim OIDC/
+               Argon2id/cookie đều đúng. 4 cái sai đều ngoại biên (openapi drift
+               claim, password-reset "chưa build" — đã ship ở 0010)
+
+  2.1  4 class xuyên suốt, sửa một lượt:
+         - `MILESTONE_CHECKS.md` là "living tracker": ADR-00×3, 01×2, 05×3, 09×3
+           + `STYLE.md:21-22` + `reference/README.md:12` + `feature-inventory.md:3`
+         - "CI gates **sqlc** drift": ADR-01:11, ADR-05:14, ADR-10:30 — CHƯA BAO
+           GIỜ đúng. Chỉ OpenAPI codegen bị drift-gate; sqlc output không commit
+           (.gitignore:32)
+         - "postgres + pgbouncer chạy trong compose": ADR-00:77, ADR-03:10/14/42-46,
+           ADR-07:31/68
+         - link `../../../` trong header **Affects**: ADR-03:6, 04:6, 05:6, 06:6
+       Hai ADR còn Status "proposed" dù đã ship: **08** và **09** → flip.
+
+  2.2  ADR-00 KHÔNG phải một ADR — nó là "architecture **review**", cả 11 phát
+       biểu sai đều là mô tả hiện trạng, nó không quyết định gì. Theo genre rule
+       mới, dated point-in-time audit thuộc `analysis/`.
+       → `git mv docs/adr/00-architecture-review.md
+             docs/product/analysis/architecture-review-2026-07.md`
+         (commit đầu tiên của file: 2026-07-07)
+         `**Status:** historical`, **thân giữ nguyên văn** (audit bất biến),
+         số `00` trong `adr/` NGHỈ VĨNH VIỄN (STYLE.md: số không tái sử dụng).
+
+  2.3  ADR-07 + `CLAUDE.md`: nói đúng trạng thái RLS theo kết quả kiểm ở mục [1].
+
+
+── CHẶNG 3 ─────────────────────────────────────────────────────────────────────
+
+3.1  `TRACEABILITY-MATRIX.md` (đã chuyển sang `reference/` ở 1.8):
+     9 bảng, cột `Req │ Summary │ Test cases │ Pri │ Cov │ Result`, **47 dòng
+     yêu cầu**. Hiện Cov = 100% ✅ toàn bộ, không có ⚠/✖, Result rỗng, và 436
+     `TC-` id KHÔNG map tới một `_test.go` nào.
+     → Đánh lại Cov theo bằng chứng: ✅ chỉ khi một `_test.go` cụ thể chứng minh
+       được yêu cầu · ⚠ module có test nhưng không phủ yêu cầu này · ✖ module
+       không có test.
+     → THÊM CỘT `Evidence` ghi `file:func`. Đây là phần làm nó không mục lại —
+       một dấu ✅ không kèm `file:func` chính là thứ đã tạo ra 47 dòng 100% ✅.
+     → Đối chiếu với 30 file `_test.go` thực tế. Module CÓ test thật: account
+       (rbac/password/reset/handler), bank, comic, journal, media, notify, ops
+       (retention/state), people, social, story, tenant/middleware, platform
+       (db/rls ×4, events, server, storage).
+     → Banner `⚠️ (added 2026-08-25)` GIỮ LẠI (nó là ghi chú có ngày, và nó đã
+       nói đúng); thêm `Last verified` mới.
+
+3.2  `docs/product/backlog.md` hiện là file ARCHIVED (banner của chính nó:
+     "do not plan from this file", 2026-08-25) nhưng vẫn chiếm cái TÊN mà
+     `CLAUDE.md` và `docs/README.md` giới thiệu là "backlog".
+     → Xoá nó (git history là archive, dẫn commit), viết `backlog.md` MỚI,
+       `**Status:** current`, nội dung từ triage TOÀN BỘ audit
+       `analysis/remaining-work-2026-08-25.md` — một dòng cho mỗi đầu mục (không
+       tách tới sub-bullet), phần tài liệu đánh dấu do phiên này đóng.
+     → P0 dẫn đầu: (1) RLS — mục [1]; (2) verify/rotate cred — mục [2].
+
+3.3  `backend/MODULES.md` §8: `grep -ni openapi backend/MODULES.md` → **0 hit**,
+     trong khi ADR-10 (dòng 4,12,83) và `CLAUDE.md` đều khẳng định file này nhắc
+     lại quy tắc "OpenAPI is contract". Checklist 7 bước cho module mới KHÔNG có
+     bước openapi → một module mới hôm nay đi hết checklist rồi vẫn fail CI.
+     → Thêm quy tắc + bước openapi vào §8 (đúng action item #6 của ADR-10, đang `[ ]`).
+     → Làm đúng MỘT file thì hai tài liệu kia thành đúng, rẻ hơn sửa hai file để
+       thừa nhận một thiếu sót rồi vẫn để module mới sập CI.
+
+3.4  Quy tắc mới cho `analysis/` (để audit không bị bỏ quên lần nữa): mỗi audit
+     khi được nhận phải sinh ra VIỆC (dòng trong `backlog.md`) hoặc bị ĐÓNG kèm
+     lý do; thân audit vẫn never-updated. Lý do quy tắc này tồn tại: audit
+     2026-08-25 đã nêu đúng gần hết các lỗi trên, kèm số dòng, rồi nằm im 17 ngày
+     trong một thư mục mà cả `docs/README.md` lẫn ADR-09 đều không khai báo.
+
+
+── KHÔNG LÀM (đã loại có chủ đích) ─────────────────────────────────────────────
+
+  · KHÔNG cutover RLS, KHÔNG đổi `DATABASE_URL` trong phiên dọn tài liệu
+  · KHÔNG purge git history, KHÔNG rotate cred thay người vận hành
+  · KHÔNG viết `CONTEXT.md` — genre rules trong `docs/README.md` CHÍNH LÀ glossary
+    của domain tài liệu; thêm glossary thứ tư trong lúc đang sửa lệch giữa ba cái
+    là tự đánh mình
+  · KHÔNG dịch trích dẫn `§N` → `[D-NN]` trong thân ADR (là đoán ý, không phải sửa)
+  · KHÔNG sửa cột Cov thành "coverage thật" ngoài phạm vi bằng chứng test có sẵn
+  · KHÔNG chạm `template-main/` (reference material)
+  · KHÔNG tạo README.md cho `guides/` và `operations/` chỉ để thoả một linter
+    (1 và 3 file — index không thêm giá trị)
+  · KHÔNG viết ADR riêng cho việc "status truth chuyển từ file sang code" —
+    đã quyết ở `f11cf3f` 2 tháng trước, viết bây giờ là khảo cổ
+
+
+── PHỤ LỤC: DỮ KIỆN ĐÃ KIỂM CHỨNG 2026-09-11 ───────────────────────────────────
+
+  · `docs/archive/` KHÔNG tồn tại — xoá ở `f11cf3f` (2026-07-19), 33 file /
+    8.200 dòng. Vẫn bị khẳng định là "frozen, never update" ở 4 nơi:
+    `docs/README.md:17` (link vỡ), `CLAUDE.md`, `ADR-09:34-35`, `STYLE.md:7-8`
+  · `MILESTONE_CHECKS.md` xoá cùng commit đó
+  · `docs/MIGRATION.md` từng tồn tại, xoá ở `f11cf3f`
+  · `docs/product/delivery-plan.md` từng tồn tại, xoá ở `efb8a70`
+  · `docs/feature.md` và `docs/product/checklist` CHƯA TỪNG tồn tại
+  · docs/ có 7 mục trên đĩa: adr, architecture, guides, operations, product,
+    reference, testing. ADR-09 khai 5 + archive. `docs/README.md` map 5 hàng.
+    `guides/` và `operations/` là 2 mục duy nhất không có README.md
+  · test `_test.go` thực tế: **30**  (CLAUDE.md nói 14 · matrix banner nói 20)
+  · module trên đĩa: **14**  (CLAUDE.md nói 13 / 12 / 12)
+  · `STYLE.md:49-53` vốn đã gắn nhãn `(binding)`: "ADRs are immutable — correct
+    them by a dated addendum note" → luật này đã bị ADR-07 vi phạm sẵn trước
+    phiên này (ADR-07:6-8 "used to read … Both were false"), nên Chặng 2 không
+    phá vỡ một luật đang sống mà chính thức hoá một thực hành đã có
+  · `STYLE.md:38-40` vốn đã cấm: "write it as verifiable rather than asserting a
+    number that will rot" → các con số 14/13/12 đang vi phạm luật đã viết
+
+
+── NHỮNG QUYẾT ĐỊNH BỊ ĐẢO TRONG PHIÊN (để không có gì ngầm định) ──────────────
+
+  · "giữ nguyên văn thân ADR-09, sửa bằng Update note"  → bị thay bằng canonical
+    hoá tại chỗ theo tầng
+  · cơ chế "dated update note"  → bị thay bằng trường `Last verified` đã có sẵn
+  · giả thuyết "ADR-06 ghi REFRESH_TTL 30d"  → SAI, ADR-06 ghi 24h và đúng
+  · "audit 2026-08-25 liệt kê 5 chỗ MILESTONE_CHECKS"  → thiếu `STYLE.md`
+  · "RLS inert" (kết luận của agent)  → chưa kết luận được, xem mục [1]
+
+
+
+
+
+
+
+
+# SPEC-10 — Docs Canonicalisation: retire 79 stale assertions and gate the corpus in CI
+
+**Status:** ready to build, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-09-11
+**Module:** none — the documentation corpus, plus one new CI job and one new check script
+**Depends on:** nothing hard. Branches from the current feature branch, not the default branch (see Implementation Decisions)
+**Upstream:** design session 2026-09-11 (37 settled decisions); per-file worksheet in the repo's local working note
+**Refs:** [ADR-09](../../adr/09-docs-architecture.md) (the tree this supersedes in part), ADR-11 (written *by* this spec, stage one), [STYLE.md](../../STYLE.md) (§ADR shape is amended), [analysis/remaining-work-2026-08-25.md](../analysis/remaining-work-2026-08-25.md) (prior audit, triaged by stage three)
+**Downstream consumers:** every agent session (the project instructions are loaded unconditionally); CI; anyone onboarding
+
+## Problem Statement
+
+Whoever opens this repository — a human contributor, or an agent loading the project instructions at the start of every session — is reading a documentation corpus that asserts things the code contradicts, in enough places that no document can be trusted without re-deriving it from the code first.
+
+Measured against the working tree on 2026-09-11:
+
+- **79 false statements across the 11 architecture decision records.** No ADR is entirely accurate. The worst three are the OpenAPI-direction record (12), the single-VPS topology record (11, wrong from its first line) and the original architecture review (11). Examples: the topology record lists Postgres and PgBouncer as "as-built" compose services (both commented out since 2026-08-21; Postgres runs on the host cluster) and states that Mailpit "never shipped" (it is a live service); the OpenAPI record's Context says "no generated code exists" and describes the spec as "~730 lines, 12 paths" (the generated code is committed and the spec is 5,137 lines across 111 paths).
+- **69 broken relative markdown links.** The dominant class is a single mechanical error repeated across four decision records, left behind when the docs tree was restructured and files moved up two directory levels without their links following.
+- **Three different counts of the repo's test files in three documents** (14, 20; actual 30), and **three different module counts inside one document** (13, 12, 12; actual 14) — in the file that is loaded into every agent session unconditionally.
+- **Four documents assert an archive directory that was deleted two months ago**, one of them instructing the reader never to edit a path that no longer exists.
+- **A deleted status-tracker file is still cited as authoritative in eight live documents**, including the style guide, which offers citing it as the *exemplary* way to describe implementation state.
+- **Two decision records still carry `Status: proposed`** while the decisions they describe have demonstrably shipped.
+- **The documentation index declares five sections; seven exist on disk.** The two undeclared ones hold the entire test corpus and the operational runbooks.
+
+The cost is not cosmetic. A reader who follows the documentation configures the wrong things. An agent that trusts the project instructions' counts, or the decision records' topology descriptions, plans against a system that does not exist. And the corpus has already proved it can absorb a correct diagnosis without acting on it: a comprehensive, accurate, line-referenced audit was written on 2026-08-25 and then sat unread for 17 days — in a directory that neither the documentation index nor the docs-architecture decision record declares exists.
+
+## Solution
+
+Make every living document true, make every immutable document honestly labelled, and put a blocking CI gate under the two classes of defect that generated most of the damage — so that the corpus cannot silently rot back.
+
+Six principles generate all of the work:
+
+1. **One owner per fact.** The project instructions own implementation status; the documentation index owns genre-to-directory routing; the style guide owns how to write a document; the module contract owns module conventions. No fact is explained twice.
+2. **No archive-in-place.** A document that is no longer maintained is deleted, and the retirement note cites the deleting commit. Git history is the archive.
+3. **Decision records are no longer immutable**, but they are corrected in tiers: statements of *fact* (current-state descriptions, paths, action-item checkboxes) are rewritten; the decision narrative, "Options considered" and "Trade-offs" are preserved. This reverses a rule the style guide marks `binding` — a rule that had already been violated in practice by one record being rewritten in place.
+4. **The only marker for "checked against the code" is the `Last verified` date field** that the style guide already defines. No new changelog mechanism.
+5. **A count in prose is replaced by the command that produces it** — already mandated by the style guide's own linking rules, and violated by the counts above.
+6. **Point-in-time audits stay immutable.** An audit is labelled, never edited; and from now on an accepted audit must produce work items or be closed with a reason.
+
+The work is sequenced in three stages with a review checkpoint after the mechanical stage, because the tiered rewrite in stage two is a judgement call on every one of 79 statements.
+
+## User Stories
+
+1. As an agent starting a session, I want the project instructions' factual claims to be true, so that I plan against the system that exists rather than the one described.
+2. As an agent starting a session, I want counts in the instructions replaced by the commands that produce them, so that a number can never be stale.
+3. As an agent asked to add a module, I want the module contract's checklist to be complete, so that following it does not leave me failing CI.
+4. As an agent exploring an unfamiliar area, I want the documentation index to list every section that exists, so that I do not miss the directory holding the test corpus or the runbooks.
+5. As an agent reading a decision record, I want its current-state descriptions to match the code, so that I do not implement against a topology that was dismantled.
+6. As an agent reading a decision record, I want the decision narrative and rejected alternatives preserved, so that I can tell why a path was not taken and avoid re-proposing it.
+7. As an agent following a link in any document, I want the link to resolve, so that a citation is a path to evidence rather than a dead end.
+8. As a new contributor, I want a single reading order that starts with what is true, so that my first hour is not spent discovering that documents disagree.
+9. As a new contributor, I want the most recent audit surfaced in the reading order, so that I read the corpus's own list of known lies before trusting any part of it.
+10. As a new contributor, I want the genre rules to tell me where a document belongs, so that I do not put a runbook in the how-to section.
+11. As a maintainer, I want every document to have exactly one section it could belong to, so that routing decisions stop being re-litigated.
+12. As a maintainer, I want retired documents deleted rather than archived in place, so that a stale document cannot be found and mistaken for a live one.
+13. As a maintainer, I want the retirement convention to cite the deleting commit, so that "git history is the archive" is findable rather than theoretical.
+14. As a maintainer, I want the backlog file to be the live backlog, so that the name the instructions advertise does not open onto a document banner-marked "do not plan from this file".
+15. As a maintainer, I want the 2026-08-25 audit triaged into work items, so that an accurate diagnosis produces action instead of sitting unread for a second month.
+16. As a maintainer, I want a standing rule that an accepted audit must generate work or be closed with a reason, so that this failure mode does not recur.
+17. As a maintainer, I want a blocking CI gate on link integrity, so that the 69 links I fix by hand stay fixed.
+18. As a maintainer, I want a blocking CI gate on retired names, so that the class of defect that produced most of the 79 false statements — plain-prose references to deleted things — cannot be reintroduced.
+19. As a maintainer, I want the docs gate to be a separate CI job from the Go lint job, so that a documentation failure is legible as one and does not hide inside module-boundary enforcement.
+20. As a reviewer, I want the two-tier rewrite applied consistently, so that I can tell at review time which sentences were retrofitted and which are original.
+21. As a reviewer, I want the tiered rewrite demonstrated on the two worst records first, so that I can correct the cut line before it is applied to nine more files.
+22. As a future reader, I want each canonicalised record to carry the date it was last checked against the code, so that I know how much to trust it without re-deriving it.
+23. As a future reader, I want a decision record explaining why records in this repo are corrected in place, so that the reversal of the immutability rule is not a mystery.
+24. As a future reader of an archived audit, I want it labelled rather than edited, so that it remains a faithful snapshot of what was believed at the time.
+25. As a reader of the traceability matrix, I want the coverage column to reflect real tests, so that "100% covered" stops meaning "nobody has run anything".
+26. As a reader of the traceability matrix, I want each covered row to name the test that covers it, so that I can verify the claim without re-auditing the suite.
+27. As a maintainer of the traceability matrix, I want a CI assertion that every named test exists and every covered row names one, so that the matrix cannot drift back to uniform green.
+28. As an operator, I want the runbooks in the operations section rather than the contributor how-to section, so that operating the deployed system and working on the repo are not the same shelf.
+29. As an operator, I want the record of the original architecture review moved to the audit section, so that a point-in-time review is not mistaken for a standing decision.
+30. As an operator, I want the true state of row-level-security enforcement stated in exactly one place, so that five documents cannot disagree about whether tenant isolation is active.
+31. As an operator, I want the environment template to seed a configuration whose security posture matches what the decision records claim, so that a new environment does not silently come up with decorative isolation.
+32. As an operator, I want the committed development credential removed and rotated, so that a secret in a public repository stops being a live secret.
+33. As a security-conscious maintainer, I want the precise location of that credential kept out of anything that gets pushed, so that remediation does not advertise the problem further.
+34. As an agent regenerating the API contract, I want the existing codegen drift gate to cover the contract edit this work requires, so that a documentation change cannot leave generated code stale.
+35. As the developer, I want this work split into tickets with declared blocking edges, so that I can pick it up across several sessions without re-deriving the plan.
+
+## Implementation Decisions
+
+**Branching.** The work branches from the current feature branch, not from the default branch. The contract file that must be edited has already been rewritten by ~4,700 lines on the feature branch; branching from the default branch would guarantee a conflict in a CI-gated file plus its two generated artifacts.
+
+**Commit shape.** The removal of the committed credential is the first commit and stands alone, so that it can be pushed immediately and independently of the rest.
+
+**Stage one — mechanical.** A new decision record is written *first*, declaring the canonicalisation policy that stage two then executes: the end of record immutability, the delete-don't-archive retirement policy, the one-owner-per-fact assignment, and `Last verified` as the freshness marker. It takes the next free number; the retired number of the relocated architecture review is not reused. Then: the documentation index gains the two undeclared sections, three new genre rules (test document, runbook, audit), the delete-don't-archive rule, and a reading-order entry pointing at the newest audit; its duplicated status-signal prose collapses to a single pointer. The style guide loses its genre list entirely (it duplicated and diverged from the index's), and its language, naming, lifecycle and record-shape sections are corrected. The project instructions lose two false claims and have both count assertions replaced by commands. Two further documents drop the deleted-tracker citation. The archived audit is labelled, not edited. Three documents are relocated to the sections their genre now assigns them, and every inbound reference is repointed — including one inside the API contract, which requires running codegen and committing the regenerated artifacts.
+
+**Stage two — the 79 statements, with a checkpoint.** The two worst records are canonicalised first and reviewed before the remaining nine are touched, because the boundary between "statement of fact" and "decision narrative" is a judgement call rather than a rule. Four cross-cutting classes are fixed in one sweep each: the deleted status tracker, the claim that CI gates sqlc drift (it never has — only the OpenAPI codegen is drift-gated), the claim that Postgres and PgBouncer run in compose, and a directory-depth error in four records' reference headers. Two records have their status flipped from proposed to accepted.
+
+**The original architecture review is reclassified, not rewritten.** It is a point-in-time review, not a decision, which is why all eleven of its false statements are current-state descriptions. It moves to the audit section with a historical status and its body preserved verbatim, and its number is permanently retired.
+
+**Row-level security is documented, not changed.** Five sources disagree about whether tenant isolation is enforced; the live environment file is absent from this checkout, so the question cannot be settled from the repo. One finding stands regardless: the environment template seeds a superuser connection, so every newly created environment gets non-enforcing RLS whatever the current machine does. This work states the true position in one place and files the cutover as a P0 work item; it does not change the database role or run the cutover, because changing the connecting role can break queries that depend on superuser rights and needs to be exercised against real data.
+
+**Stage three.** The traceability matrix's coverage column is rebuilt from evidence — covered only where a named test demonstrably exercises the requirement, partial where the module has tests that do not, gap where it has none — and gains an evidence column naming the test for every covered row. The archived backlog is deleted and a live backlog written in its place from a full triage of the 2026-08-25 audit, one line per finding heading, with the credential rotation and the RLS cutover as the leading P0 items. The module contract gains the API-contract rule and the codegen step its checklist is missing — a gap that currently lets a new module pass all seven documented steps and still fail CI.
+
+**Citations are repointed, not translated.** Where a dead link has a successor document, the link is repointed; where it does not, the link is removed, the name is kept in prose, and the deleting commit is cited. Section-number citations into a document that has since switched to decision-ID citations are left as written, because translating them means guessing which decision the record meant — that is rewriting a decision, not repairing a pointer.
+
+## Testing Decisions
+
+**What a good test is here.** The unit under test is the documentation corpus, and the only externally observable behaviour it has is whether its claims resolve against the repository. A good assertion is therefore mechanical and content-agnostic: it checks that a reference points at something that exists, never that a sentence is worded a particular way. Nothing asserts on prose.
+
+**One new seam: a single script behind a single blocking CI job.** Three assertions live in that one script rather than in three jobs, so that the next invariant has one place to go and the corpus has one red/green signal.
+
+- **Link resolution.** Every relative markdown link in the repo resolves. Reference material vendored from a third-party template is excluded; fragments are not checked; no network access, so external URLs are out of scope.
+- **Retired-name check.** A deny-list of names for deleted things must not appear in any *living* document, with the audit directory, the new policy record and the local working note allow-listed. This assertion exists because the link checker structurally cannot catch this class: most of the 79 false statements are plain prose or inline-code mentions, not markdown links. A repo full of references to deleted files passes a link checker cleanly.
+- **Matrix evidence.** Every evidence cell in the traceability matrix names a test file that exists, and every row marked covered has a non-empty evidence cell. Without this, the 47 rows rebuilt by hand in stage three drift back to uniform green within months — which is exactly how they got there the first time.
+
+**Existing seams are reused, not duplicated.** The OpenAPI codegen drift gate already covers the contract edit and its regenerated artifacts; nothing is added there. The backend test job is unchanged. The docs job is deliberately *not* folded into the Go lint job, which exists to enforce module boundaries via depguard.
+
+**Ordering.** The gate is enabled only after the existing 69 link failures are repaired; enabling it first would fail CI on pre-existing breakage and train everyone to ignore it.
+
+**Prior art.** The OpenAPI job is the closest existing pattern: a generated artifact is rebuilt and compared, and the build fails on drift. The docs job follows the same shape — derive the truth from the repo, compare against what is written down, fail on divergence.
+
+**Deliberately not asserted yet.** A "every document carries a status header" check is a real invariant that the style guide already requires, but enabling it demands a backfill across roughly forty documents first. It is filed as a work item rather than bundled here.
+
+## Out of Scope
+
+- Running the row-level-security cutover, or changing the database connection role.
+- Purging git history, or rotating the exposed credential on the operator's behalf. The removal from the working tree and the work item are in scope; the rotation itself is a human action on infrastructure outside this repo.
+- Introducing a separate domain-glossary file. The documentation index's genre rules already are the glossary for this domain; adding a fourth glossary while repairing drift between three would be self-defeating.
+- Translating section-number citations into decision-ID citations inside record bodies.
+- Reassessing what the test suite actually covers beyond the evidence the existing tests provide. The coverage column is rebuilt from what can be demonstrated, not from a fresh test-gap analysis.
+- Any change to the vendored third-party template material.
+- Creating index files for directories that hold one or three documents purely to satisfy a structural check.
+- Anchor and external-URL checking in the docs gate.
+- A decision record for the earlier move of status truth from a tracker file to the code; that was decided two months ago and is already documented in two live places.
+
+## Further Notes
+
+**This repository is public.** The exposed development credential should be treated as compromised rather than "verified if still in use", and its precise location must stay out of anything pushed — including this spec. One already-pushed document points at it; that pointer should be removed once rotation is done. Removing the file from the working tree is the most time-sensitive item in this plan and should not wait for the rest.
+
+**The path-level worksheet lives in the repo's local working note**, which carries the full per-file, per-line detail: exact line numbers for each false statement, the per-record breakdown of all 79, the inbound-reference lists for each relocation, and the deny-list contents. This spec deliberately stays at the level of decisions so that it does not rot as files move; the worksheet is the executable detail and is expected to rot, which is why it should migrate into the live backlog at the end of stage three and shrink to a pointer.
+
+**Provenance.** The 79-statement count comes from a per-record audit against the working tree; the 69-link count from a repo-wide relative-link sweep excluding vendored material. Both were run on 2026-09-11 and both should be re-run at the start of the work, since the feature branch continues to move.
+
+**Two facts corrected during planning**, recorded so they are not re-derived: the local-auth record's refresh-token TTL is correct as written (24h, matching the shipped default) — an earlier suspicion that it claimed 30 days was wrong; and the 2026-08-25 audit's list of documents citing the deleted status tracker is itself incomplete, missing the style guide.
+
+**Tracker.** This spec could not be published to the GitHub issue tracker: the authenticated account has `pull` access only on this repository (no `push`, no `triage`), so neither the `ready-for-agent` label nor an issue with labels can be created. The spec therefore lives here, which is where the genre rules this spec establishes would route it anyway. To move it onto the tracker, authenticate an account with write access and run the setup flow to establish the triage-label vocabulary.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Một ghi chú về hình dạng: phần lớn việc này là wide refactor, không phải tracer bullet — 69 link và 79 mệnh đề là một thay đổi cơ học có blast radius trải khắp corpus, không slice dọc được. Nên tôi xếp theo expand–contract: dựng script kiểm tra trước (expand, vô hại), sửa theo lô (mỗi lô xanh được vì cổng chưa bật), rồi bật cổng CI cuối cùng (contract). Đó là lý do ticket 2 đứng gần đầu và ticket 15 đứng cuối.
+
+┌─────┬────────────────────────────────────────────────────────┬───────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  #  │                         Title                          │ Blocked   │                                                                         What it delivers                                                                         │
+│     │                                                        │    by     │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1   │ Remove the committed development credential            │ —         │ File chứa cred biến khỏi working tree; quét lại repo không còn giá trị đó. Commit đứng riêng, đẩy được ngay. Gấp nhất vì repo là public.                         │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2   │ Add a local docs-check script (three assertions, not   │ —         │ ./scripts/check-docs.sh chạy được tại chỗ, chọn được từng assertion (links / retired / matrix), exit non-zero và liệt kê từng vi phạm. Đây là feedback loop cho  │
+│     │ wired to CI)                                           │           │ mọi ticket sau — biến "69 link" từ sweep thủ công thành vòng đỏ-xanh.                                                                                            │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 3   │ Write the canonicalisation decision record and amend   │ —         │ ADR-11 tồn tại (bỏ bất biến, delete-don't-archive, một-chủ-một-sự-thật, Last verified làm dấu); style guide khớp theo: §ADR shape sửa,                           │
+│     │ the style guide                                        │           │ §Language/§Naming/§Lifecycle sửa, §Genre discipline xoá. Gates mọi ticket viết lại ADR.                                                                          │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 4   │ Repair every broken relative link                      │ 2         │ Assertion links xanh. Gồm cả lỗi cơ học ../../../ ở 4 record và các target chết (có kế thừa → trỏ lại; không có → bỏ link + dẫn commit).                         │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 5   │ Sweep the retired-name class out of every living       │ 2, 3      │ Assertion retired xanh cho tài liệu sống: tracker đã xoá (8 chỗ, gồm style guide), archive (4 chỗ), các path chết. Audit đã archive thì dán nhãn Last verified,  │
+│     │ document                                               │           │ không sửa thân.                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 6   │ Relocate the three misfiled documents and repoint      │ 2, 4      │ Hai runbook về operations/, matrix về reference/; 11 inbound ref sửa hết — gồm một ref trong API contract, nên ticket này chạy codegen và commit artifact regen. │
+│     │ every inbound reference                                │           │  Job openapi có sẵn là seam kiểm.                                                                                                                                │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 7   │ Correct the project instructions' factual claims       │ 3         │ Hai khẳng định sai bị xoá; hai con số thay bằng lệnh sinh ra chúng. Không gồm dòng RLS (xem 11).                                                                 │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 8   │ Canonicalise the two worst decision records —          │ 3         │ 23/79 mệnh đề sửa xong trên 2 file nặng nhất, và đường cắt tầng được chứng minh trên thực tế. Dừng review trước khi áp lên 9 file còn lại.                       │
+│     │ CHECKPOINT                                             │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 9   │ Canonicalise the remaining eight decision records      │ 8         │ ~56 mệnh đề còn lại; 4 class xuyên suốt sửa một lượt; hai record proposed → accepted. Có thể quá to cho một context window — xem câu hỏi bên dưới.               │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 10  │ Reclassify the original architecture review as a       │ 3, 4      │ Nó chuyển sang mục audit, thân nguyên văn, status historical, số 00 nghỉ vĩnh viễn.                                                                              │
+│     │ historical audit                                       │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 11  │ State the row-level-security position in one place     │ 9         │ Một nguồn duy nhất nói đúng trạng thái RLS; environment template thôi seed superuser. ⚠️ Ticket này có điều kiện người: phải mở .env trên máy đang chạy. Đó là   │
+│     │                                                        │           │ /wizard, không phải agent.                                                                                                                                       │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 12  │ Rebuild the traceability matrix coverage column with   │ 6         │ 47 dòng Cov dựa trên bằng chứng + cột Evidence ghi file:func. Assertion matrix xanh.                                                                             │
+│     │ an evidence column                                     │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 13  │ Replace the archived backlog with a live backlog       │ 1, 4, 5,  │ Backlog cũ bị xoá, backlog sống viết lại từ triage toàn bộ audit 2026-08-25, hai P0 dẫn đầu là rotate cred và RLS cutover.                                       │
+│     │                                                        │ 11        │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 14  │ Add the API-contract rule and codegen step to the      │ —         │ Module mới đi hết checklist 7 bước không còn fail CI. Độc lập hoàn toàn, chạy song song bất cứ lúc nào.                                                          │
+│     │ module contract                                        │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 15  │ Wire the docs check into CI as a blocking job          │ 4, 5, 6,  │ Job docs riêng (không nhồi vào lint), chặn, cả ba assertion xanh. Đây là bước khiến mọi thứ ở trên không mục lại.                                                │
+│     │ (contract)                                             │ 12        │                                                                                                                                                                  │
+└─────┴────────────────────────────────────────────────────────┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Ba ticket không bị chặn và chạy được ngay: 1, 2, 14. Ticket 3 cũng không bị chặn nhưng gates 5/7/8/10 nên nên làm sớm.
+
+---
+
+Ba câu skill yêu cầu tôi hỏi:
+
+a) Granularity ổn chưa? Chỗ tôi thấy có vấn đề là ticket 9: 8 record, ~56 mệnh đề, gần như chắc chắn vượt một context window. Đề xuất tách thành hai lô theo record (9a: 4 record nặng tiếp theo — 09, 07, 05, 01; 9b: 4 record còn lại — 08, 04, 02, 06), mỗi lô blocked by 8, và cả hai block 15. Theo đúng hướng dẫn wide-refactor: chia lô theo blast radius, mỗi lô xanh được vì cổng chưa bật.
+
+b) Blocking edge có đúng không? Hai cạnh tôi không chắc, muốn bạn xác nhận:
+- 6 blocked by 4 — tôi đặt sửa link trước khi di chuyển file để assertion links không bao giờ đỏ. Làm ngược lại (move trước) cũng được, chỉ là có một khoảng đỏ ở giữa. Bạn muốn thứ tự nào?
+- 13 blocked by 11 — backlog chờ RLS chỉ vì cần dòng P0 nói đúng trạng thái. Nếu chấp nhận P0 ghi dạng "verify then fix" thì cạnh này bỏ được và 13 chạy sớm hơn nhiều.
+
+c) Có ticket nào nên gộp hay tách thêm? Ứng viên gộp: 7 vào 5 (cả hai đều là sửa tài liệu sống, cùng class). Tôi để riêng vì project instructions là file bạn sở hữu và giấy phép sửa của tôi bị giới hạn ở số đếm + path chết — nên diff của nó nên đứng riêng cho bạn soi. Ứng viên tách: 12 (47 dòng matrix có thể là một context window trọn vẹn, nếu chật thì tách theo SPEC).

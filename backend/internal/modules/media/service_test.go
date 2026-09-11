@@ -75,6 +75,23 @@ func (r *fakeRepo) GetAssetOwner(_ context.Context, id uuid.UUID) (uuid.UUID, er
 	}
 	return a.OwnerID, nil
 }
+
+// The real ACL lives in the 0032 UPDATE policy, which no in-memory fake can
+// model; the RLS suite in platform/db is what proves it. This fake only has to
+// keep the visibility value consistent so Content.Public is exercised.
+func (r *fakeRepo) SetAssetVisibility(_ context.Context, ownerID, id uuid.UUID, visibility string) (Asset, error) {
+	a, ok := r.m[id]
+	// The owner predicate is part of the statement now, not just the policy, so
+	// the fake enforces it too — otherwise the test would pass against a
+	// repository that had quietly dropped it.
+	if !ok || (a.OwnerID != uuid.Nil && a.OwnerID != ownerID) {
+		return Asset{}, ErrNotFound
+	}
+	a.Visibility = visibility
+	r.m[id] = a
+	return a, nil
+}
+
 func (r *fakeRepo) ListByOwner(_ context.Context, owner uuid.UUID, _, _ int) ([]Asset, error) {
 	var out []Asset
 	for _, a := range r.m {
@@ -307,6 +324,27 @@ func (s *fakeStore) GetRange(_ context.Context, key string, n int64) (io.ReadClo
 	}
 	return io.NopCloser(bytes.NewReader(b)), nil
 }
+
+// GetByteRange mirrors the HTTP Range convention the real store implements:
+// inclusive bounds, and a negative end meaning "to the end of the object".
+func (s *fakeStore) GetByteRange(_ context.Context, key string, start, end int64) (io.ReadCloser, error) {
+	b, ok := s.obj[key]
+	if !ok {
+		return nil, storage.ErrNotFound
+	}
+	if start < 0 {
+		start = 0
+	}
+	if start > int64(len(b)) {
+		start = int64(len(b))
+	}
+	stop := int64(len(b))
+	if end >= start && end+1 < stop {
+		stop = end + 1
+	}
+	return io.NopCloser(bytes.NewReader(b[start:stop])), nil
+}
+
 func (s *fakeStore) Size(_ context.Context, key string) (int64, error) {
 	if sz, ok := s.sizes[key]; ok {
 		return sz, nil
@@ -673,21 +711,38 @@ func TestServeVariant(t *testing.T) {
 	_ = repo.InsertVariant(ctx, id, "thumb", "variants/"+id.String()+"/thumb.webp", 320, 200, 10)
 	store.obj["variants/"+id.String()+"/thumb.webp"] = []byte("webpbytes")
 
-	rc, ct, err := svc.ServeVariant(ctx, id, "thumb")
+	c, err := svc.ServeVariant(ctx, id, "thumb")
 	if err != nil {
 		t.Fatal(err)
 	}
-	rc.Close()
-	if ct != "image/webp" {
-		t.Fatalf("content-type = %q", ct)
+	c.Body.Close()
+	if c.ContentType != "image/webp" {
+		t.Fatalf("content-type = %q", c.ContentType)
+	}
+	// A private asset must never be marked cacheable by shared caches.
+	if c.Public {
+		t.Fatal("private asset reported as public — a proxy could cache and re-serve it")
 	}
 	// unknown variant name → not found
-	if _, _, err := svc.ServeVariant(ctx, id, "bogus"); !errors.Is(err, ErrNotFound) {
+	if _, err := svc.ServeVariant(ctx, id, "bogus"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("bogus variant = %v, want ErrNotFound", err)
 	}
 	// missing variant → not found
-	if _, _, err := svc.ServeVariant(ctx, id, "medium"); !errors.Is(err, ErrNotFound) {
+	if _, err := svc.ServeVariant(ctx, id, "medium"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("missing variant = %v, want ErrNotFound", err)
+	}
+
+	// ...and a public one is, so the header can say so.
+	pub := repo.m[id]
+	pub.Visibility = VisibilityPublic
+	repo.m[id] = pub
+	c2, err := svc.ServeVariant(ctx, id, "thumb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c2.Body.Close()
+	if !c2.Public {
+		t.Fatal("public asset reported as private")
 	}
 }
 
@@ -730,24 +785,24 @@ func TestHLSObjectSafety(t *testing.T) {
 	store.obj["hls/x/index.m3u8"] = []byte("#EXTM3U")
 
 	// valid file streams back with the right content-type
-	rc, ct, err := svc.HLSObject(ctx, ready.ID, "index.m3u8")
+	c, err := svc.HLSObject(ctx, ready.ID, "index.m3u8")
 	if err != nil {
 		t.Fatal(err)
 	}
-	rc.Close()
-	if ct != "application/vnd.apple.mpegurl" {
-		t.Fatalf("content-type = %q", ct)
+	c.Body.Close()
+	if c.ContentType != "application/vnd.apple.mpegurl" {
+		t.Fatalf("content-type = %q", c.ContentType)
 	}
 
 	// path traversal cannot escape the asset's prefix (resolves to a miss, not /etc/passwd)
-	if _, _, err := svc.HLSObject(ctx, ready.ID, "../../etc/passwd"); err == nil {
+	if _, err := svc.HLSObject(ctx, ready.ID, "../../etc/passwd"); err == nil {
 		t.Fatal("expected traversal to fail")
 	}
 
 	// not-ready asset is not served
 	proc := Asset{ID: uuid.New(), OwnerID: owner, Status: StatusProcessing}
 	repo.m[proc.ID] = proc
-	if _, _, err := svc.HLSObject(ctx, proc.ID, "index.m3u8"); !errors.Is(err, ErrNotReady) {
+	if _, err := svc.HLSObject(ctx, proc.ID, "index.m3u8"); !errors.Is(err, ErrNotReady) {
 		t.Fatalf("not-ready = %v, want ErrNotReady", err)
 	}
 }
@@ -916,5 +971,65 @@ func TestContinueItemsPredicate(t *testing.T) {
 	// limit ≤ 0 defaults rather than returning an empty page
 	if got, _ := svc.ContinueItems(ctx, owner, 0); len(got) != 1 {
 		t.Fatalf("limit=0 should default, got %d items", len(got))
+	}
+}
+
+func TestCreateUploadSessionAudioKind(t *testing.T) {
+	svc, _, _, _, _ := newSvc()
+	sess, err := svc.CreateUploadSession(context.Background(), uuid.New(), "song.mp3", "audio/mpeg", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Before the music vertical, audio/* fell through to the video default and
+	// was fed to the HLS transcoder — and never matched a ?kind=audio filter.
+	if sess.Asset.Kind != "audio" {
+		t.Fatalf("kind = %q, want audio", sess.Asset.Kind)
+	}
+}
+
+func TestCompleteUploadAudioReadyWithoutTranscode(t *testing.T) {
+	svc, repo, store, enq, pub := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+
+	sess, _ := svc.CreateUploadSession(ctx, owner, "song.mp3", "audio/mpeg", 1)
+	id := sess.Asset.ID
+	store.obj[sess.Asset.SourceKey] = []byte("ID3")
+
+	if err := svc.CompleteUpload(ctx, owner, id); err != nil {
+		t.Fatal(err)
+	}
+	// Audio is played from the stored original, so it is ready immediately —
+	// no processing limbo, and nothing queued on the heavy transcode pool.
+	if repo.m[id].Status != StatusReady {
+		t.Fatalf("status = %v, want ready", repo.m[id].Status)
+	}
+	if len(enq.tasks) != 0 {
+		t.Fatalf("enqueued %d task(s), want 0", len(enq.tasks))
+	}
+	if repo.m[id].OutputPrefix != "" {
+		t.Fatalf("output prefix = %q, want empty (no HLS for audio)", repo.m[id].OutputPrefix)
+	}
+	// No worker ever sees this asset, so the service must emit asset_ready
+	// itself or audio would be the one kind producing no notification/stream card.
+	if len(pub.events) != 1 || pub.events[0] != "media:asset_ready" {
+		t.Fatalf("events = %v, want [media:asset_ready]", pub.events)
+	}
+}
+
+func TestCompleteUploadAudioTooLarge(t *testing.T) {
+	svc, repo, store, _, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+
+	sess, _ := svc.CreateUploadSession(ctx, owner, "big.wav", "audio/wav", 1)
+	id := sess.Asset.ID
+	store.obj[sess.Asset.SourceKey] = make([]byte, maxUploadBytes+1)
+
+	if err := svc.CompleteUpload(ctx, owner, id); !errors.Is(err, ErrFileTooLarge) {
+		t.Fatalf("err = %v, want ErrFileTooLarge", err)
+	}
+	if repo.m[id].Status != StatusFailed {
+		t.Fatalf("status = %v, want failed", repo.m[id].Status)
 	}
 }

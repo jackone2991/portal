@@ -7,9 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
 import { Icon } from "../../components/ui/Icon";
-
-const API =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
+import { baseURL as API } from "@/lib/api-client";
 
 type Phase = "idle" | "uploading" | "processing" | "ready" | "error";
 

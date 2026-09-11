@@ -28,13 +28,22 @@ const TaskTypePurgeOrphans = "media:purge_orphans"
 
 // Resource + variant guardrails (SPEC-01 P0.1).
 const (
-	// imageMaxDimension caps either dimension. Decoded RGBA at 8,000² ≈ 256 MB
-	// peak vs ≈ 576 MB at 12,000² — the difference between "tight" and
-	// "OOM-killer bait" on a small VPS (rev 2).
-	imageMaxDimension = 8000
-	thumbMaxWidth     = 320
-	mediumMaxWidth    = 1280
-	webpQuality       = "80"
+	// imageMaxPixels caps the DECODED AREA — the real memory guard. 8,000² px of
+	// RGBA ≈ 256 MB peak, the "tight but safe on a small VPS" budget. Capping area
+	// (not each side) lets tall-thin webtoon strips through: a 704×18000 strip is
+	// only ~13 M px (~50 MB), far under budget, yet its height alone tripped the
+	// old per-dimension 8,000 cap and made those chapters un-importable.
+	imageMaxPixels = 8000 * 8000
+	// imageMaxSide is an absolute per-side sanity ceiling for malformed/huge inputs.
+	imageMaxSide = 30000
+	// variantMaxHeight keeps every generated WebP variant within libwebp's hard
+	// 16,383 px per-dimension limit (with margin). Taller strips are scaled down to
+	// fit — width-scaling alone would leave a 704×18000 medium variant libwebp
+	// refuses to encode.
+	variantMaxHeight = 16000
+	thumbMaxWidth    = 320
+	mediumMaxWidth   = 1280
+	webpQuality      = "80"
 )
 
 // ProcessImagePayload is enqueued when an accepted image upload completes. The
@@ -44,11 +53,15 @@ const (
 type ProcessImagePayload struct {
 	AssetID   string `json:"asset_id"`
 	SourceKey string `json:"source_key"`
+	// OwnerUserID lets the worker open the asset owner's tenant scope before it
+	// writes. Without it the variant INSERT cannot resolve tenant_id once the app
+	// runs as portal_app (ADR-07).
+	OwnerUserID string `json:"owner_user_id"`
 }
 
 // NewProcessImageTask enqueues onto the "image" queue, served by its own pool
 // whose concurrency is IMAGE_CONCURRENCY (default 3) — separate from the video
-// "heavy" queue (concurrency 1). Image decodes are dimension-capped (imageMaxDimension),
+// "heavy" queue (concurrency 1). Image decodes are area-capped (imageMaxPixels),
 // so a few in parallel stay within the OOM budget while cutting batch-import time.
 func NewProcessImageTask(p ProcessImagePayload) (*asynq.Task, error) {
 	body, err := json.Marshal(p)
@@ -63,11 +76,12 @@ func NewProcessImageTask(p ProcessImagePayload) (*asynq.Task, error) {
 type ImageProcessor struct {
 	store storage.Storage
 	repo  Repo
-	pub   Publisher // optional: emits media:asset_ready
+	pub   Publisher   // optional: emits media:asset_ready
+	run_  RunInTenant // optional: nil on the api side, supplied by cmd/worker
 }
 
-func NewImageProcessor(store storage.Storage, repo Repo, pub Publisher) *ImageProcessor {
-	return &ImageProcessor{store: store, repo: repo, pub: pub}
+func NewImageProcessor(store storage.Storage, repo Repo, pub Publisher, run RunInTenant) *ImageProcessor {
+	return &ImageProcessor{store: store, repo: repo, pub: pub, run_: run}
 }
 
 // Handle is the Asynq handler. On failure it marks the asset failed and returns
@@ -85,7 +99,9 @@ func (ip *ImageProcessor) Handle(ctx context.Context, task *asynq.Task) error {
 	log.Info().Str("asset", p.AssetID).Str("src", p.SourceKey).Msg("process_image: start")
 	if err := ip.run(ctx, id, p); err != nil {
 		log.Error().Err(err).Str("asset", p.AssetID).Msg("process_image: failed")
-		_ = ip.repo.MarkFailed(ctx, id, truncate(err.Error(), 500))
+		_ = inTenant(ctx, ip.run_, TaskTypeProcessImage, p.OwnerUserID, func(ctx context.Context) error {
+			return ip.repo.MarkFailed(ctx, id, truncate(err.Error(), 500))
+		})
 		return nil
 	}
 	log.Info().Str("asset", p.AssetID).Msg("process_image: ready")
@@ -116,8 +132,8 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 	if w <= 0 || h <= 0 {
 		return errors.New("could not determine image dimensions")
 	}
-	if w > imageMaxDimension || h > imageMaxDimension {
-		return fmt.Errorf("image dimensions %dx%d exceed the %dpx limit", w, h, imageMaxDimension)
+	if w > imageMaxSide || h > imageMaxSide || w*h > imageMaxPixels {
+		return fmt.Errorf("image dimensions %dx%d exceed limits (max side %dpx, max area %dpx)", w, h, imageMaxSide, imageMaxPixels)
 	}
 
 	// 3. generate served variants (WebP, auto-oriented, metadata stripped)
@@ -128,6 +144,14 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 		{"thumb", thumbMaxWidth},
 		{"medium", mediumMaxWidth},
 	}
+	// Encode and upload first, with NO transaction open: a WebP encode takes
+	// seconds and must not pin a connection or hold a snapshot that long.
+	type variantRow struct {
+		name, key string
+		w, h      int
+		size      int64
+	}
+	rows := make([]variantRow, 0, len(variants))
 	for _, v := range variants {
 		outPath := filepath.Join(dir, v.name+".webp")
 		if err := encodeWebP(ctx, src, outPath, v.maxW); err != nil {
@@ -139,16 +163,28 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 			return fmt.Errorf("upload %s: %w", v.name, err)
 		}
 		vw, vh := scaledDims(w, h, v.maxW)
-		if err := ip.repo.InsertVariant(ctx, id, v.name, key, vw, vh, size); err != nil {
-			return fmt.Errorf("insert variant %s: %w", v.name, err)
-		}
+		rows = append(rows, variantRow{name: v.name, key: key, w: vw, h: vh, size: size})
 	}
 
-	// 4. mark ready with the SOURCE dimensions (not a variant's)
-	if err := ip.repo.MarkImageReady(ctx, id, w, h); err != nil {
+	// 4. persist: both variant rows plus the ready flag in ONE tenant-scoped
+	// transaction (ADR-07 increment 1b). Atomicity is a bonus the old
+	// insert-as-you-go loop did not have — a failure between the two variants
+	// used to leave a half-processed asset behind.
+	if err := inTenant(ctx, ip.run_, TaskTypeProcessImage, p.OwnerUserID, func(ctx context.Context) error {
+		for _, v := range rows {
+			if err := ip.repo.InsertVariant(ctx, id, v.name, v.key, v.w, v.h, v.size); err != nil {
+				return fmt.Errorf("insert variant %s: %w", v.name, err)
+			}
+		}
+		// mark ready with the SOURCE dimensions (not a variant's)
+		if err := ip.repo.MarkImageReady(ctx, id, w, h); err != nil {
+			return err
+		}
+		emitAssetReady(ctx, ip.pub, ip.repo, id)
+		return nil
+	}); err != nil {
 		return err
 	}
-	emitAssetReady(ctx, ip.pub, ip.repo, id)
 	return nil
 }
 
@@ -191,7 +227,10 @@ func (ip *ImageProcessor) upload(ctx context.Context, path, key string) (int64, 
 // (default autorotate), all metadata stripped (-map_metadata -1). Alpha
 // (PNG transparency) is preserved by libwebp.
 func encodeWebP(ctx context.Context, src, dst string, maxW int) error {
-	scale := fmt.Sprintf("scale='min(%d,iw)':-2:flags=lanczos", maxW)
+	// Fit within maxW × variantMaxHeight, aspect-preserving, never upscaled (the
+	// min(…,iw/ih) keeps the box no larger than the source). The height cap keeps
+	// very tall webtoon strips within libwebp's 16,383 px per-dimension limit.
+	scale := fmt.Sprintf("scale=w='min(%d,iw)':h='min(%d,ih)':force_original_aspect_ratio=decrease:flags=lanczos", maxW, variantMaxHeight)
 	//nolint:gosec // fixed args, paths are server-controlled temp files
 	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-y", "-i", src,
@@ -245,12 +284,20 @@ func probeImage(ctx context.Context, path string) (width, height, frames int, er
 // upscaled. FFmpeg's -2 rounds to an even height, so this is a close estimate
 // (the exact pixels live in the stored object; the row is metadata).
 func scaledDims(w, h, maxW int) (int, int) {
-	if w <= maxW {
-		return w, h
+	nw, nh := w, h
+	if nw > maxW { // width-limit first (matches the scale box's width)
+		nh = int(float64(h) * float64(maxW) / float64(w))
+		nw = maxW
+		if nh < 1 {
+			nh = 1
+		}
 	}
-	nh := int(float64(h) * float64(maxW) / float64(w))
-	if nh < 1 {
-		nh = 1
+	if nh > variantMaxHeight { // then clamp height for libwebp's per-dimension limit
+		nw = int(float64(nw) * float64(variantMaxHeight) / float64(nh))
+		nh = variantMaxHeight
+		if nw < 1 {
+			nw = 1
+		}
 	}
-	return maxW, nh
+	return nw, nh
 }

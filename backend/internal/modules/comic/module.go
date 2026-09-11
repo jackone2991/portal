@@ -27,10 +27,18 @@ type Deps struct {
 	Events EventPublisher
 
 	// P1.7 zip import. API side sets Storage + Enqueuer; worker side additionally
-	// sets RunInTenant (+ a Media whose IngestImage is wired).
+	// sets RunInTenant (+ a Media whose Ingest is wired).
 	Storage     ObjectStore
 	Enqueuer    Enqueuer
 	RunInTenant RunInTenant
+
+	// P1.8 external-source sync (API side). Scraper triggers the Python service;
+	// InternalSecret guards the scraper→api sync-callback. Nil Scraper ⇒ 503.
+	Scraper        ScraperClient
+	InternalSecret string
+	// SourceAllowlist restricts sync-source hosts (COMIC_SOURCE_ALLOWLIST). Empty
+	// allows any public host; internal/private addresses are always rejected.
+	SourceAllowlist []string
 
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -53,7 +61,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("comic: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant}
+	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, store: d.Storage, enqueue: d.Enqueuer, runInTenant: d.RunInTenant, scraper: d.Scraper, sourceAllowlist: d.SourceAllowlist}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -72,8 +80,27 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.guard(m.deps.PublishMW)).Post("/{id}/unpublish", m.handler.Unpublish)
 		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/chapters", m.handler.CreateChapter)
 		r.With(m.guard(m.deps.WriteComicMW)).Put("/{id}/chapters:order", m.handler.ReorderChapters)
-		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/imports", m.handler.CreateComicImport) // P1.7: whole-comic (multi-chapter) zip import
-		r.Put("/{id}/progress", m.handler.SaveProgress) // authenticated; service validates readability
+		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/imports", m.handler.CreateComicImport)     // P1.7: whole-comic (multi-chapter) zip import
+		r.With(m.guard(m.deps.WriteComicMW)).Get("/{id}/sync-sources", m.handler.ListSyncSources)   // P1.8
+		r.With(m.guard(m.deps.WriteComicMW)).Post("/{id}/sync-sources", m.handler.CreateSyncSource) // P1.8
+		r.Put("/{id}/progress", m.handler.SaveProgress)                                             // authenticated; service validates readability
+	})
+	r.Route("/sync-sources", func(r chi.Router) { // P1.8: sync source ops (owner-checked in handler)
+		if m.deps.RequireAuth != nil {
+			r.Use(m.deps.RequireAuth)
+		}
+		r.Post("/{id}/sync", m.handler.TriggerSync)
+		r.Post("/{id}/cancel", m.handler.CancelSync)
+		r.Delete("/{id}", m.handler.DeleteSyncSource)
+	})
+	// Internal: the scraper service calls this when a zip is uploaded (or a scrape
+	// failed). Guarded by a shared secret, NOT user auth (P1.8).
+	r.Route("/internal/comic", func(r chi.Router) {
+		r.Use(m.requireInternalSecret)
+		r.Post("/sync-batch", m.handler.SyncBatch)       // allocate a batch import job
+		r.Post("/sync-callback", m.handler.SyncCallback) // a batch's zip is uploaded → import it
+		r.Post("/sync-progress", m.handler.SyncProgress) // overall chapter progress
+		r.Post("/sync-finalize", m.handler.SyncFinalize) // sync done → set source status
 	})
 	r.Route("/chapters", func(r chi.Router) {
 		if m.deps.RequireAuth != nil {
@@ -160,3 +187,15 @@ func (m *Module) guard(mw func(http.Handler) http.Handler) func(http.Handler) ht
 }
 
 func passthrough(next http.Handler) http.Handler { return next }
+
+// requireInternalSecret gates the scraper→api callback. A blank configured secret
+// (or a mismatch) → 404 (don't reveal the endpoint exists).
+func (m *Module) requireInternalSecret(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if m.deps.InternalSecret == "" || r.Header.Get("X-Internal-Secret") != m.deps.InternalSecret {
+			http.NotFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}

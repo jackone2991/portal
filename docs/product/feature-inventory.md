@@ -1,6 +1,8 @@
 # Portal — Feature List
 
-> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout ([MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) is the living tracker). v1 scope is the hard cut in [ADR-01](architecture/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](architecture/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
+**Status:** current · **Last verified:** never (as a whole — this file is ~1,400 lines and has only ever been corrected in places; treat any state claim in it as unverified and prefer `/CLAUDE.md` § Current status. Decision IDs `D-N` are stable regardless)
+
+> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout (there is no tracker file — `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; verify against the code). v1 scope is the hard cut in [ADR-01](../adr/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](../adr/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
 
 Derived from [CLAUDE.md](../../CLAUDE.md) (architecture + module split) and [template-main/social/](../../template-main/social/) (visual/UX reference for the social layer). Each feature is mapped to the backend module that should own it ([backend/MODULES.md](../../backend/MODULES.md) rules apply: cross-module access goes through `api/` only).
 
@@ -12,7 +14,7 @@ Status legend: **✅ shipped** = wired, mounted, tested end-to-end, **✓ scaffo
 
 Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
 
-> **Auth direction updated — [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
+> **Auth direction updated — [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
 
 - **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account and returns 201 **without a session** (the user then signs in at `/login`). No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
 - **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 256-bit refresh token (SHA-256 at rest; TTL via `REFRESH_TOKEN_TTL`, currently 24h). Login's `remember` flag selects a persistent 24h cookie vs a session cookie.
@@ -21,9 +23,9 @@ Source: [backend/internal/modules/account/](../../backend/internal/modules/accou
 - **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and emits `auth.refresh.reuse_detected`.
 - **`/auth/me`** — returns the current user snapshot.
 - **RBAC engine** — `<resource>:<action>[:<scope>]` permission grammar, wildcards, fail-closed parser, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) with recursive-CTE effective-permission walk.
-- **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](architecture/06-local-auth-model.md); no IdP groups to sync.~~)*
+- **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](../adr/06-local-auth-model.md); no IdP groups to sync.~~)*
 - **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` triggers a re-auth. 5-min default window. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-27]
-- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](architecture/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-28]
+- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](../adr/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-28]
 - **Permission cache** — Redis-backed, namespaced by `token_version` so revocation = cache bust in one bump.
 - **Account-settings UI** (△ from template): `Account Settings`, `Change Password` (now first-class — Portal owns the password), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, `Notifications` preferences.
 - **Audit log** — best-effort writes via `audit.Logger`; never blocks the request.
@@ -50,7 +52,7 @@ Source: [backend/internal/modules/media/](../../backend/internal/modules/media/)
 - **Thumbnail worker** (queue `thumbnail`, priority 3) — *(stub — registered but not implemented; poster + sprite generation planned)*.
 - **Asset state machine** — `pending → processing → ready | failed` ✓; the `media:asset_ready` event is **not yet emitted** (no consumer module exists yet).
 - **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` for time-limited playback *(planned — v1 ships a public HLS proxy at `GET /assets/{id}/hls/*` instead)*.
-- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](architecture/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target.
+- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](../adr/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target.
 - **HLS playback** — frontend uses Vidstack.
 
 ---
@@ -536,7 +538,7 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Realtime** (SSE + WebSocket, Dragonfly pub/sub backplane) — `internal/platform/realtime/` ○. [D-3]
 - **Mail** (SMTP) — `internal/platform/mail/` ○. [D-4]
 - **Observability** (OTel SDK, Prometheus `/metrics`, Sentry/GlitchTip init) — `internal/platform/observability/` ○. [D-8]
-- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ○ *(table shipped as migration `0005_platform_audit`; the Go package move `account/audit` → `platform/audit` is still pending)*. [D-25]
+- **Audit** (cross-cutting event log, moved out of `account`) — `internal/platform/audit/` ● *(table shipped as migration `0005_platform_audit`; the Go package move `account/audit` → `platform/audit` is done — the stale duplicate under `account/` was deleted 2026-08-27)*. [D-25]
 - **Middleware** — rate limit ✓ (`ratelimit.go`), request ID, logging, recovery, **tenant URL-prefix resolver** [D-23].
 - **Reverse proxy** — Traefik v3 routes via `docker-compose.yml` labels.
 
@@ -581,7 +583,7 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Hot-reload dev** — `make dev` (`air` for Go, `pnpm dev` for Next).
 - **Tests** — `go test ./... -race -count=1` + `pnpm test`. Single test: `cd backend && go test ./internal/modules/account/rbac -run TestMatches -v`. Coverage targets per module in [D-9].
 - **Lint** — `golangci-lint` (incl. depguard enforcing module-boundary rules) + `pnpm lint`. Optional pre-commit hook via `lefthook` [D-9].
-- **CI/CD** — done: `.github/workflows/ci.yml` — backend go build/vet/test `-race` + sqlc-drift; frontend `next build` (typecheck + lint); OpenAPI well-formedness check. Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
+- **CI/CD** — done: `.github/workflows/ci.yml` — `backend` (sqlc generate → go build/vet/test `-race`; sqlc output is not committed, so there is no sqlc drift gate), `lint` (depguard), `openapi` (parse + regenerate-and-diff, ADR-10), `frontend` (typecheck + build), `link-check` (ADR-11). Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
 - **Observability** — opt-in `--profile observability` in `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip *(planned per [D-8]; deferred for v1 by ADR-01 — not in `docker-compose.yml` yet)*.
 - **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; quarterly restore drill. Targets + procedures in `docs/operations/backups.md` [D-10].
 - **Secrets** — `.env` in dev, Compose/K8s secrets (or optional SOPS) in prod; rotation policy per secret class in `docs/operations/secrets.md` [D-11].
@@ -595,7 +597,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 0 — Foundation wiring (immediate)
 
-> **Status (2026-07-06): DONE** — wiring landed (see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md)): migrations 0001–0007 applied (schema v7), `make sqlc` run, account + media repository adapters, `cmd/api/main.go` constructs and mounts both modules under `/api/v1`, healthz 200. The applied migration tree diverged slightly from the plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — see the D-18 update note). OIDC items below are retired per [ADR-06](architecture/06-local-auth-model.md); the audit package move, RFC 7807 `Problem` shape, and eager cross-module schemas remain open.
+> **Status (2026-07-06): DONE** — wiring landed (recorded at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f` — status now lives in `/CLAUDE.md` § Current status): migrations 0001–0007 applied (schema v7), `make sqlc` run, account + media repository adapters, `cmd/api/main.go` constructs and mounts both modules under `/api/v1`, healthz 200. The applied migration tree diverged slightly from the plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — see the D-18 update note). OIDC items below are retired per [ADR-06](../adr/06-local-auth-model.md); the audit package move, RFC 7807 `Problem` shape, and eager cross-module schemas remain open.
 
 *Goal: turn the existing scaffolds into a running, end-to-end auth flow.*
 
@@ -606,8 +608,8 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7]
 - **Move `audit/` from account → `platform/audit/`** — audit is cross-cutting; account becomes a consumer. Rename event `auth.refresh.reuse_detected` → `account.refresh.reuse_detected` to fit the new `<module>.<resource>.<action>` taxonomy. [D-25]
 - **Define event-type taxonomy registry** in `backend/MODULES.md` §5.3 to prevent collisions. [D-25]
-- ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](architecture/06-local-auth-model.md) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
-- ~~**Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.~~ → retired by [ADR-06](architecture/06-local-auth-model.md) (no IdP in the login path; table dropped by migration `0006` — see D-26.r1).
+- ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](../adr/06-local-auth-model.md) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
+- ~~**Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.~~ → retired by [ADR-06](../adr/06-local-auth-model.md) (no IdP in the login path; table dropped by migration `0006` — see D-26.r1).
 - **Adopt RFC 7807 `Problem` shape** for every 4xx/5xx in `shared/openapi.yaml`; stable `type` URIs become the i18n keys. [D-7]
 - **Reserve the `notify:*` Asynq task prefix** in `backend/MODULES.md` §5.2 so future modules don't accidentally collide. [D-1]
 - **Extend OpenAPI spec** — add comics + tenant tags. **Eager cross-module schemas** must land before Phase 0 closes [D-29]: `Problem` (RFC 7807 with Portal extensions like `required_acr`/`enrollment_url`), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem`, standard 4xx/5xx response components.
@@ -616,11 +618,11 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Frontend conventions doc** — `frontend/CLAUDE.md` documents the Zustand/TanStack/RHF state boundary [D-32] and the RSC-first rendering decision tree [D-33] with worked anti-pattern examples.
 - **Land CI workflows** — `.github/workflows/ci.yml` with lint + test + sqlc-drift + openapi-drift + migration-roundtrip + build + security jobs. Drift detection from day one. [D-9]
 
-**Exit:** a developer can `make up && make dev`, sign in via `POST /api/v1/auth/login` (local password, [ADR-06](architecture/06-local-auth-model.md)), hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift. *(Exit criterion met — 2026-07-06.)*
+**Exit:** a developer can `make up && make dev`, sign in via `POST /api/v1/auth/login` (local password, [ADR-06](../adr/06-local-auth-model.md)), hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift. *(Exit criterion met — 2026-07-06.)*
 
 ### Phase 1 — Tenancy + RLS
 
-> **Design: [ADR-07 — Multi-tenancy & RLS model](architecture/07-tenancy-rls-model.md)** (Proposed, deferred). The bullets below are the *deliverables*; ADR-07 is the *how* — per-request `SET LOCAL app.current_tenant` GUC under PgBouncer transaction pooling, `org`/`household`/`personal` tenants + synthetic `me`, `FORCE` RLS on a non-owner app role, and a `BYPASSRLS` `sysjobs` path. (ADR-07 standardises the GUC name to `app.current_tenant`; the `app.tenant_id` below is superseded.)
+> **Design: [ADR-07 — Multi-tenancy & RLS model](../adr/07-tenancy-rls-model.md)** (Proposed, deferred). The bullets below are the *deliverables*; ADR-07 is the *how* — per-request `SET LOCAL app.current_tenant` GUC under PgBouncer transaction pooling, `org`/`household`/`personal` tenants + synthetic `me`, `FORCE` RLS on a non-owner app role, and a `BYPASSRLS` `sysjobs` path. (ADR-07 standardises the GUC name to `app.current_tenant`; the `app.tenant_id` below is superseded.)
 
 - `tenant.organizations` schema includes a **`kind` column (`'org' | 'household'`)** from day one so adding household support in Phase 5i doesn't require migrating a populated table. [D-24]
 - `tenant.memberships` schema + queries; role granularity differs per kind (orgs: full hierarchy; households: owner + member only, soft cap 6).
@@ -829,7 +831,7 @@ Decisions deferred. Each affects at least one upcoming phase; many should land b
 
 ### 16.D — Auth / RBAC ✓ all resolved
 
-26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **superseded by [ADR-06](architecture/06-local-auth-model.md) (2026-07-05)**: no IdP; roles are Portal-managed only (see D-26.r1).
+26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **superseded by [ADR-06](../adr/06-local-auth-model.md) (2026-07-05)**: no IdP; roles are Portal-managed only (see D-26.r1).
 27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; `RequireACR` middleware returns 403 + `step_up_required` Problem; explicit per-route opt-in; 5-min default window. — mechanism updated by ADR-06: Portal-issued `acr`/`amr` claims, no OIDC round trip (see D-27.r1).
 28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — entirely Authentik-managed; Portal enforces "MFA required for bank-permission users" at login via the `amr` claim; settings deep-links to Authentik's MFA dashboard. — **superseded by ADR-06**: Portal-built TOTP; enforcement logic unchanged (see D-28.r1).
 
@@ -1189,7 +1191,7 @@ No production data yet — splitting once costs less than living with mixed-conc
 
 `assets.owner_id` FK to `users.id` still valid because users (`0002`) lands before assets (`0005`). Audit log table moves to `platform/audit/` in the same pass (see [D-25]). Lands in Phase 0.
 
-**Update (2026-07-06):** applied tree is `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](architecture/06-local-auth-model.md)) / `0007_media_assets` (schema v7). Tenant and RLS migrations land with Phase 1.
+**Update (2026-07-06):** applied tree is `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](../adr/06-local-auth-model.md)) / `0007_media_assets` (schema v7). Tenant and RLS migrations land with Phase 1.
 
 ### D-19 — Profile vs Account split: identity on `users`, rich profile in `social.profiles` *(resolves §16.C-19)*
 
@@ -1358,7 +1360,7 @@ BOOTSTRAP_ADMIN_GROUPS=
 
 Lands in Phase 0 (`user_oidc_roles` table) and the OIDC callback handler.
 
-**D-26.r1 (2026-07-05)** — superseded by [ADR-06](architecture/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is now admin/CLI provisioning.
+**D-26.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is now admin/CLI provisioning.
 
 ### D-27 — Step-up auth: OIDC ACR-based; sensitive ops annotated explicitly *(resolves §16.D-27)*
 
@@ -1409,7 +1411,7 @@ Frontend recognises the `type`, redirects to `/auth/login?step_up=mfa&return_to=
 
 Lands jointly with [D-28] as a Phase 5 prerequisite.
 
-**D-27.r1 (2026-07-05)** — mechanism updated by [ADR-06](architecture/06-local-auth-model.md): `acr`/`amr`/`auth_time` are Portal-issued claims; step-up re-auth happens against Portal's own login/MFA, not an IdP. The ACR levels and the gated-operation table stand.
+**D-27.r1 (2026-07-05)** — mechanism updated by [ADR-06](../adr/06-local-auth-model.md): `acr`/`amr`/`auth_time` are Portal-issued claims; step-up re-auth happens against Portal's own login/MFA, not an IdP. The ACR levels and the gated-operation table stand.
 
 ### D-28 — 2FA: entirely Authentik-managed; Portal enforces MFA at login for bank-permission users *(resolves §16.D-28)*
 
@@ -1433,7 +1435,7 @@ Authentik already ships TOTP, WebAuthn, SMS, push, recovery codes, and a polishe
 
 Lands jointly with [D-27] as a Phase 5 prerequisite. Step-up to a single-factor session adds no security, so D-27 and D-28 are useless without each other.
 
-**D-28.r1 (2026-07-05)** — superseded by [ADR-06](architecture/06-local-auth-model.md): Portal builds and stores TOTP (later phase); login-time MFA enforcement for `bank:*` users is retained; Authentik stages/deep-links are retired.
+**D-28.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): Portal builds and stores TOTP (later phase); login-time MFA enforcement for `bank:*` users is retained; Authentik stages/deep-links are retired.
 
 ### D-29 — OpenAPI: spec-first non-negotiable; monolith until ~2000 lines; eager cross-module schemas in Phase 0 *(resolves §16.E-29)*
 

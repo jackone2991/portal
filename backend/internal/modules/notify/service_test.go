@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -282,5 +283,105 @@ func TestOnAssetReady(t *testing.T) {
 	}
 	if href, _ := repo.rows[0].Data["href"].(string); href == "" {
 		t.Fatalf("missing data.href click-through, data = %v", repo.rows[0].Data)
+	}
+}
+
+// One publish, one bell entry — regardless of how many chapters it carries. The
+// old per-chapter fan-out is exactly what this replaces, so the count-in-title
+// and the count-in-dedup-key are the two things worth pinning.
+func TestOnComicPublished(t *testing.T) {
+	svc, repo, _ := newDispatchSvc()
+	owner := uuid.New()
+	comic := uuid.New().String()
+
+	mk := func(chapters int) *asynq.Task {
+		body, _ := json.Marshal(comicPublishedEvent{
+			ComicID: comic, OwnerUserID: owner.String(), Title: "Dungeon Meshi", ChapterCount: chapters,
+		})
+		return asynq.NewTask(notifyapi.TaskOnComicPublished, body)
+	}
+
+	if err := svc.OnComicPublished(context.Background(), mk(500)); err != nil {
+		t.Fatalf("publish: %v", err)
+	}
+	if len(repo.rows) != 1 || repo.rows[0].UserID != owner {
+		t.Fatalf("rows = %+v, want exactly 1 for the owner", repo.rows)
+	}
+	if repo.rows[0].Type != notifyapi.TypeComicPublished {
+		t.Fatalf("type = %q", repo.rows[0].Type)
+	}
+	if !strings.Contains(repo.rows[0].Title, "500 chapters") {
+		t.Fatalf("title = %q, want the chapter count in it", repo.rows[0].Title)
+	}
+
+	// Re-publishing unchanged is silent...
+	if err := svc.OnComicPublished(context.Background(), mk(500)); err != nil {
+		t.Fatalf("republish: %v", err)
+	}
+	if len(repo.rows) != 1 {
+		t.Fatalf("unchanged re-publish produced %d rows, want 1 (dedup)", len(repo.rows))
+	}
+
+	// ...but a sync that brought new chapters is worth saying once more.
+	if err := svc.OnComicPublished(context.Background(), mk(512)); err != nil {
+		t.Fatalf("republish with new chapters: %v", err)
+	}
+	if len(repo.rows) != 2 {
+		t.Fatalf("republish with 12 new chapters produced %d rows, want 2", len(repo.rows))
+	}
+}
+
+// One bell entry per catalogue publish, landing in the right library. The three
+// verticals share a handler and differ only in the payload key and the
+// click-through, which is exactly what is easy to get wrong.
+func TestOnWorkPublished(t *testing.T) {
+	owner := uuid.New()
+	cases := []struct {
+		task     string
+		payload  map[string]any
+		wantHref string
+	}{
+		{notifyapi.TaskOnTrackPublished, map[string]any{"track_id": "t1", "owner_user_id": owner.String(), "title": "A song"}, "/library/music/t1"},
+		{notifyapi.TaskOnStoryPublished, map[string]any{"story_id": "s1", "owner_user_id": owner.String(), "title": "A novel"}, "/library/novel/s1"},
+		{notifyapi.TaskOnMoviePublished, map[string]any{"movie_id": "m1", "owner_user_id": owner.String()}, "/library/media"},
+	}
+
+	for _, c := range cases {
+		svc, repo, _ := newDispatchSvc()
+		body, _ := json.Marshal(c.payload)
+		if err := svc.OnWorkPublished(context.Background(), asynq.NewTask(c.task, body)); err != nil {
+			t.Fatalf("%s: %v", c.task, err)
+		}
+		if len(repo.rows) != 1 {
+			t.Fatalf("%s produced %d rows, want 1", c.task, len(repo.rows))
+		}
+		if repo.rows[0].UserID != owner {
+			t.Fatalf("%s notified the wrong user", c.task)
+		}
+		if href, _ := repo.rows[0].Data["href"].(string); href != c.wantHref {
+			t.Fatalf("%s href = %q, want %q", c.task, href, c.wantHref)
+		}
+	}
+
+	// A work with no title still reads as a sentence, not "  is published".
+	svc, repo, _ := newDispatchSvc()
+	body, _ := json.Marshal(map[string]any{"movie_id": "m2", "owner_user_id": owner.String()})
+	if err := svc.OnWorkPublished(context.Background(), asynq.NewTask(notifyapi.TaskOnMoviePublished, body)); err != nil {
+		t.Fatal(err)
+	}
+	if repo.rows[0].Title != "A movie is published" {
+		t.Fatalf("untitled work -> %q", repo.rows[0].Title)
+	}
+
+	// Republishing the same work is silent: dedup_key is the work id.
+	svc2, repo2, _ := newDispatchSvc()
+	b, _ := json.Marshal(map[string]any{"track_id": "t9", "owner_user_id": owner.String(), "title": "Same"})
+	for i := 0; i < 2; i++ {
+		if err := svc2.OnWorkPublished(context.Background(), asynq.NewTask(notifyapi.TaskOnTrackPublished, b)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(repo2.rows) != 1 {
+		t.Fatalf("republish produced %d rows, want 1", len(repo2.rows))
 	}
 }

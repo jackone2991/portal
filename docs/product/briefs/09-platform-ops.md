@@ -1,5 +1,7 @@
 # 09 — Platform Ops: Backup/Restore, Queue Console, Takeout
 
+**Status:** current · **Last verified:** never
+
 **Module:** `ops` (new — not scaffolded; owns the `ops:*` prefix) · **Effort:** ~4 days P0, +5 P1 · **Depends on:** nothing hard; failure alerts get delivery when SPEC-04 lands (degrade to logs + `/healthz` until then).
 **Unlocks:** the right to hold irreplaceable data. SPEC-03 puts months of hand-entered finance on one VPS and media holds memories — today a single disk failure ends the life-OS thesis.
 **Provenance:** a 2026-07 docs audit found **no backup/DR doc exists anywhere**; backlog §7 names pieces but nothing owns them — researched 2026-07-10. **Spec:** [SPEC-09](../specs/SPEC-09-platform-ops.md).

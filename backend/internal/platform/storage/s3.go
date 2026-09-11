@@ -105,6 +105,26 @@ func (s *S3) GetRange(ctx context.Context, key string, n int64) (io.ReadCloser, 
 	return out.Body, nil
 }
 
+// GetByteRange issues an arbitrary ranged GET. `end` < 0 reads to the end of the
+// object, which is the shape an open-ended `Range: bytes=N-` request needs.
+func (s *S3) GetByteRange(ctx context.Context, key string, start, end int64) (io.ReadCloser, error) {
+	if start < 0 {
+		start = 0
+	}
+	rng := fmt.Sprintf("bytes=%d-", start)
+	if end >= start {
+		rng = fmt.Sprintf("bytes=%d-%d", start, end)
+	}
+	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{Bucket: &s.bucket, Key: &key, Range: &rng})
+	if err != nil {
+		if isNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("storage: get byte range %q: %w", key, err)
+	}
+	return out.Body, nil
+}
+
 func (s *S3) Size(ctx context.Context, key string) (int64, error) {
 	out, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &s.bucket, Key: &key})
 	if err != nil {

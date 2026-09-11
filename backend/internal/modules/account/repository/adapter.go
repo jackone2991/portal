@@ -50,11 +50,12 @@ func (a *Adapter) GetUserAuthSnapshot(ctx context.Context, id uuid.UUID) (middle
 		return middleware.UserAuthSnapshot{}, err
 	}
 	return middleware.UserAuthSnapshot{
-		ID:           uuidFrom(row.ID),
-		Email:        row.Email,
-		DisplayName:  row.DisplayName,
-		TokenVersion: int(row.TokenVersion),
-		Disabled:     row.DisabledAt.Valid,
+		ID:             uuidFrom(row.ID),
+		Email:          row.Email,
+		DisplayName:    row.DisplayName,
+		TokenVersion:   int(row.TokenVersion),
+		Disabled:       row.DisabledAt.Valid,
+		ApprovalStatus: row.ApprovalStatus,
 	}, nil
 }
 
@@ -106,14 +107,30 @@ func (a *Adapter) AssignRoleByCode(ctx context.Context, userID uuid.UUID, roleCo
 	})
 }
 
+// CountUsers / MarkApproved back the first-run bootstrap in handler.Register.
+func (a *Adapter) CountUsers(ctx context.Context) (int64, error) {
+	return a.q.CountUsers(ctx)
+}
+
+func (a *Adapter) MarkApproved(ctx context.Context, userID uuid.UUID, approvedBy *uuid.UUID) error {
+	_, err := a.q.SetUserApproval(ctx, SetUserApprovalParams{
+		ID:         pgUUID(userID),
+		Status:     handler.ApprovalApproved,
+		ApprovedBy: pgUUIDPtr(approvedBy),
+	})
+	return err
+}
+
 func toLocalUser(u User) handler.LocalUser {
 	return handler.LocalUser{
-		ID:           uuidFrom(u.ID),
-		Email:        u.Email,
-		DisplayName:  u.DisplayName,
-		PasswordHash: derefStr(u.PasswordHash),
-		TokenVersion: int(u.TokenVersion),
-		Disabled:     u.DisabledAt.Valid,
+		ID:             uuidFrom(u.ID),
+		Email:          u.Email,
+		DisplayName:    u.DisplayName,
+		PasswordHash:   derefStr(u.PasswordHash),
+		TokenVersion:   int(u.TokenVersion),
+		Disabled:       u.DisabledAt.Valid,
+		ApprovalStatus: u.ApprovalStatus,
+		ApprovalNote:   derefStr(u.ApprovalNote),
 	}
 }
 
@@ -247,13 +264,52 @@ func (a *Adapter) WriteAuditEvent(ctx context.Context, in audit.WriteEventInput)
 		Action:     in.Action,
 		TargetKind: in.TargetKind,
 		TargetID:   in.TargetID,
-		Metadata:   in.Metadata,
-		Ip:         ipToAddr(in.IP),
-		UserAgent:  strPtrOrNil(in.UserAgent),
+		// string, not []byte: the query casts $8::text::jsonb precisely so pgx
+		// sends this as text under QueryExecModeExec (see the query comment).
+		Metadata:  string(in.Metadata),
+		Ip:        ipToAddr(in.IP),
+		UserAgent: strPtrOrNil(in.UserAgent),
 	})
 }
 
 // ── account.APIUserFetcher (cross-module projection) ────────────────
+
+func (a *Adapter) GetUsersByIDs(ctx context.Context, ids []uuid.UUID) ([]accountapi.UserSummary, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	pg := make([]pgtype.UUID, 0, len(ids))
+	for _, id := range ids {
+		pg = append(pg, pgUUID(id))
+	}
+	rows, err := a.q.GetUsersByIDs(ctx, pg)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]accountapi.UserSummary, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, accountapi.UserSummary{ID: uuidFrom(r.ID), Email: r.Email, DisplayName: r.DisplayName})
+	}
+	return out, nil
+}
+
+// ListUserDirectory backs accountapi.ListDirectory — see that contract for who
+// is included and why it is not permission-gated here.
+func (a *Adapter) ListUserDirectory(ctx context.Context, exclude uuid.UUID, limit int) ([]accountapi.UserSummary, error) {
+	rows, err := a.q.ListUserDirectory(ctx, ListUserDirectoryParams{Exclude: pgUUID(exclude), Lim: int32(limit)})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]accountapi.UserSummary, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, accountapi.UserSummary{
+			ID:          uuidFrom(r.ID),
+			Email:       r.Email,
+			DisplayName: r.DisplayName,
+		})
+	}
+	return out, nil
+}
 
 func (a *Adapter) GetUserSummaryByID(ctx context.Context, id uuid.UUID) (*accountapi.UserSummary, error) {
 	u, err := a.q.GetUserByID(ctx, pgUUID(id))

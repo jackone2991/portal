@@ -6,8 +6,8 @@ alwaysApply: true
 
 # Portal — Continue Project Guide
 
-> Quick orientation for AI-assisted work. **Authoritative sources** (read these for depth):
-> `CLAUDE.md` (root, full conventions), `MILESTONE_CHECKS.md` (root, live status),
+> Quick orientation for AI-assisted work — a pointer, not an owner of any fact (ADR-11). **Authoritative sources** (read these for depth):
+> `CLAUDE.md` (root, full conventions — its § Current status is the one owner of implementation status; there is no tracker file),
 > `backend/MODULES.md` (module-boundary contract), `docs/` (ADRs, product, architecture).
 > When this guide and those disagree, **they win** — flag the drift.
 
@@ -18,7 +18,7 @@ Facebook-like social layer). **Go modular-monolith backend + Next.js 15 frontend
 - **v1 scope (shipped):** local password auth + one video **upload → transcode → HLS playback**
   happy path. Most social UI exists but is **sample data** with no backend. Don't assume a
   feature is wired just because a screen or a module folder exists.
-- **Stack:** Go 1.24 · Chi · Asynq · sqlc · Postgres 17 + PgBouncer · DragonflyDB (Redis-compat)
+- **Stack:** Go (`backend/go.mod`) · Chi · Asynq · sqlc · Postgres 18 on the **host** cluster (`host.docker.internal:5432`; no PgBouncer, not in compose) · DragonflyDB (Redis-compat)
   · MinIO (dev) + Cloudflare R2 (prod, one S3 client) · Traefik v3 · Next.js 15 (App Router/RSC)
   · Tailwind v4 · Vidstack · Docker Compose.
 
@@ -59,7 +59,7 @@ An empty `repository/` dir = that module is scaffolded but **not wired** (not co
   module's `service/handler/repository/query`, never JOIN across their tables. Cross-module coupling
   is async via Asynq events named `<module>:<event>` (e.g. `media:asset_ready`).
 - **OpenAPI first:** to add an endpoint, edit `shared/openapi.yaml` → `make openapi` → implement the
-  generated interface. (Note: spec currently drifts from handlers — see `MILESTONE_CHECKS.md`.)
+  generated interface. (CI diffs the codegen; handlers are still hand-written plain-chi — see `CLAUDE.md` § Known drift.)
 - **Never hand-edit generated files:** `*/repository/*.sql.go`, `internal/handler/api.gen.go`,
   `frontend/src/lib/types.gen.ts`.
 - **Schema changes are migration-only** (`000N_<owning-module>_<desc>.up.sql`). Never add a column to
@@ -88,10 +88,10 @@ An empty `repository/` dir = that module is scaffolded but **not wired** (not co
 ## 7. Troubleshooting
 - **`portal.localhost` down / TLS error:** Traefik lost its cert mounts — `docker compose up -d --force-recreate traefik` (started via `make up`, not raw `-f`).
 - **Transcode stuck at `processing`:** Dragonfly must run with `--default_lua_flags=allow-undeclared-keys` (Asynq Lua).
-- **pgx prepared-statement clash in dev:** dev connects **direct** to `postgres:5432`, bypassing PgBouncer transaction mode.
+- **Silent 401 on every authed route after idling:** Docker's `host.docker.internal` NAT drops idle pgx connections. Fix is on the `DATABASE_URL`: `?pool_max_conn_idle_time=60s&pool_health_check_period=30s&pool_max_conn_lifetime=30m` (in this deployment's `.env`; not yet in `.env.example` or in `platform/db.NewPool` — backlog).
 - **Browser can't reach `minio:9000`:** dev uploads proxy through the API (`PUT /assets/{id}/source`), not presigned direct-to-bucket.
 
 ## 8. References
-- `CLAUDE.md` — full conventions (authoritative). `MILESTONE_CHECKS.md` — what's actually done.
-- `backend/MODULES.md` — module contract. `docs/adr/` — decisions (00–09). `docs/product/` — scope/backlog.
+- `CLAUDE.md` — full conventions (authoritative), including what's actually done (§ Current status).
+- `backend/MODULES.md` — module contract. `docs/adr/` — decisions (`ls docs/adr`). `docs/product/backlog.md` — open work.
 - `shared/openapi.yaml` — API contract. `docs/reference/events.md` — Asynq event registry.

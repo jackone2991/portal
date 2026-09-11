@@ -1,5 +1,7 @@
 # Feature Briefs — Life-OS
 
+**Status:** current · **Last verified:** never
+
 Feature briefs for the life-OS direction. Briefs 00–04 were produced by the
 2026-07-07 brainstorm that captured the **pivot in positioning** (Portal is a
 self-hosted **life OS**, not a Facebook clone — ratified as

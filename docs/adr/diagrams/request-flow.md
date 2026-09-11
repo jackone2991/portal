@@ -1,5 +1,7 @@
 # v1 authenticated request flow
 
+**Status:** current · **Last verified:** never
+
 A simplified version of `diagrams.md` §4, with the v1 cut applied. The full long-horizon diagram shows 5 middleware layers (RequireAuth → RequireTenant → RequireACR → RequirePermission → handler); v1 ships only 2 of them (RequireAuth, RequirePermission). Tenant and step-up auth land in later phases.
 
 ```mermaid

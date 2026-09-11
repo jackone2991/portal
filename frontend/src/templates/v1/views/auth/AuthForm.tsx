@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
+import { baseURL as API_BASE } from "@/lib/api-client";
+import { problemDisplayMessage } from "@/lib/problems";
 
 type Tab = "login" | "register";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
 
 /**
  * Login / register card — React + Tailwind port of the Olympus "Landing Page"
@@ -19,10 +18,15 @@ export function AuthForm({ defaultTab = "login" }: { defaultTab?: Tab }) {
   const [prefillEmail, setPrefillEmail] = useState("");
 
   // After a successful registration we do NOT log the user in — we bounce them
-  // to the login tab to sign in with the account they just created.
-  function handleRegistered(email: string) {
+  // to the login tab, with copy that matches whether the account can actually be
+  // used yet.
+  function handleRegistered(email: string, awaitingApproval: boolean) {
     setPrefillEmail(email);
-    setNotice("Account created. Please sign in with your new account.");
+    setNotice(
+      awaitingApproval
+        ? "Account created. An administrator has to approve it before you can sign in — you will be able to log in once they do."
+        : "Account created. Please sign in with your new account.",
+    );
     setTab("login");
   }
 
@@ -71,22 +75,36 @@ function nextTarget(): string {
   return n && n.startsWith("/") ? n : "/";
 }
 
-async function postAuth(path: string, payload: Record<string, unknown>) {
+interface AuthResult {
+  /** Human message when the call failed, else null. */
+  error: string | null;
+  /** Parsed success body. Register reads `approval_status` off it. */
+  data: Record<string, unknown> | null;
+}
+
+async function postAuth(path: string, payload: Record<string, unknown>): Promise<AuthResult> {
   const res = await fetch(`${API_BASE}/api/v1/auth/${path}`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (res.ok) return null;
-  let msg = "Something went wrong. Please try again.";
-  try {
-    const body = (await res.json()) as { message?: string };
-    if (body.message) msg = body.message;
-  } catch {
-    /* non-JSON error body */
+  if (res.ok) {
+    try {
+      return { error: null, data: (await res.json()) as Record<string, unknown> };
+    } catch {
+      return { error: null, data: null }; // 204 or a non-JSON success body
+    }
   }
-  return msg;
+  // The auth endpoints answer with RFC 7807 like every other module — the old
+  // {code, message} body they used to return is retired. problemDisplayMessage
+  // reads `detail` and falls back to the shared catalog, so this path no longer
+  // carries its own copy of the fallback string.
+  try {
+    return { error: problemDisplayMessage(await res.json()), data: null };
+  } catch {
+    return { error: problemDisplayMessage(undefined), data: null }; // non-JSON error body
+  }
 }
 
 function LoginForm({
@@ -108,7 +126,7 @@ function LoginForm({
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const err = await postAuth("login", { email, password, remember });
+    const { error: err } = await postAuth("login", { email, password, remember });
     if (err) {
       setError(err);
       setLoading(false);
@@ -188,7 +206,7 @@ function RegisterForm({
   onRegistered,
 }: {
   onSwitch: () => void;
-  onRegistered: (email: string) => void;
+  onRegistered: (email: string, awaitingApproval: boolean) => void;
 }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -209,7 +227,7 @@ function RegisterForm({
       return;
     }
     setLoading(true);
-    const err = await postAuth("register", {
+    const { error: err, data } = await postAuth("register", {
       email,
       password,
       display_name: displayName,
@@ -219,9 +237,11 @@ function RegisterForm({
       setLoading(false);
       return;
     }
-    // Success: no session was created — hand the email back to the parent, which
-    // switches to the login tab so the user signs in with the new account.
-    onRegistered(email);
+    // Success, but not necessarily usable: registration is approve-first, so the
+    // account is normally `pending` and signing in would 403. The exception is
+    // the founding account on a fresh install, which comes back `approved`.
+    // Telling everyone "please sign in" would send most of them into a refusal.
+    onRegistered(email, data?.approval_status !== "approved");
   }
 
   return (

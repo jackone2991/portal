@@ -48,11 +48,24 @@ export interface TemplateManifest {
     libraryMedia: ComponentType;
     /** SPEC-07 P0.4 — media player with resume. */
     libraryMediaDetail: ComponentType<{ id: string }>;
+    /** Music vertical — track catalogue ("Thư viện" / "Của tôi"). */
+    libraryMusic: ComponentType;
+    /** Music vertical — one track: metadata, edit, publish, play. */
+    libraryMusicDetail: ComponentType<{ id: string }>;
+    /** Music vertical (0041) — the caller's playlists. */
+    libraryMusicPlaylists: ComponentType;
+    /** Music vertical (0041) — one playlist, in playlist order. */
+    libraryMusicPlaylistDetail: ComponentType<{ id: string }>;
     /** SPEC-03 §8 — personal ledger (bank): dashboard, transactions, accounts, budgets. */
     bankDashboard: ComponentType;
     bankTransactions: ComponentType;
     bankAccounts: ComponentType;
     bankBudgets: ComponentType;
+    bankReports: ComponentType;
+    /** SPEC-03 P0.4 — the ledger's taxonomy: icons, colours, parents. */
+    bankCategories: ComponentType;
+    /** SPEC-10 phase 1 — debts and loans, kept out of income/expense. */
+    bankDebts: ComponentType;
     /** SPEC-08 P0.5 — people registry (contacts + birthdays). */
     peopleList: ComponentType;
     peopleDetail: ComponentType<{ id: string }>;
@@ -60,5 +73,11 @@ export interface TemplateManifest {
     calendar: ComponentType;
     /** Weather — current + hourly + 7-day (Open-Meteo, geolocation). */
     weather: ComponentType;
+    /** Admin console — user directory + registration approval queue. */
+    adminUsers: ComponentType;
+    /** Admin console — role hierarchy and the role x permission matrix. */
+    adminRoles: ComponentType;
+    /** Admin console — shell navigation menu + dashboard widget placement. */
+    adminLayout: ComponentType;
   };
 }

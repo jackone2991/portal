@@ -3,7 +3,7 @@
 Owns the identity + access-control story:
 
 - Users (profile, lifecycle, disabled state)
-- Authentication: local password login (Argon2id, [ADR-06](../../../../doc/en/architecture/06-local-auth-model.md)), JWT (access), refresh tokens with rotation + reuse detection
+- Authentication: local password login (Argon2id, [ADR-06](../../../../docs/adr/06-local-auth-model.md)), JWT (access), refresh tokens with rotation + reuse detection
 - 2FA / TOTP (planned)
 - RBAC: roles, permissions, hierarchy, policies (planned)
 - Session management
@@ -44,7 +44,9 @@ See [api/api.go](api/api.go). Other modules MUST NOT reach into `auth`, `rbac`, 
 
 ## Open work
 
-- TOTP enrolment + step-up flow (see [authoration.md §2.4](../../../../doc/en/authoration.md)).
-- Policy + Group features (see [archivetech.md §3.1-3.3](../../../../doc/en/archivetech.md)).
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
 
-*(The Phase 0 wiring — `cmd/api/main.go` construction, repository adapters, `MountHTTP` — is done; see [MILESTONE_CHECKS.md](../../../../MILESTONE_CHECKS.md).)*

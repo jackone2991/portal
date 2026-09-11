@@ -90,3 +90,18 @@ WHERE id = $1;
 
 -- name: DeleteAsset :exec
 DELETE FROM assets WHERE id = $1;
+
+-- name: SetAssetVisibility :one
+-- Flip an asset between 'private' and 'public' (0032).
+--
+-- The owner predicate is belt AND braces. The 0032 UPDATE policy already
+-- restricts this to the owner or a tenant admin — but FORCE RLS is inert while
+-- DATABASE_URL runs as the superuser `portal`, which is still what .env.example
+-- ships (see its "RLS cutover" section). This is the one write that can make a
+-- private file world-readable; it must not depend on a deployment flag being
+-- flipped. Tenant admins lose the ability to publish someone else's asset here,
+-- which is the right trade for a statement this sharp.
+UPDATE assets
+SET visibility = $2, updated_at = now()
+WHERE id = $1 AND owner_id = $3
+RETURNING *;

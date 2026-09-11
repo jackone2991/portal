@@ -24,10 +24,23 @@ type Deps struct {
 	Repo     Repository
 	Events   EventPublisher
 	Timezone string
+	// Directory backs GET /people/suggestions. cmd/api passes a closure over
+	// accountapi.ListDirectory; nil leaves the endpoint answering an empty list.
+	Directory DirectoryFunc
+	// Connected lists accounts the caller already has a social connection or a
+	// pending request with. Suggestions subtract them, so the list stops offering
+	// someone you have already asked. Wired from socialapi.CounterpartIDs.
+	Connected ConnectedFunc
 
 	// RunInUserTenant (worker only) scopes the birthday-notice INSERT to the
 	// person's owner org (ADR-07 1b). nil on the API side.
 	RunInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+	// ForEachTenant (worker only) runs the daily birthday scan once per tenant,
+	// each in its own scope. The scan reads people_persons, an RLS table: under
+	// portal_app an unscoped scan sees zero rows and silently does nothing, so
+	// the iteration is what keeps it working after the ADR-07 cutover. Nil ⇒ run
+	// once unscoped (the pre-cutover behaviour).
+	ForEachTenant func(ctx context.Context, fn func(context.Context) error) error
 
 	RequireAuth       func(http.Handler) http.Handler
 	RequirePermission func(code string) func(http.Handler) http.Handler
@@ -53,7 +66,7 @@ func New(d Deps) (*Module, error) {
 		log.Warn().Str("tz", tz).Msg("people: timezone load failed, using UTC")
 		loc = time.UTC
 	}
-	svc := &Service{repo: d.Repo, events: d.Events, loc: loc, runInUserTenant: d.RunInUserTenant}
+	svc := &Service{repo: d.Repo, events: d.Events, loc: loc, runInUserTenant: d.RunInUserTenant, directory: d.Directory, connected: d.Connected}
 	return &Module{deps: d, svc: svc, handler: &Handler{svc: svc, currentUser: d.CurrentUser}}, nil
 }
 
@@ -65,6 +78,7 @@ func (m *Module) MountHTTP(r chi.Router) {
 		r.With(m.perm("people:read:own")).Get("/", m.handler.List)
 		r.With(m.perm("people:write:own")).Post("/", m.handler.Create)
 		r.With(m.perm("people:read:own")).Get("/upcoming-birthdays", m.handler.Upcoming)
+		r.With(m.perm("people:read:own")).Get("/suggestions", m.handler.Suggestions)
 		r.With(m.perm("people:read:own")).Get("/{id}", m.handler.Get)
 		r.With(m.perm("people:write:own")).Patch("/{id}", m.handler.Patch)
 		r.With(m.perm("people:delete:own")).Delete("/{id}", m.handler.Delete)
@@ -75,7 +89,12 @@ func (m *Module) MountHTTP(r chi.Router) {
 // the schedule (people:scan_birthdays) to the shared scheduler.
 func (m *Module) RegisterTasks(mux *asynq.ServeMux) {
 	mux.HandleFunc(peopleapi.TaskScanBirthdays, func(ctx context.Context, _ *asynq.Task) error {
-		return m.svc.ScanBirthdays(ctx, time.Now())
+		now := time.Now()
+		scan := func(ctx context.Context) error { return m.svc.ScanBirthdays(ctx, now) }
+		if m.deps.ForEachTenant == nil {
+			return scan(ctx)
+		}
+		return m.deps.ForEachTenant(ctx, scan)
 	})
 }
 

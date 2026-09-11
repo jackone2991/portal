@@ -6,9 +6,7 @@ import type { Route } from "next";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { FriendRequestsMenu, MessagesMenu, NotificationsMenu } from "./NotifMenus";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.portal.localhost";
+import { baseURL as API_BASE } from "@/lib/api-client";
 
 /**
  * Header bar content — port of `components/headers/menu.blade.php`.

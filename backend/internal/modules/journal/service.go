@@ -2,8 +2,6 @@ package journal
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -12,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	journalapi "github.com/portal/backend/internal/modules/journal/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 const (
@@ -198,26 +197,17 @@ func normalizeMood(mood *string) (*string, error) {
 // ── cursor helpers (keyset "<occurred_at>|<id>", base64url) ─────────
 
 func encodeCursor(e Entry) string {
-	raw := e.OccurredAt.UTC().Format(time.RFC3339Nano) + "|" + e.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(e.OccurredAt.UTC().Format(time.RFC3339Nano), e.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("journal: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

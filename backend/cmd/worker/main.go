@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -115,8 +115,10 @@ func run() error {
 	}
 	defer pool.Close()
 	// tdb wraps the pool with tenant-scoping helpers; conn is the context-aware
-	// DBTX handed to every repository. The worker's periodic sweeps run without a
-	// tenant tx today (cross-tenant) — that moves to cmd/sysjobs in a later increment.
+	// DBTX handed to every repository. Every worker path that touches an RLS
+	// table is now scoped: per-user writes through runInUserTenant, cross-tenant
+	// periodic sweeps through forEachTenant (one committed scope per tenant).
+	// That is what makes the portal_app cutover safe without cmd/sysjobs.
 	tdb := platformdb.New(pool)
 	conn := tdb.Conn()
 
@@ -175,6 +177,10 @@ func run() error {
 		Repo:     mediarepo.NewAdapter(conn),
 		Enqueuer: asynqClient,
 		Events:   publisher,
+		// ADR-07 increment 1b: the transcode/image/poster workers write to
+		// media_asset_variants and assets, both tenant-scoped. This is the last
+		// of the four worker write paths the 0020 migration's ⚠️ gate names.
+		RunInUserTenant: runInUserTenant,
 	})
 	if err != nil {
 		return fmt.Errorf("media module: %w", err)
@@ -219,7 +225,18 @@ func run() error {
 	// ── Bank module (worker side) ───────────────────────────────────
 	// No P0 tasks — the wiring exists so SPEC-06's stream consumer of
 	// bank:transaction_* attaches here without touching cmd/worker's shape.
-	bankMod, err := bank.New(bank.Deps{Repo: bankrepo.NewAdapter(conn, tdb.RunInTx)})
+	// Debts (SPEC-10 phase 1) need three things on the worker side: the same
+	// adapter as a second interface, a way into the notification system, and a
+	// tenant walk — the reminder sweep visits tenants, not callers.
+	bankAdapter := bankrepo.NewAdapter(conn, tdb.RunInTx)
+	bankMod, err := bank.New(bank.Deps{
+		Repo:   bankAdapter,
+		Debts:  bankAdapter,
+		Notify: asynqClient,
+		ForEachTenant: func(ctx context.Context, fn func(context.Context) error) error {
+			return forEachTenant(ctx, tenantStore, tdb, bankapi.TaskScanDebtsDue, fn)
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("bank module: %w", err)
 	}
@@ -227,10 +244,10 @@ func run() error {
 	// ── Comic module (worker side: media:asset_deleted consumer, P0.6) ──
 	comicMod, err := comic.New(comic.Deps{
 		Repo:        comicrepo.NewAdapter(conn, tdb.RunInTx),
-		Media:       mediaMod.API(),   // P1.7: IngestImage + GetAsset for the zip import
-		Storage:     store,            // P1.7: read/delete the uploaded zip
-		Enqueuer:    asynqClient,      // (unused on the worker side, but harmless)
-		RunInTenant: runInUserTenant,  // P1.7: per-image committed tenant tx
+		Media:       mediaMod.API(),  // P1.7: Ingest + GetAsset for the zip import
+		Storage:     store,           // P1.7: read/delete the uploaded zip
+		Enqueuer:    asynqClient,     // (unused on the worker side, but harmless)
+		RunInTenant: runInUserTenant, // P1.7: per-image committed tenant tx
 	})
 	if err != nil {
 		return fmt.Errorf("comic module: %w", err)
@@ -242,7 +259,27 @@ func run() error {
 		return fmt.Errorf("movie module: %w", err)
 	}
 
-	musicMod, err := music.New(music.Deps{Repo: musicrepo.NewAdapter(conn)})
+	// Music worker side: the media:asset_deleted consumer, plus the bulk zip
+	// import (0038) — Media.Ingest turns each entry into an audio asset, Storage
+	// reads the archive back, and RunInTenant opens the owner's tenant scope,
+	// without which every RLS-fenced read in the import errors outright.
+	musicMod, err := music.New(music.Deps{
+		Repo:     musicrepo.NewAdapter(conn),
+		Media:    mediaMod.API(),
+		Storage:  store,
+		Enqueuer: asynqClient,
+		// The worker is where the outbound calls actually happen. Redis carries
+		// the 1-req/s throttle, which has to be shared across every replica —
+		// a per-process ticker would multiply the rate by the replica count.
+		Lookup: music.LookupConfig{
+			Enabled:     cfg.MusicbrainzEnabled,
+			Contact:     cfg.MusicbrainzContact,
+			BaseURL:     cfg.MusicbrainzBaseURL,
+			CoverArtURL: cfg.CoverArtBaseURL,
+		},
+		Redis:       rdb,
+		RunInTenant: runInUserTenant,
+	})
 	if err != nil {
 		return fmt.Errorf("music module: %w", err)
 	}
@@ -255,7 +292,14 @@ func run() error {
 	}
 
 	// ── People module (worker side: daily birthday scan, P0.4) ──────
-	peopleMod, err := people.New(people.Deps{Repo: peoplerepo.NewAdapter(conn), Events: publisher, RunInUserTenant: runInUserTenant})
+	peopleMod, err := people.New(people.Deps{
+		Repo:            peoplerepo.NewAdapter(conn),
+		Events:          publisher,
+		RunInUserTenant: runInUserTenant,
+		ForEachTenant: func(ctx context.Context, fn func(context.Context) error) error {
+			return forEachTenant(ctx, tenantStore, tdb, peopleapi.TaskScanBirthdays, fn)
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("people module: %w", err)
 	}
@@ -280,6 +324,8 @@ func run() error {
 	// so the transcode's ready-transition actually reaches notify. The consumer
 	// task lands on the weight-1 "default" queue served by the light server below.
 	publisher.Subscribe(mediaworker.EventAssetReady, notifyapi.TaskOnAssetReady, asynq.Queue("default"))
+	// One bell entry per comic publish, not per chapter (see the note below).
+	publisher.Subscribe(comicapi.EventComicPublished, notifyapi.TaskOnComicPublished, asynq.Queue("default"))
 	// media:asset_deleted → comic:on_asset_deleted (SPEC-02 P0.6): reap dangling
 	// page/cover references when an asset is hard-deleted media-side.
 	publisher.Subscribe(media.EventAssetDeleted, comicapi.TaskOnAssetDeleted, asynq.Queue("default"))
@@ -287,18 +333,39 @@ func run() error {
 	publisher.Subscribe(media.EventAssetDeleted, musicapi.TaskOnAssetDeleted, asynq.Queue("default"))
 	publisher.Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted, asynq.Queue("default"))
 
+	// Catalogue verticals → life stream. Emitted since the verticals landed but
+	// unsubscribed until 2026-08-25: publishing a movie produced no card while
+	// publishing a comic chapter did.
+	// A catalogue publish is NOT projected into the life-stream. Publishing a
+	// track, a movie or a story is a library event — "this is now in the
+	// library" — not a moment in anyone's day, and one card per work buried the
+	// feed the same way media:asset_ready and comic:chapter_published did
+	// (0033, 0034). It reaches the bell instead.
+	publisher.Subscribe(movieapi.EventMoviePublished, notifyapi.TaskOnMoviePublished, asynq.Queue("default"))
+	publisher.Subscribe(musicapi.EventTrackPublished, notifyapi.TaskOnTrackPublished, asynq.Queue("default"))
+	publisher.Subscribe(storyapi.EventStoryPublished, notifyapi.TaskOnStoryPublished, asynq.Queue("default"))
+
 	// Life-stream projection consumers (SPEC-06 P0.1b) — journal owns stream_items
 	// and subscribes to every producer. media:asset_deleted now fans out to TWO
 	// consumers (comic reap + stream removal): the platform/events multi-consumer path.
-	publisher.Subscribe(mediaworker.EventAssetReady, journalapi.TaskStreamAssetReady, asynq.Queue("default"))
+	// media:asset_ready is deliberately NOT projected into the life-stream. It is
+	// a pipeline confirmation ("your file finished processing"), and it already
+	// has a channel: notify:on_asset_ready, subscribed above. Projecting it too
+	// put one card in the feed per processed file — 182k of them, one per
+	// imported comic page, burying every real post. The `origin == "import"`
+	// flood guard that was meant to prevent this never fired: the import path
+	// creates assets with origin 'upload'.
 	publisher.Subscribe("media:playback_completed", journalapi.TaskStreamPlaybackCompleted, asynq.Queue("default"))
 	publisher.Subscribe(media.EventAssetDeleted, journalapi.TaskStreamAssetDeleted, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionCreated, journalapi.TaskStreamBankCreated, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionUpdated, journalapi.TaskStreamBankUpdated, asynq.Queue("default"))
 	publisher.Subscribe(bankapi.EventTransactionDeleted, journalapi.TaskStreamBankDeleted, asynq.Queue("default"))
 	publisher.Subscribe(peopleapi.EventBirthdayUpcoming, journalapi.TaskStreamBirthday, asynq.Queue("default"))
-	publisher.Subscribe(comicapi.EventChapterPublished, journalapi.TaskStreamComicPublished, asynq.Queue("default"))
-	publisher.Subscribe(comicapi.EventChapterDeleted, journalapi.TaskStreamComicDeleted, asynq.Queue("default"))
+	// Chapters are NOT projected into the life-stream. Publishing a comic emits
+	// one event per chapter — a 500-chapter title produced 500 feed cards, and
+	// 2,516 rows had piled up against 10 real posts. What a person wants to hear
+	// is "this comic got new chapters", once, which is comic:published below.
+	// The chapter-deleted subscription went with it: there is no card to remove.
 
 	// ── Heavy server: serialize the expensive decodes (P0.1 OOM guard) ──
 	// Its own low-concurrency pool consumes ONLY the "heavy" queue — queue
@@ -338,10 +405,10 @@ func run() error {
 	// :on_asset_ready — all light, IO-bound, weight-1 "default" queue.
 	notifyMod.RegisterTasks(lightMux)
 	journalMod.RegisterTasks(lightMux) // no-op at P0; wiring for SPEC-06 consumers
-	bankMod.RegisterTasks(lightMux)    // no-op at P0; wiring for SPEC-06 consumers
+	bankMod.RegisterTasks(lightMux)    // bank:scan_debts_due (daily debt-due sweep, SPEC-10)
 	comicMod.RegisterTasks(lightMux)   // comic:on_asset_deleted (media:asset_deleted consumer, P0.6)
 	movieMod.RegisterTasks(lightMux)   // movie:on_asset_deleted (media:asset_deleted consumer)
-	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted (media:asset_deleted consumer)
+	musicMod.RegisterTasks(lightMux)   // music:on_asset_deleted + music:import_zip (0038)
 	storyMod.RegisterTasks(lightMux)   // story:on_asset_deleted (media:asset_deleted consumer)
 	peopleMod.RegisterTasks(lightMux)  // people:scan_birthdays (daily birthday scan, P0.4)
 	opsMod.RegisterTasks(lightMux)     // ops:backup_database (nightly pg_dump → storage)
@@ -349,7 +416,7 @@ func run() error {
 		return notifyMod.PurgeOld(ctx)
 	})
 	lightMux.HandleFunc(mediaworker.TaskTypePurgeOrphans, func(ctx context.Context, _ *asynq.Task) error {
-		return mediaMod.PurgeOrphans(ctx)
+		return forEachTenant(ctx, tenantStore, tdb, "media:purge_orphans", mediaMod.PurgeOrphans)
 	})
 	// The account module isn't constructed in the worker (its request-path deps —
 	// JWT issuer, RBAC — are irrelevant to a maintenance sweep), so the
@@ -377,6 +444,12 @@ func run() error {
 	if _, err := scheduler.Register("0 3 * * *",
 		asynq.NewTask(opsapi.TaskBackupDatabase, nil), asynq.Queue("default")); err != nil {
 		return fmt.Errorf("register ops backup schedule: %w", err)
+	}
+	// Daily debt-due sweep at 07:00 UTC (SPEC-10 phase 1) — notifies at 7 days,
+	// 1 day and on the day, each at most once per (debt, due date, lead).
+	if _, err := scheduler.Register("0 7 * * *",
+		asynq.NewTask(bankapi.TaskScanDebtsDue, nil), asynq.Queue("default")); err != nil {
+		return fmt.Errorf("register debt-due schedule: %w", err)
 	}
 	// Daily birthday scan at 06:00 UTC (SPEC-08 P0.4) — emits people:birthday_upcoming.
 	if _, err := scheduler.Register("0 6 * * *",
@@ -414,8 +487,64 @@ func run() error {
 
 	<-sigCtx.Done()
 	log.Info().Msg("worker shutting down")
+	// All three servers must be drained. imageSrv was missing here, so on SIGTERM
+	// its in-flight media:process_image tasks were killed mid-decode — during a
+	// comic zip import that is IMAGE_CONCURRENCY pages lost per restart, which
+	// surfaces later as a silently incomplete chapter.
 	scheduler.Shutdown()
 	heavySrv.Shutdown()
+	imageSrv.Shutdown()
 	lightSrv.Shutdown()
+	return nil
+}
+
+// forEachTenant runs fn once per tenant, each inside its own committed tenant
+// scope.
+//
+// The periodic sweeps (media:purge_orphans, people:scan_birthdays) are
+// cross-tenant by nature. Before the portal_app cutover they ran unscoped and
+// saw every row because the superuser bypasses RLS; after it, an unscoped sweep
+// sees NOTHING and silently does nothing — a regression with no error to notice.
+// Iterating tenants keeps them correct without a BYPASSRLS role, which is what
+// lets ADR-07 step 7 (cmd/sysjobs + internal/sysrepository) stay deferred.
+//
+// `organizations` is not an RLS table, so listing tenants works under either
+// role. One tenant's failure is logged and the sweep continues: a single bad
+// scope must not stop the janitor for everyone else.
+func forEachTenant(
+	ctx context.Context,
+	store *tenantrepo.Adapter,
+	tdb *platformdb.DB,
+	task string,
+	fn func(context.Context) error,
+) error {
+	orgs, err := store.ListAllIDs(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: list tenants: %w", task, err)
+	}
+	var failed int
+	for _, org := range orgs {
+		tx, err := tdb.BeginTenantScope(ctx, org)
+		if err != nil {
+			failed++
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: begin tenant scope failed")
+			continue
+		}
+		scoped := platformdb.WithTx(ctx, tx)
+		if err := fn(scoped); err != nil {
+			failed++
+			_ = tx.Rollback(scoped)
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: tenant failed")
+			continue
+		}
+		if err := tx.Commit(scoped); err != nil {
+			failed++
+			log.Error().Err(err).Str("task", task).Str("org", org.String()).Msg("sweep: commit failed")
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("%s: %d of %d tenants failed", task, failed, len(orgs))
+	}
+	log.Info().Str("task", task).Int("tenants", len(orgs)).Msg("sweep complete")
 	return nil
 }

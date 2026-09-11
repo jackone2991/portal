@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { WidgetCard } from "../widget/WidgetCard";
 import { TrackItem } from "./TrackItem";
 
@@ -13,7 +14,13 @@ import { TrackItem } from "./TrackItem";
  * Ships with deterministic sample tracks so it renders standalone.
  */
 
-type Track = { title: string; artist: string; duration: string };
+type Track = {
+  title: string;
+  artist: string;
+  /** Optional — real tracks carry no duration on the wire (see `TrackItem`). */
+  duration?: string;
+  coverUrl?: string | null;
+};
 
 const SAMPLE_TRACKS: Track[] = [
   { title: "The Past Starts Slow...", artist: "System of a Revenge", duration: "3:22" },
@@ -27,33 +34,47 @@ export function PlaylistWidget({
   title = "Playlist",
   tracks = SAMPLE_TRACKS,
   nowPlaying,
+  emptyLabel = "No tracks yet.",
+  footer,
   onPlay,
 }: {
   title?: string;
   tracks?: Track[];
   /** 1-based index of the currently-playing row. */
   nowPlaying?: number;
+  /** Shown instead of the list when `tracks` is an explicit empty array. */
+  emptyLabel?: string;
+  /** Optional slot under the list — e.g. a "See all" link. */
+  footer?: ReactNode;
   /** Called with the clicked row's 1-based index. */
   onPlay?: (index: number) => void;
 }) {
   return (
     <WidgetCard title={title} more>
-      <ol className="space-y-1">
-        {tracks.map((t, i) => {
-          const index = i + 1;
-          return (
-            <TrackItem
-              key={`${t.title}-${index}`}
-              index={index}
-              title={t.title}
-              artist={t.artist}
-              duration={t.duration}
-              playing={index === nowPlaying}
-              onPlay={() => onPlay?.(index)}
-            />
-          );
-        })}
-      </ol>
+      {tracks.length === 0 ? (
+        <p className="py-2 text-sm" style={{ color: "var(--tpl-muted)" }}>
+          {emptyLabel}
+        </p>
+      ) : (
+        <ol className="space-y-1">
+          {tracks.map((t, i) => {
+            const index = i + 1;
+            return (
+              <TrackItem
+                key={`${t.title}-${index}`}
+                index={index}
+                title={t.title}
+                artist={t.artist}
+                duration={t.duration}
+                coverUrl={t.coverUrl}
+                playing={index === nowPlaying}
+                onPlay={() => onPlay?.(index)}
+              />
+            );
+          })}
+        </ol>
+      )}
+      {footer && <div className="mt-3">{footer}</div>}
     </WidgetCard>
   );
 }

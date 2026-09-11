@@ -2,8 +2,6 @@ package music
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -13,6 +11,7 @@ import (
 
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	musicapi "github.com/portal/backend/internal/modules/music/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Service holds the music business logic. Construct via the module.
@@ -20,6 +19,24 @@ type Service struct {
 	repo   Repository
 	media  MediaAPI
 	events EventPublisher // optional: music:track_published on publish
+
+	// Zip import (0038). The API side sets store + enqueue; the worker side sets
+	// store as well (it reads the zip back). Nil on either means the import
+	// routes/tasks are simply not wired, which is how a binary that should not
+	// import declines to.
+	store   Storage
+	enqueue Enqueuer
+	// runInTenant opens a committed tenant scope for a user. The worker has no
+	// request tenant, and every table the import touches is RLS-fenced.
+	runInTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+
+	// Playlists (0041). Same adapter as repo; a separate field so the playlist
+	// feature stays in its own files. Nil ⇒ the playlist routes are not wired.
+	playlists PlaylistRepository
+
+	// mb is the MusicBrainz / Cover Art Archive client (0039). Nil, or present
+	// but not `active`, means outbound lookups are off — which is the default.
+	mb *MBClient
 }
 
 type ListResult struct {
@@ -194,26 +211,17 @@ func validTitle(s string) bool {
 }
 
 func encodeCursor(t Track) string {
-	raw := t.UpdatedAt.UTC().Format(time.RFC3339Nano) + "|" + t.ID.String()
-	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+	return server.EncodeCursor(t.UpdatedAt.UTC().Format(time.RFC3339Nano), t.ID)
 }
 
 func decodeCursor(s string) (time.Time, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	key, id, err := server.DecodeCursor(s)
 	if err != nil {
 		return time.Time{}, uuid.Nil, err
 	}
-	parts := strings.SplitN(string(b), "|", 2)
-	if len(parts) != 2 {
-		return time.Time{}, uuid.Nil, errors.New("music: malformed cursor")
-	}
-	at, err := time.Parse(time.RFC3339Nano, parts[0])
+	at, err := time.Parse(time.RFC3339Nano, key)
 	if err != nil {
-		return time.Time{}, uuid.Nil, err
-	}
-	id, err := uuid.Parse(parts[1])
-	if err != nil {
-		return time.Time{}, uuid.Nil, err
+		return time.Time{}, uuid.Nil, server.ErrBadCursor
 	}
 	return at, id, nil
 }

@@ -1,5 +1,7 @@
 # Portal — Detailed Feature Specs (PRD level)
 
+**Status:** current · **Last verified:** never
+
 **Language policy:** English only, per owner decision 2026-07-07 (ratified by
 [ADR-09](../../adr/09-docs-architecture.md) — the old vi mirror is a frozen archive).
 
@@ -22,6 +24,8 @@ before starting*. A brief is promoted to a spec when it's queued for build
 | [SPEC-07](SPEC-07-continue-rail.md) | Playback resume + continue rail (D-20) | `media` | — (comic leg joins after SPEC-02) |
 | [SPEC-08](SPEC-08-people-registry.md) | People registry — contacts + birthdays | `people` (new) | — (P1 avatars need SPEC-01) |
 | [SPEC-09](SPEC-09-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` (new) | — (land P0 before SPEC-03 data accrues) |
+| [SPEC-10](SPEC-10-ledger-expansion.md) | Ledger expansion — debts, goals, recurring, cards, net worth, automation, splits, sharing | `bank` (extends) | SPEC-03; SPEC-04 for reminders |
+| [SPEC-11](SPEC-11-docs-canonicalisation.md) | Docs canonicalisation — 79 stale ADR statements, 95 links, four CI docs checks (executed 2026-09-11) | none (docs + CI) | ADR-11 |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs;
 they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)

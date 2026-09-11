@@ -1,0 +1,22 @@
+-- 0033_journal_drop_asset_ready_stream: remove the media:asset_ready cards from
+-- the life-stream.
+--
+-- These were never content. `media:asset_ready` fires when the pipeline finishes
+-- processing a file, and projecting it into the stream put a "X is ready" card
+-- in the feed for every processed asset — 182,031 of them at the time of
+-- writing, one per imported comic page, against 10 actual journal entries. The
+-- feed was 99.99% plumbing receipts.
+--
+-- The event still exists and is still delivered: `notify:on_asset_ready` fans it
+-- out as a notification, which is the right channel for "your upload finished".
+-- Only the stream projection is dropped, in cmd/worker's subscription list.
+--
+-- The `origin = 'import'` guard in the old handler was meant to stop exactly
+-- this flood and never fired: the comic import path creates its assets with
+-- origin 'upload', so every page looked like a hand-made upload.
+--
+-- NOT REVERSIBLE. The down migration cannot restore these rows — their
+-- occurred_at was `now()` at projection time, which is not recoverable from the
+-- assets table. It is deliberately a no-op rather than a wrong reconstruction.
+
+DELETE FROM stream_items WHERE source_module = 'media' AND event_type = 'media:asset_ready';

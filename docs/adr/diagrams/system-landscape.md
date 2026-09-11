@@ -1,5 +1,7 @@
 # v1 system landscape
 
+**Status:** current · **Last verified:** never
+
 > **Status:** reflects the shipped v1 stack as of **2026-07-06** — 8 compose services (postgres, pgbouncer, dragonfly, minio + minio-setup, traefik, api, worker, frontend). Auth is local-password per [ADR-06](../06-local-auth-model.md).
 
 The sparse version of `diagrams.md` §1, scoped to what actually runs in the [v1 cut](../01-v1-scope-cut.md). Everything greyed-out in the long-horizon diagram (LiveKit, mediamtx, observability stack) is omitted here so the picture matches what the compose stack actually starts. MinIO appears because dev runs it as the S3 endpoint (prod = R2).
@@ -102,4 +104,4 @@ Browser → POST /api/v1/assets
        → Browser polls GET /assets/{id} until status=ready → Vidstack plays via the public GET /assets/{id}/hls/* proxy
 ```
 
-> **Update (2026-07-06):** both flows are implemented and committed; [MILESTONE_CHECKS.md](../../../../MILESTONE_CHECKS.md) is the living status tracker. [ADR-05](../05-phase0-wiring-order.md) documents the milestone schedule that got there.
+> **Update (2026-07-06):** both flows are implemented and committed; `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) is the living status tracker. [ADR-05](../05-phase0-wiring-order.md) documents the milestone schedule that got there.

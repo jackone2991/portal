@@ -1,7 +1,7 @@
 # Portal v1 — Master Test Plan
 
-**Version:** 1.0 · **Author:** QA Lead · **Date:** 2026-07-12
-**Status:** Baseline · **Applies to:** Portal v1 (SPEC-01 … SPEC-09)
+**Status:** current · **Last verified:** never (as a whole; the 2026-08-25 audit found §5 L2 layer, §"make up starts Postgres", and "CI runs vitest" false — [backlog](../product/backlog.md) line 36)
+**Version:** 1.0 · **Author:** QA Lead · **Date:** 2026-07-12 · **Applies to:** Portal v1 (SPEC-01 … SPEC-09)
 
 ---
 
@@ -16,7 +16,7 @@ The requirement baseline is the nine implementation-ready specs in
 [docs/product/specs/](../product/specs/). Each spec states acceptance criteria
 (AC); this plan turns every AC into one or more executable test cases in the
 companion `TEST-CASES-SPEC-*.md` files, and tracks coverage in
-[TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md).
+[TRACEABILITY-MATRIX.md](../reference/TRACEABILITY-MATRIX.md).
 
 ## 2. Scope
 

@@ -57,9 +57,16 @@ export interface paths {
         /**
          * Create a local account
          * @description Creates a local account (Argon2id hash) and seeds the default `user`
-         *     role. Returns **201 without a session** — the user is sent back to
-         *     `/login` to sign in with the new credentials. Deployments that want
-         *     invite-only signup gate this route at the router.
+         *     role. Returns **201 without a session**.
+         *
+         *     The account is born **pending** (migration 0031): the password works, but
+         *     `/auth/login` refuses it with 403 `account/account-pending` until a holder
+         *     of `users:approve` — `superadmin` by default — approves it. Read
+         *     `approval_status` on the response to decide what to tell the user.
+         *
+         *     **First-run exception:** if this is the very first account on the install
+         *     it is approved immediately and granted `superadmin`, because otherwise a
+         *     fresh deployment deadlocks with nobody able to approve anybody.
          */
         post: operations["register"];
         delete?: never;
@@ -198,6 +205,448 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user accounts
+         * @description The user directory and the approval queue are the same list under
+         *     different `status` filters. Always returns `counts` so the UI can badge
+         *     the pending queue without a second call. Requires `users:read:any`.
+         */
+        get: operations["adminListUsers"];
+        put?: never;
+        /**
+         * Provision an account directly
+         * @description Creates an account without a registration. Requires `users:write:any`.
+         *
+         *     **The approval state is not yours to choose.** It comes from the
+         *     creator's own authority: a creator who holds `users:approve` gets a
+         *     usable account at once, one who does not gets a `pending` row that still
+         *     has to clear the queue. Otherwise this endpoint would be a way around the
+         *     approval gate for anybody with `users:write:any`.
+         *
+         *     Roles are not settable here — assign them afterwards with
+         *     `PUT /admin/users/{id}/roles`, so the no-escalation rule lives in one
+         *     place. The new account is seeded with the `user` role only.
+         *
+         *     A password is required rather than optional: an account with no
+         *     credential can neither sign in nor recover itself.
+         */
+        post: operations["adminCreateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * One user account
+         * @description Requires `users:read:any`.
+         */
+        get: operations["adminGetUser"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an account permanently
+         * @description Requires `users:delete:any`.
+         *
+         *     **This cascades.** Every foreign key to `users` is `ON DELETE CASCADE`,
+         *     so the account's assets, comics, movies, tracks, stories, ledger, journal
+         *     entries, people and organizations go with it. There is no undo, and the
+         *     database will not object. `POST /admin/users/{id}/disable` is the
+         *     reversible alternative and is what the UI leads with.
+         *
+         *     `confirm_email` must equal the target's email (case-insensitive). That is
+         *     enforced server-side, not just in the UI, so a misclick, a stale tab or a
+         *     replayed request cannot reach the DELETE.
+         *
+         *     Also refused when: the target is you (403 `account/self-target`); the
+         *     target holds permissions you do not (403 `account/escalation`); or it is
+         *     the last account able to approve registrations, which would leave signups
+         *     that nobody can ever let in (409 `account/last-approver`).
+         */
+        delete: operations["adminDeleteUser"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit an account
+         * @description Changes the email, the display name, or sets a new password. Requires
+         *     `users:write:any`. Omitted or empty fields are left alone.
+         *
+         *     Email is editable because it IS the login identifier, which also makes
+         *     editing an account that outranks you a takeover route — refused with 403
+         *     `account/escalation`. Editing **yourself** is allowed here, unlike roles
+         *     and approval: renaming yourself locks nobody out.
+         *
+         *     Setting a password revokes every session the old one issued — the
+         *     `token_version` bump kills access tokens and the refresh chain is burned,
+         *     so the browser cannot silently mint new ones.
+         */
+        patch: operations["adminUpdateUser"];
+        trace?: never;
+    };
+    "/admin/users/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a pending registration
+         * @description Lets the account sign in. Requires `users:approve`. Approving yourself is
+         *     refused (403 `account/self-target`).
+         */
+        post: operations["adminApproveUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refuse a registration
+         * @description The row is kept rather than deleted, so the same email cannot be
+         *     re-registered to get past the refusal, and `note` is shown back to the
+         *     person on their next login attempt. Requires `users:approve`.
+         */
+        post: operations["adminRejectUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}/revoke-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send an approved account back to pending
+         * @description Bumps `token_version`, so any session the account currently holds stops
+         *     verifying on its next request. Requires `users:approve`.
+         */
+        post: operations["adminRevokeApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable an account
+         * @description Requires `users:write:any`. Disabling yourself is refused.
+         */
+        post: operations["adminDisableUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-enable a disabled account
+         * @description Requires `users:write:any`.
+         */
+        post: operations["adminEnableUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace a user's roles
+         * @description Whole-set replacement, not add/remove, so a checkbox column saves as one
+         *     atomic decision. Requires `rbac:role:assign`; refused with 403
+         *     `account/escalation` if any role being added *or* removed carries a
+         *     permission the caller does not hold, and always refused on yourself.
+         */
+        put: operations["adminSetUserRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/permission-matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The whole role x permission grid
+         * @description Every role (with its parent), every permission in the catalog, and per
+         *     role both `direct` grants and the full `effective` set after the
+         *     hierarchy walk. The two differ on purpose: a direct grant is a checkbox
+         *     you can clear, an inherited one is a consequence of the parent chain and
+         *     is changed by editing the ancestor. Requires `rbac:role:read`.
+         */
+        get: operations["adminPermissionMatrix"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a role
+         * @description Requires `rbac:role:write`.
+         */
+        post: operations["adminCreateRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a role
+         * @description Refused for system roles, for roles still assigned to somebody, and for
+         *     roles another role inherits from. Requires `rbac:role:write`.
+         */
+        delete: operations["adminDeleteRole"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a role
+         * @description `code` is immutable — grants, seed data and the escalation guard all key
+         *     on it. System roles are refused (403 `account/role-protected`), and a
+         *     parent that would close a cycle is refused (400 `account/role-cycle`).
+         *     Requires `rbac:role:write`.
+         */
+        patch: operations["adminUpdateRole"];
+        trace?: never;
+    };
+    "/admin/roles/{id}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace a role's direct permissions
+         * @description Saves one row of the matrix atomically and returns the whole recomputed
+         *     matrix, because changing one role's grants changes every descendant's
+         *     `effective` set. Everyone holding the role — or any role inheriting from
+         *     it — has `token_version` bumped, which re-keys the permission cache;
+         *     their session survives on the refresh cookie. Requires `rbac:role:write`,
+         *     and the no-escalation rule applies to both added and removed codes.
+         */
+        put: operations["adminSetRolePermissions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The shell layout for the calling user
+         * @description Menu entries and dashboard widgets this caller should actually see —
+         *     `visible` rows whose `permission` they hold, already filtered.
+         *
+         *     Authenticated but NOT permission-gated: the app frame cannot render
+         *     without it, so a gate here would only mean nobody has a sidebar. The
+         *     filtering is server-side rather than in the client, so an admin-only
+         *     entry does not merely get hidden in a bundle anyone can read.
+         */
+        get: operations["getMyLayout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The whole layout, hidden rows included
+         * @description Requires `system:settings:write`.
+         */
+        get: operations["adminGetLayout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layout/menu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace the whole navigation menu
+         * @description Whole-set rather than per-row: reordering is the common edit, and a
+         *     sequence of per-row updates would leave the menu in intermediate orders
+         *     that another admin could load. Applied in one transaction.
+         *
+         *     **Array order is authoritative** — `position` is renumbered from it, so
+         *     two rows can never claim the same slot.
+         *
+         *     Rows absent from the payload are deleted, EXCEPT `is_system` ones: those
+         *     are the shell's own navigation, and a stale tab must not be able to empty
+         *     the menu into a state nobody can fix from inside the UI. `href` must be an
+         *     in-app path starting with a single `/` — an absolute URL would turn the
+         *     app's own navigation into an open-redirect surface every user sees.
+         *
+         *     Requires `system:settings:write`.
+         */
+        put: operations["adminSaveLayoutMenu"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layout/widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace dashboard widget placement
+         * @description Sets slot, order, label, permission and visibility for the widgets that
+         *     already exist. It never creates or deletes one: `key` has to match a
+         *     React component in the frontend registry, so the catalogue is fixed by
+         *     the bundle and only placement is data. An unknown key is refused with
+         *     `layout/unknown-widget` rather than stored as a hole in the dashboard.
+         *
+         *     `position` is renumbered per slot from array order, so moving a card
+         *     between rails does not carry a number over from the rail it left.
+         *
+         *     Requires `system:settings:write`.
+         */
+        put: operations["adminSaveLayoutWidgets"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/notifications": {
         parameters: {
             query?: never;
@@ -310,7 +759,17 @@ export interface paths {
         delete: operations["deleteAsset"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update an asset (visibility)
+         * @description Changes the mutable parts of an asset. Today that is `visibility` alone —
+         *     the switch between owner-only and readable by anyone with the link.
+         *
+         *     Restricted to the owner or an admin of the owning tenant, and enforced by
+         *     the `0032` UPDATE policy rather than by a check in the handler. Someone
+         *     else's asset is therefore reported as 404, never 403: the endpoint must
+         *     not confirm that an id exists.
+         */
+        patch: operations["patchAsset"];
         trace?: never;
     };
     "/assets/{id}/source": {
@@ -367,10 +826,17 @@ export interface paths {
         };
         /**
          * Download the original file (owner-only)
-         * @description Streams the source object as an attachment with the sniffed content type.
+         * @description Streams the source object inline with the sniffed content type.
          *     Owner-authenticated only — the original retains full EXIF/GPS (unlike the
          *     metadata-stripped variants), so it is never served through the public-ish
          *     variant/HLS scheme.
+         *
+         *     **Range requests are supported** and this is load-bearing, not a nicety:
+         *     it is the route an `<audio>`/`<video>` element plays from, and a browser
+         *     that cannot range-request its media source reports `seekable` as `[0,0]`
+         *     and silently refuses every scrub. Served via `http.ServeContent`, so
+         *     `Accept-Ranges: bytes` is always present and a `Range` header is answered
+         *     with `206` + `Content-Range`.
          */
         get: operations["downloadAssetOriginal"];
         put?: never;
@@ -730,6 +1196,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bank/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Month report — category breakdown and trailing trend
+         * @description The month screen's aggregate. `expenses` / `incomes` are per-category
+         *     totals with CHILD categories rolled up into their parent, sorted by
+         *     total descending — a breakdown that split "Cà phê" out of "Ăn uống"
+         *     would be a chart of slivers.
+         *
+         *     Pure transfer legs are excluded (moving money between your own wallets
+         *     is not spending), but a transfer FEE — a row with both `transfer_id` and
+         *     `category_id` — counts as an ordinary expense.
+         *
+         *     `trend` always contains a fixed window of months ending at the requested
+         *     one, including months with no activity as zero rows.
+         */
+        get: operations["getBankReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/comics": {
         parameters: {
             query?: never;
@@ -881,6 +1377,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/comics/{id}/sync-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** List the comic's external sync sources (SPEC-02 P1.8) */
+        get: operations["listSyncSources"];
+        put?: never;
+        /**
+         * Bind an external source URL to the comic
+         * @description The URL is SSRF-checked: it must be http(s), must match COMIC_SOURCE_ALLOWLIST
+         *     when that is set, and must not resolve to a loopback, private, link-local,
+         *     CGNAT or multicast address. Re-checked before every scrape.
+         */
+        post: operations["createSyncSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a sync source (owner-checked) */
+        delete: operations["deleteSyncSource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a scrape of the source (async; the scraper calls back) */
+        post: operations["triggerSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sync-sources/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop a running sync (chapters already imported are kept) */
+        post: operations["cancelSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Allocate an import job for one batch of scraped chapters */
+        post: operations["syncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One batch's zip is uploaded (or that batch failed) */
+        post: operations["syncCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report overall chapter progress for the source */
+        post: operations["syncProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/comic/sync-finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Every batch is done — set the source's final status */
+        post: operations["syncFinalize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chapters/{id}": {
         parameters: {
             query?: never;
@@ -977,6 +1623,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's connections, or the requests waiting either way
+         * @description `status=accepted` (default) lists people you are connected to;
+         *     `incoming` lists requests waiting on your answer; `outgoing` lists ones
+         *     you sent that nobody has answered.
+         *
+         *     Every row is rendered from the caller's point of view: `user_id` and
+         *     `display_name` are always the OTHER person, and `outgoing` says which
+         *     side asked — the difference between a Cancel button and an Accept one.
+         */
+        get: operations["listConnections"];
+        put?: never;
+        /**
+         * Ask someone to connect
+         * @description Sends a pending request. If that person has already asked you, this
+         *     accepts theirs instead of failing — sending a request to someone who
+         *     asked you first is agreement, and answering "already exists" would leave
+         *     their request sitting unanswered.
+         */
+        post: operations["requestConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How many requests are waiting on the caller
+         * @description Backs the header badge. Counts pending requests addressed to the caller.
+         */
+        get: operations["connectionSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a pending request
+         * @description Only the addressee can accept, enforced by the `0037` UPDATE policy
+         *     rather than a check in the handler. A request that is not yours to
+         *     answer is reported as 404: the policies hide it, so confirming it exists
+         *     would be the only way to learn that it does.
+         */
+        post: operations["acceptConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Withdraw, decline, or disconnect
+         * @description One operation for all three, because the row means the same thing in
+         *     every case: this link no longer exists. Either party may call it, at any
+         *     stage. A declined request is deleted rather than recorded, so the pair is
+         *     free to try again later.
+         */
+        delete: operations["removeConnection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/people/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * People you may know (other accounts on this instance)
+         * @description Accounts on this Portal that the caller has not added to their registry
+         *     yet — the source of the rail's third section.
+         *
+         *     Names and ids only. The people module reaches the account roster through
+         *     account's `api/` package and subtracts its own `linked_user_id`s in Go;
+         *     there is no join across the module boundary.
+         *
+         *     Only approved, non-disabled accounts appear, and never the caller.
+         *     Returns an empty list on a binary with no directory wired.
+         */
+        get: operations["listPeopleSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/people/upcoming-birthdays": {
         parameters: {
             query?: never;
@@ -1024,6 +1797,728 @@ export interface paths {
         };
         /** The merged life-stream timeline (journal + system events) */
         get: operations["getStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/movies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published movies */
+        get: operations["listMovies"];
+        put?: never;
+        /** Create a movie (draft) */
+        post: operations["createMovie"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/movies/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own movies, drafts included */
+        get: operations["listMyMovies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/movies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        /** Get one movie (published, or any of the caller's own) */
+        get: operations["getMovie"];
+        put?: never;
+        post?: never;
+        /** Delete a movie */
+        delete: operations["deleteMovie"];
+        options?: never;
+        head?: never;
+        /** Update a movie */
+        patch: operations["updateMovie"];
+        trace?: never;
+    };
+    "/movies/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a movie */
+        post: operations["publishMovie"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/movies/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Return a movie to draft */
+        post: operations["unpublishMovie"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published tracks */
+        get: operations["listTracks"];
+        put?: never;
+        /** Create a track (draft) */
+        post: operations["createTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own tracks, drafts included */
+        get: operations["listMyTracks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's recent import jobs
+         * @description Newest first. Exists so a page reload does not lose sight of an import
+         *     that is still running. Requires `music:write:own`.
+         */
+        get: operations["listMusicImports"];
+        put?: never;
+        /**
+         * Register a bulk import job
+         * @description Returns a job id to attach the archive to and to poll. Requires
+         *     `music:write:own` — the same permission as creating one track, because an
+         *     import creates tracks for the caller and for nobody else.
+         */
+        post: operations["createMusicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Poll an import job
+         * @description Status plus the per-file report. Owner-scoped: another user's job answers
+         *     404, not 403 — the id is not confirmed to exist.
+         */
+        get: operations["getMusicImport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/imports/{id}/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Upload the archive and start the import
+         * @description The zip is the entire request body — raw, not multipart, which would only
+         *     add a parse step and a copy for a file the server spools to disk anyway.
+         *
+         *     Answers **202**: the archive is stored and the worker is queued, but no
+         *     track exists yet. Poll `GET /tracks/imports/{id}` for progress.
+         *
+         *     The worker accepts `.mp3 .m4a .aac .flac .ogg .oga .opus .wav .wma` and
+         *     silently skips everything else — cover art and `__MACOSX` stubs are not
+         *     import failures. Titles come from the embedded tags (read with ffprobe),
+         *     falling back to the filename: `01 - Artist - Title.mp3` and its shorter
+         *     forms are understood. Per-file failures land in the report; the job still
+         *     finishes `done`, since `failed` is reserved for a job that could not run
+         *     at all.
+         *
+         *     Limits: 4 GiB per archive, 2000 entries, 512 MiB per file.
+         */
+        put: operations["uploadMusicImportZip"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/imports/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fill in cover art and missing tags for everything an import created
+         * @description A second pass over the tracks the job produced, queued as one task each.
+         *
+         *     It is separate from the import on purpose. Cover art is the expensive
+         *     half — an ffmpeg extraction, a second asset ingest, then a wait for the
+         *     image pipeline, since a cover that is not `ready` is refused — and doing
+         *     it inline would turn "your 300 tracks are in" into "your 300 tracks are
+         *     still importing", for a picture nobody is looking at yet.
+         *
+         *     Enrichment only **fills gaps**: a title, artist, album or cover that
+         *     already has a value is never overwritten, because by the time this runs
+         *     the user may have typed one.
+         *
+         *     Answers **202** with how many tracks were queued. Watch the tracks
+         *     themselves for the result — `cover_asset_id` appears when one finishes.
+         */
+        post: operations["enrichMusicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/imports/{id}/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look every imported track up in MusicBrainz
+         * @description The third and last metadata pass, and the only one that leaves the
+         *     machine:
+         *
+         *     | pass | source | cost |
+         *     |---|---|---|
+         *     | import | the filename | free |
+         *     | enrich | tags and artwork inside the file (ffprobe) | local CPU |
+         *     | **lookup** | **MusicBrainz + Cover Art Archive** | **network, 1 req/s** |
+         *
+         *     **Off unless an operator enables it.** A lookup sends the library's
+         *     artist/title pairs to a third party, which is not a default anyone should
+         *     inherit silently. Disabled, this answers **503** `music/lookup-disabled`
+         *     naming the two environment variables to set — not 404, because the
+         *     endpoint exists and the request was fine.
+         *
+         *     MusicBrainz permits **one request per second per client**, enforced here
+         *     by a Redis-backed global slot so replicas cannot multiply the rate. A
+         *     library of 300 tracks therefore takes at least five minutes; this is a
+         *     background sweep, not an interactive call.
+         *
+         *     Matching is deliberately strict: MusicBrainz scores each result, and
+         *     anything under 88 is recorded as `no_match` rather than guessed at. A
+         *     wrong album silently attached to a track is worse than an empty field.
+         *     Like every other pass it **only fills gaps** — enforced in SQL, so a
+         *     value the user typed can never be replaced.
+         *
+         *     Returns **202** with `queued`, and `skipped` when the batch cap (500)
+         *     truncated the sweep. Watch the tracks for results: `lookup_status` moves
+         *     to `matched` / `no_match` / `failed`, with `lookup_note` explaining which.
+         */
+        post: operations["lookupMusicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        /** Get one track (published, or any of the caller's own) */
+        get: operations["getTrack"];
+        put?: never;
+        post?: never;
+        /** Delete a track */
+        delete: operations["deleteTrack"];
+        options?: never;
+        head?: never;
+        /** Update a track */
+        patch: operations["updateTrack"];
+        trace?: never;
+    };
+    "/tracks/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fill in this track's cover art and missing tags
+         * @description Re-reads the track's audio file and takes what is embedded in it: the
+         *     attached cover picture, and artist/album if the track has none.
+         *
+         *     Works for any track with an audio file, not only imported ones — a
+         *     single upload has the same tags inside it. Owner, or `music:write:any`.
+         *
+         *     Only **fills gaps**; an existing cover, artist or album is left alone.
+         *     Answers **202** — the extraction and the image pipeline run on the
+         *     worker. Poll the track: `cover_asset_id` appears when it is done, and
+         *     stays null when the file simply has no picture in it, which is not an
+         *     error.
+         */
+        post: operations["enrichTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{id}/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look this track up in MusicBrainz
+         * @description Fetches what the audio file cannot contain — release year, genre, and a
+         *     Cover Art Archive cover — for one track. Owner, or `music:write:any`.
+         *
+         *     Same rules as the batch version: off unless enabled (503
+         *     `music/lookup-disabled`), throttled to one request per second across the
+         *     whole deployment, and refused rather than guessed below a MusicBrainz
+         *     score of 88. Only fills gaps.
+         *
+         *     Returns **202**; poll the track for `lookup_status` and `lookup_note`.
+         */
+        post: operations["lookupTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a track */
+        post: operations["publishTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tracks/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Return a track to draft */
+        post: operations["unpublishTrack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published stories */
+        get: operations["listStories"];
+        put?: never;
+        /** Create a story (draft) */
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own stories, drafts included */
+        get: operations["listMyStories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one story with its chapter summaries
+         * @description Chapter summaries omit `body_md`. The reader payload with bodies is
+         *     `GET /stories/{id}/chapters`.
+         */
+        get: operations["getStory"];
+        put?: never;
+        post?: never;
+        /** Delete a story */
+        delete: operations["deleteStory"];
+        options?: never;
+        head?: never;
+        /** Update a story */
+        patch: operations["updateStory"];
+        trace?: never;
+    };
+    "/stories/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a story */
+        post: operations["publishStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Return a story to draft */
+        post: operations["unpublishStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{id}/chapters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        /** The reader payload — chapters WITH bodies (published-or-owner) */
+        get: operations["listStoryChapters"];
+        put?: never;
+        /** Add a chapter to a story */
+        post: operations["createStoryChapter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stories/{id}/chapters:order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reorder a story's chapters
+         * @description The body is the complete ordered id list. The server renumbers
+         *     `sort_order` from the array position — a partial list is not a partial
+         *     reorder, it is a truncation.
+         */
+        put: operations["reorderStoryChapters"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/story-chapters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a story chapter */
+        delete: operations["deleteStoryChapter"];
+        options?: never;
+        head?: never;
+        /** Update a story chapter */
+        patch: operations["updateStoryChapter"];
+        trace?: never;
+    };
+    "/comics/{id}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a whole-comic (multi-chapter) zip import
+         * @description Allocates an import job and returns an `upload_ref` to PUT the zip to.
+         *     Chapter structure is taken from the zip's top-level directories; a
+         *     chapter's `sort_order` is parsed from its NAME, never from arrival
+         *     order — see `chapterSortOrder` in the comic module.
+         */
+        post: operations["createComicImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chapters/{id}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a single-chapter zip import
+         * @description Every image in the zip becomes a page of this chapter, ordered naturally by filename.
+         */
+        post: operations["createChapterImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Poll an import job
+         * @description `status` walks `pending → uploaded → running → done | failed`. `report`
+         *     carries a per-entry result once the job has run.
+         */
+        get: operations["getImport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/imports/{id}/zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Upload the import zip
+         * @description Raw `application/zip` body, capped server-side. Completing the upload
+         *     enqueues `comic:import_zip` on the default queue — deliberately NOT the
+         *     heavy pool, because the job polls the asset statuses its own
+         *     `media:process_image` tasks produce and must not occupy a slot they need.
+         */
+        put: operations["uploadImportZip"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The tenants the caller belongs to
+         * @description At v1 every user has exactly one `personal` organization, created on
+         *     first tenant resolution. Multi-org membership is ADR-07 step 5 and is
+         *     deliberately deferred — see docs/operations/rls-cutover.md.
+         */
+        get: operations["listMyOrganizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Server clock and the app display timezone
+         * @description The single source of truth for "now" in the UI. The frontend's date
+         *     helpers read it rather than the browser clock so a wrong client clock
+         *     cannot shift a journal entry into the wrong day. Unauthenticated.
+         */
+        get: operations["getServerTime"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1154,6 +2649,10 @@ export interface components {
             kind: "income" | "expense";
             /** @description A user_id-NULL default (visible to all */
             seed: boolean;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
         BankCategoryCreate: {
             name: string;
@@ -1164,12 +2663,20 @@ export interface components {
              * @description Must be a top-level category of the same kind.
              */
             parent_id?: string | null;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
-        /** @description kind is immutable. `parent_id` present (incl. null) re-parents; absent leaves it. */
+        /** @description kind is immutable. `parent_id`, `icon` and `color` follow the same present-vs-absent rule: present (including null) sets it, absent leaves it alone. Seeds are immutable, so a patch against one is a 404. */
         BankCategoryPatch: {
             name?: string;
             /** Format: uuid */
             parent_id?: string | null;
+            /** @description An emoji, e.g. 🍜. Not a sprite id — see migration 0042. */
+            icon?: string | null;
+            /** @description Hex only; the value reaches a style attribute. */
+            color?: string | null;
         };
         BankTransaction: {
             /** Format: uuid */
@@ -1288,6 +2795,44 @@ export interface components {
              */
             amount?: number | null;
         };
+        BankCategoryTotal: {
+            /**
+             * Format: uuid
+             * @description The top-level category the total rolls up to.
+             */
+            category_id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "income" | "expense";
+            icon?: string | null;
+            color?: string | null;
+            /**
+             * Format: int64
+             * @description Minor units (D-41).
+             */
+            total: number;
+            /** Format: int64 */
+            tx_count: number;
+        };
+        BankMonthFlow: {
+            /** @description YYYY-MM */
+            month: string;
+            /** Format: int64 */
+            income: number;
+            /** Format: int64 */
+            expense: number;
+        };
+        BankReport: {
+            /** @description YYYY-MM */
+            month: string;
+            /** Format: int64 */
+            income: number;
+            /** Format: int64 */
+            expense: number;
+            expenses: components["schemas"]["BankCategoryTotal"][];
+            incomes: components["schemas"]["BankCategoryTotal"][];
+            trend: components["schemas"]["BankMonthFlow"][];
+        };
         BankDashboard: {
             month: string;
             accounts: components["schemas"]["BankAccount"][];
@@ -1297,6 +2842,102 @@ export interface components {
             expense: number;
             budgets: components["schemas"]["BankBudgetLine"][];
             recent: components["schemas"]["BankTransaction"][];
+        };
+        SyncSource: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            comic_id: string;
+            /** Format: uri */
+            source_url: string;
+            /** @description Host extracted from source_url */
+            source_site: string;
+            /** @description Blank = all; an 'A-B' range, or explicit chapter URLs */
+            chapters_hint: string;
+            /** @enum {string} */
+            last_status: "idle" | "syncing" | "done" | "failed" | "cancelled";
+            /** @description Chapters discovered at the source */
+            total_chapters: number;
+            /** @description Chapters scraped so far this run */
+            scraped_chapters: number;
+            /**
+             * Format: uuid
+             * @description The batch import currently in flight
+             */
+            last_import_id?: string;
+            last_error?: string;
+            /** Format: date-time */
+            last_synced_at?: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SyncSourceList: {
+            sources: components["schemas"]["SyncSource"][];
+        };
+        SyncSourceCreate: {
+            /**
+             * Format: uri
+             * @description Must be http(s)
+             */
+            source_url: string;
+            chapters_hint?: string;
+        };
+        SyncBatchRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description The source owner, echoed back from the value the api handed the scraper.
+             *     It supplies the tenant these session-less endpoints scope their writes to,
+             *     and is verified against the row — a wrong value yields 404.
+             */
+            owner_id: string;
+        };
+        SyncBatchResponse: {
+            /** Format: uuid */
+            import_id: string;
+            /** @description Object key the batch zip must be uploaded to (import/{import_id}.zip) */
+            upload_key: string;
+        };
+        SyncCallbackRequest: {
+            /** Format: uuid */
+            import_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            /** @description false fails that batch's import job */
+            ok: boolean;
+            error?: string;
+        };
+        SyncProgressRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            scraped: number;
+            total: number;
+        };
+        SyncFinalizeRequest: {
+            /** Format: uuid */
+            source_id: string;
+            /**
+             * Format: uuid
+             * @description See SyncBatchRequest.owner_id
+             */
+            owner_id: string;
+            ok: boolean;
+            /** @description Summary of chapters that failed */
+            failed?: string;
+        };
+        OkResponse: {
+            ok: boolean;
         };
         Comic: {
             /** Format: uuid */
@@ -1309,6 +2950,12 @@ export interface components {
             cover_asset_id?: string | null;
             /** @enum {string} */
             status: "draft" | "published";
+            /**
+             * @description Reading direction of the work (manga = rtl). Drives the reader's paged navigation order and default mode.
+             * @default vertical
+             * @enum {string}
+             */
+            reading_direction: "ltr" | "rtl" | "vertical";
             chapter_count?: number;
             /** Format: date-time */
             created_at: string;
@@ -1331,6 +2978,8 @@ export interface components {
         ComicPatch: {
             title?: string;
             description?: string | null;
+            /** @enum {string} */
+            reading_direction?: "ltr" | "rtl" | "vertical";
             /** Format: uuid */
             cover_asset_id?: string | null;
         };
@@ -1415,15 +3064,66 @@ export interface components {
             note_md?: string | null;
             /** Format: uuid */
             avatar_asset_id?: string | null;
+            circle?: components["schemas"]["PersonCircle"];
+            /**
+             * Format: uuid
+             * @description The portal account this entry stands for, when it stands for one —
+             *     set by adding someone from `/people/suggestions`. Null for everyone
+             *     who has no account here, which is most of a personal registry.
+             */
+            linked_user_id?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string;
         };
+        /**
+         * @description One connection, from the caller's point of view (migration
+         *     `0037_social_connections`).
+         */
+        Connection: {
+            /**
+             * Format: uuid
+             * @description The connection's id
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The OTHER person's account id.
+             */
+            user_id: string;
+            /** @description The other person's name. Absent on the write responses, which return the row rather than a rendered list. */
+            display_name?: string;
+            /** @enum {string} */
+            status: "pending" | "accepted";
+            /** @description True when the caller sent the request. A declined request is deleted, so there is no 'declined' status. */
+            outgoing: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            responded_at?: string | null;
+        };
+        /**
+         * @description Which fixed section of the people rail this person appears in
+         *     (migration `0035_people_circles`).
+         *
+         *     This is beside `relationship`, not instead of it: `relationship` stays
+         *     the free text you wrote ("mẹ", "bạn đại học"), while `circle` is the
+         *     closed set the UI can group by without guessing at what that text means.
+         * @default other
+         * @enum {string}
+         */
+        PersonCircle: "close_friend" | "family" | "other";
         /** @description POST requires display_name; PATCH accepts any subset. A birthday of null clears it. */
         PersonWrite: {
             display_name?: string;
             relationship?: string | null;
+            circle?: components["schemas"]["PersonCircle"];
+            /**
+             * Format: uuid
+             * @description On create only — records that this person is the given portal account.
+             */
+            linked_user_id?: string | null;
             birthday?: components["schemas"]["Birthday"] | null;
             contact?: {
                 [key: string]: unknown;
@@ -1446,6 +3146,11 @@ export interface components {
             /** @description journal | media | bank | comic | people */
             source_module: string;
             event_type: string;
+            /**
+             * Format: uuid
+             * @description Id of the record the card projects — the journal entry id for `source_module: journal` (the handle a client needs to edit or delete the post), otherwise the asset / transaction / chapter id.
+             */
+            ref_id: string;
             /** Format: date-time */
             occurred_at: string;
             body_md?: string | null;
@@ -1475,7 +3180,11 @@ export interface components {
              * @description URI reference identifying the specific occurrence.
              */
             instance?: string;
-            /** @description Portal-stable machine slug (e.g. `invalid_credentials`). */
+            /**
+             * @description Reserved. The machine-stable slug lives in `type`
+             *     (`account/invalid-credentials`), so nothing emits `code` today —
+             *     do not branch on it.
+             */
             code?: string;
             /** @description For step-up (403) — the ACR the caller must satisfy [D-27]. */
             required_acr?: string;
@@ -1502,6 +3211,253 @@ export interface components {
              * @default false
              */
             remember: boolean;
+        };
+        /**
+         * @description `pending` — job registered, no archive yet.
+         *     `uploaded` — archive stored, worker queued but not started.
+         *     `processing` — unpacking; `total` is known, `succeeded`/`failed` climb.
+         *     `done` — finished. Per-file failures live in `report`; this status does
+         *     not mean every file worked.
+         *     `failed` — the job could not run at all (not a zip, empty, over a limit);
+         *     `error` says why.
+         * @enum {string}
+         */
+        MusicImportStatus: "pending" | "uploaded" | "processing" | "done" | "failed";
+        MusicImportReportEntry: {
+            /** @description The entry's filename inside the archive. */
+            name: string;
+            ok: boolean;
+            /**
+             * Format: uuid
+             * @description Present when `ok`.
+             */
+            track_id?: string;
+            /** @description The title the importer settled on. */
+            title?: string;
+            /** @description Present when not `ok`. */
+            error?: string;
+        };
+        MusicImport: {
+            /** Format: uuid */
+            id: string;
+            status: components["schemas"]["MusicImportStatus"];
+            /** @description Audio entries found in the archive. 0 until unpacking starts. */
+            total: number;
+            succeeded: number;
+            /** @description Entries that failed. Does not stop the job. */
+            failed: number;
+            /** @description One line per audio entry, in import order. */
+            report: components["schemas"]["MusicImportReportEntry"][];
+            /** @description Job-level failure. Null unless `status` is `failed`. */
+            error?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        LayoutMenuItem: {
+            /** Format: uuid */
+            id: string;
+            /** @description Stable handle that survives a rename. Lowercase letters, digits, `-` and `_`. */
+            key: string;
+            label: string;
+            /** @description Sprite name, resolved by the frontend's Icon component. */
+            icon: string;
+            /**
+             * @description In-app path starting with a single `/`. Null renders a row that
+             *     navigates nowhere — the template ships several of those.
+             */
+            href?: string | null;
+            /**
+             * @description Permission code required to SEE this row. Null = every signed-in
+             *     user. Enforced server-side on `GET /layout`.
+             */
+            permission?: string | null;
+            /** @description Server-assigned from array order on save; do not compute it client-side. */
+            position: number;
+            visible: boolean;
+            /**
+             * @description Seeded rows. Renameable, reorderable and hideable, but never deleted
+             *     by a whole-set save — an empty menu is not recoverable from the UI.
+             */
+            is_system: boolean;
+        };
+        LayoutWidget: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description Must match a component in the frontend widget registry. The database
+             *     cannot conjure a component, so this catalogue is fixed by the bundle.
+             */
+            key: string;
+            label: string;
+            /**
+             * @description Which dashboard rail the card sits in.
+             * @enum {string}
+             */
+            slot: "left" | "right";
+            permission?: string | null;
+            /** @description Server-assigned from array order, renumbered per slot. */
+            position: number;
+            visible: boolean;
+        };
+        LayoutConfig: {
+            menu: components["schemas"]["LayoutMenuItem"][];
+            widgets: components["schemas"]["LayoutWidget"][];
+        };
+        LayoutMenuSaveRequest: {
+            /** @description The complete menu, in the order it should render. */
+            items: {
+                key: string;
+                label: string;
+                icon: string;
+                /** @description Empty = no link. */
+                href?: string;
+                /** @description Empty = visible to everyone signed in. */
+                permission?: string;
+                visible: boolean;
+            }[];
+        };
+        LayoutWidgetsSaveRequest: {
+            /** @description Every widget, grouped by slot in the order it should render. */
+            widgets: {
+                key: string;
+                label: string;
+                /** @enum {string} */
+                slot: "left" | "right";
+                permission?: string;
+                visible: boolean;
+            }[];
+        };
+        /**
+         * @description Registration state (migration 0031). `pending` and `rejected` both refuse
+         *     login and refuse to verify an already-issued access token; only
+         *     `approved` can hold a session.
+         * @enum {string}
+         */
+        ApprovalStatus: "pending" | "approved" | "rejected";
+        AdminUser: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            display_name: string;
+            avatar_url?: string | null;
+            approval_status: components["schemas"]["ApprovalStatus"];
+            /** @description The reviewer's reason. Shown back to a rejected user on their next login attempt. */
+            approval_note?: string | null;
+            /** Format: date-time */
+            approved_at?: string | null;
+            /** Format: uuid */
+            approved_by?: string | null;
+            /**
+             * @description Independent of `approval_status`. A disabled account was switched off
+             *     after the fact; a pending one was never let in.
+             */
+            disabled: boolean;
+            /** @description False for rows provisioned without credentials (admin invite). */
+            has_password: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** @description Role codes currently held, expired grants excluded. */
+            roles: string[];
+        };
+        AdminUserPage: {
+            users: components["schemas"]["AdminUser"][];
+            /** @description Rows matching the filter */
+            total: number;
+            limit: number;
+            offset: number;
+            /** @description Totals per approval state across the whole table, for the queue badge. */
+            counts: {
+                pending: number;
+                approved: number;
+                rejected: number;
+            };
+        };
+        AdminCreateUserRequest: {
+            /** Format: email */
+            email: string;
+            /**
+             * Format: password
+             * @description Required — an account with no credential can neither sign in nor recover.
+             */
+            password: string;
+            /** @description Optional; defaults to the email local-part. */
+            display_name?: string;
+        };
+        /** @description Omitted or empty fields are left unchanged. */
+        AdminUpdateUserRequest: {
+            /** Format: email */
+            email?: string;
+            display_name?: string;
+            /**
+             * Format: password
+             * @description Setting this revokes every session the old password issued — the
+             *     `token_version` bump and the refresh chain both.
+             */
+            password?: string;
+        };
+        AdminDeleteUserRequest: {
+            /**
+             * @description Must equal the target's email, case-insensitively. Enforced by the
+             *     server so a misclick or a replayed request cannot reach a cascading
+             *     delete.
+             */
+            confirm_email: string;
+        };
+        ApprovalDecision: {
+            /** @description Optional reason, kept on the account and shown to a rejected user. */
+            note?: string;
+        };
+        RoleAssignment: {
+            /** @description The complete set of role codes the user should end up with. */
+            roles: string[];
+        };
+        RolePermissionAssignment: {
+            /** @description The complete set of permission codes granted DIRECTLY to this role. */
+            permissions: string[];
+        };
+        RoleInput: {
+            /**
+             * @description Lowercase letters, digits, `-` and `_`. Required on create, ignored
+             *     on update — the code is immutable.
+             */
+            code?: string;
+            name: string;
+            description?: string;
+            /** @description Inherit every permission of this role. Empty means a root role. */
+            parent_code?: string;
+        };
+        AdminRole: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description?: string;
+            parent_code?: string | null;
+            /** @description Seeded roles (guest…superadmin). Cannot be edited or deleted. */
+            is_system: boolean;
+            user_count: number;
+        };
+        MatrixRole: components["schemas"]["AdminRole"] & {
+            /** @description Permissions granted to this role itself — the editable checkboxes. */
+            direct: string[];
+            /**
+             * @description `direct` unioned with every ancestor's grants. Read-only: change an
+             *     inherited entry by editing the role it comes from.
+             */
+            effective: string[];
+        };
+        MatrixPermission: {
+            code: string;
+            description?: string;
+            /** @description Leading resource segment (`music:write:own` → `music`); how the grid groups columns. */
+            group: string;
+        };
+        PermissionMatrix: {
+            roles: components["schemas"]["MatrixRole"][];
+            permissions: components["schemas"]["MatrixPermission"][];
         };
         RegisterRequest: {
             /** Format: email */
@@ -1550,11 +3506,39 @@ export interface components {
         CurrentUser: components["schemas"]["User"] & {
             /** @description Role codes (e.g. ["user","creator"]). Frontend uses these to render UI affordances; the server is the authority on perm checks. */
             roles: string[];
+            /**
+             * @description The caller's EFFECTIVE permission codes — own roles unioned with
+             *     every ancestor role's grants, exactly what the server checks
+             *     against. Present so the UI can hide affordances the API would
+             *     refuse; role names stopped being a usable proxy once roles became
+             *     editable from the permission matrix. Wildcards appear literally
+             *     (a superadmin gets `["*"]`), so match with the same grammar the
+             *     server uses rather than by string equality. Empty if the
+             *     permission cache could not be read — degrade the menu, never the
+             *     identity call.
+             */
+            permissions: string[];
         };
         /** @enum {string} */
         AssetKind: "video" | "audio" | "image";
         /** @enum {string} */
         AssetStatus: "uploaded" | "processing" | "ready" | "failed";
+        /**
+         * @description Who may read the asset and its renditions (migration `0032_media_asset_acl`).
+         *
+         *     `private` — the owner, plus admins of the owning tenant. This is the
+         *     default and the only value the upload path writes.
+         *     `public` — anyone, including callers with no session; the variant and
+         *     HLS routes serve these anonymously and mark them cacheable by shared
+         *     caches.
+         *
+         *     Enforcement is row-level security in Postgres, not handler code: an
+         *     asset the caller may not read does not exist for their query, so every
+         *     such request answers 404 rather than 403.
+         * @default private
+         * @enum {string}
+         */
+        AssetVisibility: "private" | "public";
         Asset: {
             /** Format: uuid */
             id: string;
@@ -1566,6 +3550,7 @@ export interface components {
             durationMs?: number | null;
             width?: number | null;
             height?: number | null;
+            visibility?: components["schemas"]["AssetVisibility"];
             /**
              * Format: uri
              * @description Master playlist URL; present once `status` is `ready`.
@@ -1681,6 +3666,248 @@ export interface components {
             poster_url?: string | null;
             /** Format: date-time */
             updated_at: string;
+        };
+        Movie: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            owner_id: string;
+            title: string;
+            description?: string | null;
+            /**
+             * Format: uuid
+             * @description A ready video asset you own.
+             */
+            video_asset_id?: string | null;
+            /**
+             * Format: uuid
+             * @description A ready image asset you own.
+             */
+            poster_asset_id?: string | null;
+            release_year?: number | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        MovieList: {
+            movies: components["schemas"]["Movie"][];
+            next_cursor?: string | null;
+        };
+        MovieCreate: {
+            title: string;
+            description?: string | null;
+            /** Format: uuid */
+            video_asset_id?: string | null;
+            /** Format: uuid */
+            poster_asset_id?: string | null;
+            release_year?: number | null;
+        };
+        /**
+         * @description Absent means unchanged; an explicit `null` clears the field. That
+         *     three-state distinction is why the asset ids are not simply nullable
+         *     strings on the wire.
+         */
+        MoviePatch: {
+            title?: string;
+            description?: string | null;
+            /** Format: uuid */
+            video_asset_id?: string | null;
+            /** Format: uuid */
+            poster_asset_id?: string | null;
+            release_year?: number | null;
+        };
+        Track: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            owner_id: string;
+            title: string;
+            artist?: string | null;
+            album?: string | null;
+            description?: string | null;
+            /**
+             * Format: uuid
+             * @description A ready audio asset you own.
+             */
+            audio_asset_id?: string | null;
+            /**
+             * Format: uuid
+             * @description A ready image asset you own.
+             */
+            cover_asset_id?: string | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** @description Original release year, from the catalogue lookup. Not in the audio file. */
+            release_year?: number | null;
+            /** @description Most-voted MusicBrainz community tag. A folksonomy, not a taxonomy. */
+            genre?: string | null;
+            /**
+             * Format: uuid
+             * @description What the lookup matched. Kept so a later pass can go straight to the
+             *     right entity instead of re-running a fuzzy search, and so a wrong
+             *     match is traceable to the thing that was matched.
+             */
+            mb_recording_id?: string | null;
+            /** Format: uuid */
+            mb_release_id?: string | null;
+            /**
+             * @description `none` — never looked up. `no_match` — asked, nothing scored high
+             *     enough; an ordinary outcome, not an error. `failed` — the call itself
+             *     failed and will be retried.
+             * @enum {string}
+             */
+            lookup_status?: "none" | "pending" | "matched" | "no_match" | "failed";
+            /** @description Why a match was refused, or why the call failed. Shown to the user. */
+            lookup_note?: string | null;
+            /** Format: date-time */
+            lookup_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        TrackList: {
+            tracks: components["schemas"]["Track"][];
+            next_cursor?: string | null;
+        };
+        TrackCreate: {
+            title: string;
+            artist?: string | null;
+            album?: string | null;
+            description?: string | null;
+            /** Format: uuid */
+            audio_asset_id?: string | null;
+            /** Format: uuid */
+            cover_asset_id?: string | null;
+        };
+        /** @description Absent means unchanged; an explicit `null` clears the field. */
+        TrackPatch: {
+            title?: string;
+            artist?: string | null;
+            album?: string | null;
+            description?: string | null;
+            /** Format: uuid */
+            audio_asset_id?: string | null;
+            /** Format: uuid */
+            cover_asset_id?: string | null;
+        };
+        Story: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            owner_id: string;
+            title: string;
+            description?: string | null;
+            /** Format: uuid */
+            cover_asset_id?: string | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            chapter_count?: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        StoryDetail: components["schemas"]["Story"] & {
+            /** @description Chapter summaries — id, title and sort_order only, never `body_md`. */
+            chapters?: components["schemas"]["StoryChapterSummary"][];
+        };
+        StoryList: {
+            stories: components["schemas"]["Story"][];
+            next_cursor?: string | null;
+        };
+        StoryCreate: {
+            title: string;
+            description?: string | null;
+            /** Format: uuid */
+            cover_asset_id?: string | null;
+        };
+        /** @description Absent means unchanged; an explicit `null` clears the field. */
+        StoryPatch: {
+            title?: string;
+            description?: string | null;
+            /** Format: uuid */
+            cover_asset_id?: string | null;
+        };
+        StoryChapter: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            story_id: string;
+            title: string;
+            /** @description Markdown. Capped at 4 MiB — four times the platform default, because a chapter is prose. */
+            body_md: string;
+            sort_order: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        StoryChapterSummary: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            sort_order: number;
+        };
+        StoryChapterCreate: {
+            title: string;
+            body_md: string;
+            sort_order: number;
+        };
+        StoryChapterPatch: {
+            title?: string;
+            body_md?: string;
+        };
+        ImportJob: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Set for a whole-comic import.
+             */
+            comic_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Set for a single-chapter import.
+             */
+            chapter_id?: string | null;
+            /** @enum {string} */
+            status: "pending" | "uploaded" | "running" | "done" | "failed";
+            /** @description Entries the zip was found to contain. */
+            total: number;
+            succeeded: number;
+            failed: number;
+            /** @description Present while status is `pending` — PUT the zip to /imports/{id}/zip. */
+            upload_ref?: string | null;
+            error?: string | null;
+            /** @description Per-entry outcome, populated once the job has run. */
+            report: {
+                name: string;
+                ok: boolean;
+                error?: string;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        Organization: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description `personal` is the synthetic per-user tenant every account gets at
+             *     first tenant resolution. `org` and `household` exist in the schema
+             *     from day one (D-24) but have no creation endpoint yet.
+             * @enum {string}
+             */
+            kind: "org" | "household" | "personal";
+            slug: string;
+            name: string;
+            /** Format: uuid */
+            owner_id: string;
         };
     };
     responses: {
@@ -1816,7 +4043,12 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
-            /** @description Account is disabled */
+            /**
+             * @description Credentials were correct but the account may not hold a session:
+             *     `account/account-disabled` (switched off), `account/account-pending`
+             *     (registration not approved yet) or `account/account-rejected` (refused;
+             *     `detail` carries the reviewer's note when there is one).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1852,6 +4084,11 @@ export interface operations {
                         status: "registered";
                         /** Format: email */
                         email: string;
+                        /**
+                         * @description `pending` for everyone but the founding account, which comes
+                         *     back `approved` and can sign in at once.
+                         */
+                        approval_status: components["schemas"]["ApprovalStatus"];
                     };
                 };
             };
@@ -2015,6 +4252,599 @@ export interface operations {
                 };
             };
             429: components["responses"]["TooManyRequests"];
+        };
+    };
+    adminListUsers: {
+        parameters: {
+            query?: {
+                /** @description Restrict to one approval state. Omit for every state. */
+                status?: components["schemas"]["ApprovalStatus"];
+                /** @description Case-insensitive substring match on email or display name. */
+                q?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of accounts, plus per-state totals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCreateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCreateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description The new account */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description An account with this email already exists (`account/email-taken`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminGetUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminDeleteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminDeleteUserRequest"];
+            };
+        };
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The confirmation did not match (`account/confirmation-mismatch`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Would leave nobody able to approve registrations (`account/last-approver`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminUpdateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Another account already uses that email (`account/email-taken`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminApproveUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ApprovalDecision"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminRejectUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ApprovalDecision"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminRevokeApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ApprovalDecision"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminDisableUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminEnableUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminSetUserRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleAssignment"];
+            };
+        };
+        responses: {
+            /** @description The updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminPermissionMatrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Roles and permissions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionMatrix"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCreateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInput"];
+            };
+        };
+        responses: {
+            /** @description The new role */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRole"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    adminDeleteRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    adminUpdateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInput"];
+            };
+        };
+        responses: {
+            /** @description The updated role */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRole"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminSetRolePermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolePermissionAssignment"];
+            };
+        };
+        responses: {
+            /** @description The recomputed matrix */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionMatrix"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getMyLayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's menu and widgets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayoutConfig"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    adminGetLayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every menu entry and widget, in position order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayoutConfig"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSaveLayoutMenu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutMenuSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description The saved layout, re-read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayoutConfig"];
+                };
+            };
+            /**
+             * @description Validation failed (`layout/validation`). `detail` names the offending
+             *     row, because an admin editing fifteen entries needs to know which one.
+             */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSaveLayoutWidgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutWidgetsSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description The saved layout, re-read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayoutConfig"];
+                };
+            };
+            /** @description Validation failed, or an unknown widget key (`layout/unknown-widget`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listNotifications: {
@@ -2209,6 +5039,47 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    patchAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    visibility?: components["schemas"]["AssetVisibility"];
+                };
+            };
+        };
+        responses: {
+            /** @description The updated asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        asset?: components["schemas"]["Asset"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description `media/invalid-visibility` — not one of `private` / `public` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     uploadAssetSource: {
         parameters: {
             query?: never;
@@ -2296,7 +5167,10 @@ export interface operations {
     downloadAssetOriginal: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Byte range, e.g. `bytes=0-1023`. Answered with `206`. */
+                Range?: string;
+            };
             path: {
                 id: components["parameters"]["AssetID"];
             };
@@ -2304,9 +5178,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The original bytes (attachment) */
+            /** @description The whole original, inline */
             200: {
                 headers: {
+                    /** @description Always `bytes` — what makes the source seekable. */
+                    "Accept-Ranges"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description The requested byte range */
+            206: {
+                headers: {
+                    /** @description e.g. `bytes 0-1023/5242880` */
+                    "Content-Range"?: string;
+                    "Accept-Ranges"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -2324,6 +5212,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
+            };
+            /** @description The requested range lies outside the object */
+            416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -3112,6 +6007,30 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
         };
     };
+    getBankReport: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM (default current month) */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The month report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankReport"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
     listComics: {
         parameters: {
             query?: {
@@ -3409,6 +6328,308 @@ export interface operations {
             422: components["responses"]["UnprocessableEntity"];
         };
     };
+    listSyncSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sources */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSourceList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createSyncSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Invalid or blocked source URL */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteSyncSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    triggerSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync accepted (the scraper works async and calls back) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description Already syncing, or the source URL no longer passes the SSRF check */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancelSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSource"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description The source is not currently syncing, or the scraper refused the cancel */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    syncBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Batch allocated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncBatchResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    syncCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncCallbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing import_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncFinalize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncFinalizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Finalized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkResponse"];
+                };
+            };
+            /** @description Malformed or missing source_id / owner_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad or missing X-Internal-Secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     deleteChapter: {
         parameters: {
             query?: never;
@@ -3572,6 +6793,8 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                /** @description Restrict to one section. Omit for every circle. */
+                circle?: components["schemas"]["PersonCircle"];
             };
             header?: never;
             path?: never;
@@ -3618,6 +6841,175 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listConnections: {
+        parameters: {
+            query?: {
+                status?: "accepted" | "incoming" | "outgoing";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connections from the caller's point of view */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connections: components["schemas"]["Connection"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    requestConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    user_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Request sent (or theirs accepted) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description `social/connection-exists` — already connected, or a request is pending either way */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `social/cannot-connect-to-self` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    connectionSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pending-incoming count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        incoming: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    acceptConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    removeConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Gone */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listPeopleSuggestions: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accounts not yet in the registry */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        suggestions: {
+                            /** Format: uuid */
+                            user_id: string;
+                            display_name: string;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     upcomingBirthdays: {
@@ -3745,6 +7137,1169 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    listMovies: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of published movies */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovieList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MovieCreate"];
+            };
+        };
+        responses: {
+            /** @description The created movie */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Movie"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listMyMovies: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of the caller's movies */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovieList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The movie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Movie"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoviePatch"];
+            };
+        };
+        responses: {
+            /** @description The updated movie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Movie"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    publishMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published movie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Movie"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    unpublishMovie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished movie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Movie"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listTracks: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of published tracks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackCreate"];
+            };
+        };
+        responses: {
+            /** @description The created track */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Track"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listMyTracks: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of the caller's tracks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    listMusicImports: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recent jobs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        imports: components["schemas"]["MusicImport"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The new job, status `pending` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicImport"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicImport"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    uploadMusicImportZip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/zip": string;
+            };
+        };
+        responses: {
+            /** @description Stored and queued; the job is now `uploaded` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicImport"];
+                };
+            };
+            /** @description Not a zip, or over a limit (`music/validation`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    enrichMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Tracks scheduled. Zero when the job created none. */
+                        queued: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    lookupMusicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        queued: number;
+                        /** @description Tracks past the 500-per-sweep cap. Never silently dropped. */
+                        skipped: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Lookups are not enabled on this deployment (`music/lookup-disabled`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The track */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Track"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated track */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Track"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    enrichTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {integer} */
+                        queued: 1;
+                    };
+                };
+            };
+            /** @description The track has no audio file to read (`music/validation`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    lookupTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {integer} */
+                        queued: 1;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Lookups are not enabled on this deployment (`music/lookup-disabled`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    publishTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published track */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Track"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    unpublishTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished track */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Track"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of published stories */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryCreate"];
+            };
+        };
+        responses: {
+            /** @description The created story */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listMyStories: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A cursor page of the caller's stories */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The story */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryDetail"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated story */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    publishStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published story */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    unpublishStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished story */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listStoryChapters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The story's chapters in reading order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        chapters: components["schemas"]["StoryChapter"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createStoryChapter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryChapterCreate"];
+            };
+        };
+        responses: {
+            /** @description The created chapter */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryChapter"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    reorderStoryChapters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    deleteStoryChapter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateStoryChapter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryChapterPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated chapter */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryChapter"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    createComicImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The created import job */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJob"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    createChapterImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The created import job */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJob"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    getImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The import job */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJob"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    uploadImportZip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AssetID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/zip": string;
+            };
+        };
+        responses: {
+            /** @description Accepted — the import job is queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJob"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            413: components["responses"]["UnprocessableEntity"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listMyOrganizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's organizations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        organizations: components["schemas"]["Organization"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getServerTime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current server time */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date-time
+                         * @description Server time, UTC, RFC3339.
+                         */
+                        now: string;
+                        /** @description IANA zone for ALL date display, e.g. Asia/Ho_Chi_Minh (APP_TIMEZONE). */
+                        timezone: string;
+                    };
+                };
+            };
         };
     };
 }

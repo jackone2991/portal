@@ -1,6 +1,6 @@
 # SPEC-08 — People Registry (contacts + birthdays, n=1)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
 **Module:** `people` (new — not scaffolded) · **Depends on:** nothing hard; P1.7 avatars need SPEC-01; birthday *delivery* compounds with SPEC-04/SPEC-06 — emission is day-one regardless
 **Upstream:** [briefs/08-people-registry.md](../briefs/08-people-registry.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), feature-inventory `D-17` (user timezone), backlog §3 P2 ("Events/birthdays", re-scoped here), Monica-CRM pattern
 **Downstream consumers:** SPEC-06 (stream + `BirthdayCard` widget), SPEC-04 (notification type, when wired), SPEC-09 P1.7 (takeout)

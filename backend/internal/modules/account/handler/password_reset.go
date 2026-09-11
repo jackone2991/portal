@@ -12,7 +12,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net"
 	"net/http"
@@ -26,6 +25,7 @@ import (
 	"github.com/portal/backend/internal/modules/account/auth"
 	notifyapi "github.com/portal/backend/internal/modules/notify/api"
 	"github.com/portal/backend/internal/platform/audit"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Abuse controls for the public reset endpoints.
@@ -53,7 +53,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	ua := r.UserAgent()
 	// Per-IP throttle (IP-keyed leaks nothing about any email).
 	if h.resetIPThrottled(r.Context(), ip) {
-		writeProblem(w, http.StatusTooManyRequests, probRateLimited, "Too many requests", "please slow down and try again shortly")
+		server.Problem(w, http.StatusTooManyRequests, probRateLimited, "Too many requests", "please slow down and try again shortly")
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	_ = decodeJSON(r, &body) // a malformed body is still an enumeration-safe 202
 	email := normalizeEmail(body.Email)
 
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "accepted"})
+	server.JSON(w, http.StatusAccepted, map[string]any{"status": "accepted"})
 
 	// Out-of-band: the request context is cancelled once we return, so use a
 	// fresh background context for the mint/dispatch work.
@@ -123,7 +123,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ip := clientIP(r)
 	if h.resetIPThrottled(ctx, ip) {
-		writeProblem(w, http.StatusTooManyRequests, probRateLimited, "Too many requests", "please slow down and try again shortly")
+		server.Problem(w, http.StatusTooManyRequests, probRateLimited, "Too many requests", "please slow down and try again shortly")
 		return
 	}
 
@@ -132,27 +132,27 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		NewPassword string `json:"new_password"`
 	}
 	if err := decodeJSON(r, &body); err != nil {
-		writeProblem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
+		server.Problem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
 		return
 	}
 	if body.Token == "" {
-		writeProblem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
+		server.Problem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
 		return
 	}
 	if len(body.NewPassword) < minPasswordLen {
-		writeProblem(w, http.StatusBadRequest, probPasswordPolicy, "Weak password", "password must be at least 8 characters")
+		server.Problem(w, http.StatusBadRequest, probPasswordPolicy, "Weak password", "password must be at least 8 characters")
 		return
 	}
 
 	row, err := h.ResetTokens.Verify(ctx, body.Token)
 	if err != nil {
-		writeProblem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
+		server.Problem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
 		return
 	}
 	// A token belonging to a since-disabled user is rejected too.
 	snap, err := h.Users.GetUserAuthSnapshot(ctx, row.UserID)
 	if err != nil || snap.Disabled {
-		writeProblem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
+		server.Problem(w, http.StatusBadRequest, probInvalidResetToken, "Invalid reset token", "the reset token is invalid or has expired")
 		return
 	}
 
@@ -179,7 +179,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		IP:        ip,
 		UserAgent: r.UserAgent(),
 	})
-	writeJSON(w, http.StatusOK, map[string]any{"status": "password_updated"})
+	server.JSON(w, http.StatusOK, map[string]any{"status": "password_updated"})
 }
 
 // ── throttles ───────────────────────────────────────────────────────
@@ -237,16 +237,4 @@ func (h *AuthHandler) resetIPThrottled(ctx context.Context, ip net.IP) bool {
 		_ = h.Redis.Expire(ctx, key, resetIPWindow).Err()
 	}
 	return n > int64(resetIPMax)
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   typ,
-		"title":  title,
-		"status": status,
-		"detail": detail,
-	})
 }

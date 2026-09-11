@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // RFC 7807 Problem type URIs (SPEC-01 §7).
@@ -55,7 +56,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "internal", "could not create upload session")
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{
+	server.JSON(w, http.StatusCreated, map[string]any{
 		"asset":  h.assetJSON(sess.Asset, ""),
 		"upload": map[string]any{"url": sess.URL, "method": sess.Method, "headers": sess.Headers},
 	})
@@ -70,14 +71,14 @@ func (h *Handler) Complete(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	if err := h.svc.CompleteUpload(r.Context(), uid, id); err != nil {
 		writeMediaProblem(w, err)
 		return
 	}
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "processing"})
+	server.JSON(w, http.StatusAccepted, map[string]any{"status": "processing"})
 }
 
 // PUT /assets/{id}/source — API-proxied upload of the original (dev path).
@@ -117,7 +118,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		writeMediaErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, h.assetJSON(asset, hls))
+	server.JSON(w, http.StatusOK, h.assetJSON(asset, hls))
 }
 
 // GET /assets — list the caller's assets (?kind=&status=&cursor=&limit=).
@@ -157,7 +158,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		body["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, body)
+	server.JSON(w, http.StatusOK, body)
 }
 
 // DELETE /assets/{id} — delete an asset + all its storage objects (P0.3).
@@ -165,15 +166,15 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	if err := h.svc.DeleteAsset(r.Context(), id); err != nil {
 		if errors.Is(err, ErrNotFound) {
-			writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+			server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 			return
 		}
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not delete asset")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not delete asset")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -188,7 +189,7 @@ func (h *Handler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	pos, pct, completedAt, updatedAt, err := h.svc.GetProgress(r.Context(), uid, id)
@@ -206,7 +207,7 @@ func (h *Handler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp["completed_at"] = nil
 	}
-	writeJSON(w, http.StatusOK, resp)
+	server.JSON(w, http.StatusOK, resp)
 }
 
 // PUT /assets/{id}/progress — save playback progress.
@@ -218,7 +219,7 @@ func (h *Handler) PutProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	var body struct {
@@ -248,38 +249,49 @@ func (h *Handler) DownloadOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
-	rc, ct, filename, err := h.svc.DownloadOriginal(r.Context(), uid, id)
+	rs, ct, filename, modtime, err := h.svc.OriginalContent(r.Context(), uid, id)
 	if err != nil {
 		writeMediaProblem(w, err)
 		return
 	}
-	defer rc.Close()
+	defer rs.Close()
+
 	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	// `inline`, not `attachment`. This route is also the playback source for
+	// audio (music's trackAudioURL), and marking a file the app plays as a
+	// download is the wrong statement about it. The filename is still offered so
+	// an explicit "save as" keeps it.
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%q", filename))
 	w.Header().Set("Cache-Control", "private, no-store")
-	_, _ = io.Copy(w, rc)
+
+	// ServeContent — not io.Copy — is what makes this seekable. It parses Range,
+	// answers 206 with Content-Range, advertises Accept-Ranges and handles HEAD
+	// and If-Range. Without it a browser reports the media as seekable [0,0] and
+	// refuses every scrub, which reads as a broken progress bar rather than a
+	// missing server feature.
+	http.ServeContent(w, r, filename, modtime, rs)
 }
 
 // GET /assets/{id}/variants/{variant} — PUBLIC variant proxy (WebP) (P0.1).
 func (h *Handler) ServeVariant(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
 		return
 	}
 	variant := chi.URLParam(r, "variant")
-	rc, ct, err := h.svc.ServeVariant(r.Context(), id, variant)
+	c, err := h.svc.ServeVariant(r.Context(), id, variant)
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "variant not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "variant not found")
 		return
 	}
-	defer rc.Close()
-	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-	_, _ = io.Copy(w, rc)
+	defer c.Body.Close()
+	w.Header().Set("Content-Type", c.ContentType)
+	w.Header().Set("Cache-Control", cacheControl(c.Public, 31536000))
+	_, _ = io.Copy(w, c.Body)
 }
 
 // GET /assets/{id}/hls/* — PUBLIC HLS proxy (manifest + segments).
@@ -290,15 +302,15 @@ func (h *Handler) HLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sub := chi.URLParam(r, "*")
-	rc, ct, err := h.svc.HLSObject(r.Context(), id, sub)
+	c, err := h.svc.HLSObject(r.Context(), id, sub)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	defer rc.Close()
-	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "public, max-age=30")
-	_, _ = io.Copy(w, rc)
+	defer c.Body.Close()
+	w.Header().Set("Content-Type", c.ContentType)
+	w.Header().Set("Cache-Control", cacheControl(c.Public, 30))
+	_, _ = io.Copy(w, c.Body)
 }
 
 // ── helpers ─────────────────────────────────────────────────────────
@@ -316,6 +328,7 @@ func (h *Handler) assetJSON(a Asset, hlsURL string) map[string]any {
 		"title":             a.Title,
 		"original_filename": a.OriginalFilename,
 		"origin":            a.Origin,
+		"visibility":        a.Visibility,
 		"created_at":        a.CreatedAt.Format(time.RFC3339),
 	}
 	if hlsURL != "" {
@@ -344,19 +357,19 @@ func writeMediaProblem(w http.ResponseWriter, err error) {
 	var ufe *UnsupportedFormatError
 	switch {
 	case errors.As(err, &ufe):
-		writeProblem(w, http.StatusUnprocessableEntity, probUnsupportedFormat, "Unsupported media format", ufe.Detail)
+		server.Problem(w, http.StatusUnprocessableEntity, probUnsupportedFormat, "Unsupported media format", ufe.Detail)
 	case errors.Is(err, ErrFileTooLarge):
-		writeProblem(w, http.StatusRequestEntityTooLarge, probFileTooLarge, "File too large", "the uploaded file exceeds the 50 MB limit")
+		server.Problem(w, http.StatusRequestEntityTooLarge, probFileTooLarge, "File too large", "the uploaded file exceeds the 50 MB limit")
 	case errors.Is(err, ErrNotReady):
-		writeProblem(w, http.StatusConflict, probAssetNotReady, "Asset not ready", "the asset upload is not complete")
+		server.Problem(w, http.StatusConflict, probAssetNotReady, "Asset not ready", "the asset upload is not complete")
 	case errors.Is(err, ErrForbidden):
-		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+		server.Problem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
 	case errors.Is(err, ErrNotPlayable):
-		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
+		server.Problem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "unexpected error")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "unexpected error")
 	}
 }
 
@@ -364,26 +377,14 @@ func writeMediaProblem(w http.ResponseWriter, err error) {
 func writeProgressProblem(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrNotPlayable):
-		writeProblem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
+		server.Problem(w, http.StatusNotFound, probAssetNotPlayable, "Asset not playable", "asset is not a video")
 	case errors.Is(err, ErrForbidden):
-		writeProblem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
+		server.Problem(w, http.StatusForbidden, "about:blank", "Forbidden", "not your asset")
 	case errors.Is(err, ErrNotFound):
-		writeProblem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "asset not found")
 	default:
-		writeProblem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not process progress")
+		server.Problem(w, http.StatusInternalServerError, "about:blank", "Internal error", "could not process progress")
 	}
-}
-
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   typ,
-		"title":  title,
-		"status": status,
-		"detail": detail,
-	})
 }
 
 // writeMediaErr is the legacy JSON error shape kept for the untouched handlers
@@ -401,13 +402,95 @@ func writeMediaErr(w http.ResponseWriter, err error) {
 	}
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+// writeErr answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
+func writeErr(w http.ResponseWriter, status int, code, msg string) {
+	server.Problem(w, status, server.ProblemType("media", code), http.StatusText(status), msg)
 }
 
-func writeErr(w http.ResponseWriter, status int, code, msg string) {
-	writeJSON(w, status, map[string]string{"code": code, "message": msg})
+// cacheControl decides who may store a rendition, and for how long.
+//
+// `private` keeps someone else's file out of shared caches: a proxy that cached
+// it would hand it to the next caller and undo the row-level policies entirely.
+//
+// There is deliberately no `immutable`, and no year-long max-age, even though
+// the BYTES never change. What can change is who may read them: an owner can
+// flip an asset back to private at any time, and the URL does not change with
+// it. `immutable` would tell every browser that already holds the file not to
+// revalidate for a year, so un-sharing would not reach the people it most needs
+// to. The ceilings below bound that gap instead.
+func cacheControl(public bool, maxAge int) string {
+	if public {
+		return fmt.Sprintf("public, max-age=%d", minInt(maxAge, publicCacheSeconds))
+	}
+	return fmt.Sprintf("private, max-age=%d", minInt(maxAge, privateCacheSeconds))
+}
+
+const (
+	// A day for public renditions: long enough that a comic chapter is not
+	// re-fetched page by page, short enough that un-sharing means something.
+	publicCacheSeconds = 86400
+	// Ten minutes for private ones, which one browser re-fetches anyway.
+	privateCacheSeconds = 600
+)
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Patch updates the mutable parts of an asset. Today that is `visibility`, the
+// switch between "only I can see this" and "anyone with the link can".
+//
+// PATCH /assets/{id}  {"visibility":"public"|"private"}
+//
+// Ownership is not checked here. The 0032 UPDATE policy restricts the statement
+// to the owner or a tenant admin, so someone else's asset simply does not exist
+// for this UPDATE and the repository reports ErrNotFound — the same answer a
+// missing id gets, which is what keeps the endpoint from confirming that an
+// asset exists.
+func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
+	uid, ok := h.currentUser(r.Context())
+	if !ok {
+		server.Unauthorized(w)
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "invalid asset id")
+		return
+	}
+
+	var body struct {
+		Visibility *string `json:"visibility"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&body); err != nil {
+		server.BadRequest(w, "invalid JSON body")
+		return
+	}
+	if body.Visibility == nil {
+		server.BadRequest(w, "nothing to update")
+		return
+	}
+	switch *body.Visibility {
+	case VisibilityPrivate, VisibilityPublic:
+	default:
+		server.Problem(w, http.StatusUnprocessableEntity, server.ProblemType("media", "invalid_visibility"),
+			"Unprocessable Entity", "visibility must be \"private\" or \"public\"")
+		return
+	}
+
+	asset, err := h.svc.SetVisibility(r.Context(), uid, id, *body.Visibility)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			server.Problem(w, http.StatusNotFound, probAssetNotFound, "Asset not found", "no such asset")
+			return
+		}
+		server.Internal(w)
+		return
+	}
+	server.JSON(w, http.StatusOK, map[string]any{"asset": h.assetJSON(asset, h.svc.hlsURL(asset))})
 }

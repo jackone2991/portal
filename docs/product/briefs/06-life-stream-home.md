@@ -1,5 +1,7 @@
 # 06 — Life-Stream Home (read path: projection + dashboard)
 
+**Status:** current · **Last verified:** never
+
 **Module:** `journal` (extends brief 05) + frontend home · **Effort:** ~6 days · **Depends on:** brief 05 (first content); system events arrive as SPEC-01 P1.2 / SPEC-04 / SPEC-03 land — every widget degrades to an empty state.
 **Unlocks:** the ADR-08 proof screen — money + entertainment + notifications in one glance; resolves brief 00's open question about the newsfeed.
 **Provenance:** merges three research candidates (stream projection, "Today" dashboard, Home-Assistant-pattern home) — researched 2026-07-10. **Spec:** [SPEC-06](../specs/SPEC-06-life-stream-home.md).

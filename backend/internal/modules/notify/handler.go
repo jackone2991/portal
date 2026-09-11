@@ -2,13 +2,13 @@ package notify
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // RFC 7807 Problem type URIs (SPEC-04 §7).
@@ -57,7 +57,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if res.NextCursor != "" {
 		body["next_cursor"] = res.NextCursor
 	}
-	writeJSON(w, http.StatusOK, body)
+	server.JSON(w, http.StatusOK, body)
 }
 
 // POST /me/notifications/{id}/read — idempotent mark-read → 200 {unread_count}.
@@ -69,19 +69,19 @@ func (h *Handler) MarkRead(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeProblem(w, http.StatusNotFound, probNotificationNotFound, "Notification not found", "invalid notification id")
+		server.Problem(w, http.StatusNotFound, probNotificationNotFound, "Notification not found", "invalid notification id")
 		return
 	}
 	unread, err := h.svc.MarkRead(r.Context(), uid, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			writeProblem(w, http.StatusNotFound, probNotificationNotFound, "Notification not found", "notification not found")
+			server.Problem(w, http.StatusNotFound, probNotificationNotFound, "Notification not found", "notification not found")
 			return
 		}
 		writeErr(w, http.StatusInternalServerError, "internal", "could not mark read")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"unread_count": unread})
+	server.JSON(w, http.StatusOK, map[string]any{"unread_count": unread})
 }
 
 // POST /me/notifications/read-all?before= — mark all (≤ watermark) read →
@@ -101,7 +101,7 @@ func (h *Handler) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "internal", "could not mark all read")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"unread_count": unread})
+	server.JSON(w, http.StatusOK, map[string]any{"unread_count": unread})
 }
 
 // ── helpers ─────────────────────────────────────────────────────────
@@ -139,25 +139,9 @@ func parsePositiveInt(s string) (int, error) {
 	return n, nil
 }
 
-func writeProblem(w http.ResponseWriter, status int, typ, title, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   typ,
-		"title":  title,
-		"status": status,
-		"detail": detail,
-	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
+// writeErr answers with RFC 7807. The legacy {code, message} body this used to
+// write is retired (ADR-10); `code` is carried through as the problem type so
+// every existing call site keeps its vocabulary and gains the standard shape.
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
-	writeJSON(w, status, map[string]string{"code": code, "message": msg})
+	server.Problem(w, status, server.ProblemType("notify", code), http.StatusText(status), msg)
 }

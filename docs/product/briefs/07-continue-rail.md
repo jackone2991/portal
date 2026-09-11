@@ -1,5 +1,7 @@
 # 07 — Playback Resume + Continue Rail (D-20 execution)
 
+**Status:** current · **Last verified:** never
+
 **Module:** `media` (built + wired) · **Effort:** ~4 days · **Depends on:** nothing (video leg works on today's stack); the comic leg plugs in when SPEC-02 ships its progress table.
 **Unlocks:** the retention mechanic of every personal media server (Jellyfin/Plex's most-used surface); the continue widget in brief 06's rail.
 **Provenance:** promotion of cataloged decision `D-20` (continue aggregator), justified by the closed video loop — researched 2026-07-10. **Spec:** [SPEC-07](../specs/SPEC-07-continue-rail.md).

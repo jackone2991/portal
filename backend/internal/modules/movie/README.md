@@ -17,6 +17,9 @@ Owns: films, episodes, cast, ratings, watchlists for the movie vertical.
 
 ## Open work
 
-- Migration `0006_movie_init.up.sql`
-- CRUD endpoints + permissions wired (`movies:read`, `movies:write:own`, `movies:publish`, `movies:delete:any`)
-- Search hookup (Postgres FTS first)
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+

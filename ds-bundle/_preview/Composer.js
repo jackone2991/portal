@@ -88,7 +88,10 @@ var __dsPreview = (() => {
   // .design-sync/previews/Composer.tsx
   var Composer_exports = {};
   __export(Composer_exports, {
-    CreatePost: () => CreatePost
+    Drafting: () => Drafting,
+    Empty: () => Empty,
+    Submitting: () => Submitting,
+    WithError: () => WithError
   });
   init_define_import_meta_env();
 
@@ -104,7 +107,60 @@ var __dsPreview = (() => {
 
   // .design-sync/previews/Composer.tsx
   var import_jsx_runtime = __toESM(require_react_shim());
-  var CreatePost = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { "data-template": "v1", style: { background: "#f5f6fa", padding: 16, maxWidth: 640 }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ds_exports.Composer, { displayName: "Marina Valentine", onPost: () => {
-  } }) });
+  var frame = (children) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { "data-template": "v1", style: { background: "var(--tpl-bg, #f5f6fa)", padding: 16, maxWidth: 640 }, children });
+  var Empty = () => frame(
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      ds_exports.Composer,
+      {
+        displayName: "Marina Valentine",
+        bodyMd: "",
+        onBodyMdChange: () => {
+        },
+        onSubmit: () => {
+        }
+      }
+    )
+  );
+  var Drafting = () => frame(
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      ds_exports.Composer,
+      {
+        displayName: "Marina Valentine",
+        bodyMd: "Vừa đọc xong chương mới của Vạn Cổ Thần Đế — nhịp truyện nhanh hơn hẳn arc trước.",
+        onBodyMdChange: () => {
+        },
+        onSubmit: () => {
+        }
+      }
+    )
+  );
+  var Submitting = () => frame(
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      ds_exports.Composer,
+      {
+        displayName: "Marina Valentine",
+        bodyMd: "Đang đăng ghi chú này…",
+        onBodyMdChange: () => {
+        },
+        onSubmit: () => {
+        },
+        submitting: true
+      }
+    )
+  );
+  var WithError = () => frame(
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      ds_exports.Composer,
+      {
+        displayName: "Marina Valentine",
+        bodyMd: "Ghi chú không gửi được.",
+        onBodyMdChange: () => {
+        },
+        onSubmit: () => {
+        },
+        error: "Không đăng được — thử lại sau."
+      }
+    )
+  );
   return __toCommonJS(Composer_exports);
 })();

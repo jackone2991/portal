@@ -28,6 +28,10 @@ type Store interface {
 	GetOrCreatePersonalOrg(ctx context.Context, userID uuid.UUID, name string) (*Organization, error)
 	ListForUser(ctx context.Context, userID uuid.UUID) ([]Organization, error)
 	IsMember(ctx context.Context, userID, orgID uuid.UUID) (bool, error)
+	// ListAllIDs returns every tenant. Used only by the worker's periodic sweeps,
+	// which are cross-tenant by nature and iterate one scope at a time rather
+	// than relying on a BYPASSRLS role (ADR-07 step 7 defers cmd/sysjobs).
+	ListAllIDs(ctx context.Context) ([]uuid.UUID, error)
 }
 
 // API is what other modules import to interact with the tenant domain.

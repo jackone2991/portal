@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { activeTemplate } from "@/templates/registry";
 
-export const metadata: Metadata = { title: "Ledger" };
+export const metadata: Metadata = { title: "Sổ thu chi" };
 
 /** /bank — the ledger dashboard (SPEC-03 P0.6). */
 export default function BankDashboardPage() {

@@ -1,8 +1,8 @@
 # Postgres / PgBouncer / pgx tuning
 
-**Status:** stub — the pool-sizing note promised by [ADR-03](../adr/03-single-vps-topology.md)
+**Status:** stub — the pool-sizing note promised by [ADR-03](../adr/03-single-vps-topology.md) · **Last verified:** never
 (step 5, "Document in `docs/operations/postgres-tuning.md`") and flagged by
-[ADR-00](../adr/00-architecture-review.md) ("No mention of database connection-pool
+[the 2026-05-24 architecture review](../product/analysis/architecture-review-2026-05-24.md) ("No mention of database connection-pool
 tuning between PgBouncer transaction-pool mode and `pgx`"). **v1 does not need this
 tuned** — dev connects directly and load is n=1; it becomes load-bearing at Phase 1
 (tenancy/RLS routes the app through PgBouncer) and under concurrent transcode bursts.
@@ -21,7 +21,7 @@ tuned** — dev connects directly and load is n=1; it becomes load-bearing at Ph
 
 2. **Pool sizing — a *capacity* problem.** `api`, `worker`, and Asynq share one
    Postgres cluster. Without a connection budget, a transcode burst on `worker` can
-   exhaust connections and starve `api` ([ADR-00](../adr/00-architecture-review.md)).
+   exhaust connections and starve `api` ([architecture review, 2026-05-24](../product/analysis/architecture-review-2026-05-24.md)).
    This document is the home for that budget when it is set.
 
 ## v1 posture (today)

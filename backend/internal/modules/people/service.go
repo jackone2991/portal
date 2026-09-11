@@ -2,8 +2,6 @@ package people
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"math"
 	"sort"
 	"strings"
@@ -14,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	peopleapi "github.com/portal/backend/internal/modules/people/api"
+	"github.com/portal/backend/internal/platform/server"
 )
 
 // Service holds the people business logic. loc is the instance-default timezone
@@ -25,6 +24,24 @@ type Service struct {
 	// runInUserTenant scopes the worker notice INSERT to the person's owner org
 	// (ADR-07 1b) so people_birthday_notices.tenant_id's DEFAULT is set. nil → direct.
 	runInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
+	// directory is the account module's user roster, injected as a function so
+	// people depends on a signature rather than on the account package.
+	directory DirectoryFunc
+	connected ConnectedFunc
+}
+
+// ConnectedFunc returns accounts the user already has a social relationship
+// with. Nil simply means nothing extra is subtracted.
+type ConnectedFunc func(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
+
+// DirectoryFunc returns other accounts on this instance, excluding one. Wired
+// from accountapi.ListDirectory by cmd/api; nil disables suggestions.
+type DirectoryFunc func(ctx context.Context, exclude uuid.UUID, limit int) ([]DirectoryUser, error)
+
+// DirectoryUser is the slice of an account this module is allowed to see.
+type DirectoryUser struct {
+	ID          uuid.UUID
+	DisplayName string
 }
 
 // runScoped runs fn in the target user's tenant scope (ADR-07 1b) on the worker;
@@ -48,6 +65,9 @@ func (s *Service) CreatePerson(ctx context.Context, in CreatePersonInput) (Perso
 	if !validName(in.DisplayName) {
 		return Person{}, ErrValidation
 	}
+	if in.Circle != nil && !ValidCircle(*in.Circle) {
+		return Person{}, ErrValidation
+	}
 	if err := validateBirthday(in.Birthday); err != nil {
 		return Person{}, err
 	}
@@ -58,11 +78,14 @@ func (s *Service) GetPerson(ctx context.Context, userID, id uuid.UUID) (Person, 
 	return s.repo.GetPerson(ctx, userID, id)
 }
 
-func (s *Service) ListPeople(ctx context.Context, userID uuid.UUID, cursor string, limit int) (ListResult, error) {
+func (s *Service) ListPeople(ctx context.Context, userID uuid.UUID, cursor string, limit int, circle string) (ListResult, error) {
 	if limit <= 0 || limit > maxLimit {
 		limit = defaultLimit
 	}
-	in := ListInput{UserID: userID, Limit: limit + 1}
+	if circle != "" && !ValidCircle(circle) {
+		return ListResult{}, ErrValidation
+	}
+	in := ListInput{UserID: userID, Limit: limit + 1, Circle: circle}
 	if cursor != "" {
 		name, id, err := decodeCursor(cursor)
 		if err != nil {
@@ -84,6 +107,9 @@ func (s *Service) ListPeople(ctx context.Context, userID uuid.UUID, cursor strin
 }
 
 func (s *Service) UpdatePerson(ctx context.Context, in UpdatePersonInput) (Person, error) {
+	if in.Circle != nil && !ValidCircle(*in.Circle) {
+		return Person{}, ErrValidation
+	}
 	if in.DisplayName != nil {
 		n := strings.TrimSpace(*in.DisplayName)
 		if !validName(n) {
@@ -256,21 +282,67 @@ func validName(s string) bool {
 
 // cursor "<display_name>|<id>", base64url.
 func encodeCursor(p Person) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(p.DisplayName + "|" + p.ID.String()))
+	return server.EncodeCursor(p.DisplayName, p.ID)
 }
 
 func decodeCursor(s string) (string, uuid.UUID, error) {
-	b, err := base64.RawURLEncoding.DecodeString(s)
+	return server.DecodeCursor(s)
+}
+
+// Suggestion is one "people you may know" entry: a portal account that is not
+// yet in the caller's registry.
+type Suggestion struct {
+	UserID      uuid.UUID
+	DisplayName string
+}
+
+// Suggestions lists other accounts on this instance, minus the ones already in
+// the registry. The subtraction happens here rather than in SQL because the
+// roster comes from the account module through its api/ package — people never
+// reads the users table.
+//
+// An unwired directory (a binary that did not pass one) yields an empty list,
+// not an error: a rail with no suggestions is a fine rail.
+func (s *Service) Suggestions(ctx context.Context, userID uuid.UUID, limit int) ([]Suggestion, error) {
+	if s.directory == nil {
+		return nil, nil
+	}
+	if limit <= 0 || limit > maxLimit {
+		limit = defaultLimit
+	}
+	linked, err := s.repo.ListLinkedUserIDs(ctx, userID)
 	if err != nil {
-		return "", uuid.Nil, err
+		return nil, err
 	}
-	i := strings.LastIndex(string(b), "|")
-	if i < 0 {
-		return "", uuid.Nil, errors.New("people: malformed cursor")
+	known := make(map[uuid.UUID]struct{}, len(linked))
+	for _, id := range linked {
+		known[id] = struct{}{}
 	}
-	id, err := uuid.Parse(string(b)[i+1:])
+	// Someone you have asked (or are connected to) is not someone you "may
+	// know" any more — offering them again reads as the request having failed.
+	if s.connected != nil {
+		ids, cerr := s.connected(ctx, userID)
+		if cerr != nil {
+			return nil, cerr
+		}
+		for _, id := range ids {
+			known[id] = struct{}{}
+		}
+	}
+	// Over-fetch so filtering out the already-known cannot leave a short page.
+	roster, err := s.directory(ctx, userID, limit+len(known))
 	if err != nil {
-		return "", uuid.Nil, err
+		return nil, err
 	}
-	return string(b)[:i], id, nil
+	out := make([]Suggestion, 0, limit)
+	for _, u := range roster {
+		if _, dup := known[u.ID]; dup {
+			continue
+		}
+		out = append(out, Suggestion{UserID: u.ID, DisplayName: u.DisplayName})
+		if len(out) == limit {
+			break
+		}
+	}
+	return out, nil
 }

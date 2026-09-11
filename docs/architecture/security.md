@@ -1,13 +1,15 @@
 # Authoration — Authentication, Authorization, and Multi-Tenancy
 
+**Status:** current · **Last verified:** never
+
 > Canonical security specification for Portal. Covers identity (authn),
 > permission decisions (authz), and tenant isolation (data segregation).
 >
 > **Companion docs:**
-> - [archivetech.md](archivetech.md) — full functional roadmap (UI, modules, phasing)
+> - [deferred/access-policies.md](deferred/access-policies.md) (was `archivetech.md`) — full functional roadmap (UI, modules, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
-> - [ADR-02](architecture/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
-> - [ADR-06](architecture/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
+> - [ADR-02](../adr/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
+> - [ADR-06](../adr/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
 >
 > For built (v1) surfaces, code + ADRs are canonical (ADR-02 explicitly
 > disregards spec-wins clauses for v1); for the post-v1 layers specced here,
@@ -16,16 +18,16 @@
 
 > **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
 > channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
-> (see `MILESTONE_CHECKS.md`, [ADR-06](architecture/06-local-auth-model.md)). Everything
+> (see [ADR-06](../adr/06-local-auth-model.md); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). Everything
 > tenant/policy-shaped — §1 L2 tenant layer, §2.4 TOTP, §3 tenancy+RLS, §4 policy-bundle
 > authorization, §5.4 notifications, §6 steps 8–9, §9 migrations beyond 0007 — is **POST-V1 DESIGN**,
-> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](architecture/02-rbac-model-reconciliation.md).
+> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](../adr/02-rbac-model-reconciliation.md).
 
 ---
 
 ## 0. Decision log
 
-The settled answers to the open questions raised in `archivetech.md §9`:
+The settled answers to the open questions raised in `access-policies.md §9` (then `archivetech.md`):
 
 | # | Question | Decision |
 |---|----------|----------|
@@ -77,7 +79,7 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 ## 2. Identity layer (authentication)
 
-> **Superseded by [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
+> **Superseded by [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
 
 ### 2.1 Local password login flow  *([BUILT])*
 
@@ -178,7 +180,7 @@ A **Tenant** is the top-level data isolation boundary. In Portal, a Tenant ≡ a
                  └────────┬─────────┘
                           ▼
                  ┌──────────────────┐
-                 │   User Group     │  see archivetech.md §3.1
+                 │   User Group     │  see access-policies.md §3.1
                  └────────┬─────────┘
                           ▼
                  ┌──────────────────┐
@@ -286,7 +288,7 @@ The `superadmin` role is *system-level*, not tenant-level. It exists in a virtua
 
 ### 4.1 Access-control model recap
 
-(Detailed in `archivetech.md §2`. Repeated here as the unit-of-decision for this document.)
+(Detailed in `access-policies.md §2`. Repeated here as the unit-of-decision for this document.)
 
 ```text
         Group hierarchy             Policies (reusable bundles)
@@ -363,7 +365,7 @@ Per decision-log #1. The `DELETE /admin/groups/{id}` endpoint:
 
 1. Requires permission `rbac:role:write` (or equivalent group-management perm) — standard authz.
 2. Additionally requires step-up: either header `X-Step-Up-Token: <6 digits>` OR a session flag set within the last 5 min.
-3. On success: cascade deletes children (per `archivetech.md`), bump `token_version` for all members of all affected groups, audit `rbac.group.deleted` with a metadata field listing every cascaded child group.
+3. On success: cascade deletes children (per `access-policies.md`), bump `token_version` for all members of all affected groups, audit `rbac.group.deleted` with a metadata field listing every cascaded child group.
 4. If the actor lacks TOTP enrolment, the endpoint returns `403 totp_required` and the frontend redirects to `/account/security` to enrol.
 
 This same pattern (`requireStepUp`) wraps every other destructive op:
@@ -375,7 +377,7 @@ This same pattern (`requireStepUp`) wraps every other destructive op:
 
 ### 5.1 Audit  *([BUILT] core; UI [PLANNED])*
 
-Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/modules/account/audit/logger.go). Action codes are dotted, e.g. `auth.login`, `rbac.policy.updated`, `tenant.switched`, `auth.totp.verified`. **Failures are loud but non-blocking** for the user request.
+Every security-sensitive event written to `audit_log` (append-only). See [audit/logger.go](../../backend/internal/platform/audit/logger.go). Action codes are dotted `<module>.<resource>.<action>`, e.g. `account.session.login`, `account.role.granted` — the legacy `auth.*`/`rbac.*`/`user.*` codes were renamed per [D-25]; the constants in that file are canonical. **Failures are loud but non-blocking** for the user request.
 
 Add for multi-tenancy: every audit row carries `organization_id` (NULL for system events). Migration delta:
 

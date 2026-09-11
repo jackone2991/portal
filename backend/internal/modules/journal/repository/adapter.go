@@ -199,13 +199,18 @@ func (a *Adapter) ListStream(ctx context.Context, in journal.StreamListInput) ([
 }
 
 // payloadOr returns nil for an empty payload so pgx sends SQL NULL — the query's
-// COALESCE(...::jsonb, '{}'::jsonb) then substitutes an empty object. sqlc types
-// the param as []byte now that the query casts it explicitly.
-func payloadOr(p json.RawMessage) []byte {
+// COALESCE(...::text::jsonb, '{}'::jsonb) then substitutes an empty object.
+//
+// The return is *string, not []byte: the pool runs QueryExecModeExec, where pgx
+// derives the wire OID from the Go type, and a []byte goes out as bytea — which
+// a jsonb column rejects with SQLSTATE 22P02. Casting in SQL does not help; the
+// param has to arrive as text.
+func payloadOr(p json.RawMessage) *string {
 	if len(p) == 0 {
 		return nil
 	}
-	return []byte(p)
+	s := string(p)
+	return &s
 }
 
 // ── mapping helpers ─────────────────────────────────────────────────

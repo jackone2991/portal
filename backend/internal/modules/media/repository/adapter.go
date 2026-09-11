@@ -85,6 +85,22 @@ func (a *Adapter) GetAssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uu
 	return out, rows.Err()
 }
 
+func (a *Adapter) SetAssetVisibility(ctx context.Context, ownerID, id uuid.UUID, visibility string) (media.Asset, error) {
+	row, err := a.q.SetAssetVisibility(ctx, SetAssetVisibilityParams{
+		ID: pgUUID(id), Visibility: visibility, OwnerID: pgUUID(ownerID),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// No row the caller may update — it does not exist, it is not theirs,
+			// or the 0032 policy hides it. Same answer either way: existence
+			// never leaks.
+			return media.Asset{}, media.ErrNotFound
+		}
+		return media.Asset{}, err
+	}
+	return toAsset(row), nil
+}
+
 func (a *Adapter) GetAssetOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
 	row, err := a.q.GetAssetOwner(ctx, pgUUID(id))
 	if err != nil {
@@ -331,6 +347,7 @@ func toAsset(r Asset) media.Asset {
 		Title:            derefStr(r.Title),
 		OriginalFilename: derefStr(r.OriginalFilename),
 		Origin:           r.Origin,
+		Visibility:       r.Visibility,
 		CreatedAt:        r.CreatedAt.Time,
 	}
 }

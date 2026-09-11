@@ -30,7 +30,9 @@ Nothing.
 
 ## Open work
 
-- Real FFmpeg pipeline in `worker/transcode.go` (currently logs and returns nil).
-- HLS variant ladder configurable per tier (240p/480p/720p/1080p/4K).
-- S3 multipart upload session: `service/upload.go`.
-- `media:asset_ready` emission wired to repository update.
+None listed here on purpose. Implementation status has one written owner
+(`/CLAUDE.md` § Current status) and open work one list
+(`docs/product/backlog.md`) — ADR-11. A status claim in a module README was
+wrong within weeks every time it was tried (the 2026-08-25 audit found seven
+of eight sections stale).
+
