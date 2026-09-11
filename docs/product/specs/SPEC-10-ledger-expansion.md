@@ -1,6 +1,6 @@
 # SPEC-10 — Ledger expansion (module `bank`: debts, goals, recurring, cards, net worth, automation, splits, sharing)
 
-**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11
+**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-09-11
 **Module:** `bank` (extends it; no new module) · **Depends on:** SPEC-03 (the ledger this builds on), SPEC-04 (notify, for reminders), SPEC-01 (media, only for P1.10 receipts)
 **Refs:** SPEC-03 §5 P0.3 (the transfer-leg predicate everything here keys on), migration 0042 (icon-first categories)
 

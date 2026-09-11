@@ -1,6 +1,6 @@
 # SPEC-09 — Platform Ops: Backup/Restore, Queue Console, Takeout
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
 **Module:** `ops` (new — not scaffolded; owns the `ops:*` prefix) · **Depends on:** nothing hard on data — rides (or, if it lands first, introduces) SPEC-01 P0.3's shared periodic-scheduler convention; failure alerts get delivery when SPEC-04 lands (degrade to logs + status endpoint until then)
 **Upstream:** [briefs/09-platform-ops.md](../briefs/09-platform-ops.md) · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (observability stays deferred), [ADR-03](../../adr/03-single-vps-topology.md), [ADR-04](../../adr/04-storage-tier-budget.md), backlog §7, feature-inventory `D-25` (audit types)
 **Downstream consumers:** every module holding irreplaceable data (bank, journal, media, people); SPEC-04 (backup-failure alerts, later)

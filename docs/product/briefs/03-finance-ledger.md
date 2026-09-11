@@ -1,5 +1,7 @@
 # 03 — Finance Ledger (module `bank`, ledger scope)
 
+**Status:** current · **Last verified:** never
+
 **Module:** `bank` (name reserved in diagrams/MODULES; no code yet).
 **Ref:** [feature-inventory.md §8](../feature-inventory.md) (was `feature.md`) — this spec implements a **subset** (§8.1–8.2 core). **Spec:** [SPEC-03](../specs/SPEC-03-finance-ledger.md).
 **Depends on:** nothing hard; receipt attachments reuse spec 01.

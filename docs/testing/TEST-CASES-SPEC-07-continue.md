@@ -1,5 +1,7 @@
 # Test Cases — SPEC-07 Playback Resume + Continue Rail
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-07](../product/specs/SPEC-07-continue-rail.md) · **Module:** `media` + `cmd/api` aggregator
 **Prefix:** `TC-CONT-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
 

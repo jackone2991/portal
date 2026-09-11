@@ -1,6 +1,6 @@
 # Postgres / PgBouncer / pgx tuning
 
-**Status:** stub — the pool-sizing note promised by [ADR-03](../adr/03-single-vps-topology.md)
+**Status:** stub — the pool-sizing note promised by [ADR-03](../adr/03-single-vps-topology.md) · **Last verified:** never
 (step 5, "Document in `docs/operations/postgres-tuning.md`") and flagged by
 [the 2026-05-24 architecture review](../product/analysis/architecture-review-2026-05-24.md) ("No mention of database connection-pool
 tuning between PgBouncer transaction-pool mode and `pgx`"). **v1 does not need this

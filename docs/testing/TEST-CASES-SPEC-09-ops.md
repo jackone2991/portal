@@ -1,5 +1,7 @@
 # Test Cases — SPEC-09 Platform Ops
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-09](../product/specs/SPEC-09-platform-ops.md) · **Module:** `ops`
 **Prefix:** `TC-OPS-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R2 (irreplaceable data loss)
 

@@ -1,5 +1,7 @@
 # Test Cases — SPEC-05 Journal (life-stream write path)
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-05](../product/specs/SPEC-05-journal.md) · **Module:** `journal`
 **Prefix:** `TC-JRNL-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R7 (capture not saved)
 

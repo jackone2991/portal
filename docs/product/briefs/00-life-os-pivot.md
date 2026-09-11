@@ -1,6 +1,6 @@
 # 00 — Life-OS Pivot (positioning)
 
-**Status:** agreed in brainstorm 2026-07-07 · **ratified as [ADR-08](../../adr/08-life-os-pivot.md)** (landed 2026-07; binding — [vision.md](../vision.md) is the current yardstick).
+**Status:** agreed in brainstorm 2026-07-07 · **ratified as [ADR-08](../../adr/08-life-os-pivot.md)** (landed 2026-07; binding — [vision.md](../vision.md) is the current yardstick). · **Last verified:** never
 **Owner:** product (solo dev).
 
 ## Problem statement

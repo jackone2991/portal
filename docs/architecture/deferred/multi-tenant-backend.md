@@ -1,5 +1,7 @@
 # ArchiveTech — Backend Architecture for Multi-Tenancy
 
+**Status:** current · **Last verified:** never
+
 > **Status (2026-07-06): forward-looking design spec — none of this is built.** v1 shipped with no tenancy ([01-v1-scope-cut](../../adr/01-v1-scope-cut.md)); the tenant module is scaffold-only and is not constructed in `cmd/api/main.go`. Per [ADR-02](../../adr/02-rbac-model-reconciliation.md), the user-group/policy model this doc builds on layers on top of the shipped role-hierarchy RBAC in a later phase. Where the code layout here conflicts with [backend/MODULES.md](../../../backend/MODULES.md) (modules + platform structure, per-module sqlc `repository/`), MODULES.md wins. OIDC references are retired per [ADR-06](../../adr/06-local-auth-model.md) (local password auth). Migration numbers cited below (0003/0004/0009) are stale — 0001–0007 are already applied; tenant migrations take the next free `000N_tenant_…` numbers.
 
 > Engineering patterns for running Portal's Go backend in a multi-tenant

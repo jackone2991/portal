@@ -1,5 +1,7 @@
 # Portal — Test Documentation
 
+**Status:** current · **Last verified:** never
+
 This tree is the **QA source of truth** for the Portal v1 platform. It is written
 to be executable later by a tester who did not build the features — every test
 case carries preconditions, steps, test data, and an unambiguous expected result.

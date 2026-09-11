@@ -1,6 +1,6 @@
 # SPEC-04 — Notification Module (life-stream backbone)
 
-**Status:** ready to build, rev 3 · **Drafted:** 2026-07-08
+**Status:** ready to build, rev 3 · **Drafted:** 2026-07-08 · **Last verified:** never
 **Module:** `notify` (new — not yet scaffolded) · **Depends on:** SPEC-01 P1.2 for P0.4 (the `media:asset_ready` emit — see P0.4's dependency note); otherwise nothing hard
 **Upstream:** the 2026-07 gap analysis — now folded into [backlog.md](../backlog.md) §5 *(the standalone `gap-audit-2026-07.md` file was never committed; link fixed 2026-07-10)* · **Refs:** backlog §1/§3/§5, [facebook-comparison](../analysis/facebook-comparison.md) §14, [MODULES.md](../../../backend/MODULES.md) §5.2
 **Downstream consumers:** account (password reset, security alerts), the Olympus bell/activity UI, all future social types · **Consumes:** `media:asset_ready` (SPEC-01 P1.2)

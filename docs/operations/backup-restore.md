@@ -1,5 +1,7 @@
 # Backup & Restore Runbook
 
+**Status:** current · **Last verified:** never
+
 **Scope:** SPEC-09 P0 — nightly Postgres backups, the freshness sentinel, and the
 quarterly restore drill. Followable start-to-finish by someone who did not write
 the code.

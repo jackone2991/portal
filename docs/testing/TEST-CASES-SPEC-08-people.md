@@ -1,5 +1,7 @@
 # Test Cases — SPEC-08 People Registry
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-08](../product/specs/SPEC-08-people-registry.md) · **Module:** `people`
 **Prefix:** `TC-PPL-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
 

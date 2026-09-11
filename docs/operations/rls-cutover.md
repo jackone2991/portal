@@ -1,6 +1,6 @@
 # RLS cutover — running the app as `portal_app`
 
-**Status:** executed 2026-08-25 · **Relates:** [ADR-07](../adr/07-tenancy-rls-model.md) · `backend/db/migrations/0020_platform_rls_enable.up.sql`
+**Status:** executed 2026-08-25 · **Relates:** [ADR-07](../adr/07-tenancy-rls-model.md) · `backend/db/migrations/0020_platform_rls_enable.up.sql` · **Last verified:** never
 
 Row-Level Security has been in the schema since migration `0020`, but it was
 **inert**: the app connected as `portal`, a superuser, and a superuser bypasses

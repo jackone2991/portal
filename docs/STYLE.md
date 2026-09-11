@@ -24,7 +24,8 @@ code ([ADR-11](adr/11-docs-canonicalisation.md)). No changelogs, no per-section
 "update notes": correct the text, bump the date. The date means the **whole
 file** was checked; a file nobody has checked as a whole says
 `**Last verified:** never` — an honest `never` beats a date that means "last
-edited". There is no per-section variant.
+edited". There is no per-section variant. CI checks that the field is present
+(`scripts/check-doc-headers.sh`); it does not judge the value.
 
 Audits (`product/analysis/`) additionally carry `**Triaged:** YYYY-MM-DD →
 backlog.md` once their findings have been turned into backlog lines. Header

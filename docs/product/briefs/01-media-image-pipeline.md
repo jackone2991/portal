@@ -1,5 +1,7 @@
 # 01 — Media: Image Asset Kind + Pipeline Completion
 
+**Status:** current · **Last verified:** never
+
 **Module:** `media` (built + wired) · **Effort:** ~days · **Depends on:** nothing.
 **Unlocks:** comic pages (spec 02), avatars, photos, finance receipt attachments.
 

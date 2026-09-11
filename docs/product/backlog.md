@@ -176,6 +176,11 @@ was checked, and code moves.
     name migrations that do not exist and work that is done. Not re-verified
     line by line in this triage; treat each as suspect until its
     `Last verified` is bumped.
+36a. **`architecture/{diagrams,overview,security}.md`, `adr/diagrams/system-landscape.md`,
+    `guides/getting-started.md`, `operations/postgres-tuning.md`** still draw or
+    describe `postgres` + `pgbouncer` as compose services (gone 2026-08-21; host
+    PG 18). All now carry `Last verified: never` so the reader is warned; fixing
+    the diagrams is one pass with `docker-compose.yml` open.
 36. **`docs/testing/TEST-PLAN.md`** still describes a container-backed L2
     integration layer that does not exist, says `make up` starts Postgres and
     PgBouncer, and says CI runs `vitest` (audit §4.6). Correct it when line 3

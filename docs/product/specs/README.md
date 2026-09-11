@@ -1,5 +1,7 @@
 # Portal — Detailed Feature Specs (PRD level)
 
+**Status:** current · **Last verified:** never
+
 **Language policy:** English only, per owner decision 2026-07-07 (ratified by
 [ADR-09](../../adr/09-docs-architecture.md) — the old vi mirror is a frozen archive).
 

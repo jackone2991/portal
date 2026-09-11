@@ -1,5 +1,7 @@
 # ArchiveTech — System Functional Specification
 
+**Status:** current · **Last verified:** never
+
 > **Status (updated 2026-07-06):** Deferred (post-v1) spec for the policy-bundle / user-group / file-gated-permission layer.
 > Per [ADR-02](../../adr/02-rbac-model-reconciliation.md) the role-hierarchy RBAC in code is canonical for v1 — this layer stacks on top of roles later, and the "spec wins, adjust code" clause below is **suspended for v1**.
 > Auth is now local password (Argon2id) per [ADR-06](../../adr/06-local-auth-model.md) — Authentik/OIDC removed; every OIDC/Authentik mention below is historical.

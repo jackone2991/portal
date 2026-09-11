@@ -1,6 +1,6 @@
 # SPEC-03 — Finance Ledger (module `bank`, ledger scope)
 
-**Status:** ready to build, rev 1 · **Drafted / last-verified:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-07-10
 **Module:** `bank` (name reserved in diagrams/MODULES; no code) · **Depends on:** ADR-08 (scope amendment); SPEC-01 only for P1 receipts
 **Upstream:** [briefs/03-finance-ledger.md](../briefs/03-finance-ledger.md) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
 

@@ -1,5 +1,7 @@
 # 05 — Journal (life-stream write path)
 
+**Status:** current · **Last verified:** never
+
 **Module:** `journal` (new — not scaffolded) · **Effort:** ~5–6 days · **Depends on:** nothing hard (ADR-10 codegen cutover preferred first; photo attachments reuse spec 01).
 **Unlocks:** the life-stream surface (brief 06), the first real post type, deletion of the largest fixture block in the app.
 **Provenance:** promotion of backlog §3 P1 "Posts/newsfeed API", reframed per [ADR-08](../../adr/08-life-os-pivot.md) — researched 2026-07-10. **Spec:** [SPEC-05](../specs/SPEC-05-journal.md).

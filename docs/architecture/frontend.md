@@ -1,5 +1,7 @@
 # Portal — Frontend architecture
 
+**Status:** current · **Last verified:** never
+
 Companion to [feature.md](../product/feature-inventory.md). Where `feature.md` defines the full system, this doc focuses on the **`frontend/`** Next.js 15 app: structure, state, rendering, auth handoff, and the page inventory built from `template-main/`.
 
 Read [§16 Frontend](../product/feature-inventory.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34] — superseded by client-side SessionKeeper, see the §4 banner — and [D-7]); this doc expands them with concrete patterns and a build-out roadmap.

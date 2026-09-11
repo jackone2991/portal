@@ -1,5 +1,7 @@
 # Authoration — Authentication, Authorization, and Multi-Tenancy
 
+**Status:** current · **Last verified:** never
+
 > Canonical security specification for Portal. Covers identity (authn),
 > permission decisions (authz), and tenant isolation (data segregation).
 >

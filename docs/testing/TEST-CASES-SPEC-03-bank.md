@@ -1,5 +1,7 @@
 # Test Cases — SPEC-03 Finance Ledger (`bank`)
 
+**Status:** current · **Last verified:** never
+
 **Spec:** [SPEC-03](../product/specs/SPEC-03-finance-ledger.md) · **Module:** `bank`
 **Prefix:** `TC-BANK-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
 **Risk:** R1 (money incorrectness) + R3 (finance is the most sensitive data) — treat every S1 here as release-gating.

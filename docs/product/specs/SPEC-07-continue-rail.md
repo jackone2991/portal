@@ -1,6 +1,6 @@
 # SPEC-07 — Playback Resume + Continue Rail (D-20 execution)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10
+**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
 **Module:** `media` (built + wired); aggregator mounts in `cmd/api` · **Depends on:** nothing hard (the video leg runs on today's stack); the comic leg plugs in when SPEC-02 ships `comic_reading_progress`
 **Upstream:** [briefs/07-continue-rail.md](../briefs/07-continue-rail.md) · **Refs:** feature-inventory `D-20` (continue aggregator shape), SPEC-02 P0.4 (progress-beacon convention), frontend.md
 **Downstream consumers:** SPEC-06 P0.4 (continue widget), SPEC-04 (open type registry, via P1.5's event)
