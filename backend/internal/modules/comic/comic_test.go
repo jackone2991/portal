@@ -420,15 +420,52 @@ func TestProgressMembership(t *testing.T) {
 	if err := svc.SaveProgress(ctx, owner, c.ID, ch.ID, &page.ID); err != nil {
 		t.Fatalf("valid progress: %v", err)
 	}
-	// chapter not in this comic
-	otherComic := uuid.New()
-	if err := svc.SaveProgress(ctx, owner, otherComic, ch.ID, nil); !errors.Is(err, ErrInvalidProgressTarget) {
+	// a comic that does not exist is 404 — the visibility gate answers before
+	// membership does, so "no such comic" and "someone else's draft" look alike
+	if err := svc.SaveProgress(ctx, owner, uuid.New(), ch.ID, nil); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("unknown comic = %v, want ErrNotFound", err)
+	}
+	// chapter not in this comic (a real, visible comic — so the gate passes and
+	// the membership check is what refuses)
+	otherComic, _ := svc.CreateComic(ctx, CreateComicInput{OwnerID: owner, Title: "Other"})
+	if err := svc.SaveProgress(ctx, owner, otherComic.ID, ch.ID, nil); !errors.Is(err, ErrInvalidProgressTarget) {
 		t.Fatalf("foreign chapter = %v, want ErrInvalidProgressTarget", err)
 	}
 	// page not in this chapter
 	otherCh, _ := svc.CreateChapter(ctx, c.ID, "Ch2", 20)
 	if err := svc.SaveProgress(ctx, owner, c.ID, otherCh.ID, &page.ID); !errors.Is(err, ErrInvalidProgressTarget) {
 		t.Fatalf("page in wrong chapter = %v, want ErrInvalidProgressTarget", err)
+	}
+}
+
+// SaveProgress must apply the same published-or-owner gate as ReaderPagesVisible.
+// Without it the endpoint is an existence oracle over other users' drafts
+// (a 422 for "wrong comic" vs a 204 for "right comic" tells you the draft is
+// there) and it writes progress rows against comics the caller cannot read.
+func TestSaveProgressRespectsDraftVisibility(t *testing.T) {
+	svc, repo, _ := newSvc()
+	ctx := context.Background()
+	owner := uuid.New()
+	reader := uuid.New()
+	c, _ := svc.CreateComic(ctx, CreateComicInput{OwnerID: owner, Title: "Draft"})
+	ch, _ := svc.CreateChapter(ctx, c.ID, "Ch", 10)
+	page, _ := repo.CreatePage(ctx, ch.ID, uuid.New(), 10)
+
+	// a stranger cannot mark progress on a draft — and learns nothing from the answer
+	if err := svc.SaveProgress(ctx, reader, c.ID, ch.ID, &page.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("stranger on draft = %v, want ErrNotFound", err)
+	}
+	if len(repo.progress) != 0 {
+		t.Fatalf("a refused save must not write a row; got %d", len(repo.progress))
+	}
+	// the owner can
+	if err := svc.SaveProgress(ctx, owner, c.ID, ch.ID, &page.ID); err != nil {
+		t.Fatalf("owner on own draft: %v", err)
+	}
+	// once published, so can the stranger
+	_, _ = repo.SetStatus(ctx, c.ID, StatusPublished)
+	if err := svc.SaveProgress(ctx, reader, c.ID, ch.ID, &page.ID); err != nil {
+		t.Fatalf("stranger on published: %v", err)
 	}
 }
 

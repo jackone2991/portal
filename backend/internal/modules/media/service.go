@@ -383,6 +383,35 @@ func (s *Service) OriginalContent(ctx context.Context, ownerID, id uuid.UUID) (i
 		asset.MimeType, filename, asset.CreatedAt, nil
 }
 
+// SignedOriginalURL returns a presigned GET for the uploaded original, for
+// direct delivery by another module's player (the mediaapi.SignedURL seam).
+// Tenant-scoped, not owner-scoped: the caller's RequireTenant transaction is
+// what decides which assets exist, and a track shared inside a tenant is
+// meant to play for its members. Only a READY asset is signed — an uploading
+// source may be partial and a deleting one is on its way out — so the link
+// can never point at bytes that are still changing. A non-positive ttl gets
+// the upload TTL rather than a zero-lifetime link.
+func (s *Service) SignedOriginalURL(ctx context.Context, id uuid.UUID, ttl time.Duration) (string, error) {
+	asset, err := s.repo.GetAsset(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if asset.Status != StatusReady {
+		if asset.Status == StatusDeleting {
+			return "", ErrNotFound
+		}
+		return "", ErrNotReady
+	}
+	if ttl <= 0 {
+		ttl = s.uploadTTL
+	}
+	pre, err := s.store.PresignGet(ctx, asset.SourceKey, ttl)
+	if err != nil {
+		return "", err
+	}
+	return pre.URL, nil
+}
+
 // DownloadOriginal streams the byte-identical uploaded original for the owner
 // (P0.5). Returns the reader, its content type and the download filename.
 func (s *Service) DownloadOriginal(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error) {

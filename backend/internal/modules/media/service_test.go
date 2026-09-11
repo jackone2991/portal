@@ -807,6 +807,36 @@ func TestHLSObjectSafety(t *testing.T) {
 	}
 }
 
+// SignedOriginalURL is the cross-module delivery path (movie/music players).
+// It hands out a presigned GET for the uploaded original — only once the
+// asset is ready, and only for an asset the tenant scope can see.
+func TestSignedOriginalURL(t *testing.T) {
+	svc, repo, _, _, _ := newSvc()
+	ctx := context.Background()
+	ready := Asset{ID: uuid.New(), OwnerID: uuid.New(), Kind: "audio", Status: StatusReady, SourceKey: "uploads/a/original.mp3"}
+	uploading := Asset{ID: uuid.New(), OwnerID: uuid.New(), Kind: "audio", Status: StatusUploading, SourceKey: "uploads/b/original.mp3"}
+	repo.m[ready.ID] = ready
+	repo.m[uploading.ID] = uploading
+
+	url, err := svc.SignedOriginalURL(ctx, ready.ID, time.Minute)
+	if err != nil {
+		t.Fatalf("ready: %v", err)
+	}
+	if !strings.HasSuffix(url, ready.SourceKey) {
+		t.Fatalf("signed url = %q, want it to name the source key", url)
+	}
+	if _, err := svc.SignedOriginalURL(ctx, uploading.ID, time.Minute); !errors.Is(err, ErrNotReady) {
+		t.Fatalf("uploading = %v, want ErrNotReady", err)
+	}
+	if _, err := svc.SignedOriginalURL(ctx, uuid.New(), time.Minute); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("unknown = %v, want ErrNotFound", err)
+	}
+	// a non-positive ttl gets the default, never a zero-lifetime link
+	if _, err := svc.SignedOriginalURL(ctx, ready.ID, 0); err != nil {
+		t.Fatalf("ttl 0: %v", err)
+	}
+}
+
 func TestGetOwnerScoped(t *testing.T) {
 	svc, repo, _, _, _ := newSvc()
 	ctx := context.Background()

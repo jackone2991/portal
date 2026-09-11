@@ -99,6 +99,7 @@ type Impl struct {
 	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error)
 	ingestFn   func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error)
 	openFn     func(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error)
+	signFn     func(ctx context.Context, id uuid.UUID, ttl time.Duration) (string, error)
 }
 
 func NewImpl(
@@ -107,10 +108,11 @@ func NewImpl(
 	statusesFn func(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]AssetStatus, error),
 	ingestFn func(ctx context.Context, ownerID uuid.UUID, filename, contentType string, data []byte) (uuid.UUID, error),
 	openFn func(ctx context.Context, ownerID, id uuid.UUID) (io.ReadCloser, string, string, error),
+	signFn func(ctx context.Context, id uuid.UUID, ttl time.Duration) (string, error),
 ) *Impl {
 	return &Impl{
 		continueFn: continueFn, getAssetFn: getAssetFn,
-		statusesFn: statusesFn, ingestFn: ingestFn, openFn: openFn,
+		statusesFn: statusesFn, ingestFn: ingestFn, openFn: openFn, signFn: signFn,
 	}
 }
 
@@ -152,8 +154,15 @@ func (a *Impl) AssetStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUI
 	return map[uuid.UUID]AssetStatus{}, nil
 }
 
-func (a *Impl) SignedURL(_ context.Context, _ uuid.UUID, _ time.Duration) (string, error) {
-	return "", nil
+// SignedURL delegates to the media service's presigned-GET on the uploaded
+// original. Nil-safe the same way as Ingest/OpenOriginal: a module built
+// without a signer answers with an error, never with a valid-looking empty
+// string — which is what this method did until 2026-09-11.
+func (a *Impl) SignedURL(ctx context.Context, id uuid.UUID, ttl time.Duration) (string, error) {
+	if a.signFn == nil {
+		return "", errors.New("media: signed URLs not available")
+	}
+	return a.signFn(ctx, id, ttl)
 }
 
 func (a *Impl) Continue(ctx context.Context, userID uuid.UUID, limit int) ([]ContinueItem, error) {
