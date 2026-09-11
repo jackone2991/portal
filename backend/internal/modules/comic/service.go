@@ -329,8 +329,18 @@ func (s *Service) ReaderPages(ctx context.Context, chapterID uuid.UUID) ([]Reade
 
 // ══ Reading progress (P0.4) ═════════════════════════════════════════════
 
-// SaveProgress validates chapter/page membership then upserts (keyed by page_id).
+// SaveProgress applies the published-or-owner gate (the same one
+// ReaderPagesVisible enforces — a draft is 404 to everyone but its owner),
+// then validates chapter/page membership and upserts (keyed by page_id).
+//
+// The gate comes FIRST, before any membership answer: a 422 for "chapter is
+// not in this comic" versus a 204 for "it is" would otherwise tell a stranger
+// whether an unpublished comic exists, and let them write progress rows
+// against a comic they cannot read.
 func (s *Service) SaveProgress(ctx context.Context, userID, comicID, chapterID uuid.UUID, pageID *uuid.UUID) error {
+	if _, err := s.GetComic(ctx, userID, comicID); err != nil {
+		return err
+	}
 	cc, err := s.repo.ChapterComic(ctx, chapterID)
 	if err != nil {
 		return ErrInvalidProgressTarget

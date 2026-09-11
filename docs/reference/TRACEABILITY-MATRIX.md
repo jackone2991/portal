@@ -60,7 +60,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.1 | Entities + CRUD + asset validation | TC-COMIC-001…015 | P0 | ⚠ | `modules/comic/comic_test.go: TestPageAssetValidation, TestCoverAssetValidation` — validation proven; CRUD paths have no test. |
 | P0.2 | Publish flow + owner-or-elevated RBAC | TC-COMIC-030…040 | P0 | ⚠ | `modules/comic/comic_test.go: TestPublishValidation, TestDraftVisibility` — publish guards and draft visibility proven; the elevated-permission path (`RequireOwnerOrPermission`) is not exercised. |
 | P0.3 | Reader vertical scroll | TC-COMIC-060…066 | P0 | ✖ | frontend; no test files. |
-| P0.4 | Reading progress keyed by page_id | TC-COMIC-080…088 | P0 | ⚠ | `modules/comic/comic_test.go: TestProgressMembership` — page-belongs-to-comic guard only. |
+| P0.4 | Reading progress keyed by page_id | TC-COMIC-080…088 | P0 | ✅ | `modules/comic/comic_test.go: TestProgressMembership` (chapter/page membership, unknown comic is 404), `TestSaveProgressRespectsDraftVisibility` (a stranger's save on a draft is 404 and writes no row; owner can; published opens it). |
 | P0.5 | Library + detail | TC-COMIC-100…104 | P0 | ✖ | frontend; the backend list has no test either. |
 | P0.6 | Asset-deletion coupling | TC-COMIC-120…123 | P0 | ✅ | `modules/comic/comic_test.go: TestAssetDeletedConsumer`. |
 | P1.7/P1.9 | Zip import, chapter events | TC-COMIC-140…148 | P1 | ⚠ | import ordering `modules/comic/comic_test.go: TestChapterSortOrder`; scraper source guard `modules/comic/sourceguard_test.go` (6 tests: allow-list, private-IP block, echoed-owner check). `comic:chapter_published` is consumed in `modules/notify/service_test.go: TestOnComicPublished` (the stream projection was removed in `0034`), but no comic test asserts it is emitted. |
@@ -155,7 +155,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 |----|-----------|---------------------|-----|----------|
 | CC-1 | RFC-7807 on every non-2xx + i18n key | TC-MEDIA-110/111, TC-COMIC-160/161, TC-BANK-200/201, TC-NOTIFY-130, TC-JRNL-090/091, TC-STREAM-037, TC-CONT-100, TC-PPL-110/111, TC-OPS-122 | ⚠ | writer: `platform/server/server_test.go: TestProblemEmitsAllFourStandardMembers, TestProblemWithCannotOverrideStandardMembers, TestNotFoundCarriesModuleScopedType, TestDecodeRejectsMalformedJSONWithProblem`. That every handler *uses* it is by construction since 2026-08-27 (`server.Problem` is the only writer) but no per-module test asserts a body; the i18n catalogue (`frontend/src/lib/problems.ts`) is untested. |
 | CC-2 | Permission grammar (2–3 seg, fail-closed, seeding) | TC-COMIC-040, TC-BANK-162, TC-NOTIFY-008, TC-JRNL-092, TC-PPL-112, TC-OPS-044/120 | ✅ | `modules/account/rbac/permission_test.go: TestParse, TestMatches, TestSetAllows, TestSetAllowsMalformedDenied`; escalation guards `modules/account/handler/admin_test.go` (32 tests: no-escalation, no-self-edit, last-approver, token_version bump). |
-| CC-3 | Owner isolation (404 not 403, no list leak) | TC-MEDIA-069/082, TC-COMIC-031/162, TC-BANK-160, TC-NOTIFY-004, TC-JRNL-011, TC-STREAM-031, TC-CONT-021/045, TC-PPL-004, TC-OPS-103 | ✅ | `modules/media/service_test.go: TestGetOwnerScoped`; `modules/journal/journal_test.go: TestGetOwnerScopedNotFound`; `modules/bank/bank_test.go: TestOwnerScoping`; `modules/{movie,music,story}/*_test.go: TestDraftIsInvisibleToOthers`; `modules/social/social_test.go: TestRemoveOnlyByAParty`; at the database, CC-10. |
+| CC-3 | Owner isolation (404 not 403, no list leak) | TC-MEDIA-069/082, TC-COMIC-031/162, TC-BANK-160, TC-NOTIFY-004, TC-JRNL-011, TC-STREAM-031, TC-CONT-021/045, TC-PPL-004, TC-OPS-103 | ✅ | `modules/media/service_test.go: TestGetOwnerScoped`; `modules/journal/journal_test.go: TestGetOwnerScopedNotFound`; `modules/comic/comic_test.go: TestDraftVisibility, TestSaveProgressRespectsDraftVisibility`; `modules/bank/bank_test.go: TestOwnerScoping`; `modules/{movie,music,story}/*_test.go: TestDraftIsInvisibleToOthers`; `modules/social/social_test.go: TestRemoveOnlyByAParty`; at the database, CC-10. |
 | CC-4 | Cursor pagination stable | TC-MEDIA-063, TC-COMIC-102, TC-BANK-033, TC-NOTIFY-005, TC-JRNL-012, TC-STREAM-030, TC-PPL-015 | ✅ | `platform/server/server_test.go: TestCursorRoundTripsTimestampKey, TestCursorRoundTripsSortKeyContainingSeparator, TestDecodeCursorRejectsGarbage, TestCursorIsURLSafe, TestLimitDefaultsAndClamps`; `modules/media/service_test.go: TestListPaginates`; `modules/journal/journal_test.go: TestListCursorPaginates`. |
 | CC-5 | Events after-commit + fan-out edges registered + idempotent | TC-MEDIA-090/091/092, TC-COMIC-123/147, TC-BANK-140/144, TC-NOTIFY-074, TC-JRNL-030…032, TC-STREAM-014, TC-CONT-083, TC-PPL-113, TC-OPS-007 | ⚠ | after-commit `modules/journal/journal_test.go: TestCreateEmitsExactlyOnceAfterCommit, TestCreateRollbackPublishesNothing`; fan-out `platform/events/events_test.go`; idempotent consumers `modules/{movie,music,story}/*_test.go: TestAssetDeletedIsIdempotent`, `modules/journal/journal_test.go: TestStreamIdempotency`; publisher-failure tolerance `TestPublishSurvivesAFailingOrAbsentPublisher`. Gap: bank and comic never assert their own emits. |
 | CC-6 | Money integer minor units, no floats | TC-BANK-026/202 | ⚠ | type-level (`int64` throughout `modules/bank`); `modules/bank/bank_test.go: TestInvalidAmount` rejects non-positive amounts; no test guards against a float creeping into an API body. |
@@ -182,7 +182,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | Spec | P0 rows | ✅ | ⚠ | ✖ | Notes |
 |------|---------|----|----|----|-------|
 | SPEC-01 media | 6 | 3 | 3 | 0 | workers (`process_image`, `thumbnail`, `transcode`) have no tests |
-| SPEC-02 comic | 6 | 1 | 3 | 2 | reader/library are frontend |
+| SPEC-02 comic | 6 | 2 | 2 | 2 | reader/library are frontend |
 | SPEC-03 bank | 8 (+1 P1) | 6 | 2 | 0 | best-covered module; emits unasserted |
 | SPEC-10 ledger expansion | 1 | 0 | 1 | 0 | no case document yet |
 | SPEC-04 notify | 5 | 2 | 2 | 1 | store/read API untested |
@@ -191,7 +191,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | SPEC-07 continue | 4 | 3 | 0 | 1 | |
 | SPEC-08 people | 4 | 1 | 2 | 1 | lunar untested |
 | SPEC-09 ops | 4 (+1 doc) | 1 | 3 | 0 | backup/restore proven manually only |
-| **Total** | **46 P0** | **21** | **18** | **7** | plus 1 doc row (✅) and 9 P1 rows (2 ✅, 3 ⚠, 4 ✖) |
+| **Total** | **46 P0** | **22** | **17** | **7** | plus 1 doc row (✅) and 9 P1 rows (2 ✅, 3 ⚠, 4 ✖) |
 
 Cross-cutting: CC-2/3/4/11 ✅ · CC-1/5/6/7/8/10 ⚠ · CC-9 ✖.
 

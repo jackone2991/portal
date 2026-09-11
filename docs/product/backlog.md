@@ -61,17 +61,6 @@ was checked, and code moves.
    only by hand. *Closes when:* the `backend` job starts a Postgres service,
    applies migrations, and sets both URLs. (Audit §3.1 "no test opens a Postgres
    connection" — the tests now exist; the CI run does not.)
-4. **`comic.SaveProgress` skips the published-or-owner gate** — audit §5 bug 5.
-   `comic/service.go` `SaveProgress` validates chapter↔comic and page↔chapter
-   membership but never applies the visibility check `ReaderPagesVisible`
-   does; the route has no owner guard. An existence oracle over other users'
-   drafts, plus junk rows. RLS under `portal_app` limits the blast radius but
-   does not close it (the row is the caller's own tenant). *Closes when:* the
-   handler calls the same gate and a test in `comic_test.go` proves a draft of
-   another user is 404.
-5. **`media/api.SignedURL` returns `("", nil)`** — audit §5 bug 7. A caller gets
-   a valid-looking empty URL and no error. `movie`/`music` are its intended
-   consumers. *Closes when:* it either signs or returns an error.
 
 ## P1 — contract and coverage
 
@@ -220,6 +209,14 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- §5 bug 5 **`comic.SaveProgress` skips the visibility gate** — closed
+  2026-09-11: `SaveProgress` now calls `GetComic` (published-or-owner) before
+  any membership answer; `comic_test.go: TestSaveProgressRespectsDraftVisibility`.
+- §5 bug 7 **`media/api.SignedURL` returns `("", nil)`** — closed 2026-09-11:
+  a real `signFn` seam (`Service.SignedOriginalURL`: tenant-scoped lookup,
+  READY only, presigned GET on the source key) and an error when unwired;
+  `media/api/api_test.go: TestSignedURLWithoutASignerIsAnError`,
+  `media/service_test.go: TestSignedOriginalURL`.
 - §5 bug 1 **silent commit failure** — `require_tenant.go` now commits before
   the response is released; `require_tenant_test.go: TestMutatingRequestCommitFailureBecomes500`.
 - §5 bug 2 **`imageSrv.Shutdown()`** — present in `cmd/worker/main.go`.
