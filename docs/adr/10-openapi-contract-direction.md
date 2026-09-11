@@ -116,11 +116,17 @@ from the spec fails CI — the specs' DoD becomes mechanical, not aspirational.
 
 What followed, checked against the tree on 2026-09-11:
 
-- **The drift gate is real, and it is the repo's only one.** `api.gen.go`
-  (10,367 lines) and `types.gen.ts` (8,305 lines) have been committed since
-  `6160f8e` (2026-07-12); `.gitignore` excludes sqlc output only. CI's `openapi`
-  job runs `make openapi` then `git diff --exit-code` on both files. Stale
-  codegen fails the build.
+- **The drift gate exists in `ci.yml` — and has never run to its diff step.**
+  `api.gen.go` (10,367 lines) and `types.gen.ts` (8,305 lines) have been
+  committed since `6160f8e` (2026-07-12); `.gitignore` excludes sqlc output
+  only; the `openapi` job is written to run `make openapi` then
+  `git diff --exit-code`. But `frontend/pnpm-lock.yaml` was deleted in
+  `edadf28` (2026-07-08) while the job's `setup-node` step still caches on
+  it, so the job — and the `frontend` job with it — has failed at setup on
+  **every run since**, on `main` and on every PR (`gh run list`). With no
+  branch protection, red CI blocked nothing. "Stale codegen fails the build"
+  has been true on paper only; whether committed codegen matches the spec has
+  been checked by hand. Backlog P0.
 - **Spec-first held for every module that came after.** The spec is now
   `wc -l shared/openapi.yaml` lines (5,137 at last check) and
   `python3 -c "import yaml;print(len(yaml.safe_load(open('shared/openapi.yaml'))['paths']))"`

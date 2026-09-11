@@ -43,6 +43,18 @@ was checked, and code moves.
    on the host Postgres cluster and rotates it if so. History is **not**
    purged: before rotation a purge is false safety, after rotation the copy in
    history is harmless.
+2a. **CI has been red on `main` since 2026-07-23 — and on every PR since.**
+   `frontend/pnpm-lock.yaml` was deleted in `edadf28` (2026-07-08); the
+   `frontend` and `openapi` jobs still cache on it (`setup-node`,
+   `cache-dependency-path: frontend/pnpm-lock.yaml`) and fail at setup before
+   running anything. So the ADR-10 drift gate has never executed, the
+   frontend has not been type-checked in CI for two months, and with `main`
+   unprotected nothing noticed. The repo is also split on package manager:
+   Makefile, Dockerfile and CI say pnpm; the tracked lockfile is npm's
+   `package-lock.json`; local `node_modules` is npm-shaped; the Dockerfile
+   falls back to an **unpinned** `pnpm install`. *Closes when:* one package
+   manager is chosen, its lockfile is committed and the other deleted, the
+   CI cache path matches, and a run on `main` is green.
 3. **The RLS test suite does not run in CI.** `platform/db/rls*_test.go` (19
    tests) are gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `ci.yml` sets
    neither, so the isolation guarantee the architecture rests on is verified
