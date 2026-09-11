@@ -181,8 +181,10 @@ personal org.
   `golang-migrate` (so the chain is also proven from zero on each push), and
   sets `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `rls_test.go: setup` fails
   instead of skipping when `CI` is set and the URLs are not, so the gate
-  cannot lapse silently. Verified locally first: fresh database, 43
-  migrations, 19/19 green as `portal_app`.
+  cannot lapse silently. Verified locally first (fresh database, every
+  migration from zero, 19/19 green as `portal_app`), then by the first CI
+  execution: PR #7 (`f0901bd`), Actions run `34633577648`, `backend` green
+  with the guard in place — which it could not be had the suite skipped.
 - P0 **CI red on `main` since 2026-07-23** — closed 2026-09-11 (`a30b887`,
   `0df5a11`): pnpm is the one package manager, `frontend/pnpm-lock.yaml` is
   tracked and `package-lock.json` deleted, the `setup-node` cache path
