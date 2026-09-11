@@ -3,7 +3,7 @@
 **Status:** Accepted (see Update 2026-07-06)
 **Date:** 2026-05-24
 **Deciders:** kirito
-**Affects:** [docker-compose.yml](../../../docker-compose.yml), [Makefile](../../../Makefile), [feature.md D-8 (observability)], [feature.md D-36/D-39 (live + calls)]
+**Affects:** [docker-compose.yml](../../docker-compose.yml), [Makefile](../../Makefile), [feature.md D-8 (observability)], [feature.md D-36/D-39 (live + calls)]
 
 ## Update (2026-07-06) — Authentik removed (ADR-06); service set as-built
 

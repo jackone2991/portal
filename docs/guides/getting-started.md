@@ -68,5 +68,5 @@ mangled by MSYS path conversion.
 
 New here? Follow the reading order in [../README.md](../README.md). Building a
 feature? Its spec is in [../product/specs/](../product/specs/README.md); check
-[`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md) for what's actually real before
+`MILESTONE_CHECKS.md` (deleted in `f11cf3f`) for what's actually real before
 trusting any doc's status claims.

@@ -9,9 +9,9 @@ Why Portal exists, what it is, and what gets built in what order.
 | [vision.md](vision.md) | positioning | What Portal is (life OS) — the yardstick that replaced Facebook parity |
 | [feature-inventory.md](feature-inventory.md) | decision log | Canonical per-module feature inventory + decisions `D-1`…`D-40` |
 | [backlog.md](backlog.md) | living analysis | Gap analysis / backlog (was `missing-features.md`); ordering now defers to briefs + specs |
-| [checklist.md](checklist.md) | living checklist | Phase 0–12 deliverables tied to `D-N` IDs |
+| `checklist.md` (deleted in `efb8a70`) | living checklist | Phase 0–12 deliverables tied to `D-N` IDs |
 | [analysis/facebook-comparison.md](analysis/facebook-comparison.md) | historical | The old parity yardstick — superseded by vision.md ([ADR-08](../adr/08-life-os-pivot.md)) |
-| [analysis/gap-audit-2026-07.md](analysis/gap-audit-2026-07.md) | analysis snapshot | Code-verified gap review (2026-07-08); corrects stale doc claims. Live ordering stays in backlog.md |
+| `gap-audit-2026-07.md` (no such file was ever committed; the nearest surviving audit is `analysis/spec-gap-fix-worklog-2026-07-11.md`) | analysis snapshot | Code-verified gap review (2026-07-08); corrects stale doc claims. Live ordering stays in backlog.md |
 | [briefs/](briefs/) | briefs | Brainstorm-level "what & why" per feature (00–04, from 2026-07-07) |
 | [specs/](specs/README.md) | specs/PRDs | Implementation-ready: SPEC-01 media images · SPEC-02 comic · SPEC-03 finance ledger |
 
@@ -26,7 +26,7 @@ brainstorm → briefs/NN-*.md → specs/SPEC-NN-*.md → code + MILESTONE_CHECKS
 
 A brief answers *should we, and roughly what*. A spec answers *exactly what,
 with acceptance criteria*. Implementation status never lives here — it lives in
-[`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md).
+`MILESTONE_CHECKS.md` (deleted in `f11cf3f`).
 
 ## Current build order (per ADR-08)
 

@@ -2,7 +2,7 @@
 
 **Status:** current · **Last verified:** 2026-07-07
 **Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [../adr/](../adr/README.md)
-**Live implementation status:** [`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md) — trust it over any prose here.
+**Live implementation status:** `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) — trust it over any prose here.
 
 This is the narrative architecture of record. It describes the system in three
 tiers and keeps them separate on purpose:

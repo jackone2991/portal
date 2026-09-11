@@ -102,4 +102,4 @@ Browser → POST /api/v1/assets
        → Browser polls GET /assets/{id} until status=ready → Vidstack plays via the public GET /assets/{id}/hls/* proxy
 ```
 
-> **Update (2026-07-06):** both flows are implemented and committed; [MILESTONE_CHECKS.md](../../../../MILESTONE_CHECKS.md) is the living status tracker. [ADR-05](../05-phase0-wiring-order.md) documents the milestone schedule that got there.
+> **Update (2026-07-06):** both flows are implemented and committed; `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) is the living status tracker. [ADR-05](../05-phase0-wiring-order.md) documents the milestone schedule that got there.

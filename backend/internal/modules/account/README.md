@@ -3,7 +3,7 @@
 Owns the identity + access-control story:
 
 - Users (profile, lifecycle, disabled state)
-- Authentication: local password login (Argon2id, [ADR-06](../../../../doc/en/architecture/06-local-auth-model.md)), JWT (access), refresh tokens with rotation + reuse detection
+- Authentication: local password login (Argon2id, [ADR-06](../../../../docs/adr/06-local-auth-model.md)), JWT (access), refresh tokens with rotation + reuse detection
 - 2FA / TOTP (planned)
 - RBAC: roles, permissions, hierarchy, policies (planned)
 - Session management

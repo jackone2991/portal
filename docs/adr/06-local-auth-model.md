@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-07-05
 **Deciders:** kirito
-**Supersedes:** the OIDC-login decision in [ADR-05](./05-phase0-wiring-order.md) (Milestone 0.4) and the "No local password auth. OIDC via Authentik" statement in [CLAUDE.md](../../../CLAUDE.md) (Account module).
+**Supersedes:** the OIDC-login decision in [ADR-05](./05-phase0-wiring-order.md) (Milestone 0.4) and the "No local password auth. OIDC via Authentik" statement in [CLAUDE.md](../../CLAUDE.md) (Account module).
 
 ## Update (2026-07-06) — implemented
 

@@ -19,7 +19,7 @@ holds the design documents themselves.
 - **Module boundaries & event/task registry conventions:**
   [`/backend/MODULES.md`](../../backend/MODULES.md) — next to the code it governs.
 - **API contract:** [`/shared/openapi.yaml`](../../shared/openapi.yaml).
-- **Implementation status:** [`/MILESTONE_CHECKS.md`](../../MILESTONE_CHECKS.md).
+- **Implementation status:** `MILESTONE_CHECKS.md` (deleted in `f11cf3f`).
 
 ## `deferred/` semantics
 

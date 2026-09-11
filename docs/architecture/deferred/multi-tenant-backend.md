@@ -1,13 +1,13 @@
 # ArchiveTech — Backend Architecture for Multi-Tenancy
 
-> **Status (2026-07-06): forward-looking design spec — none of this is built.** v1 shipped with no tenancy ([01-v1-scope-cut](architecture/01-v1-scope-cut.md)); the tenant module is scaffold-only and is not constructed in `cmd/api/main.go`. Per [ADR-02](architecture/02-rbac-model-reconciliation.md), the user-group/policy model this doc builds on layers on top of the shipped role-hierarchy RBAC in a later phase. Where the code layout here conflicts with [backend/MODULES.md](../../backend/MODULES.md) (modules + platform structure, per-module sqlc `repository/`), MODULES.md wins. OIDC references are retired per [ADR-06](architecture/06-local-auth-model.md) (local password auth). Migration numbers cited below (0003/0004/0009) are stale — 0001–0007 are already applied; tenant migrations take the next free `000N_tenant_…` numbers.
+> **Status (2026-07-06): forward-looking design spec — none of this is built.** v1 shipped with no tenancy ([01-v1-scope-cut](../../adr/01-v1-scope-cut.md)); the tenant module is scaffold-only and is not constructed in `cmd/api/main.go`. Per [ADR-02](../../adr/02-rbac-model-reconciliation.md), the user-group/policy model this doc builds on layers on top of the shipped role-hierarchy RBAC in a later phase. Where the code layout here conflicts with [backend/MODULES.md](../../../backend/MODULES.md) (modules + platform structure, per-module sqlc `repository/`), MODULES.md wins. OIDC references are retired per [ADR-06](../../adr/06-local-auth-model.md) (local password auth). Migration numbers cited below (0003/0004/0009) are stale — 0001–0007 are already applied; tenant migrations take the next free `000N_tenant_…` numbers.
 
 > Engineering patterns for running Portal's Go backend in a multi-tenant
-> setting. The **security model** lives in [authoration.md](authoration.md);
+> setting. The **security model** lives in [authoration.md](../security.md);
 > this doc is about the **code architecture** that implements it safely
 > across HTTP requests, background jobs, storage, cache, and observability.
 >
-> Read after [authoration.md](authoration.md) §3 (the tenant layer). This
+> Read after [authoration.md](../security.md) §3 (the tenant layer). This
 > doc assumes you've internalized: PostgreSQL RLS as the enforcement floor,
 > `app.current_tenant` as the per-request DB session variable, organizations
 > as the data-isolation boundary.
@@ -720,7 +720,7 @@ This catches the worst-class bug: an endpoint mounted without `RequireTenant`.
 
 ## 14. Code organization
 
-> **Superseded by [backend/MODULES.md](../../backend/MODULES.md)** — the shipped layout is `internal/modules/<name>/` + `internal/platform/`. Read this tree as a responsibility map (`tenant/` → `internal/modules/tenant/`, `storage`/`cache`/`jobs` → `internal/platform/`, per-domain service+repository → each module). Where they conflict, MODULES.md wins.
+> **Superseded by [backend/MODULES.md](../../../backend/MODULES.md)** — the shipped layout is `internal/modules/<name>/` + `internal/platform/`. Read this tree as a responsibility map (`tenant/` → `internal/modules/tenant/`, `storage`/`cache`/`jobs` → `internal/platform/`, per-domain service+repository → each module). Where they conflict, MODULES.md wins.
 
 ```text
 backend/
@@ -758,7 +758,7 @@ backend/
 └── go.mod
 ```
 
-OIDC is retired per [ADR-06](architecture/06-local-auth-model.md); identity code lives in `internal/modules/account/`.
+OIDC is retired per [ADR-06](../../adr/06-local-auth-model.md); identity code lives in `internal/modules/account/`.
 
 ### Allowed-import rules
 
@@ -791,7 +791,7 @@ Use `golangci-lint`'s `depguard` linter to enforce.
 
 ## 16. Implementation milestones
 
-These build on the phases in [archivetech.md §7](archivetech.md) — per [ADR-02](architecture/02-rbac-model-reconciliation.md) those phases layer on top of the shipped role-hierarchy RBAC in a post-v1 phase; none of M0–M5 is in the v1 envelope:
+These build on the phases in [archivetech.md §7](access-policies.md) — per [ADR-02](../../adr/02-rbac-model-reconciliation.md) those phases layer on top of the shipped role-hierarchy RBAC in a post-v1 phase; none of M0–M5 is in the v1 envelope:
 
 ### M0 — Tenant primitives  *(blocks Phase 1)*
 

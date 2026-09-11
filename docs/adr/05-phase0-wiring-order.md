@@ -3,11 +3,11 @@
 **Status:** Accepted (executed; Milestone 0.4 superseded by [ADR-06](./06-local-auth-model.md); Milestone 0.5 partially superseded — see Update note)
 **Date:** 2026-05-24
 **Deciders:** kirito
-**Affects:** [cmd/api/main.go](../../../backend/cmd/api/main.go), [cmd/worker/main.go](../../../backend/cmd/worker/main.go), [backend/internal/modules/account/module.go](../../../backend/internal/modules/account/module.go), [backend/sqlc.yaml](../../../backend/sqlc.yaml), [backend/db/migrations/](../../../backend/db/migrations/)
+**Affects:** [cmd/api/main.go](../../backend/cmd/api/main.go), [cmd/worker/main.go](../../backend/cmd/worker/main.go), [backend/internal/modules/account/module.go](../../backend/internal/modules/account/module.go), [backend/sqlc.yaml](../../backend/sqlc.yaml), [backend/db/migrations/](../../backend/db/migrations/)
 
 ## Update (2026-07-06) — executed; kept as historical record
 
-- All milestones 0.1–0.6 are complete; the v1 demo loop (login → upload → transcode → HLS playback → revocable logout) is closed and committed. Live status: [MILESTONE_CHECKS.md](../../../MILESTONE_CHECKS.md).
+- All milestones 0.1–0.6 are complete; the v1 demo loop (login → upload → transcode → HLS playback → revocable logout) is closed and committed. Live status: `MILESTONE_CHECKS.md` (deleted in `f11cf3f`).
 - Milestone 0.4 (OIDC/Authentik) was delivered instead as **local password auth** per [ADR-06](./06-local-auth-model.md); Authentik is removed from code and compose.
 - Milestone 0.5's refresh-and-return route was replaced by the `SessionKeeper` client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates on the `portal_session` cookie.
 - Migrations landed as `0001_platform_init` … `0007_media_assets` (v7 applied) — media tables shipped in `0007`, extending the 5-file plan in Milestone 0.1.
@@ -206,4 +206,4 @@ Total budget for Phase 0: ~35 hours, ~Days 1–6 of the sprint. That leaves Days
 4. [x] Day 4 (Authentik): block out a full afternoon. Authentik's first-time config is the highest-risk hour in the sprint.
 5. [x] End of Milestone 0.5: run the full 7-step demo from [ADR-01](./01-v1-scope-cut.md) §Decision. If it works, you're on track for v1.
 
-*(2026-07-06: all items complete — items 2 and 4's Authentik/OIDC parts were dropped per [ADR-06](./06-local-auth-model.md); live status lives in [MILESTONE_CHECKS.md](../../../MILESTONE_CHECKS.md).)*
+*(2026-07-06: all items complete — items 2 and 4's Authentik/OIDC parts were dropped per [ADR-06](./06-local-auth-model.md); live status lives in `MILESTONE_CHECKS.md` (deleted in `f11cf3f`).)*

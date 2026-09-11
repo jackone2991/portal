@@ -27,7 +27,7 @@ with genre-separated sections and an explicit lifecycle:
 
 `docs/{adr, product{vision, feature-inventory, backlog, checklist, analysis,
 briefs, specs}, architecture{…, deferred/}, guides, reference, archive}` — full
-mapping in [MIGRATION.md](../MIGRATION.md).
+mapping in `MIGRATION.md` (deleted in `f11cf3f`).
 
 Policies bundled into this decision:
 
@@ -58,7 +58,7 @@ Policies bundled into this decision:
 ## Trade-offs
 
 - One-time link breakage across the repo; mitigated by the migration script + grep
-  checklist in MIGRATION.md, and by citing decisions via stable IDs (`D-N`, `ADR-N`)
+  checklist in `MIGRATION.md` (deleted in `f11cf3f`), and by citing decisions via stable IDs (`D-N`, `ADR-N`)
   going forward.
 - Vietnamese-speaking future contributors lose maintained VI docs; accepted —
   the archive remains readable, and code/API-level naming was always English.
@@ -81,6 +81,6 @@ Policies bundled into this decision:
 
 - [ ] Accept this ADR (owner).
 - [ ] Run `migrate-docs.sh` on a branch; drop in the bundle's new files.
-- [ ] Fix inbound links (MIGRATION.md step 3) and update CLAUDE.md / project
+- [ ] Fix inbound links (`MIGRATION.md` step 3; deleted in `f11cf3f`) and update CLAUDE.md / project
       instructions (language rule + paths).
 - [ ] Add `docs/` link-check to CI (optional, P3).

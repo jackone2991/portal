@@ -16,13 +16,13 @@
 
 
 
-**Last verified:** 2026-07-06 — snapshot taken after the v1 demo loop closed; see [MILESTONE_CHECKS.md](../../MILESTONE_CHECKS.md) for the living status tracker.
+**Last verified:** 2026-07-06 — snapshot taken after the v1 demo loop closed; see `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) for the living status tracker.
 
-What is built today vs. what the spec ([feature.md](feature.md)) describes. This is
+What is built today vs. what the spec ([feature.md](feature-inventory.md)) describes. This is
 the **backlog after the v1 demo loop closed** (auth → upload → transcode → HLS
 playback → logout). Use it to pick the next thing to build.
 
-**Legend:** ✅ done · ◐ partial (UI-only or schema-only) · ○ not started · ⛔ deferred (out of v1 scope, [ADR-01](architecture/01-v1-scope-cut.md)).
+**Legend:** ✅ done · ◐ partial (UI-only or schema-only) · ○ not started · ⛔ deferred (out of v1 scope, [ADR-01](../adr/01-v1-scope-cut.md)).
 **Priority:** `P1` = obvious next step / unblocks a shipped surface · `P2` = soon · `P3` = later.
 
 > The recurring theme: **the Olympus UI shell is shipped, but most of it is
@@ -60,7 +60,7 @@ The auth core is solid; these are the surrounding account features (several have
 - ○ **P3** Audio/image asset kinds (schema allows `audio`/`image`; pipeline only handles video).
 
 ## 3. Social layer — UI shipped, backend missing (the big gap)
-Every item here has a **screen already built with sample data**; none has a backend. See [feature.md §9](feature.md).
+Every item here has a **screen already built with sample data**; none has a backend. See [feature.md §9](feature-inventory.md).
 - ○ **P1** **Posts / newsfeed API** — the composer posts to local state only. Need `posts` table + create/list/feed endpoints + wire `HomeView` composer & feed.
 - ○ **P1** **Comments, likes/reactions, shares** on posts — counters are static.
 - ○ **P1** **Friend graph** — friend requests (the header dropdown), accept/decline, friends list, "Friend Suggestions", friend groups (Close Friends/Family/Uncategorized). All sample data.
@@ -84,7 +84,7 @@ Every item here has a **screen already built with sample data**; none has a back
 - ○ **P1** New module owning the reserved `notify:*` tasks ([MODULES.md §5.2](../../backend/MODULES.md)): email (SMTP/provider), web-push, in-app. Unblocks password reset, friend-request/notification delivery, refresh-reuse alerts. `account` already stubs `RegisterTasks` for it.
 
 ## 6. Multi-tenancy & RLS — deferred (⛔ for v1)
-- ⛔ `tenant` module (organizations, memberships), Postgres **RLS** bootstrap, `cmd/sysjobs` (BYPASSRLS). Skeleton only; explicitly cut from v1 ([ADR-01](architecture/01-v1-scope-cut.md), [feature.md §2]). Revisit if multi-org is needed.
+- ⛔ `tenant` module (organizations, memberships), Postgres **RLS** bootstrap, `cmd/sysjobs` (BYPASSRLS). Skeleton only; explicitly cut from v1 ([ADR-01](../adr/01-v1-scope-cut.md), [feature.md §2]). Revisit if multi-org is needed.
 
 ## 7. Platform / Ops
 - ○ **P2** Wire the existing `platform/middleware` IP rate-limiter onto `/auth/*` at the router (built, unused).

@@ -4,10 +4,10 @@
 > permission decisions (authz), and tenant isolation (data segregation).
 >
 > **Companion docs:**
-> - [archivetech.md](archivetech.md) — full functional roadmap (UI, modules, phasing)
+> - [archivetech.md](deferred/access-policies.md) — full functional roadmap (UI, modules, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
-> - [ADR-02](architecture/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
-> - [ADR-06](architecture/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
+> - [ADR-02](../adr/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
+> - [ADR-06](../adr/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
 >
 > For built (v1) surfaces, code + ADRs are canonical (ADR-02 explicitly
 > disregards spec-wins clauses for v1); for the post-v1 layers specced here,
@@ -16,10 +16,10 @@
 
 > **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
 > channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
-> (see `MILESTONE_CHECKS.md`, [ADR-06](architecture/06-local-auth-model.md)). Everything
+> (see `MILESTONE_CHECKS.md`, [ADR-06](../adr/06-local-auth-model.md)). Everything
 > tenant/policy-shaped — §1 L2 tenant layer, §2.4 TOTP, §3 tenancy+RLS, §4 policy-bundle
 > authorization, §5.4 notifications, §6 steps 8–9, §9 migrations beyond 0007 — is **POST-V1 DESIGN**,
-> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](architecture/02-rbac-model-reconciliation.md).
+> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](../adr/02-rbac-model-reconciliation.md).
 
 ---
 
@@ -77,7 +77,7 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 ## 2. Identity layer (authentication)
 
-> **Superseded by [ADR-06](architecture/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
+> **Superseded by [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
 
 ### 2.1 Local password login flow  *([BUILT])*
 

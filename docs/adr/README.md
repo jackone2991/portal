@@ -16,18 +16,17 @@ single VPS** (ADR-01).
 |---|---|---|---|
 | [00](00-architecture-review.md) | Architecture review (2026-05-24) | accepted | Findings that motivated ADRs 01–05 |
 | [01](01-v1-scope-cut.md) | v1 scope cut | accepted, amended by 08 | What v1 is — and everything it is not |
-| [02](02-*.md) | *(see file)* | accepted | Role-based access now; policy bundles deferred |
-| [03](03-*.md) | *(see file)* | accepted | |
-| [04](04-*.md) | *(see file)* | accepted | |
-| [05](05-*.md) | *(see file)* | accepted | |
+| [02](02-rbac-model-reconciliation.md) | RBAC model reconciliation | accepted | Role hierarchy is canonical for v1; policy bundles layer on top later |
+| [03](03-single-vps-topology.md) | Single-VPS topology | accepted | One VPS, compose profiles as the envelope; observability/live profiles stay off |
+| [04](04-storage-tier-budget.md) | Storage tier & budget | accepted | R2 for prod, MinIO kept for local dev (presigned uploads need an S3 origin) |
+| [05](05-phase0-wiring-order.md) | Phase 0 wiring order | accepted | The critical path to a running demo — closed; kept for the shape of the work |
 | [06](06-local-auth-model.md) | Local auth model | accepted | Passwords in Portal (Argon2id + JWT); Authentik/OIDC removed |
-| [07](07-*.md) | Multi-tenancy / RLS (design only) | accepted (deferred design) | |
+| [07](07-tenancy-rls-model.md) | Multi-tenancy / RLS model | accepted | Tenant column + RLS policies; enforced only when the app connects as `portal_app` |
 | [08](08-life-os-pivot.md) | Life-OS pivot + finance ledger scope | **proposed** | Portal is a life OS; ledger in scope; "real bank" stays deferred |
 | [09](09-docs-architecture.md) | Documentation architecture | **proposed** | Diátaxis-informed `docs/` tree; English canonical |
 | [10](10-openapi-contract-direction.md) | OpenAPI contract direction | **proposed** | Spec-first, enforced: generate Go stubs + TS client; CI drift gate |
+| [11](11-docs-canonicalisation.md) | Documentation canonicalisation | accepted | One owner per fact; ADRs corrected in place by layer; nothing archived |
 
-> Note: rows 02–05 and 07 keep their existing filenames from the migration; fill in
-> their exact titles when running the move (they are unchanged in content).
 
 ## When to write an ADR
 

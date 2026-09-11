@@ -151,3 +151,16 @@ jobs:
         run: pnpm typecheck
       - name: Build
         run: pnpm build
+
+  # ADR-11: a rule that is not checked is a rule that will be broken again.
+  # Its own job, not a step inside `lint` — that job is Go-only and needs sqlc
+  # + golangci-lint before it can say anything; a docs PR should not wait on
+  # (or be failed by) the Go toolchain. Blocking: a broken relative link is a
+  # build failure, same as stale codegen.
+  link-check:
+    name: Docs (relative links resolve)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check every relative Markdown link
+        run: bash scripts/check-links.sh

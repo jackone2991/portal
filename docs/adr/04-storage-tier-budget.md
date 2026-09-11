@@ -3,7 +3,7 @@
 **Status:** Accepted (see Updates 2026-06-06, 2026-07-06)
 **Date:** 2026-05-24
 **Deciders:** kirito
-**Affects:** [docker-compose.yml](../../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1] (system landscape)
+**Affects:** [docker-compose.yml](../../docker-compose.yml), `backend/internal/platform/storage/`, [diagrams.md §1] (system landscape)
 
 ## Update (2026-06-06) — local dev runs MinIO on a local folder; R2-only still applies to deployed environments
 
