@@ -680,3 +680,76 @@ The work is sequenced in three stages with a review checkpoint after the mechani
 
 **Tracker.** This spec could not be published to the GitHub issue tracker: the authenticated account has `pull` access only on this repository (no `push`, no `triage`), so neither the `ready-for-agent` label nor an issue with labels can be created. The spec therefore lives here, which is where the genre rules this spec establishes would route it anyway. To move it onto the tracker, authenticate an account with write access and run the setup flow to establish the triage-label vocabulary.
 
+
+
+
+
+
+
+
+
+
+
+
+
+Một ghi chú về hình dạng: phần lớn việc này là wide refactor, không phải tracer bullet — 69 link và 79 mệnh đề là một thay đổi cơ học có blast radius trải khắp corpus, không slice dọc được. Nên tôi xếp theo expand–contract: dựng script kiểm tra trước (expand, vô hại), sửa theo lô (mỗi lô xanh được vì cổng chưa bật), rồi bật cổng CI cuối cùng (contract). Đó là lý do ticket 2 đứng gần đầu và ticket 15 đứng cuối.
+
+┌─────┬────────────────────────────────────────────────────────┬───────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  #  │                         Title                          │ Blocked   │                                                                         What it delivers                                                                         │
+│     │                                                        │    by     │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1   │ Remove the committed development credential            │ —         │ File chứa cred biến khỏi working tree; quét lại repo không còn giá trị đó. Commit đứng riêng, đẩy được ngay. Gấp nhất vì repo là public.                         │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2   │ Add a local docs-check script (three assertions, not   │ —         │ ./scripts/check-docs.sh chạy được tại chỗ, chọn được từng assertion (links / retired / matrix), exit non-zero và liệt kê từng vi phạm. Đây là feedback loop cho  │
+│     │ wired to CI)                                           │           │ mọi ticket sau — biến "69 link" từ sweep thủ công thành vòng đỏ-xanh.                                                                                            │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 3   │ Write the canonicalisation decision record and amend   │ —         │ ADR-11 tồn tại (bỏ bất biến, delete-don't-archive, một-chủ-một-sự-thật, Last verified làm dấu); style guide khớp theo: §ADR shape sửa,                           │
+│     │ the style guide                                        │           │ §Language/§Naming/§Lifecycle sửa, §Genre discipline xoá. Gates mọi ticket viết lại ADR.                                                                          │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 4   │ Repair every broken relative link                      │ 2         │ Assertion links xanh. Gồm cả lỗi cơ học ../../../ ở 4 record và các target chết (có kế thừa → trỏ lại; không có → bỏ link + dẫn commit).                         │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 5   │ Sweep the retired-name class out of every living       │ 2, 3      │ Assertion retired xanh cho tài liệu sống: tracker đã xoá (8 chỗ, gồm style guide), archive (4 chỗ), các path chết. Audit đã archive thì dán nhãn Last verified,  │
+│     │ document                                               │           │ không sửa thân.                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 6   │ Relocate the three misfiled documents and repoint      │ 2, 4      │ Hai runbook về operations/, matrix về reference/; 11 inbound ref sửa hết — gồm một ref trong API contract, nên ticket này chạy codegen và commit artifact regen. │
+│     │ every inbound reference                                │           │  Job openapi có sẵn là seam kiểm.                                                                                                                                │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 7   │ Correct the project instructions' factual claims       │ 3         │ Hai khẳng định sai bị xoá; hai con số thay bằng lệnh sinh ra chúng. Không gồm dòng RLS (xem 11).                                                                 │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 8   │ Canonicalise the two worst decision records —          │ 3         │ 23/79 mệnh đề sửa xong trên 2 file nặng nhất, và đường cắt tầng được chứng minh trên thực tế. Dừng review trước khi áp lên 9 file còn lại.                       │
+│     │ CHECKPOINT                                             │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 9   │ Canonicalise the remaining eight decision records      │ 8         │ ~56 mệnh đề còn lại; 4 class xuyên suốt sửa một lượt; hai record proposed → accepted. Có thể quá to cho một context window — xem câu hỏi bên dưới.               │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 10  │ Reclassify the original architecture review as a       │ 3, 4      │ Nó chuyển sang mục audit, thân nguyên văn, status historical, số 00 nghỉ vĩnh viễn.                                                                              │
+│     │ historical audit                                       │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 11  │ State the row-level-security position in one place     │ 9         │ Một nguồn duy nhất nói đúng trạng thái RLS; environment template thôi seed superuser. ⚠️ Ticket này có điều kiện người: phải mở .env trên máy đang chạy. Đó là   │
+│     │                                                        │           │ /wizard, không phải agent.                                                                                                                                       │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 12  │ Rebuild the traceability matrix coverage column with   │ 6         │ 47 dòng Cov dựa trên bằng chứng + cột Evidence ghi file:func. Assertion matrix xanh.                                                                             │
+│     │ an evidence column                                     │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 13  │ Replace the archived backlog with a live backlog       │ 1, 4, 5,  │ Backlog cũ bị xoá, backlog sống viết lại từ triage toàn bộ audit 2026-08-25, hai P0 dẫn đầu là rotate cred và RLS cutover.                                       │
+│     │                                                        │ 11        │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 14  │ Add the API-contract rule and codegen step to the      │ —         │ Module mới đi hết checklist 7 bước không còn fail CI. Độc lập hoàn toàn, chạy song song bất cứ lúc nào.                                                          │
+│     │ module contract                                        │           │                                                                                                                                                                  │
+├─────┼────────────────────────────────────────────────────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 15  │ Wire the docs check into CI as a blocking job          │ 4, 5, 6,  │ Job docs riêng (không nhồi vào lint), chặn, cả ba assertion xanh. Đây là bước khiến mọi thứ ở trên không mục lại.                                                │
+│     │ (contract)                                             │ 12        │                                                                                                                                                                  │
+└─────┴────────────────────────────────────────────────────────┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Ba ticket không bị chặn và chạy được ngay: 1, 2, 14. Ticket 3 cũng không bị chặn nhưng gates 5/7/8/10 nên nên làm sớm.
+
+---
+
+Ba câu skill yêu cầu tôi hỏi:
+
+a) Granularity ổn chưa? Chỗ tôi thấy có vấn đề là ticket 9: 8 record, ~56 mệnh đề, gần như chắc chắn vượt một context window. Đề xuất tách thành hai lô theo record (9a: 4 record nặng tiếp theo — 09, 07, 05, 01; 9b: 4 record còn lại — 08, 04, 02, 06), mỗi lô blocked by 8, và cả hai block 15. Theo đúng hướng dẫn wide-refactor: chia lô theo blast radius, mỗi lô xanh được vì cổng chưa bật.
+
+b) Blocking edge có đúng không? Hai cạnh tôi không chắc, muốn bạn xác nhận:
+- 6 blocked by 4 — tôi đặt sửa link trước khi di chuyển file để assertion links không bao giờ đỏ. Làm ngược lại (move trước) cũng được, chỉ là có một khoảng đỏ ở giữa. Bạn muốn thứ tự nào?
+- 13 blocked by 11 — backlog chờ RLS chỉ vì cần dòng P0 nói đúng trạng thái. Nếu chấp nhận P0 ghi dạng "verify then fix" thì cạnh này bỏ được và 13 chạy sớm hơn nhiều.
+
+c) Có ticket nào nên gộp hay tách thêm? Ứng viên gộp: 7 vào 5 (cả hai đều là sửa tài liệu sống, cùng class). Tôi để riêng vì project instructions là file bạn sở hữu và giấy phép sửa của tôi bị giới hạn ở số đếm + path chết — nên diff của nó nên đứng riêng cho bạn soi. Ứng viên tách: 12 (47 dòng matrix có thể là một context window trọn vẹn, nếu chật thì tách theo SPEC).
