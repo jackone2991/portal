@@ -18,9 +18,10 @@ This is a single-context repo. What exists today, and what does not:
 
 ```
 /
-├── (no CONTEXT.md yet — docs/README.md § "Genre rules" is the glossary of the
-│    documentation domain; the product domain has none. /domain-modeling creates
-│    one lazily when a term actually gets resolved.)
+├── CONTEXT.md           the product glossary — created 2026-09-12 when the first terms
+│                        (Entry, Attachment, Location, Asset) were resolved; grows one
+│                        resolved term at a time, never in bulk. docs/README.md § "Genre
+│                        rules" is the separate glossary of the *documentation* domain.
 ├── docs/adr/            NN-<slug>.md, 01–11; corrected in place (ADR-11), never archived
 ├── docs/product/feature-inventory.md   product decisions D-1…D-41 — cite the IDs
 └── backend/ frontend/ scraper/
@@ -42,9 +43,11 @@ When your output names a domain concept (in an issue title, a refactor proposal,
 
 If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
-Until a `CONTEXT.md` exists, the vocabulary to hold to is the one the code and
-`CLAUDE.md` already use (module names, `tenant`/`organization`, `asset`, `scope`,
-`approval_status`, the permission grammar) and the genre names in `docs/README.md`.
+`CONTEXT.md` covers only the terms that have been through a design session so far. For
+everything else, the vocabulary to hold to is the one the code and `CLAUDE.md` already
+use (module names, `tenant`/`organization`, `scope`, `approval_status`, the permission
+grammar) and the genre names in `docs/README.md` — and a term used inconsistently there
+is a candidate for the glossary, not a licence to invent a third name.
 
 ## Flag ADR conflicts
 

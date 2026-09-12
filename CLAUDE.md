@@ -216,7 +216,7 @@ The five canonical labels, unrenamed (`needs-triage`, `needs-info`, `ready-for-a
 
 ### Domain docs
 
-Single-context: `docs/adr/` at the root, no `CONTEXT.md` yet (the genre rules in `docs/README.md` are the working glossary). See `docs/agents/domain.md`.
+Single-context: `CONTEXT.md` (the product glossary — terms are added as they are resolved, never in bulk) and `docs/adr/` at the root; `docs/README.md` § Genre rules is the glossary of the *documentation* domain. See `docs/agents/domain.md`.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence

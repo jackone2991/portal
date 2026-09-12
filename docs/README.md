@@ -32,6 +32,7 @@ frontend, Docker Compose behind Traefik.
 | File | Governs |
 |---|---|
 | [`/CLAUDE.md`](../CLAUDE.md) | The repo as a whole: stack, boundaries, **implementation status** (the one written owner) |
+| [`/CONTEXT.md`](../CONTEXT.md) | The product glossary — one canonical term per concept, with the words to avoid. Not a spec: no implementation detail lives there |
 | [`/backend/MODULES.md`](../backend/MODULES.md) | Backend module contract; the new-module checklist |
 | `backend/internal/modules/<name>/README.md` | What that module owns, talks to, emits and subscribes. **Not status** — open work is in [product/backlog.md](product/backlog.md) |
 | [`/frontend/CLAUDE.md`](../frontend/CLAUDE.md) · [`/frontend/src/templates/README.md`](../frontend/src/templates/README.md) | Frontend conventions; the version-switched template tree |

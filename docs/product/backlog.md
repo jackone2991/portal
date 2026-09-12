@@ -95,7 +95,10 @@ was checked, and code moves.
     photo + location links **inside the markdown body**
     (`frontend/src/lib/attachments.ts`). That is a shipped UX resting on a
     workaround; the P1.5 backend would let the body stop carrying structure.
-    The highest-value single P1 left (audit D-17).
+    The highest-value single P1 left (audit D-17). **Specced 2026-09-12 as
+    [SPEC-12](specs/SPEC-12-journal-attachments.md)** (supersedes P1.5: up to
+    ten Attachments, Location as columns, backfill in the migration) — tracker
+    issue #8, `ready-for-agent`. *Closes when:* #8 and its tickets are closed.
 19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
     `journal:backfill_stream`.
 20. SPEC-06 **stream de-projection is a decision, not a gap** — `0033`/`0034`/

@@ -1,6 +1,6 @@
 # Triage Labels
 
-**Status:** current · **Last verified:** 2026-09-12 · the defaults, unrenamed; `wontfix` pre-exists on the repo, `/triage` creates the other four on first use
+**Status:** current · **Last verified:** 2026-09-12 · the defaults, unrenamed; `wontfix` and `ready-for-agent` exist on the repo (the latter created by `/to-spec` on 2026-09-12), `/triage` creates the other three on first use
 
 The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
 
