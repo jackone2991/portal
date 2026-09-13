@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { StreamItem } from "@/lib/stream";
 import { firstLink, splitLinks, stripLink } from "@/lib/links";
-import { decodeAttachments } from "@/lib/attachments";
-import { coordName, osmURL } from "@/lib/geo";
+import { presentEntry } from "@/lib/entry-presentation";
+import { locationLabel, osmURL } from "@/lib/geo";
 import { assetVariantURL } from "@/lib/media-assets";
 import { Icon } from "../ui/Icon";
 import { Post } from "../post/Post";
@@ -89,13 +89,14 @@ function JournalPost({
   saving,
 }: StreamItemCardProps & { when: string }) {
   const body = item.body_md ?? "";
-  // Attachments first: they are link forms too, so pulling them out keeps the
-  // shared-link detection below looking at what the author actually typed.
-  const att = decodeAttachments(body);
+  // One place decides what the Entry shows (`entry-presentation.ts`); the
+  // shared-link detection below then looks only at what the author typed.
+  const shown = presentEntry(item);
+  const [assetId] = shown.assetIds;
   // An attached photo owns the media slot; a URL in that post stays anchored in
   // the paragraph instead of becoming a second card.
-  const link = att.photoId ? null : firstLink(att.rest);
-  const stripped = link ? stripLink(att.rest, link.url) : att.rest;
+  const link = assetId ? null : firstLink(shown.text);
+  const stripped = link ? stripLink(shown.text, link.url) : shown.text;
   const { heading, rest } = splitHeading(stripped);
 
   // A temp id from the optimistic insert isn't a real entry yet — no menu until
@@ -136,19 +137,19 @@ function JournalPost({
           </>
         ) : null
       }
-      place={
-        !editing && att.place
+      location={
+        !editing && shown.location
           ? {
-              name: att.place.name || coordName(att.place.lat, att.place.lon),
-              href: osmURL(att.place.lat, att.place.lon),
+              name: locationLabel(shown.location),
+              href: osmURL(shown.location.lat, shown.location.lon),
             }
           : undefined
       }
       media={
         editing
           ? undefined
-          : att.photoId
-          ? { type: "photo", src: assetVariantURL(att.photoId, "medium") }
+          : assetId
+          ? { type: "photo", src: assetVariantURL(assetId, "medium") }
           : link
           ? {
               type: link.kind,

@@ -50,7 +50,7 @@ export interface PostProps {
   liked?: boolean;
   onToggleLike?: () => void;
   /** Attached location — rendered as a pin chip under the body. */
-  place?: { name: string; href: string };
+  location?: { name: string; href: string };
   /** Replaces the inert three-dots button (e.g. a real Edit/Delete dropdown). */
   menu?: ReactNode;
   className?: string;
@@ -69,7 +69,7 @@ export function Post({
   shares,
   liked,
   onToggleLike,
-  place,
+  location,
   menu,
   className = "",
 }: PostProps) {
@@ -114,9 +114,9 @@ export function Post({
 
       {media && <MediaCard media={media} />}
 
-      {place && (
+      {location && (
         <a
-          href={place.href}
+          href={location.href}
           target="_blank"
           rel="noreferrer noopener"
           className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition hover:opacity-90"
@@ -125,7 +125,7 @@ export function Post({
           <span style={{ color: "var(--tpl-accent)" }}>
             <Icon name="small-pin-icon" size={12} />
           </span>
-          <span className="max-w-[18rem] truncate">{place.name}</span>
+          <span className="max-w-[18rem] truncate">{location.name}</span>
         </a>
       )}
 

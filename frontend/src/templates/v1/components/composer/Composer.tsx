@@ -4,10 +4,10 @@ import { useState, type FormEvent } from "react";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { AttachPhotoPopup } from "../popup/AttachPhotoPopup";
-import { PlacePickerPopup } from "../popup/PlacePickerPopup";
+import { LocationPickerPopup } from "../popup/LocationPickerPopup";
 import { assetVariantURL } from "@/lib/media-assets";
 import { composeBody } from "@/lib/attachments";
-import { coordName, type Place } from "@/lib/geo";
+import { locationLabel, type Location } from "@/lib/geo";
 
 /**
  * Newsfeed composer — port of the Olympus `.news-feed-form` create-post box
@@ -24,9 +24,9 @@ import { coordName, type Place } from "@/lib/geo";
  * The two live add-options buttons return attachments, not files:
  *   · camera → {@link AttachPhotoPopup} — upload or pick an existing image,
  *     resolving to a media-module asset id.
- *   · pin    → {@link PlacePickerPopup} — search or drop a pin on the map.
- * Both are encoded into the entry body by `lib/attachments.ts`, because the
- * journal API accepts no other field for them (see that module's note). Tagging
+ *   · pin    → {@link LocationPickerPopup} — search or drop a pin on the map.
+ * Both are still encoded into the entry body by `lib/attachments.ts` (SPEC-12
+ * T1/T3 move them into `asset_ids` and Location columns). Tagging
  * friends stays inert — there is no people-tagging surface yet.
  *
  * Controlled/presentational: the caller owns the draft and the mutation (D-32);
@@ -53,21 +53,26 @@ export function Composer({
   className = "",
 }: ComposerProps) {
   const [preview, setPreview] = useState(false);
-  const [photoId, setPhotoId] = useState<string | null>(null);
+  // Attachments are an ordered list even though the UI still caps it at one:
+  // the body form (`composeBody`) has room for a single photo until SPEC-12 T1
+  // moves them into `asset_ids`, and T2 then lifts the cap without reshaping
+  // this state.
+  const [assetIds, setAssetIds] = useState<string[]>([]);
   const [thumbFailed, setThumbFailed] = useState(false);
-  const [place, setPlace] = useState<Place | null>(null);
+  const [location, setLocation] = useState<Location | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
-  const [placeOpen, setPlaceOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [assetId] = assetIds;
 
-  const composed = composeBody(bodyMd, photoId, place);
+  const composed = composeBody(bodyMd, assetIds, location);
   const canPost = composed.trim().length > 0 && !submitting;
 
   function submit(e: FormEvent) {
     e.preventDefault();
     if (!canPost) return;
     onSubmit(composed);
-    setPhotoId(null);
-    setPlace(null);
+    setAssetIds([]);
+    setLocation(null);
     setPreview(false);
   }
 
@@ -144,9 +149,9 @@ export function Composer({
           )}
         </div>
 
-        {(photoId || place) && (
+        {(assetId || location) && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {photoId && (
+            {assetId && (
               <span
                 className="relative inline-block overflow-hidden rounded-lg border"
                 style={{ borderColor: "var(--tpl-border)" }}
@@ -163,17 +168,17 @@ export function Composer({
                 ) : (
                   /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
                   <img
-                    src={assetVariantURL(photoId, "thumb")}
+                    src={assetVariantURL(assetId, "thumb")}
                     alt="Ảnh đính kèm"
                     onError={() => setThumbFailed(true)}
                     className="h-20 w-28 object-cover"
                   />
                 )}
-                <ChipRemove label="Bỏ ảnh" onClick={() => setPhotoId(null)} />
+                <ChipRemove label="Bỏ ảnh" onClick={() => setAssetIds([])} />
               </span>
             )}
 
-            {place && (
+            {location && (
               <span
                 className="relative inline-flex items-center gap-2 rounded-full py-1.5 pl-3 pr-8 text-xs font-medium"
                 style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-text)" }}
@@ -182,9 +187,9 @@ export function Composer({
                   <Icon name="small-pin-icon" size={12} />
                 </span>
                 <span className="max-w-[16rem] truncate">
-                  {place.name || coordName(place.lat, place.lon)}
+                  {locationLabel(location)}
                 </span>
-                <ChipRemove label="Bỏ địa điểm" onClick={() => setPlace(null)} inline />
+                <ChipRemove label="Bỏ địa điểm" onClick={() => setLocation(null)} inline />
               </span>
             )}
           </div>
@@ -196,17 +201,17 @@ export function Composer({
           style={{ borderColor: "var(--tpl-border)" }}
         >
           <IconBtn
-            label={photoId ? "Đổi ảnh" : "Thêm ảnh"}
+            label={assetId ? "Đổi ảnh" : "Thêm ảnh"}
             icon="camera-icon"
-            active={!!photoId}
+            active={!!assetId}
             onClick={() => setPhotoOpen(true)}
           />
           <IconBtn label="Tag friends (coming soon)" icon="computer-icon" disabled />
           <IconBtn
-            label={place ? "Đổi địa điểm" : "Thêm địa điểm"}
+            label={location ? "Đổi địa điểm" : "Thêm địa điểm"}
             icon="small-pin-icon"
-            active={!!place}
-            onClick={() => setPlaceOpen(true)}
+            active={!!location}
+            onClick={() => setLocationOpen(true)}
           />
 
           <div className="ml-auto flex items-center gap-2">
@@ -239,14 +244,15 @@ export function Composer({
         onClose={() => setPhotoOpen(false)}
         onPick={(id) => {
           setThumbFailed(false);
-          setPhotoId(id);
+          // Cap of one until T2: a new pick replaces, never appends.
+          setAssetIds([id]);
         }}
       />
-      <PlacePickerPopup
-        open={placeOpen}
-        onClose={() => setPlaceOpen(false)}
-        onPick={setPlace}
-        initial={place}
+      <LocationPickerPopup
+        open={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        onPick={setLocation}
+        initial={location}
       />
     </div>
   );

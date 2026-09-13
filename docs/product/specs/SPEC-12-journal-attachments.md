@@ -5,6 +5,7 @@
 **Upstream:** `/grill-with-docs` session 2026-09-12 (sixteen settled decisions, four glossary terms) · [backlog](../backlog.md) P2 #18 · **Refs:** [CONTEXT.md](../../../CONTEXT.md) (Entry, Attachment, Location, Asset) · [SPEC-05 P1.5](SPEC-05-journal.md) (the original photo-attachments item this supersedes) · [SPEC-06](SPEC-06-life-stream-home.md) (stream card promise "asset thumbs — joined from journal_entries") · [ADR-07](../../adr/07-tenancy-rls-model.md) (tenant scope on every lookup) · [ADR-10](../../adr/10-openapi-contract-direction.md) (contract first, codegen committed)
 **Downstream consumers:** the stream (SPEC-06) reads the new columns through its existing join; takeout (SPEC-09 P1.7) — bodies stay plain markdown, which this spec makes true for every row
 **Tracker:** GitHub issue [#8](https://github.com/jackone2991/portal/issues/8), label `ready-for-agent`
+**Tickets (`/to-tickets`, 2026-09-13 — the T-labels code comments cite):** T0 [#9](https://github.com/jackone2991/portal/issues/9) prefactor · T1 [#10](https://github.com/jackone2991/portal/issues/10) Attachments in columns (one photo) · T2 [#11](https://github.com/jackone2991/portal/issues/11) many photos, card, lightbox · T3 [#12](https://github.com/jackone2991/portal/issues/12) Location in columns · T4 [#13](https://github.com/jackone2991/portal/issues/13) deleted Asset strips · T5 [#14](https://github.com/jackone2991/portal/issues/14) edit in place · T6 [#15](https://github.com/jackone2991/portal/issues/15) close-out. Edges: T0 → T1 → {T2, T3, T4} → T5 → T6.
 
 ## Problem Statement
 
