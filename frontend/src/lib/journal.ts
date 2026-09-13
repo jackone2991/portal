@@ -3,22 +3,21 @@
 // (D-32); this module only holds the fetch functions and the wire types they
 // return.
 //
-// Mirrors the same convention as `media-assets.ts` / `notifications.ts`: no
-// `journal` schema exists yet in `src/lib/types.gen.ts` (the backend module is
-// landing in parallel — SPEC-05 P0.1/P0.2 — and `make openapi` hasn't picked
-// it up), so these types are hand-rolled against the real wire shape
-// documented in SPEC-05 §6 (migration `0011_journal_entries`) and §7 (API
-// summary) — snake_case, matching the account/media modules' handlers.
-// Reconcile against `types.gen.ts` once the journal module's OpenAPI paths
-// land and `make openapi` generates a schema for it.
+// Same convention as `media-assets.ts` / `notifications.ts`: the wire types are
+// hand-rolled, snake_case, and kept in step with `JournalEntry` /
+// `JournalEntryWrite` in `src/lib/types.gen.ts` (generated from
+// `shared/openapi.yaml`). They predate the generated schema; switching the
+// consumers onto `components["schemas"]` is open debt, not a reason to let the
+// two drift — change the contract first, regenerate, then mirror it here.
 
 import { api } from "./api-client";
 
 export interface JournalEntry {
   id: string;
+  /** Plain markdown — may be "" for a photo-only Entry (SPEC-12). */
   body_md: string;
   mood: string | null;
-  /** SPEC-05 §6 column — `NOT NULL DEFAULT '{}'`; stays empty until P1.5. */
+  /** The Entry's Attachments — image Asset ids in display order (SPEC-12 T1). */
   asset_ids: string[];
   /** User-editable "when this happened" — the timeline's sort key (§5 P0.2). */
   occurred_at: string;
@@ -38,10 +37,20 @@ export interface ListEntriesParams {
 }
 
 export interface CreateEntryInput {
-  /** 1–20000 chars, else 422 `journal/invalid-body` (§5 P0.2). */
-  body_md: string;
+  /**
+   * At most 20000 chars. May be omitted or empty only when `asset_ids` has at
+   * least one element — an Entry is text or an Attachment, never neither —
+   * else 422 `journal/invalid-body` (SPEC-12).
+   */
+  body_md?: string;
   /** Freeform, 1–80 chars after trimming when present (§5 P0.2). */
   mood?: string;
+  /**
+   * The Entry's Attachments in display order: at most ten distinct ready image
+   * Assets the caller owns, else 422 `journal/invalid-asset` naming the id and
+   * nothing is stored. On PATCH it replaces the whole list (SPEC-12 T1).
+   */
+  asset_ids?: string[];
   /** Omit to default to now server-side; backdating/future-dating unlimited (§5 P0.2). */
   occurred_at?: string;
 }

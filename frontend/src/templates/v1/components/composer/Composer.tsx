@@ -23,21 +23,33 @@ import { locationLabel, type Location } from "@/lib/geo";
  *
  * The two live add-options buttons return attachments, not files:
  *   · camera → {@link AttachPhotoPopup} — upload or pick an existing image,
- *     resolving to a media-module asset id.
+ *     resolving to a media-module asset id that is already `ready`.
  *   · pin    → {@link LocationPickerPopup} — search or drop a pin on the map.
- * Both are still encoded into the entry body by `lib/attachments.ts` (SPEC-12
- * T1/T3 move them into `asset_ids` and Location columns). Tagging
- * friends stays inert — there is no people-tagging surface yet.
+ * The Attachment travels as the Entry's `asset_ids` (SPEC-12 T1); the Location
+ * is still encoded into the body by `lib/attachments.ts` until T3 gives it
+ * columns. Tagging friends stays inert — there is no people-tagging surface yet.
  *
  * Controlled/presentational: the caller owns the draft and the mutation (D-32);
  * the attachments and the preview toggle are ephemeral UI state and stay local.
  */
+export interface ComposerDraft {
+  /** The body to post — the text plus the encoded Location, no photo markup. */
+  bodyMd: string;
+  /** The Entry's Attachments in the order they were added. */
+  assetIds: string[];
+}
+
 export interface ComposerProps {
   displayName: string;
   bodyMd: string;
   onBodyMdChange: (value: string) => void;
-  /** Receives the composed markdown — text plus any attachments. */
-  onSubmit: (bodyMd: string) => void;
+  /**
+   * Resolves to whether the post was accepted. The composer keeps its
+   * Attachments and Location until then, so a refused post (the server said no
+   * to a photo, say) leaves everything in place to fix and resend — exactly as
+   * the text does through `bodyMd`.
+   */
+  onSubmit: (draft: ComposerDraft) => Promise<boolean> | boolean;
   submitting?: boolean;
   error?: string | null;
   className?: string;
@@ -53,10 +65,8 @@ export function Composer({
   className = "",
 }: ComposerProps) {
   const [preview, setPreview] = useState(false);
-  // Attachments are an ordered list even though the UI still caps it at one:
-  // the body form (`composeBody`) has room for a single photo until SPEC-12 T1
-  // moves them into `asset_ids`, and T2 then lifts the cap without reshaping
-  // this state.
+  // Attachments are an ordered list even though the UI still caps it at one;
+  // SPEC-12 T2 lifts the cap without reshaping this state.
   const [assetIds, setAssetIds] = useState<string[]>([]);
   const [thumbFailed, setThumbFailed] = useState(false);
   const [location, setLocation] = useState<Location | null>(null);
@@ -64,13 +74,18 @@ export function Composer({
   const [locationOpen, setLocationOpen] = useState(false);
   const [assetId] = assetIds;
 
-  const composed = composeBody(bodyMd, assetIds, location);
-  const canPost = composed.trim().length > 0 && !submitting;
+  const composed = composeBody(bodyMd, location);
+  // An Entry is text or at least one Attachment — never a Location alone
+  // (SPEC-12 story 7), which is exactly what the server refuses; the button
+  // says so before the request does. This is the one place the rule lives on
+  // the client.
+  const canPost = (bodyMd.trim().length > 0 || assetIds.length > 0) && !submitting;
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     if (!canPost) return;
-    onSubmit(composed);
+    const accepted = await onSubmit({ bodyMd: composed, assetIds });
+    if (!accepted) return; // the parent has shown the error; the draft stays
     setAssetIds([]);
     setLocation(null);
     setPreview(false);
@@ -133,7 +148,7 @@ export function Composer({
             >
               {composed.trim() ? (
                 composed
-              ) : (
+              ) : assetId ? null : ( // a photo-only draft previews as its tile below
                 <span style={{ color: "var(--tpl-muted)" }}>Nothing to preview yet.</span>
               )}
             </div>

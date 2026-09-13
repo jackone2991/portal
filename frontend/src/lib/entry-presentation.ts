@@ -2,33 +2,33 @@
 // Location — derived in ONE place, so the cards never know where those come
 // from.
 //
-// Today (SPEC-12 T0) everything still comes out of the markdown body via
-// `attachments.ts`. T1 switches `assetIds` to the Entry's `asset_ids` column and
-// T3 switches `location` to its columns; both change only this file, and every
-// card that reads through it follows untouched. (The calendar still prints
-// `body_md` raw — a pre-existing gap T1's migration closes by cleaning the body.)
+// Attachments come from the Entry's `asset_ids` column (SPEC-12 T1); the
+// Location still comes out of the markdown body via `attachments.ts` until T3
+// gives it columns — that switch changes only this file, and every card that
+// reads through it follows untouched.
 
-import { decodeAttachments } from "./attachments";
+import { decodeBody } from "./attachments";
 import type { Location } from "./geo";
 
 /** The wire fields a card may receive — a journal Entry or a journal stream item. */
 export interface EntryLike {
   body_md?: string | null;
+  asset_ids?: string[] | null;
 }
 
 export interface EntryPresentation {
-  /** The Entry's Attachments — Asset ids in display order (T0: at most one, from the body). */
+  /** The Entry's Attachments — Asset ids in display order. */
   assetIds: string[];
   location: Location | null;
-  /** The body with any attachment markup removed — what the author typed. */
+  /** The body with any location markup removed — what the author typed. */
   text: string;
 }
 
 export function presentEntry(entry: EntryLike): EntryPresentation {
-  const att = decodeAttachments(entry.body_md ?? "");
+  const body = decodeBody(entry.body_md ?? "");
   return {
-    assetIds: att.photoId ? [att.photoId] : [],
-    location: att.location,
-    text: att.rest,
+    assetIds: entry.asset_ids ?? [],
+    location: body.location,
+    text: body.text,
   };
 }

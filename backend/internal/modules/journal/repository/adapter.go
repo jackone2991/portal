@@ -46,6 +46,7 @@ func (a *Adapter) CreateEntry(ctx context.Context, in journal.CreateEntryInput) 
 		row, err := q.CreateEntry(ctx, CreateEntryParams{
 			UserID:     pgUUID(in.UserID),
 			BodyMd:     in.BodyMd,
+			AssetIds:   pgUUIDs(in.AssetIDs),
 			OccurredAt: pgTime(in.OccurredAt),
 			Mood:       in.Mood,
 		})
@@ -109,6 +110,11 @@ func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (j
 			Mood:   in.Mood,
 			ID:     pgUUID(in.ID),
 			UserID: pgUUID(in.UserID),
+		}
+		if in.AssetIDs != nil {
+			// A nil slice is sent as SQL NULL (COALESCE keeps the column); a
+			// non-nil empty one goes out as '{}' and clears it.
+			p.AssetIds = pgUUIDs(*in.AssetIDs)
 		}
 		if in.OccurredAt != nil {
 			p.OccurredAt = pgTime(*in.OccurredAt)
@@ -192,7 +198,7 @@ func (a *Adapter) ListStream(ctx context.Context, in journal.StreamListInput) ([
 		out = append(out, journal.StreamItem{
 			ID: uuidFrom(r.ID), SourceModule: r.SourceModule, EventType: r.EventType,
 			RefID: uuidFrom(r.RefID), Payload: json.RawMessage(r.Payload), OccurredAt: r.OccurredAt.Time,
-			BodyMd: r.BodyMd, Mood: r.Mood,
+			BodyMd: r.BodyMd, Mood: r.Mood, AssetIDs: uuidsFrom(r.AssetIds),
 		})
 	}
 	return out, nil
@@ -243,6 +249,20 @@ func uuidsFrom(ps []pgtype.UUID) []uuid.UUID {
 		if p.Valid {
 			out = append(out, uuid.UUID(p.Bytes))
 		}
+	}
+	return out
+}
+
+// pgUUIDs is the inverse of uuidsFrom. It preserves nil-ness on purpose: under
+// QueryExecModeExec a nil slice is encoded as SQL NULL and a non-nil empty one
+// as '{}', which is how PatchEntry's COALESCE tells "keep" from "clear".
+func pgUUIDs(ids []uuid.UUID) []pgtype.UUID {
+	if ids == nil {
+		return nil
+	}
+	out := make([]pgtype.UUID, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, pgUUID(id))
 	}
 	return out
 }

@@ -4,12 +4,13 @@
 -- backdated entry sits at its date (P0.2), backed by journal_entries_user_cursor_idx.
 
 -- name: CreateEntry :one
--- Create one journal entry. asset_ids is intentionally NOT set — it stays at the
--- table default '{}' until P1.5 attachments land (the service rejects any
--- asset_ids in the request before this query runs). occurred_at is resolved by
--- the service (defaults to now(); backdating/future-dating unlimited).
-INSERT INTO journal_entries (user_id, body_md, mood, occurred_at)
-VALUES ($1, $2, sqlc.narg('mood'), $3)
+-- Create one journal entry. asset_ids is the Entry's Attachments in display
+-- order (SPEC-12 T1) — validated as a whole by the service through the media
+-- module's public lookup before this runs; an empty array is a text-only Entry.
+-- occurred_at is resolved by the service (defaults to now(); backdating/
+-- future-dating unlimited).
+INSERT INTO journal_entries (user_id, body_md, mood, asset_ids, occurred_at)
+VALUES (@user_id, @body_md, sqlc.narg('mood'), @asset_ids::uuid[], @occurred_at)
 RETURNING *;
 
 -- name: GetEntry :one
@@ -32,14 +33,17 @@ ORDER BY occurred_at DESC, id DESC
 LIMIT @lim::int;
 
 -- name: PatchEntry :one
--- Partial update of any subset of {body_md, mood, occurred_at}. A NULL arg leaves
--- the column unchanged (COALESCE), so nil pointers from the service mean "keep".
--- updated_at always advances; occurred_at is only moved when the caller edits it,
--- so an entry keeps its timeline position unless occurred_at itself changed.
--- Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
+-- Partial update of any subset of {body_md, mood, asset_ids, occurred_at}. A
+-- NULL arg leaves the column unchanged (COALESCE), so nil pointers from the
+-- service mean "keep". asset_ids REPLACES the whole list when present — an
+-- empty array (not NULL) clears it (SPEC-12 T1). updated_at always advances;
+-- occurred_at is only moved when the caller edits it, so an entry keeps its
+-- timeline position unless occurred_at itself changed. Owner-scoped; no matching
+-- row → ErrEntryNotFound (404, never leaks existence).
 UPDATE journal_entries
 SET body_md     = COALESCE(sqlc.narg('body_md'), body_md),
     mood        = COALESCE(sqlc.narg('mood'), mood),
+    asset_ids   = COALESCE(sqlc.narg('asset_ids')::uuid[], asset_ids),
     occurred_at = COALESCE(sqlc.narg('occurred_at')::timestamptz, occurred_at),
     updated_at  = now()
 WHERE id = @id AND user_id = @user_id

@@ -7,7 +7,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
-import { Composer } from "../../components/composer/Composer";
+import { Composer, type ComposerDraft } from "../../components/composer/Composer";
 import { StreamItemCard } from "../../components/stream/StreamItemCard";
 import { widgetComponent } from "../../components/widget/registry";
 import { useLayout, type WidgetSlot } from "@/lib/layout";
@@ -57,15 +57,18 @@ export function HomeView() {
         source_module: "journal",
         event_type: "journal:entry_created",
         occurred_at: input.occurred_at ?? new Date().toISOString(),
-        body_md: input.body_md,
+        body_md: input.body_md ?? "",
         mood: null,
+        asset_ids: input.asset_ids ?? [],
       };
       qc.setQueryData<InfiniteData<StreamPage>>(STREAM_KEY, (data) => prepend(data, optimistic));
       return { previous };
     },
     onError: (err, input, ctx) => {
       if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
-      setBodyMd(input.body_md);
+      // The text comes back into the box; the composer keeps its Attachments
+      // and Location itself until `handleCreate` reports success.
+      setBodyMd(input.body_md ?? "");
       setComposerError(err instanceof ApiError ? problemDisplayMessage(err.body) : "Could not post");
     },
     onSuccess: () => {
@@ -120,12 +123,18 @@ export function HomeView() {
     },
   });
 
-  function handleCreate(composed: string) {
-    const body = composed.trim();
-    if (!body || create.isPending) return;
+  // The composer decides what is postable; this only reports whether the
+  // server took it (the mutation's onError has already shown why not).
+  async function handleCreate(draft: ComposerDraft): Promise<boolean> {
+    if (create.isPending) return false;
     setComposerError(null);
     setBodyMd("");
-    create.mutate({ body_md: body });
+    try {
+      await create.mutateAsync({ body_md: draft.bodyMd.trim(), asset_ids: draft.assetIds });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   return (

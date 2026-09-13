@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	journalapi "github.com/portal/backend/internal/modules/journal/api"
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/platform/server"
 )
 
@@ -22,6 +24,7 @@ const (
 // emit-only journal:entry_created event (P0.3). Construct via the module.
 type Service struct {
 	repo   Repository
+	media  MediaAPI       // Attachment validation (SPEC-12); nil on the worker → fail closed
 	events EventPublisher // optional: journal:entry_created (emit-only)
 	// runInUserTenant scopes a worker-side stream INSERT to the target user's
 	// personal org (ADR-07 Increment 1b): resolve the org, open BeginTenantScope so
@@ -30,26 +33,27 @@ type Service struct {
 	runInUserTenant func(ctx context.Context, userID uuid.UUID, fn func(context.Context) error) error
 }
 
-// CreateParams is the service-level create request. HasAssetIDs records whether
-// the caller supplied asset_ids at all — any presence is rejected until P1.5
-// ships (fail closed rather than store unvalidated cross-module references, P0.2).
+// CreateParams is the service-level create request. AssetIDs is the Attachment
+// list in display order (nil or empty = text-only); it is validated as a whole
+// against the media module before anything is stored (SPEC-12 T1).
 type CreateParams struct {
-	UserID      uuid.UUID
-	BodyMd      string
-	Mood        *string    // nil = absent (no mood)
-	OccurredAt  *time.Time // nil = default now
-	HasAssetIDs bool
+	UserID     uuid.UUID
+	BodyMd     string
+	Mood       *string    // nil = absent (no mood)
+	OccurredAt *time.Time // nil = default now
+	AssetIDs   []uuid.UUID
 }
 
 // PatchParams is the service-level partial update. A nil pointer means "leave
-// unchanged"; HasAssetIDs rejects any asset_ids until P1.5, as create does.
+// unchanged". AssetIDs, when present, REPLACES the whole list — a pointer to an
+// empty slice clears it — and is validated exactly as on create.
 type PatchParams struct {
-	UserID      uuid.UUID
-	ID          uuid.UUID
-	BodyMd      *string
-	Mood        *string
-	OccurredAt  *time.Time
-	HasAssetIDs bool
+	UserID     uuid.UUID
+	ID         uuid.UUID
+	BodyMd     *string
+	Mood       *string
+	OccurredAt *time.Time
+	AssetIDs   *[]uuid.UUID
 }
 
 // ListResult is a keyset page plus the cursor for the next one ("" = last page).
@@ -62,14 +66,14 @@ type ListResult struct {
 // publishes journal:entry_created (emit-only, P0.3). A validation failure or an
 // insert error publishes nothing.
 func (s *Service) Create(ctx context.Context, p CreateParams) (Entry, error) {
-	if p.HasAssetIDs {
-		return Entry{}, ErrInvalidAsset // P1.5 not shipped — fail closed
-	}
-	if !validBody(p.BodyMd) {
+	if !validBody(p.BodyMd, p.AssetIDs) {
 		return Entry{}, ErrInvalidBody
 	}
 	mood, err := normalizeMood(p.Mood)
 	if err != nil {
+		return Entry{}, err
+	}
+	if err := s.validateAssets(ctx, p.UserID, p.AssetIDs); err != nil {
 		return Entry{}, err
 	}
 	occurredAt := time.Now().UTC()
@@ -81,6 +85,7 @@ func (s *Service) Create(ctx context.Context, p CreateParams) (Entry, error) {
 		UserID:     p.UserID,
 		BodyMd:     p.BodyMd,
 		Mood:       mood,
+		AssetIDs:   nonNil(p.AssetIDs),
 		OccurredAt: occurredAt,
 	})
 	if err != nil {
@@ -125,25 +130,46 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, cursor string, lim
 	return res, nil
 }
 
-// Patch applies a partial update (any subset of body_md/mood/occurred_at),
-// owner-scoped. No entry_updated event is emitted (P0.3 — the only planned
-// consumer maintains its projection transactionally in-module).
+// Patch applies a partial update (any subset of body_md/mood/asset_ids/
+// occurred_at), owner-scoped. The "text or Attachment" rule is judged on the
+// RESULT: when either half is being changed the current row is read first so a
+// patch cannot empty an Entry by clearing the half it is not sending. No
+// entry_updated event is emitted (P0.3 — the only planned consumer maintains its
+// projection transactionally in-module).
 func (s *Service) Patch(ctx context.Context, p PatchParams) (Entry, error) {
-	if p.HasAssetIDs {
-		return Entry{}, ErrInvalidAsset
-	}
-	if p.BodyMd != nil && !validBody(*p.BodyMd) {
-		return Entry{}, ErrInvalidBody
-	}
 	mood, err := normalizeMood(p.Mood)
 	if err != nil {
 		return Entry{}, err
+	}
+	if p.BodyMd != nil || p.AssetIDs != nil {
+		cur, err := s.repo.GetEntry(ctx, p.UserID, p.ID) // owner-scoped: 404 for a stranger, as before
+		if err != nil {
+			return Entry{}, err
+		}
+		body, ids := cur.BodyMd, cur.AssetIDs
+		if p.BodyMd != nil {
+			body = *p.BodyMd
+		}
+		if p.AssetIDs != nil {
+			ids = *p.AssetIDs
+		}
+		if !validBody(body, ids) {
+			return Entry{}, ErrInvalidBody
+		}
+	}
+	if p.AssetIDs != nil {
+		if err := s.validateAssets(ctx, p.UserID, *p.AssetIDs); err != nil {
+			return Entry{}, err
+		}
+		ids := nonNil(*p.AssetIDs)
+		p.AssetIDs = &ids
 	}
 	return s.repo.PatchEntry(ctx, PatchEntryInput{
 		UserID:     p.UserID,
 		ID:         p.ID,
 		BodyMd:     p.BodyMd,
 		Mood:       mood,
+		AssetIDs:   p.AssetIDs,
 		OccurredAt: p.OccurredAt,
 	})
 }
@@ -172,11 +198,67 @@ func (s *Service) emitCreated(ctx context.Context, e Entry) {
 
 // ── validation ──────────────────────────────────────────────────────
 
-// validBody reports whether body_md is 1–20000 characters (runes), matching the
-// §6 CHECK measured in char_length.
-func validBody(body string) bool {
-	n := utf8.RuneCountInString(body)
-	return n >= minBodyLen && n <= maxBodyLen
+// validBody is the SPEC-12 write rule: an Entry is text, or at least one
+// Attachment, or both — never neither. The length bound mirrors the 0044 CHECK
+// (char_length ≤ 20000); "text" means something other than whitespace, so a
+// blank body with no Attachment is refused exactly like an empty one.
+func validBody(body string, assetIDs []uuid.UUID) bool {
+	if utf8.RuneCountInString(body) > maxBodyLen {
+		return false
+	}
+	return strings.TrimSpace(body) != "" || len(assetIDs) > 0
+}
+
+// validateAssets checks the Attachment list as a whole (SPEC-12): at most ten,
+// no duplicates, and every id an existing image Asset that is ready and owned
+// by the caller. The first violation fails the whole request — an AssetError
+// naming the id and the reason — and nothing is stored. Runs inside the
+// request's tenant transaction, so GetAsset answers nil for another tenant's
+// Asset exactly as for a missing one (ADR-07).
+//
+// A nil media lookup (the worker constructs the module without one) fails
+// closed rather than storing an unvalidated cross-module reference.
+func (s *Service) validateAssets(ctx context.Context, ownerID uuid.UUID, ids []uuid.UUID) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if len(ids) > maxAssetIDs {
+		return &AssetError{ID: ids[maxAssetIDs].String(), Reason: fmt.Sprintf("exceeds the limit of %d attachments", maxAssetIDs)}
+	}
+	if s.media == nil {
+		return &AssetError{ID: ids[0].String(), Reason: "cannot be validated: no asset lookup is wired"}
+	}
+	seen := make(map[uuid.UUID]struct{}, len(ids))
+	for _, id := range ids {
+		if _, dup := seen[id]; dup {
+			return &AssetError{ID: id.String(), Reason: "is listed twice"}
+		}
+		seen[id] = struct{}{}
+		a, err := s.media.GetAsset(ctx, id)
+		if err != nil {
+			return err
+		}
+		switch {
+		case a == nil || a.OwnerID != ownerID:
+			// Another user's Asset is reported as unknown: confirming that it
+			// exists would leak existence across owners.
+			return &AssetError{ID: id.String(), Reason: "is not an asset you own"}
+		case a.Kind != mediaapi.KindImage:
+			return &AssetError{ID: id.String(), Reason: "is not an image"}
+		case a.Status != mediaapi.StatusReady:
+			return &AssetError{ID: id.String(), Reason: "is not ready (status " + string(a.Status) + ")"}
+		}
+	}
+	return nil
+}
+
+// nonNil turns a nil id list into an empty one so the column is written as
+// '{}' rather than NULL.
+func nonNil(ids []uuid.UUID) []uuid.UUID {
+	if ids == nil {
+		return []uuid.UUID{}
+	}
+	return ids
 }
 
 // normalizeMood trims a present mood and enforces 1–80 chars (matching the §6

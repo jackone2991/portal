@@ -1451,7 +1451,7 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
         "422":
-          description: Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset`)
+          description: Validation failed (`journal/invalid-body` — no text and no Attachment, or over 20000 characters · `journal/invalid-mood` · `journal/invalid-asset` — the Attachment list as a whole is invalid; `detail` names the id and the reason)
           content:
             application/problem+json:
               schema:
@@ -1546,7 +1546,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Problem"
         "422":
-          description: Validation failed
+          description: Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset` — as for create; the "text or Attachment" rule is judged on the patched result)
           content:
             application/problem+json:
               schema:
@@ -3635,11 +3635,24 @@ components:
     JournalEntryWrite:
       type: object
       description: |
-        Create requires body_md; PATCH accepts any subset of the fields. `asset_ids`
-        is rejected with 422 `journal/invalid-asset` until photo attachments (P1.5).
+        PATCH accepts any subset of the fields. An Entry is text, or at least one
+        Attachment, or both (SPEC-12): a create or patch whose result has neither
+        is 422 `journal/invalid-body`. `asset_ids`, when present, replaces the
+        whole list and is validated as a whole — a duplicate, an eleventh element,
+        or any id that is not a ready image Asset owned by the caller is 422
+        `journal/invalid-asset` with `detail` naming the id and the reason, and
+        nothing is stored.
       properties:
-        body_md: { type: string, minLength: 1, maxLength: 20000 }
+        body_md:
+          type: string
+          maxLength: 20000
+          description: Plain markdown. Absent or empty is allowed only when the resulting Entry has at least one Attachment.
         mood: { type: string, nullable: true, minLength: 1, maxLength: 80 }
+        asset_ids:
+          type: array
+          maxItems: 10
+          items: { type: string, format: uuid }
+          description: The Entry's Attachments in display order — image Assets owned by the caller with status `ready`. Replaces the whole list when present.
         occurred_at:
           type: string
           format: date-time
@@ -4147,7 +4160,7 @@ components:
     # ── Life-stream home (SPEC-06) ──────────────────────────────────────────
     StreamItem:
       type: object
-      description: "One merged-timeline card. Journal items carry body_md/mood; system items a synthesized title/href."
+      description: "One merged-timeline card. Journal items carry body_md/mood/asset_ids (the same shapes as JournalEntry, so one renderer serves both — SPEC-12); system items a synthesized title/href."
       required: [id, source_module, event_type, ref_id, occurred_at]
       properties:
         id: { type: string, format: uuid }
@@ -4157,6 +4170,10 @@ components:
         occurred_at: { type: string, format: date-time }
         body_md: { type: string, nullable: true }
         mood: { type: string, nullable: true }
+        asset_ids:
+          type: array
+          items: { type: string, format: uuid }
+          description: "Journal items only — the Entry's Attachments in display order (empty when none)."
         title: { type: string, nullable: true }
         href: { type: string, nullable: true }
 

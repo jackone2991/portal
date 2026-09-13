@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 )
 
 // Errors surfaced to the handler.
@@ -14,17 +17,31 @@ var (
 	ErrEntryNotFound = errors.New("journal: entry not found")
 	ErrInvalidBody   = errors.New("journal: invalid body")
 	ErrInvalidMood   = errors.New("journal: invalid mood")
-	ErrInvalidAsset  = errors.New("journal: invalid asset")
-	ErrBadCursor     = errors.New("journal: invalid cursor")
+	// ErrInvalidAsset means the Attachment list as a whole is invalid (SPEC-12).
+	// The service wraps it in an AssetError naming the offending id and reason.
+	ErrInvalidAsset = errors.New("journal: invalid asset")
+	ErrBadCursor    = errors.New("journal: invalid cursor")
 )
 
-// body_md / mood length bounds — mirror the 0011 migration CHECKs, measured in
-// characters (runes) to match Postgres char_length semantics (P0.2 / §6).
+// AssetError is ErrInvalidAsset with the id and the reason a client needs to
+// fix the right thing (SPEC-12 story 28). errors.Is(err, ErrInvalidAsset) holds.
+type AssetError struct {
+	ID     string // as the client sent it — it may not even be a uuid
+	Reason string
+}
+
+func (e *AssetError) Error() string        { return fmt.Sprintf("journal: asset %s %s", e.ID, e.Reason) }
+func (e *AssetError) Is(target error) bool { return target == ErrInvalidAsset }
+
+// Length bounds — mirror the migration CHECKs (0011, relaxed by 0044), measured
+// in characters (runes) to match Postgres char_length semantics. The body has no
+// minimum since 0044: an Entry is text, or at least one Attachment (SPEC-12) —
+// that rule is the service's, not the database's.
 const (
-	minBodyLen = 1
-	maxBodyLen = 20000
-	minMoodLen = 1
-	maxMoodLen = 80
+	maxBodyLen  = 20000
+	minMoodLen  = 1
+	maxMoodLen  = 80
+	maxAssetIDs = 10
 )
 
 // Entry is the journal module's internal record of one human-authored entry.
@@ -39,24 +56,27 @@ type Entry struct {
 	UpdatedAt  time.Time
 }
 
-// CreateEntryInput is the persistence write side of a create. asset_ids is not
-// included — it stays at the table default '{}' until P1.5 (the service rejects
-// any asset_ids in the request before this runs). OccurredAt is already resolved
-// (the service defaults it to now()).
+// CreateEntryInput is the persistence write side of a create. AssetIDs is the
+// validated Attachment list in display order (empty = text-only); OccurredAt is
+// already resolved (the service defaults it to now()).
 type CreateEntryInput struct {
 	UserID     uuid.UUID
 	BodyMd     string
 	Mood       *string
+	AssetIDs   []uuid.UUID
 	OccurredAt time.Time
 }
 
 // PatchEntryInput is the persistence side of a partial update. A nil pointer
-// leaves the column unchanged (COALESCE in PatchEntry).
+// leaves the column unchanged (COALESCE in PatchEntry). AssetIDs is a pointer
+// to a slice on purpose: nil = keep, a pointer to an empty slice = clear — the
+// wire distinction between an absent `asset_ids` and `"asset_ids": []`.
 type PatchEntryInput struct {
 	UserID     uuid.UUID
 	ID         uuid.UUID
 	BodyMd     *string
 	Mood       *string
+	AssetIDs   *[]uuid.UUID
 	OccurredAt *time.Time
 }
 
@@ -92,8 +112,9 @@ type Repository interface {
 	ListStream(ctx context.Context, in StreamListInput) ([]StreamItem, error)
 }
 
-// StreamItem is one row of the merged life-stream (SPEC-06). BodyMd/Mood are set
-// only for journal items (joined from journal_entries); nil for system items.
+// StreamItem is one row of the merged life-stream (SPEC-06). BodyMd/Mood/
+// AssetIDs are set only for journal items (joined from journal_entries); nil
+// for system items.
 type StreamItem struct {
 	ID           uuid.UUID
 	SourceModule string
@@ -103,6 +124,15 @@ type StreamItem struct {
 	OccurredAt   time.Time
 	BodyMd       *string
 	Mood         *string
+	AssetIDs     []uuid.UUID
+}
+
+// MediaAPI is the slice of media/api journal needs: the Attachment lookup that
+// validates `asset_ids` (SPEC-12). Declared here, satisfied by media.Module.API()
+// in cmd/api — journal never imports media's internals. Every call runs inside
+// the request's tenant transaction, so an Asset in another tenant answers nil.
+type MediaAPI interface {
+	GetAsset(ctx context.Context, id uuid.UUID) (*mediaapi.Asset, error)
 }
 
 // StreamListInput is the merged keyset read (P0.2). Zero CursorAt = first page.

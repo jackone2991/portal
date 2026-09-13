@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	journalapi "github.com/portal/backend/internal/modules/journal/api"
+	mediaapi "github.com/portal/backend/internal/modules/media/api"
 )
 
 type streamKey struct {
@@ -70,7 +71,14 @@ func (f *fakeRepo) ListStream(_ context.Context, in StreamListInput) ([]StreamIt
 		if r.user != in.UserID {
 			continue
 		}
-		out = append(out, StreamItem{ID: r.id, SourceModule: k.src, EventType: k.evt, RefID: k.ref, Payload: r.payload, OccurredAt: r.occurredAt})
+		it := StreamItem{ID: r.id, SourceModule: k.src, EventType: k.evt, RefID: k.ref, Payload: r.payload, OccurredAt: r.occurredAt}
+		if k.src == "journal" { // the LEFT JOIN onto journal_entries
+			if e, ok := f.rows[k.ref]; ok {
+				body := e.BodyMd
+				it.BodyMd, it.Mood, it.AssetIDs = &body, e.Mood, e.AssetIDs
+			}
+		}
+		out = append(out, it)
 	}
 	for i := 0; i < len(out); i++ {
 		for j := i + 1; j < len(out); j++ {
@@ -91,10 +99,11 @@ func (f *fakeRepo) CreateEntry(_ context.Context, in CreateEntryInput) (Entry, e
 		return Entry{}, f.createErr
 	}
 	e := Entry{
-		ID: uuid.New(), UserID: in.UserID, BodyMd: in.BodyMd, Mood: in.Mood,
+		ID: uuid.New(), UserID: in.UserID, BodyMd: in.BodyMd, Mood: in.Mood, AssetIDs: in.AssetIDs,
 		OccurredAt: in.OccurredAt, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	f.rows[e.ID] = e
+	_ = f.InsertStreamItem(context.Background(), e.UserID, "journal", "journal:entry_created", e.ID, nil, e.OccurredAt)
 	return e, nil
 }
 
@@ -142,6 +151,9 @@ func (f *fakeRepo) PatchEntry(_ context.Context, in PatchEntryInput) (Entry, err
 	if in.Mood != nil {
 		e.Mood = in.Mood
 	}
+	if in.AssetIDs != nil {
+		e.AssetIDs = *in.AssetIDs
+	}
 	if in.OccurredAt != nil {
 		e.OccurredAt = *in.OccurredAt
 	}
@@ -159,6 +171,33 @@ func (f *fakeRepo) DeleteEntry(_ context.Context, userID, id uuid.UUID) error {
 	return nil
 }
 
+// fakeMedia is the Attachment lookup (SPEC-12). It records the context each
+// call arrived under so a test can assert the lookup ran inside the request
+// scope the middleware opened, and never on a bare background context.
+type fakeMedia struct {
+	assets map[uuid.UUID]*mediaapi.Asset
+	calls  []context.Context
+}
+
+func newFakeMedia() *fakeMedia { return &fakeMedia{assets: map[uuid.UUID]*mediaapi.Asset{}} }
+
+func (m *fakeMedia) GetAsset(ctx context.Context, id uuid.UUID) (*mediaapi.Asset, error) {
+	m.calls = append(m.calls, ctx)
+	return m.assets[id], nil
+}
+
+// asset seeds one Asset and returns its id.
+func (m *fakeMedia) asset(owner uuid.UUID, kind mediaapi.AssetKind, status mediaapi.AssetStatus) uuid.UUID {
+	id := uuid.New()
+	m.assets[id] = &mediaapi.Asset{ID: id, OwnerID: owner, Kind: kind, Status: status}
+	return id
+}
+
+// readyImage is the one shape an Attachment may take.
+func (m *fakeMedia) readyImage(owner uuid.UUID) uuid.UUID {
+	return m.asset(owner, mediaapi.KindImage, mediaapi.StatusReady)
+}
+
 // spyPublisher records Publish calls.
 type spyPublisher struct {
 	calls []string // event names published
@@ -172,7 +211,7 @@ func (s *spyPublisher) Publish(_ context.Context, name string, _ any) error {
 func newSvc() (*Service, *fakeRepo, *spyPublisher) {
 	repo := newFakeRepo()
 	pub := &spyPublisher{}
-	return &Service{repo: repo, events: pub}, repo, pub
+	return &Service{repo: repo, media: newFakeMedia(), events: pub}, repo, pub
 }
 
 func TestCreateEmitsExactlyOnceAfterCommit(t *testing.T) {
@@ -192,8 +231,9 @@ func TestCreateValidationPublishesNothing(t *testing.T) {
 		p    CreateParams
 		want error
 	}{
-		{"asset_ids rejected", CreateParams{UserID: uuid.New(), BodyMd: "x", HasAssetIDs: true}, ErrInvalidAsset},
+		{"unknown asset", CreateParams{UserID: uuid.New(), BodyMd: "x", AssetIDs: []uuid.UUID{uuid.New()}}, ErrInvalidAsset},
 		{"empty body", CreateParams{UserID: uuid.New(), BodyMd: ""}, ErrInvalidBody},
+		{"blank body, no attachment", CreateParams{UserID: uuid.New(), BodyMd: " \n "}, ErrInvalidBody},
 		{"too-long body", CreateParams{UserID: uuid.New(), BodyMd: strings.Repeat("a", 20001)}, ErrInvalidBody},
 		{"blank mood", CreateParams{UserID: uuid.New(), BodyMd: "ok", Mood: ptr("   ")}, ErrInvalidMood},
 	}

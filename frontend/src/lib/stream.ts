@@ -10,9 +10,11 @@ export interface StreamItem {
    * is the handle the post options menu needs to edit or delete the post. */
   ref_id: string;
   occurred_at: string;
-  // journal items
+  // journal items — the same shapes as JournalEntry, so one renderer serves both
   body_md?: string | null;
   mood?: string | null;
+  /** The Entry's Attachments in display order (SPEC-12 T1); `[]` when none. */
+  asset_ids?: string[] | null;
   // system items
   title?: string | null;
   href?: string | null;

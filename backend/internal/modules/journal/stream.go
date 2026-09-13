@@ -17,7 +17,8 @@ const (
 )
 
 // StreamCard is one rendered life-stream card (SPEC-06 P0.2). Journal cards carry
-// BodyMd/Mood; system cards carry a synthesized Title/Href from the render mapping.
+// BodyMd/Mood/AssetIDs — the Entry's own shapes (SPEC-12); system cards carry a
+// synthesized Title/Href from the render mapping.
 type StreamCard struct {
 	ID           uuid.UUID
 	SourceModule string
@@ -26,6 +27,7 @@ type StreamCard struct {
 	OccurredAt   time.Time
 	BodyMd       *string
 	Mood         *string
+	AssetIDs     []uuid.UUID
 	Title        string
 	Href         string
 	Payload      json.RawMessage
@@ -69,7 +71,7 @@ func (s *Service) Stream(ctx context.Context, userID uuid.UUID, cursor string, l
 func toCard(r StreamItem) StreamCard {
 	c := StreamCard{ID: r.ID, SourceModule: r.SourceModule, EventType: r.EventType, RefID: r.RefID, OccurredAt: r.OccurredAt, Payload: r.Payload}
 	if r.SourceModule == "journal" {
-		c.BodyMd, c.Mood = r.BodyMd, r.Mood
+		c.BodyMd, c.Mood, c.AssetIDs = r.BodyMd, r.Mood, r.AssetIDs
 		return c
 	}
 	c.Title, c.Href = renderSystem(r.EventType, r.RefID, r.Payload)

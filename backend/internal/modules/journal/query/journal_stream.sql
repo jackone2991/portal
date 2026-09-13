@@ -35,10 +35,11 @@ DELETE FROM stream_items WHERE source_module = $1 AND event_type = $2 AND ref_id
 DELETE FROM stream_items WHERE source_module = $1 AND ref_id = $2;
 
 -- name: ListStreamCursor :many
--- Merged timeline. Journal items carry their entry body/mood (LEFT JOIN); system
--- items leave those NULL and render compact from payload (P0.2).
+-- Merged timeline. Journal items carry their entry body/mood/asset_ids (LEFT
+-- JOIN — the same shapes as the Entry itself, so one renderer serves both,
+-- SPEC-12); system items leave those NULL and render compact from payload (P0.2).
 SELECT s.id, s.source_module, s.event_type, s.ref_id, s.payload, s.occurred_at,
-       je.body_md, je.mood
+       je.body_md, je.mood, je.asset_ids
 FROM stream_items s
 LEFT JOIN journal_entries je ON s.source_module = 'journal' AND je.id = s.ref_id
 WHERE s.user_id = @user_id

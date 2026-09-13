@@ -8,12 +8,17 @@ Owns the life-stream **write path** (SPEC-05): human-authored journal entries.
 
 ## Owns these tables
 
-`journal_entries` (migration `0011_journal_entries`). Also owns SPEC-06's `stream_items` projection — a **later** migration; not shipped here.
+`journal_entries` (migration `0011_journal_entries`; `0044` makes `asset_ids` live and relaxes the body CHECK to a length bound). Also owns SPEC-06's `stream_items` projection (`0017`).
+
+## Talks to
+
+- **media** — `GetAsset`, through the `MediaAPI` interface journal declares and `media.Module.API()` satisfies in `cmd/api`. An Entry's Attachments (`asset_ids`, SPEC-12) are validated as a whole before a write: at most ten, no duplicates, every id a `ready` image Asset the caller owns, else 422 `journal/invalid-asset` naming the id and the reason. The lookup runs inside the request's tenant transaction, so another tenant's Asset answers "not found" (ADR-07). The worker constructs the module without it; a nil lookup refuses any `asset_ids` rather than trusting them.
 
 ## Boundaries
 
 - `user_id` FKs into `users(id)` — the sanctioned identity-anchor exception (matches `0007`/`0009`).
-- `asset_ids` carries **no FK** (cross-module); validated via `mediaapi` at P1.5, rejected with 422 `journal/invalid-asset` until then.
+- `asset_ids` carries **no FK** (cross-module) — validated through media's public API on write (above). The only place that reads `assets` directly is migration `0044`'s backfill, which is a migration, not module code.
+- An Entry is text, or at least one Attachment, or both — never neither. That is a **service** write rule (422 `journal/invalid-body`), not a CHECK, so a later consumer can strip the last Attachment from a photo-only Entry and leave it standing (SPEC-12 T4).
 - Other modules import only `journal/api` (the `journal:entry_created` event contract). No synchronous call surface yet.
 
 ## Emits events
