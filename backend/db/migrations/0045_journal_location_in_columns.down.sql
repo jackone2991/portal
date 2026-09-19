@@ -15,10 +15,11 @@
 -- `geo:21.0286,105.8506`. SPEC-12 settled on four places (~11 m), so this is
 -- the precision the schema has, not a loss the rollback introduces.
 --
--- Two rows would fail the 0044 length bound and have to be dealt with by hand
--- before rolling back: one whose text was within ~60 characters of the 20 000
--- limit, which the appended link pushes over, and — if 0044 is rolled back
--- next — one with neither text nor Attachment nor Location.
+-- One row would fail the 0044 length bound and has to be dealt with by hand
+-- before rolling back: text within ~60 characters of the 20 000 limit, which
+-- the appended link pushes over. (A row with neither text nor Attachment nor
+-- Location is fine here, and 0044 down restores its lower bound NOT VALID for
+-- exactly that row — see there.)
 UPDATE journal_entries
 SET body_md = CASE
         WHEN btrim(body_md) = '' THEN ''

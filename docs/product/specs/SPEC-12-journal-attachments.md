@@ -150,8 +150,12 @@ structure.
   empty database (CI) it is a no-op. On the live database it touches two rows, both of
   which keep text after stripping (verified 2026-09-12: 47 and 24 characters).
 - **The down migration re-encodes**: it appends the same two link forms from the columns
-  back onto the body, drops the Location columns and restores the previous body CHECK.
-  Rolling back loses nothing.
+  back onto the body, drops the Location columns and restores the previous body CHECK —
+  `NOT VALID`, because a row the up emptied (a link-only body whose Asset was already gone,
+  so the link was dropped) cannot satisfy the old lower bound; the rollback completes, the
+  old rule binds every new row version — so that emptied row cannot be written to under the
+  old code until it is fixed by hand — and `VALIDATE CONSTRAINT` finishes the job then.
+  Rolling back loses nothing the up kept.
 - No foreign key from `asset_ids` to the media module's table (cross-module; validated
   through the media module's public API and corrected by event, as SPEC-05 decided).
 
@@ -250,10 +254,12 @@ fakes underneath) pins every decision above that a client can observe:
 assert that the id is stripped from every Entry that carried it, that other ids survive,
 and that a second delivery is a no-op.
 
-**The migration is self-checking, not unit-tested.** Its closing DO block is the
-assertion; it runs on CI's fresh database (no rows → passes trivially) and on the live
-database before cutover. The regexes are the ones the frontend used to write the links,
-copied verbatim into the migration.
+**The migration is self-checking, and its loops are under test.** Its closing DO block is
+the assertion; it runs on CI's fresh database (no rows → passes trivially) and ran on the
+live database before cutover. The regexes are the ones the frontend used to write the
+links, copied verbatim into the migration. `backfill_test.go` (journal) additionally builds
+a throwaway database to 0043 from the migration files, seeds old-style bodies and runs
+up → down → up plus the refused input, on the `RLS_TEST_ADMIN_URL` CI provides.
 
 **Frontend: no runner in CI.** vitest is not wired into CI (backlog #10); the frontend is
 covered by typecheck and `next build` in CI and by running the composer by hand against

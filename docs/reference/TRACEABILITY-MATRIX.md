@@ -1,6 +1,6 @@
 # Traceability Matrix — Requirements ↔ Tests
 
-**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 35 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
+**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 36 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
 
 > **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
 >
@@ -116,7 +116,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | T1 | `asset_ids` validated as a whole (dup, eleventh, unknown, non-image, not ready, other owner → 422 `journal/invalid-asset` naming the id; nothing stored); order kept; PATCH replaces the whole list; lookup inside the request scope | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPCreateStoresAttachmentsInOrder, TestHTTPInvalidAttachmentListIsRefusedWhole, TestHTTPMalformedAssetIDNamesIt, TestHTTPPatchReplacesWholeList, TestHTTPAssetLookupRunsInsideRequestScope, TestHTTPTextOnlyCreateSkipsLookup`. |
 | T1 | An Entry is text or at least one Attachment — never neither, never a Location alone — judged on the patched result | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPTextOrAttachment, TestHTTPLocationAloneIsNotAnEntry`. |
 | T1/T3 | Entry JSON and stream item JSON carry `asset_ids` and `location` in one shape (`[]` / explicit null, never absent) | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPEntryAndStreamItemShareAssetIDsShape, TestHTTPLocationStoredAndSharedShape`. |
-| T1/T3 | Migrations `0044`/`0045`: the photo and geo links move out of every body into columns, the closing DO block raises on any leftover, `down` re-encodes | — | P0 | ⚠ | the migrations are self-checking, not unit-tested (spec §Testing): the `backend` CI job applies them from zero on every push, which proves the DDL and the empty-table pass only; the backfill loops were proven by hand (2026-09-13, 2026-09-19) on a throwaway database seeded with old-style bodies (up → down → up byte-stable; the 0045 CHECK refusing five bad shapes; an off-Earth link making `up` RAISE and roll back) and on the live database (2 + 1 rows moved, zero leftovers). No automated test seeds a body and runs the loop. |
+| T1/T3 | Migrations `0044`/`0045`: the photo and geo links move out of every body into columns, the closing DO block raises on any leftover, `down` re-encodes | — | P0 | ✅ | `modules/journal/backfill_test.go: TestBackfillMigrationsMoveLinksOutOfBodies` — builds a throwaway database to 0043 from the migration files, seeds five old-style bodies (text + photo + place, photo whose Asset is gone, place-only, plain, inline link), runs 0044 → 0045 → down → down → up → up asserting bodies, `asset_ids` and the three columns at each step, the 0045 CHECK refusing six half-shapes, the restored 0044 CHECK still binding new writes, then the three refusals — an off-Earth link and a leftover second link making 0045 RAISE, a leftover second photo link making 0044 RAISE — each with its DDL rolled back. Needs `RLS_TEST_ADMIN_URL` (skips locally when unset, fails under CI). Its first run caught a rollback failure — 0044 down's restored CHECK refused the row the up had emptied — fixed by restoring it `NOT VALID`. |
 | T3 | Location rules: name-only, coordinates-only, blank name, out of range, wrong type → 422 `journal/invalid-location`, nothing stored; PATCH object sets, null clears, absent keeps | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPLocationStoredAndSharedShape, TestHTTPInvalidLocationIsRefused, TestHTTPPatchLocationSetClearKeep`. |
 | T4 | `media:asset_deleted` strips the id from every Entry of the owner (order kept, empty Entry survives, other owners untouched), inside the owner's tenant scope, idempotent on redelivery; an owner-less event is dropped | — | P0 | ✅ | `modules/journal/journal_test.go: TestAssetDeletedStripsAttachmentFromEveryEntry, TestAssetDeletedWithoutOwnerIsDropped, TestStreamAssetDeletedRemoves` (+ `TestBankDeletedRunsInsideOwnerScope` for the sibling consumer scoped in the same change). |
 | T5 | PATCH `mood`: a string sets (trimmed, 1–80), null clears, absent keeps; blank or wrong type → 422 `journal/invalid-mood` | — | P1 | ✅ | `modules/journal/http_test.go: TestHTTPPatchMoodSetClearKeep`. |
@@ -204,12 +204,12 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | SPEC-10 ledger expansion | 1 | 0 | 1 | 0 | no case document yet |
 | SPEC-04 notify | 5 | 2 | 2 | 1 | store/read API untested |
 | SPEC-05 journal | 4 | 3 | 0 | 1 | P1.5/P1.6 now ⚠ via SPEC-12 (backend proven; picker not) |
-| SPEC-12 journal attachments | 6 | 5 | 1 | 0 | added 2026-09-19; migrations proven by hand, not by a test |
+| SPEC-12 journal attachments | 6 | 6 | 0 | 0 | added 2026-09-19 |
 | SPEC-06 stream | 4 | 1 | 2 | 1 | |
 | SPEC-07 continue | 4 | 3 | 0 | 1 | |
 | SPEC-08 people | 4 | 1 | 2 | 1 | lunar untested |
 | SPEC-09 ops | 4 (+1 doc) | 1 | 3 | 0 | backup/restore proven manually only |
-| **Total** | **52 P0** | **27** | **18** | **7** | plus 1 doc row (✅) and 13 P1 rows (3 ✅, 5 ⚠, 5 ✖) |
+| **Total** | **52 P0** | **28** | **17** | **7** | plus 1 doc row (✅) and 13 P1 rows (3 ✅, 5 ⚠, 5 ✖) |
 
 Cross-cutting: CC-2/3/4/11 ✅ · CC-1/5/6/7/8/10 ⚠ (CC-1 and CC-8 now proven over HTTP for comic and bank; ⚠ until every module has the same two tests) · CC-9 ✖.
 
