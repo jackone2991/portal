@@ -102,6 +102,9 @@ func (r *fakeRepo) SetStatus(_ context.Context, id uuid.UUID, status string) (Mo
 }
 
 func (r *fakeRepo) DeleteMovie(_ context.Context, id uuid.UUID) error {
+	if _, ok := r.movies[id]; !ok {
+		return ErrNotFound // mirrors the adapter: 0 rows affected
+	}
 	delete(r.movies, id)
 	return nil
 }

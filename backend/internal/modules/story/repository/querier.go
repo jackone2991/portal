@@ -20,7 +20,11 @@ type Querier interface {
 	CreateStory(ctx context.Context, arg CreateStoryParams) (Story, error)
 	// ══ Chapters ═══════════════════════════════════════════════════════════════
 	CreateStoryChapter(ctx context.Context, arg CreateStoryChapterParams) (StoryChapter, error)
-	DeleteStory(ctx context.Context, id pgtype.UUID) error
+	// Rows affected, so the adapter can answer ErrNotFound for an id that is
+	// already gone: a second DELETE is 404, not a silent 204 (the contract comic
+	// and bank keep; the owner guard in cmd/api says 404 too, but the module
+	// must not depend on it).
+	DeleteStory(ctx context.Context, id pgtype.UUID) (int64, error)
 	DeleteStoryChapter(ctx context.Context, id pgtype.UUID) error
 	// EmptyChapters lists chapters with a blank body — the publish blocker.
 	EmptyChapters(ctx context.Context, storyID pgtype.UUID) ([]EmptyChaptersRow, error)

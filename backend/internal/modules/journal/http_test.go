@@ -558,3 +558,36 @@ func TestHTTPPatchMoodSetClearKeep(t *testing.T) {
 		t.Fatalf("stored mood after clear = %v, want nil", *e.Mood)
 	}
 }
+
+// ── the two promises every module keeps (backlog P1 #8, CC-3 / CC-8) ────
+
+// An Entry that is not yours answers 404, never 403 — the same body as a
+// missing id, so the endpoint never confirms that it exists.
+func TestHTTPEntryIsNotFoundToAStranger(t *testing.T) {
+	h, _, _ := newHTTP(t)
+	owner, stranger := uuid.New(), uuid.New()
+	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"mine"}`), http.StatusCreated)["id"].(string)
+	rec := do(t, h, stranger, http.MethodGet, "/journal/entries/"+id, "")
+	problem(t, rec, http.StatusNotFound, "journal/entry-not-found")
+	rec2 := do(t, h, stranger, http.MethodGet, "/journal/entries/"+uuid.NewString(), "")
+	problem(t, rec2, http.StatusNotFound, "journal/entry-not-found")
+	if rec.Body.String() != rec2.Body.String() {
+		t.Fatalf("someone else's and missing must answer identically:\n%s\n%s", rec.Body.String(), rec2.Body.String())
+	}
+	// …and a stranger's PATCH or DELETE changes nothing, with the same answer.
+	problem(t, do(t, h, stranger, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"theirs"}`), http.StatusNotFound, "journal/entry-not-found")
+	problem(t, do(t, h, stranger, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
+	if out := entryOut(t, do(t, h, owner, http.MethodGet, "/journal/entries/"+id, ""), http.StatusOK); out["body_md"] != "mine" {
+		t.Fatalf("owner's Entry after a stranger's writes = %v", out["body_md"])
+	}
+}
+
+func TestHTTPDeleteTwiceIs404(t *testing.T) {
+	h, _, _ := newHTTP(t)
+	owner := uuid.New()
+	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"gone"}`), http.StatusCreated)["id"].(string)
+	if rec := do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("first DELETE = %d (%s)", rec.Code, rec.Body.String())
+	}
+	problem(t, do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
+}

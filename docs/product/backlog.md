@@ -40,13 +40,14 @@ was checked, and code moves.
    `api-client.ts` still says "once `make openapi` runs". *Closes when:* the
    `lib/*.ts` clients import `components["schemas"][…]`, or the spec's `info`
    block stops promising a generated client.
-8. **HTTP contracts are asserted for comic and bank only.** `comic/http_test.go`
-   and `bank/http_test.go` (2026-09-11) drive the real router over the fakes
-   and pin 404-not-403 on cross-owner access, the RFC 7807 body, and
-   delete-twice → 404 ([TRACEABILITY-MATRIX](../reference/TRACEABILITY-MATRIX.md)
-   CC-1, CC-3, CC-8). The pattern is ~100 lines per module. *Closes when:*
-   movie, music, story, journal, people, notify, layout and social carry the
-   same two tests. (Audit Tier A-4 asked for comic + bank; done.)
+8. *(closed 2026-09-19 — see § Closed.)*
+8a. **The HTTP-contract helpers exist in nine copies** — `ctxUserKey`,
+    `requireAuth`, `currentUser`, `do`, `problem` (~70 lines) are pasted into
+    every `modules/<m>/http_test.go` (2026-09-19). `problem` encodes a contract
+    fact — the three members `shared/openapi.yaml` marks required — that should
+    have one owner (ADR-11). A `platform/server/servertest` package is legal
+    under depguard (platform may not import modules; a test helper needs
+    neither). *Closes when:* the nine files import one helper.
 9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
    (matrix SPEC-01 P0.1/P0.2), and `comic.RunImport` — the largest function in
    that module, reachable only with an object store, a tenant runner, a real
@@ -170,6 +171,17 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P1 #8 **HTTP contracts asserted for comic and bank only** — closed
+  2026-09-19: movie, music, story, journal, people, social and notify carry
+  the two tests over the real router with fakes (`modules/<m>/http_test.go`;
+  notify's second is mark-read-twice, its only write). Layout is the
+  exception by shape, not by omission: it has no per-id resource, so
+  "a stranger's id" and "delete twice" do not exist there — its contract is
+  the whole-set save with `layout/unknown_widget` / `layout/validation`,
+  under `layout/service_test.go`. Writing the tests found movie, music and
+  story answering 204 to a repeat DELETE — the module left the 404 to
+  cmd/api's owner guard; their `Delete*` are `:execrows` now, like comic's.
+  Matrix CC-1 / CC-3 / CC-8 name every file.
 - P1 #10 **`pnpm test` not in CI** — closed 2026-09-19: the `frontend` job
   runs `pnpm test` between typecheck and build (`vitest.config.ts` gives the
   suite the app's `@/` alias); the three vitest files SPEC-12 added are the
