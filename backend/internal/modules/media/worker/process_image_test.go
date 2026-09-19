@@ -81,9 +81,9 @@ func requireFFmpeg(t *testing.T) {
 	for _, bin := range []string{"ffmpeg", "ffprobe"} {
 		if _, err := exec.LookPath(bin); err != nil {
 			if os.Getenv("CI") != "" {
-				t.Fatalf("%s not on PATH but CI is — the image-pipeline fixture tests must run in CI, not skip", bin)
+				t.Fatalf("%s not on PATH but CI is — the media worker fixture tests must run in CI, not skip", bin)
 			}
-			t.Skipf("%s not on PATH — skipping the image-pipeline fixture tests", bin)
+			t.Skipf("%s not on PATH — skipping the media worker fixture tests", bin)
 		}
 	}
 }

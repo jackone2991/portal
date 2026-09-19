@@ -1,6 +1,6 @@
 # Traceability Matrix — Requirements ↔ Tests
 
-**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 45 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
+**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 46 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
 
 > **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
 >
@@ -50,7 +50,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
 | P0.1 | Image ingest, sniff, HEIC/size/dim/animated, variants, orientation | TC-MEDIA-001…019 | P0 | ⚠ | `modules/media/service_test.go: TestCompleteUploadImageAccepted, TestCompleteUploadHEICRejected, TestCompleteUploadUnknownFormatRejected, TestCompleteUploadTooLarge, TestSniffImageType, TestIsHEIC` — ingest/sniff/HEIC/size proven. The worker's rules since 2026-09-19: `modules/media/worker/process_image_test.go: TestCheckImageDims` (the area cap that admits a 704×18000 strip and refuses 8001×8000, the per-side ceiling, animated and zero-size refusals), `TestScaledDims` (never upscaled, width-first, libwebp height clamp, never a zero side), `TestPipelineAgainstFixtures` (real ffmpeg/ffprobe on PNG/GIF fixtures drawn in-test — the probe's dimensions and frame count, thumb and medium variants matching `scaledDims`, a 200×18000 strip encoded under the height limit, an animated GIF refused; CI installs ffmpeg for it and the test fails there if it is missing). Still without a fixture: EXIF orientation (`-map_metadata -1` strips it; auto-rotation is ffmpeg's default and is not asserted) and the `run` orchestration around download/upload/tenant scope. |
-| P0.2 | Video poster + audio-only skip + non-fatal | TC-MEDIA-030…033 | P0 | ⚠ | `modules/media/worker/thumbnail_test.go: TestPosterPlan` — the audio-only container is skipped with the error the caller treats as a warning, and the seek rule (10 % of the duration, capped at 10 s, first frame when unknown or zero) is pinned; audio-skip at the service level: `modules/media/service_test.go: TestCompleteUploadAudioReadyWithoutTranscode`. The frame extraction itself (`extractPoster`) has no fixture — a video fixture needs ffmpeg to synthesise one — and "non-fatal" (`Handle` turning the skip into a warning) is asserted nowhere. |
+| P0.2 | Video poster + audio-only skip + non-fatal | TC-MEDIA-030…033 | P0 | ✅ | `modules/media/worker/poster_fixture_test.go: TestPosterFromASynthesisedVideo` (Handle over an in-memory store and a recording repo, a 1280×720 clip synthesised by ffmpeg's lavfi → one `poster` row at 640×360, the WebP object uploaded), `TestAudioOnlyContainerSkipsThePosterWithoutFailing` (a sine-only container: Handle returns nil, no row, no object), `TestMissingSourceIsNonFatal`; the plan's arithmetic in `modules/media/worker/thumbnail_test.go: TestPosterPlan`; the service-level audio path in `modules/media/service_test.go: TestCompleteUploadAudioReadyWithoutTranscode`. The fixture tests need ffmpeg (CI installs it; they fail there if it is missing). |
 | P0.3 | Delete asset + janitor + event | TC-MEDIA-040…048 | P0 | ✅ | `modules/media/service_test.go: TestDeleteAsset` (asserts `media:asset_deleted` is published), `TestPurgeOrphans`; consumers: `modules/comic/comic_test.go: TestAssetDeletedConsumer`, `modules/{movie,music}/*_test.go: TestAssetDeletedClearsBothReferences`, `modules/story/story_test.go: TestAssetDeletedClearsTheCover`. |
 | P0.4 | Library page + filters + cursor + LCP | TC-MEDIA-060…069 | P0 | ⚠ | `modules/media/service_test.go: TestListPaginates, TestCursorRoundTrip, TestExpandStatuses` — API list/filter/cursor proven. Page render and LCP: frontend, no tests. |
 | P0.5 | Download original (checksum, private, states) | TC-MEDIA-080…086 | P0 | ✅ | `modules/media/service_test.go: TestDownloadOriginal, TestServeVariant, TestHLSObjectSafety`; range semantics `modules/media/objectreader_test.go: TestServeContentAnswersRangeRequests, TestObjectReaderSeekEndReportsSizeWithoutReading`. |
@@ -201,7 +201,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 
 | Spec | P0 rows | ✅ | ⚠ | ✖ | Notes |
 |------|---------|----|----|----|-------|
-| SPEC-01 media | 6 | 3 | 3 | 0 | the image worker's rules and the poster plan are tested since 2026-09-19; `transcode` and the orchestration around the workers are not |
+| SPEC-01 media | 6 | 4 | 2 | 0 | the image worker's rules and the whole poster path are tested since 2026-09-19; `transcode` and the image worker's orchestration are not |
 | SPEC-02 comic | 6 | 2 | 2 | 2 | reader/library are frontend |
 | SPEC-03 bank | 8 (+1 P1) | 6 | 2 | 0 | best-covered module; emits unasserted |
 | SPEC-10 ledger expansion | 1 | 0 | 1 | 0 | no case document yet |
@@ -212,7 +212,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | SPEC-07 continue | 4 | 3 | 0 | 1 | |
 | SPEC-08 people | 4 | 1 | 2 | 1 | lunar untested |
 | SPEC-09 ops | 4 (+1 doc) | 1 | 3 | 0 | backup/restore proven manually only |
-| **Total** | **52 P0** | **28** | **17** | **7** | plus 1 doc row (✅) and 13 P1 rows (4 ✅, 4 ⚠, 5 ✖) |
+| **Total** | **52 P0** | **29** | **16** | **7** | plus 1 doc row (✅) and 13 P1 rows (4 ✅, 4 ⚠, 5 ✖) |
 
 Cross-cutting: CC-2/3/4/11 ✅ · CC-1/5/6/7/8/10 ⚠ (CC-1 and CC-8 are proven over HTTP for comic, bank, journal, movie, music, story, people, social and notify since 2026-09-19; ⚠ for the media/ops/account/tenant handlers and the i18n catalogue) · CC-9 ✖.
 

@@ -43,18 +43,20 @@ was checked, and code moves.
 8. *(closed 2026-09-19 — see § Closed.)*
 8a. *(closed 2026-09-19 — see § Closed.)*
 9. **Workers are thinly tested** — the image pipeline's admission and scaling
-   rules and the poster's audio-skip/seek plan are under test since 2026-09-19
-   (`media/worker/{process_image,thumbnail}_test.go`; the encode/probe half
-   runs the real ffmpeg on fixtures drawn in-test, and CI installs ffmpeg for
-   it). Still untested: EXIF orientation (no way to draw an EXIF fixture with
-   the standard library — needs a checked-in JPEG or a tiny writer),
-   `extractPoster` and `transcode.go` (need a video fixture ffmpeg can
-   synthesise with `lavfi`), and `comic.RunImport` — the largest function in
-   that module, reachable only with an object store, a tenant runner, a real
-   zip and wall-clock sleeps. *Closes when:* an orientation fixture, a synthesised
-   video for `extractPoster` and the poster's non-fatal skip, and `RunImport`
-   with a fake store are under test; `transcode.go`'s HLS output is out of
-   this line's scope (its own item when someone needs it).
+   rules, its encode/probe on drawn fixtures, and the whole poster path
+   (`Handle` over an in-memory store with lavfi-synthesised video: cut, stored,
+   audio-only skipped, non-fatal) are under test since 2026-09-19
+   (`media/worker/{process_image,thumbnail,poster_fixture}_test.go`; CI
+   installs ffmpeg for them). Still untested: EXIF orientation (no way to draw
+   an EXIF fixture with the standard library — needs a checked-in JPEG or a
+   tiny writer) and `comic.RunImport` — the largest function in that module,
+   reachable only with an object store, a tenant runner, a real zip and
+   wall-clock sleeps — it needs a fake `storage.Storage` it can import, which
+   means a `platform/storage/storagetest` package: the media tests hold two
+   unexported copies today (`media/service_test.go`, `media/worker/
+   poster_fixture_test.go`), a template, not a dependency. *Closes when:* an
+   orientation fixture and `RunImport` with a fake store are under test; `transcode.go`'s HLS output is out of this line's scope (its own item
+   when someone needs it).
 10. *(closed 2026-09-19 — see § Closed.)*
 11. **oapi-codegen is pinned in CI but not locally** (ADR-10). No `tool`
     directive in `backend/go.mod`; a developer on another version produces a
