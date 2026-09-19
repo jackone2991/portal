@@ -1,6 +1,6 @@
 # SPEC-12 — Journal attachments: Attachments and Location leave the body
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-09-12 · **Last verified:** 2026-09-12
+**Status:** executed 2026-09-19 on branch `feat/journal-attachments` (T0–T6, #9–#15; rev 1 drafted 2026-09-12; the manual run against the stack is owed — [backlog](../backlog.md) P1 17a) · **Last verified:** 2026-09-19
 **Module:** `journal` (extends: one migration, service, handler, one consumer) · frontend journal composer, entry card, stream card · **Depends on:** SPEC-01 (image variants — shipped), SPEC-05 (entries — shipped), SPEC-06 (stream join — shipped). Nothing pending.
 **Upstream:** `/grill-with-docs` session 2026-09-12 (sixteen settled decisions, four glossary terms) · [backlog](../backlog.md) P2 #18 · **Refs:** [CONTEXT.md](../../../CONTEXT.md) (Entry, Attachment, Location, Asset) · [SPEC-05 P1.5](SPEC-05-journal.md) (the original photo-attachments item this supersedes) · [SPEC-06](SPEC-06-life-stream-home.md) (stream card promise "asset thumbs — joined from journal_entries") · [ADR-07](../../adr/07-tenancy-rls-model.md) (tenant scope on every lookup) · [ADR-10](../../adr/10-openapi-contract-direction.md) (contract first, codegen committed)
 **Downstream consumers:** the stream (SPEC-06) reads the new columns through its existing join; takeout (SPEC-09 P1.7) — bodies stay plain markdown, which this spec makes true for every row
@@ -130,7 +130,8 @@ structure.
 - `asset_ids uuid[]` (already present, never written until now) becomes live: at most ten
   elements, array order is display order.
 - Three new nullable columns on the entries table: `location_name` (text),
-  `location_lat`, `location_lon` (numeric, four decimal places suffice). A CHECK makes them
+  `location_lat`, `location_lon` (`numeric(7,4)` — four decimal places, ~11 m; a rollback
+  re-encodes those four, whatever an old body held). A CHECK makes them
   all-or-nothing, requires a non-empty trimmed name, and bounds latitude to [−90, 90] and
   longitude to [−180, 180].
 - The body CHECK relaxes from "1–20 000 characters" to "at most 20 000 characters". The
@@ -142,8 +143,10 @@ structure.
   link whose target is `asset:` followed by a uuid is moved into `asset_ids`; the first
   markdown link whose target is `geo:` followed by `lat,lon` (its link text is the name)
   is moved into the three Location columns; both links are
-  stripped from the body and surrounding blank lines trimmed. A closing DO block raises if
-  any body still matches either marker, so the migration cannot complete half-done. On an
+  stripped from the body and surrounding blank lines trimmed. A `geo:` link whose point is
+  off the Earth makes the migration raise naming the row rather than guess. A closing DO
+  block raises if any body still matches either marker, so the migration cannot complete
+  half-done. On an
   empty database (CI) it is a no-op. On the live database it touches two rows, both of
   which keep text after stripping (verified 2026-09-12: 47 and 24 characters).
 - **The down migration re-encodes**: it appends the same two link forms from the columns
@@ -154,7 +157,8 @@ structure.
 
 **Service — journal.**
 
-- Create and update accept `asset_ids` and `location`. `asset_ids` is validated as a whole:
+- Create and update accept `asset_ids` and `location`, and update treats `mood` the way it
+  treats `location` (T5). `asset_ids` is validated as a whole:
   duplicates, more than ten elements, or any element that is not an existing image Asset
   with status ready and owned by the caller → the whole request is refused with a 422
   problem `journal/invalid-asset` whose `detail` names the id and the reason. Nothing is
@@ -186,7 +190,10 @@ copied.
 - `JournalEntry` gains `location` (object `{name, lat, lon}` or null); `asset_ids` stays as
   declared.
 - `JournalEntryWrite` gains `asset_ids` (array of uuid, optional; when present it
-  **replaces the whole array**) and `location` (the object, or `null` to clear; optional).
+  **replaces the whole array**) and `location` (the object, or `null` to clear; optional);
+  `mood` follows the same three states on PATCH — a string sets, `null` clears, absent
+  keeps — since the schema already declared it nullable and the edit surface must be able
+  to take a mood away (T5).
   `body_md` becomes optional-but-bounded: absent or empty is allowed only when the
   resulting Entry has at least one Attachment.
 - `StreamItem` gains `asset_ids` and `location` with the same shapes.
@@ -232,6 +239,7 @@ fakes underneath) pins every decision above that a client can observe:
   `journal/invalid-asset`, `detail` naming the id and reason, nothing stored;
 - Location all-or-nothing, name non-empty, bounds → 422 `journal/invalid-location`;
 - patch with `asset_ids` replaces the whole array; patch with `location: null` clears it;
+  patch with `mood: null` clears the mood and a blank mood is refused (T5);
 - empty body with one Attachment is created; empty body with none, or with only a
   Location, is refused;
 - the Entry JSON and the stream item JSON carry `asset_ids` and `location` in the same

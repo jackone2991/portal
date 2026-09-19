@@ -1,6 +1,6 @@
 # Traceability Matrix — Requirements ↔ Tests
 
-**Status:** current · **Last verified:** 2026-09-11 — every `Cov` mark below was re-graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 31 at this check; `frontend/` has none) and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
+**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 35 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
 
 > **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
 >
@@ -34,8 +34,9 @@ Legend — **Cov** is graded on evidence, not intent:
 - ✅ a named `_test.go` function (or CI job) proves the whole requirement summary;
 - ⚠ the owning module has tests, but they prove only part of the summary — the
   Evidence cell names what is proven and the gap;
-- ✖ nothing automated proves it. For frontend-only rows this is structural: the
-  frontend has no test files at all.
+- ✖ nothing automated proves it. For frontend-only rows this is near-structural:
+  the frontend's only tests are three vitest files of pure rules under
+  `frontend/src/lib/` (SPEC-12 T2–T5), and CI does not run them (backlog #10).
 
 Evidence paths are relative to `backend/internal/` unless they start with `.github/` or `scripts/`.
 
@@ -104,7 +105,23 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.2 | Entries CRUD + validation + ordering | TC-JRNL-010…023 | P0 | ✅ | `modules/journal/journal_test.go: TestCreateValidationPublishesNothing, TestGetOwnerScopedNotFound, TestListCursorPaginates`. |
 | P0.3 | Event emit (emit-only) | TC-JRNL-030…033 | P0 | ✅ | `modules/journal/journal_test.go: TestCreateEmitsExactlyOnceAfterCommit, TestCreateRollbackPublishesNothing`. |
 | P0.4 | Composer + home + sanitization | TC-JRNL-050…059 | P0 | ✖ | frontend composer/home untested; no sanitization test on either side. |
-| P1.5/P1.6 | Attachments, mood picker | TC-JRNL-070…074 | P1 | ✖ | no test. |
+| P1.5/P1.6 | Attachments, mood picker | TC-JRNL-070…074 | P1 | ⚠ | Attachments superseded by SPEC-12 (section below) and proven there — `modules/journal/http_test.go: TestHTTPCreateStoresAttachmentsInOrder`; the mood is edited in the composer and cleared over PATCH (T5, `TestHTTPPatchMoodSetClearKeep`), but the picker itself (TC-JRNL-074, the preset row) is frontend and untested. |
+
+## SPEC-12 — Journal attachments ([spec](../product/specs/SPEC-12-journal-attachments.md); no case document — the spec's Testing Decisions name the seam)
+
+Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`. The primary seam is the journal HTTP-contract file over the real router with fakes (`modules/journal/http_test.go`); the frontend half has vitest unit tests for its pure rules, which run locally but not in CI (backlog #10) — graded ⚠, never ✅, on that evidence.
+
+| Req | Summary | Test cases | Pri | Cov | Evidence |
+|-----|---------|-----------|-----|-----|----------|
+| T1 | `asset_ids` validated as a whole (dup, eleventh, unknown, non-image, not ready, other owner → 422 `journal/invalid-asset` naming the id; nothing stored); order kept; PATCH replaces the whole list; lookup inside the request scope | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPCreateStoresAttachmentsInOrder, TestHTTPInvalidAttachmentListIsRefusedWhole, TestHTTPMalformedAssetIDNamesIt, TestHTTPPatchReplacesWholeList, TestHTTPAssetLookupRunsInsideRequestScope, TestHTTPTextOnlyCreateSkipsLookup`. |
+| T1 | An Entry is text or at least one Attachment — never neither, never a Location alone — judged on the patched result | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPTextOrAttachment, TestHTTPLocationAloneIsNotAnEntry`. |
+| T1/T3 | Entry JSON and stream item JSON carry `asset_ids` and `location` in one shape (`[]` / explicit null, never absent) | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPEntryAndStreamItemShareAssetIDsShape, TestHTTPLocationStoredAndSharedShape`. |
+| T1/T3 | Migrations `0044`/`0045`: the photo and geo links move out of every body into columns, the closing DO block raises on any leftover, `down` re-encodes | — | P0 | ⚠ | the migrations are self-checking, not unit-tested (spec §Testing): the `backend` CI job applies them from zero on every push, which proves the DDL and the empty-table pass only; the backfill loops were proven by hand (2026-09-13, 2026-09-19) on a throwaway database seeded with old-style bodies (up → down → up byte-stable; the 0045 CHECK refusing five bad shapes; an off-Earth link making `up` RAISE and roll back) and on the live database (2 + 1 rows moved, zero leftovers). No automated test seeds a body and runs the loop. |
+| T3 | Location rules: name-only, coordinates-only, blank name, out of range, wrong type → 422 `journal/invalid-location`, nothing stored; PATCH object sets, null clears, absent keeps | — | P0 | ✅ | `modules/journal/http_test.go: TestHTTPLocationStoredAndSharedShape, TestHTTPInvalidLocationIsRefused, TestHTTPPatchLocationSetClearKeep`. |
+| T4 | `media:asset_deleted` strips the id from every Entry of the owner (order kept, empty Entry survives, other owners untouched), inside the owner's tenant scope, idempotent on redelivery; an owner-less event is dropped | — | P0 | ✅ | `modules/journal/journal_test.go: TestAssetDeletedStripsAttachmentFromEveryEntry, TestAssetDeletedWithoutOwnerIsDropped, TestStreamAssetDeletedRemoves` (+ `TestBankDeletedRunsInsideOwnerScope` for the sibling consumer scoped in the same change). |
+| T5 | PATCH `mood`: a string sets (trimmed, 1–80), null clears, absent keeps; blank or wrong type → 422 `journal/invalid-mood` | — | P1 | ✅ | `modules/journal/http_test.go: TestHTTPPatchMoodSetClearKeep`. |
+| T2 | Composer rules: a file picked twice is one tile, the eleventh is refused with a message, Save only when every photo is ready and the draft has text or a photo; card layout hero + four thumbs + "+N" | — | P1 | ⚠ | pure rules under vitest — `frontend/src/lib/composer-photos.test.ts` (17), `frontend/src/lib/entry-presentation.test.ts` (8), `frontend/src/lib/geo.test.ts` (2) — green locally (`cd frontend && pnpm test`), **not run in CI** (backlog #10); the composer, the upload orchestration and the card are not under test. |
+| T2/T5 | Lightbox; edit in place with the composer (pre-fill, cancel, whole-Entry save); Location chip on both cards | — | P1 | ✖ | frontend components; no component or browser test. The manual run against the stack (spec §Testing) is still owed: Docker Desktop was down on the dev box for every ticket (recorded in the commits). |
 
 ## SPEC-06 — Stream ([cases](../testing/TEST-CASES-SPEC-06-stream.md))
 
@@ -153,7 +170,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 
 | CC | Convention | Representative cases | Cov | Evidence |
 |----|-----------|---------------------|-----|----------|
-| CC-1 | RFC-7807 on every non-2xx + i18n key | TC-MEDIA-110/111, TC-COMIC-160/161, TC-BANK-200/201, TC-NOTIFY-130, TC-JRNL-090/091, TC-STREAM-037, TC-CONT-100, TC-PPL-110/111, TC-OPS-122 | ⚠ | writer: `platform/server/server_test.go: TestProblemEmitsAllFourStandardMembers, TestProblemWithCannotOverrideStandardMembers, TestNotFoundCarriesModuleScopedType, TestDecodeRejectsMalformedJSONWithProblem`. Over HTTP, per module: `modules/comic/http_test.go: TestHTTPDraftIsNotFoundToAStranger, TestHTTPDeleteTwiceIs404`; `modules/bank/http_test.go: TestHTTPAnotherUsersAccountIsNotFound, TestHTTPDeleteAccountTwiceIs404` (media type, `type`, `status`, `title`). Every other module's handlers use the same writer by construction since 2026-08-27 but have no HTTP test; the i18n catalogue (`frontend/src/lib/problems.ts`) is untested. |
+| CC-1 | RFC-7807 on every non-2xx + i18n key | TC-MEDIA-110/111, TC-COMIC-160/161, TC-BANK-200/201, TC-NOTIFY-130, TC-JRNL-090/091, TC-STREAM-037, TC-CONT-100, TC-PPL-110/111, TC-OPS-122 | ⚠ | writer: `platform/server/server_test.go: TestProblemEmitsAllFourStandardMembers, TestProblemWithCannotOverrideStandardMembers, TestNotFoundCarriesModuleScopedType, TestDecodeRejectsMalformedJSONWithProblem`. Over HTTP, per module: `modules/comic/http_test.go: TestHTTPDraftIsNotFoundToAStranger, TestHTTPDeleteTwiceIs404`; `modules/bank/http_test.go: TestHTTPAnotherUsersAccountIsNotFound, TestHTTPDeleteAccountTwiceIs404` (media type, `type`, `status`, `title`). `modules/journal/http_test.go` (SPEC-12) asserts 7807 bodies the same way. Every other module's handlers use the same writer by construction since 2026-08-27 but have no HTTP test; the i18n catalogue (`frontend/src/lib/problems.ts`) is untested. |
 | CC-2 | Permission grammar (2–3 seg, fail-closed, seeding) | TC-COMIC-040, TC-BANK-162, TC-NOTIFY-008, TC-JRNL-092, TC-PPL-112, TC-OPS-044/120 | ✅ | `modules/account/rbac/permission_test.go: TestParse, TestMatches, TestSetAllows, TestSetAllowsMalformedDenied`; escalation guards `modules/account/handler/admin_test.go` (32 tests: no-escalation, no-self-edit, last-approver, token_version bump). |
 | CC-3 | Owner isolation (404 not 403, no list leak) | TC-MEDIA-069/082, TC-COMIC-031/162, TC-BANK-160, TC-NOTIFY-004, TC-JRNL-011, TC-STREAM-031, TC-CONT-021/045, TC-PPL-004, TC-OPS-103 | ✅ | over HTTP — 404 not 403, byte-identical to "never existed": `modules/comic/http_test.go: TestHTTPDraftIsNotFoundToAStranger`, `modules/bank/http_test.go: TestHTTPAnotherUsersAccountIsNotFound`. At the service: `modules/media/service_test.go: TestGetOwnerScoped`; `modules/journal/journal_test.go: TestGetOwnerScopedNotFound`; `modules/comic/comic_test.go: TestDraftVisibility, TestSaveProgressRespectsDraftVisibility`; `modules/bank/bank_test.go: TestOwnerScoping`; `modules/{movie,music,story}/*_test.go: TestDraftIsInvisibleToOthers`; `modules/social/social_test.go: TestRemoveOnlyByAParty`; at the database, CC-10. |
 | CC-4 | Cursor pagination stable | TC-MEDIA-063, TC-COMIC-102, TC-BANK-033, TC-NOTIFY-005, TC-JRNL-012, TC-STREAM-030, TC-PPL-015 | ✅ | `platform/server/server_test.go: TestCursorRoundTripsTimestampKey, TestCursorRoundTripsSortKeyContainingSeparator, TestDecodeCursorRejectsGarbage, TestCursorIsURLSafe, TestLimitDefaultsAndClamps`; `modules/media/service_test.go: TestListPaginates`; `modules/journal/journal_test.go: TestListCursorPaginates`. |
@@ -161,7 +178,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | CC-6 | Money integer minor units, no floats | TC-BANK-026/202 | ⚠ | type-level (`int64` throughout `modules/bank`); `modules/bank/bank_test.go: TestInvalidAmount` rejects non-positive amounts; no test guards against a float creeping into an API body. |
 | CC-7 | Migration-only schema + generated files not hand-edited + drift gates | TC-MEDIA-112/114, TC-COMIC-164, TC-BANK-204/205, all `-*` migration cases | ⚠ | CI, not a test: `.github/workflows/ci.yml` job `openapi` regenerates `api.gen.go` + `types.gen.ts` and fails on diff (ADR-10). There is **no** sqlc drift gate — sqlc output is not committed. Migrations: job `backend` applies the whole chain to a fresh `postgres:18` on every push (since 2026-09-11), so "applies from zero" is proven; there is still no round-trip (`down`) job. |
 | CC-8 | Idempotent deletes (404 not 500) | TC-MEDIA-041, TC-COMIC-163, TC-BANK-203, TC-JRNL-023, TC-PPL-016 | ⚠ | over HTTP — 204 then 404: `modules/comic/http_test.go: TestHTTPDeleteTwiceIs404` (needed `DeleteComic` to become `:execrows` — a repeat used to answer 204), `modules/bank/http_test.go: TestHTTPDeleteAccountTwiceIs404`. Event-consumer deletes: `modules/{movie,music,story}/*_test.go: TestAssetDeletedIsIdempotent`, `modules/journal/journal_test.go: TestStreamAssetDeletedRemoves`. Other modules' HTTP deletes are unasserted. |
-| CC-9 | Frontend state ownership + no fixtures | TC-MEDIA-065, TC-COMIC-103, TC-NOTIFY-090, TC-JRNL-054, TC-STREAM-050, TC-PPL-070 | ✖ | frontend has no test files. |
+| CC-9 | Frontend state ownership + no fixtures | TC-MEDIA-065, TC-COMIC-103, TC-NOTIFY-090, TC-JRNL-054, TC-STREAM-050, TC-PPL-070 | ✖ | no frontend component test; the three vitest files under `frontend/src/lib/` cover pure rules only and do not run in CI. |
 | CC-10 | Tenant scope per request + RLS at the database (ADR-07) | — | ✅ | request transaction: `modules/tenant/middleware/require_tenant_test.go: TestMutatingRequestCommitFailureBecomes500, TestMutatingRequestHandlerErrorRollsBack, TestMutatingRequestPanicRollsBackAndRepanics, TestUnauthenticatedRequestNeverOpensAScope, TestOversizedMutatingResponseStreamsIntact`. RLS itself: `platform/db/rls_test.go: TestRLSTenantCannotReadAnotherTenantsRows, TestRLSTenantCannotWriteIntoAnotherTenant, TestRLSTenantCannotRelocateARow, TestRLSTenantCannotDeleteAnotherTenantsRow, TestRLSWriteWithoutATenantScopeFails, TestRLSEveryProtectedTableHasAPolicyAndForce`, `platform/db/rls_media_test.go: TestRLSMediaMemberCannotReadAnotherMembersAsset, TestRLSMediaAdminOfAnotherTenantSeesNothing`, `platform/db/rls_social_test.go: TestRLSConnectionVisibleOnlyToItsTwoParties, TestRLSCannotForgeARequestFromAnotherUser`. Env-gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; CI job `backend` sets both (since 2026-09-11). |
 | CC-11 | Auth primitives | — | ✅ | `modules/account/auth/password_test.go: TestHashAndVerifyPassword, TestVerifyPasswordMalformed`; `modules/account/auth/reset_test.go` (3). No test for `/auth/login`'s lockout counters or for refresh-token reuse detection. |
 
@@ -177,7 +194,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | R6 Worker OOM / stuck queue | TC-MEDIA-009, -010, -015, -047 | none — the guard is structural (`heavyConcurrency = 1`). |
 | R7 Capture not saved | TC-JRNL-059, TC-STREAM-051, TC-PPL-054, TC-COMIC-088 | `TestCreateEmitsExactlyOnceAfterCommit` (journal); the rest are frontend, untested. |
 
-## Coverage summary (re-graded 2026-09-11)
+## Coverage summary (re-graded 2026-09-11; SPEC-12 rows added 2026-09-19)
 
 | Spec | P0 rows | ✅ | ⚠ | ✖ | Notes |
 |------|---------|----|----|----|-------|
@@ -186,19 +203,20 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | SPEC-03 bank | 8 (+1 P1) | 6 | 2 | 0 | best-covered module; emits unasserted |
 | SPEC-10 ledger expansion | 1 | 0 | 1 | 0 | no case document yet |
 | SPEC-04 notify | 5 | 2 | 2 | 1 | store/read API untested |
-| SPEC-05 journal | 4 | 3 | 0 | 1 | |
+| SPEC-05 journal | 4 | 3 | 0 | 1 | P1.5/P1.6 now ⚠ via SPEC-12 (backend proven; picker not) |
+| SPEC-12 journal attachments | 6 | 5 | 1 | 0 | added 2026-09-19; migrations proven by hand, not by a test |
 | SPEC-06 stream | 4 | 1 | 2 | 1 | |
 | SPEC-07 continue | 4 | 3 | 0 | 1 | |
 | SPEC-08 people | 4 | 1 | 2 | 1 | lunar untested |
 | SPEC-09 ops | 4 (+1 doc) | 1 | 3 | 0 | backup/restore proven manually only |
-| **Total** | **46 P0** | **22** | **17** | **7** | plus 1 doc row (✅) and 9 P1 rows (2 ✅, 3 ⚠, 4 ✖) |
+| **Total** | **52 P0** | **27** | **18** | **7** | plus 1 doc row (✅) and 13 P1 rows (3 ✅, 5 ⚠, 5 ✖) |
 
 Cross-cutting: CC-2/3/4/11 ✅ · CC-1/5/6/7/8/10 ⚠ (CC-1 and CC-8 now proven over HTTP for comic and bank; ⚠ until every module has the same two tests) · CC-9 ✖.
 
 What this says, in one line: **the service layer of every backend module is
-tested, and comic and bank now hold their HTTP contracts (status codes, 7807
-bodies, delete-twice) under test; the workers, the other modules' HTTP
-surfaces, the RLS suite in CI, and the entire frontend are not.** Closing a ⚠/✖ means
+tested, and comic, bank and journal now hold their HTTP contracts (status codes,
+7807 bodies, delete-twice / whole-list rules) under test; the workers, the other
+modules' HTTP surfaces, and the frontend beyond three local vitest files are not.** Closing a ⚠/✖ means
 adding a named test and putting it in the Evidence cell — nothing else moves a
 mark.
 

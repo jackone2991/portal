@@ -1,6 +1,6 @@
 # Backlog
 
-**Status:** current · **Last verified:** 2026-09-11
+**Status:** current · **Last verified:** 2026-09-19
 
 The live, triaged list of open work. One line per item; the line says what is
 wrong, where the evidence is, and what closes it. Ordering inside a tier is
@@ -53,10 +53,11 @@ was checked, and code moves.
    zip and wall-clock sleeps. *Closes when:* the image pipeline's cap/variant/
    orientation rules and the poster's audio-skip are unit-tested against
    fixtures, and `RunImport` has a fake-store test.
-10. **`make test` fails** — `vitest run` with zero test files exits non-zero;
-    CI never runs it (audit §3.1, Tier C-13). *Closes when:* either a first
-    frontend test exists or `--passWithNoTests` is set, and `pnpm test` is in
-    the `frontend` CI job.
+10. **`pnpm test` is not in CI** — SPEC-12 (2026-09-19) added the first
+    frontend tests (three vitest files under `frontend/src/lib/`, 27 tests,
+    green locally), so `vitest run` no longer exits non-zero on an empty
+    suite (audit §3.1, Tier C-13), but the `frontend` CI job still never runs
+    it. *Closes when:* `pnpm test` is in the `frontend` CI job.
 11. **oapi-codegen is pinned in CI but not locally** (ADR-10). No `tool`
     directive in `backend/go.mod`; a developer on another version produces a
     diff the gate rejects. *Closes when:* `go.mod` carries the tool directive
@@ -85,20 +86,22 @@ was checked, and code moves.
     and by presigned URLs, not by prefix. *Closes when:* a decision is recorded —
     either the prefix is dropped from ADR-04 as unnecessary under RLS, or a
     migration of every object is scheduled.
+17a. **SPEC-12 residue** (2026-09-19) — the manual run against the stack the
+    spec's §Testing owes (five photos in one Entry, a duplicate and an
+    eleventh file, a failed upload removed, a Location set and cleared, an
+    attached photo deleted from the library, an edit in place) was never done:
+    Docker Desktop was down on the dev box for every ticket. And the `0044`/
+    `0045` backfill loops are proven only by hand (throwaway + live database),
+    a P0 row at ⚠ in the matrix — a test that seeds an old-style body and
+    runs the loop would close it. *Closes when:* the run is recorded in
+    `docs/testing/` and the matrix row is re-graded on a named test.
 17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
     depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
 
 ## P2 — specced, not built (from audit §3.3, still absent 2026-09-11)
 
-18. SPEC-05 P1.5 **journal photo attachments** — `asset_ids` column exists, the
-    handler fails closed on it, and the frontend works around it by encoding
-    photo + location links **inside the markdown body**
-    (`frontend/src/lib/attachments.ts`). That is a shipped UX resting on a
-    workaround; the P1.5 backend would let the body stop carrying structure.
-    The highest-value single P1 left (audit D-17). **Specced 2026-09-12 as
-    [SPEC-12](specs/SPEC-12-journal-attachments.md)** (supersedes P1.5: up to
-    ten Attachments, Location as columns, backfill in the migration) — tracker
-    issue #8, `ready-for-agent`. *Closes when:* #8 and its tickets are closed.
+18. *(closed 2026-09-19 — SPEC-12 executed; see § Closed. Number kept so
+    citations of "backlog #18" still resolve.)*
 19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
     `journal:backfill_stream`.
 20. SPEC-06 **stream de-projection is a decision, not a gap** — `0033`/`0034`/
@@ -179,6 +182,20 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P2 #18 **journal photo attachments** (SPEC-05 P1.5) — closed 2026-09-19 by
+  [SPEC-12](specs/SPEC-12-journal-attachments.md), executed as tickets
+  #9–#15 on `feat/journal-attachments` (`d8b2910`, `b6d8a89`, `1e1f12a`,
+  `ebe97ca`, `4215701`, `aba8785`): up to ten Attachments in `asset_ids`
+  validated as a whole, the Location in three columns, both backfilled out of
+  every body by self-asserting migrations `0044`/`0045` (applied to the live
+  database), the asset-deleted consumer stripping the id in the owner's
+  scope, one composer for create and in-place edit, and
+  `frontend/src/lib/attachments.ts` deleted. Evidence: the SPEC-12 section of
+  the [traceability matrix](../reference/TRACEABILITY-MATRIX.md). Tracker #8
+  and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
+  checks on the close-out commit. Residue has owners: the frontend vitest
+  files run locally only (P1 line 10); the manual run and the untested
+  backfill loops are P1 line 17a.
 - P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
   starts a `postgres:18` service, applies every migration to it with
   `golang-migrate` (so the chain is also proven from zero on each push), and
