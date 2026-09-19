@@ -86,15 +86,13 @@ was checked, and code moves.
     and by presigned URLs, not by prefix. *Closes when:* a decision is recorded —
     either the prefix is dropped from ADR-04 as unnecessary under RLS, or a
     migration of every object is scheduled.
-17a. **SPEC-12 residue** (2026-09-19) — the manual run against the stack the
-    spec's §Testing owes (five photos in one Entry, a duplicate and an
-    eleventh file, a failed upload removed, a Location set and cleared, an
-    attached photo deleted from the library, an edit in place) was never done:
-    Docker Desktop was down on the dev box for every ticket. And the `0044`/
-    `0045` backfill loops are proven only by hand (throwaway + live database),
-    a P0 row at ⚠ in the matrix — a test that seeds an old-style body and
-    runs the loop would close it. *Closes when:* the run is recorded in
-    `docs/testing/` and the matrix row is re-graded on a named test.
+17a. **SPEC-12 residue** — the `0044`/`0045` backfill loops are proven only by
+    hand (throwaway + live database), a P0 row at ⚠ in the matrix; a test that
+    seeds an old-style body and runs the loop would close it. The manual run
+    the spec's §Testing owed was done on 2026-09-19 — every step passed, one
+    focus defect found and fixed — and is recorded in
+    [TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md).
+    *Closes when:* the matrix row is re-graded on a named test.
 17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
     depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
 
@@ -194,8 +192,9 @@ personal org.
   the [traceability matrix](../reference/TRACEABILITY-MATRIX.md). Tracker #8
   and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
   checks on the close-out commit. Residue has owners: the frontend vitest
-  files run locally only (P1 line 10); the manual run and the untested
-  backfill loops are P1 line 17a.
+  files run locally only (P1 line 10); the untested backfill loops are P1
+  line 17a; the manual run was done 2026-09-19
+  ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md)).
 - P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
   starts a `postgres:18` service, applies every migration to it with
   `golang-migrate` (so the chain is also proven from zero on each push), and

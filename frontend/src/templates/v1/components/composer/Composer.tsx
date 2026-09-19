@@ -133,6 +133,14 @@ export function Composer({
   const [mood, setMood] = useState(initial?.mood ?? "");
   const [moodOpen, setMoodOpen] = useState(!!initial?.mood);
   const moodInput = useRef<HTMLInputElement>(null);
+  // Bumped by the mood button; the effect below moves the caret once the chip
+  // has rendered. (A requestAnimationFrame did the same job until the manual
+  // run showed it never fires in a backgrounded tab, and the keystrokes landed
+  // in the textarea instead.)
+  const [moodFocusTick, setMoodFocusTick] = useState(0);
+  useEffect(() => {
+    if (moodFocusTick > 0) moodInput.current?.focus();
+  }, [moodFocusTick]);
   const [location, setLocation] = useState<Location | null>(initial?.location ?? null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
@@ -173,7 +181,7 @@ export function Composer({
   // the mood" with the chip already open should not be a dead tap.
   function openMood() {
     setMoodOpen(true);
-    requestAnimationFrame(() => moodInput.current?.focus());
+    setMoodFocusTick((t) => t + 1);
   }
 
   function openPhotoPicker() {
