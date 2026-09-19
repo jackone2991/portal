@@ -1,9 +1,11 @@
 import { AttachPhotoPopup, DSQuerySeed } from "portal-frontend";
 import { useEffect, useRef } from "react";
 
-// Photo picker for the composer. It has two panes and opens on the chooser, so a
-// plain render only ever shows the two big buttons — the gallery, which is the
-// interesting half, is one click away and its `pane` state is internal.
+// Photo picker for the composer — it only picks (many files, or many library
+// images); the composer runs the uploads and shows their state on its tiles.
+// It has two panes and opens on the chooser, so a plain render only ever shows
+// the two big buttons — the gallery, which is the interesting half, is one
+// click away and its `pane` state is internal.
 //
 // So the gallery cell clicks "Choose from My Photos" on mount, the same way the
 // PostOptionsMenu preview opens its menu: through the component's own DOM, not
@@ -53,13 +55,13 @@ const stage = (seed: unknown, children: React.ReactNode) => (
   </DSQuerySeed>
 );
 
-export const Choose = () => stage({ assets }, <AttachPhotoPopup open onClose={() => {}} onPick={() => {}} />);
+export const Choose = () => stage({ assets }, <AttachPhotoPopup open onClose={() => {}} onAdd={() => {}} />);
 
 export const Gallery = () =>
   stage(
     { assets },
     <ClickInto label="Choose from My Photos">
-      <AttachPhotoPopup open onClose={() => {}} onPick={() => {}} />
+      <AttachPhotoPopup open onClose={() => {}} onAdd={() => {}} />
     </ClickInto>,
   );
 
@@ -69,6 +71,6 @@ export const GalleryEmpty = () =>
   stage(
     { assets: [] },
     <ClickInto label="Choose from My Photos">
-      <AttachPhotoPopup open onClose={() => {}} onPick={() => {}} />
+      <AttachPhotoPopup open onClose={() => {}} onAdd={() => {}} />
     </ClickInto>,
   );

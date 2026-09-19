@@ -7,7 +7,6 @@ import type { StreamItem } from "@/lib/stream";
 import { firstLink, splitLinks, stripLink } from "@/lib/links";
 import { presentEntry } from "@/lib/entry-presentation";
 import { locationLabel, osmURL } from "@/lib/geo";
-import { assetVariantURL } from "@/lib/media-assets";
 import { Icon } from "../ui/Icon";
 import { Post } from "../post/Post";
 import { PostOptionsMenu, type PostMenuItem } from "../post/PostOptionsMenu";
@@ -92,10 +91,10 @@ function JournalPost({
   // One place decides what the Entry shows (`entry-presentation.ts`); the
   // shared-link detection below then looks only at what the author typed.
   const shown = presentEntry(item);
-  const [assetId] = shown.assetIds;
-  // An attached photo owns the media slot; a URL in that post stays anchored in
+  const hasPhotos = shown.assetIds.length > 0;
+  // Attached photos own the media slot; a URL in that post stays anchored in
   // the paragraph instead of becoming a second card.
-  const link = assetId ? null : firstLink(shown.text);
+  const link = hasPhotos ? null : firstLink(shown.text);
   const stripped = link ? stripLink(shown.text, link.url) : shown.text;
   const { heading, rest } = splitHeading(stripped);
 
@@ -148,8 +147,8 @@ function JournalPost({
       media={
         editing
           ? undefined
-          : assetId
-          ? { type: "photo", src: assetVariantURL(assetId, "medium") }
+          : hasPhotos
+          ? { type: "photos", assetIds: shown.assetIds }
           : link
           ? {
               type: link.kind,

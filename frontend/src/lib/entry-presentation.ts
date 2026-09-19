@@ -32,3 +32,29 @@ export function presentEntry(entry: EntryLike): EntryPresentation {
     text: body.text,
   };
 }
+
+/** How many `thumb` tiles the card shows under the hero before it says "+N". */
+export const GALLERY_THUMBS = 4;
+
+export interface AttachmentLayout {
+  /** The first Attachment, shown large at `medium`; null when there are none. */
+  hero: string | null;
+  /** The next few, as a row of `thumb` variants in array order. */
+  thumbs: string[];
+  /** Attachments beyond the row — the "+N" badge; 0 hides it. */
+  overflow: number;
+}
+
+/**
+ * Split an Entry's Attachments into what the card draws (SPEC-12 T2). One
+ * photo is a hero alone, so an Entry that always had one looks as it did; the
+ * lightbox still walks the whole array, so the layout hides nothing for good.
+ */
+export function attachmentLayout(assetIds: string[]): AttachmentLayout {
+  const [hero = null, ...rest] = assetIds;
+  return {
+    hero,
+    thumbs: rest.slice(0, GALLERY_THUMBS),
+    overflow: Math.max(0, rest.length - GALLERY_THUMBS),
+  };
+}

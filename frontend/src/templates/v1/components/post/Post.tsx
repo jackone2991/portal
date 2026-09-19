@@ -1,40 +1,47 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { ReactionBar } from "./ReactionBar";
 import { PostControlButtons } from "./PostControlButtons";
+import { AttachmentGallery } from "../journal/AttachmentGallery";
 
 /**
  * Full post card — port of Olympus `.ui-block .hentry.post` (Newsfeed.html
  * 2666-2793; media variants from Post Versions.html). Header (avatar · author ·
- * optional action · time · options menu), body text, optional media slot, then
- * the {@link ReactionBar} footer and the half-outside
+ * optional action · time · options menu), body text, optional media slot — a
+ * link/video preview card, or the Entry's photos via {@link AttachmentGallery}
+ * — then the {@link ReactionBar} footer and the half-outside
  * {@link PostControlButtons} FAB column.
  *
  * Presentational: interactivity lives in the client-side FAB column and in the
  * `menu` slot the caller passes, so this stays render-only.
  */
-export interface PostMedia {
+export interface PostLinkMedia {
   /** `video` adds the play overlay; `link` is the same card without it. */
-  type: "video" | "photo" | "link";
+  type: "video" | "link";
   title?: ReactNode;
   desc?: ReactNode;
   /** The Olympus `.link-site` line — a bare host, rendered uppercase. */
   source?: ReactNode;
   /** Makes the whole card a link out. */
   href?: string;
-  /** Real image URL (an attached photo's media variant). */
-  src?: string;
   /**
-   * Seed for the thumbnail's gradient, used when there is no `src`. A shared
-   * link has no crawler and no og:image behind it, so its thumbnail is a
-   * deterministic placeholder — same host, same colours — rather than a fake
-   * screenshot.
+   * Seed for the thumbnail's gradient. A shared link has no crawler and no
+   * og:image behind it, so its thumbnail is a deterministic placeholder — same
+   * host, same colours — rather than a fake screenshot.
    */
   seed?: string;
 }
+
+export interface PostPhotoMedia {
+  type: "photos";
+  /** The Entry's Attachments in display order — drawn by {@link AttachmentGallery}. */
+  assetIds: string[];
+}
+
+export type PostMedia = PostLinkMedia | PostPhotoMedia;
 
 export interface PostProps {
   author: string;
@@ -144,7 +151,7 @@ export function Post({
 /* ── Media variants ───────────────────────────────────────────────── */
 
 function MediaCard({ media }: { media: PostMedia }) {
-  if (media.type === "photo") return <PhotoCard media={media} />;
+  if (media.type === "photos") return <AttachmentGallery assetIds={media.assetIds} />;
   return <LinkCard media={media} />;
 }
 
@@ -152,7 +159,7 @@ function MediaCard({ media }: { media: PostMedia }) {
  * Link / video card — Olympus `.post-video`: square thumb on the left, title +
  * excerpt + source host on the right. `type: "video"` overlays the play button.
  */
-function LinkCard({ media }: { media: PostMedia }) {
+function LinkCard({ media }: { media: PostLinkMedia }) {
   const inner = (
     <>
       <div
@@ -217,67 +224,6 @@ function LinkCard({ media }: { media: PostMedia }) {
   ) : (
     <div className={cls} style={style}>
       {inner}
-    </div>
-  );
-}
-
-/** Photo card — self-contained gradient thumbnail placeholder (no image assets). */
-function PhotoCard({ media }: { media: PostMedia }) {
-  return (
-    <div
-      className="mt-3 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--tpl-border)" }}
-    >
-      <PhotoFrame media={media} />
-      {(media.title || media.desc) && (
-        <div className="p-4">
-          {media.title && (
-            <p className="text-base font-semibold" style={{ color: "var(--tpl-heading)" }}>
-              {media.title}
-            </p>
-          )}
-          {media.desc && (
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--tpl-muted)" }}>
-              {media.desc}
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * The photo itself, with a placeholder fallback. A variant URL that 404s (the
- * media module's public variant route is currently blocked by tenant RLS) must
- * not leave a broken-image glyph in the middle of the feed — the card falls
- * back to the same placeholder a thumbnail-less link card uses.
- */
-function PhotoFrame({ media }: { media: PostMedia }) {
-  const [failed, setFailed] = useState(false);
-
-  if (media.src && !failed) {
-    return (
-      /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
-      <img
-        src={media.src}
-        alt={typeof media.title === "string" ? media.title : "photo"}
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="max-h-[32rem] w-full object-contain"
-        style={{ background: "var(--tpl-surface-2)" }}
-      />
-    );
-  }
-
-  return (
-    <div
-      className="grid h-64 place-items-center"
-      style={{ background: gradientOf(media.seed ?? String(media.title ?? "photo")) }}
-    >
-      <span className="text-white/70">
-        <Icon name="photos-icon" size={40} />
-      </span>
     </div>
   );
 }

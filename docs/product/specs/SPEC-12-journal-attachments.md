@@ -247,9 +247,12 @@ assertion; it runs on CI's fresh database (no rows → passes trivially) and on 
 database before cutover. The regexes are the ones the frontend used to write the links,
 copied verbatim into the migration.
 
-**Frontend: no runner.** vitest is not wired into CI (backlog #10) and does not run on
-the development machine; the frontend is covered by typecheck and `next build` in CI and
-by running the composer by hand against the stack. This spec does not introduce a runner.
+**Frontend: no runner in CI.** vitest is not wired into CI (backlog #10); the frontend is
+covered by typecheck and `next build` in CI and by running the composer by hand against
+the stack. This spec does not introduce a runner. *(T2 note, 2026-09-19: the composer's
+photo-list rules and the card's hero/thumbs/"+N" split are pure functions with vitest
+unit tests — `pnpm test` runs them locally in under a second — but until #10 lands they
+are a local check, not CI evidence.)*
 
 **Prior art.** Comic and bank HTTP-contract tests (router-driven, fakes); the four
 modules' identical Asset-validation pattern; the comic importer's poll-to-ready loop for

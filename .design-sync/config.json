@@ -83,6 +83,10 @@
       "cardMode": "single",
       "primaryStory": "Picker"
     },
+    "Lightbox": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
     "ComicReaderView": {
       "cardMode": "single",
       "primaryStory": "Reader"

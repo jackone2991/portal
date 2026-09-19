@@ -1,12 +1,26 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
+import { PhotoFrame } from "../ui/PhotoFrame";
 import { AttachPhotoPopup } from "../popup/AttachPhotoPopup";
 import { LocationPickerPopup } from "../popup/LocationPickerPopup";
 import { assetVariantURL } from "@/lib/media-assets";
+import { uploadImage } from "@/lib/media-upload";
 import { composeBody } from "@/lib/attachments";
+import {
+  MAX_ATTACHMENTS,
+  addPhotos,
+  canPost,
+  capMessage,
+  fullMessage,
+  patchPhoto,
+  readyAssetIds,
+  removePhoto,
+  type ComposerPhoto,
+  type PhotoPick,
+} from "@/lib/composer-photos";
 import { locationLabel, type Location } from "@/lib/geo";
 
 /**
@@ -21,11 +35,16 @@ import { locationLabel, type Location } from "@/lib/geo";
  * distinction the feed never made. Pasting a URL into the status text still
  * renders the link/video card (`lib/links.ts`), so nothing was lost with them.
  *
- * The two live add-options buttons return attachments, not files:
- *   · camera → {@link AttachPhotoPopup} — upload or pick an existing image,
- *     resolving to a media-module asset id that is already `ready`.
+ * The two live add-options buttons:
+ *   · camera → {@link AttachPhotoPopup} — pick files to upload, or existing
+ *     images from the library. Each pick becomes a tile here (SPEC-12 T2); a
+ *     file's upload runs from this component so the tile can show its
+ *     progress, then "processing" while the worker cuts the WebP variants,
+ *     then ready — or the error, with a remove control. Up to ten, a file
+ *     picked twice is ignored, and Post waits until every tile is ready; the
+ *     rules are `lib/composer-photos.ts`, this file only draws them.
  *   · pin    → {@link LocationPickerPopup} — search or drop a pin on the map.
- * The Attachment travels as the Entry's `asset_ids` (SPEC-12 T1); the Location
+ * The Attachments travel as the Entry's `asset_ids` (SPEC-12 T1); the Location
  * is still encoded into the body by `lib/attachments.ts` until T3 gives it
  * columns. Tagging friends stays inert — there is no people-tagging surface yet.
  *
@@ -35,7 +54,7 @@ import { locationLabel, type Location } from "@/lib/geo";
 export interface ComposerDraft {
   /** The body to post — the text plus the encoded Location, no photo markup. */
   bodyMd: string;
-  /** The Entry's Attachments in the order they were added. */
+  /** The Entry's Attachments in the order they were added — every one `ready`. */
   assetIds: string[];
 }
 
@@ -65,28 +84,91 @@ export function Composer({
   className = "",
 }: ComposerProps) {
   const [preview, setPreview] = useState(false);
-  // Attachments are an ordered list even though the UI still caps it at one;
-  // SPEC-12 T2 lifts the cap without reshaping this state.
-  const [assetIds, setAssetIds] = useState<string[]>([]);
-  const [thumbFailed, setThumbFailed] = useState(false);
+  const [photos, setPhotos] = useState<ComposerPhoto[]>([]);
+  // The cap message; cleared by the next add or remove.
+  const [notice, setNotice] = useState<string | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [assetId] = assetIds;
+
+  // Which tiles exist — the membership, kept beside the state because the
+  // picker's callback can run before an upload's queued progress patch has
+  // rendered, and "is this a duplicate / is the list full" must not read a
+  // stale list. Every membership change (`handleAdd`, `handleRemove`, the reset
+  // in `submit`) writes it; status patches never do. Adds and removes then go
+  // to the state as functional updates, so a patch queued in between is
+  // merged, never overwritten.
+  const members = useRef<ComposerPhoto[]>([]);
+
+  // An object URL is browser memory until revoked: tiles release theirs when
+  // removed, posted, or — whatever is left in the strip — on unmount.
+  useEffect(() => () => members.current.forEach(release), []);
 
   const composed = composeBody(bodyMd, location);
-  // An Entry is text or at least one Attachment — never a Location alone
-  // (SPEC-12 story 7), which is exactly what the server refuses; the button
-  // says so before the request does. This is the one place the rule lives on
-  // the client.
-  const canPost = (bodyMd.trim().length > 0 || assetIds.length > 0) && !submitting;
+  // Text or at least one Attachment, and every photo ready (SPEC-12 stories 7
+  // and 11) — what the server would refuse, said by the button first.
+  const draftValid = canPost(bodyMd, photos);
+  const postable = draftValid && !submitting;
+  const waiting = photos.some((p) => p.status === "uploading" || p.status === "processing");
+  const remaining = MAX_ATTACHMENTS - photos.length;
+
+  function handleAdd(picks: PhotoPick[]) {
+    const result = addPhotos(members.current, picks, (pick) =>
+      pick.kind === "file" ? URL.createObjectURL(pick.file) : assetVariantURL(pick.id, "thumb"),
+    );
+    const fresh = result.added.map((a) => a.photo);
+    members.current = [...members.current, ...fresh];
+    setPhotos((ps) => [...ps, ...fresh]);
+    setNotice(result.refused > 0 ? capMessage(result.refused) : null);
+    for (const { photo, pick } of result.added) {
+      if (pick.kind === "file") void upload(photo.key, pick.file);
+    }
+  }
+
+  function openPhotoPicker() {
+    // A full strip says so where the tap landed (SPEC-12 story 8) — a disabled
+    // button's tooltip is invisible on touch.
+    if (remaining <= 0) {
+      setNotice(fullMessage());
+      return;
+    }
+    setPhotoOpen(true);
+  }
+
+  async function upload(key: string, file: File) {
+    // A tile removed mid-upload makes every patch a no-op; the Asset still
+    // lands in the library, which is the same as an upload from /library/media.
+    const patch = (p: Partial<Omit<ComposerPhoto, "key">>) =>
+      setPhotos((ps) => patchPhoto(ps, key, p));
+    try {
+      const up = await uploadImage(
+        file,
+        (pct) => patch({ pct }),
+        () => patch({ status: "processing", pct: 100 }),
+      );
+      patch({ status: "ready", assetId: up.assetId });
+    } catch (e) {
+      patch({ status: "failed", error: e instanceof Error ? e.message : "Tải ảnh lên thất bại." });
+    }
+  }
+
+  function handleRemove(photo: ComposerPhoto) {
+    release(photo);
+    members.current = removePhoto(members.current, photo.key);
+    setPhotos((ps) => removePhoto(ps, photo.key));
+    setNotice(null);
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!canPost) return;
-    const accepted = await onSubmit({ bodyMd: composed, assetIds });
+    if (!postable) return;
+    const accepted = await onSubmit({ bodyMd: composed, assetIds: readyAssetIds(photos) });
     if (!accepted) return; // the parent has shown the error; the draft stays
-    setAssetIds([]);
+    // Adds are frozen while submitting, so the strip is exactly what was posted.
+    members.current.forEach(release);
+    members.current = [];
+    setPhotos([]);
+    setNotice(null);
     setLocation(null);
     setPreview(false);
   }
@@ -148,7 +230,7 @@ export function Composer({
             >
               {composed.trim() ? (
                 composed
-              ) : assetId ? null : ( // a photo-only draft previews as its tile below
+              ) : photos.length > 0 ? null : ( // a photo-only draft previews as its tiles below
                 <span style={{ color: "var(--tpl-muted)" }}>Nothing to preview yet.</span>
               )}
             </div>
@@ -164,34 +246,11 @@ export function Composer({
           )}
         </div>
 
-        {(assetId || location) && (
+        {(photos.length > 0 || location) && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {assetId && (
-              <span
-                className="relative inline-block overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--tpl-border)" }}
-              >
-                {thumbFailed ? (
-                  // The variant URL can 404 (see PhotoFrame in Post.tsx); the
-                  // attachment is still valid, so show a tile, not a broken icon.
-                  <span
-                    className="grid h-20 w-28 place-items-center"
-                    style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-muted)" }}
-                  >
-                    <Icon name="photos-icon" size={22} />
-                  </span>
-                ) : (
-                  /* eslint-disable-next-line @next/next/no-img-element -- dynamic, API-proxied variant, not a static/optimizable asset */
-                  <img
-                    src={assetVariantURL(assetId, "thumb")}
-                    alt="Ảnh đính kèm"
-                    onError={() => setThumbFailed(true)}
-                    className="h-20 w-28 object-cover"
-                  />
-                )}
-                <ChipRemove label="Bỏ ảnh" onClick={() => setAssetIds([])} />
-              </span>
-            )}
+            {photos.map((p) => (
+              <PhotoTile key={p.key} photo={p} onRemove={() => handleRemove(p)} />
+            ))}
 
             {location && (
               <span
@@ -210,22 +269,30 @@ export function Composer({
           </div>
         )}
 
+        {notice && (
+          <p role="status" className="mt-2 text-xs font-medium" style={{ color: "#ef4444" }}>
+            {notice}
+          </p>
+        )}
+
         {/* add-options-message: icons left, Preview + primary right */}
         <div
           className="mt-3 flex items-center gap-1 border-t pt-3"
           style={{ borderColor: "var(--tpl-border)" }}
         >
           <IconBtn
-            label={assetId ? "Đổi ảnh" : "Thêm ảnh"}
+            label={remaining > 0 ? `Thêm ảnh (còn ${remaining})` : `Đã đủ ${MAX_ATTACHMENTS} ảnh`}
             icon="camera-icon"
-            active={!!assetId}
-            onClick={() => setPhotoOpen(true)}
+            active={photos.length > 0}
+            disabled={submitting}
+            onClick={openPhotoPicker}
           />
           <IconBtn label="Tag friends (coming soon)" icon="computer-icon" disabled />
           <IconBtn
             label={location ? "Đổi địa điểm" : "Thêm địa điểm"}
             icon="small-pin-icon"
             active={!!location}
+            disabled={submitting}
             onClick={() => setLocationOpen(true)}
           />
 
@@ -244,11 +311,18 @@ export function Composer({
             </button>
             <button
               type="submit"
-              disabled={!canPost}
+              disabled={!postable}
+              title={
+                waiting
+                  ? "Đợi ảnh tải và xử lý xong"
+                  : photos.some((p) => p.status === "failed")
+                    ? "Bỏ ảnh lỗi trước khi đăng"
+                    : undefined
+              }
               className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
             >
-              {submitting ? "Posting…" : "Post Status"}
+              {submitting ? "Posting…" : waiting ? "Đang tải ảnh…" : "Post Status"}
             </button>
           </div>
         </div>
@@ -257,11 +331,8 @@ export function Composer({
       <AttachPhotoPopup
         open={photoOpen}
         onClose={() => setPhotoOpen(false)}
-        onPick={(id) => {
-          setThumbFailed(false);
-          // Cap of one until T2: a new pick replaces, never appends.
-          setAssetIds([id]);
-        }}
+        onAdd={handleAdd}
+        remaining={remaining}
       />
       <LocationPickerPopup
         open={locationOpen}
@@ -297,6 +368,85 @@ function ChipRemove({
     </button>
   );
 }
+
+/** Only a file pick holds browser memory; a library thumb is just a URL. */
+function release(photo: ComposerPhoto) {
+  if (photo.preview.startsWith("blob:")) URL.revokeObjectURL(photo.preview);
+}
+
+/**
+ * One photo in the strip: its picture, its state over it — a progress bar
+ * while uploading, a veil while the worker processes, the error when it
+ * failed — and the remove control, always. The state is what tells the writer
+ * why Post is not available yet (SPEC-12 story 10).
+ */
+function PhotoTile({ photo, onRemove }: { photo: ComposerPhoto; onRemove: () => void }) {
+  const failed = photo.status === "failed";
+  // One place says what each status looks like: the label the tile carries,
+  // and the veil over the picture (none while uploading — that is the bar).
+  const { label, veil } = TILE_STATE[photo.status](photo);
+
+  return (
+    <span
+      role="group"
+      aria-label={label}
+      title={label}
+      className="relative inline-block h-20 w-28 overflow-hidden rounded-lg border"
+      style={{ borderColor: failed ? "#ef4444" : "var(--tpl-border)" }}
+    >
+      <PhotoFrame
+        src={photo.preview}
+        alt="Ảnh đính kèm"
+        className="h-full w-full object-cover"
+        fallbackClassName="h-full"
+        iconSize={22}
+      />
+
+      {photo.status === "uploading" && (
+        <span
+          className="absolute inset-x-0 bottom-0 h-1.5"
+          style={{ background: "rgba(0,0,0,.35)" }}
+          aria-hidden
+        >
+          <span
+            className="block h-full transition-[width]"
+            style={{
+              width: `${photo.pct}%`,
+              background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))",
+            }}
+          />
+        </span>
+      )}
+      {veil && (
+        <span
+          className="absolute inset-0 grid place-items-center px-1 text-center text-[11px] font-semibold leading-tight text-white"
+          style={{ background: veil.background }}
+          aria-hidden
+        >
+          {veil.text}
+        </span>
+      )}
+
+      <ChipRemove label="Bỏ ảnh" onClick={onRemove} />
+    </span>
+  );
+}
+
+const TILE_STATE: Record<
+  ComposerPhoto["status"],
+  (p: ComposerPhoto) => { label: string; veil: { text: string; background: string } | null }
+> = {
+  uploading: (p) => ({ label: `Đang tải lên… ${p.pct}%`, veil: null }),
+  processing: () => ({
+    label: "Đang xử lý ảnh…",
+    veil: { text: "Đang xử lý…", background: "rgba(0,0,0,.45)" },
+  }),
+  ready: () => ({ label: "Sẵn sàng", veil: null }),
+  failed: (p) => {
+    const error = p.error ?? "Tải ảnh lên thất bại.";
+    return { label: error, veil: { text: error, background: "rgba(239,68,68,.78)" } };
+  },
+};
 
 function IconBtn({
   label,
