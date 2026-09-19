@@ -1,6 +1,6 @@
 # Traceability Matrix — Requirements ↔ Tests
 
-**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 46 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
+**Status:** current · **Last verified:** 2026-09-19 — the SPEC-12 section was added and graded against the `_test.go` files on disk (`find backend -name '*_test.go' | wc -l`, 47 at this check — the 2026-09-11 header said 31, a stale count even then); the legend, CC-1, CC-9 and the one-line summary were re-read against the tree the same day and corrected where the frontend's three vitest files or the journal HTTP-contract file made them false; every other `Cov` mark stands as re-graded on 2026-09-11 and carries an **Evidence** cell naming the test that proves it. A ✅ with an empty Evidence cell is a defect in this document, not coverage.
 
 > **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
 >

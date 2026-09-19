@@ -1,97 +1,25 @@
 package worker
 
-// The poster end to end (SPEC-01 P0.2; backlog #9): Thumbnailer.Handle over an
-// in-memory store and a recording repo, with videos synthesised by ffmpeg's
+// The poster end to end (SPEC-01 P0.2; backlog #9): Thumbnailer.Handle over
+// storagetest.MemStore and a recording repo, with videos synthesised by ffmpeg's
 // lavfi sources — no binary fixtures. Pins the three things the row promises:
 // a poster is cut and stored at the right size, an audio-only container is
 // skipped, and the skip is non-fatal (Handle returns nil, nothing is written).
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 
-	"github.com/portal/backend/internal/platform/storage"
+	"github.com/portal/backend/internal/platform/storage/storagetest"
 )
-
-// memStore is the smallest storage.Storage the worker path touches: Get and
-// Put. Everything else is unreachable from Handle and says so.
-type memStore struct {
-	mu      sync.Mutex
-	objects map[string][]byte
-	types   map[string]string
-}
-
-func newMemStore() *memStore {
-	return &memStore{objects: map[string][]byte{}, types: map[string]string{}}
-}
-
-func (m *memStore) put(key string, b []byte) { m.mu.Lock(); defer m.mu.Unlock(); m.objects[key] = b }
-
-func (m *memStore) Bucket() string { return "test" }
-func (m *memStore) Put(_ context.Context, key string, body io.Reader, contentType string) error {
-	b, err := io.ReadAll(body)
-	if err != nil {
-		return err
-	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.objects[key], m.types[key] = b, contentType
-	return nil
-}
-func (m *memStore) Get(_ context.Context, key string) (io.ReadCloser, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	b, ok := m.objects[key]
-	if !ok {
-		return nil, fmt.Errorf("memStore: no object %q", key)
-	}
-	return io.NopCloser(bytes.NewReader(b)), nil
-}
-func (m *memStore) Exists(_ context.Context, key string) (bool, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	_, ok := m.objects[key]
-	return ok, nil
-}
-func (m *memStore) Size(_ context.Context, key string) (int64, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return int64(len(m.objects[key])), nil
-}
-func (m *memStore) Delete(_ context.Context, key string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	delete(m.objects, key)
-	return nil
-}
-func (m *memStore) DeletePrefix(context.Context, string) error {
-	return fmt.Errorf("memStore: DeletePrefix not used by the worker")
-}
-func (m *memStore) GetRange(context.Context, string, int64) (io.ReadCloser, error) {
-	return nil, fmt.Errorf("memStore: GetRange not used by the worker")
-}
-func (m *memStore) GetByteRange(context.Context, string, int64, int64) (io.ReadCloser, error) {
-	return nil, fmt.Errorf("memStore: GetByteRange not used by the worker")
-}
-func (m *memStore) PresignPut(context.Context, string, string, time.Duration) (*storage.PresignedRequest, error) {
-	return nil, fmt.Errorf("memStore: PresignPut not used by the worker")
-}
-func (m *memStore) PresignGet(context.Context, string, time.Duration) (*storage.PresignedRequest, error) {
-	return nil, fmt.Errorf("memStore: PresignGet not used by the worker")
-}
-
-var _ storage.Storage = (*memStore)(nil)
 
 // recordingRepo keeps every variant row the worker inserts — and every
 // MarkFailed, which the poster path must never call: a poster is cosmetics,
@@ -156,18 +84,23 @@ func posterTask(t *testing.T, id uuid.UUID, key string) *asynq.Task {
 func TestPosterFromASynthesisedVideo(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
-	store, repo := newMemStore(), &recordingRepo{}
+	store, repo := storagetest.New(), &recordingRepo{}
 	th := NewThumbnailer(store, repo, nil)
 	id := uuid.New()
 
 	// Two seconds of the SMPTE-ish test pattern at 1280×720: wider than the
 	// poster's 640 cap, so the scale rule has something to do.
-	store.put("src/video", synthesise(t, dir, "video.mp4",
+	store.Seed("src/video", synthesise(t, dir, "video.mp4",
 		"-f", "lavfi", "-i", "testsrc=duration=2:size=1280x720:rate=10",
-		"-c:v", "mpeg4", "-q:v", "5", "-pix_fmt", "yuv420p"))
+		"-c:v", "mpeg4", "-q:v", "5", "-pix_fmt", "yuv420p"), "video/mp4")
 
 	if err := th.Handle(context.Background(), posterTask(t, id, "src/video")); err != nil {
 		t.Fatalf("Handle: %v", err)
+	}
+	// The poster path reads the source and writes the poster — nothing else.
+	// In particular it never deletes: the source is the asset.
+	if got := strings.Join(store.Calls(), ","); got != "Get,Put" {
+		t.Fatalf("store calls = %s, want Get,Put", got)
 	}
 	if len(repo.variants) != 1 {
 		t.Fatalf("variant rows = %d, want exactly one poster", len(repo.variants))
@@ -183,7 +116,7 @@ func TestPosterFromASynthesisedVideo(t *testing.T) {
 	if ok, _ := store.Exists(context.Background(), key); !ok {
 		t.Fatalf("poster object %s was not uploaded", key)
 	}
-	if ct := store.types[key]; ct != "image/webp" {
+	if ct := store.ContentType(key); ct != "image/webp" {
 		t.Fatalf("poster uploaded as %q, want image/webp", ct)
 	}
 	if len(repo.failed) != 0 {
@@ -192,8 +125,8 @@ func TestPosterFromASynthesisedVideo(t *testing.T) {
 
 	// A clip narrower than the cap is never upscaled.
 	small := uuid.New()
-	store.put("src/small", synthesise(t, dir, "small.mp4",
-		"-f", "lavfi", "-i", "testsrc=duration=1:size=320x240:rate=10", "-c:v", "mpeg4", "-q:v", "5"))
+	store.Seed("src/small", synthesise(t, dir, "small.mp4",
+		"-f", "lavfi", "-i", "testsrc=duration=1:size=320x240:rate=10", "-c:v", "mpeg4", "-q:v", "5"), "video/mp4")
 	if err := th.Handle(context.Background(), posterTask(t, small, "src/small")); err != nil {
 		t.Fatalf("Handle (small): %v", err)
 	}
@@ -208,15 +141,18 @@ func TestPosterFromASynthesisedVideo(t *testing.T) {
 func TestAudioOnlyContainerSkipsThePosterWithoutFailing(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
-	store, repo := newMemStore(), &recordingRepo{}
+	store, repo := storagetest.New(), &recordingRepo{}
 	th := NewThumbnailer(store, repo, nil)
 	id := uuid.New()
 
-	store.put("src/audio", synthesise(t, dir, "audio.mp4",
-		"-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-c:a", "aac"))
+	store.Seed("src/audio", synthesise(t, dir, "audio.mp4",
+		"-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-c:a", "aac"), "video/mp4")
 
 	if err := th.Handle(context.Background(), posterTask(t, id, "src/audio")); err != nil {
 		t.Fatalf("Handle must swallow the skip, got %v", err)
+	}
+	if got := strings.Join(store.Calls(), ","); got != "Get" {
+		t.Fatalf("store calls = %s, want the source read and nothing written", got)
 	}
 	if len(repo.variants) != 0 {
 		t.Fatalf("a poster row was written for an audio-only container: %+v", repo.variants)
@@ -231,12 +167,15 @@ func TestAudioOnlyContainerSkipsThePosterWithoutFailing(t *testing.T) {
 
 // A missing source is the same story: warn, return nil, write nothing.
 func TestMissingSourceIsNonFatal(t *testing.T) {
-	store, repo := newMemStore(), &recordingRepo{}
+	store, repo := storagetest.New(), &recordingRepo{}
 	th := NewThumbnailer(store, repo, nil)
 	if err := th.Handle(context.Background(), posterTask(t, uuid.New(), "src/nope")); err != nil {
 		t.Fatalf("Handle must swallow a download failure, got %v", err)
 	}
 	if len(repo.variants) != 0 || len(repo.failed) != 0 {
 		t.Fatalf("a download failure wrote something: variants %+v, failed %v", repo.variants, repo.failed)
+	}
+	if got := strings.Join(store.Calls(), ","); got != "Get" {
+		t.Fatalf("store calls = %s, want the failed read and nothing else", got)
 	}
 }

@@ -51,10 +51,10 @@ was checked, and code moves.
    an EXIF fixture with the standard library — needs a checked-in JPEG or a
    tiny writer) and `comic.RunImport` — the largest function in that module,
    reachable only with an object store, a tenant runner, a real zip and
-   wall-clock sleeps — it needs a fake `storage.Storage` it can import, which
-   means a `platform/storage/storagetest` package: the media tests hold two
-   unexported copies today (`media/service_test.go`, `media/worker/
-   poster_fixture_test.go`), a template, not a dependency. *Closes when:* an
+   wall-clock sleeps — it needs a fake `storage.Storage` it can import.
+   That fake exists since 2026-09-19: `platform/storage/storagetest.MemStore`
+   (the media tests' two unexported copies, folded into one owner with its
+   semantics pinned by its own tests), so this half is unblocked. *Closes when:* an
    orientation fixture and `RunImport` with a fake store are under test; `transcode.go`'s HLS output is out of this line's scope (its own item
    when someone needs it).
 10. *(closed 2026-09-19 — see § Closed.)*
