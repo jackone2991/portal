@@ -18,8 +18,12 @@ type Querier interface {
 	// Create one journal entry. asset_ids is the Entry's Attachments in display
 	// order (SPEC-12 T1) — validated as a whole by the service through the media
 	// module's public lookup before this runs; an empty array is a text-only Entry.
-	// occurred_at is resolved by the service (defaults to now(); backdating/
-	// future-dating unlimited).
+	// The Location is three all-or-nothing columns (0045, SPEC-12 T3): all NULL for
+	// none, all set for one — the service hands over a whole Location or nil, so
+	// the CHECK never fires from here. Coordinates arrive as float8 (what sqlc types
+	// a *float64 param as) and are assigned into numeric(7,4), which rounds to four
+	// places; the RETURNING row carries what was stored. occurred_at is resolved by
+	// the service (defaults to now(); backdating/future-dating unlimited).
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (JournalEntry, error)
 	// Owner-scoped delete. RETURNING id yields no row when the id is missing or owned
 	// by another user → the handler answers an idempotent 404; a matched row → 204.
@@ -46,17 +50,21 @@ type Querier interface {
 	// Keyset page for the owner, newest first. A NULL @cursor_occurred_at starts at
 	// the top; the (occurred_at, id) keyset is backed by journal_entries_user_cursor_idx.
 	ListEntriesByUserCursor(ctx context.Context, arg ListEntriesByUserCursorParams) ([]JournalEntry, error)
-	// Merged timeline. Journal items carry their entry body/mood/asset_ids (LEFT
-	// JOIN — the same shapes as the Entry itself, so one renderer serves both,
-	// SPEC-12); system items leave those NULL and render compact from payload (P0.2).
+	// Merged timeline. Journal items carry their entry body/mood/asset_ids and the
+	// three Location columns (LEFT JOIN — the same shapes as the Entry itself, so
+	// one renderer serves both, SPEC-12); system items leave those NULL and render
+	// compact from payload (P0.2).
 	ListStreamCursor(ctx context.Context, arg ListStreamCursorParams) ([]ListStreamCursorRow, error)
-	// Partial update of any subset of {body_md, mood, asset_ids, occurred_at}. A
-	// NULL arg leaves the column unchanged (COALESCE), so nil pointers from the
-	// service mean "keep". asset_ids REPLACES the whole list when present — an
-	// empty array (not NULL) clears it (SPEC-12 T1). updated_at always advances;
-	// occurred_at is only moved when the caller edits it, so an entry keeps its
-	// timeline position unless occurred_at itself changed. Owner-scoped; no matching
-	// row → ErrEntryNotFound (404, never leaks existence).
+	// Partial update of any subset of {body_md, mood, asset_ids, location,
+	// occurred_at}. A NULL arg leaves the column unchanged (COALESCE), so nil
+	// pointers from the service mean "keep". asset_ids REPLACES the whole list when
+	// present — an empty array (not NULL) clears it (SPEC-12 T1). The Location
+	// cannot use COALESCE — NULL is how it is CLEARED — so @set_location says
+	// whether the three location args apply at all: false keeps them, true writes
+	// them as sent (all NULL = clear, all set = replace; SPEC-12 T3). updated_at
+	// always advances; occurred_at is only moved when the caller edits it, so an
+	// entry keeps its timeline position unless occurred_at itself changed.
+	// Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
 	PatchEntry(ctx context.Context, arg PatchEntryParams) (JournalEntry, error)
 	// A journal edit moves its stream row to the edited position (P0.1a).
 	UpdateStreamOccurredAt(ctx context.Context, arg UpdateStreamOccurredAtParams) error

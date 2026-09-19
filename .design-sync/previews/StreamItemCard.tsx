@@ -26,6 +26,16 @@ const journal = {
   mood: "good",
 };
 
+// A placed Entry: the Location arrives as a field on the item (SPEC-12 T3) and
+// renders as the pin chip that opens the map — never parsed out of the body.
+const placed = {
+  ...journal,
+  id: "s3",
+  ref_id: "e3",
+  body_md: "Sáng nay đi bộ quanh hồ.",
+  location: { name: "Hoàn Kiếm", lat: 21.0286, lon: 105.8506 },
+};
+
 const system = {
   id: "s2",
   source_module: "music",
@@ -44,6 +54,8 @@ const handlers = {
 };
 
 export const JournalItem = () => frame(<StreamItemCard item={journal} displayName="Nguyễn Lâm" {...handlers} />);
+
+export const PlacedItem = () => frame(<StreamItemCard item={placed} displayName="Nguyễn Lâm" {...handlers} />);
 
 // A system item: no body of its own, just what happened and a way back to it.
 export const SystemItem = () => frame(<StreamItemCard item={system} displayName="Nguyễn Lâm" {...handlers} />);

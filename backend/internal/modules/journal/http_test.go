@@ -377,3 +377,149 @@ func TestHTTPTextOnlyCreateSkipsLookup(t *testing.T) {
 		t.Fatalf("GetAsset calls = %d, want 0", len(media.calls))
 	}
 }
+
+// ── Location (SPEC-12 T3, #12) ──────────────────────────────────────
+
+// locationOf reads the `location` member, which must be PRESENT on every Entry
+// and journal stream item — an object or null, never absent.
+func locationOf(t *testing.T, m map[string]any) map[string]any {
+	t.Helper()
+	raw, present := m["location"]
+	if !present {
+		t.Fatalf("location is absent from %v; want an object or null", m)
+	}
+	if raw == nil {
+		return nil
+	}
+	obj, ok := raw.(map[string]any)
+	if !ok {
+		t.Fatalf("location = %#v, want an object or null", raw)
+	}
+	return obj
+}
+
+func wantLocation(t *testing.T, got map[string]any, name string, lat, lon float64) {
+	t.Helper()
+	if got == nil {
+		t.Fatalf("location = null, want {%q %v %v}", name, lat, lon)
+	}
+	if got["name"] != name || got["lat"] != lat || got["lon"] != lon {
+		t.Fatalf("location = %v, want {%q %v %v}", got, name, lat, lon)
+	}
+}
+
+// A valid Location is stored, comes back on the create response, on GET, and
+// on the stream item in the same shape; an Entry without one carries null.
+func TestHTTPLocationStoredAndSharedShape(t *testing.T) {
+	h, repo, _ := newHTTP(t)
+	owner := uuid.New()
+
+	placed := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries",
+		`{"body_md":"phở sáng","location":{"name":"  Phở Thìn  ","lat":21.0285,"lon":105.8542}}`), http.StatusCreated)
+	wantLocation(t, locationOf(t, placed), "Phở Thìn", 21.0285, 105.8542) // name trimmed
+	e := repo.rows[uuid.MustParse(placed["id"].(string))]
+	if e.Location == nil || e.Location.Name != "Phở Thìn" || e.Location.Lat != 21.0285 || e.Location.Lon != 105.8542 {
+		t.Fatalf("stored location = %+v", e.Location)
+	}
+
+	plain := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"no place"}`), http.StatusCreated)
+	if locationOf(t, plain) != nil {
+		t.Fatalf("location = %v, want null", plain["location"])
+	}
+
+	fetched := entryOut(t, do(t, h, owner, http.MethodGet, "/journal/entries/"+placed["id"].(string), ""), http.StatusOK)
+	wantLocation(t, locationOf(t, fetched), "Phở Thìn", 21.0285, 105.8542)
+
+	page := entryOut(t, do(t, h, owner, http.MethodGet, "/stream", ""), http.StatusOK)
+	items, _ := page["items"].([]any)
+	seen := 0
+	for _, it := range items {
+		m := it.(map[string]any)
+		switch m["ref_id"] {
+		case placed["id"]:
+			wantLocation(t, locationOf(t, m), "Phở Thìn", 21.0285, 105.8542)
+			seen++
+		case plain["id"]:
+			if locationOf(t, m) != nil {
+				t.Fatalf("stream item location = %v, want null", m["location"])
+			}
+			seen++
+		}
+	}
+	if seen != 2 {
+		t.Fatalf("matched %d journal stream items, want 2", seen)
+	}
+}
+
+// Every way a Location can be wrong is 422 journal/invalid-location and
+// nothing is stored.
+func TestHTTPInvalidLocationIsRefused(t *testing.T) {
+	cases := []struct{ name, location string }{
+		{"name only", `{"name":"Hà Nội"}`},
+		{"coordinates only", `{"lat":21.0285,"lon":105.8542}`},
+		{"empty name", `{"name":"","lat":21.0285,"lon":105.8542}`},
+		{"blank name", `{"name":"   ","lat":21.0285,"lon":105.8542}`},
+		{"latitude too far north", `{"name":"x","lat":90.0001,"lon":0}`},
+		{"latitude too far south", `{"name":"x","lat":-91,"lon":0}`},
+		{"longitude too far east", `{"name":"x","lat":0,"lon":180.5}`},
+		{"longitude too far west", `{"name":"x","lat":0,"lon":-181}`},
+		{"latitude not a number", `{"name":"x","lat":"21","lon":105}`},
+		{"not an object", `"Hà Nội"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, repo, _ := newHTTP(t)
+			rec := do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x","location":`+tc.location+`}`)
+			problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-location")
+			if len(repo.rows) != 0 {
+				t.Fatalf("stored %d rows, want nothing stored", len(repo.rows))
+			}
+		})
+	}
+}
+
+// PATCH: an object sets, null clears, absent keeps — and a refused patch
+// leaves the stored Location untouched.
+func TestHTTPPatchLocationSetClearKeep(t *testing.T) {
+	h, repo, _ := newHTTP(t)
+	owner := uuid.New()
+	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t"}`), http.StatusCreated)["id"].(string)
+
+	out := entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"Đà Lạt","lat":11.9404,"lon":108.4583}}`), http.StatusOK)
+	wantLocation(t, locationOf(t, out), "Đà Lạt", 11.9404, 108.4583)
+
+	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
+	wantLocation(t, locationOf(t, out), "Đà Lạt", 11.9404, 108.4583) // absent keeps
+
+	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"","lat":1,"lon":1}}`), http.StatusUnprocessableEntity, "journal/invalid-location")
+	if e := repo.rows[uuid.MustParse(id)]; e.Location == nil || e.Location.Name != "Đà Lạt" {
+		t.Fatalf("a refused patch changed the stored location to %+v", e.Location)
+	}
+
+	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":null}`), http.StatusOK)
+	if locationOf(t, out) != nil {
+		t.Fatalf("after clearing location = %v, want null", out["location"])
+	}
+	if e := repo.rows[uuid.MustParse(id)]; e.Location != nil {
+		t.Fatalf("stored location after clear = %+v, want nil", e.Location)
+	}
+}
+
+// A Location alone does not make an Entry (SPEC-12 story 7): with neither text
+// nor an Attachment it is the same 422 journal/invalid-body as an empty one,
+// on create and on a patch whose result would be place-only.
+func TestHTTPLocationAloneIsNotAnEntry(t *testing.T) {
+	h, repo, media := newHTTP(t)
+	owner := uuid.New()
+	loc := `{"name":"Hà Nội","lat":21.0285,"lon":105.8542}`
+
+	problem(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	problem(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"  ","asset_ids":[],"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	if len(repo.rows) != 0 {
+		t.Fatalf("stored %d rows, want none", len(repo.rows))
+	}
+
+	a := media.readyImage(owner)
+	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`,"location":`+loc+`}`), http.StatusCreated)["id"].(string)
+	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+}

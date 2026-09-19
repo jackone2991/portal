@@ -206,15 +206,18 @@ type ComicSyncSource struct {
 }
 
 type JournalEntry struct {
-	ID         pgtype.UUID        `json:"id"`
-	UserID     pgtype.UUID        `json:"user_id"`
-	BodyMd     string             `json:"body_md"`
-	Mood       *string            `json:"mood"`
-	AssetIds   []pgtype.UUID      `json:"asset_ids"`
-	OccurredAt pgtype.Timestamptz `json:"occurred_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
-	TenantID   pgtype.UUID        `json:"tenant_id"`
+	ID           pgtype.UUID        `json:"id"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	BodyMd       string             `json:"body_md"`
+	Mood         *string            `json:"mood"`
+	AssetIds     []pgtype.UUID      `json:"asset_ids"`
+	OccurredAt   pgtype.Timestamptz `json:"occurred_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
+	LocationName *string            `json:"location_name"`
+	LocationLat  pgtype.Numeric     `json:"location_lat"`
+	LocationLon  pgtype.Numeric     `json:"location_lon"`
 }
 
 type LayoutMenuItem struct {

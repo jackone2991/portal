@@ -2,34 +2,35 @@
 // Location — derived in ONE place, so the cards never know where those come
 // from.
 //
-// Attachments come from the Entry's `asset_ids` column (SPEC-12 T1); the
-// Location still comes out of the markdown body via `attachments.ts` until T3
-// gives it columns — that switch changes only this file, and every card that
-// reads through it follows untouched.
+// Since SPEC-12 T1/T3 all three are columns on the Entry — `body_md` is plain
+// markdown, `asset_ids` the Attachments, `location` the Location — and the
+// journal Entry and the journal stream item carry them in the same shape. The
+// markdown-link workaround that once smuggled the photo and the place through
+// the body is gone (migration 0044/0045 cleaned every row); this module is
+// where it would have to come back, and it must not.
 
-import { decodeBody } from "./attachments";
 import type { Location } from "./geo";
 
 /** The wire fields a card may receive — a journal Entry or a journal stream item. */
 export interface EntryLike {
   body_md?: string | null;
   asset_ids?: string[] | null;
+  location?: Location | null;
 }
 
 export interface EntryPresentation {
   /** The Entry's Attachments — Asset ids in display order. */
   assetIds: string[];
   location: Location | null;
-  /** The body with any location markup removed — what the author typed. */
+  /** What the author typed — plain markdown, nothing encoded in it. */
   text: string;
 }
 
 export function presentEntry(entry: EntryLike): EntryPresentation {
-  const body = decodeBody(entry.body_md ?? "");
   return {
     assetIds: entry.asset_ids ?? [],
-    location: body.location,
-    text: body.text,
+    location: entry.location ?? null,
+    text: (entry.body_md ?? "").trim(),
   };
 }
 

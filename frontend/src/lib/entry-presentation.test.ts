@@ -34,4 +34,17 @@ describe("presentEntry", () => {
     expect(presentEntry({ body_md: "hi" }).assetIds).toEqual([]);
     expect(presentEntry({ body_md: "hi", asset_ids: null }).assetIds).toEqual([]);
   });
+
+  it("reads the Location from the field and tolerates its absence", () => {
+    const loc = { name: "Hoàn Kiếm", lat: 21.0286, lon: 105.8506 };
+    expect(presentEntry({ body_md: "hi", location: loc }).location).toEqual(loc);
+    expect(presentEntry({ body_md: "hi" }).location).toBeNull();
+    expect(presentEntry({ body_md: "hi", location: null }).location).toBeNull();
+  });
+
+  it("leaves the body alone — a link-shaped body is text, not a Location", () => {
+    const shown = presentEntry({ body_md: "  see [Hoàn Kiếm](geo:21.0286,105.8506)  " });
+    expect(shown.text).toBe("see [Hoàn Kiếm](geo:21.0286,105.8506)");
+    expect(shown.location).toBeNull();
+  });
 });

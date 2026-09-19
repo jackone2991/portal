@@ -74,8 +74,14 @@ export function latToTileY(lat: number, z: number): number {
   return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 2 ** z;
 }
 
+/**
+ * Wraps into [−180, 180): the map pans past the antimeridian (tile x is not
+ * clamped, so a pin dropped there would otherwise read 190°E), and the server
+ * refuses a Location off the Earth (SPEC-12 T3, `journal/invalid-location`).
+ */
 export function tileXToLon(x: number, z: number): number {
-  return (x / 2 ** z) * 360 - 180;
+  const lon = (x / 2 ** z) * 360 - 180;
+  return ((((lon + 180) % 360) + 360) % 360) - 180;
 }
 
 export function tileYToLat(y: number, z: number): number {

@@ -23,12 +23,43 @@ type Handler struct {
 
 // entryReq is the create/patch body. Every field is a pointer so absence can be
 // told from an explicit value: on PATCH a nil field is "keep", and a present
-// asset_ids (even `[]`) replaces the whole list (SPEC-12 T1).
+// asset_ids (even `[]`) replaces the whole list (SPEC-12 T1). Location is kept
+// raw because it has THREE wire states — absent (keep), `null` (clear), an
+// object (set) — and a *struct collapses the first two (SPEC-12 T3).
 type entryReq struct {
-	BodyMd     *string    `json:"body_md"`
-	Mood       *string    `json:"mood"`
-	OccurredAt *time.Time `json:"occurred_at"`
-	AssetIDs   *[]string  `json:"asset_ids"`
+	BodyMd     *string         `json:"body_md"`
+	Mood       *string         `json:"mood"`
+	OccurredAt *time.Time      `json:"occurred_at"`
+	AssetIDs   *[]string       `json:"asset_ids"`
+	Location   json.RawMessage `json:"location"`
+}
+
+// locationReq is the wire Location with every field optional, so a name-only
+// or coordinates-only object is detectable as such rather than defaulting to
+// "" / 0 and slipping through as a place at the equator.
+type locationReq struct {
+	Name *string  `json:"name"`
+	Lat  *float64 `json:"lat"`
+	Lon  *float64 `json:"lon"`
+}
+
+// location decodes the raw member: (set=false) when absent, (set=true, nil)
+// for `null`, (set=true, loc) for a whole object. Anything else — a partial
+// object, a wrong type, a bare string — is ErrInvalidLocation (422), because a
+// client that sent a location and got a 400 could not tell which field was
+// wrong; the bounds are the service's.
+func (b *entryReq) location() (set bool, loc *Location, err error) {
+	if len(b.Location) == 0 {
+		return false, nil, nil
+	}
+	if string(b.Location) == "null" {
+		return true, nil, nil
+	}
+	var l locationReq
+	if err := json.Unmarshal(b.Location, &l); err != nil || l.Name == nil || l.Lat == nil || l.Lon == nil {
+		return true, nil, ErrInvalidLocation
+	}
+	return true, &Location{Name: *l.Name, Lat: *l.Lat, Lon: *l.Lon}, nil
 }
 
 // assetIDs parses the wire list. A string that is not a uuid cannot be an Asset
@@ -66,7 +97,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
-	p := CreateParams{UserID: uid, Mood: body.Mood, OccurredAt: body.OccurredAt}
+	_, loc, err := body.location() // on create, absent and null are the same: no Location
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	p := CreateParams{UserID: uid, Mood: body.Mood, OccurredAt: body.OccurredAt, Location: loc}
 	if body.BodyMd != nil {
 		p.BodyMd = *body.BodyMd // absent = "" — legal only with an Attachment; the service decides
 	}
@@ -150,13 +186,20 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
+	setLoc, loc, err := body.location()
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
 	entry, err := h.svc.Patch(r.Context(), PatchParams{
-		UserID:     uid,
-		ID:         id,
-		BodyMd:     body.BodyMd,
-		Mood:       body.Mood,
-		OccurredAt: body.OccurredAt,
-		AssetIDs:   ids,
+		UserID:      uid,
+		ID:          id,
+		BodyMd:      body.BodyMd,
+		Mood:        body.Mood,
+		OccurredAt:  body.OccurredAt,
+		AssetIDs:    ids,
+		SetLocation: setLoc,
+		Location:    loc,
 	})
 	if err != nil {
 		writeJournalErr(w, err)
@@ -209,6 +252,7 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 			m["body_md"] = c.BodyMd
 			m["mood"] = c.Mood
 			m["asset_ids"] = uuidStrings(c.AssetIDs) // same shape as the Entry (SPEC-12 story 32)
+			m["location"] = locationJSON(c.Location)
 		} else {
 			m["title"] = c.Title
 			if c.Href != "" {
@@ -232,6 +276,7 @@ func entryJSON(e Entry) map[string]any {
 		"body_md":     e.BodyMd,
 		"mood":        e.Mood,
 		"asset_ids":   uuidStrings(e.AssetIDs),
+		"location":    locationJSON(e.Location),
 		"occurred_at": e.OccurredAt.Format(time.RFC3339),
 		"created_at":  e.CreatedAt.Format(time.RFC3339),
 		"updated_at":  e.UpdatedAt.Format(time.RFC3339),
@@ -246,6 +291,15 @@ func uuidStrings(ids []uuid.UUID) []string {
 		out = append(out, id.String())
 	}
 	return out
+}
+
+// locationJSON renders the Location member: an object, or an explicit null —
+// the key is always present so a client can read it without a guard.
+func locationJSON(l *Location) any {
+	if l == nil {
+		return nil
+	}
+	return map[string]any{"name": l.Name, "lat": l.Lat, "lon": l.Lon}
 }
 
 // writeJournalErr maps a service error to its RFC 7807 Problem (§7 type URIs).
@@ -263,6 +317,8 @@ func writeJournalErr(w http.ResponseWriter, err error) {
 		// the id and the reason (SPEC-12 story 28) so the client can fix the
 		// right element of the list.
 		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-asset", "Invalid asset", "asset "+assetErr.ID+" "+assetErr.Reason)
+	case errors.Is(err, ErrInvalidLocation):
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-location", "Invalid location", "location must be an object with a non-empty name, lat in [-90, 90] and lon in [-180, 180] — or null to clear it")
 	case errors.Is(err, ErrBadCursor):
 		server.Problem(w, http.StatusBadRequest, "journal/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:

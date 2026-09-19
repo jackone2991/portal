@@ -75,7 +75,7 @@ func (f *fakeRepo) ListStream(_ context.Context, in StreamListInput) ([]StreamIt
 		if k.src == "journal" { // the LEFT JOIN onto journal_entries
 			if e, ok := f.rows[k.ref]; ok {
 				body := e.BodyMd
-				it.BodyMd, it.Mood, it.AssetIDs = &body, e.Mood, e.AssetIDs
+				it.BodyMd, it.Mood, it.AssetIDs, it.Location = &body, e.Mood, e.AssetIDs, e.Location
 			}
 		}
 		out = append(out, it)
@@ -99,7 +99,7 @@ func (f *fakeRepo) CreateEntry(_ context.Context, in CreateEntryInput) (Entry, e
 		return Entry{}, f.createErr
 	}
 	e := Entry{
-		ID: uuid.New(), UserID: in.UserID, BodyMd: in.BodyMd, Mood: in.Mood, AssetIDs: in.AssetIDs,
+		ID: uuid.New(), UserID: in.UserID, BodyMd: in.BodyMd, Mood: in.Mood, AssetIDs: in.AssetIDs, Location: in.Location,
 		OccurredAt: in.OccurredAt, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	f.rows[e.ID] = e
@@ -153,6 +153,9 @@ func (f *fakeRepo) PatchEntry(_ context.Context, in PatchEntryInput) (Entry, err
 	}
 	if in.AssetIDs != nil {
 		e.AssetIDs = *in.AssetIDs
+	}
+	if in.SetLocation {
+		e.Location = in.Location // nil clears
 	}
 	if in.OccurredAt != nil {
 		e.OccurredAt = *in.OccurredAt

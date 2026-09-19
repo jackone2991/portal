@@ -42,18 +42,23 @@ type CreateParams struct {
 	Mood       *string    // nil = absent (no mood)
 	OccurredAt *time.Time // nil = default now
 	AssetIDs   []uuid.UUID
+	Location   *Location // nil = none; validated by the CHECK's rules (SPEC-12 T3)
 }
 
 // PatchParams is the service-level partial update. A nil pointer means "leave
 // unchanged". AssetIDs, when present, REPLACES the whole list — a pointer to an
-// empty slice clears it — and is validated exactly as on create.
+// empty slice clears it — and is validated exactly as on create. The Location
+// travels as a flag plus a value (see PatchEntryInput): SetLocation false =
+// keep; true with nil = clear; true with a Location = set, validated as on create.
 type PatchParams struct {
-	UserID     uuid.UUID
-	ID         uuid.UUID
-	BodyMd     *string
-	Mood       *string
-	OccurredAt *time.Time
-	AssetIDs   *[]uuid.UUID
+	UserID      uuid.UUID
+	ID          uuid.UUID
+	BodyMd      *string
+	Mood        *string
+	OccurredAt  *time.Time
+	AssetIDs    *[]uuid.UUID
+	SetLocation bool
+	Location    *Location
 }
 
 // ListResult is a keyset page plus the cursor for the next one ("" = last page).
@@ -76,6 +81,10 @@ func (s *Service) Create(ctx context.Context, p CreateParams) (Entry, error) {
 	if err := s.validateAssets(ctx, p.UserID, p.AssetIDs); err != nil {
 		return Entry{}, err
 	}
+	loc, err := normalizeLocation(p.Location)
+	if err != nil {
+		return Entry{}, err
+	}
 	occurredAt := time.Now().UTC()
 	if p.OccurredAt != nil {
 		occurredAt = *p.OccurredAt // backdating / future-dating both unlimited
@@ -86,6 +95,7 @@ func (s *Service) Create(ctx context.Context, p CreateParams) (Entry, error) {
 		BodyMd:     p.BodyMd,
 		Mood:       mood,
 		AssetIDs:   nonNil(p.AssetIDs),
+		Location:   loc,
 		OccurredAt: occurredAt,
 	})
 	if err != nil {
@@ -131,13 +141,18 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, cursor string, lim
 }
 
 // Patch applies a partial update (any subset of body_md/mood/asset_ids/
-// occurred_at), owner-scoped. The "text or Attachment" rule is judged on the
-// RESULT: when either half is being changed the current row is read first so a
-// patch cannot empty an Entry by clearing the half it is not sending. No
-// entry_updated event is emitted (P0.3 — the only planned consumer maintains its
-// projection transactionally in-module).
+// location/occurred_at), owner-scoped. The "text or Attachment" rule is judged
+// on the RESULT: when either half is being changed the current row is read
+// first so a patch cannot empty an Entry by clearing the half it is not
+// sending. The Location plays no part in that rule — a place alone is not an
+// Entry (SPEC-12 story 7). No entry_updated event is emitted (P0.3 — the only
+// planned consumer maintains its projection transactionally in-module).
 func (s *Service) Patch(ctx context.Context, p PatchParams) (Entry, error) {
 	mood, err := normalizeMood(p.Mood)
+	if err != nil {
+		return Entry{}, err
+	}
+	loc, err := normalizeLocation(p.Location)
 	if err != nil {
 		return Entry{}, err
 	}
@@ -165,12 +180,14 @@ func (s *Service) Patch(ctx context.Context, p PatchParams) (Entry, error) {
 		p.AssetIDs = &ids
 	}
 	return s.repo.PatchEntry(ctx, PatchEntryInput{
-		UserID:     p.UserID,
-		ID:         p.ID,
-		BodyMd:     p.BodyMd,
-		Mood:       mood,
-		AssetIDs:   p.AssetIDs,
-		OccurredAt: p.OccurredAt,
+		UserID:      p.UserID,
+		ID:          p.ID,
+		BodyMd:      p.BodyMd,
+		Mood:        mood,
+		AssetIDs:    p.AssetIDs,
+		SetLocation: p.SetLocation,
+		Location:    loc,
+		OccurredAt:  p.OccurredAt,
 	})
 }
 
@@ -259,6 +276,23 @@ func nonNil(ids []uuid.UUID) []uuid.UUID {
 		return []uuid.UUID{}
 	}
 	return ids
+}
+
+// normalizeLocation trims the name and enforces the 0045 CHECK's rules — a
+// non-empty trimmed name, latitude in [−90, 90], longitude in [−180, 180] — so
+// a bad place is a 422 journal/invalid-location here, never a 500 from the
+// database. A nil Location is "none" and passes through. All-or-nothing
+// (name-only, coordinates-only) is the handler's to catch: by the time a
+// Location reaches the service it is either whole or nil.
+func normalizeLocation(l *Location) (*Location, error) {
+	if l == nil {
+		return nil, nil
+	}
+	name := strings.TrimSpace(l.Name)
+	if name == "" || l.Lat < -90 || l.Lat > 90 || l.Lon < -180 || l.Lon > 180 {
+		return nil, ErrInvalidLocation
+	}
+	return &Location{Name: name, Lat: l.Lat, Lon: l.Lon}, nil
 }
 
 // normalizeMood trims a present mood and enforces 1–80 chars (matching the §6

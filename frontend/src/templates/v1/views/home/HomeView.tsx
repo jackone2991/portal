@@ -60,6 +60,7 @@ export function HomeView() {
         body_md: input.body_md ?? "",
         mood: null,
         asset_ids: input.asset_ids ?? [],
+        location: input.location ?? null,
       };
       qc.setQueryData<InfiniteData<StreamPage>>(STREAM_KEY, (data) => prepend(data, optimistic));
       return { previous };
@@ -130,7 +131,11 @@ export function HomeView() {
     setComposerError(null);
     setBodyMd("");
     try {
-      await create.mutateAsync({ body_md: draft.bodyMd.trim(), asset_ids: draft.assetIds });
+      await create.mutateAsync({
+        body_md: draft.bodyMd.trim(),
+        asset_ids: draft.assetIds,
+        location: draft.location,
+      });
       return true;
     } catch {
       return false;

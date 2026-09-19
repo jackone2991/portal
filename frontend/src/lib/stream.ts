@@ -1,6 +1,7 @@
 // Data layer for the life-stream home (SPEC-06). The merged timeline read.
 
 import { api } from "./api-client";
+import type { Location } from "./geo";
 
 export interface StreamItem {
   id: string;
@@ -15,6 +16,8 @@ export interface StreamItem {
   mood?: string | null;
   /** The Entry's Attachments in display order (SPEC-12 T1); `[]` when none. */
   asset_ids?: string[] | null;
+  /** The Entry's Location (SPEC-12 T3); null when none. */
+  location?: Location | null;
   // system items
   title?: string | null;
   href?: string | null;

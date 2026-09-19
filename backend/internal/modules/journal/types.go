@@ -20,7 +20,11 @@ var (
 	// ErrInvalidAsset means the Attachment list as a whole is invalid (SPEC-12).
 	// The service wraps it in an AssetError naming the offending id and reason.
 	ErrInvalidAsset = errors.New("journal: invalid asset")
-	ErrBadCursor    = errors.New("journal: invalid cursor")
+	// ErrInvalidLocation is a Location that breaks the 0045 CHECK rules: a
+	// name without a point or a point without a name, a blank name, or a point
+	// off the Earth (SPEC-12 T3).
+	ErrInvalidLocation = errors.New("journal: invalid location")
+	ErrBadCursor       = errors.New("journal: invalid cursor")
 )
 
 // AssetError is ErrInvalidAsset with the id and the reason a client needs to
@@ -44,6 +48,16 @@ const (
 	maxAssetIDs = 10
 )
 
+// Location is where an Entry happened (SPEC-12 T3) — a property of the Entry,
+// not an Attachment. Stored as three all-or-nothing columns (0045); this is
+// the "all" half, nil is the "nothing" half. Coordinates are decimal degrees,
+// kept to four places.
+type Location struct {
+	Name string
+	Lat  float64
+	Lon  float64
+}
+
 // Entry is the journal module's internal record of one human-authored entry.
 type Entry struct {
 	ID         uuid.UUID
@@ -51,6 +65,7 @@ type Entry struct {
 	BodyMd     string
 	Mood       *string // nil = no mood set
 	AssetIDs   []uuid.UUID
+	Location   *Location // nil = no Location
 	OccurredAt time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -64,6 +79,7 @@ type CreateEntryInput struct {
 	BodyMd     string
 	Mood       *string
 	AssetIDs   []uuid.UUID
+	Location   *Location // validated; nil = none
 	OccurredAt time.Time
 }
 
@@ -71,13 +87,18 @@ type CreateEntryInput struct {
 // leaves the column unchanged (COALESCE in PatchEntry). AssetIDs is a pointer
 // to a slice on purpose: nil = keep, a pointer to an empty slice = clear — the
 // wire distinction between an absent `asset_ids` and `"asset_ids": []`.
+// The Location has three wire states — absent (keep), null (clear), object
+// (set) — so it travels as a flag plus a value: SetLocation false = keep;
+// true with a nil Location = clear; true with one = set (SPEC-12 T3).
 type PatchEntryInput struct {
-	UserID     uuid.UUID
-	ID         uuid.UUID
-	BodyMd     *string
-	Mood       *string
-	AssetIDs   *[]uuid.UUID
-	OccurredAt *time.Time
+	UserID      uuid.UUID
+	ID          uuid.UUID
+	BodyMd      *string
+	Mood        *string
+	AssetIDs    *[]uuid.UUID
+	SetLocation bool
+	Location    *Location
+	OccurredAt  *time.Time
 }
 
 // ListInput is the keyset read query (P0.2). A zero CursorAt means "first page".
@@ -113,8 +134,8 @@ type Repository interface {
 }
 
 // StreamItem is one row of the merged life-stream (SPEC-06). BodyMd/Mood/
-// AssetIDs are set only for journal items (joined from journal_entries); nil
-// for system items.
+// AssetIDs/Location are set only for journal items (joined from
+// journal_entries); nil for system items.
 type StreamItem struct {
 	ID           uuid.UUID
 	SourceModule string
@@ -125,6 +146,7 @@ type StreamItem struct {
 	BodyMd       *string
 	Mood         *string
 	AssetIDs     []uuid.UUID
+	Location     *Location
 }
 
 // MediaAPI is the slice of media/api journal needs: the Attachment lookup that

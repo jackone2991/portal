@@ -8,7 +8,6 @@ import { AttachPhotoPopup } from "../popup/AttachPhotoPopup";
 import { LocationPickerPopup } from "../popup/LocationPickerPopup";
 import { assetVariantURL } from "@/lib/media-assets";
 import { uploadImage } from "@/lib/media-upload";
-import { composeBody } from "@/lib/attachments";
 import {
   MAX_ATTACHMENTS,
   addPhotos,
@@ -44,18 +43,20 @@ import { locationLabel, type Location } from "@/lib/geo";
  *     picked twice is ignored, and Post waits until every tile is ready; the
  *     rules are `lib/composer-photos.ts`, this file only draws them.
  *   · pin    → {@link LocationPickerPopup} — search or drop a pin on the map.
- * The Attachments travel as the Entry's `asset_ids` (SPEC-12 T1); the Location
- * is still encoded into the body by `lib/attachments.ts` until T3 gives it
- * columns. Tagging friends stays inert — there is no people-tagging surface yet.
+ * The Attachments travel as the Entry's `asset_ids` (SPEC-12 T1) and the
+ * Location as its `location` (T3); the body is the text and nothing else.
+ * Tagging friends stays inert — there is no people-tagging surface yet.
  *
  * Controlled/presentational: the caller owns the draft and the mutation (D-32);
  * the attachments and the preview toggle are ephemeral UI state and stay local.
  */
 export interface ComposerDraft {
-  /** The body to post — the text plus the encoded Location, no photo markup. */
+  /** The body to post — plain markdown, exactly what was typed. */
   bodyMd: string;
   /** The Entry's Attachments in the order they were added — every one `ready`. */
   assetIds: string[];
+  /** The Entry's Location, or null for none. */
+  location: Location | null;
 }
 
 export interface ComposerProps {
@@ -104,9 +105,9 @@ export function Composer({
   // removed, posted, or — whatever is left in the strip — on unmount.
   useEffect(() => () => members.current.forEach(release), []);
 
-  const composed = composeBody(bodyMd, location);
-  // Text or at least one Attachment, and every photo ready (SPEC-12 stories 7
-  // and 11) — what the server would refuse, said by the button first.
+  // Text or at least one Attachment — a Location alone is not an Entry — and
+  // every photo ready (SPEC-12 stories 7 and 11): what the server would
+  // refuse, said by the button first.
   const draftValid = canPost(bodyMd, photos);
   const postable = draftValid && !submitting;
   const waiting = photos.some((p) => p.status === "uploading" || p.status === "processing");
@@ -162,7 +163,7 @@ export function Composer({
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!postable) return;
-    const accepted = await onSubmit({ bodyMd: composed, assetIds: readyAssetIds(photos) });
+    const accepted = await onSubmit({ bodyMd, assetIds: readyAssetIds(photos), location });
     if (!accepted) return; // the parent has shown the error; the draft stays
     // Adds are frozen while submitting, so the strip is exactly what was posted.
     members.current.forEach(release);
@@ -228,8 +229,8 @@ export function Composer({
               className="min-h-[7rem] w-full whitespace-pre-wrap pt-2 text-sm"
               style={{ color: "var(--tpl-text)" }}
             >
-              {composed.trim() ? (
-                composed
+              {bodyMd.trim() ? (
+                bodyMd
               ) : photos.length > 0 ? null : ( // a photo-only draft previews as its tiles below
                 <span style={{ color: "var(--tpl-muted)" }}>Nothing to preview yet.</span>
               )}

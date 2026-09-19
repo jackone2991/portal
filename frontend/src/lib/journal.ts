@@ -11,6 +11,7 @@
 // two drift — change the contract first, regenerate, then mirror it here.
 
 import { api } from "./api-client";
+import type { Location } from "./geo";
 
 export interface JournalEntry {
   id: string;
@@ -19,6 +20,8 @@ export interface JournalEntry {
   mood: string | null;
   /** The Entry's Attachments — image Asset ids in display order (SPEC-12 T1). */
   asset_ids: string[];
+  /** Where the Entry happened (SPEC-12 T3); null when none. */
+  location: Location | null;
   /** User-editable "when this happened" — the timeline's sort key (§5 P0.2). */
   occurred_at: string;
   /** Audit timestamp only — never used for ordering (§5 P0.2). */
@@ -51,6 +54,13 @@ export interface CreateEntryInput {
    * nothing is stored. On PATCH it replaces the whole list (SPEC-12 T1).
    */
   asset_ids?: string[];
+  /**
+   * The Entry's Location: an object sets it, `null` clears it, absent keeps it
+   * (on PATCH). Name non-empty after trimming, lat in [−90, 90], lon in
+   * [−180, 180], else 422 `journal/invalid-location`. A Location alone does
+   * not make an Entry (SPEC-12 T3).
+   */
+  location?: Location | null;
   /** Omit to default to now server-side; backdating/future-dating unlimited (§5 P0.2). */
   occurred_at?: string;
 }
