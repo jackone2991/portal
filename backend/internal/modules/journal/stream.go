@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -169,9 +170,22 @@ func (s *Service) OnPlaybackCompleted(ctx context.Context, payload []byte) error
 	return s.insertSystem(ctx, payload, p.UserID, "media", "media:playback_completed", p.AssetID, time.Now())
 }
 
+// OnAssetDeleted is the media:asset_deleted consumer. Two things go with a
+// deleted Asset: its own stream card (P0.1), and its place in every Entry that
+// showed it — the Attachment is stripped from `asset_ids` so the card shows one
+// photo fewer, never a broken frame (SPEC-12 T4, story 21). An Entry left with
+// no Attachment and no text is kept: the text-or-Attachment rule guards user
+// writes, not this consumer (Further Notes).
+//
+// Both run inside the owner's tenant scope — the event carries the owner —
+// because both tables are RLS-fenced and the worker's role errors on an
+// unscoped touch. Idempotent by construction: a redelivery finds nothing to
+// delete and no row that still carries the id. A payload without an owner
+// cannot be scoped and is dropped rather than retried forever.
 func (s *Service) OnAssetDeleted(ctx context.Context, payload []byte) error {
 	var p struct {
 		AssetID string `json:"asset_id"`
+		OwnerID string `json:"owner_user_id"`
 	}
 	if err := json.Unmarshal(payload, &p); err != nil {
 		return nil
@@ -180,7 +194,24 @@ func (s *Service) OnAssetDeleted(ctx context.Context, payload []byte) error {
 	if err != nil {
 		return nil
 	}
-	return s.repo.DeleteStreamByRef(ctx, "media", assetID)
+	owner, err := uuid.Parse(p.OwnerID)
+	if err != nil {
+		log.Warn().Str("asset", p.AssetID).Msg("journal: asset_deleted without owner_user_id — dropped")
+		return nil
+	}
+	return s.runScoped(ctx, owner, func(ctx context.Context) error {
+		if err := s.repo.DeleteStreamByRef(ctx, "media", assetID); err != nil {
+			return err
+		}
+		n, err := s.repo.StripAssetFromEntries(ctx, owner, assetID)
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			log.Info().Str("asset", assetID.String()).Int("entries", n).Msg("journal: attachment stripped from entries")
+		}
+		return nil
+	})
 }
 
 func (s *Service) OnBankCreated(ctx context.Context, payload []byte) error {
@@ -190,13 +221,17 @@ func (s *Service) OnBankUpdated(ctx context.Context, payload []byte) error {
 	return s.bankUpsert(ctx, payload, true)
 }
 
+// OnBankDeleted removes the transaction's card. Scoped like the inserts: the
+// delete used to run bare, which under portal_app's RLS errors on every
+// delivery (found while scoping OnAssetDeleted for SPEC-12 T4).
 func (s *Service) OnBankDeleted(ctx context.Context, payload []byte) error {
 	userID, refID, _, ok := bankRef(payload)
 	if !ok {
 		return nil
 	}
-	_ = userID
-	return s.repo.DeleteStreamItem(ctx, "bank", "bank:transaction_created", refID)
+	return s.runScoped(ctx, userID, func(ctx context.Context) error {
+		return s.repo.DeleteStreamItem(ctx, "bank", "bank:transaction_created", refID)
+	})
 }
 
 func (s *Service) OnBirthdayUpcoming(ctx context.Context, payload []byte) error {

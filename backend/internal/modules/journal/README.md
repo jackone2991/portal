@@ -26,6 +26,12 @@ Owns the life-stream **write path** (SPEC-05): human-authored journal entries.
 
 - `journal:entry_created` `{entry_id, user_id, occurred_at}` — **emit-only**. Deliberately no `entry_updated`/`entry_deleted`: SPEC-06's projection lives in the same module and is maintained transactionally, not via the bus (P0.3).
 
+## Subscribes to
+
+The life-stream projection consumers (SPEC-06 P0.1b; wired in `cmd/worker`): `media:playback_completed`, `bank:transaction_created` / `_updated` / `_deleted`, `people:birthday_upcoming` — each writes or removes a `stream_items` row inside the target user's tenant scope.
+
+- `media:asset_deleted` `{asset_id, owner_user_id}` — removes the Asset's own stream card **and strips the id from `asset_ids` of every Entry of the owner that showed it** (SPEC-12 T4), so a card shows one photo fewer rather than a broken frame. Runs inside the owner's tenant scope (both tables are RLS-fenced; the worker's role errors on an unscoped touch), is idempotent (a redelivery finds no row still carrying the id), and keeps an Entry that ends up with neither text nor Attachment — the text-or-Attachment rule is for user writes, not for this consumer. An event without `owner_user_id` cannot be scoped and is dropped.
+
 ## Permissions
 
 `journal:read:own`, `journal:write:own`, `journal:delete:own` — seeded to the base `user` role by `0011` (`write` covers create + update).

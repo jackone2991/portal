@@ -169,6 +169,14 @@ func (a *Adapter) DeleteEntry(ctx context.Context, userID, id uuid.UUID) error {
 	})
 }
 
+// StripAssetFromEntries is the media:asset_deleted write (SPEC-12 T4). No tx of
+// its own: the consumer already runs it inside the owner's tenant scope, and
+// the single UPDATE is atomic by itself.
+func (a *Adapter) StripAssetFromEntries(ctx context.Context, userID, assetID uuid.UUID) (int, error) {
+	n, err := a.q.StripAssetFromEntries(ctx, StripAssetFromEntriesParams{AssetID: pgUUID(assetID), UserID: pgUUID(userID)})
+	return int(n), err
+}
+
 // ── stream projection (SPEC-06 P0.1b + P0.2) ─────────────────────────
 
 func (a *Adapter) InsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error {

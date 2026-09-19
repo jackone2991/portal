@@ -121,6 +121,11 @@ type Repository interface {
 	PatchEntry(ctx context.Context, in PatchEntryInput) (Entry, error)
 	// DeleteEntry is owner-scoped + idempotent; ErrEntryNotFound when nothing matched.
 	DeleteEntry(ctx context.Context, userID, id uuid.UUID) error
+	// StripAssetFromEntries removes one Asset id from the asset_ids of every
+	// Entry of the owner that carries it, keeping the order of the rest, and
+	// returns how many rows changed. Idempotent: a second call finds no row
+	// (SPEC-12 T4). Runs inside the owner's tenant scope on the worker.
+	StripAssetFromEntries(ctx context.Context, userID, assetID uuid.UUID) (int, error)
 
 	// ── life-stream projection (SPEC-06) ─────────────────────────────
 	// InsertStreamItem is idempotent (ON CONFLICT DO NOTHING); UpsertStreamItem

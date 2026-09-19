@@ -67,3 +67,15 @@ RETURNING *;
 DELETE FROM journal_entries
 WHERE id = $1 AND user_id = $2
 RETURNING id;
+
+-- name: StripAssetFromEntries :execrows
+-- media:asset_deleted (SPEC-12 T4): take one Asset out of the Attachments of
+-- every Entry of the owner that shows it. array_remove keeps the order of the
+-- rest; the WHERE keeps the update to rows that actually carry the id, which
+-- is what makes a redelivery a no-op (0 rows). An Entry may end up with '{}'
+-- and an empty body — kept, by design (the text-or-Attachment rule is the
+-- service's write rule, not a CHECK). Runs inside the owner's tenant scope.
+UPDATE journal_entries
+SET asset_ids  = array_remove(asset_ids, @asset_id::uuid),
+    updated_at = now()
+WHERE user_id = @user_id AND @asset_id::uuid = ANY (asset_ids);

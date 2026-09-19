@@ -66,6 +66,13 @@ type Querier interface {
 	// entry keeps its timeline position unless occurred_at itself changed.
 	// Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
 	PatchEntry(ctx context.Context, arg PatchEntryParams) (JournalEntry, error)
+	// media:asset_deleted (SPEC-12 T4): take one Asset out of the Attachments of
+	// every Entry of the owner that shows it. array_remove keeps the order of the
+	// rest; the WHERE keeps the update to rows that actually carry the id, which
+	// is what makes a redelivery a no-op (0 rows). An Entry may end up with '{}'
+	// and an empty body — kept, by design (the text-or-Attachment rule is the
+	// service's write rule, not a CHECK). Runs inside the owner's tenant scope.
+	StripAssetFromEntries(ctx context.Context, arg StripAssetFromEntriesParams) (int64, error)
 	// A journal edit moves its stream row to the edited position (P0.1a).
 	UpdateStreamOccurredAt(ctx context.Context, arg UpdateStreamOccurredAtParams) error
 	// Insert-or-refresh — a corrected payload/occurred_at must win (bank updated, P0.1).
