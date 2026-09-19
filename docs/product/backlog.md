@@ -41,13 +41,7 @@ was checked, and code moves.
    `lib/*.ts` clients import `components["schemas"][…]`, or the spec's `info`
    block stops promising a generated client.
 8. *(closed 2026-09-19 — see § Closed.)*
-8a. **The HTTP-contract helpers exist in nine copies** — `ctxUserKey`,
-    `requireAuth`, `currentUser`, `do`, `problem` (~70 lines) are pasted into
-    every `modules/<m>/http_test.go` (2026-09-19). `problem` encodes a contract
-    fact — the three members `shared/openapi.yaml` marks required — that should
-    have one owner (ADR-11). A `platform/server/servertest` package is legal
-    under depguard (platform may not import modules; a test helper needs
-    neither). *Closes when:* the nine files import one helper.
+8a. *(closed 2026-09-19 — see § Closed.)*
 9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
    (matrix SPEC-01 P0.1/P0.2), and `comic.RunImport` — the largest function in
    that module, reachable only with an object store, a tenant runner, a real
@@ -171,6 +165,12 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P1 #8a **HTTP-contract helpers in nine copies** — closed 2026-09-19:
+  `platform/server/servertest` (`RequireAuth`, `CurrentUser`, `Do`,
+  `Problem`) is the one owner; the nine `modules/<m>/http_test.go`
+  import it (journal wraps `RequireAuth` to add its tenant-scope marker).
+  `servertest_test.go` pins the helpers themselves against the real
+  `server.Problem` writer. MODULES.md §8 step 9 names it for the next module.
 - P1 #8 **HTTP contracts asserted for comic and bank only** — closed
   2026-09-19: movie, music, story, journal, people, social and notify carry
   the two tests over the real router with fakes (`modules/<m>/http_test.go`;

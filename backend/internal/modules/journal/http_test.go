@@ -30,19 +30,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/portal/backend/internal/platform/server/servertest"
 
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 )
-
-type ctxUserKey struct{}
 
 // ctxScopeKey stands in for the tenant transaction cmd/api's RequireTenant puts
 // on the request context: the test middleware sets it, and the fake media
 // lookup checks it arrived — the only observable proof that the service passed
 // the request context through rather than a fresh one.
 type ctxScopeKey struct{}
-
-const testUserHeader = "X-Test-User"
 
 // newHTTP mounts a real Module on a chi router over the in-memory fakes.
 func newHTTP(t *testing.T) (http.Handler, *fakeRepo, *fakeMedia) {
@@ -51,22 +48,16 @@ func newHTTP(t *testing.T) (http.Handler, *fakeRepo, *fakeMedia) {
 	mod, err := New(Deps{
 		Repo:  repo,
 		Media: media,
+		// servertest's identity, plus the scope marker the fake lookup checks for.
 		RequireAuth: func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if raw := r.Header.Get(testUserHeader); raw != "" {
-					if id, err := uuid.Parse(raw); err == nil {
-						ctx := context.WithValue(r.Context(), ctxUserKey{}, id)
-						ctx = context.WithValue(ctx, ctxScopeKey{}, id) // "the tenant scope is open"
-						r = r.WithContext(ctx)
-					}
+			return servertest.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if id, ok := servertest.CurrentUser(r.Context()); ok {
+					r = r.WithContext(context.WithValue(r.Context(), ctxScopeKey{}, id)) // "the tenant scope is open"
 				}
 				next.ServeHTTP(w, r)
-			})
+			}))
 		},
-		CurrentUser: func(ctx context.Context) (uuid.UUID, bool) {
-			id, ok := ctx.Value(ctxUserKey{}).(uuid.UUID)
-			return id, ok
-		},
+		CurrentUser: servertest.CurrentUser,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -74,44 +65,6 @@ func newHTTP(t *testing.T) (http.Handler, *fakeRepo, *fakeMedia) {
 	r := chi.NewRouter()
 	mod.MountHTTP(r)
 	return r, repo, media
-}
-
-func do(t *testing.T, h http.Handler, as uuid.UUID, method, path, body string) *httptest.ResponseRecorder {
-	t.Helper()
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
-	req.Header.Set(testUserHeader, as.String())
-	if body != "" {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, req)
-	return rec
-}
-
-// problem decodes an RFC 7807 body and asserts the shape the contract fixes:
-// the media type, and the three members shared/openapi.yaml marks required.
-func problem(t *testing.T, rec *httptest.ResponseRecorder, wantStatus int, wantType string) map[string]any {
-	t.Helper()
-	if rec.Code != wantStatus {
-		t.Fatalf("status = %d, want %d (body %s)", rec.Code, wantStatus, rec.Body.String())
-	}
-	if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "application/problem+json") {
-		t.Fatalf("Content-Type = %q, want application/problem+json", ct)
-	}
-	var p map[string]any
-	if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
-		t.Fatalf("body is not JSON: %v — %s", err, rec.Body.String())
-	}
-	if p["type"] != wantType {
-		t.Fatalf("type = %v, want %q", p["type"], wantType)
-	}
-	if s, _ := p["status"].(float64); int(s) != wantStatus {
-		t.Fatalf("status member = %v, want %d", p["status"], wantStatus)
-	}
-	if title, _ := p["title"].(string); title == "" {
-		t.Fatal("title is missing or empty")
-	}
-	return p
 }
 
 // entryOut decodes a 2xx Entry body.
@@ -152,7 +105,7 @@ func TestHTTPCreateStoresAttachmentsInOrder(t *testing.T) {
 	owner := uuid.New()
 	a, b, c := media.readyImage(owner), media.readyImage(owner), media.readyImage(owner)
 
-	rec := do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"three pictures","asset_ids":`+idsJSON(c, a, b)+`}`)
+	rec := servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"three pictures","asset_ids":`+idsJSON(c, a, b)+`}`)
 	out := entryOut(t, rec, http.StatusCreated)
 	if got, want := assetIDsOf(t, out), []string{c.String(), a.String(), b.String()}; strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Fatalf("asset_ids = %v, want %v (order preserved)", got, want)
@@ -209,8 +162,8 @@ func TestHTTPInvalidAttachmentListIsRefusedWhole(t *testing.T) {
 			h, repo, media := newHTTP(t)
 			ids, culprit := tc.ids(media)
 
-			rec := do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":`+idsJSON(ids...)+`}`)
-			p := problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-asset")
+			rec := servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":`+idsJSON(ids...)+`}`)
+			p := servertest.Problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-asset")
 			if detail, _ := p["detail"].(string); !strings.Contains(detail, culprit.String()) {
 				t.Fatalf("detail = %q, want it to name %s", detail, culprit)
 			}
@@ -225,8 +178,8 @@ func TestHTTPInvalidAttachmentListIsRefusedWhole(t *testing.T) {
 // that hides which element was wrong.
 func TestHTTPMalformedAssetIDNamesIt(t *testing.T) {
 	h, _, _ := newHTTP(t)
-	rec := do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":["not-a-uuid"]}`)
-	p := problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-asset")
+	rec := servertest.Do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":["not-a-uuid"]}`)
+	p := servertest.Problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-asset")
 	if detail, _ := p["detail"].(string); !strings.Contains(detail, "not-a-uuid") {
 		t.Fatalf("detail = %q, want it to name the bad element", detail)
 	}
@@ -239,10 +192,10 @@ func TestHTTPPatchReplacesWholeList(t *testing.T) {
 	owner := uuid.New()
 	a, b, c := media.readyImage(owner), media.readyImage(owner), media.readyImage(owner)
 
-	created := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t","asset_ids":`+idsJSON(a, b)+`}`), http.StatusCreated)
+	created := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t","asset_ids":`+idsJSON(a, b)+`}`), http.StatusCreated)
 	id := created["id"].(string)
 
-	out := entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(c)+`}`), http.StatusOK)
+	out := entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(c)+`}`), http.StatusOK)
 	if got := assetIDsOf(t, out); len(got) != 1 || got[0] != c.String() {
 		t.Fatalf("after patch asset_ids = %v, want [%s] (replaced, not merged)", got, c)
 	}
@@ -251,20 +204,20 @@ func TestHTTPPatchReplacesWholeList(t *testing.T) {
 	}
 
 	// A patch that does not mention asset_ids keeps them.
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
 	if got := assetIDsOf(t, out); len(got) != 1 || got[0] != c.String() {
 		t.Fatalf("body-only patch changed asset_ids to %v", got)
 	}
 
 	// An explicit empty list clears them.
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusOK)
 	if got := assetIDsOf(t, out); len(got) != 0 {
 		t.Fatalf("after clearing asset_ids = %v, want []", got)
 	}
 
 	// An invalid replacement leaves the stored list untouched.
-	_ = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(a)+`}`), http.StatusOK)
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(uuid.New())+`}`), http.StatusUnprocessableEntity, "journal/invalid-asset")
+	_ = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(a)+`}`), http.StatusOK)
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":`+idsJSON(uuid.New())+`}`), http.StatusUnprocessableEntity, "journal/invalid-asset")
 	if e := repo.rows[uuid.MustParse(id)]; len(e.AssetIDs) != 1 || e.AssetIDs[0] != a {
 		t.Fatalf("a refused patch changed the stored list to %v", e.AssetIDs)
 	}
@@ -277,7 +230,7 @@ func TestHTTPTextOrAttachment(t *testing.T) {
 	a := media.readyImage(owner)
 
 	// photo-only: created, body is "".
-	out := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`}`), http.StatusCreated)
+	out := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`}`), http.StatusCreated)
 	if out["body_md"] != "" {
 		t.Fatalf("photo-only body_md = %#v, want \"\"", out["body_md"])
 	}
@@ -285,7 +238,7 @@ func TestHTTPTextOrAttachment(t *testing.T) {
 
 	// nothing at all, three spellings: absent body, empty body, blank body.
 	for _, body := range []string{`{}`, `{"body_md":""}`, `{"body_md":"  \n ","asset_ids":[]}`} {
-		problem(t, do(t, h, owner, http.MethodPost, "/journal/entries", body), http.StatusUnprocessableEntity, "journal/invalid-body")
+		servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", body), http.StatusUnprocessableEntity, "journal/invalid-body")
 	}
 	if len(repo.rows) != 1 {
 		t.Fatalf("stored rows = %d, want only the photo-only entry", len(repo.rows))
@@ -293,11 +246,11 @@ func TestHTTPTextOrAttachment(t *testing.T) {
 
 	// The rule is judged on the RESULT of a patch: clearing the only photo of a
 	// photo-only Entry is refused, as is blanking the only text of a text-only one.
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+photoOnly, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
-	textOnly := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"words"}`), http.StatusCreated)["id"].(string)
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+textOnly, `{"body_md":""}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+photoOnly, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	textOnly := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"words"}`), http.StatusCreated)["id"].(string)
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+textOnly, `{"body_md":""}`), http.StatusUnprocessableEntity, "journal/invalid-body")
 	// …but swapping text for a photo in one request is fine.
-	entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+textOnly, `{"body_md":"","asset_ids":`+idsJSON(a)+`}`), http.StatusOK)
+	entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+textOnly, `{"body_md":"","asset_ids":`+idsJSON(a)+`}`), http.StatusOK)
 }
 
 // The Entry JSON and the stream item JSON carry asset_ids in the same shape —
@@ -308,20 +261,20 @@ func TestHTTPEntryAndStreamItemShareAssetIDsShape(t *testing.T) {
 	owner := uuid.New()
 	a, b := media.readyImage(owner), media.readyImage(owner)
 
-	withPhotos := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"p","asset_ids":`+idsJSON(a, b)+`}`), http.StatusCreated)
-	textOnly := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t"}`), http.StatusCreated)
+	withPhotos := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"p","asset_ids":`+idsJSON(a, b)+`}`), http.StatusCreated)
+	textOnly := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t"}`), http.StatusCreated)
 	if got := assetIDsOf(t, textOnly); len(got) != 0 {
 		t.Fatalf("text-only entry asset_ids = %v, want []", got)
 	}
 
 	// GET /journal/entries/{id} agrees with the create response.
-	fetched := entryOut(t, do(t, h, owner, http.MethodGet, "/journal/entries/"+withPhotos["id"].(string), ""), http.StatusOK)
+	fetched := entryOut(t, servertest.Do(t, h, owner, http.MethodGet, "/journal/entries/"+withPhotos["id"].(string), ""), http.StatusOK)
 	if fmt.Sprint(assetIDsOf(t, fetched)) != fmt.Sprint(assetIDsOf(t, withPhotos)) {
 		t.Fatalf("GET asset_ids = %v, want %v", assetIDsOf(t, fetched), assetIDsOf(t, withPhotos))
 	}
 
 	// The stream carries the same array on the journal item.
-	rec := do(t, h, owner, http.MethodGet, "/stream", "")
+	rec := servertest.Do(t, h, owner, http.MethodGet, "/stream", "")
 	page := entryOut(t, rec, http.StatusOK)
 	items, _ := page["items"].([]any)
 	if len(items) != 2 {
@@ -359,7 +312,7 @@ func TestHTTPAssetLookupRunsInsideRequestScope(t *testing.T) {
 	owner := uuid.New()
 	a := media.readyImage(owner)
 
-	entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":`+idsJSON(a)+`}`), http.StatusCreated)
+	entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"x","asset_ids":`+idsJSON(a)+`}`), http.StatusCreated)
 	if len(media.calls) != 1 {
 		t.Fatalf("GetAsset calls = %d, want 1", len(media.calls))
 	}
@@ -372,7 +325,7 @@ func TestHTTPAssetLookupRunsInsideRequestScope(t *testing.T) {
 // and there is nothing to read.
 func TestHTTPTextOnlyCreateSkipsLookup(t *testing.T) {
 	h, _, media := newHTTP(t)
-	entryOut(t, do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x"}`), http.StatusCreated)
+	entryOut(t, servertest.Do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x"}`), http.StatusCreated)
 	if len(media.calls) != 0 {
 		t.Fatalf("GetAsset calls = %d, want 0", len(media.calls))
 	}
@@ -414,7 +367,7 @@ func TestHTTPLocationStoredAndSharedShape(t *testing.T) {
 	h, repo, _ := newHTTP(t)
 	owner := uuid.New()
 
-	placed := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries",
+	placed := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries",
 		`{"body_md":"phở sáng","location":{"name":"  Phở Thìn  ","lat":21.0285,"lon":105.8542}}`), http.StatusCreated)
 	wantLocation(t, locationOf(t, placed), "Phở Thìn", 21.0285, 105.8542) // name trimmed
 	e := repo.rows[uuid.MustParse(placed["id"].(string))]
@@ -422,15 +375,15 @@ func TestHTTPLocationStoredAndSharedShape(t *testing.T) {
 		t.Fatalf("stored location = %+v", e.Location)
 	}
 
-	plain := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"no place"}`), http.StatusCreated)
+	plain := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"no place"}`), http.StatusCreated)
 	if locationOf(t, plain) != nil {
 		t.Fatalf("location = %v, want null", plain["location"])
 	}
 
-	fetched := entryOut(t, do(t, h, owner, http.MethodGet, "/journal/entries/"+placed["id"].(string), ""), http.StatusOK)
+	fetched := entryOut(t, servertest.Do(t, h, owner, http.MethodGet, "/journal/entries/"+placed["id"].(string), ""), http.StatusOK)
 	wantLocation(t, locationOf(t, fetched), "Phở Thìn", 21.0285, 105.8542)
 
-	page := entryOut(t, do(t, h, owner, http.MethodGet, "/stream", ""), http.StatusOK)
+	page := entryOut(t, servertest.Do(t, h, owner, http.MethodGet, "/stream", ""), http.StatusOK)
 	items, _ := page["items"].([]any)
 	seen := 0
 	for _, it := range items {
@@ -469,8 +422,8 @@ func TestHTTPInvalidLocationIsRefused(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			h, repo, _ := newHTTP(t)
-			rec := do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x","location":`+tc.location+`}`)
-			problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-location")
+			rec := servertest.Do(t, h, uuid.New(), http.MethodPost, "/journal/entries", `{"body_md":"x","location":`+tc.location+`}`)
+			servertest.Problem(t, rec, http.StatusUnprocessableEntity, "journal/invalid-location")
 			if len(repo.rows) != 0 {
 				t.Fatalf("stored %d rows, want nothing stored", len(repo.rows))
 			}
@@ -483,20 +436,20 @@ func TestHTTPInvalidLocationIsRefused(t *testing.T) {
 func TestHTTPPatchLocationSetClearKeep(t *testing.T) {
 	h, repo, _ := newHTTP(t)
 	owner := uuid.New()
-	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t"}`), http.StatusCreated)["id"].(string)
+	id := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t"}`), http.StatusCreated)["id"].(string)
 
-	out := entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"Đà Lạt","lat":11.9404,"lon":108.4583}}`), http.StatusOK)
+	out := entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"Đà Lạt","lat":11.9404,"lon":108.4583}}`), http.StatusOK)
 	wantLocation(t, locationOf(t, out), "Đà Lạt", 11.9404, 108.4583)
 
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
 	wantLocation(t, locationOf(t, out), "Đà Lạt", 11.9404, 108.4583) // absent keeps
 
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"","lat":1,"lon":1}}`), http.StatusUnprocessableEntity, "journal/invalid-location")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":{"name":"","lat":1,"lon":1}}`), http.StatusUnprocessableEntity, "journal/invalid-location")
 	if e := repo.rows[uuid.MustParse(id)]; e.Location == nil || e.Location.Name != "Đà Lạt" {
 		t.Fatalf("a refused patch changed the stored location to %+v", e.Location)
 	}
 
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":null}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"location":null}`), http.StatusOK)
 	if locationOf(t, out) != nil {
 		t.Fatalf("after clearing location = %v, want null", out["location"])
 	}
@@ -513,15 +466,15 @@ func TestHTTPLocationAloneIsNotAnEntry(t *testing.T) {
 	owner := uuid.New()
 	loc := `{"name":"Hà Nội","lat":21.0285,"lon":105.8542}`
 
-	problem(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
-	problem(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"  ","asset_ids":[],"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"  ","asset_ids":[],"location":`+loc+`}`), http.StatusUnprocessableEntity, "journal/invalid-body")
 	if len(repo.rows) != 0 {
 		t.Fatalf("stored %d rows, want none", len(repo.rows))
 	}
 
 	a := media.readyImage(owner)
-	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`,"location":`+loc+`}`), http.StatusCreated)["id"].(string)
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
+	id := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`,"location":`+loc+`}`), http.StatusCreated)["id"].(string)
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
 }
 
 // ── Mood on PATCH (SPEC-12 T5, #14) ─────────────────────────────────
@@ -532,25 +485,25 @@ func TestHTTPLocationAloneIsNotAnEntry(t *testing.T) {
 func TestHTTPPatchMoodSetClearKeep(t *testing.T) {
 	h, repo, _ := newHTTP(t)
 	owner := uuid.New()
-	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t","mood":"calm"}`), http.StatusCreated)["id"].(string)
+	id := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t","mood":"calm"}`), http.StatusCreated)["id"].(string)
 
-	out := entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
+	out := entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
 	if out["mood"] != "calm" {
 		t.Fatalf("absent mood changed it to %#v; want kept", out["mood"])
 	}
 
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"  tired  "}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"  tired  "}`), http.StatusOK)
 	if out["mood"] != "tired" {
 		t.Fatalf("mood = %#v, want \"tired\" (set, trimmed)", out["mood"])
 	}
 
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"   "}`), http.StatusUnprocessableEntity, "journal/invalid-mood")
-	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":123}`), http.StatusUnprocessableEntity, "journal/invalid-mood") // wrong type, same problem
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"   "}`), http.StatusUnprocessableEntity, "journal/invalid-mood")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":123}`), http.StatusUnprocessableEntity, "journal/invalid-mood") // wrong type, same problem
 	if e := repo.rows[uuid.MustParse(id)]; e.Mood == nil || *e.Mood != "tired" {
 		t.Fatalf("a refused mood changed the stored one to %v", e.Mood)
 	}
 
-	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":null}`), http.StatusOK)
+	out = entryOut(t, servertest.Do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":null}`), http.StatusOK)
 	if out["mood"] != nil {
 		t.Fatalf("after clearing mood = %#v, want null", out["mood"])
 	}
@@ -566,18 +519,18 @@ func TestHTTPPatchMoodSetClearKeep(t *testing.T) {
 func TestHTTPEntryIsNotFoundToAStranger(t *testing.T) {
 	h, _, _ := newHTTP(t)
 	owner, stranger := uuid.New(), uuid.New()
-	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"mine"}`), http.StatusCreated)["id"].(string)
-	rec := do(t, h, stranger, http.MethodGet, "/journal/entries/"+id, "")
-	problem(t, rec, http.StatusNotFound, "journal/entry-not-found")
-	rec2 := do(t, h, stranger, http.MethodGet, "/journal/entries/"+uuid.NewString(), "")
-	problem(t, rec2, http.StatusNotFound, "journal/entry-not-found")
+	id := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"mine"}`), http.StatusCreated)["id"].(string)
+	rec := servertest.Do(t, h, stranger, http.MethodGet, "/journal/entries/"+id, "")
+	servertest.Problem(t, rec, http.StatusNotFound, "journal/entry-not-found")
+	rec2 := servertest.Do(t, h, stranger, http.MethodGet, "/journal/entries/"+uuid.NewString(), "")
+	servertest.Problem(t, rec2, http.StatusNotFound, "journal/entry-not-found")
 	if rec.Body.String() != rec2.Body.String() {
 		t.Fatalf("someone else's and missing must answer identically:\n%s\n%s", rec.Body.String(), rec2.Body.String())
 	}
 	// …and a stranger's PATCH or DELETE changes nothing, with the same answer.
-	problem(t, do(t, h, stranger, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"theirs"}`), http.StatusNotFound, "journal/entry-not-found")
-	problem(t, do(t, h, stranger, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
-	if out := entryOut(t, do(t, h, owner, http.MethodGet, "/journal/entries/"+id, ""), http.StatusOK); out["body_md"] != "mine" {
+	servertest.Problem(t, servertest.Do(t, h, stranger, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"theirs"}`), http.StatusNotFound, "journal/entry-not-found")
+	servertest.Problem(t, servertest.Do(t, h, stranger, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
+	if out := entryOut(t, servertest.Do(t, h, owner, http.MethodGet, "/journal/entries/"+id, ""), http.StatusOK); out["body_md"] != "mine" {
 		t.Fatalf("owner's Entry after a stranger's writes = %v", out["body_md"])
 	}
 }
@@ -585,9 +538,9 @@ func TestHTTPEntryIsNotFoundToAStranger(t *testing.T) {
 func TestHTTPDeleteTwiceIs404(t *testing.T) {
 	h, _, _ := newHTTP(t)
 	owner := uuid.New()
-	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"gone"}`), http.StatusCreated)["id"].(string)
-	if rec := do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""); rec.Code != http.StatusNoContent {
+	id := entryOut(t, servertest.Do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"gone"}`), http.StatusCreated)["id"].(string)
+	if rec := servertest.Do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""); rec.Code != http.StatusNoContent {
 		t.Fatalf("first DELETE = %d (%s)", rec.Code, rec.Body.String())
 	}
-	problem(t, do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
+	servertest.Problem(t, servertest.Do(t, h, owner, http.MethodDelete, "/journal/entries/"+id, ""), http.StatusNotFound, "journal/entry-not-found")
 }
