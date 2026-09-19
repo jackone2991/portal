@@ -65,6 +65,15 @@ jobs:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
 
+      # The media worker's fixture tests run the real ffmpeg/ffprobe on images
+      # drawn in-test (media/worker/process_image_test.go) and FAIL under CI
+      # when the binaries are missing, so the pipeline's contract cannot lapse
+      # by a silent skip. Note the builds differ — Ubuntu's ffmpeg here, Alpine's
+      # in the worker image (backend/Dockerfile), whatever is on PATH locally —
+      # so a rule that only one of them honours would show up here first.
+      - name: Install ffmpeg (media worker fixture tests)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       # sqlc output (internal/modules/*/repository/*.sql.go) is NOT committed —
       # .gitignore excludes it — but the committed adapter.go/querier.go call into
       # it, so nothing compiles until it exists. This step must precede the build.
