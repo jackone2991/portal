@@ -102,6 +102,9 @@ func (r *fakeRepo) SetStatus(_ context.Context, id uuid.UUID, status string) (Tr
 }
 
 func (r *fakeRepo) DeleteTrack(_ context.Context, id uuid.UUID) error {
+	if _, ok := r.tracks[id]; !ok {
+		return ErrNotFound // mirrors the adapter: 0 rows affected
+	}
 	delete(r.tracks, id)
 	return nil
 }

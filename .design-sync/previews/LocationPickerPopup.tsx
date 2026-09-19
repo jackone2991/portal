@@ -1,4 +1,4 @@
-import { PlacePickerPopup } from "portal-frontend";
+import { LocationPickerPopup } from "portal-frontend";
 
 // Location picker for a journal entry or post. The map is a hand-rolled slippy
 // map — a grid of 256px OpenStreetMap tiles, with the attribution the OSM tile
@@ -14,13 +14,13 @@ const stage = (children: React.ReactNode) => (
   </div>
 );
 
-export const Picker = () => stage(<PlacePickerPopup open onClose={() => {}} onPick={() => {}} />);
+export const Picker = () => stage(<LocationPickerPopup open onClose={() => {}} onPick={() => {}} />);
 
 // Re-opening on a place already chosen: it centres there and zooms in, rather
 // than starting from the default view again.
 export const WithInitial = () =>
   stage(
-    <PlacePickerPopup
+    <LocationPickerPopup
       open
       onClose={() => {}}
       onPick={() => {}}

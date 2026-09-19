@@ -21,13 +21,81 @@ type Handler struct {
 	currentUser func(context.Context) (uuid.UUID, bool)
 }
 
-// entryReq is the create/patch body. asset_ids is decoded as RawMessage only to
-// detect its *presence* — any asset_ids is rejected until P1.5 (fail closed).
+// entryReq is the create/patch body. Every field is a pointer so absence can be
+// told from an explicit value: on PATCH a nil field is "keep", and a present
+// asset_ids (even `[]`) replaces the whole list (SPEC-12 T1). Location and
+// mood are kept raw because they have THREE wire states — absent (keep),
+// `null` (clear), a value (set) — and a pointer collapses the first two
+// (SPEC-12 T3, T5).
 type entryReq struct {
-	BodyMd     *string          `json:"body_md"`
-	Mood       *string          `json:"mood"`
-	OccurredAt *time.Time       `json:"occurred_at"`
-	AssetIDs   *json.RawMessage `json:"asset_ids"`
+	BodyMd     *string         `json:"body_md"`
+	Mood       json.RawMessage `json:"mood"`
+	OccurredAt *time.Time      `json:"occurred_at"`
+	AssetIDs   *[]string       `json:"asset_ids"`
+	Location   json.RawMessage `json:"location"`
+}
+
+// mood decodes the raw member: (set=false) when absent, (set=true, nil) for
+// `null`, (set=true, &s) for a string. Anything else is ErrInvalidMood — the
+// service then judges the string itself (1–80 characters after trimming).
+func (b *entryReq) mood() (set bool, mood *string, err error) {
+	if len(b.Mood) == 0 {
+		return false, nil, nil
+	}
+	if string(b.Mood) == "null" {
+		return true, nil, nil
+	}
+	var s string
+	if err := json.Unmarshal(b.Mood, &s); err != nil {
+		return true, nil, ErrInvalidMood
+	}
+	return true, &s, nil
+}
+
+// locationReq is the wire Location with every field optional, so a name-only
+// or coordinates-only object is detectable as such rather than defaulting to
+// "" / 0 and slipping through as a place at the equator.
+type locationReq struct {
+	Name *string  `json:"name"`
+	Lat  *float64 `json:"lat"`
+	Lon  *float64 `json:"lon"`
+}
+
+// location decodes the raw member: (set=false) when absent, (set=true, nil)
+// for `null`, (set=true, loc) for a whole object. Anything else — a partial
+// object, a wrong type, a bare string — is ErrInvalidLocation (422), because a
+// client that sent a location and got a 400 could not tell which field was
+// wrong; the bounds are the service's.
+func (b *entryReq) location() (set bool, loc *Location, err error) {
+	if len(b.Location) == 0 {
+		return false, nil, nil
+	}
+	if string(b.Location) == "null" {
+		return true, nil, nil
+	}
+	var l locationReq
+	if err := json.Unmarshal(b.Location, &l); err != nil || l.Name == nil || l.Lat == nil || l.Lon == nil {
+		return true, nil, ErrInvalidLocation
+	}
+	return true, &Location{Name: *l.Name, Lat: *l.Lat, Lon: *l.Lon}, nil
+}
+
+// assetIDs parses the wire list. A string that is not a uuid cannot be an Asset
+// of ours, so it is reported the way any other invalid Attachment is — an
+// AssetError naming it — rather than as a 400 that hides which element.
+func (b *entryReq) assetIDs() (*[]uuid.UUID, error) {
+	if b.AssetIDs == nil {
+		return nil, nil
+	}
+	ids := make([]uuid.UUID, 0, len(*b.AssetIDs))
+	for _, raw := range *b.AssetIDs {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			return nil, &AssetError{ID: raw, Reason: "is not a uuid"}
+		}
+		ids = append(ids, id)
+	}
+	return &ids, nil
 }
 
 // POST /journal/entries — create an entry.
@@ -42,17 +110,29 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
 		return
 	}
-	if body.BodyMd == nil {
-		writeJournalErr(w, ErrInvalidBody)
+	ids, err := body.assetIDs()
+	if err != nil {
+		writeJournalErr(w, err)
 		return
 	}
-	entry, err := h.svc.Create(r.Context(), CreateParams{
-		UserID:      uid,
-		BodyMd:      *body.BodyMd,
-		Mood:        body.Mood,
-		OccurredAt:  body.OccurredAt,
-		HasAssetIDs: body.AssetIDs != nil,
-	})
+	_, loc, err := body.location() // on create, absent and null are the same: no Location
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	_, mood, err := body.mood() // likewise: absent and null are both "no mood"
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	p := CreateParams{UserID: uid, Mood: mood, OccurredAt: body.OccurredAt, Location: loc}
+	if body.BodyMd != nil {
+		p.BodyMd = *body.BodyMd // absent = "" — legal only with an Attachment; the service decides
+	}
+	if ids != nil {
+		p.AssetIDs = *ids
+	}
+	entry, err := h.svc.Create(r.Context(), p)
 	if err != nil {
 		writeJournalErr(w, err)
 		return
@@ -124,13 +204,31 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		server.Problem(w, http.StatusBadRequest, "about:blank", "Bad Request", "invalid JSON body")
 		return
 	}
+	ids, err := body.assetIDs()
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	setLoc, loc, err := body.location()
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	setMood, mood, err := body.mood()
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
 	entry, err := h.svc.Patch(r.Context(), PatchParams{
 		UserID:      uid,
 		ID:          id,
 		BodyMd:      body.BodyMd,
-		Mood:        body.Mood,
+		SetMood:     setMood,
+		Mood:        mood,
 		OccurredAt:  body.OccurredAt,
-		HasAssetIDs: body.AssetIDs != nil,
+		AssetIDs:    ids,
+		SetLocation: setLoc,
+		Location:    loc,
 	})
 	if err != nil {
 		writeJournalErr(w, err)
@@ -182,6 +280,8 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 		if c.SourceModule == "journal" {
 			m["body_md"] = c.BodyMd
 			m["mood"] = c.Mood
+			m["asset_ids"] = uuidStrings(c.AssetIDs) // same shape as the Entry (SPEC-12 story 32)
+			m["location"] = locationJSON(c.Location)
 		} else {
 			m["title"] = c.Title
 			if c.Href != "" {
@@ -200,32 +300,54 @@ func (h *Handler) Stream(w http.ResponseWriter, r *http.Request) {
 // ── helpers ─────────────────────────────────────────────────────────
 
 func entryJSON(e Entry) map[string]any {
-	ids := make([]string, 0, len(e.AssetIDs))
-	for _, a := range e.AssetIDs {
-		ids = append(ids, a.String())
-	}
 	return map[string]any{
 		"id":          e.ID,
 		"body_md":     e.BodyMd,
 		"mood":        e.Mood,
-		"asset_ids":   ids,
+		"asset_ids":   uuidStrings(e.AssetIDs),
+		"location":    locationJSON(e.Location),
 		"occurred_at": e.OccurredAt.Format(time.RFC3339),
 		"created_at":  e.CreatedAt.Format(time.RFC3339),
 		"updated_at":  e.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
+// uuidStrings renders an id list as JSON strings — always an array, never null,
+// so a client can index it without a guard.
+func uuidStrings(ids []uuid.UUID) []string {
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, id.String())
+	}
+	return out
+}
+
+// locationJSON renders the Location member: an object, or an explicit null —
+// the key is always present so a client can read it without a guard.
+func locationJSON(l *Location) any {
+	if l == nil {
+		return nil
+	}
+	return map[string]any{"name": l.Name, "lat": l.Lat, "lon": l.Lon}
+}
+
 // writeJournalErr maps a service error to its RFC 7807 Problem (§7 type URIs).
 func writeJournalErr(w http.ResponseWriter, err error) {
+	var assetErr *AssetError
 	switch {
 	case errors.Is(err, ErrEntryNotFound):
 		server.Problem(w, http.StatusNotFound, "journal/entry-not-found", "Not Found", "journal entry not found")
 	case errors.Is(err, ErrInvalidBody):
-		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-body", "Invalid body", "body_md must be 1–20000 characters")
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-body", "Invalid body", "an entry needs text or at least one attachment, and body_md is at most 20000 characters")
 	case errors.Is(err, ErrInvalidMood):
 		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-mood", "Invalid mood", "mood must be 1–80 non-blank characters")
-	case errors.Is(err, ErrInvalidAsset):
-		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-asset", "Invalid asset", "asset_ids are not accepted until photo attachments ship (P1.5)")
+	case errors.As(err, &assetErr):
+		// ErrInvalidAsset only ever travels as an *AssetError: the detail names
+		// the id and the reason (SPEC-12 story 28) so the client can fix the
+		// right element of the list.
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-asset", "Invalid asset", "asset "+assetErr.ID+" "+assetErr.Reason)
+	case errors.Is(err, ErrInvalidLocation):
+		server.Problem(w, http.StatusUnprocessableEntity, "journal/invalid-location", "Invalid location", "location must be an object with a non-empty name, lat in [-90, 90] and lon in [-180, 180] — or null to clear it")
 	case errors.Is(err, ErrBadCursor):
 		server.Problem(w, http.StatusBadRequest, "journal/invalid-cursor", "Invalid cursor", "the pagination cursor is malformed")
 	default:

@@ -1,6 +1,6 @@
 # Asynq Events & Tasks Registry
 
-**Status:** current · **Last verified:** 2026-09-11 (re-derived from the `Subscribe(` and `scheduler.Register(` calls in `cmd/api/main.go` + `cmd/worker/main.go` — `grep -n 'Subscribe(' backend/cmd/*/main.go` is the source; this table is the copy)
+**Status:** current · **Last verified:** 2026-09-19 (re-derived from the `Subscribe(` and `scheduler.Register(` calls in `cmd/api/main.go` + `cmd/worker/main.go` — `grep -n 'Subscribe(' backend/cmd/*/main.go` is the source; this table is the copy)
 
 Cross-module coupling happens **only** through this bus (hard rule). Naming:
 `<module>:<event_or_task>`; the emitting/owning module is the prefix. Two kinds:
@@ -18,7 +18,7 @@ the naming *rules*, this file owns the *inventory*.
 | Name | Payload (sketch) | Emitter | Status | Consumers |
 |---|---|---|---|---|
 | `media:asset_ready` | `{asset_id, kind, owner_user_id, title, origin: 'upload'\|'import'}` | media | live — **1 consumer** | notify — in-app notification, skips `origin='import'` (SPEC-04 P0.4). **Not projected into the stream** since `0033` (2026-08-28): an upload finishing is a library event, not a moment in the day. `origin` exists so a SPEC-02 zip import (≤300 assets) can't flood the bell |
-| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — **5 consumers** | comic — drop dangling pages / null covers (SPEC-02 P0.6); movie, music, story — null the asset references (`*:on_asset_deleted`); stream — `journal:stream_asset_deleted` removes every media-sourced item with this ref (SPEC-06 P0.1). Not yet: journal attachment ids (SPEC-05 P1.5), people avatars (SPEC-08 P1.7) |
+| `media:asset_deleted` | `{asset_id, owner_user_id}` | media | live — **5 consumers** | comic — drop dangling pages / null covers (SPEC-02 P0.6); movie, music, story — null the asset references (`*:on_asset_deleted`); journal — `journal:stream_asset_deleted` removes every media-sourced stream item with this ref (SPEC-06 P0.1) **and strips the id from `asset_ids` of every Entry of the owner that showed it** (SPEC-12 T4, #13), both inside the owner's tenant scope, idempotent. Not yet: people avatars (SPEC-08 P1.7) |
 | `media:playback_completed` | `{asset_id, user_id, title}` | media | live — **1 consumer** (stream) | stream (SPEC-06); notify (SPEC-04 open type registry) |
 | `comic:chapter_published` | `{comic_id, chapter_id, owner_user_id, title}` | comic | live (SPEC-02 P1.9) — emitted per chapter on comic publish | notify — `notify:on_comic_published`, one bell entry with a click-through. **Not projected into the stream** since `0034` (2026-08-28) |
 | `comic:chapter_deleted` | `{comic_id, chapter_id, owner_user_id}` | comic | live (SPEC-02 P1.9) — emitted per chapter on chapter/comic delete | **none** since `0034` removed the comic stream projection; emit-only |

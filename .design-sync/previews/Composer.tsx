@@ -54,3 +54,18 @@ export const WithError = () =>
       error="Không đăng được — thử lại sau."
     />,
   );
+
+// Edit mode (SPEC-12 T5): `initial` pre-fills mood and Location (photos would
+// point at the media API and show as placeholder tiles here), the tab says
+// Edit Post, the primary button says Save, and Cancel appears.
+export const Editing = () =>
+  frame(
+    <Composer
+      displayName="Marina Valentine"
+      bodyMd="Sáng nay đi bộ quanh hồ."
+      onBodyMdChange={() => {}}
+      onSubmit={() => false}
+      onCancel={() => {}}
+      initial={{ mood: "good", assetIds: [], location: { name: "Hoàn Kiếm", lat: 21.0286, lon: 105.8506 } }}
+    />,
+  );

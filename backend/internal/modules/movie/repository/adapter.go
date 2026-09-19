@@ -93,8 +93,17 @@ func (a *Adapter) SetStatus(ctx context.Context, id uuid.UUID, status string) (m
 	return toMovie(row), nil
 }
 
+// DeleteMovie answers ErrNotFound when nothing matched — the second of two
+// DELETEs is a 404, not a 204.
 func (a *Adapter) DeleteMovie(ctx context.Context, id uuid.UUID) error {
-	return a.q.DeleteMovie(ctx, pgUUID(id))
+	n, err := a.q.DeleteMovie(ctx, pgUUID(id))
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return movie.ErrNotFound
+	}
+	return nil
 }
 
 func (a *Adapter) OwnerByMovie(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {

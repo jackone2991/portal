@@ -18,6 +18,7 @@ export type ProblemType =
   | "journal/invalid-body"
   | "journal/invalid-mood"
   | "journal/invalid-asset"
+  | "journal/invalid-location"
   | "bank/not-found"
   | "bank/account-not-empty"
   | "bank/account-not-mutable"
@@ -83,9 +84,13 @@ export const PROBLEM_MESSAGES: Record<ProblemType, string> = {
   "media/asset-not-ready":
     "This asset is still being uploaded — try again in a moment.",
   "journal/entry-not-found": "This entry doesn't exist or was already removed.",
-  "journal/invalid-body": "Entries need 1-20,000 characters of text.",
+  "journal/invalid-body":
+    "An entry needs some text or at least one photo, and at most 20,000 characters.",
   "journal/invalid-mood": "Mood can't be blank — leave it empty or add a word.",
-  "journal/invalid-asset": "Photo attachments aren't supported yet.",
+  "journal/invalid-asset":
+    "One of the photos can't be attached — it must be a finished image of yours, listed once, ten at most.",
+  "journal/invalid-location":
+    "The place needs a name and a point on the map — pick it again.",
   "bank/not-found": "This item doesn't exist or was already removed.",
   "bank/account-not-empty": "This account has transactions — archive it instead of deleting.",
   "bank/account-not-mutable": "You can't change the currency once an account has transactions.",

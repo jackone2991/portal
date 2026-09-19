@@ -14,7 +14,8 @@ import (
 	"time"
 )
 
-// ErrNotFound is returned by Get/Exists when the object does not exist.
+// ErrNotFound is returned by Get, GetRange, GetByteRange and Size when the
+// object does not exist; Exists answers (false, nil) instead.
 var ErrNotFound = errors.New("storage: object not found")
 
 // Config is the S3-compatible connection config, sourced from the S3_* env vars.

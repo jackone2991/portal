@@ -1451,7 +1451,7 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
         "422":
-          description: Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset`)
+          description: Validation failed (`journal/invalid-body` — no text and no Attachment, or over 20000 characters · `journal/invalid-mood` · `journal/invalid-asset` — the Attachment list as a whole is invalid; `detail` names the id and the reason · `journal/invalid-location` — name-only, coordinates-only, empty name, or coordinates out of range)
           content:
             application/problem+json:
               schema:
@@ -1546,7 +1546,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Problem"
         "422":
-          description: Validation failed
+          description: Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset` · `journal/invalid-location` — as for create; the "text or Attachment" rule is judged on the patched result)
           content:
             application/problem+json:
               schema:
@@ -3619,27 +3619,69 @@ components:
             $ref: "#/components/schemas/Problem"
 
   schemas:
+    JournalLocation:
+      type: object
+      description: |
+        Where an Entry happened (SPEC-12 T3) — a property of the Entry, not an
+        Attachment. All three fields together or the whole thing null: a
+        name-only or coordinates-only Location is 422 `journal/invalid-location`.
+        Coordinates are kept to four decimal places.
+      required: [name, lat, lon]
+      properties:
+        name: { type: string, minLength: 1, description: "Non-empty after trimming." }
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lon: { type: number, minimum: -180, maximum: 180 }
     JournalEntry:
       type: object
-      required: [id, body_md, asset_ids, occurred_at, created_at, updated_at]
+      required: [id, body_md, asset_ids, location, occurred_at, created_at, updated_at]
       properties:
         id: { type: string, format: uuid }
-        body_md: { type: string }
+        body_md: { type: string, description: "Plain markdown — never carries the Attachments or the Location." }
         mood: { type: string, nullable: true }
         asset_ids:
           type: array
           items: { type: string, format: uuid }
+        location:
+          allOf: [{ $ref: "#/components/schemas/JournalLocation" }]
+          nullable: true
+          description: The Entry's Location; null when none.
         occurred_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
     JournalEntryWrite:
       type: object
       description: |
-        Create requires body_md; PATCH accepts any subset of the fields. `asset_ids`
-        is rejected with 422 `journal/invalid-asset` until photo attachments (P1.5).
+        PATCH accepts any subset of the fields. An Entry is text, or at least one
+        Attachment, or both (SPEC-12): a create or patch whose result has neither
+        is 422 `journal/invalid-body` — a Location alone does not make an Entry.
+        `asset_ids`, when present, replaces the whole list and is validated as a
+        whole — a duplicate, an eleventh element, or any id that is not a ready
+        image Asset owned by the caller is 422 `journal/invalid-asset` with
+        `detail` naming the id and the reason, and nothing is stored. `location`
+        sets the Location when it is an object, clears it when null, and keeps
+        it when absent; a violation of its rules is 422 `journal/invalid-location`.
+        `mood` follows the same three states: a string sets, `null` clears,
+        absent keeps.
       properties:
-        body_md: { type: string, minLength: 1, maxLength: 20000 }
-        mood: { type: string, nullable: true, minLength: 1, maxLength: 80 }
+        body_md:
+          type: string
+          maxLength: 20000
+          description: Plain markdown. Absent or empty is allowed only when the resulting Entry has at least one Attachment.
+        mood:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 80
+          description: A string sets the mood (1–80 characters after trimming), `null` clears it, absent keeps it (SPEC-12 T5).
+        asset_ids:
+          type: array
+          maxItems: 10
+          items: { type: string, format: uuid }
+          description: The Entry's Attachments in display order — image Assets owned by the caller with status `ready`. Replaces the whole list when present.
+        location:
+          allOf: [{ $ref: "#/components/schemas/JournalLocation" }]
+          nullable: true
+          description: An object sets the Location, `null` clears it, absent keeps it.
         occurred_at:
           type: string
           format: date-time
@@ -4147,7 +4189,7 @@ components:
     # ── Life-stream home (SPEC-06) ──────────────────────────────────────────
     StreamItem:
       type: object
-      description: "One merged-timeline card. Journal items carry body_md/mood; system items a synthesized title/href."
+      description: "One merged-timeline card. Journal items carry body_md/mood/asset_ids/location (the same shapes as JournalEntry, so one renderer serves both — SPEC-12); system items a synthesized title/href."
       required: [id, source_module, event_type, ref_id, occurred_at]
       properties:
         id: { type: string, format: uuid }
@@ -4157,6 +4199,14 @@ components:
         occurred_at: { type: string, format: date-time }
         body_md: { type: string, nullable: true }
         mood: { type: string, nullable: true }
+        asset_ids:
+          type: array
+          items: { type: string, format: uuid }
+          description: "Journal items only — the Entry's Attachments in display order (empty when none)."
+        location:
+          allOf: [{ $ref: "#/components/schemas/JournalLocation" }]
+          nullable: true
+          description: "Journal items only — the Entry's Location, the same shape as on JournalEntry (SPEC-12 T3); null when none."
         title: { type: string, nullable: true }
         href: { type: string, nullable: true }
 

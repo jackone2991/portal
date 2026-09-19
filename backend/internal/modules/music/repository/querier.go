@@ -36,7 +36,11 @@ type Querier interface {
 	// sets app.current_tenant) — never inserted here.
 	CreateTrack(ctx context.Context, arg CreateTrackParams) (MusicTrack, error)
 	DeletePlaylist(ctx context.Context, arg DeletePlaylistParams) (pgtype.UUID, error)
-	DeleteTrack(ctx context.Context, id pgtype.UUID) error
+	// Rows affected, so the adapter can answer ErrNotFound for an id that is
+	// already gone: a second DELETE is 404, not a silent 204 (the contract comic
+	// and bank keep; the owner guard in cmd/api says 404 too, but the module
+	// must not depend on it).
+	DeleteTrack(ctx context.Context, id pgtype.UUID) (int64, error)
 	// report is cast text->jsonb so sqlc types the param as a Go string: the pool runs
 	// QueryExecModeExec, where pgx picks the wire OID from the Go type without
 	// describing params, and a []byte goes out as bytea which jsonb rejects (22P02).

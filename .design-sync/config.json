@@ -79,16 +79,17 @@
       "cardMode": "single",
       "primaryStory": "Gallery"
     },
-    "PlacePickerPopup": {
+    "LocationPickerPopup": {
       "cardMode": "single",
       "primaryStory": "Picker"
+    },
+    "Lightbox": {
+      "cardMode": "single",
+      "primaryStory": "Open"
     },
     "ComicReaderView": {
       "cardMode": "single",
       "primaryStory": "Reader"
-    },
-    "EntryCard": {
-      "cardMode": "column"
     },
     "StreamItemCard": {
       "cardMode": "column"

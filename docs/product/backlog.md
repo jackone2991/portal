@@ -1,6 +1,6 @@
 # Backlog
 
-**Status:** current · **Last verified:** 2026-09-11
+**Status:** current · **Last verified:** 2026-09-19
 
 The live, triaged list of open work. One line per item; the line says what is
 wrong, where the evidence is, and what closes it. Ordering inside a tier is
@@ -28,24 +28,6 @@ was checked, and code moves.
 1. **Re-word the `0019`/`0020` migration headers** ("**INERT** until …") in
    the next migration that touches those tables — applied files are not
    edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
-2a. **CI has been red on `main` since 2026-07-23 — and on every PR since.**
-   `frontend/pnpm-lock.yaml` was deleted in `edadf28` (2026-07-08); the
-   `frontend` and `openapi` jobs still cache on it (`setup-node`,
-   `cache-dependency-path: frontend/pnpm-lock.yaml`) and fail at setup before
-   running anything. So the ADR-10 drift gate has never executed, the
-   frontend has not been type-checked in CI for two months, and with `main`
-   unprotected nothing noticed. The repo is also split on package manager:
-   Makefile, Dockerfile and CI say pnpm; the tracked lockfile is npm's
-   `package-lock.json`; local `node_modules` is npm-shaped; the Dockerfile
-   falls back to an **unpinned** `pnpm install`. *Closes when:* one package
-   manager is chosen, its lockfile is committed and the other deleted, the
-   CI cache path matches, and a run on `main` is green.
-3. **The RLS test suite does not run in CI.** `platform/db/rls*_test.go` (19
-   tests) are gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `ci.yml` sets
-   neither, so the isolation guarantee the architecture rests on is verified
-   only by hand. *Closes when:* the `backend` job starts a Postgres service,
-   applies migrations, and sets both URLs. (Audit §3.1 "no test opens a Postgres
-   connection" — the tests now exist; the CI run does not.)
 
 ## P1 — contract and coverage
 
@@ -58,23 +40,24 @@ was checked, and code moves.
    `api-client.ts` still says "once `make openapi` runs". *Closes when:* the
    `lib/*.ts` clients import `components["schemas"][…]`, or the spec's `info`
    block stops promising a generated client.
-8. **HTTP contracts are asserted for comic and bank only.** `comic/http_test.go`
-   and `bank/http_test.go` (2026-09-11) drive the real router over the fakes
-   and pin 404-not-403 on cross-owner access, the RFC 7807 body, and
-   delete-twice → 404 ([TRACEABILITY-MATRIX](../reference/TRACEABILITY-MATRIX.md)
-   CC-1, CC-3, CC-8). The pattern is ~100 lines per module. *Closes when:*
-   movie, music, story, journal, people, notify, layout and social carry the
-   same two tests. (Audit Tier A-4 asked for comic + bank; done.)
-9. **Workers have no tests** — `media/worker/{transcode,process_image,thumbnail}.go`
-   (matrix SPEC-01 P0.1/P0.2), and `comic.RunImport` — the largest function in
-   that module, reachable only with an object store, a tenant runner, a real
-   zip and wall-clock sleeps. *Closes when:* the image pipeline's cap/variant/
-   orientation rules and the poster's audio-skip are unit-tested against
-   fixtures, and `RunImport` has a fake-store test.
-10. **`make test` fails** — `vitest run` with zero test files exits non-zero;
-    CI never runs it (audit §3.1, Tier C-13). *Closes when:* either a first
-    frontend test exists or `--passWithNoTests` is set, and `pnpm test` is in
-    the `frontend` CI job.
+8. *(closed 2026-09-19 — see § Closed.)*
+8a. *(closed 2026-09-19 — see § Closed.)*
+9. **Workers are thinly tested** — the image pipeline's admission and scaling
+   rules, its encode/probe on drawn fixtures, and the whole poster path
+   (`Handle` over an in-memory store with lavfi-synthesised video: cut, stored,
+   audio-only skipped, non-fatal) are under test since 2026-09-19
+   (`media/worker/{process_image,thumbnail,poster_fixture}_test.go`; CI
+   installs ffmpeg for them). Still untested: EXIF orientation (no way to draw
+   an EXIF fixture with the standard library — needs a checked-in JPEG or a
+   tiny writer) and `comic.RunImport` — the largest function in that module,
+   reachable only with an object store, a tenant runner, a real zip and
+   wall-clock sleeps — it needs a fake `storage.Storage` it can import.
+   That fake exists since 2026-09-19: `platform/storage/storagetest.MemStore`
+   (the media tests' two unexported copies, folded into one owner with its
+   semantics pinned by its own tests), so this half is unblocked. *Closes when:* an
+   orientation fixture and `RunImport` with a fake store are under test; `transcode.go`'s HLS output is out of this line's scope (its own item
+   when someone needs it).
+10. *(closed 2026-09-19 — see § Closed.)*
 11. **oapi-codegen is pinned in CI but not locally** (ADR-10). No `tool`
     directive in `backend/go.mod`; a developer on another version produces a
     diff the gate rejects. *Closes when:* `go.mod` carries the tool directive
@@ -103,17 +86,14 @@ was checked, and code moves.
     and by presigned URLs, not by prefix. *Closes when:* a decision is recorded —
     either the prefix is dropped from ADR-04 as unnecessary under RLS, or a
     migration of every object is scheduled.
+17a. *(closed 2026-09-19 — see § Closed.)*
 17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
     depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
 
 ## P2 — specced, not built (from audit §3.3, still absent 2026-09-11)
 
-18. SPEC-05 P1.5 **journal photo attachments** — `asset_ids` column exists, the
-    handler fails closed on it, and the frontend works around it by encoding
-    photo + location links **inside the markdown body**
-    (`frontend/src/lib/attachments.ts`). That is a shipped UX resting on a
-    workaround; the P1.5 backend would let the body stop carrying structure.
-    The highest-value single P1 left (audit D-17).
+18. *(closed 2026-09-19 — SPEC-12 executed; see § Closed. Number kept so
+    citations of "backlog #18" still resolve.)*
 19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
     `journal:backfill_stream`.
 20. SPEC-06 **stream de-projection is a decision, not a gap** — `0033`/`0034`/
@@ -194,6 +174,70 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P1 #8a **HTTP-contract helpers in nine copies** — closed 2026-09-19:
+  `platform/server/servertest` (`RequireAuth`, `CurrentUser`, `Do`,
+  `Problem`) is the one owner; the nine `modules/<m>/http_test.go`
+  import it (journal wraps `RequireAuth` to add its tenant-scope marker).
+  `servertest_test.go` pins the helpers themselves against the real
+  `server.Problem` writer. MODULES.md §8 step 9 names it for the next module.
+- P1 #8 **HTTP contracts asserted for comic and bank only** — closed
+  2026-09-19: movie, music, story, journal, people, social and notify carry
+  the two tests over the real router with fakes (`modules/<m>/http_test.go`;
+  notify's second is mark-read-twice, its only write). Layout is the
+  exception by shape, not by omission: it has no per-id resource, so
+  "a stranger's id" and "delete twice" do not exist there — its contract is
+  the whole-set save with `layout/unknown_widget` / `layout/validation`,
+  under `layout/service_test.go`. Writing the tests found movie, music and
+  story answering 204 to a repeat DELETE — the module left the 404 to
+  cmd/api's owner guard; their `Delete*` are `:execrows` now, like comic's.
+  Matrix CC-1 / CC-3 / CC-8 name every file.
+- P1 #10 **`pnpm test` not in CI** — closed 2026-09-19: the `frontend` job
+  runs `pnpm test` between typecheck and build (`vitest.config.ts` gives the
+  suite the app's `@/` alias); the three vitest files SPEC-12 added are the
+  first frontend suite CI has ever run, and the matrix checker accepts a
+  `frontend/…/x.test.ts` reference as evidence, so the SPEC-12 T2 row is ✅
+  on them. The job's display name is unchanged (why: the note on the
+  `backend` job in `ci.yml`).
+- P1 #17a **SPEC-12 residue** — closed 2026-09-19. The manual run against the
+  stack: every step passed, one focus defect found and fixed
+  ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md)).
+  The `0044`/`0045` backfill loops:
+  `modules/journal/backfill_test.go: TestBackfillMigrationsMoveLinksOutOfBodies`
+  builds a throwaway database from the migration files, seeds old-style
+  bodies and runs up → down → up plus the RAISE case, on the same
+  `RLS_TEST_ADMIN_URL` CI already provides. Its first run found that
+  `0044 down` could not complete on a row the up had emptied (a link-only
+  body whose Asset was gone) — the restored CHECK is now `NOT VALID`.
+- P2 #18 **journal photo attachments** (SPEC-05 P1.5) — closed 2026-09-19 by
+  [SPEC-12](specs/SPEC-12-journal-attachments.md), executed as tickets
+  #9–#15 on `feat/journal-attachments` (`d8b2910`, `b6d8a89`, `1e1f12a`,
+  `ebe97ca`, `4215701`, `aba8785`): up to ten Attachments in `asset_ids`
+  validated as a whole, the Location in three columns, both backfilled out of
+  every body by self-asserting migrations `0044`/`0045` (applied to the live
+  database), the asset-deleted consumer stripping the id in the owner's
+  scope, one composer for create and in-place edit, and
+  `frontend/src/lib/attachments.ts` deleted. Evidence: the SPEC-12 section of
+  the [traceability matrix](../reference/TRACEABILITY-MATRIX.md). Tracker #8
+  and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
+  checks on the close-out commit. Residue has owners: the frontend vitest
+  files run in CI since the same day (line 10, closed); the manual run was done 2026-09-19
+  ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md))
+  and the backfill loops are under test (17a, closed the same day).
+- P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
+  starts a `postgres:18` service, applies every migration to it with
+  `golang-migrate` (so the chain is also proven from zero on each push), and
+  sets `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; `rls_test.go: setup` fails
+  instead of skipping when `CI` is set and the URLs are not, so the gate
+  cannot lapse silently. Verified locally first (fresh database, every
+  migration from zero, 19/19 green as `portal_app`), then by the first CI
+  execution: PR #7 (`f0901bd`), Actions run `34633577648`, `backend` green
+  with the guard in place — which it could not be had the suite skipped.
+- P0 **CI red on `main` since 2026-07-23** — closed 2026-09-11 (`a30b887`,
+  `0df5a11`): pnpm is the one package manager, `frontend/pnpm-lock.yaml` is
+  tracked and `package-lock.json` deleted, the `setup-node` cache path
+  matches, `main` green at `4c0049c`; `main` is now branch-protected on all
+  five jobs. Residue, not a gap: the Dockerfile still falls back to
+  `|| pnpm install` when the frozen install fails.
 - P0 **RLS decorative on every fresh install** — closed 2026-09-11:
   `.env.example` defaults `DATABASE_URL` to `portal_app` with the password
   `0019` seeds; `MIGRATE_DATABASE_URL` (owner) added and `make migrate` uses

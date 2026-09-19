@@ -83,21 +83,9 @@ func (th *Thumbnailer) run(ctx context.Context, id uuid.UUID, p ThumbnailPayload
 	// streams — e.g. an .mp3 renamed .mp4) gets skipped with a warning, never a
 	// failure (SPEC-01 P0.2, rev 2 review pt 5).
 	durMs, width, _ := probe(ctx, src) // (durMs, width*, height*) — width nil ⇒ no video
-	if width == nil {
-		return fmt.Errorf("no video stream (audio-only container?) — poster skipped")
-	}
-
-	// Seek to min(10% of duration, 10s), clamped inside short clips.
-	seek := 0.0
-	if durMs != nil && *durMs > 0 {
-		secs := float64(*durMs) / 1000.0
-		seek = secs * 0.10
-		if seek > 10 {
-			seek = 10
-		}
-		if seek > secs {
-			seek = 0
-		}
+	seek, err := posterPlan(durMs, width)
+	if err != nil {
+		return err
 	}
 
 	out := filepath.Join(dir, "poster.webp")
@@ -154,6 +142,26 @@ func (th *Thumbnailer) upload(ctx context.Context, path, key string) (int64, err
 		return 0, err
 	}
 	return info.Size(), nil
+}
+
+// posterPlan decides from the probe whether a poster can be cut and where: no
+// video stream (an audio-only container — an .mp3 renamed .mp4) is skipped with
+// an error the caller treats as a warning, never a failure; otherwise the frame
+// at min(10 % of the duration, 10 s), or the first frame when the duration is
+// unknown or zero.
+func posterPlan(durMs *int, width *int) (seek float64, err error) {
+	if width == nil {
+		return 0, fmt.Errorf("no video stream (audio-only container?) — poster skipped")
+	}
+	if durMs == nil || *durMs <= 0 {
+		return 0, nil
+	}
+	secs := float64(*durMs) / 1000.0
+	seek = secs * 0.10
+	if seek > 10 {
+		seek = 10
+	}
+	return seek, nil
 }
 
 // extractPoster seeks to `seek` seconds and grabs one frame scaled to at most
