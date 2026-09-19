@@ -189,6 +189,12 @@ jobs:
       # `next lint` / next's build-time lint pass are both no-ops today.
       - name: Typecheck
         run: pnpm typecheck
+      # vitest over src/**/*.test.ts (vitest.config.ts) — the pure rules the
+      # SPEC-12 composer and card are built on. Its own step for the same
+      # reason typecheck is. The display name does not list it: see the note on
+      # the `backend` job about branch protection and job names.
+      - name: Test
+        run: pnpm test
       - name: Build
         run: pnpm build
 

@@ -7,6 +7,9 @@ makes that cell load-bearing:
 
   * every `path_test.go: TestA, TestB` reference resolves — the file exists under
     backend/internal/ and each named Test function is defined in it;
+  * every `frontend/…/x.test.ts` reference resolves — the file exists and holds at
+    least one `it(`/`test(` case — and counts as naming a test (vitest, run by the
+    `frontend` CI job; only `.test.ts`, the pattern vitest.config.ts includes);
   * every row marked ✅ has a non-empty Evidence cell that names at least one
     test function (a CI job or a document may also count, but only when the row
     says so in words — see ALLOWED_NON_TEST);
@@ -28,6 +31,10 @@ CI = os.path.join(ROOT, ".github", "workflows", "ci.yml")
 
 # `modules/bank/bank_test.go: TestA, TestB` — also `modules/{movie,music}/*_test.go: TestX`
 REF = re.compile(r"`((?:[\w{},./*-]+?)_test\.go)(?::\s*([^`]+))?`")
+# `frontend/src/lib/composer-photos.test.ts` — whole-file evidence. The character
+# class admits Next route dirs (`(app)`, `[id]`, `@slot`) so such a path cannot
+# slip past unchecked.
+TSREF = re.compile(r"`(frontend/[\w./()\[\]@-]+\.test\.ts)`")
 TESTNAME = re.compile(r"\bTest[A-Za-z0-9_]+\b")
 JOB = re.compile(r"job `([a-z-]+)`")
 ALLOWED_NON_TEST = ("document, not code", "structural:", "CI, not a test")
@@ -85,6 +92,16 @@ for n, line in enumerate(lines, 1):
             if w not in have:
                 failures.append(f"{n}: {w} not defined in {path_glob}")
         named += wanted
+    for ts in TSREF.findall(evidence):
+        p = os.path.join(ROOT, ts)
+        if not os.path.exists(p):
+            failures.append(f"{n}: file not found: {ts}")
+            continue
+        with open(p, encoding="utf-8") as fh:
+            if not re.search(r"^\s*(it|test)\(", fh.read(), re.M):
+                failures.append(f"{n}: {ts} holds no it()/test() case")
+                continue
+        named.append(ts)
     for job in JOB.findall(evidence):
         if job not in ci_jobs:
             failures.append(f"{n}: CI job `{job}` not in ci.yml")

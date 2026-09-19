@@ -265,8 +265,8 @@ up → down → up plus the refused input, on the `RLS_TEST_ADMIN_URL` CI provid
 covered by typecheck and `next build` in CI and by running the composer by hand against
 the stack. This spec does not introduce a runner. *(T2 note, 2026-09-19: the composer's
 photo-list rules and the card's hero/thumbs/"+N" split are pure functions with vitest
-unit tests — `pnpm test` runs them locally in under a second — but until #10 lands they
-are a local check, not CI evidence.)*
+unit tests — `pnpm test`, under a second — and since the same day the `frontend` CI job
+runs them, so they are CI evidence for the rules, not for the components around them.)*
 
 **Prior art.** Comic and bank HTTP-contract tests (router-driven, fakes); the four
 modules' identical Asset-validation pattern; the comic importer's poll-to-ready loop for

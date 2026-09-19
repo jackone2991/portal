@@ -53,11 +53,7 @@ was checked, and code moves.
    zip and wall-clock sleeps. *Closes when:* the image pipeline's cap/variant/
    orientation rules and the poster's audio-skip are unit-tested against
    fixtures, and `RunImport` has a fake-store test.
-10. **`pnpm test` is not in CI** — SPEC-12 (2026-09-19) added the first
-    frontend tests (three vitest files under `frontend/src/lib/`, 27 tests,
-    green locally), so `vitest run` no longer exits non-zero on an empty
-    suite (audit §3.1, Tier C-13), but the `frontend` CI job still never runs
-    it. *Closes when:* `pnpm test` is in the `frontend` CI job.
+10. *(closed 2026-09-19 — see § Closed.)*
 11. **oapi-codegen is pinned in CI but not locally** (ADR-10). No `tool`
     directive in `backend/go.mod`; a developer on another version produces a
     diff the gate rejects. *Closes when:* `go.mod` carries the tool directive
@@ -174,6 +170,13 @@ personal org.
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
+- P1 #10 **`pnpm test` not in CI** — closed 2026-09-19: the `frontend` job
+  runs `pnpm test` between typecheck and build (`vitest.config.ts` gives the
+  suite the app's `@/` alias); the three vitest files SPEC-12 added are the
+  first frontend suite CI has ever run, and the matrix checker accepts a
+  `frontend/…/x.test.ts` reference as evidence, so the SPEC-12 T2 row is ✅
+  on them. The job's display name is unchanged (why: the note on the
+  `backend` job in `ci.yml`).
 - P1 #17a **SPEC-12 residue** — closed 2026-09-19. The manual run against the
   stack: every step passed, one focus defect found and fixed
   ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md)).
@@ -196,7 +199,7 @@ personal org.
   the [traceability matrix](../reference/TRACEABILITY-MATRIX.md). Tracker #8
   and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
   checks on the close-out commit. Residue has owners: the frontend vitest
-  files run locally only (P1 line 10); the manual run was done 2026-09-19
+  files run in CI since the same day (line 10, closed); the manual run was done 2026-09-19
   ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md))
   and the backfill loops are under test (17a, closed the same day).
 - P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
