@@ -48,12 +48,13 @@ type CreateParams struct {
 // PatchParams is the service-level partial update. A nil pointer means "leave
 // unchanged". AssetIDs, when present, REPLACES the whole list — a pointer to an
 // empty slice clears it — and is validated exactly as on create. The Location
-// travels as a flag plus a value (see PatchEntryInput): SetLocation false =
-// keep; true with nil = clear; true with a Location = set, validated as on create.
+// and the mood travel as a flag plus a value (see PatchEntryInput): Set* false
+// = keep; true with nil = clear; true with a value = set, validated as on create.
 type PatchParams struct {
 	UserID      uuid.UUID
 	ID          uuid.UUID
 	BodyMd      *string
+	SetMood     bool
 	Mood        *string
 	OccurredAt  *time.Time
 	AssetIDs    *[]uuid.UUID
@@ -183,6 +184,7 @@ func (s *Service) Patch(ctx context.Context, p PatchParams) (Entry, error) {
 		UserID:      p.UserID,
 		ID:          p.ID,
 		BodyMd:      p.BodyMd,
+		SetMood:     p.SetMood,
 		Mood:        mood,
 		AssetIDs:    p.AssetIDs,
 		SetLocation: p.SetLocation,

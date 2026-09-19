@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import type { StreamItem } from "@/lib/stream";
@@ -28,46 +28,29 @@ import { formatDate, useTimeConfig } from "@/lib/time";
  *
  * Reaction counts are 0 and the FABs are inert: there is no social layer yet, so
  * the bar is the design's chrome, not fake engagement. Edit/Delete in the
- * options menu ARE real — they hit the journal entry behind `ref_id`.
+ * options menu ARE real — they hit the journal entry behind `ref_id`. Editing
+ * happens in place: the caller hands in the composer as `editor` and it is
+ * rendered where the card was (SPEC-12 T5) — this card knows nothing about
+ * how an Entry is edited, only that it is not being shown meanwhile.
  */
 export interface StreamItemCardProps {
   item: StreamItem;
   displayName?: string;
-  /** Rendering the inline editor instead of the body. */
-  editing?: boolean;
+  /** When set, rendered in place of the card — the edit surface. */
+  editor?: ReactNode;
   onStartEdit?: (item: StreamItem) => void;
-  onCancelEdit?: () => void;
-  onSave?: (item: StreamItem, bodyMd: string) => void;
   onDelete?: (item: StreamItem) => void;
-  saving?: boolean;
 }
 
-export function StreamItemCard({
-  item,
-  displayName,
-  editing = false,
-  onStartEdit,
-  onCancelEdit,
-  onSave,
-  onDelete,
-  saving = false,
-}: StreamItemCardProps) {
+export function StreamItemCard({ item, displayName, editor, onStartEdit, onDelete }: StreamItemCardProps) {
   const { data: tc } = useTimeConfig();
   const when = formatDate(item.occurred_at, tc?.timezone ?? "UTC");
 
+  if (editor) return <>{editor}</>;
+
   if (item.source_module === "journal") {
     return (
-      <JournalPost
-        item={item}
-        when={when}
-        displayName={displayName}
-        editing={editing}
-        onStartEdit={onStartEdit}
-        onCancelEdit={onCancelEdit}
-        onSave={onSave}
-        onDelete={onDelete}
-        saving={saving}
-      />
+      <JournalPost item={item} when={when} displayName={displayName} onStartEdit={onStartEdit} onDelete={onDelete} />
     );
   }
 
@@ -80,14 +63,9 @@ function JournalPost({
   item,
   when,
   displayName,
-  editing,
   onStartEdit,
-  onCancelEdit,
-  onSave,
   onDelete,
-  saving,
-}: StreamItemCardProps & { when: string }) {
-  const body = item.body_md ?? "";
+}: Pick<StreamItemCardProps, "item" | "displayName" | "onStartEdit" | "onDelete"> & { when: string }) {
   // One place decides what the Entry shows (`entry-presentation.ts`); the
   // shared-link detection below then looks only at what the author typed.
   const shown = presentEntry(item);
@@ -115,14 +93,7 @@ function JournalPost({
       time={item.mood ? `${when} · ${item.mood}` : when}
       action={link ? <SharedA kind={link.kind} /> : undefined}
       text={
-        editing ? (
-          <InlineEditor
-            initial={body}
-            saving={saving}
-            onCancel={() => onCancelEdit?.()}
-            onSave={(v) => onSave?.(item, v)}
-          />
-        ) : heading || rest.trim() ? (
+        heading || rest.trim() ? (
           // Guard here, not inside RichText: an element that renders null is
           // still truthy, so Post would draw the empty body spacer on a
           // link-only post.
@@ -137,7 +108,7 @@ function JournalPost({
         ) : null
       }
       location={
-        !editing && shown.location
+        shown.location
           ? {
               name: locationLabel(shown.location),
               href: osmURL(shown.location.lat, shown.location.lon),
@@ -145,9 +116,7 @@ function JournalPost({
           : undefined
       }
       media={
-        editing
-          ? undefined
-          : hasPhotos
+        hasPhotos
           ? { type: "photos", assetIds: shown.assetIds }
           : link
           ? {
@@ -218,54 +187,6 @@ function RichText({ text }: { text: string }) {
         ),
       )}
     </p>
-  );
-}
-
-/** Edit Post — the same textarea the composer uses, in place. */
-function InlineEditor({
-  initial,
-  saving,
-  onSave,
-  onCancel,
-}: {
-  initial: string;
-  saving?: boolean;
-  onSave: (body: string) => void;
-  onCancel: () => void;
-}) {
-  const [value, setValue] = useState(initial);
-  const dirty = value.trim().length > 0 && value !== initial;
-
-  return (
-    <div>
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        rows={4}
-        autoFocus
-        className="w-full resize-none rounded-md border p-3 text-sm outline-none"
-        style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-text)" }}
-      />
-      <div className="mt-2 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onSave(value.trim())}
-          disabled={!dirty || saving}
-          className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-          style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
-          style={{ borderColor: "var(--tpl-border)", color: "var(--tpl-muted)" }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
   );
 }
 

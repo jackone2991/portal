@@ -2569,10 +2569,13 @@ export interface components {
          *     `detail` naming the id and the reason, and nothing is stored. `location`
          *     sets the Location when it is an object, clears it when null, and keeps
          *     it when absent; a violation of its rules is 422 `journal/invalid-location`.
+         *     `mood` follows the same three states: a string sets, `null` clears,
+         *     absent keeps.
          */
         JournalEntryWrite: {
             /** @description Plain markdown. Absent or empty is allowed only when the resulting Entry has at least one Attachment. */
             body_md?: string;
+            /** @description A string sets the mood (1–80 characters after trimming), `null` clears it, absent keeps it (SPEC-12 T5). */
             mood?: string | null;
             /** @description The Entry's Attachments in display order — image Assets owned by the caller with status `ready`. Replaces the whole list when present. */
             asset_ids?: string[];

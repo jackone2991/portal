@@ -17,6 +17,7 @@ import {
   patchPhoto,
   readyAssetIds,
   removePhoto,
+  storedPhotos,
   type ComposerPhoto,
   type PhotoPick,
 } from "@/lib/composer-photos";
@@ -47,19 +48,51 @@ import { locationLabel, type Location } from "@/lib/geo";
  * Location as its `location` (T3); the body is the text and nothing else.
  * Tagging friends stays inert — there is no people-tagging surface yet.
  *
+ * The same composer is the edit surface (SPEC-12 T5): rendered in place of the
+ * card with `initial` pre-filling the mood, photos and Location (the text
+ * comes through `bodyMd` as always) and `onCancel` set. Editing and creating
+ * differ only in chrome — the tab says so, the primary button says Save, and
+ * a Cancel button appears — the rules are the same rules.
+ *
  * Controlled/presentational: the caller owns the draft and the mutation (D-32);
- * the attachments and the preview toggle are ephemeral UI state and stay local.
+ * the attachments, the mood, the Location and the preview toggle are ephemeral
+ * UI state and stay local.
  */
 export interface ComposerDraft {
   /** The body to post — plain markdown, exactly what was typed. */
   bodyMd: string;
+  /** Freeform, trimmed; null for none. */
+  mood: string | null;
   /** The Entry's Attachments in the order they were added — every one `ready`. */
   assetIds: string[];
   /** The Entry's Location, or null for none. */
   location: Location | null;
 }
 
-export interface ComposerProps {
+/**
+ * What an existing Entry brings into the composer when it is edited — the
+ * draft minus the text, which arrives through `bodyMd`. The stored
+ * Attachments are `ready` by definition.
+ */
+export type ComposerInitial = Omit<ComposerDraft, "bodyMd">;
+
+/**
+ * Create mode has neither; edit mode has both — an "Edit Post" with no way
+ * out is not a state the type allows.
+ */
+type ComposerMode =
+  | { initial?: undefined; onCancel?: undefined }
+  | {
+      /**
+       * Pre-fills mood, photos and Location. Read once, on mount — the caller
+       * mounts a fresh composer per Entry.
+       */
+      initial: ComposerInitial;
+      /** The Cancel button. */
+      onCancel: () => void;
+    };
+
+export type ComposerProps = ComposerMode & {
   displayName: string;
   bodyMd: string;
   onBodyMdChange: (value: string) => void;
@@ -73,22 +106,34 @@ export interface ComposerProps {
   submitting?: boolean;
   error?: string | null;
   className?: string;
-}
+};
+
+const MAX_MOOD = 80;
 
 export function Composer({
   displayName,
   bodyMd,
   onBodyMdChange,
   onSubmit,
+  initial,
+  onCancel,
   submitting = false,
   error = null,
   className = "",
 }: ComposerProps) {
+  const editing = initial !== undefined;
   const [preview, setPreview] = useState(false);
-  const [photos, setPhotos] = useState<ComposerPhoto[]>([]);
+  // An edited Entry's stored Attachments start as ready tiles showing their
+  // thumb variant — the same tile a library pick makes.
+  const [photos, setPhotos] = useState<ComposerPhoto[]>(() =>
+    storedPhotos(initial?.assetIds ?? [], previewOf),
+  );
   // The cap message; cleared by the next add or remove.
   const [notice, setNotice] = useState<string | null>(null);
-  const [location, setLocation] = useState<Location | null>(null);
+  const [mood, setMood] = useState(initial?.mood ?? "");
+  const [moodOpen, setMoodOpen] = useState(!!initial?.mood);
+  const moodInput = useRef<HTMLInputElement>(null);
+  const [location, setLocation] = useState<Location | null>(initial?.location ?? null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
 
@@ -99,7 +144,7 @@ export function Composer({
   // in `submit`) writes it; status patches never do. Adds and removes then go
   // to the state as functional updates, so a patch queued in between is
   // merged, never overwritten.
-  const members = useRef<ComposerPhoto[]>([]);
+  const members = useRef<ComposerPhoto[]>(photos);
 
   // An object URL is browser memory until revoked: tiles release theirs when
   // removed, posted, or — whatever is left in the strip — on unmount.
@@ -114,9 +159,7 @@ export function Composer({
   const remaining = MAX_ATTACHMENTS - photos.length;
 
   function handleAdd(picks: PhotoPick[]) {
-    const result = addPhotos(members.current, picks, (pick) =>
-      pick.kind === "file" ? URL.createObjectURL(pick.file) : assetVariantURL(pick.id, "thumb"),
-    );
+    const result = addPhotos(members.current, picks, previewOf);
     const fresh = result.added.map((a) => a.photo);
     members.current = [...members.current, ...fresh];
     setPhotos((ps) => [...ps, ...fresh]);
@@ -124,6 +167,13 @@ export function Composer({
     for (const { photo, pick } of result.added) {
       if (pick.kind === "file") void upload(photo.key, pick.file);
     }
+  }
+
+  // Opens the chip if needed and puts the caret in it either way — "change
+  // the mood" with the chip already open should not be a dead tap.
+  function openMood() {
+    setMoodOpen(true);
+    requestAnimationFrame(() => moodInput.current?.focus());
   }
 
   function openPhotoPicker() {
@@ -163,13 +213,23 @@ export function Composer({
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!postable) return;
-    const accepted = await onSubmit({ bodyMd, assetIds: readyAssetIds(photos), location });
+    const accepted = await onSubmit({
+      bodyMd,
+      mood: mood.trim() || null,
+      assetIds: readyAssetIds(photos),
+      location,
+    });
     if (!accepted) return; // the parent has shown the error; the draft stays
+    // An accepted edit is the end of this composer: the caller swaps the card
+    // back in and the unmount cleanup releases the strip.
+    if (editing) return;
     // Adds are frozen while submitting, so the strip is exactly what was posted.
     members.current.forEach(release);
     members.current = [];
     setPhotos([]);
     setNotice(null);
+    setMood("");
+    setMoodOpen(false);
     setLocation(null);
     setPreview(false);
   }
@@ -203,7 +263,7 @@ export function Composer({
           }}
         >
           <Icon name="status-icon" size={16} style={{ color: "var(--tpl-accent)" }} />
-          <span>Status</span>
+          <span>{editing ? "Edit Post" : "Status"}</span>
         </span>
       </div>
 
@@ -247,11 +307,40 @@ export function Composer({
           )}
         </div>
 
-        {(photos.length > 0 || location) && (
+        {(photos.length > 0 || moodOpen || location) && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {photos.map((p) => (
               <PhotoTile key={p.key} photo={p} onRemove={() => handleRemove(p)} />
             ))}
+
+            {moodOpen && (
+              <span
+                className="relative inline-flex items-center gap-2 rounded-full py-1 pl-3 pr-8 text-xs font-medium"
+                style={{ background: "var(--tpl-surface-2)", color: "var(--tpl-text)" }}
+              >
+                <span style={{ color: "var(--tpl-accent)" }}>
+                  <Icon name="happy-face-icon" size={12} />
+                </span>
+                <input
+                  ref={moodInput}
+                  value={mood}
+                  onChange={(e) => setMood(e.target.value)}
+                  maxLength={MAX_MOOD}
+                  placeholder="Tâm trạng…"
+                  aria-label="Tâm trạng"
+                  className="w-32 bg-transparent text-xs outline-none placeholder:text-[var(--tpl-muted)]"
+                  style={{ color: "var(--tpl-text)" }}
+                />
+                <ChipRemove
+                  label="Bỏ tâm trạng"
+                  onClick={() => {
+                    setMood("");
+                    setMoodOpen(false);
+                  }}
+                  inline
+                />
+              </span>
+            )}
 
             {location && (
               <span
@@ -290,6 +379,13 @@ export function Composer({
           />
           <IconBtn label="Tag friends (coming soon)" icon="computer-icon" disabled />
           <IconBtn
+            label={mood ? "Đổi tâm trạng" : "Thêm tâm trạng"}
+            icon="happy-face-icon"
+            active={mood.trim().length > 0}
+            disabled={submitting}
+            onClick={openMood}
+          />
+          <IconBtn
             label={location ? "Đổi địa điểm" : "Thêm địa điểm"}
             icon="small-pin-icon"
             active={!!location}
@@ -298,18 +394,14 @@ export function Composer({
           />
 
           <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPreview((p) => !p)}
-              className="rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)]"
-              style={{
-                borderColor: "var(--tpl-border)",
-                background: "transparent",
-                color: "var(--tpl-muted)",
-              }}
-            >
+            {onCancel && (
+              <SecondaryBtn onClick={onCancel} disabled={submitting}>
+                Cancel
+              </SecondaryBtn>
+            )}
+            <SecondaryBtn onClick={() => setPreview((p) => !p)}>
               {preview ? "Edit" : "Preview"}
-            </button>
+            </SecondaryBtn>
             <button
               type="submit"
               disabled={!postable}
@@ -323,7 +415,7 @@ export function Composer({
               className="rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))" }}
             >
-              {submitting ? "Posting…" : waiting ? "Đang tải ảnh…" : "Post Status"}
+              {primaryLabel(editing, submitting, waiting)}
             </button>
           </div>
         </div>
@@ -370,9 +462,43 @@ function ChipRemove({
   );
 }
 
+/** What a tile shows: the file itself while it uploads, the thumb variant for an Asset. */
+function previewOf(pick: PhotoPick): string {
+  return pick.kind === "file" ? URL.createObjectURL(pick.file) : assetVariantURL(pick.id, "thumb");
+}
+
+/** The primary button says what it will do, or why it is waiting. */
+function primaryLabel(editing: boolean, submitting: boolean, waiting: boolean): string {
+  if (submitting) return editing ? "Saving…" : "Posting…";
+  if (waiting) return "Đang tải ảnh…";
+  return editing ? "Save" : "Post Status";
+}
+
 /** Only a file pick holds browser memory; a library thumb is just a URL. */
 function release(photo: ComposerPhoto) {
   if (photo.preview.startsWith("blob:")) URL.revokeObjectURL(photo.preview);
+}
+
+function SecondaryBtn({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border px-4 py-2 text-sm font-semibold transition hover:bg-[var(--tpl-surface-2)] disabled:opacity-50"
+      style={{ borderColor: "var(--tpl-border)", background: "transparent", color: "var(--tpl-muted)" }}
+    >
+      {children}
+    </button>
+  );
 }
 
 /**

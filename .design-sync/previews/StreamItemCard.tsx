@@ -1,9 +1,11 @@
-import { StreamItemCard, DSQuerySeed } from "portal-frontend";
+import { Composer, StreamItemCard, DSQuerySeed } from "portal-frontend";
 
 // One row of the life stream (SPEC-06). The stream mixes two shapes: journal
-// items carry a body the user wrote and can edit inline, while system items are
-// projections of something that happened elsewhere (a track published, a comic
-// chapter read) and carry a title + link instead.
+// items carry a body the user wrote and can be edited in place — the caller
+// hands the card a composer as `editor` and it renders where the card was
+// (SPEC-12 T5) — while system items are projections of something that
+// happened elsewhere (a track published, a comic chapter read) and carry a
+// title + link instead.
 //
 // It reads ["time-config"] for the display timezone — the app never trusts the
 // browser clock — so that cache is seeded; without it the date line is wrong.
@@ -48,10 +50,21 @@ const system = {
 
 const handlers = {
   onStartEdit: () => {},
-  onCancelEdit: () => {},
-  onSave: () => {},
   onDelete: () => {},
 };
+
+// The edit surface: the same composer, pre-filled from the Entry, with Cancel.
+const editor = (submitting: boolean) => (
+  <Composer
+    displayName="Nguyễn Lâm"
+    bodyMd={placed.body_md}
+    onBodyMdChange={() => {}}
+    onSubmit={() => false}
+    onCancel={() => {}}
+    initial={{ mood: placed.mood, assetIds: [], location: placed.location }}
+    submitting={submitting}
+  />
+);
 
 export const JournalItem = () => frame(<StreamItemCard item={journal} displayName="Nguyễn Lâm" {...handlers} />);
 
@@ -60,11 +73,11 @@ export const PlacedItem = () => frame(<StreamItemCard item={placed} displayName=
 // A system item: no body of its own, just what happened and a way back to it.
 export const SystemItem = () => frame(<StreamItemCard item={system} displayName="Nguyễn Lâm" {...handlers} />);
 
-// Inline editing — the same row, swapped for its editor rather than a dialog.
+// Editing in place — the same row, swapped for the composer rather than a dialog.
 export const Editing = () =>
-  frame(<StreamItemCard item={journal} displayName="Nguyễn Lâm" editing {...handlers} />);
+  frame(<StreamItemCard item={placed} displayName="Nguyễn Lâm" editor={editor(false)} {...handlers} />);
 
-// Mid-save: the editor stays visible and locked rather than disappearing, so a
-// slow request cannot look like the edit was lost.
+// Mid-save: the composer stays visible and locked rather than disappearing, so
+// a slow request cannot look like the edit was lost.
 export const Saving = () =>
-  frame(<StreamItemCard item={journal} displayName="Nguyễn Lâm" editing saving {...handlers} />);
+  frame(<StreamItemCard item={placed} displayName="Nguyễn Lâm" editor={editor(true)} {...handlers} />);

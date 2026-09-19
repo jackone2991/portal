@@ -46,8 +46,11 @@ export interface CreateEntryInput {
    * else 422 `journal/invalid-body` (SPEC-12).
    */
   body_md?: string;
-  /** Freeform, 1–80 chars after trimming when present (§5 P0.2). */
-  mood?: string;
+  /**
+   * Freeform, 1–80 chars after trimming when present (§5 P0.2). On PATCH a
+   * string sets it, `null` clears it, absent keeps it (SPEC-12 T5).
+   */
+  mood?: string | null;
   /**
    * The Entry's Attachments in display order: at most ten distinct ready image
    * Assets the caller owns, else 422 `journal/invalid-asset` naming the id and

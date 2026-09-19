@@ -9,6 +9,7 @@ import {
   patchPhoto,
   readyAssetIds,
   removePhoto,
+  storedPhotos,
   type ComposerPhoto,
   type PhotoPick,
 } from "./composer-photos";
@@ -98,6 +99,23 @@ describe("addPhotos", () => {
     const full = Array.from({ length: MAX_ATTACHMENTS }, (_, i) => ready(`asset:${i}`, String(i)));
     addPhotos(full, [{ kind: "asset", id: "0" }, { kind: "file", file: file("over.jpg") }], spy);
     expect(calls).toEqual([]);
+  });
+});
+
+describe("storedPhotos", () => {
+  it("starts an edited Entry with its Attachments as ready tiles, in stored order", () => {
+    const tiles = storedPhotos(["b", "a"], preview);
+    expect(tiles.map((p) => [p.key, p.assetId, p.status, p.preview])).toEqual([
+      ["asset:b", "b", "ready", "thumb:b"],
+      ["asset:a", "a", "ready", "thumb:a"],
+    ]);
+    expect(readyAssetIds(tiles)).toEqual(["b", "a"]);
+  });
+
+  it("makes a stored Attachment picked again from the library a duplicate, not a second tile", () => {
+    const r = add(storedPhotos(["a"], preview), [{ kind: "asset", id: "a" }]);
+    expect(r.photos).toHaveLength(1);
+    expect(r.duplicates).toBe(1);
   });
 });
 

@@ -23,15 +23,33 @@ type Handler struct {
 
 // entryReq is the create/patch body. Every field is a pointer so absence can be
 // told from an explicit value: on PATCH a nil field is "keep", and a present
-// asset_ids (even `[]`) replaces the whole list (SPEC-12 T1). Location is kept
-// raw because it has THREE wire states — absent (keep), `null` (clear), an
-// object (set) — and a *struct collapses the first two (SPEC-12 T3).
+// asset_ids (even `[]`) replaces the whole list (SPEC-12 T1). Location and
+// mood are kept raw because they have THREE wire states — absent (keep),
+// `null` (clear), a value (set) — and a pointer collapses the first two
+// (SPEC-12 T3, T5).
 type entryReq struct {
 	BodyMd     *string         `json:"body_md"`
-	Mood       *string         `json:"mood"`
+	Mood       json.RawMessage `json:"mood"`
 	OccurredAt *time.Time      `json:"occurred_at"`
 	AssetIDs   *[]string       `json:"asset_ids"`
 	Location   json.RawMessage `json:"location"`
+}
+
+// mood decodes the raw member: (set=false) when absent, (set=true, nil) for
+// `null`, (set=true, &s) for a string. Anything else is ErrInvalidMood — the
+// service then judges the string itself (1–80 characters after trimming).
+func (b *entryReq) mood() (set bool, mood *string, err error) {
+	if len(b.Mood) == 0 {
+		return false, nil, nil
+	}
+	if string(b.Mood) == "null" {
+		return true, nil, nil
+	}
+	var s string
+	if err := json.Unmarshal(b.Mood, &s); err != nil {
+		return true, nil, ErrInvalidMood
+	}
+	return true, &s, nil
 }
 
 // locationReq is the wire Location with every field optional, so a name-only
@@ -102,7 +120,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
-	p := CreateParams{UserID: uid, Mood: body.Mood, OccurredAt: body.OccurredAt, Location: loc}
+	_, mood, err := body.mood() // likewise: absent and null are both "no mood"
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
+	p := CreateParams{UserID: uid, Mood: mood, OccurredAt: body.OccurredAt, Location: loc}
 	if body.BodyMd != nil {
 		p.BodyMd = *body.BodyMd // absent = "" — legal only with an Attachment; the service decides
 	}
@@ -191,11 +214,17 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		writeJournalErr(w, err)
 		return
 	}
+	setMood, mood, err := body.mood()
+	if err != nil {
+		writeJournalErr(w, err)
+		return
+	}
 	entry, err := h.svc.Patch(r.Context(), PatchParams{
 		UserID:      uid,
 		ID:          id,
 		BodyMd:      body.BodyMd,
-		Mood:        body.Mood,
+		SetMood:     setMood,
+		Mood:        mood,
 		OccurredAt:  body.OccurredAt,
 		AssetIDs:    ids,
 		SetLocation: setLoc,

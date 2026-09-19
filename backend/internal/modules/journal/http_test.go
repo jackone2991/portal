@@ -523,3 +523,38 @@ func TestHTTPLocationAloneIsNotAnEntry(t *testing.T) {
 	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"asset_ids":`+idsJSON(a)+`,"location":`+loc+`}`), http.StatusCreated)["id"].(string)
 	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"asset_ids":[]}`), http.StatusUnprocessableEntity, "journal/invalid-body")
 }
+
+// ── Mood on PATCH (SPEC-12 T5, #14) ─────────────────────────────────
+
+// PATCH mood follows the location's three states — a string sets, null
+// clears, absent keeps — so the edit surface can take a mood away, not only
+// change it. A blank string is still 422 journal/invalid-mood.
+func TestHTTPPatchMoodSetClearKeep(t *testing.T) {
+	h, repo, _ := newHTTP(t)
+	owner := uuid.New()
+	id := entryOut(t, do(t, h, owner, http.MethodPost, "/journal/entries", `{"body_md":"t","mood":"calm"}`), http.StatusCreated)["id"].(string)
+
+	out := entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"body_md":"edited"}`), http.StatusOK)
+	if out["mood"] != "calm" {
+		t.Fatalf("absent mood changed it to %#v; want kept", out["mood"])
+	}
+
+	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"  tired  "}`), http.StatusOK)
+	if out["mood"] != "tired" {
+		t.Fatalf("mood = %#v, want \"tired\" (set, trimmed)", out["mood"])
+	}
+
+	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":"   "}`), http.StatusUnprocessableEntity, "journal/invalid-mood")
+	problem(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":123}`), http.StatusUnprocessableEntity, "journal/invalid-mood") // wrong type, same problem
+	if e := repo.rows[uuid.MustParse(id)]; e.Mood == nil || *e.Mood != "tired" {
+		t.Fatalf("a refused mood changed the stored one to %v", e.Mood)
+	}
+
+	out = entryOut(t, do(t, h, owner, http.MethodPatch, "/journal/entries/"+id, `{"mood":null}`), http.StatusOK)
+	if out["mood"] != nil {
+		t.Fatalf("after clearing mood = %#v, want null", out["mood"])
+	}
+	if e := repo.rows[uuid.MustParse(id)]; e.Mood != nil {
+		t.Fatalf("stored mood after clear = %v, want nil", *e.Mood)
+	}
+}

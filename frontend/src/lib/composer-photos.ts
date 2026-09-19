@@ -90,6 +90,20 @@ export function addPhotos(
   return { added, duplicates, refused };
 }
 
+/**
+ * The tiles an edited Entry starts with (SPEC-12 T5): its stored Attachments,
+ * ready by definition, in stored order. Built through `addPhotos` so they carry
+ * the same keys a library pick would — picking one of them again is a
+ * duplicate, not a second tile.
+ */
+export function storedPhotos(assetIds: string[], preview: (pick: PhotoPick) => string): ComposerPhoto[] {
+  return addPhotos(
+    [],
+    assetIds.map((id) => ({ kind: "asset", id })),
+    preview,
+  ).added.map((a) => a.photo);
+}
+
 export function removePhoto(photos: ComposerPhoto[], key: string): ComposerPhoto[] {
   return photos.filter((p) => p.key !== key);
 }

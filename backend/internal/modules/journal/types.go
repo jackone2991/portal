@@ -87,13 +87,14 @@ type CreateEntryInput struct {
 // leaves the column unchanged (COALESCE in PatchEntry). AssetIDs is a pointer
 // to a slice on purpose: nil = keep, a pointer to an empty slice = clear — the
 // wire distinction between an absent `asset_ids` and `"asset_ids": []`.
-// The Location has three wire states — absent (keep), null (clear), object
-// (set) — so it travels as a flag plus a value: SetLocation false = keep;
-// true with a nil Location = clear; true with one = set (SPEC-12 T3).
+// The Location and the mood have three wire states — absent (keep), null
+// (clear), value (set) — so each travels as a flag plus a value: Set* false =
+// keep; true with nil = clear; true with a value = set (SPEC-12 T3, T5).
 type PatchEntryInput struct {
 	UserID      uuid.UUID
 	ID          uuid.UUID
 	BodyMd      *string
+	SetMood     bool
 	Mood        *string
 	AssetIDs    *[]uuid.UUID
 	SetLocation bool

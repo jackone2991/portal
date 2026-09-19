@@ -163,8 +163,8 @@ func (f *fakeRepo) PatchEntry(_ context.Context, in PatchEntryInput) (Entry, err
 	if in.BodyMd != nil {
 		e.BodyMd = *in.BodyMd
 	}
-	if in.Mood != nil {
-		e.Mood = in.Mood
+	if in.SetMood {
+		e.Mood = in.Mood // nil clears
 	}
 	if in.AssetIDs != nil {
 		e.AssetIDs = *in.AssetIDs

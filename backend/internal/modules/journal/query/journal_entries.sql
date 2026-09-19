@@ -43,15 +43,16 @@ LIMIT @lim::int;
 -- occurred_at}. A NULL arg leaves the column unchanged (COALESCE), so nil
 -- pointers from the service mean "keep". asset_ids REPLACES the whole list when
 -- present — an empty array (not NULL) clears it (SPEC-12 T1). The Location
--- cannot use COALESCE — NULL is how it is CLEARED — so @set_location says
--- whether the three location args apply at all: false keeps them, true writes
--- them as sent (all NULL = clear, all set = replace; SPEC-12 T3). updated_at
--- always advances; occurred_at is only moved when the caller edits it, so an
--- entry keeps its timeline position unless occurred_at itself changed.
--- Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
+-- and the mood cannot use COALESCE — NULL is how they are CLEARED — so
+-- @set_location / @set_mood say whether their args apply at all: false keeps
+-- the column, true writes the arg as sent (NULL = clear, a value = replace;
+-- SPEC-12 T3, T5). updated_at always advances; occurred_at is only moved when
+-- the caller edits it, so an entry keeps its timeline position unless
+-- occurred_at itself changed. Owner-scoped; no matching row →
+-- ErrEntryNotFound (404, never leaks existence).
 UPDATE journal_entries
 SET body_md       = COALESCE(sqlc.narg('body_md'), body_md),
-    mood          = COALESCE(sqlc.narg('mood'), mood),
+    mood          = CASE WHEN @set_mood::bool THEN sqlc.narg('mood')::text ELSE mood END,
     asset_ids     = COALESCE(sqlc.narg('asset_ids')::uuid[], asset_ids),
     location_name = CASE WHEN @set_location::bool THEN sqlc.narg('location_name')::text   ELSE location_name END,
     location_lat  = CASE WHEN @set_location::bool THEN sqlc.narg('location_lat')::float8  ELSE location_lat  END,

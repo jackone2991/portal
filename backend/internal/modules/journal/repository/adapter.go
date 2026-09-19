@@ -110,10 +110,11 @@ func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (j
 	err := a.runInTx(ctx, func(tx pgx.Tx) error {
 		q := New(tx)
 		p := PatchEntryParams{
-			BodyMd: in.BodyMd,
-			Mood:   in.Mood,
-			ID:     pgUUID(in.ID),
-			UserID: pgUUID(in.UserID),
+			BodyMd:  in.BodyMd,
+			SetMood: in.SetMood,
+			Mood:    in.Mood, // written as sent when SetMood: nil clears
+			ID:      pgUUID(in.ID),
+			UserID:  pgUUID(in.UserID),
 		}
 		if in.AssetIDs != nil {
 			// A nil slice is sent as SQL NULL (COALESCE keeps the column); a

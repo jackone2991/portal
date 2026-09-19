@@ -59,12 +59,13 @@ type Querier interface {
 	// occurred_at}. A NULL arg leaves the column unchanged (COALESCE), so nil
 	// pointers from the service mean "keep". asset_ids REPLACES the whole list when
 	// present — an empty array (not NULL) clears it (SPEC-12 T1). The Location
-	// cannot use COALESCE — NULL is how it is CLEARED — so @set_location says
-	// whether the three location args apply at all: false keeps them, true writes
-	// them as sent (all NULL = clear, all set = replace; SPEC-12 T3). updated_at
-	// always advances; occurred_at is only moved when the caller edits it, so an
-	// entry keeps its timeline position unless occurred_at itself changed.
-	// Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
+	// and the mood cannot use COALESCE — NULL is how they are CLEARED — so
+	// @set_location / @set_mood say whether their args apply at all: false keeps
+	// the column, true writes the arg as sent (NULL = clear, a value = replace;
+	// SPEC-12 T3, T5). updated_at always advances; occurred_at is only moved when
+	// the caller edits it, so an entry keeps its timeline position unless
+	// occurred_at itself changed. Owner-scoped; no matching row →
+	// ErrEntryNotFound (404, never leaks existence).
 	PatchEntry(ctx context.Context, arg PatchEntryParams) (JournalEntry, error)
 	// media:asset_deleted (SPEC-12 T4): take one Asset out of the Attachments of
 	// every Entry of the owner that shows it. array_remove keeps the order of the
