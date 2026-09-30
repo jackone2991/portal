@@ -1,17 +1,18 @@
 # SPEC-02 — Comic Vertical (end-to-end)
 
-**Status:** ready to build, rev 14 · **Drafted:** 2026-07-05 · **Last-verified:** 2026-08-15 · **Last verified:** never
-**rev 14 (2026-08-15):** **P1.8 sync imports incrementally per chapter.** A whole-comic sync no longer scrapes-all-then-imports-once (slow, all-or-nothing, opaque). The scraper discovers chapters and processes them in batches of **`SCRAPER_BATCH_SIZE` (default 1 = each chapter imports the moment it's scraped)**, each batch a **separate `comic_imports` job** requested via the new internal `POST /internal/comic/sync-batch {source_id}` → chapters appear in the UI one-by-one as scraped (verified: `scraped`↔`chapters` track 1:1). Discovery itself retries `BATCH_RETRIES`× (Cloudflare can challenge the index page too). **Stop button (0030):** `POST /sync-sources/{id}/cancel` → the api signals the scraper (`/cancel`, in-memory set) and marks the source `cancelled` (new status); the scraper checks before each chapter and stops (the in-flight chapter finishes), keeping chapters already imported. UI shows a "⏹ Ngừng" button while syncing (and an "Đã ngừng" badge after). A batch that yields zero images (Cloudflare re-challenge) is **retried up to 3×** (`SCRAPER_BATCH_RETRIES`); chapters still failing are collected and shown on the source row as **"⚠ N chương lỗi: …"** (last_error). Migration `0028` gains `total_chapters`/`scraped_chapters` (0029) so the source shows **live "Cào X/Y chương (%)"** across all batches (progress → source, not a per-import job). New internal endpoints `sync-batch`/`sync-progress`(source_id)/`sync-finalize`; `sync-callback` now enqueues one batch's import only. **Fix:** `sync-batch` runs outside `authTenant`, so `RequestSyncBatch` creates the batch import via an API-side `runInUserTenant` (comic_imports.tenant_id default). **Verified:** 22-chapter sync → 2 batches (20+2), batch 1's 20 chapters imported *before* batch 2 finished, 636 pages, pages render. (Scraper host-mode still required — Cloudflare blocks the container; see [scraper/README.md](../../../scraper/README.md).)
-**rev 13 (2026-08-15):** **P1.8 external-source sync (full UI feature).** A comic can bind to external source URLs (`comic_sync_sources`, migration `0028`, tenant_id+RLS). Clicking "Đồng bộ" → `TriggerSync` creates a comic-level import job (reusing P1.7) and calls a **new Python scraper service** (`scraper/`, FastAPI + SeleniumBase undetected-Chrome on xvfb); the scraper discovers chapters, scrapes image URLs, downloads a folder-per-chapter tree, zips it, uploads to MinIO at `import/{importID}.zip`, and hits the shared-secret `POST /internal/comic/sync-callback` → Go enqueues `comic:import_zip` (the whole optimized import pipeline is reused untouched). Endpoints: `GET/POST /comics/{id}/sync-sources`, `POST /sync-sources/{id}/sync` (202), `DELETE /sync-sources/{id}`, internal `sync-callback`. Wiring: `COMIC_SCRAPER_URL` (nil ⇒ feature off), `COMIC_SYNC_SECRET`; new `scraper` docker service (internal-only, `shm_size` for Chrome). UI: "Nguồn đồng bộ" section on the comic manager (add source, list, Sync button, live scrape+import status). **Verified:** api→scraper→callback→import plumbing end-to-end (error propagates to `last_error`). **Known limit:** the *containerized* Chrome is fingerprinted+blocked by Cloudflare on truyenqq (`title='Just a moment…'`, xvfb-headful and `uc_gui_click_captcha` both fail); the container shares the host IP, so it's a fingerprint problem — run the scraper **on the host** (real Chrome passes) via the recipe in [scraper/README.md](../../../scraper/README.md).
+**Status:** current, rev 15 · **Drafted:** 2026-07-05 · **Last verified:** 2026-09-30
+**rev 14 (2026-08-15):** **P1.10 external-source sync imports incrementally per chapter.** A whole-comic sync no longer scrapes-all-then-imports-once (slow, all-or-nothing, opaque). The scraper discovers chapters and processes them in batches of **`SCRAPER_BATCH_SIZE` (default 1 = each chapter imports the moment it's scraped)**, each batch a **separate `comic_imports` job** requested via the new internal `POST /internal/comic/sync-batch {source_id}` → chapters appear in the UI one-by-one as scraped (verified: `scraped`↔`chapters` track 1:1). Discovery itself retries `BATCH_RETRIES`× (Cloudflare can challenge the index page too). **Stop button (0030):** `POST /sync-sources/{id}/cancel` → the api signals the scraper (`/cancel`, in-memory set) and marks the source `cancelled` (new status); the scraper checks before each chapter and stops (the in-flight chapter finishes), keeping chapters already imported. UI shows a "⏹ Ngừng" button while syncing (and an "Đã ngừng" badge after). A batch that yields zero images (Cloudflare re-challenge) is **retried up to 3×** (`SCRAPER_BATCH_RETRIES`); chapters still failing are collected and shown on the source row as **"⚠ N chương lỗi: …"** (last_error). Migration `0028` gains `total_chapters`/`scraped_chapters` (0029) so the source shows **live "Cào X/Y chương (%)"** across all batches (progress → source, not a per-import job). New internal endpoints `sync-batch`/`sync-progress`(source_id)/`sync-finalize`; `sync-callback` now enqueues one batch's import only. **Fix:** `sync-batch` runs outside `authTenant`, so `RequestSyncBatch` creates the batch import via an API-side `runInUserTenant` (comic_imports.tenant_id default). **Verified:** 22-chapter sync → 2 batches (20+2), batch 1's 20 chapters imported *before* batch 2 finished, 636 pages, pages render. (Scraper host-mode still required — Cloudflare blocks the container; see [scraper/README.md](../../../scraper/README.md).)
+**rev 13 (2026-08-15):** **P1.10 external-source sync (full UI feature).** A comic can bind to external source URLs (`comic_sync_sources`, migration `0028`, tenant_id+RLS). Clicking "Đồng bộ" → `TriggerSync` creates a comic-level import job (reusing P1.7) and calls a **new Python scraper service** (`scraper/`, FastAPI + SeleniumBase undetected-Chrome on xvfb); the scraper discovers chapters, scrapes image URLs, downloads a folder-per-chapter tree, zips it, uploads to MinIO at `import/{importID}.zip`, and hits the shared-secret `POST /internal/comic/sync-callback` → Go enqueues `comic:import_zip` (the whole optimized import pipeline is reused untouched). Endpoints: `GET/POST /comics/{id}/sync-sources`, `POST /sync-sources/{id}/sync` (202), `DELETE /sync-sources/{id}`, internal `sync-callback`. Wiring: `COMIC_SCRAPER_URL` (nil ⇒ feature off), `COMIC_SYNC_SECRET`; new `scraper` docker service (internal-only, `shm_size` for Chrome). UI: "Nguồn đồng bộ" section on the comic manager (add source, list, Sync button, live scrape+import status). **Verified:** api→scraper→callback→import plumbing end-to-end (error propagates to `last_error`). **Known limit:** the *containerized* Chrome is fingerprinted+blocked by Cloudflare on truyenqq (`title='Just a moment…'`, xvfb-headful and `uc_gui_click_captcha` both fail); the container shares the host IP, so it's a fingerprint problem — run the scraper **on the host** (real Chrome passes) via the recipe in [scraper/README.md](../../../scraper/README.md).
 **rev 12 (2026-08-15):** **P1.7 import performance optimized + hardened.** (1) `media:process_image` moved off the concurrency-1 `heavy` queue onto a new **`image` queue** with its own pool (`IMAGE_CONCURRENCY`, default 3) — variants transcode in parallel while video stays serial (SPEC-01 P0.1 OOM guard preserved: image decodes are dimension-capped). (2) **Parallel ingest** (`IMPORT_INGEST_CONCURRENCY`, default 4): `RunImport` now (A) creates all chapters, (B) reads the zip serially but fans the DB+storage ingest out to a bounded pool (I/O-bound: MinIO PUT + tenant tx per image) — measured ingest **5.8 → ~22 img/s**, no longer starving the transcode pool; then (C) drains, paging **each chapter the moment its images are ready** so pages commit incrementally (crash-resilient) and `succeeded` climbs live. (3) New `mediaapi.AssetStatuses(ids)` → **one** `WHERE id = ANY(...)` query per poll round instead of a `GetAsset` (one tenant tx) per asset. (4) `media.UploadSource` skips the temp-file spool for `io.ReadSeeker` bodies. **Fixes found in load-testing the 1.68 GB / 9129-image archive:** (a) the import task is enqueued *outside* the request pg tx, so the worker could dequeue before `SetImportUpload` committed → `RunImport` now waits briefly for `upload_ref` instead of failing (`no upload`); (b) the API's global 30 s request timeout cancelled the multi-GB API-proxied upload's S3 PutObject → raised to a generous per-request window (`cmd/api/main.go`, `ReadHeaderTimeout` still guards headers). Transcode throughput is I/O-bound on dev's bind-mounted MinIO (~6 img/s, few cores used); it scales further on prod storage. *(Tradeoff: `succeeded` stays 0 during the up-front parallel ingest, then climbs during the drain.)*
 **rev 4 (2026-08-07):** reader-experience redesign added as phased R1–R4 (end of §5). Reader prefs reframed as client-side (D-32), superseding P1.6's server pref.
 **rev 5 (2026-08-07):** R2–R4 implemented — page slider + chapter menu + prev/next chapter, double-page + RTL (migration `0024_comic_reading_direction`), preloader + seamless webtoon, zoom. `reading_direction` is live end-to-end.
 **rev 6 (2026-08-07):** R5 implemented — full-screen immersive reader (breaks out of the app shell into a fixed overlay; webtoon scrolls inside it), `prefers-reduced-motion`, and a `?` keyboard-shortcut help.
 **rev 7 (2026-08-07):** `/library/comic` list redesigned (renamed sidebar "Truyện tranh", dropped the toolbar strip, "new comic" is now a grid tile + dialog); migration `0025_comic_user_write_grant` lets every `user` create & publish their own comics (see P0.2).
 **rev 8 (2026-08-07):** owner CRUD manager implemented on `/library/comic/[id]` — edit metadata + cover, publish/unpublish, delete, chapter add/rename/reorder/delete, and page upload/reorder/delete. Page & cover images go through the SPEC-01 pipeline via `lib/media-upload.ts` (verified: upload → ffmpeg WebP variant → thumbnail renders). Backend CRUD was already complete; this closes the frontend gap.
-**rev 11 (2026-08-08):** import task now enqueued with `asynq.Timeout(12h)` + `MaxRetry(0)` — a long whole-comic import used to exceed asynq's ~30-min lease, get its context cancelled, and re-run → duplicate chapters. **rev 10 (2026-08-07):** P1.7 extended to **whole-comic (multi-chapter) zip import** — migration `0027_comic_import_comic_level` (nullable `chapter_id`), endpoint `POST /comics/{id}/imports`, worker groups images by top-level folder → one chapter per folder (natural-sorted, handles a wrapper folder); limits raised to 3 GB / 20000 entries. Frontend "Nhập bộ từ ZIP" on the comic manager (comic-level) alongside per-chapter "Nhập ZIP". Verified on a real 1.68 GB / ~9100-image / ~100-chapter archive.
+**rev 11 (2026-08-08):** import task now enqueued with `asynq.Timeout(12h)` + `MaxRetry(0)` — a long whole-comic import used to exceed asynq's ~30-min lease, get its context cancelled, and re-run → duplicate chapters. **rev 10 (2026-08-07):** P1.7 extended to **whole-comic (multi-chapter) zip import** — migration `0027_comic_import_comic_level` (nullable `chapter_id`), endpoint `POST /comics/{id}/imports`, worker groups images by top-level folder → one chapter per folder (natural-sorted, handles a wrapper folder); limits raised to 3 GB / 20000 entries (the entry cap is `importMaxEntries` in `comic/import.go`, since raised to 100,000; that constant, not this note, is current). Frontend "Nhập bộ từ ZIP" on the comic manager (comic-level) alongside per-chapter "Nhập ZIP". Verified on a real 1.68 GB / ~9100-image / ~100-chapter archive.
 **rev 9 (2026-08-07):** **P1.7 zip chapter import implemented (full server-side).** Migration `0026_comic_imports` (persisted job + per-file report, tenant_id+RLS). Endpoints `POST /chapters/{id}/imports`, `PUT /imports/{id}/zip` (API-proxied — dev MinIO presign isn't browser-reachable; 500 MB cap), `GET /imports/{id}` (poll). Worker task `comic:import_zip` (default queue) spools the zip → unpacks (guards: 300 entries, image-only, no traversal, zip-bomb ratio) → natural-sort → `mediaapi.IngestImage` per image in a committed tenant tx → poll assets ready → create pages. Frontend `lib/comic-import.ts` (create→upload→poll) with "Nhập chương từ ZIP" (new chapter) + per-chapter "Nhập ZIP". Verified: 4-image zip `002,10,1,003` → done, natural order `1,002,003,10`, variants render. *(Note: found+fixed a latent pgx bug — under `QueryExecModeExec`, a jsonb param passed as `[]byte` is sent as bytea and rejected; pass the json as a string. The audit logger has the same latent bug.)*
-**Module:** `comic` (skeleton: `module.go` + `api/` stub) · **Depends on:** SPEC-01 (image kind)
+**Module:** `comic` · **Depends on:** SPEC-01 (image kind)
+**Downstream consumers:** SPEC-07 P1.6 (comic leg, `comicapi.Continue`), SPEC-04 (`comic:published` bell)
 **Upstream:** [briefs/02-comic-vertical.md](../briefs/02-comic-vertical.md) · **Refs:** feature-inventory.md §7, frontend.md Phase 4
 **Role:** reference implementation of the *media → domain vertical* pattern
 (migration → `query/` → repository → service/handler → `MountHTTP` → real view),
@@ -40,12 +41,15 @@ Until one vertical is real, every future vertical estimate is a guess.
 
 - Comments, ratings, reactions on comics (social layer, later).
 - Follow/subscribe to a series; new-chapter notifications (needs the notification
-  module; the `comic:chapter_published` event is emitted anyway — P1.9).
-- Import/scraping from external comic sources.
+  module; `comic:published` is emitted anyway and reaches the bell — P1.9).
+- Import/scraping from external sources was a v1 non-goal; reversed by rev 13
+  (2026-08-15), see P1.10. Still out of scope: scheduled/automatic re-sync, and
+  passing anti-bot challenges from the containerised scraper (host mode only).
 - Per-comic visibility/ACL: `published` = visible to **all authenticated users** at
   v1. Visibility scoping arrives with the privacy layer. (Recommendation locked
   from the feature doc's open question.)
-- Reading-direction RTL (manga) and page-spread layout intelligence — P2.
+- Automatic page-spread detection (double-page art); RTL and manual double-page
+  pairing shipped as R3.
 - Offline reading / PWA caching.
 
 ## 4. User stories
@@ -76,9 +80,23 @@ delete semantics sane. A page is removed via `DELETE /api/v1/pages/{id}` (§7),
 which drops the `comic_pages` row only — the referenced media asset keeps its own
 lifecycle (assets are never deleted as a side effect of page deletion).
 
+**Owned by the creator** means the asset's owner, as `mediaapi` returns it
+(`assets.owner_id`), equals `comics.owner_user_id` of the target comic, whoever the
+caller is (the owner or a `comics:write:any` editor). Assets created by zip import
+(P1.7) or sync (P1.10) are ingested via `mediaapi.Ingest` with
+owner = `comics.owner_user_id`, never the requesting editor. *(Code follow-up: the
+shipped `RunImport` ingests with owner = `comic_imports.owner_user_id`, i.e. the
+caller who created the job, so an editor's import on another creator's comic
+creates assets that the P0.1 page check then rejects, and the chapter gets no pages.)*
+
 **Acceptance criteria.**
 - Given a page create with a nonexistent, non-image, non-ready, or not-owned
   asset id, then 422 Problem `comic/invalid-page-asset` and no row.
+- Given editor E (`comics:write:any`) attaching an asset E owns to creator C's
+  comic, then 422 `comic/invalid-page-asset` (or `comic/invalid-cover-asset` for a
+  cover) and no change.
+- Given an editor runs a zip import on C's comic, then every created asset's owner
+  is C.
 - Given a comic create/update whose `cover_asset_id` is nonexistent, non-image,
   non-ready, or not owned by the creator, then 422 Problem
   `comic/invalid-cover-asset` and no change (same `mediaapi` validation path
@@ -98,13 +116,16 @@ lets the caller touch **their own** content; editing someone else's requires the
 elevated `comics:write:any` moderation grant. Owner-only creation (`POST /comics`)
 and own-listing (`GET /comics/mine`) keep plain `RequirePermission` on
 `comics:write:own`. Destructive/elevated variants: `DELETE /comics/{id}` uses
-`comics:delete:any` as the elevated code; a `{status}` publish/unpublish change
-uses a new elevated `comics:publish:any` (owner still needs `comics:publish:own`).
+`comics:delete:any` as the elevated code; `POST /comics/{id}/publish` /
+`/unpublish` use a new elevated `comics:publish:any`, and the owner additionally
+needs `comics:publish:own`, enforced by the chained check in the table below. Unlike
+SPEC-01's `assets:delete:own`, this `:own` code is not merely documentary.
 **Who can create (rev 7, 2026-08-07):** migration `0025_comic_user_write_grant`
 widened `comics:write:own` + `comics:publish:own` from `creator` to the base `user`
 role — every authenticated user creates & publishes **their own** comics (life-OS
-direction). `:any` moderation + delete stay creator+/admin. So the "Thêm truyện"
-tile on `/library/comic` works for all users.
+direction). `:any` write/publish moderation stays `editor`, and
+`comics:delete:any` stays `admin`. So the "Thêm truyện" tile on `/library/comic`
+works for all users.
 *(2026-07-10 reconciliation: codes follow the 0003 catalog shape — `read|write|
 delete` plus the sparing verb `publish`, scope `own|any` only. The earlier
 `comics:read:published` used a content state as a scope token: it parses, but the
@@ -121,15 +142,16 @@ rework above.)*
 | read own drafts | implied by owner check on `comics:write:own` |
 | create comic (`POST /comics`), list own (`GET /comics/mine`) | `comics:write:own` |
 | update / reorder / add pages / delete a chapter on an existing comic or chapter | owner, **or** `comics:write:any` — `RequireOwnerOrPermission(engine, "comics:write:any", extractComicOwner)` |
-| publish / unpublish (`{status}` change) | owner + `comics:publish:own`, **or** `comics:publish:any` |
+| publish / unpublish (`POST /comics/{id}/publish`, `/unpublish`) | `RequirePermission("comics:publish:own")` chained before `RequireOwnerOrPermission(engine, "comics:publish:any", extractComicOwner)`. An owner passes only while holding `comics:publish:own`; an editor passes the first check because the matcher lets an `:any` grant satisfy the same code's `:own` check (and every `user` already holds `:own` via `0025`). *(Code follow-up: `cmd/api/main.go` wires only the `RequireOwnerOrPermission` half, so `comics:publish:own` is never checked.)* |
 | delete a comic, or delete a page | owner, **or** `comics:delete:any` |
 
 **Seeding (this module's migration ships it, 0003 pattern):** `comics:read` →
 `user` role (v1 = all-authenticated readers; not `guest`, unlike
 `movies:read`, per the §3 visibility decision); `comics:write:own` +
-`comics:publish:own` → `creator`; `comics:write:any` + `comics:publish:any` →
+`comics:publish:own` → `creator` (widened to `user` by
+`0025_comic_user_write_grant`, rev 7); `comics:write:any` + `comics:publish:any` →
 `editor` (the write/publish-any moderation tier, mirroring `movies:write:any` +
-`movies:publish`); `comics:delete:any` → `admin` (the movies precedent —
+`movies:publish:any`, `0021`); `comics:delete:any` → `admin` (the movies precedent —
 `movies:delete:any` is admin-tier). An unseeded code 403s everyone below
 superadmin.
 
@@ -137,21 +159,51 @@ Publish validation: a comic may be published only if it has ≥1 chapter and eve
 chapter has ≥1 page; otherwise 422 `comic/not-publishable` listing the offending
 chapters. Unpublish returns it to `draft`.
 
+The invariant is enforced **at publish only**. On a published comic:
+(a) a chapter with 0 pages is omitted from the chapter list, the chapter count, the
+reader chapter picker and prev/next navigation, and `GET /chapters/{id}/pages` for
+it returns 404 `comic/not-found` to non-owners, until it has ≥ 1 page;
+(b) adding chapters or pages to an already-published comic (manual add, zip import
+or sync) emits nothing: `comic:published` fires only on a publish action (P1.9), and
+a creator who wants the bell re-runs `POST /comics/{id}/publish`, which is allowed on
+a published comic and is deduplicated by `chapter_count`;
+(c) deleting pages or chapters, including via the P0.6 reaper, never
+auto-unpublishes; a published comic left with no non-empty chapters simply shows no
+chapters. *(Code follow-up for (a): the shipped `GetComic` and `ReaderPages` return
+empty chapters, and `chapter_count` counts them.)*
+
 **Acceptance criteria.**
 - Given a user without `comics:write:own`, when POST /comics, then 403.
 - Given reader R and creator C's draft, when R fetches detail/pages/list, then the
   draft is absent from lists and detail returns 404 (not 403 — don't leak existence).
 - Given a comic with an empty chapter, when publish is attempted, then 422 naming
   the chapter.
-- Given creator D (holds `comics:write:own`) editing creator C's comic, then
-  404/403 and no change — `:own` alone must not grant cross-owner writes.
+- Given creator D (holds `comics:write:own` only) mutating creator C's comic, then
+  403 if C's comic is published, or 404 `comic/not-found` if it is a draft, and no
+  change. `extractComicOwner` returns 404 `comic/not-found` for a draft when the
+  caller is neither the owner nor a holder of the endpoint's `:any` code; holders of
+  `:any` (editors) resolve drafts normally. *(Code follow-up: the shipped extractor
+  resolves the owner regardless of status, so D gets 403 on a draft too.)*
 - Given an editor with `comics:write:any` editing another creator's comic, then
   200; and an admin with `comics:delete:any` calling DELETE passes.
+- Given an editor with `comics:publish:any`, when `POST /comics/{C}/unpublish` on
+  C's published comic, then 200 and status `draft`.
+- Given an owner whose effective permissions lack `comics:publish:own`, when
+  `POST /comics/{id}/publish` on their draft, then 403 and status unchanged.
+- Given a published comic, when the creator adds an empty chapter, then readers do
+  not see it in the chapter list, the chapter count or the reader navigation until
+  it has a page. (a)
+- Given a published comic, when a chapter gains its first page, then no event is
+  emitted; a later `POST /comics/{id}/publish` emits one `comic:published` with the
+  new `chapter_count`. (b)
+- Given a published comic whose last page is reaped by P0.6, then the comic stays
+  `published` and shows no chapters. (c)
 
 ### P0.3 — Reader (vertical scroll)
 
 Route `/library/comic/[id]/read/[chapterId]` (client component; catalogue/detail
-stay RSC-first per D-33). **Presentation goes through the version-switched template
+stay RSC-first per D-33 — "RSC shell" as defined in the specs README Frontend
+convention). **Presentation goes through the version-switched template
 registry:** the reader view is declared in `TemplateManifest.views`
 (`templates/types.ts`), implemented under `templates/v1/views/...`, and the
 `app/(app)/library/comic/[id]/read/[chapterId]/page.tsx` route resolves it via
@@ -180,11 +232,17 @@ with the `ON DELETE SET NULL` FK to `comic_pages` above — always resolves to t
 page the reader stopped on, or degrades cleanly to the chapter top if that page was
 later deleted. Reader upserts debounced: every 10 s while the furthest visible page
 changes, plus on pagehide — mirroring the watch-progress convention (frontend.md
-Phase 2-3). Detail page shows **Continue reading → ch. N, p. M** (M = the
-page's current 1-based position, computed when the detail page is fetched —
-only `page_id` is stored, so a position "at read time" is not recoverable
-after a reorder, and the current position is what Continue actually scrolls
-to) when progress exists; opening via Continue scrolls to that page.
+Phase 2-3). Every save, the pagehide one included, is a keepalive `PUT` per
+SPEC-07 P0.2's **transport rule**; never `navigator.sendBeacon`, which can only
+POST against this PUT-only route. *(Code follow-up: the shipped
+`frontend/src/lib/comic.ts` still calls `sendBeacon` first.)*
+Detail page shows **Continue reading → ch. N, p. M** when progress exists; opening
+via Continue scrolls to that page. The server returns only ids
+(`ComicDetail.progress = {chapter_id, page_id|null, updated_at} | null`, §7); the
+client derives N from the chapter's 1-based index in `ComicDetail.chapters[]` and M
+from the page's 1-based index in `GET /chapters/{id}/pages`. Only `page_id` is
+stored, so a position "at read time" is not recoverable after a reorder, and the
+current position is what Continue actually scrolls to.
 
 **Acceptance criteria.**
 - Given reading to ch.2 p.14 then closing the tab, when the comic is reopened via
@@ -224,7 +282,9 @@ in `TemplateManifest.views` (`templates/types.ts`), implemented under
   chapter count, updated date).
 - The creator's "My comics" tab lists both with status badges; a reader never sees
   drafts.
-- A result set of >1 page paginates without duplicates.
+- A result set of >1 page paginates with no duplicates or skips, provided no comic
+  in the set is modified between page fetches (an edited comic legitimately moves
+  to the head).
 - The pre-existing placeholder component is gone from the route.
 - The detail page shows **Continue** iff progress exists (P0.4).
 
@@ -267,57 +327,153 @@ the reference pattern for movie/music/story, which hold the same media reference
   `GET/PUT /api/v1/comics/reader-prefs` originally sketched here is **dropped** (no
   cross-device sync in v1; accepted trade-off). The only server-side reader field is
   `comics.reading_direction`, a property of the *work* (R3), not a per-user pref.
-- **P1.7 Zip chapter upload**: the .zip is uploaded via a **dedicated presigned
-  PUT** — a separate `import/` prefix, a **500 MB content-length-range**, and **no
-  `assets` row** (it is not a media asset, so SPEC-01's 50 MB asset-upload path does
-  not apply). The client then POSTs `pages:import-zip {upload_ref: <storage key>}`
-  to `POST /api/v1/chapters/{id}/pages:import-zip`, which enqueues worker task
-  `comic:import_zip {chapter_id, upload_ref}` (events.md). The worker **streams the
-  object and deletes it after processing**: it unpacks, creates media assets via
-  `mediaapi` (batch, marked `origin='import'` so `media:asset_ready` consumers
-  suppress the flood — SPEC-01 P1.2), creates pages in **filename natural-sort
-  order**. **Ready-race rule (2026-07-10):** P0.1 requires a page's asset to be
-  `ready` at write time, but batch-created assets start `processing` (variants are
-  generated asynchronously by `media:process_image`) — so the import task runs on
-  the **`default` queue** and, after creating the assets, **polls their status via
-  `mediaapi`** (~2 s interval, **bounded timeout = max(10 min, entry_count × 15 s ÷
-  heavy-queue concurrency)** — sized so a full 300-entry import at concurrency 1
-  (SPEC-01 P0.1) cannot time out while its assets are still queued; only assets
-  individually stuck > that window are reported as failures), creating pages only for
-  assets that reached `ready`. It must NOT run on the heavy queue: with heavy
-  concurrency 1–2 (SPEC-01 P0.1), an import polling there would occupy the very
-  slot its `media:process_image` tasks need — a self-deadlock. Guards (blocking
-  question resolved here): max 500 MB zip, max 300 entries, images only by
-  magic bytes, reject nested directories and path traversal (`../`), reject
-  compression ratio > 100:1 (zip-bomb). Failures (including poll timeouts)
-  produce a per-file report; the chapter gets the pages that succeeded.
-  **Update (rev 12, 2026-08-15):** `media:process_image` now runs on its **own
-  `image` queue** (`IMAGE_CONCURRENCY`, default 3), not `heavy` — so the
-  self-deadlock the "must NOT run on the heavy queue" rule guarded against is
-  gone (import on `default`, transcode on `image`, video on `heavy`, all
-  distinct pools). Poll timeout is now `max(2 min, entry_count × 5 s)` capped at
-  11 h (under the 12 h task lease); the worker ingests all images up front and
-  bulk-polls (`AssetStatuses`) one query per round. See rev 12 in the header.
+- **P1.7 Zip import (per-chapter and whole-comic)** — *implemented revs 9–12.* Flow:
+  1. The client creates a job: `POST /api/v1/chapters/{id}/imports` (per-chapter:
+     pages go into that existing chapter) or `POST /api/v1/comics/{id}/imports`
+     (whole-comic: one chapter per zip folder). 201 `ImportJob`, status `pending`;
+     `comic_imports.owner_user_id` records the caller, the only user who may upload
+     to and poll the job.
+  2. The client uploads the zip body with `PUT /api/v1/imports/{id}/zip`. The API
+     spools it (API-proxied: dev MinIO presign is not browser-reachable), stores it
+     at `import/{import_id}.zip` with **no `assets` row** (it is not a media asset,
+     so SPEC-01's asset-upload path does not apply), sets `upload_ref`, status
+     `uploaded`, and enqueues `comic:import_zip {import_id}` (events.md).
+  3. The client polls `GET /api/v1/imports/{id}` for `status`
+     (`pending|uploaded|processing|done|failed`), `total`, `succeeded`, `failed`,
+     the per-file `report` (capped at 500 entries, failures first) and a job-level
+     `error`.
+
+  The worker **spools the object and deletes it after processing**. It creates one
+  media asset per image by calling SPEC-01 P1.3 `mediaapi.Ingest(..., origin="import")`
+  (the `origin='import'` mark makes `media:asset_ready` consumers suppress the
+  flood — SPEC-01 P1.2) with owner = `comics.owner_user_id` (P0.1),
+  then pages in **filename natural-sort order**. **Ready-race rule:** P0.1 requires a
+  page's asset to be `ready` at write time, but ingested assets start `processing`
+  (variants come from `media:process_image` on its own `image` queue,
+  `IMAGE_CONCURRENCY`, default 3, rev 12). So the worker ingests every image up front
+  (`IMPORT_INGEST_CONCURRENCY`, default 4), bulk-polls `mediaapi.AssetStatuses` every
+  ~2 s, and pages each chapter as soon as its assets resolve, creating pages only for
+  assets that reached `ready`. **Poll timeout = max(2 min, entry_count × 5 s), capped
+  at 11 h (under the 12 h task lease, rev 11), for both modes;** assets still pending
+  at the deadline are reported as failures. Failures produce per-file report rows;
+  the chapter gets the pages that succeeded.
+
+  **Guards (both modes share the shipped caps in `comic/import.go`; that file, not
+  this table, is authoritative for the numbers):**
+
+  | | Per-chapter (`POST /chapters/{id}/imports`) | Whole-comic (`POST /comics/{id}/imports`) |
+  |---|---|---|
+  | Zip size | ≤ `importMaxZipBytes` (16 GiB); larger → 422 `comic/validation` at `PUT /imports/{id}/zip`, nothing stored | same |
+  | Image entries | ≤ `importMaxEntries` (100,000); more → job `failed` with `error` | same |
+  | Folders | ignored: every image is flattened into the target chapter, ordered by base filename (natural sort) | each distinct folder path becomes one chapter titled by its last segment, in natural-sort order; a wrapper folder is therefore transparent (`wrapper/ch1/*` → chapter `ch1`), and loose root-level images form one chapter |
+  | Chapter placement | the existing chapter; new pages append after its current pages | `sort_order` from the chapter number in the title (numberless titles append after `MAX(sort_order)`); a title that already exists **with** pages is skipped, one that exists **empty** is refilled in place |
+
+  Both modes: entries are selected as images by extension; directory entries, names
+  containing `..`, absolute paths, `__MACOSX/` entries and entries with a
+  compression ratio > 100:1 (zip-bomb guard) are skipped and never extracted; an
+  image the media pipeline cannot process fails in the per-file report. A zip that is
+  unreadable or has no valid image leaves the job `failed` with `error`.
+  **Queue (target):** a 12 h job must not share the light server's `default`
+  queue with notify (SPEC-04 P0.2 step 4), so `comic:import_zip` runs on a
+  dedicated **`bulk`** queue served by its own `asynq.Server` (Concurrency 1),
+  shared with SPEC-09's `ops:takeout`. *(Code follow-up: `comic/import.go` still
+  enqueues on `default`.)*
+
+  **Acceptance criteria.**
+  - Given a per-chapter zip containing `a/2.png`, `b/1.png`, then both images become
+    pages of the target chapter in order `1.png`, `2.png` (folders ignored).
+  - Given a whole-comic zip `wrapper/ch1/*`, `wrapper/ch2/*`, then two chapters
+    `ch1`, `ch2` in natural order.
+  - Given a zip over `importMaxZipBytes`, when `PUT /imports/{id}/zip`, then 422
+    `comic/validation` and no object stored.
+  - Given a zip entry named `../x.png`, then it is skipped and nothing is written
+    outside the import.
+  - Given user U polls another user's import id, then 404 `comic/not-found`.
 - **P1.8 Bookmarks**: per user, per page; list on the detail page. Needs a
-  `comic_bookmarks(user_id, page_id fk ON DELETE CASCADE, created_at,
-  PRIMARY KEY (user_id, page_id))` table and `PUT/DELETE
+  `comic_bookmarks(user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  page_id uuid NOT NULL REFERENCES comic_pages(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (user_id, page_id))`
+  table (tenant-scoped per the specs README Tenancy convention) and `PUT/DELETE
   /api/v1/pages/{id}/bookmark` + `GET /api/v1/comics/{id}/bookmarks`; **schema +
   endpoints to be added to §6/§7 when scheduled.**
-- **P1.9 Event**: emit `comic:chapter_published` `{comic_id, chapter_id, owner_user_id,
-  title}` — life-stream producer #2. Also emit `comic:chapter_deleted`
-  `{comic_id, chapter_id, owner_user_id}` on a **chapter delete** and **once per
-  chapter on a comic delete**, so no published-chapter history card is left with a
-  404ing href (media and bank deletions remove their stream items the same way).
-  Register it in events.md with consumer *"stream — delete the
-  (`source_module='comic'`, `ref_id=chapter_id`) item (SPEC-06 P0.1)"*, and add the
-  matching handler row to SPEC-06's P0.1 table (both are part of this item's
-  definition of done).
+- **P1.9 Events**: on publish, emit **one** `comic:published`
+  `{comic_id, owner_user_id, title, chapter_count}` per publish action — never one
+  per chapter (a whole-comic import holds ~100 chapters), and nothing when a
+  published comic gains chapters or pages (P0.2 (b)). Its consumer is
+  `notify:on_comic_published` (SPEC-04 §7): one bell entry with
+  `dedup_key = comic_id + ":" + chapter_count`, so a repeat publish of an
+  unchanged comic is silent and a publish after new chapters notifies once. It is
+  **not projected into the stream** (`0034` removed the comic stream rows: a
+  publish is a library event, not a moment). `comic:chapter_deleted`
+  `{comic_id, chapter_id, owner_user_id}` is emitted on a **chapter delete** and
+  **once per chapter on a comic delete**; since `0034` it is **emit-only** (no
+  consumer). Both rows live in events.md.
+
+  **Acceptance criteria.**
+  - Given a comic with 100 chapters published at once, then exactly one bell
+    notification; given it re-published unchanged, then none.
+
+- **P1.10 External-source sync (revs 13–14)** — *implemented 2026-08-15; code
+  comments and migrations `0028`–`0030` call it "P1.8".* A comic binds to external
+  source URLs (`comic_sync_sources`, §6) and pulls chapters from them through the
+  P1.7 import pipeline. Flow:
+  1. The owner (or a `comics:write:any` editor) adds a source with
+     `POST /comics/{id}/sync-sources {source_url, chapters_hint?}`. The URL must be
+     absolute http(s) and pass the SSRF guard (`sourceguard.go`: private and
+     internal addresses are always rejected; `COMIC_SOURCE_ALLOWLIST` restricts
+     hosts when set), else 422 `comic/validation`. The row's `owner_user_id` is the
+     caller.
+  2. `POST /sync-sources/{id}/sync` (**TriggerSync**, 202) re-runs the SSRF guard,
+     resets progress, sets `last_status='syncing'` and calls the scraper service
+     with `{source_id, owner_id, source_url, chapters, existing}`. `existing` lists
+     the comic's chapter titles so an incremental sync skips them unless
+     `chapters_hint` forces a list. A second trigger while `syncing` is 422
+     `comic/validation`, unless the source has been `syncing` for over 15 min
+     (a lost callback must not strand it).
+  3. The scraper discovers chapters (discovery retried like a batch) and works in
+     batches of `SCRAPER_BATCH_SIZE` chapters (default 1). Per batch it calls
+     `POST /internal/comic/sync-batch` → one new comic-level `comic_imports` job +
+     its upload key `import/{import_id}.zip`; it uploads the folder-per-chapter zip
+     there and calls `POST /internal/comic/sync-callback {import_id, owner_id, ok}`,
+     which sets `upload_ref` and enqueues `comic:import_zip {import_id}`. It reports
+     overall progress with `sync-progress {scraped, total}` (→ `scraped_chapters`,
+     `total_chapters`) and ends with `sync-finalize {ok, failed}` (→ `last_status`
+     `done`/`failed`, the failed-chapter summary in `last_error`).
+  4. A batch that yields 0 images (for example a Cloudflare re-challenge) is retried
+     up to `SCRAPER_BATCH_RETRIES` times (default 3); chapters still failing are
+     collected into `last_error` and the sync continues with the next batch.
+  5. **Cancel:** `POST /sync-sources/{id}/cancel` is accepted only while
+     `last_status='syncing'` (otherwise 422 `comic/validation`). The API signals the
+     scraper (`/cancel`, an in-memory set); if the scraper refuses, the call fails
+     and the source is unchanged. On success the source becomes `cancelled`; the
+     scraper checks before each chapter, so the in-flight chapter finishes, and
+     chapters already imported are kept.
+
+  **Config:** `COMIC_SCRAPER_URL` (unset ⇒ feature off: every sync-source endpoint
+  returns 404 Problem `comic/sync-disabled`; *code follow-up: the shipped API still
+  serves source list/create/delete and answers a trigger with 500*);
+  `COMIC_SYNC_SECRET` (the internal-endpoint secret, §7); `COMIC_SOURCE_ALLOWLIST`;
+  scraper-side `SCRAPER_BATCH_SIZE` (default 1) and `SCRAPER_BATCH_RETRIES`
+  (default 3). The containerised scraper is blocked by Cloudflare on some sources;
+  run it on the host per [scraper/README.md](../../../scraper/README.md).
+
+  **Acceptance criteria.**
+  - (a) Given batch size 1, then each chapter appears in the chapter list as soon as
+    it is scraped, and `scraped_chapters` counts imported chapters 1:1.
+  - (b) Given a sync cancelled mid-run, then `last_status='cancelled'`, the
+    in-flight chapter finishes, and chapters already imported are kept.
+  - (c) Given a batch that still yields 0 images after `SCRAPER_BATCH_RETRIES`
+    attempts, then its chapters are listed in `last_error` and the sync continues.
+  - Given a re-sync of an unchanged source, then no chapter is duplicated (titles
+    already present with pages are skipped, P1.7).
+  - Given user U calling sync, cancel or delete on a source whose `owner_user_id` is
+    not U, then 404 `comic/not-found`.
 
 ### P2 — future considerations
 
 - Review/approval publish workflow (mirror story module when it lands).
-- RTL reading direction + double-page spread pairing — **scheduled as R3** of the
-  reader redesign below; adds the `comics.reading_direction` column.
+- RTL reading direction + double-page spread pairing — shipped as R3 (2026-08-07)
+  of the reader redesign below, with the `comics.reading_direction` column.
 - Per-comic visibility (unlisted/link-only) once the privacy layer exists.
 
 ### Reader experience — phased redesign (R1–R4)  *(rev 4, 2026-08-07)*
@@ -347,10 +503,14 @@ D-33) into a container + mode renderers:
 - `PagedReader` — single/double page, LTR/RTL, tap-zones, swipe (R2/R3)
 - `ReaderSettings` — sheet: mode · fit · brightness · quality
 - hooks: `useReaderSettings` (Zustand persist), `useReaderProgress` (extract the P0.4
-  furthest-page + throttle + `sendBeacon`), `usePagePreloader` (R3)
+  furthest-page + throttle + keepalive `PUT` — SPEC-07 P0.2 transport rule; never
+  `sendBeacon`), `usePagePreloader` (R3)
 
-**Image quality → variant.** Data-saver = `thumb`, Standard = `medium` (current
-default), High = `poster`/large — via the existing `variantURL(assetId, variant)`.
+**Image quality → variant.** Data-saver = `thumb`, Standard = `medium` (default);
+High = `medium` until SPEC-01 adds a larger image variant (images have no `poster`;
+originals are never served to the reader). The client builds the URL with
+the existing `variantURL(assetId, variant)`, passing the reader payload's
+`asset_id` (§7).
 
 **Phases** (each a standalone, shippable PR):
 - **R1 — reading frame.** Split container/renderers; **single-page mode** + kept
@@ -381,6 +541,8 @@ default), High = `poster`/large — via the existing `variantURL(assetId, varian
 
 ## 6. Data model — migration `000N_comic_core`
 
+**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `comics`, `comic_chapters`, `comic_pages`, `comic_reading_progress` (`tenant_id` + index + `tenant_isolation` policy added by `0020_platform_rls_enable`), `comic_imports` (`0026`) and `comic_sync_sources` (`0028`), both created with them. The four core tables' DDL below predates ADR-07 and omits the columns; the two P1 tables show them.
+
 ```sql
 CREATE TABLE comics (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -389,11 +551,15 @@ CREATE TABLE comics (
   description    text,
   cover_asset_id uuid,                     -- media asset, validated via mediaapi
   status         text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','published')),
+  reading_direction text NOT NULL DEFAULT 'vertical'
+                 CHECK (reading_direction IN ('ltr','rtl','vertical')), -- R3, 0024_comic_reading_direction
   created_at     timestamptz NOT NULL DEFAULT now(),
   updated_at     timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON comics (status, updated_at DESC);
-CREATE INDEX ON comics (owner_user_id);
+-- Keyset indexes (§7): both lists order by (updated_at DESC, id DESC); the id tiebreaker is mandatory.
+CREATE INDEX comics_status_updated_idx ON comics (status, updated_at DESC, id DESC);   -- shipped in 0015; serves GET /comics (status = 'published')
+CREATE INDEX comics_owner_cursor_idx ON comics (owner_user_id, updated_at DESC, id DESC); -- serves GET /comics/mine
+CREATE INDEX comics_cover_asset_idx ON comics (cover_asset_id) WHERE cover_asset_id IS NOT NULL; -- P0.6 cover-nulling UPDATE
 
 CREATE TABLE comic_chapters (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -420,7 +586,59 @@ CREATE TABLE comic_reading_progress (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, comic_id)
 );
+
+-- P1.7 import jobs: 0026_comic_imports + 0027_comic_import_comic_level (verbatim shape).
+CREATE TABLE comic_imports (
+  id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  comic_id      uuid NOT NULL REFERENCES comics(id) ON DELETE CASCADE,
+  chapter_id    uuid REFERENCES comic_chapters(id) ON DELETE CASCADE, -- NULL = whole-comic job (0027)
+  owner_user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- the caller who created the job
+  status        text NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending','uploaded','processing','done','failed')),
+  upload_ref    text,                               -- storage key of the uploaded zip
+  total         int  NOT NULL DEFAULT 0,            -- image entries to process
+  succeeded     int  NOT NULL DEFAULT 0,            -- pages created
+  failed        int  NOT NULL DEFAULT 0,            -- entries that failed
+  report        jsonb NOT NULL DEFAULT '[]'::jsonb, -- [{name, ok, error?}], capped at 500 rows
+  error         text,                               -- job-level failure
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+  tenant_id     uuid NOT NULL DEFAULT current_setting('app.current_tenant')::uuid REFERENCES organizations(id)
+);
+CREATE INDEX comic_imports_chapter_idx ON comic_imports (chapter_id);
+CREATE INDEX comic_imports_owner_idx   ON comic_imports (owner_user_id);
+CREATE INDEX comic_imports_tenant_idx  ON comic_imports (tenant_id);
+-- ENABLE + FORCE ROW LEVEL SECURITY; POLICY tenant_isolation (specs README Tenancy).
+
+-- P1.10 sync sources: 0028_comic_sync_sources + 0029_comic_sync_batch + 0030_comic_sync_cancel.
+CREATE TABLE comic_sync_sources (
+  id               uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  comic_id         uuid NOT NULL REFERENCES comics(id) ON DELETE CASCADE,
+  owner_user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- the user who added the source; the internal endpoints scope to this user (§7)
+  source_url       text NOT NULL,                  -- external comic page URL
+  source_site      text NOT NULL DEFAULT '',       -- host, e.g. truyenqqno.com
+  chapters_hint    text NOT NULL DEFAULT '',       -- optional explicit chapter list/range (blank = all)
+  last_status      text NOT NULL DEFAULT 'idle'
+                     CHECK (last_status IN ('idle','syncing','done','failed','cancelled')), -- 'cancelled' added by 0030
+  last_import_id   uuid,                           -- comic_imports job of the current/most recent batch
+  last_error       text,                           -- failure, or the failed-chapter summary
+  last_synced_at   timestamptz,
+  total_chapters   int NOT NULL DEFAULT 0,         -- 0029
+  scraped_chapters int NOT NULL DEFAULT 0,         -- 0029
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now(),
+  tenant_id        uuid NOT NULL DEFAULT current_setting('app.current_tenant')::uuid REFERENCES organizations(id)
+);
+CREATE INDEX comic_sync_sources_comic_idx  ON comic_sync_sources (comic_id);
+CREATE INDEX comic_sync_sources_owner_idx  ON comic_sync_sources (owner_user_id);
+CREATE INDEX comic_sync_sources_tenant_idx ON comic_sync_sources (tenant_id);
+-- ENABLE + FORCE ROW LEVEL SECURITY; POLICY tenant_isolation (specs README Tenancy).
 ```
+
+*(Code follow-up: `0015` shipped only `comics_owner_idx ON comics (owner_user_id)`
+and no cover index; `comics_owner_cursor_idx` and `comics_cover_asset_idx` above are
+the target. The two P1 tables were migrated with `ADD COLUMN tenant_id` → `SET
+DEFAULT` → `SET NOT NULL` steps, which the inline column above summarises.)*
 
 **Reordering (canonical pattern — movie/music/story copy this verbatim).** Both
 sort-order uniques are declared `DEFERRABLE INITIALLY DEFERRED`, so the constraint is
@@ -443,20 +661,20 @@ No negative-temp or `+offset` dance, and no ordering gymnastics in Go/sqlc.
 not the columns. Domain-specific fields (movie/music per-item `duration`, etc.) belong
 to each vertical's **own** migration under its own schema ownership; do **not** pre-add
 a speculative `meta jsonb` here that comic never reads — an unused column teaches the
-next dev to add unused columns. comic adds its own columns (tags, RTL direction — P2)
+next dev to add unused columns. comic adds its own columns (e.g. tags)
 if and when its roadmap needs them.
 
 ## 7. API summary (add to `shared/openapi.yaml`)
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/comics?cursor=` | `comics:read` | drafts excluded; cursor paging, order `status, updated_at DESC` (the §6 index) — matches the SPEC-01/04/05/06/08 cursor convention |
-| GET | `/api/v1/comics/mine?cursor=` | `comics:write:own` | incl. drafts, status badges; cursor paging |
+| GET | `/api/v1/comics?cursor=&limit=` | `comics:read` | drafts excluded; keyset paging ordered `updated_at DESC, id DESC`; the opaque cursor encodes `(updated_at, id)`, and the `id` tiebreaker is mandatory. This deliberately differs from SPEC-01's `created_at DESC, id DESC` because the library sorts by recent activity (specs README Pagination: the key ends in `id`). Limit default 30, max 50 |
+| GET | `/api/v1/comics/mine?cursor=&limit=` | `comics:write:own` | incl. drafts, status badges; same keyset (`updated_at DESC, id DESC`) over `owner_user_id`; limit default 30, max 50 |
 | POST | `/api/v1/comics` | `comics:write:own` | |
-| GET | `/api/v1/comics/{id}` | published: `comics:read`; own draft: owner | |
-| PATCH | `/api/v1/comics/{id}` | owner, or `comics:write:any` (`RequireOwnerOrPermission`) | update title/description/cover only (`ComicPatch`) — **status is NOT changed here** |
-| POST | `/api/v1/comics/{id}/publish` | owner+`comics:publish:own`, or `comics:publish:any` | **dedicated endpoint** (not a `PATCH {status}`); 200 `Comic`, or 422 `comic/not-publishable` listing offending chapters |
-| POST | `/api/v1/comics/{id}/unpublish` | owner+`comics:publish:own`, or `comics:publish:any` | back to `draft`; 200 `Comic` |
+| GET | `/api/v1/comics/{id}` | published: `comics:read`; own draft: owner | returns `ComicDetail` = `Comic` + `chapters[]` (ordered) + `progress: {chapter_id, page_id\|null, updated_at} \| null` for the caller; the client derives ch. N from the chapter's index and p. M from the page's index in `GET /chapters/{id}/pages` (P0.4) |
+| PATCH | `/api/v1/comics/{id}` | owner, or `comics:write:any` (`RequireOwnerOrPermission`) | update title/description/cover/reading_direction (`ComicPatch`) — **status is NOT changed here**; `… SET …, updated_at = now()` (specs README updated_at convention) |
+| POST | `/api/v1/comics/{id}/publish` | `comics:publish:own` (`RequirePermission`), then owner, or `comics:publish:any` (`RequireOwnerOrPermission`) — chained, P0.2 | **dedicated endpoint** (not a `PATCH {status}`); 200 `Comic`, or 422 `comic/not-publishable` listing offending chapters |
+| POST | `/api/v1/comics/{id}/unpublish` | `comics:publish:own` (`RequirePermission`), then owner, or `comics:publish:any` (`RequireOwnerOrPermission`) — chained, P0.2 | back to `draft`; 200 `Comic` |
 | DELETE | `/api/v1/comics/{id}` | owner, or `comics:delete:any` | |
 | POST | `/api/v1/comics/{id}/chapters` | owner, or `comics:write:any` | |
 | PATCH/DELETE | `/api/v1/chapters/{id}` | owner, or `comics:write:any` | |
@@ -464,13 +682,66 @@ if and when its roadmap needs them.
 | POST | `/api/v1/chapters/{id}/pages` | owner, or `comics:write:any` | body `{pages: [{asset_id, sort_order}]}` (`PagesCreate`) — **wrapped object, not a bare array** |
 | PUT | `/api/v1/chapters/{id}/pages:order` | owner, or `comics:write:any` | `[page_id…]` |
 | DELETE | `/api/v1/pages/{id}` | owner, or `comics:delete:any` (moderation) | removes the page row only; the media asset is untouched (P0.1) |
-| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `{pages: [{page_id, url(medium), width, height}]}` — draft invisibility applies here too (404, not 403) |
+| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `{pages: [{page_id, asset_id, width, height}]}` in reading order; the client renders the `medium` variant via `variantURL(asset_id, 'medium')` (no URL in the payload); `width`/`height` are the asset's dimensions (nullable) for layout reservation. Draft invisibility applies here too (404, not 403) |
 | PUT | `/api/v1/comics/{id}/progress` | authenticated | `{chapter_id, page_id}`; membership-validated (P0.4) |
-| POST | `/api/v1/chapters/{id}/pages:import-zip` | owner, or `comics:write:any` | P1.7; body `{upload_ref: <storage key>}` (the zip is pre-uploaded via a dedicated presigned PUT — P1.7) |
+| POST | `/api/v1/chapters/{id}/imports` | owner, or `comics:write:any` | P1.7 per-chapter job; 201 `ImportJob` (`owner_user_id` = caller) |
+| POST | `/api/v1/comics/{id}/imports` | owner, or `comics:write:any` | P1.7 whole-comic job; 201 `ImportJob` |
+| PUT | `/api/v1/imports/{id}/zip` | authenticated; caller must be the job's `owner_user_id` (else 404 `comic/not-found`) | raw zip body; 200 `ImportJob`; over `importMaxZipBytes` → 422 `comic/validation` |
+| GET | `/api/v1/imports/{id}` | authenticated; caller must be the job's `owner_user_id` (else 404 `comic/not-found`) | 200 `ImportJob` (poll) |
+| GET | `/api/v1/comics/{id}/sync-sources` | owner, or `comics:write:any` | P1.10; 200 `{sources: [SyncSource]}` (unpaginated) |
+| POST | `/api/v1/comics/{id}/sync-sources` | owner, or `comics:write:any` | P1.10; body `{source_url, chapters_hint?}`; 201 `SyncSource` (`owner_user_id` = caller); SSRF-guard failure → 422 `comic/validation` |
+| POST | `/api/v1/sync-sources/{id}/sync` | authenticated; caller must be the source's `owner_user_id` (else 404 `comic/not-found`) | P1.10; 202 `SyncSource`; already syncing → 422 `comic/validation` |
+| POST | `/api/v1/sync-sources/{id}/cancel` | authenticated; caller must be the source's `owner_user_id` (else 404 `comic/not-found`) | P1.10; 200 `SyncSource` (`cancelled`); not syncing → 422 `comic/validation` |
+| DELETE | `/api/v1/sync-sources/{id}` | authenticated; caller must be the source's `owner_user_id` (else 404 `comic/not-found`) | P1.10; 204 |
+
+The import-job and sync-source rows keyed by their own id (`/imports/*`,
+`/sync-sources/*`) are **owner-only**, as shipped: the handler compares the caller
+with the row's `owner_user_id`, and a `comics:write:any` editor reaches only the
+jobs and sources they created. When `COMIC_SCRAPER_URL` is unset, every sync-source
+row returns 404 `comic/sync-disabled` (P1.10; code follow-up).
+
+**Internal (scraper → API) endpoints** — P1.10, no user session, outside
+`authTenant`:
+
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| POST | `/api/v1/internal/comic/sync-batch` | internal secret (below) | `{source_id, owner_id}` → `{import_id, upload_key}`: a new comic-level `comic_imports` job for one batch |
+| POST | `/api/v1/internal/comic/sync-callback` | internal secret | `{import_id, owner_id, ok, error?}`: on `ok`, set `upload_ref` and enqueue `comic:import_zip {import_id}`; otherwise fail that job |
+| POST | `/api/v1/internal/comic/sync-progress` | internal secret | `{source_id, owner_id, scraped, total}` → `scraped_chapters`/`total_chapters` |
+| POST | `/api/v1/internal/comic/sync-finalize` | internal secret | `{source_id, owner_id, ok, failed}` → `last_status` `done`/`failed`, `last_error` = failed-chapter summary |
+
+- **Secret.** Header `X-Internal-Secret` must equal `COMIC_SYNC_SECRET`, compared in
+  constant time. Missing or mismatched → 404 (the route reads as absent); when
+  `COMIC_SYNC_SECRET` is empty every request is 404, so an empty secret never
+  authenticates. *(Code follow-up: `requireInternalSecret` compares with `!=`, not
+  `subtle.ConstantTimeCompare`; `shared/openapi.yaml` declares 401 for a bad secret
+  where the handler answers 404.)*
+- **Exposure.** These routes must not be reachable from the public edge: the reverse
+  proxy does not route `/api/v1/internal/*`. *(Code follow-up: the Traefik `api`
+  router matches the whole API host, so the routes are publicly reachable today and
+  the secret is the only guard.)* They are declared in `shared/openapi.yaml` under
+  the `internalSecret` security scheme.
+- **Tenant resolution.** The scraper echoes the `owner_id` the API sent it when
+  starting the scrape. The API never trusts it alone: `runInUserTenant` opens that
+  user's personal-org scope, re-reads the source (or import) row by id inside it,
+  and requires the row's `owner_user_id` to equal `owner_id`; a mismatch resolves to
+  not found and nothing is written. A missing `owner_id` is rejected before any
+  write.
+- **API → scraper.** Calls to the scraper (`/sync`, `/cancel`) send the same
+  `X-Internal-Secret`; the scraper service is internal-only (compose network
+  `internal`, no published port). *(Code follow-up: `cmd/api/scraper.go` sends no
+  secret header.)*
 
 Problem types: `comic/invalid-page-asset`, `comic/invalid-cover-asset`,
-`comic/invalid-progress-target`, `comic/not-publishable`, `comic/not-found`,
-`comic/zip-rejected`.
+`comic/invalid-progress-target`, `comic/not-publishable`, `comic/not-found` (also
+for a missing or foreign import job or sync source), `comic/invalid-cursor` (400,
+malformed cursor on either list), `comic/validation` (422; also an oversized import
+zip, an SSRF-rejected source URL, and sync/cancel in the wrong state), and
+`comic/sync-disabled` (404, P1.10; not yet emitted or in `problems.ts` — code
+follow-up). The earlier `comic/zip-rejected` was never emitted and is dropped:
+archive-level import failures surface as the job's `status=failed` + `error` (P1.7).
+
+Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation). Both list endpoints return `{items, next_cursor}` (specs README Pagination). *(Code follow-up: the shipped handler and `shared/openapi.yaml` still use the pre-convention key `{comics: [...], next_cursor?}`; until the retrofit, clients read `comics`.)*
 
 ## 8. Success metrics
 
@@ -487,7 +758,8 @@ Problem types: `comic/invalid-page-asset`, `comic/invalid-cover-asset`,
 2. CRUD + publish + RBAC wiring, OpenAPI (1 day)
 3. Reader + progress (1–1.5 days)
 4. Library/detail pages replacing placeholders (1 day)
-5. P1: zip import (1 day), reader modes + bookmarks (1 day)
+5. P1: zip import (per-chapter + whole-comic), reader R1–R5, external-source sync
+   (header revs 13–14); bookmarks (P1.8) unscheduled
 P0 ≈ 4–5 dev-days; P1 adds ~2.
 
 ## 10. Open questions
@@ -506,3 +778,5 @@ P0 ≈ 4–5 dev-days; P1 adds ~2.
 | r1 | 2026-07-05 | Initial spec from brief 02 — the reference media→domain vertical. |
 | r2 | 2026-07-08 | Reading progress keyed by `page_id` (not array index); asset-deletion coupling via `media:asset_deleted` (P0.6); `DEFERRABLE`-unique reorder pattern. |
 | r3 | 2026-07-10 | Code-verified reconciliations: RBAC reworked to **owner-or-elevated** (`RequireOwnerOrPermission`; new `comics:write:any`/`comics:publish:any`/`comics:delete:any` moderation grants seeded to editor/admin per the movies precedent) — the earlier `all-via-RequirePermission` on `:own` neither checked ownership nor admitted moderation; permission codes aligned to the 0003 2–3-segment catalog (dropped `comics:read:published`); identity-anchor FK to `users(id)` added to `comics`/`comic_reading_progress` (§6); `DELETE /pages/{id}` added to §7 and P0.1; list endpoints switched to cursor paging (§7); zip-import upload path + entry-scaled poll-timeout defined (P1.7); `comic:chapter_deleted` stream-removal event added (P1.9); P0.5 gained acceptance criteria; template-registry note added to the reader (P0.3) and library (P0.5) views. |
+| r4–r14 | 2026-08-07 → 2026-08-15 | Recorded in the header's rev notes (reader redesign R1–R5, zip import per-chapter + whole-comic, external-source sync); not restated here. |
+| r15 | 2026-09-30 | Spec-gap fixes: external-source sync gets its own section (P1.10, renamed from the colliding "P1.8"), `comic_imports`/`comic_sync_sources` DDL, and §7 rows for the import, sync-source and internal endpoints (secret, exposure, tenant resolution); P1.7 rewritten around the shipped job endpoints and per-mode guard table; `reading_direction` in §6/§7; keyset order `updated_at DESC, id DESC`; publish chains `comics:publish:own`; post-publish invariant; asset-ownership rule for editors and imports; `ComicDetail.progress` and reader payload (`asset_id`) aligned with the shipped shapes. Code follow-ups are marked inline. |

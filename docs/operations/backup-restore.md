@@ -1,6 +1,6 @@
 # Backup & Restore Runbook
 
-**Status:** current · **Last verified:** never
+**Status:** current · **Last verified:** 2026-09-30
 
 **Scope:** SPEC-09 P0 — nightly Postgres backups, the freshness sentinel, and the
 quarterly restore drill. Followable start-to-finish by someone who did not write
@@ -40,14 +40,22 @@ A periodic Asynq task `ops:backup_database` runs **nightly at 03:00 UTC**,
 scheduled on the worker's shared scheduler (there is no OS cron). Each run:
 
 1. Opens a `ops_backup_runs` row (`running`).
-2. Streams `pg_dump -Fc` — connecting **directly to Postgres, not PgBouncer** —
-   through a sha256 hasher straight into object storage at
-   `backups/pg/<yyyy-mm-dd>.dump`.
+2. Runs `pg_dump -Fc` — connecting **directly to Postgres, not PgBouncer** —
+   spooling it to a worker temp file with sha256 computed in the same pass, then
+   uploads the file to object storage at `backups/pg/<yyyy-mm-dd>.dump` (the
+   storage client needs a seekable body, so a straight pipe cannot work). The
+   worker's scratch disk must hold one dump.
 3. Closes the row (`ok` + size + key, or `failed` + reason).
 4. On success, overwrites `backups/pg/LATEST.json`
    `{storage_key, sha256, size_bytes, finished_at}`.
-5. Prunes old dumps: keeps the **7 most recent daily** dumps + the **4 most
-   recent weekly** (Sunday) dumps; never deletes the current dump or `LATEST.json`.
+5. Prunes old dumps, working only from the `ok` rows in `ops_backup_runs` (never
+   a bucket listing; all dates UTC): keeps the **7 most recent** dump dates plus,
+   for each of the **4 most recent ISO weeks** with an ok dump, that week's
+   latest dump; never deletes the `LATEST.json` target or `LATEST.json` itself.
+   Objects with no ok row are left alone (after a disaster restore the ledger is
+   older than the bucket). See SPEC-09 P0.2 step 5. *(The shipped selector
+   still keeps the 4 most recent Sunday dumps as the weekly set, not the latest
+   dump of each ISO week — code follow-up.)*
 6. Emits `ops:backup_completed` / `ops:backup_failed` and writes an audit record
    (`ops.backup.completed` / `ops.backup.failed`).
 
@@ -57,22 +65,32 @@ normally.
 ### Configuration
 
 `BACKUP_DATABASE_URL` (in `.env`) is the DSN pg_dump uses. It **MUST connect to
-Postgres directly** (`postgres:5432`), not through PgBouncer — a transaction
-pooler breaks the session semantics pg_dump relies on. Example:
+Postgres directly** (port 5432), never through PgBouncer or any other pooler — a
+transaction pooler breaks the session semantics pg_dump relies on. It connects as
+the schema-owner role `portal`, which bypasses RLS so every tenant's rows are
+dumped. Never reuse `DATABASE_URL` (`portal_app`, NOBYPASSRLS): under RLS pg_dump
+either errors or silently omits tenants. Under the host-Postgres topology the
+host is `host.docker.internal`, matching `.env.example`:
 
 ```
-BACKUP_DATABASE_URL=postgres://portal:change-me@postgres:5432/portal?sslmode=disable
+BACKUP_DATABASE_URL=postgres://portal:change-me@host.docker.internal:5432/portal?sslmode=disable
 ```
 
-If it is empty, the task self-reports a `failed` run (visible on `/ops/status`)
-rather than crashing the worker.
+If it is empty, the task self-reports a `failed` run
+(`BACKUP_DATABASE_URL is not configured`, visible on `/ops/status`) rather than
+crashing the worker.
 
-The worker image ships `postgresql17-client` (pg_dump + pg_restore), major-version
-pinned to the Postgres 17 server.
+The worker image ships `postgresql18-client` (pg_dump + pg_restore), whose major
+version equals the Postgres 18 server's. An older pg_dump refuses to dump a newer
+server, so bump the client in the same change that moves the server major.
 
 ---
 
 ## 3. The freshness sentinel
+
+**First, verify the owner account holds the `admin` role** (or superadmin). The
+ops surfaces (`/ops/status`, `/admin/queues`) require `admin`; an owner
+provisioned as `creator` gets 403 by design (SPEC-09 P0.1).
 
 `GET /api/v1/ops/status` (permission `ops:read`, admin-tier) returns:
 
@@ -122,9 +140,14 @@ make restore-drill
    must exit 0.
 4. Sanity-checks the restored DB (each meaningful without knowing the dump's
    history):
-   - `schema_migrations.version` ≤ the checked-out repo's latest migration number;
-   - `users` and `assets` return plausible counts;
+   - `schema_migrations.dirty = false` and `version` ≤ the checked-out repo's
+     latest migration number;
+   - `count(*) FROM users` ≥ 1, and `SELECT count(*) FROM assets` succeeds;
    - the 7 system roles seeded by `0003_account_rbac` are present.
+
+   Any failed check exits non-zero. SPEC-09 P0.4 step 3 is the contract
+   (`RESTORE DRILL FAILED: <check>`); the shipped script does not yet check
+   `dirty` or `users ≥ 1`.
 5. Drops the scratch DB and prints `RESTORE DRILL PASSED`.
 
 It consults **no** application table for selection — a fresh dev stack has no
@@ -132,23 +155,29 @@ It consults **no** application table for selection — a fresh dev stack has no
 
 ### Prerequisites
 
-`aws` (S3-compatible CLI), `jq`, `postgresql17-client` (`pg_restore` + `psql`),
-and `sha256sum` or `shasum` on the host. The scratch-DB connection must reach
-Postgres **directly** (not PgBouncer).
+The drill runs docker-first (`backend/scripts/restore-drill.sh`): object storage
+is read with a one-off `minio/mc` container on the compose network, and
+`pg_restore`/`psql` run inside the running Postgres container. The host needs
+`docker`, `python3` (to parse the manifest) and `sha256sum` or `shasum`; no
+host-installed Postgres client is required. When you restore with a host client
+instead, it must be `postgresql18-client` (the server's major version). The
+scratch-DB connection must reach Postgres **directly** (not PgBouncer).
 
 ### Connection knobs
 
-The script auto-reads `S3_*` and `POSTGRES_*` from `.env`. Because the drill runs
-from the host (not inside a container), point it at Postgres with:
+The script auto-reads `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and
+`POSTGRES_USER` from `.env`, and takes `PG_CONTAINER` (default
+`portal-postgres-1`), `RESTORE_NET` (default `portal_internal`) and `SCRATCH_DB`
+(default `portal_restore_check`) from the environment.
 
-```bash
-# defaults shown; override if your Postgres isn't on localhost:5432
-RESTORE_PGHOST=localhost RESTORE_PGPORT=5432 make restore-drill
-```
-
-If Postgres is only reachable inside the compose network, either publish its port
-or run the drill from a container on the `internal` network. `S3_ENDPOINT` in dev
-is the MinIO container URL — expose it or run against a host-reachable endpoint.
+**Backup source.** The stack's single `S3_*` set points at the disposable dev
+MinIO, so it cannot reach last night's prod dump. SPEC-09 P0.4 step 0 defines an
+explicit source: `RESTORE_S3_ENDPOINT`, `RESTORE_S3_BUCKET`,
+`RESTORE_S3_ACCESS_KEY`, `RESTORE_S3_SECRET_KEY`, each falling back to `S3_*`
+only when unset. The prod drill uses a read-only R2 token scoped to
+`backups/pg/*`. The shipped script does not read `RESTORE_S3_*` yet (it always
+talks to `http://minio:9000`); until it does, a prod drill means copying
+`LATEST.json` and its dump from R2 into the dev MinIO bucket first.
 
 ### Manual restore into production (real disaster)
 

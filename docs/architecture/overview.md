@@ -34,8 +34,10 @@ always the same: the envelope.
    across another module's tables. This is the single load-bearing rule
    ([MODULES.md](../../backend/MODULES.md) is authoritative).
 2. **The event bus is the product, not plumbing.** Under the life-OS positioning,
-   domain events (`bank:transaction_created`, `comic:chapter_published`,
-   `media:asset_ready`) are the raw material of the user's **life stream**. Every
+   domain events (`bank:transaction_created`, `media:playback_completed`,
+   `people:birthday_upcoming`) are the raw material of the user's **life
+   stream**; library events (`media:asset_ready`, `comic:published`) go to the
+   bell instead. Every
    new domain module emits at least one event from its first release (ADR-08).
    Registry: [reference/events.md](../reference/events.md).
 3. **One identity, one authorization engine.** Local password auth (Argon2id,

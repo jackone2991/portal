@@ -82,7 +82,7 @@ app/(app)/page.tsx ──────────┼─→ activeTemplate() ─�
 app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
 ```
 
-- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`). Every version implements this exact shape.
+- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-07 P0.4 player with resume; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
 - **`templates/registry.ts`** — the single switch point: maps version id → manifest, picks the active one from `NEXT_PUBLIC_TEMPLATE_VERSION`, throws on an unknown id.
 - **`templates/v1/index.ts`** — the v1 manifest binding the Olympus components to the contract.
 
@@ -626,9 +626,11 @@ Errors keyed by RFC 7807 `type` URI:
 
 When backend returns a Problem, frontend looks up `errors[problem.type]` for localised display. Falls back to `problem.title` if key missing.
 
+**Interim catalog: `src/lib/problems.ts`.** The next-intl tree above is the future target — `next-intl` is not a dependency yet. Today the live catalog is `frontend/src/lib/problems.ts` (`ProblemType` + `PROBLEM_MESSAGES`), keyed by the relative `<module>/<kebab-reason>` slug the backend emits (not a full URI); generic failures use `about:blank`. The specs README Errors convention makes adding each new type there part of definition of done.
+
 ### 5.3 Money formatting
 
-Backend never pre-formats. API returns `{ amount: "12345.67", currency: "USD" }`.
+Backend never pre-formats. **`bank` money is integer minor units** (D-41): amounts are JSON integers (`int64` minor units, VND exponent 0), and the shipped formatter is `formatVND` in `frontend/src/lib/bank.ts`; a general formatter divides by `10**exponent(currency)` before `Intl.NumberFormat`. D-14's decimal-string amounts (`{ amount: "12345.67", currency: "USD" }`, sketched below) remain the rule outside the v1 ledger.
 
 ```typescript
 // frontend/src/lib/format.ts
@@ -928,7 +930,7 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 
 ### Phase 5 — Bank
 
-- Money types: `<MoneyDisplay />`, `<MoneyInput />` (string-amount-aware).
+- Money types: `<MoneyDisplay />`, `<MoneyInput />` (minor-unit-aware, D-41).
 - Transaction list with infinite scroll + filter chips.
 - Net-worth chart, cash-flow Sankey.
 - Step-up auth UX wired into every destructive bank op (delete account, export).
@@ -937,7 +939,7 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 ### Phase 6 — Notifications
 
 - `<NotificationsBellDropdown />`.
-- **SSE client** subscribed to `/api/v1/events/stream`; pushes new notifications into TanStack cache (mutate cache directly, no refetch).
+- **SSE client** subscribed to `/api/v1/me/notifications/stream`; each event invalidates the notifications query and the unread count, which TanStack then refetches (invalidate-and-refetch — no direct cache mutation; SPEC-04 P1.2).
 - Web Push subscription via Service Worker; ask for permission only after user opts in via settings.
 
 ### Phase 7 — Social baseline
