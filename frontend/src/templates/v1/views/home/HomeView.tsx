@@ -7,13 +7,14 @@ import {
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
-import { Composer } from "../../components/composer/Composer";
+import { Composer, type ComposerDraft } from "../../components/composer/Composer";
 import { StreamItemCard } from "../../components/stream/StreamItemCard";
 import { widgetComponent } from "../../components/widget/registry";
 import { useLayout, type WidgetSlot } from "@/lib/layout";
 import { ApiError, baseURL } from "@/lib/api-client";
 import { problemDisplayMessage } from "@/lib/problems";
-import { createEntry, deleteEntry, patchEntry, type CreateEntryInput } from "@/lib/journal";
+import { presentEntry } from "@/lib/entry-presentation";
+import { createEntry, deleteEntry, patchEntry, type CreateEntryInput, type PatchEntryInput } from "@/lib/journal";
 import { getStream, type StreamItem, type StreamPage } from "@/lib/stream";
 
 /**
@@ -22,10 +23,20 @@ import { getStream, type StreamItem, type StreamPage } from "@/lib/stream";
  * bank/comic/people), newest first. The SPEC-05 composer sits on top; a new post
  * is inserted optimistically and survives refetch (the projection is written in
  * the entry's transaction — P0.1a). Edit and delete on a post go straight to the
- * journal entry behind the card's `ref_id`, also optimistically. The rail
- * carries real, failure-isolated facet widgets. Zero fixtures on this route.
+ * journal entry behind the card's `ref_id`, also optimistically. Editing opens
+ * a second composer in place of the card (SPEC-12 T5), pre-filled from the
+ * Entry, and sends the whole Entry back — body, mood, every Attachment, the
+ * Location (or null) — so the server sees one shape from both surfaces. The
+ * rail carries real, failure-isolated facet widgets. Zero fixtures on this route.
  */
 const STREAM_KEY = ["stream"] as const;
+
+/** The one Entry being edited: which, and the text as typed so far (D-32: the
+ * caller owns the composer's text; the rest of the draft is the composer's). */
+interface EditSession {
+  id: string;
+  bodyMd: string;
+}
 
 export function HomeView() {
   const displayName = useDisplayName();
@@ -33,7 +44,8 @@ export function HomeView() {
 
   const [bodyMd, setBodyMd] = useState("");
   const [composerError, setComposerError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<EditSession | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const query = useInfiniteQuery({
@@ -57,15 +69,19 @@ export function HomeView() {
         source_module: "journal",
         event_type: "journal:entry_created",
         occurred_at: input.occurred_at ?? new Date().toISOString(),
-        body_md: input.body_md,
-        mood: null,
+        body_md: input.body_md ?? "",
+        mood: input.mood ?? null,
+        asset_ids: input.asset_ids ?? [],
+        location: input.location ?? null,
       };
       qc.setQueryData<InfiniteData<StreamPage>>(STREAM_KEY, (data) => prepend(data, optimistic));
       return { previous };
     },
     onError: (err, input, ctx) => {
       if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
-      setBodyMd(input.body_md);
+      // The text comes back into the box; the composer keeps its Attachments
+      // and Location itself until `handleCreate` reports success.
+      setBodyMd(input.body_md ?? "");
       setComposerError(err instanceof ApiError ? problemDisplayMessage(err.body) : "Could not post");
     },
     onSuccess: () => {
@@ -75,25 +91,34 @@ export function HomeView() {
   });
 
   const update = useMutation({
-    mutationFn: ({ refId, bodyMd: body }: { refId: string; bodyMd: string }) =>
-      patchEntry(refId, { body_md: body }),
-    onMutate: async ({ refId, bodyMd: body }) => {
+    mutationFn: ({ refId, input }: { refId: string; input: PatchEntryInput }) => patchEntry(refId, input),
+    onMutate: async ({ refId, input }) => {
       await qc.cancelQueries({ queryKey: STREAM_KEY });
       const previous = qc.getQueryData<InfiniteData<StreamPage>>(STREAM_KEY);
+      // The edit sends every field, so the card can show the whole result at
+      // once rather than the text first and the photos a refetch later.
       qc.setQueryData<InfiniteData<StreamPage>>(STREAM_KEY, (data) =>
-        mapItems(data, (it) => (it.ref_id === refId ? { ...it, body_md: body } : it)),
+        mapItems(data, (it) =>
+          it.ref_id === refId
+            ? {
+                ...it,
+                body_md: input.body_md ?? it.body_md,
+                mood: input.mood === undefined ? it.mood : input.mood,
+                asset_ids: input.asset_ids ?? it.asset_ids,
+                location: input.location === undefined ? it.location : input.location,
+              }
+            : it,
+        ),
       );
       return { previous };
     },
     onError: (err, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(STREAM_KEY, ctx.previous);
-      setActionError(
-        err instanceof ApiError ? problemDisplayMessage(err.body) : "Could not save the post",
-      );
+      setEditError(err instanceof ApiError ? problemDisplayMessage(err.body) : "Could not save the post");
     },
     onSuccess: () => {
-      setActionError(null);
-      setEditingId(null);
+      setEditError(null);
+      setEditing(null);
       qc.invalidateQueries({ queryKey: STREAM_KEY });
     },
   });
@@ -120,12 +145,28 @@ export function HomeView() {
     },
   });
 
-  function handleCreate(composed: string) {
-    const body = composed.trim();
-    if (!body || create.isPending) return;
+  // The composer decides what is postable; these only report whether the
+  // server took it (the mutation's onError has already shown why not) — false
+  // keeps the composer's draft in place.
+  async function handleCreate(draft: ComposerDraft): Promise<boolean> {
+    if (create.isPending) return false;
     setComposerError(null);
     setBodyMd("");
-    create.mutate({ body_md: body });
+    return accepted(create.mutateAsync({ ...entryInput(draft), mood: draft.mood ?? undefined }));
+  }
+
+  // The edit composer sends the WHOLE Entry back — text, mood (null clears),
+  // every Attachment in order, the Location (null clears) — so the server sees
+  // the same shape from both surfaces.
+  async function handleSaveEdit(item: StreamItem, draft: ComposerDraft): Promise<boolean> {
+    if (update.isPending) return false;
+    setEditError(null);
+    return accepted(update.mutateAsync({ refId: item.ref_id, input: entryInput(draft) }));
+  }
+
+  function startEdit(item: StreamItem) {
+    setEditError(null);
+    setEditing({ id: item.id, bodyMd: presentEntry(item).text });
   }
 
   return (
@@ -173,22 +214,35 @@ export function HomeView() {
           </p>
         ) : (
           <>
-            {items.map((it) => (
-              <StreamItemCard
-                key={it.id}
-                item={it}
-                displayName={displayName}
-                editing={editingId === it.id}
-                saving={update.isPending}
-                onStartEdit={(target) => {
-                  setActionError(null);
-                  setEditingId(target.id);
-                }}
-                onCancelEdit={() => setEditingId(null)}
-                onSave={(target, body) => update.mutate({ refId: target.ref_id, bodyMd: body })}
-                onDelete={(target) => remove.mutate(target.ref_id)}
-              />
-            ))}
+            {items.map((it) => {
+              const shown = editing?.id === it.id ? presentEntry(it) : null;
+              return (
+                <StreamItemCard
+                  key={it.id}
+                  item={it}
+                  displayName={displayName}
+                  editor={
+                    editing && shown && (
+                      // A fresh composer per Entry — the card is keyed by the
+                      // Entry and `editor` is null for every other row — so
+                      // `initial` being read once on mount is enough.
+                      <Composer
+                        displayName={displayName}
+                        bodyMd={editing.bodyMd}
+                        onBodyMdChange={(v) => setEditing((e) => (e ? { ...e, bodyMd: v } : e))}
+                        initial={{ mood: it.mood ?? null, assetIds: shown.assetIds, location: shown.location }}
+                        onSubmit={(draft) => handleSaveEdit(it, draft)}
+                        onCancel={() => setEditing(null)}
+                        submitting={update.isPending}
+                        error={editError}
+                      />
+                    )
+                  }
+                  onStartEdit={startEdit}
+                  onDelete={(target) => remove.mutate(target.ref_id)}
+                />
+              );
+            })}
             {query.hasNextPage && (
               <div className="flex justify-center">
                 <button
@@ -280,6 +334,26 @@ function filterItems(
 ): InfiniteData<StreamPage> | undefined {
   if (!data) return data;
   return { ...data, pages: data.pages.map((p) => ({ ...p, items: p.items.filter(keep) })) };
+}
+
+/** The wire shape of a composer draft — what create and edit both send. */
+function entryInput(draft: ComposerDraft): PatchEntryInput {
+  return {
+    body_md: draft.bodyMd.trim(),
+    mood: draft.mood,
+    asset_ids: draft.assetIds,
+    location: draft.location,
+  };
+}
+
+/** Did the server take it? The mutation's onError has already shown why not. */
+async function accepted(request: Promise<unknown>): Promise<boolean> {
+  try {
+    await request;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 let tempSeq = 0;

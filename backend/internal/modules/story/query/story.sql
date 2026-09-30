@@ -48,7 +48,11 @@ RETURNING *;
 -- name: UpdateStoryStatus :one
 UPDATE stories SET status = $2, updated_at = now() WHERE id = $1 RETURNING *;
 
--- name: DeleteStory :exec
+-- name: DeleteStory :execrows
+-- Rows affected, so the adapter can answer ErrNotFound for an id that is
+-- already gone: a second DELETE is 404, not a silent 204 (the contract comic
+-- and bank keep; the owner guard in cmd/api says 404 too, but the module
+-- must not depend on it).
 DELETE FROM stories WHERE id = $1;
 
 -- name: CountStoryChapters :one

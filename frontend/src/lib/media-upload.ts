@@ -21,7 +21,17 @@ export interface UploadedImage {
   height: number | null;
 }
 
-export async function uploadImage(file: File, onProgress?: (pct: number) => void): Promise<UploadedImage> {
+/**
+ * `onProgress` reports the PUT (0–100); `onProcessing` fires once the upload is
+ * confirmed and the worker owns the file — the point where "uploading" becomes
+ * "processing" on a tile. Inferring that from `pct === 100` would be wrong: the
+ * last progress event can land before the PUT has been acknowledged.
+ */
+export async function uploadImage(
+  file: File,
+  onProgress?: (pct: number) => void,
+  onProcessing?: () => void,
+): Promise<UploadedImage> {
   const contentType = file.type || guessType(file.name);
   if (!contentType.startsWith("image/")) throw new Error("Chỉ chấp nhận tệp ảnh.");
 
@@ -41,6 +51,7 @@ export async function uploadImage(file: File, onProgress?: (pct: number) => void
   // 3. confirm → enqueue variant processing
   const co = await fetch(`${baseURL}/api/v1/assets/${asset.id}/complete`, { method: "POST", credentials: "include" });
   if (!co.ok) throw new Error("Không hoàn tất được tải lên.");
+  onProcessing?.();
 
   // 4. poll until the worker finishes (variants ready)
   const done = await poll(asset.id);

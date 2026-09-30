@@ -159,7 +159,7 @@ Markdown renders through a **sanitizing renderer** — no raw-HTML passthrough
 
 ### P1 — nice to have
 
-- **P1.5 Photo attachments**: `asset_ids uuid[]`, ≤ 10 per entry, each validated
+- **P1.5 Photo attachments** — *superseded 2026-09-12 by [SPEC-12](SPEC-12-journal-attachments.md), which keeps the ≤ 10 / image / ready / owned rules below, adds Location as Entry columns, allows a photo-only Entry, and backfills the interim markdown-link workaround out of every body. Kept here as the original decision; build from SPEC-12.* Original text: `asset_ids uuid[]`, ≤ 10 per entry, each validated
   via `mediaapi` at write time (exists, `kind=image`, `status=ready`, owned by the
   caller) — 422 Problem `journal/invalid-asset` otherwise. Entry cards render
   `thumb` variants; lightbox shows `medium`. **Needs SPEC-01.** Also subscribe to

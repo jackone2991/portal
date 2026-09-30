@@ -126,14 +126,8 @@ func (ip *ImageProcessor) run(ctx context.Context, id uuid.UUID, p ProcessImageP
 	if err != nil {
 		return fmt.Errorf("probe: %w", err)
 	}
-	if frames > 1 {
-		return fmt.Errorf("animated images are not supported (%d frames)", frames)
-	}
-	if w <= 0 || h <= 0 {
-		return errors.New("could not determine image dimensions")
-	}
-	if w > imageMaxSide || h > imageMaxSide || w*h > imageMaxPixels {
-		return fmt.Errorf("image dimensions %dx%d exceed limits (max side %dpx, max area %dpx)", w, h, imageMaxSide, imageMaxPixels)
+	if err := checkImageDims(w, h, frames); err != nil {
+		return err
 	}
 
 	// 3. generate served variants (WebP, auto-oriented, metadata stripped)
@@ -278,6 +272,24 @@ func probeImage(ctx context.Context, path string) (width, height, frames int, er
 		frames = n
 	}
 	return s.Width, s.Height, frames, nil
+}
+
+// checkImageDims is the admission rule, before any full decode: a single still
+// frame, with dimensions the probe could read, under the area budget and the
+// per-side sanity ceiling. It is what lets a 704×18000 webtoon strip in
+// (13 M px) while refusing 9000×9000 (81 M px) — the area is the memory, not
+// the longer side.
+func checkImageDims(w, h, frames int) error {
+	if frames > 1 {
+		return fmt.Errorf("animated images are not supported (%d frames)", frames)
+	}
+	if w <= 0 || h <= 0 {
+		return errors.New("could not determine image dimensions")
+	}
+	if w > imageMaxSide || h > imageMaxSide || w*h > imageMaxPixels {
+		return fmt.Errorf("image dimensions %dx%d exceed limits (max side %dpx, max area %dpx)", w, h, imageMaxSide, imageMaxPixels)
+	}
+	return nil
 }
 
 // scaledDims computes the stored variant dimensions: aspect-preserving, never

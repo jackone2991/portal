@@ -15,9 +15,14 @@ type Querier interface {
 	// never hand-edit the *.sql.go output. Entries are owner-scoped human-authored
 	// rows; the timeline orders and paginates on (occurred_at DESC, id DESC) so a
 	// backdated entry sits at its date (P0.2), backed by journal_entries_user_cursor_idx.
-	// Create one journal entry. asset_ids is intentionally NOT set — it stays at the
-	// table default '{}' until P1.5 attachments land (the service rejects any
-	// asset_ids in the request before this query runs). occurred_at is resolved by
+	// Create one journal entry. asset_ids is the Entry's Attachments in display
+	// order (SPEC-12 T1) — validated as a whole by the service through the media
+	// module's public lookup before this runs; an empty array is a text-only Entry.
+	// The Location is three all-or-nothing columns (0045, SPEC-12 T3): all NULL for
+	// none, all set for one — the service hands over a whole Location or nil, so
+	// the CHECK never fires from here. Coordinates arrive as float8 (what sqlc types
+	// a *float64 param as) and are assigned into numeric(7,4), which rounds to four
+	// places; the RETURNING row carries what was stored. occurred_at is resolved by
 	// the service (defaults to now(); backdating/future-dating unlimited).
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (JournalEntry, error)
 	// Owner-scoped delete. RETURNING id yields no row when the id is missing or owned
@@ -45,15 +50,30 @@ type Querier interface {
 	// Keyset page for the owner, newest first. A NULL @cursor_occurred_at starts at
 	// the top; the (occurred_at, id) keyset is backed by journal_entries_user_cursor_idx.
 	ListEntriesByUserCursor(ctx context.Context, arg ListEntriesByUserCursorParams) ([]JournalEntry, error)
-	// Merged timeline. Journal items carry their entry body/mood (LEFT JOIN); system
-	// items leave those NULL and render compact from payload (P0.2).
+	// Merged timeline. Journal items carry their entry body/mood/asset_ids and the
+	// three Location columns (LEFT JOIN — the same shapes as the Entry itself, so
+	// one renderer serves both, SPEC-12); system items leave those NULL and render
+	// compact from payload (P0.2).
 	ListStreamCursor(ctx context.Context, arg ListStreamCursorParams) ([]ListStreamCursorRow, error)
-	// Partial update of any subset of {body_md, mood, occurred_at}. A NULL arg leaves
-	// the column unchanged (COALESCE), so nil pointers from the service mean "keep".
-	// updated_at always advances; occurred_at is only moved when the caller edits it,
-	// so an entry keeps its timeline position unless occurred_at itself changed.
-	// Owner-scoped; no matching row → ErrEntryNotFound (404, never leaks existence).
+	// Partial update of any subset of {body_md, mood, asset_ids, location,
+	// occurred_at}. A NULL arg leaves the column unchanged (COALESCE), so nil
+	// pointers from the service mean "keep". asset_ids REPLACES the whole list when
+	// present — an empty array (not NULL) clears it (SPEC-12 T1). The Location
+	// and the mood cannot use COALESCE — NULL is how they are CLEARED — so
+	// @set_location / @set_mood say whether their args apply at all: false keeps
+	// the column, true writes the arg as sent (NULL = clear, a value = replace;
+	// SPEC-12 T3, T5). updated_at always advances; occurred_at is only moved when
+	// the caller edits it, so an entry keeps its timeline position unless
+	// occurred_at itself changed. Owner-scoped; no matching row →
+	// ErrEntryNotFound (404, never leaks existence).
 	PatchEntry(ctx context.Context, arg PatchEntryParams) (JournalEntry, error)
+	// media:asset_deleted (SPEC-12 T4): take one Asset out of the Attachments of
+	// every Entry of the owner that shows it. array_remove keeps the order of the
+	// rest; the WHERE keeps the update to rows that actually carry the id, which
+	// is what makes a redelivery a no-op (0 rows). An Entry may end up with '{}'
+	// and an empty body — kept, by design (the text-or-Attachment rule is the
+	// service's write rule, not a CHECK). Runs inside the owner's tenant scope.
+	StripAssetFromEntries(ctx context.Context, arg StripAssetFromEntriesParams) (int64, error)
 	// A journal edit moves its stream row to the edited position (P0.1a).
 	UpdateStreamOccurredAt(ctx context.Context, arg UpdateStreamOccurredAtParams) error
 	// Insert-or-refresh — a corrected payload/occurred_at must win (bank updated, P0.1).

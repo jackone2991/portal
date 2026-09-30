@@ -103,8 +103,17 @@ func (a *Adapter) SetStatus(ctx context.Context, id uuid.UUID, status string) (s
 	return toStory(row), nil
 }
 
+// DeleteStory answers ErrNotFound when nothing matched — the second of two
+// DELETEs is a 404, not a 204.
 func (a *Adapter) DeleteStory(ctx context.Context, id uuid.UUID) error {
-	return a.q.DeleteStory(ctx, pgUUID(id))
+	n, err := a.q.DeleteStory(ctx, pgUUID(id))
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return story.ErrNotFound
+	}
+	return nil
 }
 
 func (a *Adapter) OwnerByStory(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {

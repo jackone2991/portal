@@ -103,6 +103,9 @@ func (r *fakeRepo) SetStatus(_ context.Context, id uuid.UUID, status string) (St
 }
 
 func (r *fakeRepo) DeleteStory(_ context.Context, id uuid.UUID) error {
+	if _, ok := r.stories[id]; !ok {
+		return ErrNotFound // mirrors the adapter: 0 rows affected
+	}
 	delete(r.stories, id)
 	return nil
 }

@@ -25,12 +25,14 @@ frontend, Docker Compose behind Traefik.
 | [operations/](operations/) | How do I run the deployed system | [backup-restore.md](operations/backup-restore.md) |
 | [reference/](reference/README.md) | Lookup: events, contracts, canonical sources — and **what is proven** by a test | [events.md](reference/events.md) · [TRACEABILITY-MATRIX.md](reference/TRACEABILITY-MATRIX.md) |
 | [testing/](testing/README.md) | What we **intend** to prove, per spec (test plan, case documents, dated runs) | [TEST-PLAN.md](testing/TEST-PLAN.md) |
+| [agents/](agents/) | Where the engineering skills find the issue tracker, triage labels and domain-doc rules | [issue-tracker.md](agents/issue-tracker.md) |
 
 **Outside `docs/`** — contracts live next to what they govern ([ADR-09](adr/09-docs-architecture.md)); this is the list:
 
 | File | Governs |
 |---|---|
 | [`/CLAUDE.md`](../CLAUDE.md) | The repo as a whole: stack, boundaries, **implementation status** (the one written owner) |
+| [`/CONTEXT.md`](../CONTEXT.md) | The product glossary — one canonical term per concept, with the words to avoid. Not a spec: no implementation detail lives there |
 | [`/backend/MODULES.md`](../backend/MODULES.md) | Backend module contract; the new-module checklist |
 | `backend/internal/modules/<name>/README.md` | What that module owns, talks to, emits and subscribes. **Not status** — open work is in [product/backlog.md](product/backlog.md) |
 | [`/frontend/CLAUDE.md`](../frontend/CLAUDE.md) · [`/frontend/src/templates/README.md`](../frontend/src/templates/README.md) | Frontend conventions; the version-switched template tree |
@@ -86,6 +88,10 @@ move that into a spec.
   what we *intend* to prove → `testing/`. What *is* proven, by which
   `_test.go` function, is the traceability matrix in `reference/`.
 - A **registry or pointer** you look up rather than read → `reference/`.
+- **Configuration the engineering skills read** (which issue tracker, which
+  triage labels, where domain docs live) → `agents/`. Written once by
+  `/setup-matt-pocock-skills`, edited by hand after; never a place for content
+  a human reads to learn the system.
 - **Implementation status** has exactly one written owner,
   [`/CLAUDE.md`](../CLAUDE.md) § Current status, and one list of what is
   still open, [product/backlog.md](product/backlog.md). No other document —

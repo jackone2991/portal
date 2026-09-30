@@ -26,6 +26,7 @@ before starting*. A brief is promoted to a spec when it's queued for build
 | [SPEC-09](SPEC-09-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` (new) | — (land P0 before SPEC-03 data accrues) |
 | [SPEC-10](SPEC-10-ledger-expansion.md) | Ledger expansion — debts, goals, recurring, cards, net worth, automation, splits, sharing | `bank` (extends) | SPEC-03; SPEC-04 for reminders |
 | [SPEC-11](SPEC-11-docs-canonicalisation.md) | Docs canonicalisation — 79 stale ADR statements, 95 links, four CI docs checks (executed 2026-09-11) | none (docs + CI) | ADR-11 |
+| [SPEC-12](SPEC-12-journal-attachments.md) | Journal attachments — Attachments (≤ 10 image Assets) and Location as first-class Entry properties; the markdown-link workaround backfilled out of every body (issue #8) | `journal` (extends) · frontend | SPEC-01, SPEC-05, SPEC-06 (all shipped) |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs;
 they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)

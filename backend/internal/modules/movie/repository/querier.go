@@ -17,7 +17,11 @@ type Querier interface {
 	// media:asset_deleted consumer. tenant_id is filled by its column DEFAULT
 	// (RequireTenant sets app.current_tenant per request) — never inserted here.
 	CreateMovie(ctx context.Context, arg CreateMovieParams) (Movie, error)
-	DeleteMovie(ctx context.Context, id pgtype.UUID) error
+	// Rows affected, so the adapter can answer ErrNotFound for an id that is
+	// already gone: a second DELETE is 404, not a silent 204 (the contract comic
+	// and bank keep; the owner guard in cmd/api says 404 too, but the module
+	// must not depend on it).
+	DeleteMovie(ctx context.Context, id pgtype.UUID) (int64, error)
 	GetMovie(ctx context.Context, id pgtype.UUID) (Movie, error)
 	GetMovieOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	ListOwnMovies(ctx context.Context, arg ListOwnMoviesParams) ([]Movie, error)

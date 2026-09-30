@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Modal, BtnPrimary, BtnSecondary } from "./Modal";
 import { Icon } from "../ui/Icon";
 import { listAssets, assetVariantURL, type MediaAsset } from "@/lib/media-assets";
-import { uploadImage } from "@/lib/media-upload";
+import { MAX_ATTACHMENTS, type PhotoPick } from "@/lib/composer-photos";
+import { useInfiniteScroll } from "@/lib/use-infinite-scroll";
 
 /**
  * "Add Photo" popup for the newsfeed composer — the Olympus
@@ -13,64 +14,74 @@ import { uploadImage } from "@/lib/media-upload";
  * Photos), with the picker as a second pane of the same modal instead of a
  * second stacked dialog.
  *
- * Both options end at the same place: a **real** media-module asset id. Upload
- * runs the standard image pipeline (`uploadImage`: create session → PUT source
- * → complete → poll until the WebP variants are ready), and the library lists
- * the caller's own ready images — no fixture tiles, so what you pick is what
- * the post will show.
+ * It only *picks* (SPEC-12 T2): several files from disk, or several of the
+ * caller's own ready images from the library — no fixture tiles, so what you
+ * pick is what the post will show. The picks go back as {@link PhotoPick}s and
+ * the dialog closes; the composer runs each upload and shows its progress on
+ * the tile, because a dialog that stayed open for one upload cannot show ten.
+ * The cap and the duplicate rule live in `lib/composer-photos.ts`, not here —
+ * `remaining` is only the hint on the buttons.
  */
 type Pane = "choose" | "library";
 
 export function AttachPhotoPopup({
   open,
   onClose,
-  onPick,
+  onAdd,
+  remaining = MAX_ATTACHMENTS,
 }: {
   open: boolean;
   onClose: () => void;
-  onPick: (assetId: string) => void;
+  /** The photos picked, in selection order; the composer takes it from here. */
+  onAdd: (picks: PhotoPick[]) => void;
+  /** Slots left before the cap — shown, not enforced (the composer enforces). */
+  remaining?: number;
 }) {
   const [pane, setPane] = useState<Pane>("choose");
-  const [selected, setSelected] = useState<string | null>(null);
-  const [pct, setPct] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
 
-  // Fresh dialog every time: a stale pane or half-finished upload from the
+  // Fresh dialog every time: a stale pane or a half-made selection from the
   // previous open would be confusing.
   useEffect(() => {
     if (!open) {
       setPane("choose");
-      setSelected(null);
-      setPct(null);
-      setError(null);
+      setSelected([]);
     }
   }, [open]);
 
-  const library = useQuery({
+  // Keyset-paginated like every list here (frontend/CLAUDE.md "Cursor lists"):
+  // a plain query would show the first 30 photos as if they were all of them.
+  const library = useInfiniteQuery({
     queryKey: ["assets", "image", "ready"],
-    queryFn: () => listAssets({ kind: "image", status: "ready" }),
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      listAssets({ kind: "image", status: "ready", cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
     enabled: open && pane === "library",
+  });
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: () => library.fetchNextPage(),
+    hasMore: library.hasNextPage,
+    isLoading: library.isFetchingNextPage,
   });
 
   // The list endpoint takes `kind`/`status`, but filter here too: the picker
   // must never offer a video or a still-processing image.
-  const photos = (library.data?.assets ?? []).filter(
+  const photos = (library.data?.pages.flatMap((p) => p.assets) ?? []).filter(
     (a: MediaAsset) => a.kind === "image" && a.status === "ready",
   );
 
-  async function handleFile(file: File) {
-    setError(null);
-    setPct(0);
-    try {
-      const up = await uploadImage(file, setPct);
-      onPick(up.assetId);
-      onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Tải ảnh lên thất bại.");
-    } finally {
-      setPct(null);
-    }
+  function toggle(id: string) {
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   }
+
+  function confirmLibrary() {
+    if (selected.length === 0) return;
+    onAdd(selected.map((id) => ({ kind: "asset", id })));
+    onClose();
+  }
+
+  const slots = `còn ${remaining}/${MAX_ATTACHMENTS} ảnh`;
 
   return (
     <Modal
@@ -79,76 +90,43 @@ export function AttachPhotoPopup({
       title={pane === "choose" ? "Add Photo" : "Choose from My Photos"}
       width={pane === "choose" ? 460 : 640}
     >
-      {error && (
-        <p
-          role="alert"
-          className="mx-6 mt-4 rounded-lg border px-3 py-2 text-sm"
-          style={{
-            borderColor: "rgba(239,68,68,.4)",
-            background: "rgba(239,68,68,.08)",
-            color: "#ef4444",
-          }}
-        >
-          {error}
-        </p>
-      )}
-
       {pane === "choose" ? (
         <div className="space-y-3 p-6">
-          {pct === null ? (
-            <>
-              <label className="block cursor-pointer">
-                <Option
-                  icon="computer-icon"
-                  title="Upload Photo"
-                  subtitle="Browse your computer."
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void handleFile(f);
-                    e.target.value = ""; // allow re-picking the same file
-                  }}
-                />
-              </label>
+          <label className="block cursor-pointer">
+            <Option
+              icon="computer-icon"
+              title="Upload Photo"
+              subtitle="Browse your computer — several at once."
+            />
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = ""; // allow re-picking the same file
+                if (files.length === 0) return;
+                onAdd(files.map((file) => ({ kind: "file", file })));
+                onClose();
+              }}
+            />
+          </label>
 
-              <button
-                type="button"
-                className="w-full text-left"
-                onClick={() => setPane("library")}
-              >
-                <Option
-                  icon="photos-icon"
-                  title="Choose from My Photos"
-                  subtitle="Choose from your uploaded photos"
-                />
-              </button>
-            </>
-          ) : (
-            <div className="py-4">
-              <p className="text-sm font-semibold" style={{ color: "var(--tpl-heading)" }}>
-                {pct < 100 ? `Đang tải lên… ${pct}%` : "Đang xử lý ảnh…"}
-              </p>
-              <div
-                className="mt-3 h-2 w-full overflow-hidden rounded-full"
-                style={{ background: "var(--tpl-surface-2)" }}
-              >
-                <div
-                  className="h-full transition-[width]"
-                  style={{
-                    width: `${pct}%`,
-                    background: "linear-gradient(135deg, var(--tpl-accent), var(--tpl-accent-2))",
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-xs" style={{ color: "var(--tpl-muted)" }}>
-                Ảnh được chuyển sang WebP trước khi đính vào bài.
-              </p>
-            </div>
-          )}
+          <button
+            type="button"
+            className="w-full text-left"
+            onClick={() => setPane("library")}
+          >
+            <Option
+              icon="photos-icon"
+              title="Choose from My Photos"
+              subtitle="Choose from your uploaded photos"
+            />
+          </button>
+          <p className="text-center text-xs" style={{ color: "var(--tpl-muted)" }}>
+            {slots}
+          </p>
         </div>
       ) : (
         <>
@@ -168,12 +146,13 @@ export function AttachPhotoPopup({
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {photos.map((p) => {
-                  const active = selected === p.id;
+                  const order = selected.indexOf(p.id);
+                  const active = order >= 0;
                   return (
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => setSelected(p.id)}
+                      onClick={() => toggle(p.id)}
                       aria-pressed={active}
                       className="relative aspect-[3/2] overflow-hidden rounded-lg transition"
                       style={{
@@ -189,11 +168,13 @@ export function AttachPhotoPopup({
                         className="h-full w-full object-cover"
                       />
                       {active && (
+                        // The pick order is the display order, so the badge
+                        // says which slot this photo takes rather than just ✓.
                         <span
-                          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full text-white"
+                          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full text-xs font-semibold text-white"
                           style={{ background: "var(--tpl-accent)" }}
                         >
-                          <Icon name="check-icon" size={12} />
+                          {order + 1}
                         </span>
                       )}
                     </button>
@@ -201,23 +182,25 @@ export function AttachPhotoPopup({
                 })}
               </div>
             )}
+            {/* The scroll sentinel: the next page loads as it comes into view. */}
+            <div ref={sentinelRef} aria-hidden />
+            {library.isFetchingNextPage && (
+              <p className="mt-3 text-center text-xs" style={{ color: "var(--tpl-muted)" }}>
+                Đang tải thêm…
+              </p>
+            )}
           </div>
 
           <div
-            className="flex justify-end gap-2 border-t px-6 py-4"
+            className="flex items-center justify-end gap-2 border-t px-6 py-4"
             style={{ borderColor: "var(--tpl-border)" }}
           >
+            <span className="mr-auto text-xs" style={{ color: "var(--tpl-muted)" }}>
+              {slots}
+            </span>
             <BtnSecondary onClick={() => setPane("choose")}>Back</BtnSecondary>
-            <BtnPrimary
-              disabled={!selected}
-              onClick={() => {
-                if (selected) {
-                  onPick(selected);
-                  onClose();
-                }
-              }}
-            >
-              Confirm Photo
+            <BtnPrimary disabled={selected.length === 0} onClick={confirmLibrary}>
+              {selected.length > 1 ? `Confirm ${selected.length} Photos` : "Confirm Photo"}
             </BtnPrimary>
           </div>
         </>

@@ -10,16 +10,16 @@ import {
   coordName,
   latToTileY,
   lonToTileX,
-  searchPlaces,
+  searchLocations,
   tileURL,
   tileXToLon,
   tileYToLat,
-  type Place,
-  type PlaceResult,
+  type Location,
+  type LocationResult,
 } from "@/lib/geo";
 
 /**
- * "Add Location" picker for the newsfeed composer — search a place, or drop the
+ * "Add Location" picker for the newsfeed composer — search a location, or drop the
  * pin anywhere on the map.
  *
  * The map is a hand-rolled slippy map: a grid of 256px OpenStreetMap tiles
@@ -36,7 +36,7 @@ import {
 const DEFAULT_CENTER = { lat: 21.0278, lon: 105.8342 }; // Hà Nội
 const MAP_H = 300;
 
-export function PlacePickerPopup({
+export function LocationPickerPopup({
   open,
   onClose,
   onPick,
@@ -44,15 +44,15 @@ export function PlacePickerPopup({
 }: {
   open: boolean;
   onClose: () => void;
-  onPick: (place: Place) => void;
-  initial?: Place | null;
+  onPick: (location: Location) => void;
+  initial?: Location | null;
 }) {
   const [center, setCenter] = useState(initial ?? DEFAULT_CENTER);
   const [zoom, setZoom] = useState(initial ? 15 : 12);
   const [pin, setPin] = useState<{ lat: number; lon: number } | null>(initial ?? null);
   const [name, setName] = useState(initial?.name ?? "");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [results, setResults] = useState<LocationResult[]>([]);
   const [searching, setSearching] = useState(false);
 
   const boxRef = useRef<HTMLDivElement>(null);
@@ -85,7 +85,7 @@ export function PlacePickerPopup({
     const ctrl = new AbortController();
     setSearching(true);
     const t = setTimeout(async () => {
-      const found = await searchPlaces(q, ctrl.signal);
+      const found = await searchLocations(q, ctrl.signal);
       if (!ctrl.signal.aborted) {
         setResults(found);
         setSearching(false);
@@ -164,7 +164,7 @@ export function PlacePickerPopup({
     setName((n) => (n.trim() ? n : coordName(lat, lon)));
   }
 
-  function choose(p: PlaceResult) {
+  function choose(p: LocationResult) {
     setPin({ lat: p.lat, lon: p.lon });
     setCenter({ lat: p.lat, lon: p.lon });
     setZoom(14);
@@ -173,7 +173,7 @@ export function PlacePickerPopup({
     setQuery("");
   }
 
-  const resolved: Place | null = pin
+  const resolved: Location | null = pin
     ? { name: name.trim() || coordName(pin.lat, pin.lon), lat: pin.lat, lon: pin.lon }
     : null;
 

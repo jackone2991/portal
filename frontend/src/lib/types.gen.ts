@@ -2531,12 +2531,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description Where an Entry happened (SPEC-12 T3) — a property of the Entry, not an
+         *     Attachment. All three fields together or the whole thing null: a
+         *     name-only or coordinates-only Location is 422 `journal/invalid-location`.
+         *     Coordinates are kept to four decimal places.
+         */
+        JournalLocation: {
+            /** @description Non-empty after trimming. */
+            name: string;
+            lat: number;
+            lon: number;
+        };
         JournalEntry: {
             /** Format: uuid */
             id: string;
+            /** @description Plain markdown — never carries the Attachments or the Location. */
             body_md: string;
             mood?: string | null;
             asset_ids: string[];
+            /** @description The Entry's Location; null when none. */
+            location: components["schemas"]["JournalLocation"] | null;
             /** Format: date-time */
             occurred_at: string;
             /** Format: date-time */
@@ -2545,12 +2560,27 @@ export interface components {
             updated_at: string;
         };
         /**
-         * @description Create requires body_md; PATCH accepts any subset of the fields. `asset_ids`
-         *     is rejected with 422 `journal/invalid-asset` until photo attachments (P1.5).
+         * @description PATCH accepts any subset of the fields. An Entry is text, or at least one
+         *     Attachment, or both (SPEC-12): a create or patch whose result has neither
+         *     is 422 `journal/invalid-body` — a Location alone does not make an Entry.
+         *     `asset_ids`, when present, replaces the whole list and is validated as a
+         *     whole — a duplicate, an eleventh element, or any id that is not a ready
+         *     image Asset owned by the caller is 422 `journal/invalid-asset` with
+         *     `detail` naming the id and the reason, and nothing is stored. `location`
+         *     sets the Location when it is an object, clears it when null, and keeps
+         *     it when absent; a violation of its rules is 422 `journal/invalid-location`.
+         *     `mood` follows the same three states: a string sets, `null` clears,
+         *     absent keeps.
          */
         JournalEntryWrite: {
+            /** @description Plain markdown. Absent or empty is allowed only when the resulting Entry has at least one Attachment. */
             body_md?: string;
+            /** @description A string sets the mood (1–80 characters after trimming), `null` clears it, absent keeps it (SPEC-12 T5). */
             mood?: string | null;
+            /** @description The Entry's Attachments in display order — image Assets owned by the caller with status `ready`. Replaces the whole list when present. */
+            asset_ids?: string[];
+            /** @description An object sets the Location, `null` clears it, absent keeps it. */
+            location?: components["schemas"]["JournalLocation"] | null;
             /**
              * Format: date-time
              * @description Optional; defaults to now. Backdating and future-dating are allowed.
@@ -3139,7 +3169,7 @@ export interface components {
             days_until: number;
             age_turning?: number | null;
         };
-        /** @description One merged-timeline card. Journal items carry body_md/mood; system items a synthesized title/href. */
+        /** @description One merged-timeline card. Journal items carry body_md/mood/asset_ids/location (the same shapes as JournalEntry, so one renderer serves both — SPEC-12); system items a synthesized title/href. */
         StreamItem: {
             /** Format: uuid */
             id: string;
@@ -3155,6 +3185,10 @@ export interface components {
             occurred_at: string;
             body_md?: string | null;
             mood?: string | null;
+            /** @description Journal items only — the Entry's Attachments in display order (empty when none). */
+            asset_ids?: string[];
+            /** @description Journal items only — the Entry's Location, the same shape as on JournalEntry (SPEC-12 T3); null when none. */
+            location?: components["schemas"]["JournalLocation"] | null;
             title?: string | null;
             href?: string | null;
         };
@@ -5402,7 +5436,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
-            /** @description Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset`) */
+            /** @description Validation failed (`journal/invalid-body` — no text and no Attachment, or over 20000 characters · `journal/invalid-mood` · `journal/invalid-asset` — the Attachment list as a whole is invalid; `detail` names the id and the reason · `journal/invalid-location` — name-only, coordinates-only, empty name, or coordinates out of range) */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -5501,7 +5535,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Validation failed */
+            /** @description Validation failed (`journal/invalid-body` · `journal/invalid-mood` · `journal/invalid-asset` · `journal/invalid-location` — as for create; the "text or Attachment" rule is judged on the patched result) */
             422: {
                 headers: {
                     [name: string]: unknown;

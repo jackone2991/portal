@@ -66,7 +66,8 @@ psql -U portal -d portal -c 'select version from schema_migrations;'
 #    on anything that is not a throwaway dev cluster.
 psql -U portal -d portal -c "ALTER ROLE portal_app WITH LOGIN PASSWORD '<password>';"
 
-# 3. Prove isolation actually holds BEFORE flipping anything.
+# 3. Prove isolation actually holds BEFORE flipping anything. CI runs this same
+#    suite against a throwaway database; this run proves it on THIS cluster.
 cd backend
 RLS_TEST_ADMIN_URL='postgres://portal:<pw>@127.0.0.1:5432/portal?sslmode=disable' \
 RLS_TEST_APP_URL='postgres://portal_app:<pw>@127.0.0.1:5432/portal?sslmode=disable' \

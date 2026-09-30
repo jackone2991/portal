@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/portal/backend/internal/platform/storage/storagetest"
 )
 
 // objectReader is what makes a media file seekable over HTTP. The properties
@@ -15,16 +17,16 @@ import (
 // body with Seek(0, End) before reading a byte, and a reader that fetched the
 // whole object to answer that would defeat the point.
 
-func newTestReader(t *testing.T, body []byte) (*objectReader, *fakeStore) {
+func newTestReader(t *testing.T, body []byte) *objectReader {
 	t.Helper()
-	store := newFakeStore()
-	store.obj["k"] = body
-	return newObjectReader(context.Background(), store, "k", int64(len(body))), store
+	store := storagetest.New()
+	store.Seed("k", body, "")
+	return newObjectReader(context.Background(), store, "k", int64(len(body)))
 }
 
 func TestObjectReaderSeekEndReportsSizeWithoutReading(t *testing.T) {
 	body := []byte("0123456789")
-	r, _ := newTestReader(t, body)
+	r := newTestReader(t, body)
 
 	n, err := r.Seek(0, io.SeekEnd)
 	if err != nil {
@@ -41,7 +43,7 @@ func TestObjectReaderSeekEndReportsSizeWithoutReading(t *testing.T) {
 }
 
 func TestObjectReaderReadsFromTheSeekedOffset(t *testing.T) {
-	r, _ := newTestReader(t, []byte("0123456789"))
+	r := newTestReader(t, []byte("0123456789"))
 
 	if _, err := r.Seek(4, io.SeekStart); err != nil {
 		t.Fatalf("Seek: %v", err)
@@ -59,7 +61,7 @@ func TestObjectReaderReadsFromTheSeekedOffset(t *testing.T) {
 // one would return bytes from the previous position and silently corrupt the
 // response.
 func TestObjectReaderDropsTheOpenBodyOnSeek(t *testing.T) {
-	r, _ := newTestReader(t, []byte("0123456789"))
+	r := newTestReader(t, []byte("0123456789"))
 
 	buf := make([]byte, 3)
 	if _, err := r.Read(buf); err != nil {
@@ -85,7 +87,7 @@ func TestObjectReaderDropsTheOpenBodyOnSeek(t *testing.T) {
 }
 
 func TestObjectReaderSeekCurrentAndEOF(t *testing.T) {
-	r, _ := newTestReader(t, []byte("0123456789"))
+	r := newTestReader(t, []byte("0123456789"))
 
 	if _, err := r.Read(make([]byte, 2)); err != nil {
 		t.Fatalf("Read: %v", err)
@@ -111,7 +113,7 @@ func TestObjectReaderSeekCurrentAndEOF(t *testing.T) {
 // "the progress bar does nothing".
 func TestServeContentAnswersRangeRequests(t *testing.T) {
 	body := []byte("0123456789abcdef")
-	r, _ := newTestReader(t, body)
+	r := newTestReader(t, body)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		http.ServeContent(w, req, "track.mp3", time.Unix(0, 0), r)

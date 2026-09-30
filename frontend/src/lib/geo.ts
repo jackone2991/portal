@@ -1,4 +1,4 @@
-// Place search + slippy-map tile maths for the newsfeed location picker.
+// Location search + slippy-map tile maths for the newsfeed location picker.
 //
 // Both services are keyless, CORS-open and called straight from the browser —
 // the same arrangement `weather.ts` already uses for Open-Meteo's forecast API,
@@ -12,13 +12,13 @@
 // nothing in the bundle. Attribution is required by the OSM tile policy and is
 // rendered by the picker.
 
-export interface Place {
+export interface Location {
   name: string;
   lat: number;
   lon: number;
 }
 
-export interface PlaceResult extends Place {
+export interface LocationResult extends Location {
   /** "Hanoi, Vietnam" style context line, already joined for display. */
   detail: string;
 }
@@ -35,7 +35,7 @@ interface OMGeo {
 }
 
 /** Open-Meteo geocoding. Returns [] for a blank query, a miss, or a failure. */
-export async function searchPlaces(query: string, signal?: AbortSignal): Promise<PlaceResult[]> {
+export async function searchLocations(query: string, signal?: AbortSignal): Promise<LocationResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
   const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
@@ -74,8 +74,14 @@ export function latToTileY(lat: number, z: number): number {
   return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 2 ** z;
 }
 
+/**
+ * Wraps into [−180, 180): the map pans past the antimeridian (tile x is not
+ * clamped, so a pin dropped there would otherwise read 190°E), and the server
+ * refuses a Location off the Earth (SPEC-12 T3, `journal/invalid-location`).
+ */
 export function tileXToLon(x: number, z: number): number {
-  return (x / 2 ** z) * 360 - 180;
+  const lon = (x / 2 ** z) * 360 - 180;
+  return ((((lon + 180) % 360) + 360) % 360) - 180;
 }
 
 export function tileYToLat(y: number, z: number): number {
@@ -93,6 +99,11 @@ export function tileURL(z: number, x: number, y: number): string {
 /** Rounded to ~11 m — enough for a post's location, and keeps bodies short. */
 export function fmtCoord(v: number): string {
   return v.toFixed(4);
+}
+
+/** What a Location is called wherever it is shown: its name, or its coordinates. */
+export function locationLabel(l: Location): string {
+  return l.name.trim() || coordName(l.lat, l.lon);
 }
 
 /** Human-readable fallback name for a pin dropped straight on the map. */

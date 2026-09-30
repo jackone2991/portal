@@ -93,8 +93,17 @@ func (a *Adapter) SetStatus(ctx context.Context, id uuid.UUID, status string) (m
 	return toTrack(row), nil
 }
 
+// DeleteTrack answers ErrNotFound when nothing matched — the second of two
+// DELETEs is a 404, not a 204.
 func (a *Adapter) DeleteTrack(ctx context.Context, id uuid.UUID) error {
-	return a.q.DeleteTrack(ctx, pgUUID(id))
+	n, err := a.q.DeleteTrack(ctx, pgUUID(id))
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return music.ErrNotFound
+	}
+	return nil
 }
 
 func (a *Adapter) OwnerByTrack(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {

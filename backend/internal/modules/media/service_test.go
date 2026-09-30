@@ -1,10 +1,8 @@
 package media
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"io"
 	"sort"
 	"strings"
 	"testing"
@@ -15,7 +13,7 @@ import (
 
 	mediaapi "github.com/portal/backend/internal/modules/media/api"
 	"github.com/portal/backend/internal/modules/media/worker"
-	"github.com/portal/backend/internal/platform/storage"
+	"github.com/portal/backend/internal/platform/storage/storagetest"
 )
 
 // ── fakes ───────────────────────────────────────────────────────────
@@ -286,89 +284,6 @@ func containsStr(ss []string, want string) bool {
 	return false
 }
 
-type fakeStore struct {
-	obj   map[string][]byte
-	sizes map[string]int64 // optional Size override (e.g. simulate a >50 MB object)
-}
-
-func newFakeStore() *fakeStore {
-	return &fakeStore{obj: map[string][]byte{}, sizes: map[string]int64{}}
-}
-
-func (s *fakeStore) Bucket() string { return "test" }
-func (s *fakeStore) PresignPut(_ context.Context, key, _ string, ttl time.Duration) (*storage.PresignedRequest, error) {
-	return &storage.PresignedRequest{URL: "http://store/" + key, Method: "PUT", Expires: time.Now().Add(ttl)}, nil
-}
-func (s *fakeStore) PresignGet(_ context.Context, key string, ttl time.Duration) (*storage.PresignedRequest, error) {
-	return &storage.PresignedRequest{URL: "http://store/" + key, Method: "GET", Expires: time.Now().Add(ttl)}, nil
-}
-func (s *fakeStore) Put(_ context.Context, key string, body io.Reader, _ string) error {
-	b, _ := io.ReadAll(body)
-	s.obj[key] = b
-	return nil
-}
-func (s *fakeStore) Get(_ context.Context, key string) (io.ReadCloser, error) {
-	b, ok := s.obj[key]
-	if !ok {
-		return nil, storage.ErrNotFound
-	}
-	return io.NopCloser(bytes.NewReader(b)), nil
-}
-func (s *fakeStore) GetRange(_ context.Context, key string, n int64) (io.ReadCloser, error) {
-	b, ok := s.obj[key]
-	if !ok {
-		return nil, storage.ErrNotFound
-	}
-	if int64(len(b)) > n {
-		b = b[:n]
-	}
-	return io.NopCloser(bytes.NewReader(b)), nil
-}
-
-// GetByteRange mirrors the HTTP Range convention the real store implements:
-// inclusive bounds, and a negative end meaning "to the end of the object".
-func (s *fakeStore) GetByteRange(_ context.Context, key string, start, end int64) (io.ReadCloser, error) {
-	b, ok := s.obj[key]
-	if !ok {
-		return nil, storage.ErrNotFound
-	}
-	if start < 0 {
-		start = 0
-	}
-	if start > int64(len(b)) {
-		start = int64(len(b))
-	}
-	stop := int64(len(b))
-	if end >= start && end+1 < stop {
-		stop = end + 1
-	}
-	return io.NopCloser(bytes.NewReader(b[start:stop])), nil
-}
-
-func (s *fakeStore) Size(_ context.Context, key string) (int64, error) {
-	if sz, ok := s.sizes[key]; ok {
-		return sz, nil
-	}
-	b, ok := s.obj[key]
-	if !ok {
-		return 0, storage.ErrNotFound
-	}
-	return int64(len(b)), nil
-}
-func (s *fakeStore) Delete(_ context.Context, key string) error { delete(s.obj, key); return nil }
-func (s *fakeStore) DeletePrefix(_ context.Context, prefix string) error {
-	for k := range s.obj {
-		if strings.HasPrefix(k, prefix) {
-			delete(s.obj, k)
-		}
-	}
-	return nil
-}
-func (s *fakeStore) Exists(_ context.Context, key string) (bool, error) {
-	_, ok := s.obj[key]
-	return ok, nil
-}
-
 type fakeEnqueuer struct{ tasks []*asynq.Task }
 
 func (e *fakeEnqueuer) Enqueue(t *asynq.Task, _ ...asynq.Option) (*asynq.TaskInfo, error) {
@@ -383,9 +298,9 @@ func (p *fakePublisher) Publish(_ context.Context, name string, _ any) error {
 	return nil
 }
 
-func newSvc() (*Service, *fakeRepo, *fakeStore, *fakeEnqueuer, *fakePublisher) {
+func newSvc() (*Service, *fakeRepo, *storagetest.MemStore, *fakeEnqueuer, *fakePublisher) {
 	repo := newFakeRepo()
-	store := newFakeStore()
+	store := storagetest.New()
 	enq := &fakeEnqueuer{}
 	pub := &fakePublisher{}
 	svc := &Service{store: store, repo: repo, enqueue: enq, events: pub, baseURL: "https://api.test", uploadTTL: time.Minute}
@@ -461,7 +376,7 @@ func TestCompleteUpload(t *testing.T) {
 		t.Fatalf("missing source = %v, want ErrNotReady", err)
 	}
 	// upload landed → completes, marks processing, enqueues one transcode task
-	store.obj[sess.Asset.SourceKey] = []byte("mp4")
+	store.Seed(sess.Asset.SourceKey, []byte("mp4"), "")
 	if err := svc.CompleteUpload(ctx, owner, id); err != nil {
 		t.Fatal(err)
 	}
@@ -480,7 +395,7 @@ func TestCompleteUploadImageAccepted(t *testing.T) {
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "p.jpg", "image/jpeg", 1)
 	id := sess.Asset.ID
-	store.obj[sess.Asset.SourceKey] = jpegHeader
+	store.Seed(sess.Asset.SourceKey, jpegHeader, "")
 
 	if err := svc.CompleteUpload(ctx, owner, id); err != nil {
 		t.Fatalf("complete image: %v", err)
@@ -500,7 +415,7 @@ func TestCompleteUploadHEICRejected(t *testing.T) {
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "IMG.heic", "image/heic", 1)
 	id := sess.Asset.ID
-	store.obj[sess.Asset.SourceKey] = heicHeader
+	store.Seed(sess.Asset.SourceKey, heicHeader, "")
 
 	err := svc.CompleteUpload(ctx, owner, id)
 	var ufe *UnsupportedFormatError
@@ -510,7 +425,7 @@ func TestCompleteUploadHEICRejected(t *testing.T) {
 	if repo.m[id].Status != StatusFailed {
 		t.Fatalf("status = %v, want failed", repo.m[id].Status)
 	}
-	if _, ok := store.obj[sess.Asset.SourceKey]; ok {
+	if _, ok := store.Object(sess.Asset.SourceKey); ok {
 		t.Fatal("uploaded object should be deleted on rejection")
 	}
 	if len(enq.tasks) != 0 {
@@ -524,7 +439,7 @@ func TestCompleteUploadUnknownFormatRejected(t *testing.T) {
 	owner := uuid.New()
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "x.png", "image/png", 1)
-	store.obj[sess.Asset.SourceKey] = []byte("not an image at all")
+	store.Seed(sess.Asset.SourceKey, []byte("not an image at all"), "")
 
 	var ufe *UnsupportedFormatError
 	if err := svc.CompleteUpload(ctx, owner, sess.Asset.ID); !errors.As(err, &ufe) || ufe.HEIC {
@@ -541,8 +456,8 @@ func TestCompleteUploadTooLarge(t *testing.T) {
 	owner := uuid.New()
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "big.jpg", "image/jpeg", 1)
-	store.obj[sess.Asset.SourceKey] = jpegHeader
-	store.sizes[sess.Asset.SourceKey] = maxUploadBytes + 1 // simulate a >50 MB object
+	store.Seed(sess.Asset.SourceKey, jpegHeader, "")
+	store.SetSize(sess.Asset.SourceKey, maxUploadBytes+1) // simulate a >50 MB object
 
 	if err := svc.CompleteUpload(ctx, owner, sess.Asset.ID); !errors.Is(err, ErrFileTooLarge) {
 		t.Fatalf("err = %v, want ErrFileTooLarge", err)
@@ -550,7 +465,7 @@ func TestCompleteUploadTooLarge(t *testing.T) {
 	if repo.m[sess.Asset.ID].Status != StatusFailed {
 		t.Fatal("asset should be failed")
 	}
-	if _, ok := store.obj[sess.Asset.SourceKey]; ok {
+	if _, ok := store.Object(sess.Asset.SourceKey); ok {
 		t.Fatal("oversized object should be deleted")
 	}
 }
@@ -653,8 +568,8 @@ func TestDeleteAsset(t *testing.T) {
 	id := uuid.New()
 	repo.m[id] = Asset{ID: id, OwnerID: owner, Kind: "image", Status: StatusReady, SourceKey: "uploads/" + id.String() + "/original.jpg"}
 	_ = repo.InsertVariant(ctx, id, "thumb", "variants/"+id.String()+"/thumb.webp", 320, 200, 10)
-	store.obj["uploads/"+id.String()+"/original.jpg"] = []byte("orig")
-	store.obj["variants/"+id.String()+"/thumb.webp"] = []byte("thumb")
+	store.Seed("uploads/"+id.String()+"/original.jpg", []byte("orig"), "")
+	store.Seed("variants/"+id.String()+"/thumb.webp", []byte("thumb"), "")
 
 	if err := svc.DeleteAsset(ctx, id); err != nil {
 		t.Fatalf("delete: %v", err)
@@ -662,8 +577,8 @@ func TestDeleteAsset(t *testing.T) {
 	if _, ok := repo.m[id]; ok {
 		t.Fatal("asset row should be gone")
 	}
-	if len(store.obj) != 0 {
-		t.Fatalf("storage objects should be gone, have %v", store.obj)
+	if len(store.Keys()) != 0 {
+		t.Fatalf("storage objects should be gone, have %v", store.Keys())
 	}
 	if !containsStr(pub.events, EventAssetDeleted) {
 		t.Fatalf("expected %s event, got %v", EventAssetDeleted, pub.events)
@@ -683,7 +598,7 @@ func TestPurgeOrphans(t *testing.T) {
 	// a tombstoned asset → purged
 	del := uuid.New()
 	repo.m[del] = Asset{ID: del, OwnerID: owner, Status: StatusDeleting, SourceKey: "uploads/" + del.String() + "/original.jpg"}
-	store.obj["uploads/"+del.String()+"/original.jpg"] = []byte("x")
+	store.Seed("uploads/"+del.String()+"/original.jpg", []byte("x"), "")
 
 	// an abandoned upload → marked failed
 	ab := uuid.New()
@@ -695,8 +610,8 @@ func TestPurgeOrphans(t *testing.T) {
 	if _, ok := repo.m[del]; ok {
 		t.Fatal("tombstoned asset should be purged")
 	}
-	if len(store.obj) != 0 {
-		t.Fatalf("objects should be purged, have %v", store.obj)
+	if len(store.Keys()) != 0 {
+		t.Fatalf("objects should be purged, have %v", store.Keys())
 	}
 	if repo.m[ab].Status != StatusFailed || repo.m[ab].ErrorMessage != "upload abandoned" {
 		t.Fatalf("abandoned upload = %+v, want failed/upload abandoned", repo.m[ab])
@@ -709,7 +624,7 @@ func TestServeVariant(t *testing.T) {
 	id := uuid.New()
 	repo.m[id] = Asset{ID: id, Kind: "image", Status: StatusReady}
 	_ = repo.InsertVariant(ctx, id, "thumb", "variants/"+id.String()+"/thumb.webp", 320, 200, 10)
-	store.obj["variants/"+id.String()+"/thumb.webp"] = []byte("webpbytes")
+	store.Seed("variants/"+id.String()+"/thumb.webp", []byte("webpbytes"), "")
 
 	c, err := svc.ServeVariant(ctx, id, "thumb")
 	if err != nil {
@@ -753,7 +668,7 @@ func TestDownloadOriginal(t *testing.T) {
 	id := uuid.New()
 	key := "uploads/" + id.String() + "/original.jpg"
 	repo.m[id] = Asset{ID: id, OwnerID: owner, Kind: "image", Status: StatusReady, SourceKey: key, MimeType: "image/jpeg", OriginalFilename: "vacation.jpg"}
-	store.obj[key] = []byte("JPEGDATA")
+	store.Seed(key, []byte("JPEGDATA"), "")
 
 	rc, ct, filename, err := svc.DownloadOriginal(ctx, owner, id)
 	if err != nil {
@@ -782,7 +697,7 @@ func TestHLSObjectSafety(t *testing.T) {
 
 	ready := Asset{ID: uuid.New(), OwnerID: owner, Kind: "video", Status: StatusReady, OutputPrefix: "hls/x"}
 	repo.m[ready.ID] = ready
-	store.obj["hls/x/index.m3u8"] = []byte("#EXTM3U")
+	store.Seed("hls/x/index.m3u8", []byte("#EXTM3U"), "")
 
 	// valid file streams back with the right content-type
 	c, err := svc.HLSObject(ctx, ready.ID, "index.m3u8")
@@ -1024,7 +939,7 @@ func TestCompleteUploadAudioReadyWithoutTranscode(t *testing.T) {
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "song.mp3", "audio/mpeg", 1)
 	id := sess.Asset.ID
-	store.obj[sess.Asset.SourceKey] = []byte("ID3")
+	store.Seed(sess.Asset.SourceKey, []byte("ID3"), "")
 
 	if err := svc.CompleteUpload(ctx, owner, id); err != nil {
 		t.Fatal(err)
@@ -1054,7 +969,7 @@ func TestCompleteUploadAudioTooLarge(t *testing.T) {
 
 	sess, _ := svc.CreateUploadSession(ctx, owner, "big.wav", "audio/wav", 1)
 	id := sess.Asset.ID
-	store.obj[sess.Asset.SourceKey] = make([]byte, maxUploadBytes+1)
+	store.Seed(sess.Asset.SourceKey, make([]byte, maxUploadBytes+1), "")
 
 	if err := svc.CompleteUpload(ctx, owner, id); !errors.Is(err, ErrFileTooLarge) {
 		t.Fatalf("err = %v, want ErrFileTooLarge", err)

@@ -43,11 +43,16 @@ func (a *Adapter) CreateEntry(ctx context.Context, in journal.CreateEntryInput) 
 	var entry journal.Entry
 	err := a.runInTx(ctx, func(tx pgx.Tx) error {
 		q := New(tx)
+		name, lat, lon := locationParams(in.Location)
 		row, err := q.CreateEntry(ctx, CreateEntryParams{
-			UserID:     pgUUID(in.UserID),
-			BodyMd:     in.BodyMd,
-			OccurredAt: pgTime(in.OccurredAt),
-			Mood:       in.Mood,
+			UserID:       pgUUID(in.UserID),
+			BodyMd:       in.BodyMd,
+			AssetIds:     pgUUIDs(in.AssetIDs),
+			LocationName: name,
+			LocationLat:  lat,
+			LocationLon:  lon,
+			OccurredAt:   pgTime(in.OccurredAt),
+			Mood:         in.Mood,
 		})
 		if err != nil {
 			return err
@@ -105,10 +110,22 @@ func (a *Adapter) PatchEntry(ctx context.Context, in journal.PatchEntryInput) (j
 	err := a.runInTx(ctx, func(tx pgx.Tx) error {
 		q := New(tx)
 		p := PatchEntryParams{
-			BodyMd: in.BodyMd,
-			Mood:   in.Mood,
-			ID:     pgUUID(in.ID),
-			UserID: pgUUID(in.UserID),
+			BodyMd:  in.BodyMd,
+			SetMood: in.SetMood,
+			Mood:    in.Mood, // written as sent when SetMood: nil clears
+			ID:      pgUUID(in.ID),
+			UserID:  pgUUID(in.UserID),
+		}
+		if in.AssetIDs != nil {
+			// A nil slice is sent as SQL NULL (COALESCE keeps the column); a
+			// non-nil empty one goes out as '{}' and clears it.
+			p.AssetIds = pgUUIDs(*in.AssetIDs)
+		}
+		if in.SetLocation {
+			// The three args are written as sent: a nil Location is three NULLs
+			// (clear); when SetLocation is false the query ignores them (keep).
+			p.SetLocation = true
+			p.LocationName, p.LocationLat, p.LocationLon = locationParams(in.Location)
 		}
 		if in.OccurredAt != nil {
 			p.OccurredAt = pgTime(*in.OccurredAt)
@@ -153,6 +170,14 @@ func (a *Adapter) DeleteEntry(ctx context.Context, userID, id uuid.UUID) error {
 	})
 }
 
+// StripAssetFromEntries is the media:asset_deleted write (SPEC-12 T4). No tx of
+// its own: the consumer already runs it inside the owner's tenant scope, and
+// the single UPDATE is atomic by itself.
+func (a *Adapter) StripAssetFromEntries(ctx context.Context, userID, assetID uuid.UUID) (int, error) {
+	n, err := a.q.StripAssetFromEntries(ctx, StripAssetFromEntriesParams{AssetID: pgUUID(assetID), UserID: pgUUID(userID)})
+	return int(n), err
+}
+
 // ── stream projection (SPEC-06 P0.1b + P0.2) ─────────────────────────
 
 func (a *Adapter) InsertStreamItem(ctx context.Context, userID uuid.UUID, sourceModule, eventType string, refID uuid.UUID, payload json.RawMessage, occurredAt time.Time) error {
@@ -192,7 +217,8 @@ func (a *Adapter) ListStream(ctx context.Context, in journal.StreamListInput) ([
 		out = append(out, journal.StreamItem{
 			ID: uuidFrom(r.ID), SourceModule: r.SourceModule, EventType: r.EventType,
 			RefID: uuidFrom(r.RefID), Payload: json.RawMessage(r.Payload), OccurredAt: r.OccurredAt.Time,
-			BodyMd: r.BodyMd, Mood: r.Mood,
+			BodyMd: r.BodyMd, Mood: r.Mood, AssetIDs: uuidsFrom(r.AssetIds),
+			Location: locationFrom(r.LocationName, r.LocationLat, r.LocationLon),
 		})
 	}
 	return out, nil
@@ -222,10 +248,40 @@ func toEntry(r JournalEntry) journal.Entry {
 		BodyMd:     r.BodyMd,
 		Mood:       r.Mood,
 		AssetIDs:   uuidsFrom(r.AssetIds),
+		Location:   locationFrom(r.LocationName, r.LocationLat, r.LocationLon),
 		OccurredAt: r.OccurredAt.Time,
 		CreatedAt:  r.CreatedAt.Time,
 		UpdatedAt:  r.UpdatedAt.Time,
 	}
+}
+
+// locationParams splits a Location into the three write args. The coordinates
+// go out as float8 (the query casts the params so sqlc types them *float64)
+// and Postgres assigns them into numeric(7,4); nil is three NULLs.
+func locationParams(l *journal.Location) (name *string, lat, lon *float64) {
+	if l == nil {
+		return nil, nil, nil
+	}
+	n, la, lo := l.Name, l.Lat, l.Lon
+	return &n, &la, &lo
+}
+
+// locationFrom rebuilds the Location from the three columns. They are
+// all-or-nothing by CHECK (0045), so the name alone decides; the numerics are
+// read back as float64 — four decimal places survive the round trip exactly.
+func locationFrom(name *string, lat, lon pgtype.Numeric) *journal.Location {
+	if name == nil {
+		return nil
+	}
+	la, err := lat.Float64Value()
+	if err != nil {
+		return nil
+	}
+	lo, err := lon.Float64Value()
+	if err != nil {
+		return nil
+	}
+	return &journal.Location{Name: *name, Lat: la.Float64, Lon: lo.Float64}
 }
 
 func pgUUID(id uuid.UUID) pgtype.UUID { return pgtype.UUID{Bytes: id, Valid: true} }
@@ -243,6 +299,20 @@ func uuidsFrom(ps []pgtype.UUID) []uuid.UUID {
 		if p.Valid {
 			out = append(out, uuid.UUID(p.Bytes))
 		}
+	}
+	return out
+}
+
+// pgUUIDs is the inverse of uuidsFrom. It preserves nil-ness on purpose: under
+// QueryExecModeExec a nil slice is encoded as SQL NULL and a non-nil empty one
+// as '{}', which is how PatchEntry's COALESCE tells "keep" from "clear".
+func pgUUIDs(ids []uuid.UUID) []pgtype.UUID {
+	if ids == nil {
+		return nil
+	}
+	out := make([]pgtype.UUID, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, pgUUID(id))
 	}
 	return out
 }

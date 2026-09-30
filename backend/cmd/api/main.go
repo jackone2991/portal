@@ -370,7 +370,8 @@ func run() error {
 	// ── Journal module (life-stream write path: /journal/entries) ────
 	journalMod, err := journal.New(journal.Deps{
 		Repo:        journalrepo.NewAdapter(conn, tdb.RunInTx),
-		Events:      mediaEvents, // shared fan-out publisher; journal:entry_created is emit-only
+		Media:       mediaMod.API(), // Attachment validation (SPEC-12) — inside the request tenant tx
+		Events:      mediaEvents,    // shared fan-out publisher; journal:entry_created is emit-only
 		RequireAuth: authTenant,
 		RequirePermission: func(code string) func(http.Handler) http.Handler {
 			return accountmw.RequirePermission(accountMod.Engine(), code)

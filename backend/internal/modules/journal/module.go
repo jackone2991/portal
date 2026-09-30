@@ -23,6 +23,10 @@ import (
 type Deps struct {
 	Repo   Repository
 	Events EventPublisher // optional: journal:entry_created emit (nil → no-op)
+	// Media validates an Entry's Attachments through the media module's public
+	// asset lookup (SPEC-12). cmd/api passes media.Module.API(); the worker leaves
+	// it nil, and a nil lookup refuses any asset_ids rather than trusting them.
+	Media MediaAPI
 
 	// RunInUserTenant (worker only) scopes stream-projection INSERTs to the target
 	// user's personal org (ADR-07 1b). nil on the API side — those requests already
@@ -46,7 +50,7 @@ func New(d Deps) (*Module, error) {
 	if d.Repo == nil {
 		return nil, errors.New("journal: Repo is required")
 	}
-	svc := &Service{repo: d.Repo, events: d.Events, runInUserTenant: d.RunInUserTenant}
+	svc := &Service{repo: d.Repo, media: d.Media, events: d.Events, runInUserTenant: d.RunInUserTenant}
 	return &Module{
 		deps:    d,
 		svc:     svc,
