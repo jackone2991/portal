@@ -1,9 +1,9 @@
 # SPEC-06 — Life-Stream Home (read path: projection + dashboard)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
-**Module:** `journal` (extends SPEC-05; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-05 (hard — first content + module home); system events attach as their producers land (SPEC-01 P1.2/P0.3, SPEC-02 P1.9, SPEC-03 P0.7, SPEC-07 P1.5, SPEC-08 P0.4); the widget rail additionally consumes SPEC-04's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Module:** `journal` (extends SPEC-05; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-05 (hard — first content + module home); system events attach as their producers land (SPEC-01 P0.3, SPEC-03 P0.7, SPEC-07 P1.5, SPEC-08 P0.4); the widget rail additionally consumes SPEC-04's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
 **Upstream:** [briefs/06-life-stream-home.md](../briefs/06-life-stream-home.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
-**Downstream consumers:** SPEC-04 P2 daily digest (reads this projection), future on-this-day widgets
+**Downstream consumers:** this spec's own P2 daily digest (reads this projection; delivered via SPEC-04 channels), future on-this-day widgets
 
 ---
 
@@ -42,14 +42,14 @@ sits on top; the widget rail carries the facets.
   anticipated this store: notifications are a delivery store, the life-stream
   archive is its own system-of-record — `stream_items` is that archive.)
 - **Push/email digest delivery** — P2 here, promotes SPEC-04's P2 digest seam.
-- **Weather widget** — dropped, not wired (closes the backlog §3 P2 question).
+- **Weather widget** — dropped, not wired (closes the 2026-07 backlog §3 P2 question (archived; `git show 8d382d2^:docs/product/backlog.md`)).
 - Editing/deleting *system* stream items — they are projections of facts; the fix
   for a wrong fact is in the owning module.
 
 ## 4. User stories
 
-- As the owner, I open `/` and see today: what I wrote, what finished
-  transcoding, what I spent — one timeline, newest first. *(the ADR-08 proof)*
+- As the owner, I open `/` and see today: what I wrote, what I finished
+  watching, what I spent — one timeline, newest first. *(the ADR-08 proof)*
 - As the owner, I glance at the rail: month-to-date spend, continue-watching,
   upcoming birthdays — without opening three apps.
 - As the owner, a year from now, "on this day" resurfaces what I did today.
@@ -82,22 +82,63 @@ mechanics"; Asynq gives one handler per task type, and notify already consumes
 some of these events, so the stream registers its own consumer task —
 never the raw event name):
 
-| Event | Arrives with | `ref_id` used | Handler action |
-|---|---|---|---|
-| `media:asset_ready` | SPEC-01 P1.2 | `asset_id` | insert; **skip `origin='import'`** (zip-import flood guard) |
-| `media:playback_completed` | SPEC-07 P1.5 | `asset_id` | insert (distinct `event_type` — no collision with asset_ready) |
-| `media:asset_deleted` | SPEC-01 P0.3 | `asset_id` | **delete ALL** `source_module='media'` rows with this `ref_id`, any event_type — else a "watched X" card dangles |
-| `bank:transaction_created` | SPEC-03 P0.7 | **`transfer_id` when `is_transfer`, else `transaction_id`** | insert — both transfer legs share `transfer_id`, so the unique key collapses them into ONE "moved X" item (SPEC-03 P0.7's intent; two items per transfer was a bug) |
-| `bank:transaction_updated` | SPEC-03 P0.7 | same rule | upsert: `INSERT … ON CONFLICT (source_module, event_type, ref_id) DO UPDATE SET payload, occurred_at` — writing under the created-event key when absent, so a reordered created retry then hits `DO NOTHING` and the corrected payload wins (a corrected amount must not render wrong forever) |
-| `bank:transaction_deleted` | SPEC-03 P0.7 | same rule | delete the matching row |
-| `comic:chapter_published` | SPEC-02 P1.9 | `chapter_id` | insert |
-| `people:birthday_upcoming` | SPEC-08 P0.4 | **`notice_id`** (in the payload — SPEC-08 §6) | insert — keying on `person_id` would make the unique constraint swallow the day-of event and every later year (the original critical bug) |
+| Event | Consumer task | Arrives with | `user_id` from | `ref_id` used | Handler action |
+|---|---|---|---|---|---|
+| `media:playback_completed` | `journal:stream_playback_completed` | SPEC-07 P1.5 | `user_id` | `asset_id` | insert |
+| `media:asset_deleted` | `journal:stream_asset_deleted` | SPEC-01 P0.3 | `owner_user_id` | `asset_id` | **delete ALL** `source_module='media'` rows with this `ref_id`, any event_type and **all users** (the asset is gone for everyone) — else a "watched X" card dangles |
+| `bank:transaction_created` | `journal:stream_bank_created` | SPEC-03 P0.7 | `user_id` | **`transfer_id` when `is_transfer`, else `transaction_id`** | insert — both transfer legs share `transfer_id`, so the unique key collapses them into ONE "moved X" item (SPEC-03 P0.7's intent; two items per transfer was a bug) |
+| `bank:transaction_updated` | `journal:stream_bank_updated` | SPEC-03 P0.7 | `user_id` | same rule | upsert: `INSERT … ON CONFLICT (user_id, source_module, event_type, ref_id) DO UPDATE SET payload, occurred_at` (`occurred_at` per the rule below) — writing under the created-event key when absent, so a reordered created retry then hits `DO NOTHING` and the latest-processed correction wins |
+| `bank:transaction_deleted` | `journal:stream_bank_deleted` | SPEC-03 P0.7 | `user_id` | same rule | delete the matching row |
+| `people:birthday_upcoming` | `journal:stream_birthday` | SPEC-08 P0.4 | `user_id` | **`notice_id`** (in the payload — SPEC-08 §6) | insert — keying on `person_id` would make the unique constraint swallow the day-of event and every later year (the original critical bug) |
+| `people:birthday_notice_revoked` | `journal:stream_birthday_revoked` | SPEC-08 P0.2 | `user_id` | `notice_id` | delete the matching `people` row — an edited birthday leaves no stale card |
+| `people:person_deleted` | `journal:stream_person_deleted` | SPEC-08 §7 DELETE | `user_id` | `person_id` | delete **all** `source_module='people'` rows whose payload `person_id` matches — no card links to a deleted person's 404 |
 
-Inserts use `ON CONFLICT (source_module, event_type, ref_id) DO NOTHING` —
-idempotency under redelivery is structural. `payload` stores the event's raw
-registered payload (render-minimum per events.md); `occurred_at` = the
-payload's own timestamp field where one exists (`occurred_at` on bank rows),
-else ingest time.
+The `cmd/worker` subscription table (specs README, per-binary event
+subscription) maps each event to exactly its task above. The
+`journal:stream_ingest` name in `platform/events`' own test is an illustrative
+fixture, not a registered task; these names are the real ones.
+The last two tasks are specced, not shipped.
+
+The stream projects **moments**, not library events: `media:asset_ready`,
+`comic:published` and the catalogue publishes (`movie:published`,
+`music:track_published`, `story:published`) go to the bell (SPEC-04) only —
+their stream projections were removed in `0033`/`0034`/`0040`
+([events.md](../../reference/events.md)). The two `people:*` retraction rows
+are specced, not shipped: SPEC-08 emits neither event on HEAD (code follow-up).
+
+Inserts use `ON CONFLICT (user_id, source_module, event_type, ref_id) DO
+NOTHING` (the §6 unique key; every `ON CONFLICT` in this spec uses the same
+target) — idempotency under redelivery is structural. `payload` stores the
+event's raw registered payload (render-minimum per events.md). `user_id` is
+taken from the payload's user field (column above); a payload missing it, or
+carrying an unparseable id, is dropped with a log line and never retried (the
+handler returns without error, or with `asynq.SkipRetry`).
+
+`occurred_at` per event:
+- **Date-only payloads** (bank `occurred_at` is a `date`, SPEC-03 §6): convert
+  explicitly in the owner's timezone — `APP_TIMEZONE` at v1 (as P1.5), the
+  owner's `users.timezone` once it has a write path (D-17). Use the ingest
+  instant if the date equals the owner's local today at ingest, else 12:00
+  local on that date. Never rely on the implicit date→timestamptz cast (the
+  session TZ is UTC, so a bare date lands at 07:00 ICT and on the wrong local
+  day at day boundaries).
+- **`bank:transaction_updated`** keeps the stored `occurred_at` when the payload
+  date is unchanged — `DO UPDATE SET payload = EXCLUDED.payload, occurred_at =
+  CASE WHEN (stream_items.occurred_at AT TIME ZONE <tz>)::date = <payload date>
+  THEN stream_items.occurred_at ELSE EXCLUDED.occurred_at END` — so a metadata
+  edit (re-categorize, note) never moves the item; it is re-derived only when
+  the date itself changed.
+- **`media:playback_completed`**: the payload's `completed_at` (the latched
+  completion instant, SPEC-07 P1.5), so an event delivered late after worker
+  downtime still sorts at its real position.
+- **Other events**: the payload timestamp if present, else ingest time.
+  `people:birthday_upcoming` carries none and keeps the ingest-time fallback
+  (accepted residual below).
+
+*(Code follow-up: on HEAD `journal/stream.go` `bankRef` parses the date as UTC
+midnight, the upsert overwrites `occurred_at` unconditionally, the
+`playback_completed` handler uses `time.Now()` because the payload has no
+`completed_at`, and malformed payloads are dropped without a log line.)*
 
 **Known residual risk (accepted at v1, documented):** a `*_created` retry
 processed *after* the corresponding `*_deleted` resurrects an item —
@@ -107,6 +148,17 @@ Second accepted residual: producers other than SPEC-08 emit post-commit without
 an outbox, so a producer crash between commit and `Publish` drops that item
 permanently. Accepted at v1; a P2 reconcile sweep can diff `stream_items`
 against each producer's rows via their `api/` packages.
+Third accepted residual: two `bank:transaction_updated` events processed out of
+order leave the earlier edit's payload (last-processed-wins; the payload
+carries no version). This self-corrects on the next edit or the P2 reconcile
+sweep. If it ever bites, add `updated_at` to the SPEC-03 P0.7 payload and guard
+the upsert with `WHERE (stream_items.payload->>'updated_at')::timestamptz <=
+(EXCLUDED.payload->>'updated_at')::timestamptz`. (A transfer flag never flips
+on an existing leg — legs are immutable per SPEC-03 P0.3 — so the ref key
+cannot change under an update.)
+Fourth accepted residual: a birthday notice delivered late (SPEC-08 outbox
+retry on the next scan) sorts at delivery time — its payload has no timestamp,
+and it is a heads-up, not a timed fact.
 
 **Backfill of pre-existing journal entries:** the `000N_journal_stream_items`
 migration itself seeds rows for **all existing `journal_entries`**
@@ -123,9 +175,26 @@ vanish from home the day the stream replaces the interim list.
   including a `playback_completed` item for a deleted asset.
 - Given one transfer (two `bank:transaction_created` legs), then exactly one
   stream item exists.
+- Given a `bank:transaction_updated` with a new amount (even if delivered before
+  its created event), then the single stream item shows the new amount.
+- Given a `bank:transaction_deleted` (or a transfer delete emitting both legs),
+  then the item is gone.
+- Given a transaction dated today and created at 21:00 local, then it sorts
+  above a journal entry written at 08:00 local that day.
+- Given that transaction later re-categorized, then its stream position does
+  not change.
+- Given a transaction dated 2026-07-01 for a UTC+7 owner, then its item falls on
+  2026-07-01 local, not 2026-06-30.
+- Given two users completing playback of the same shared asset, then each has
+  their own `playback_completed` item.
+- Given a `playback_completed` event delivered after worker downtime, then its
+  item sits at the payload's `completed_at`, not at the recovery time.
 - Given SPEC-08's 3-day and day-of birthday events for the same person, and again
   the following year, then each becomes its own stream item (four items).
-- Given a `media:asset_ready` with `origin='import'`, then no stream item.
+- Given a `media:asset_ready` (any origin), then no stream item — it reaches the
+  bell only.
+- Given a person deleted, or a birthday edited so an emitted notice is revoked,
+  then that person's / notice's birthday stream items are gone.
 - Given an event type the consumer doesn't recognize (future producer), then it
   is skipped with a log line, never an error loop.
 - Given journal entries created before this spec landed, then they appear in
@@ -136,20 +205,32 @@ vanish from home the day the stream replaces the interim list.
 `GET /api/v1/stream?cursor=&limit=` — permission `stream:read:own` (seeded +
 granted to the base `user` role in this module's migration). Merged timeline
 ordered `occurred_at DESC, id DESC` (same key as SPEC-05's list),
-cursor-paginated. `?limit=` defaults to 30, hard max 50 (clamped above; aligns
-with the 50-item LCP budget in §8).
-Response items are discriminated by `source_module`: journal items render
-**full** (`body_md`, `mood`, asset thumbs — joined from `journal_entries`),
-system items render **compact** (`{event_type, title, href, occurred_at}` +
-selected payload fields).
+cursor-paginated (specs README Pagination convention). `?limit=` defaults to
+30, hard max 50 (values above are clamped to 50; aligns with the 50-item LCP
+budget in §8); a missing, non-integer or < 1 value falls back to 30 — lenient,
+no Problem type. *(Code follow-up: on HEAD a value above 50 falls back to 30
+instead of clamping.)*
+
+Response `200 {items: StreamItem[], next_cursor?: string}` (`next_cursor`
+absent on the last page). Every `StreamItem` carries `{id (stream_items.id),
+source_module, event_type, ref_id, occurred_at}` and is discriminated by
+`source_module`:
+- `journal` items render **full**: `body_md`, `mood`, `asset_ids`, `location`
+  — joined from `journal_entries`, in the Entry's own field shapes (SPEC-05
+  OpenAPI `JournalEntry`; SPEC-12), never a parallel shape.
+- every other module's items render **compact**: `title` and `href` (absent
+  when the mapping has none) synthesized per the render mapping below; the raw
+  payload is not returned.
 
 **`title`/`href` synthesis (2026-07-10 — previously hand-waved):** registered
 event payloads do **not** uniformly carry `title`, and none carries `href`
 (producers don't own frontend routes). The stream service owns a small
 **per-event-type render mapping** — `event_type → (title template, href
-builder)`, e.g. `media:asset_ready → ("<title> is ready", /library/media#id)`,
-`bank:transaction_created → (amount/direction summary, /bank/transactions)`,
-`people:birthday_upcoming → ("<display_name> — birthday in N days", /people/id)`
+builder)`, e.g. `media:playback_completed → ("Finished watching <title>",
+/library/media/{asset_id})` (media hrefs follow SPEC-07 P0.4's **media
+deep-link rule**), `bank:transaction_created → (amount/direction summary,
+/bank/transactions)`,
+`people:birthday_upcoming → ("<display_name> — birthday in N days", /people/{person_id})`
 — applied at read time from the stored payload. This mirrors SPEC-04's
 `data.href` philosophy with the mapping consumer-owned; adding an event type
 without a mapping renders a generic card, never an error. For `is_transfer`
@@ -158,37 +239,74 @@ payloads, normalize on direction — source = `account_id` when
 payload) — so either collapsed leg renders the identical "moved <amount>
 <source>→<dest>" card.
 
+**Bank cards are the first per-type fetcher (§10).** At read time the stream
+service batch-resolves the page's account and category ids via one
+`bankapi.Names(ctx, userID, accountIDs, categoryIDs)` call per page (the
+payload holds ids only, and `category_id` goes stale after a reassign-delete
+that emits no event). Unresolvable ids render "(deleted account)" /
+"Uncategorized". Amounts are formatted with the payload `currency`'s exponent
+(VND = 0; SPEC-03 P0.7 adds `currency`), never a hard-coded ₫. *(Code
+follow-up: on HEAD `bankapi.Names` does not exist, the payload has no
+`currency`, and `journal/stream.go` formats every amount as VND.)*
+
+**Optimistic journal item** (P0.3). It is built from the `POST /journal/entries`
+response in the StreamItem shape `{id: <temp client id>,
+source_module: "journal", event_type: "journal:entry_created", ref_id: entry.id,
+occurred_at, body_md, mood}`. On refetch the server item (real `id`) replaces it
+by `ref_id`. Ties at equal `occurred_at` are placed first and are corrected by
+the refetch.
+
 **Acceptance criteria.**
 - Given a mix of journal + system items, then one stable merged order with
   correct cursor traversal (no dupes/gaps across pages).
 - Given user B's items, then user A's stream never contains them.
 - Given stored system items of each mapped event type, then the response carries
-  the synthesized title and href per the mapping (e.g. `media:asset_ready` →
-  "<title> is ready", `/library/media#id`).
+  the synthesized title and href per the mapping (e.g. `media:playback_completed`
+  → "Finished watching <title>", `/library/media/{asset_id}`).
+- Given a USD account transfer, then the card shows USD, never ₫.
 - Given a stored item whose `event_type` has no mapping, then `GET /stream`
   returns 200 with a generic card (no href), never a 5xx.
 
 ### P0.3 — Home `/` replacement
 
-RSC shell per D-33; the stream is a client island using TanStack infinite query
+RSC shell per D-33 (as defined in the specs README Frontend convention); the stream is a client island using TanStack infinite query
 (D-32) against `GET /stream`, with the SPEC-05 composer on top — a successful
 post is optimistically inserted at its `occurred_at` position in the stream
-query. The fixture newsfeed is already
+query (**optimistic placement** below). The fixture newsfeed is already
 gone (SPEC-05 P0.4); this item swaps the interim journal-only query for `/stream`
 and removes any remaining fixture blocks on the route.
+
+**Optimistic placement** (same rule as SPEC-05 P0.4): insert into the loaded
+page whose range contains `occurred_at`. If it is older than the last loaded
+item and `hasNextPage`, do not insert; show a "Saved to <date>" toast. Dedupe by
+`ref_id` (= entry id) against fetched pages. The same rule applies to edits
+that change `occurred_at`. On error, restore body, mood and `occurred_at`. The
+optimistic item's shape is defined in P0.2.
 
 **Acceptance criteria.**
 - Grep test: zero fixture data anywhere on the home route.
 - Given a new journal post, then it appears at its `occurred_at` position (top,
   when now-dated) optimistically and survives an immediate refetch — guaranteed
   because the projection row is written in the create transaction (P0.1(a)).
+- Given a post backdated older than the last loaded item while more pages
+  exist, then it is not inserted, a "Saved to <date>" toast shows, and it
+  appears exactly once when its page loads.
 
 ### P0.4 — Widget rail on real data
 
 Each widget is **independent**: its own query, its own empty state, and
 failure-isolated — one failing/absent endpoint never blanks the rail or throws a
 toast storm. If a backing module isn't mounted yet (404), the widget renders its
-empty/"coming soon" state.
+empty/"coming soon" state. Each widget query sets `retry: false`: a 4xx is
+final, so a 404/403 renders the empty or "coming soon" state immediately
+(TanStack's default three retries would spin for seconds first), and a 5xx
+renders an inline retry affordance. *(Code follow-up: on HEAD the rail queries
+use the `QueryClient` defaults.)*
+
+The Activity feed reuses SPEC-04 P0.5's `["notifications"]` query (same key and
+queryFn, rendering a slice) and never defines its own key (D-32), so the bell's
+optimistic mark-read reaches the rail. *(Code follow-up: on HEAD
+`ActivityFeed.tsx` uses `["notifications", "rail"]`.)*
 
 | Widget | Source | Arrives with |
 |---|---|---|
@@ -198,31 +316,37 @@ empty/"coming soon" state.
 | Continue rail | `GET /continue` | SPEC-07 |
 | Birthdays (`BirthdayCard`) | `GET /people/upcoming-birthdays` | SPEC-08 |
 
+`PersonalInfoWidget`'s `DEFAULT_ITEMS` sample data is deleted and `items` made
+required, built from `GET /auth/me`; otherwise §2 goal 4's grep test fails.
+`BirthdayCard` is reworked, not merely wired (SPEC-08 P0.5).
+
 **Acceptance criteria.**
 - Given only account + media wired, then the rail renders without errors or
   fixtures (empty states where backends are absent).
 - Given one widget's endpoint returning 500, then the other widgets render
   normally.
+- Given a widget's endpoint returning 404 or 403, then that widget shows its
+  empty/"coming soon" state at once, with no retries.
+- Given a notification marked read from the bell, then the Activity feed shows
+  it read without a refetch.
 
 ### P1 — nice to have
 
 - **P1.5 On-this-day memories**: `GET /api/v1/stream/memories` — **journal
   entries only** (system items are noise as memories; scope crisped 2026-07-10)
-  whose `occurred_at` month/day matches today **in the user's timezone** (D-17),
+  whose `occurred_at` month/day matches today in the instance timezone
+  `APP_TIMEZONE` (the same v1 TZ source as SPEC-08 P0.3; per-user TZ is out of
+  scope until `users.timezone` has a write path),
   from prior years, grouped by years-ago; rendered as one `WidgetCard`. Feb-29
   memories surface on Feb-28 in non-leap years (match SPEC-08's rule).
-- **P1.6 Backfill task** `journal:backfill_stream` — one-shot, admin/CLI-triggered:
-  seeds `stream_items` from existing **media assets'** upload dates **via
-  `mediaapi` listing** (never raw table reads — boundary rule), so the stream
-  isn't empty on day one. Journal entries need no task — the §P0.1 migration
-  backfill covers them. Idempotent via the same unique constraint. Seeded rows
-  use `source_module='media'`, `event_type='media:asset_ready'`,
-  `ref_id=asset_id` — identical to the live consumer's key, so the unique
-  constraint dedups against real events. Apply the same import exclusion as the
-  live consumer. Since SPEC-01 does not persist `origin` on assets, the
-  `mediaapi` listing must expose an import/batch discriminator (coordinate with
-  SPEC-01/SPEC-02); until it does, the backfill is restricted to instances with
-  no comic imports.
+  Response `200 {groups: [{years_ago: int, entries: JournalEntry[]}]}`, groups
+  ordered `years_ago` ASC; an empty `groups` means none. *Acceptance:* given
+  entries on today's month/day one and three years ago plus a system item on
+  the same day, then two groups (1, 3) holding only the journal entries; given
+  none, then `200 {groups: []}`.
+- **P1.6 Backfill task — retired.** It seeded `media:asset_ready` rows, which
+  the stream no longer projects (`0033`; P0.1(b) note). Journal entries need no
+  task — the §P0.1 migration backfill covers them.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -237,21 +361,31 @@ empty/"coming soon" state.
 
 ## 6. Data model — migration `000N_journal_stream_items`
 
+**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `stream_items` (`tenant_id` + index + `tenant_isolation` policy, added by `0020_platform_rls_enable`); consumers write inside the payload user's tenant scope. The DDL below predates ADR-07 and omits the columns.
+
 ```sql
 CREATE TABLE stream_items (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                   -- identity-anchor exception (SPEC-04 §6 precedent)
-  source_module text NOT NULL,          -- 'journal' | 'media' | 'bank' | 'comic' | 'people' | ...
-  event_type    text NOT NULL,          -- registry name, e.g. 'media:asset_ready'
+  source_module text NOT NULL,          -- 'journal' | 'media' | 'bank' | 'people' | ...
+  event_type    text NOT NULL,          -- registry name, e.g. 'media:playback_completed'
   ref_id        uuid NOT NULL,          -- per-event ref (P0.1 table): entry, asset,
-                                        -- transaction OR transfer, chapter, birthday-notice
-  payload       jsonb NOT NULL DEFAULT '{}',  -- render-minimum snapshot (title, href, amount?)
+                                        -- transaction OR transfer, birthday-notice
+  payload       jsonb NOT NULL DEFAULT '{}',  -- raw registered event payload; title/href
+                                        -- synthesized at read time (P0.2); '{}' for journal rows
   occurred_at   timestamptz NOT NULL,
-  UNIQUE (source_module, event_type, ref_id)
+  UNIQUE (user_id, source_module, event_type, ref_id)
+                                        -- user_id first: a shared asset's playback is per user
 );
 CREATE INDEX ON stream_items (user_id, occurred_at DESC, id DESC);
 ```
+
+The same migration also ships the `stream:read:own` → `user` seed (the `0003`
+`WITH grants(...)` pattern) and the P0.1 journal backfill `INSERT … SELECT … ON
+CONFLICT DO NOTHING`. *(Code follow-up: on HEAD the unique key and every
+`ON CONFLICT` in `query/journal_stream.sql` omit `user_id`, so a second user's
+completion of a shared asset would be dropped.)*
 
 No FK on `ref_id` (polymorphic and mostly cross-module). Queries in
 `query/journal_stream.sql`; regenerate via `make sqlc`.
@@ -260,10 +394,17 @@ No FK on `ref_id` (polymorphic and mostly cross-module). Queries in
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/stream?cursor=` | `stream:read:own` | merged timeline |
-| GET | `/api/v1/stream/memories` | `stream:read:own` | P1.5; user-TZ month/day match |
+| GET | `/api/v1/stream?cursor=&limit=` | `stream:read:own` | merged timeline; `limit` default 30, max 50 (above is clamped; missing/invalid → 30); returns `{items, next_cursor?}` (P0.2) |
+| GET | `/api/v1/stream/memories` | `stream:read:own` | P1.5; `APP_TIMEZONE` month/day match; returns `{groups}` |
 
-Problem types: `stream/invalid-cursor`. Consumer registrations (the table in
+Problem types: `journal/invalid-cursor` (400; the stream is served by the
+`journal` module, so the slug is `journal/…` — shared with SPEC-05's
+cursor-paginated `GET /journal/entries`; the shipped handler emits it; the
+earlier `stream/invalid-cursor` in `problems.ts` names no emitted type). No
+limit Problem: `limit` parsing is lenient (P0.2), and the stream takes no body,
+so no `journal/validation` is emitted here. The stream follows the specs README
+Pagination convention (`{items, next_cursor}`).
+Annotate each operation per the specs README AuthZ **OpenAPI encoding**. Consumer registrations (the table in
 P0.1) update the **Consumers** column in
 [events.md](../../reference/events.md) — definition of done.
 
@@ -272,18 +413,21 @@ P0.1) update the **Consumers** column in
 - Leading: home LCP < 2.5 s with a 50-item stream (frontend.md §8 budget applies).
 - Leading: the owner opens `/` on ≥ 20 of the first 30 days after landing (the
   habit ADR-08 predicts integration creates).
-- Lagging: zero fixture data on the home route (grep); a `media:asset_ready`
-  fired while the stream consumer was down appears after worker recovery (Asynq
-  durability, no lost items).
+- Lagging: zero fixture data on the home route (grep); a
+  `bank:transaction_created` fired while the stream consumer was down appears
+  after worker recovery at its original `occurred_at` position (Asynq
+  durability, no lost items; holds for events whose payload carries a
+  timestamp — P0.1).
 
 ## 9. Timeline & phasing
 
-1. Projection table + consumers + idempotency tests (1.5 days)
+1. Projection table + consumers + idempotency tests (1.5 days) — lands with
+   SPEC-05, before SPEC-02/03/07/08 emit (§1; specs README build order)
 2. `GET /stream` merged read + OpenAPI (1 day)
 3. Home replacement (stream island + composer integration) (1.5 days)
 4. Widget rail wiring + empty states (1 day)
-5. P1 (memories + backfill) (1.5 days)
-P0 ≈ 5 dev-days; P1 adds ~1.5. Matches the brief's ~6.
+5. P1 (memories) (1 day; the P1.6 backfill is retired)
+P0 ≈ 5 dev-days; P1 adds ~1. Matches the brief's ~6.
 
 ## 10. Open questions
 
@@ -297,5 +441,6 @@ P0 ≈ 5 dev-days; P1 adds ~1.5. Matches the brief's ~6.
   **show** (n=1, own data) — the consumer decides per events.md's privacy note;
   revisit at household tenancy alongside SPEC-03 §11.
 - **(engineering, non-blocking)** Should system cards deep-fetch via owning
-  modules' `api/` when payload isn't enough? Start payload-only; add per-type
-  fetchers only when a card demonstrably needs more.
+  modules' `api/` when payload isn't enough? **Resolved for `bank:*`** (P0.2:
+  `bankapi.Names` batch resolve per page); other types stay payload-only until a
+  card demonstrably needs more.

@@ -700,7 +700,7 @@ Standalone `notification` module — decision settled in [D-1]. Channel decision
 - `notification` module owns `notifications`, `notification_preferences`, `delivery_attempts`, `push_subscriptions`.
 - Asynq fan-out: every emitter publishes `notify:*` tasks; the module's worker dispatches per-channel.
 - **Channels:**
-  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/events/stream`. [D-3]
+  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/me/notifications/stream`; the client invalidates and refetches on each event (SPEC-04 P1.2). [D-3]
   - **Email** — `platform/mail/` SMTP (`wneessen/go-mail`); templates under `backend/templates/email/<category>/`. [D-4]
   - **Web Push** — VAPID via `SherClockHolmes/webpush-go`; subscriptions in `notification.push_subscriptions`. No APNS/FCM in v1. [D-5]
 - User preferences per category × per channel.
@@ -883,7 +883,7 @@ Self-hosted users push back on every extra service. Postgres FTS (`tsvector` + `
 Three real-time needs: notification stream (push-only), media events (push-only), chat (bi-directional with typing/presence). The first two are SSE-shaped; only chat genuinely needs WS.
 
 **Decision:** new `backend/internal/platform/realtime/` package exposing `Publish(ctx, channel, event)` / `Subscribe(ctx, channel) <-chan Event` over Dragonfly pub/sub. Endpoints:
-- `GET /api/v1/events/stream` (SSE, authed, channel = `user:<id>`) — Phase 6.
+- `GET /api/v1/me/notifications/stream` (SSE, authed, channel = `user:<id>`; client invalidates and refetches on each event per SPEC-04 P1.2) — Phase 6.
 - `GET /api/v1/chat/ws` (WebSocket via `coder/websocket`, formerly `nhooyr/websocket`) — Phase 7.
 
 No external service (Centrifugo, Soketi, etc.) unless scale demands.
@@ -1238,6 +1238,8 @@ type ContinuingItem struct {
 
 `GET /api/v1/continue` aggregator in `cmd/api` fans out, merges, returns sorted by `updated_at DESC`. Lands in Phase 4.
 
+**Update (2026-09-30, SPEC-07 P0.3):** the item schema above is revised. `ContinuingItem{Kind, ID, Title, Position, Duration, Thumbnail, UpdatedAt}` becomes `ContinueItem{module, ref_id, title, poster_url, progress_pct, href, updated_at}` (the openapi `ContinueItem` schema) — the rail item carries a percentage and a link, not a raw position. The exact seek position comes from `GET /api/v1/assets/{id}/progress`. The shared Go type is still to live in a platform package. The fan-out decision itself is unchanged. See [SPEC-07](specs/SPEC-07-continue-rail.md).
+
 ### D-21 — Ratings: per-domain tables; no shared module *(resolves §16.C-21)*
 
 Same shape as [D-20] but the case for centralisation is weaker — rating queries are dominated by "ratings for this content" (module-local). Cross-domain "top rated everywhere" surface is rare; deferred until UI demands it.
@@ -1320,6 +1322,7 @@ Examples:
 - `tenant.member.invited`, `tenant.organization.created`
 - `media.asset.failed`
 - `notification.delivery.failed`
+- `ops.backup.completed`, `ops.backup.failed` — system-written (`actor_kind='system'`, `target_kind='ops_backup_run'`, `target_id=<run id>`); registered 2026-09-30 for SPEC-09 P0.2 (already written by the shipped `ops` backup task)
 
 Audit remains best-effort, non-blocking (per CLAUDE.md). Lands in Phase 0 alongside the migration `0001` audit ([D-18]) — the audit-log table moves files at the same time as the rename.
 
@@ -1450,7 +1453,7 @@ The OpenAPI spec is the contract for both Go server stubs and TS client types. L
   - `Money` schema (`{ amount: string, currency: string }`) [D-7, D-14].
   - `PaginatedResult<T>` (cursor-based: `{ items: T[], next_cursor: string|null }`).
   - `TenantContext` path parameter contract [D-23].
-  - `ContinuingItem` schema for `/api/v1/continue` aggregator [D-20].
+  - `ContinueItem` schema for `/api/v1/continue` aggregator [D-20] (renamed from `ContinuingItem` by SPEC-07 P0.3).
   - Standard 4xx/5xx response component refs.
 - **Per-module endpoints** land with each module's `MountHTTP` (movie endpoints when movie ships, bank endpoints when bank ships). Aggregator endpoints + cross-module schemas land in Phase 0.
 

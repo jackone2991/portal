@@ -181,7 +181,8 @@ structure.
   which is why the "text or Attachment" rule lives in the service's write path and not in
   a CHECK (see Further Notes).
 - No new event. No new permission: attaching only *reads* an Asset; uploading is the media
-  module's existing write path.
+  module's existing write path (`assets:write:own`, granted to `user` by the
+  SPEC-01 grant migration — SPEC-01 §7).
 
 **Stream — SPEC-06.** The existing left join that already fetches `body_md` and `mood`
 from the entries table also fetches `asset_ids` and the three Location columns. Stream

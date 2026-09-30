@@ -9,8 +9,9 @@
 ## Problem statement
 
 ADR-08 says the first real post type is **a journal / life event of the user**, not a
-status for friends — but nothing specs it. SPEC-01/02/03 create three event
-*producers* and SPEC-04's bell is their only consumer; the browsable timeline that
+status for friends — but nothing specs it. SPEC-01 (and later SPEC-02/03) create
+event *producers*; the only planned consumer ahead of this spec is SPEC-04's bell
+(for `media:asset_ready`); the browsable timeline that
 ADR-08 calls the product has no write path. Meanwhile `HomeView` renders a ~685-line
 hard-coded newsfeed, and the ported `Composer`/`Post`/comment kits are exported but
 imported by nothing. Every week without a capture surface is life-stream data lost

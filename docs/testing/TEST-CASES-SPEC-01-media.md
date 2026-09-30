@@ -11,17 +11,19 @@
 |---|---|---|
 | POST | `/api/v1/assets/{id}/complete` | `assets:write:own` (magic-byte sniff + HEAD size) |
 | DELETE | `/api/v1/assets/{id}` | owner or `assets:delete:any` |
-| GET | `/api/v1/assets/{id}/original` | `assets:read:own` |
+| GET | `/api/v1/assets/{id}/original` | authenticated, owner-scoped load (no `:any`/`*` bypass) |
 | GET | `/api/v1/assets/{id}/variants/{variant}` | public-ish (unauthenticated) |
-| PATCH | `/api/v1/assets/{id}` | `assets:write:own` (P1.1, `{title}`) |
-| GET | `/api/v1/assets?kind=&status=&cursor=` | `assets:read:own` |
+| PATCH | `/api/v1/assets/{id}` | owner or `assets:write:any` (P1.1, `{title}`) |
+| POST | `/api/v1/assets` | `assets:write:own` (records `original_filename`, `title`, `origin='upload'`) |
+| GET | `/api/v1/assets?kind=&status=&cursor=&limit=` | `assets:read:own` |
 
 ### Preconditions (all cases)
 
 - Stack up (`make up`), worker running, MinIO reachable, migrations current.
 - Accounts `owner` (creator), `userA`, `userB`, `admin`, `guest` per plan §4.
 - Fixtures loaded per plan §5 (`12mp.jpg`, `orientation6_gps.jpg`, `transparent.png`,
-  `photo.webp`, `animated.gif`, `sample.heic`, `corrupt.bin`, `9000px.jpg`,
+  `photo.webp`, `animated.gif`, `sample.heic`, `corrupt.bin`, `8001x8000.jpg`,
+  `webtoon_704x18000.jpg`,
   `oversize_51mb.jpg`, `short_2s.mp4`, `audio_only.mp4`).
 - Problem types: `media/unsupported-format`, `media/file-too-large`,
   `media/asset-not-found`, `media/asset-not-ready`.
@@ -43,22 +45,23 @@
 | TC-MEDIA-007 | Oversize > 50 MB via HEAD re-check | Boundary/Neg | P0 | upload `oversize_51mb.jpg` bypassing presign policy; `/complete` | 422 `media/file-too-large`; object deleted; asset `failed`; never enqueued | ☐ |
 | TC-MEDIA-008 | 50 MB boundary accepted | Boundary | P1 | upload exactly ≤50 MB image | accepted, processes normally | ☐ |
 | TC-MEDIA-009 | Animated GIF rejected (worker) | Negative | P0 | upload `animated.gif`; `/complete` (passes sniff) | worker ffprobe detects frame>1 → `status=failed`, `error_message` names animated input; worker does **not** crash; queue continues | ☐ |
-| TC-MEDIA-010 | Dimension > 8000 px rejected | Boundary/Neg | P0 | upload `9000px.jpg` | `status=failed`, human-readable `error_message`; no crash; queue continues | ☐ |
+| TC-MEDIA-010 | Area over budget rejected | Boundary/Neg | P0 | upload `8001x8000.jpg` (> 64 MP) | `status=failed`, human-readable `error_message`; no crash; queue continues | ☐ |
 | TC-MEDIA-011 | EXIF orientation baked into variants | Functional | P0 | upload `orientation6_gps.jpg`; after ready, fetch both variants | both display **upright**; `exiftool` shows **no** metadata on variants | ☐ |
 | TC-MEDIA-012 | Original preserved byte-identical (EXIF+GPS intact) | Data-integrity | P0(S1) | download original of TC-MEDIA-011 asset | checksum == uploaded; `exiftool` shows full EXIF incl GPS retained on original | ☐ |
 | TC-MEDIA-013 | No upscaling | Boundary | P0 | upload 800 px-wide image | `medium`=800 px (not upscaled), `thumb`=320 px | ☐ |
 | TC-MEDIA-014 | Corrupt file → failed, no hang | Negative | P0 | upload `corrupt.bin` (valid sniff, undecodable) | `status=failed` w/ reason; never stuck in `processing` | ☐ |
-| TC-MEDIA-015 | Heavy-queue concurrency cap | Reliability | P0(S1) | enqueue 2 large images + 1 transcode simultaneously | ≤ heavy-server concurrency (1–2) decode at once (assert via Asynq inspector / worker logs); no OOM | ☐ [MANUAL] |
-| TC-MEDIA-016 | Variant serving + cache headers | Functional | P0 | GET `/assets/{id}/variants/thumb` (unauthenticated) | 200 WebP content-type + long-lived cache headers; served without auth | ☐ |
+| TC-MEDIA-015 | Image/heavy concurrency caps | Reliability | P0(S1) | enqueue 5 image tasks + 2 transcodes simultaneously | ≤ `IMAGE_CONCURRENCY` image tasks and 1 transcode run at once (assert via Asynq inspector / worker logs); no OOM | ☐ [MANUAL] |
+| TC-MEDIA-016 | Variant serving + cache headers | Functional | P0 | GET `/assets/{id}/variants/thumb` (unauthenticated) | 200 WebP content-type + `Cache-Control: private, max-age=600` (`public, max-age=86400` for a public asset), no `immutable`; served without auth | ☐ |
 | TC-MEDIA-017 | Variant 404 for missing/deleting asset | Negative | P0 | GET variant of deleted/nonexistent id | 404 `media/asset-not-found` | ☐ |
 | TC-MEDIA-018 | Variant enum validation | Boundary | P1 | GET `/variants/foo` (not in thumb\|medium\|poster) | 4xx (not 500) | ☐ |
 | TC-MEDIA-019 | Lifecycle has no `uploaded` state | Functional | P1 | observe status transitions | only `uploading→processing→ready\|failed\|deleting`; never `uploaded` | ☐ |
+| TC-MEDIA-020 | Tall webtoon strip admitted | Boundary | P0 | upload `webtoon_704x18000.jpg` | reaches `ready`; `medium` ≤ 16,000 px tall | ☐ |
 
 ## P0.2 — Video poster thumbnail
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-MEDIA-030 | Video gets poster on transcode | Functional | P0 | upload a normal video; wait transcode | `poster` variant row exists; renders in library grid + as Vidstack poster | ☐ |
+| TC-MEDIA-030 | Video gets poster on transcode | Functional | P0 | upload a normal video; wait for `ready` + one thumbnail-task cycle | `media:thumbnail` enqueued after `ready`; `poster` variant row exists; renders in library grid + as Vidstack poster | ☐ |
 | TC-MEDIA-031 | Short 2 s video poster (seek clamp) | Boundary | P0 | upload `short_2s.mp4` | poster extraction succeeds (seek clamped inside file) | ☐ |
 | TC-MEDIA-032 | Audio-only container → skip poster | Negative | P0 | upload `audio_only.mp4` (0 video streams) | poster step **skipped with warning**; no crash; asset still reaches `ready` | ☐ |
 | TC-MEDIA-033 | Poster failure non-fatal | Reliability | P0 | induce poster-gen failure (e.g. unreadable frame) | video stays `ready`; poster absent; warning logged; asset NOT failed | ☐ |
@@ -67,15 +70,18 @@
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-MEDIA-040 | Delete ready video removes all objects | Functional | P0(S1) | DELETE `/assets/{id}` on ready video | HLS URL, variant URLs, original-download all 404/403; `mc ls` shows **no** objects under asset prefix; DB rows gone | ☐ |
+| TC-MEDIA-040 | Delete ready video removes all objects | Functional | P0(S1) | DELETE `/assets/{id}` on ready video | HLS URL, variant URLs, original-download all 404 from the API origin (cache bypassed); `mc ls` shows **no** objects under asset prefix; DB rows gone | ☐ |
 | TC-MEDIA-041 | Delete is idempotent | Idempotency | P0 | DELETE same id twice | 2nd call → 404 (never 500) | ☐ (CC-8) |
-| TC-MEDIA-042 | Cross-owner delete blocked | AuthZ | P0(S1) | userB DELETE userA's asset (no wildcard) | 403; nothing deleted | ☐ (CC-3) |
+| TC-MEDIA-042 | Cross-owner delete blocked | AuthZ | P0(S1) | userB DELETE userA's asset (no `assets:delete:any`, not `*`) | 403 (not 404); nothing deleted | ☐ (CC-3) |
 | TC-MEDIA-043 | Admin `assets:delete:any` allowed | AuthZ | P1 | admin DELETE userA's asset | 204; deleted | ☐ |
 | TC-MEDIA-044 | `deleting` excluded from listings | Functional | P0 | set asset `deleting`; GET `/assets` | asset absent from all list filters while deleting | ☐ |
 | TC-MEDIA-045 | Janitor finishes stuck delete | Reliability | P0(S1) | simulate storage outage mid-delete; run janitor after recovery (>15 min grace) | asset finishes deleting; never reappears in listings meanwhile | ☐ [MANUAL] |
 | TC-MEDIA-046 | Janitor sweeps abandoned uploads | Reliability | P1 | create upload session, never complete; age >24 h; run janitor | marked `failed` `error_message='upload abandoned'` | ☐ [MANUAL] |
 | TC-MEDIA-047 | Stuck purge logs after 5 attempts | Reliability | P1 | force 5 consecutive purge failures for one asset | error-level log emitted (the "stuck" signal) | ☐ [MANUAL] |
 | TC-MEDIA-048 | `media:asset_deleted` emitted after row gone | Integration | P0 | delete an asset; observe bus | exactly one `media:asset_deleted {asset_id, owner_user_id}` after row removed; registered in events.md | ☐ (CC-5) |
+| TC-MEDIA-049 | Delete survives purge failure | Reliability | P0 | induce storage failure during DELETE; DELETE again while `deleting` | both calls 204; janitor completes the purge after the grace | ☐ |
+| TC-MEDIA-050 | Delete while worker in flight | Reliability | P0(S1) | DELETE a `processing` image/video (and one with a poster task queued); let the worker finish | no objects under its prefixes; no variant rows; no `media:asset_ready` | ☐ |
+| TC-MEDIA-051 | Janitor on the shared scheduler | Integration | P1 | start `cmd/worker` | `media:purge_orphans` registered `@every 1h` on the single `asynq.Scheduler` | ☐ |
 
 ## P0.4 — Library page
 
@@ -96,13 +102,14 @@
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-MEDIA-080 | Owner download byte-identical | Data-integrity | P0(S1) | GET `/assets/{id}/original` as owner | checksum == uploaded; `Content-Disposition: attachment; filename="<original>"`; sniffed content-type; EXIF intact | ☐ |
+| TC-MEDIA-080 | Owner download byte-identical | Data-integrity | P0(S1) | GET `/assets/{id}/original` as owner | checksum == uploaded; `Content-Disposition: inline; filename="<original>"`; `Accept-Ranges: bytes`; content-type = `assets.mime_type` (sniffed for images); EXIF intact | ☐ |
 | TC-MEDIA-081 | Fallback filename when original_filename null | Functional | P1 | asset predating migration | filename falls back to `{asset_id}.{ext}` from sniffed type/source_key | ☐ |
-| TC-MEDIA-082 | Cross-owner original blocked | AuthZ | P0(S1) | userB GET userA's original | 403/404; never served | ☐ (CC-3) |
+| TC-MEDIA-082 | Cross-owner original blocked | AuthZ | P0(S1) | userB, editor (`assets:read:any`) and `*` superadmin each GET userA's original | 403 (or 404 when RLS hides the row); no bytes streamed | ☐ (CC-3) |
 | TC-MEDIA-083 | Original never via public variant scheme | Security | P0(S1) | attempt to reach original through variant/HLS URL pattern | not reachable; only owner-authenticated proxy serves it | ☐ |
 | TC-MEDIA-084 | processing/failed original still downloadable | Functional | P0 | asset failed worker-side (object still exists) | original downloadable (archival guarantee for accepted uploads) | ☐ |
 | TC-MEDIA-085 | Purged-at-complete original → 404 | Negative | P0 | asset rejected at `/complete` (file-too-large/unsupported, object purged) | 404 `media/asset-not-found` | ☐ |
 | TC-MEDIA-086 | Still-uploading original → 409 | Negative | P0 | GET original while `uploading` | 409 `media/asset-not-ready` | ☐ |
+| TC-MEDIA-087 | Abandoned-upload original → 404 | Negative | P0 | GET original of an asset `failed` with `upload abandoned` | 404 `media/asset-not-found`; no bytes streamed | ☐ |
 
 ## P0.6 — Event fan-out prerequisite
 
@@ -112,14 +119,15 @@
 | TC-MEDIA-091 | Emitting-binary registers edges (regression) | Integration | P0(S1) | emit an api-side event (delete) | api's publisher has the subscription edge; task actually enqueued (guards the "empty routing table" bug) | ☐ (CC-5) |
 | TC-MEDIA-092 | Publish only after commit | Integration | P0 | roll back a delete tx | no event emitted | ☐ (CC-5) |
 | TC-MEDIA-093 | Unregistered event name never enqueued as task | Reliability | P1 | inspect worker | raw event name is never a task type; one handler per task type (no ServeMux panic) | ☐ |
+| TC-MEDIA-094 | Publish fan-out cardinality | Integration | P0 | unit: two subscriptions; none; failing enqueuer | one task per subscriber; nil + nothing enqueued; enqueue error propagated | ☐ |
 
 ## P1 — nice to have
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-MEDIA-100 | PATCH title (inline rename) | Functional | P1 | PATCH `/assets/{id}`{title} as owner | title updated; library reflects; perm `assets:write:own` | ☐ [P1] |
+| TC-MEDIA-100 | PATCH title (inline rename) | Functional | P1 | PATCH `/assets/{id}`{title} as owner; as another `user`; with `""`; with `null` | owner: title updated, library reflects; other user: 403; `""`: 422; `null`: reset to `original_filename` | ☐ [P1] |
 | TC-MEDIA-101 | `media:asset_ready` emitted on ready | Integration | P1 | asset reaches ready | one `media:asset_ready {asset_id,kind,owner_user_id,title,origin}`; title falls back to original_filename | ☐ [P1] |
-| TC-MEDIA-102 | Import-origin flood suppression flag | Integration | P1 | batch-create with `origin='import'` | payload carries `origin='import'`; consumers can suppress | ☐ [P1] |
+| TC-MEDIA-102 | Import-origin flood suppression flag | Integration | P1 | `mediaapi.Ingest(..., origin="import")` (P1.3) | payload carries `origin='import'`; consumers can suppress | ☐ [P1] |
 
 ## Cross-cutting / contract
 

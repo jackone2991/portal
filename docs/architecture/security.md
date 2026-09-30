@@ -1,6 +1,6 @@
 # Authoration — Authentication, Authorization, and Multi-Tenancy
 
-**Status:** current · **Last verified:** never
+**Status:** current · **Last verified:** 2026-09-30
 
 > Canonical security specification for Portal. Covers identity (authn),
 > permission decisions (authz), and tenant isolation (data segregation).
@@ -371,6 +371,18 @@ Per decision-log #1. The `DELETE /admin/groups/{id}` endpoint:
 This same pattern (`requireStepUp`) wraps every other destructive op:
 `DELETE /admin/policies/{id}`, `DELETE /admin/users/{id}`, `POST /auth/logout-all`, `POST /auth/switch-tenant` (when source org has elevated perms), `cmd/admin grant-superadmin`.
 
+### 4.6 Permission catalogue — operator console codes
+
+Permission codes that specs add for the operator surfaces. The seeded rows in the migrations are canonical; this table records the security-relevant ones.
+
+| Code | Granted to | Guards | Status |
+|------|-----------|--------|--------|
+| `ops:read` | admin | ops status / backup-run reads (SPEC-09) | seeded by SPEC-09 P0.1 |
+| `queues:read` | admin | read-only asynqmon queue console (SPEC-09 P1.6) | seeded by SPEC-09 P0.1 |
+| `queues:write` | admin only | asynqmon mutations — retry, delete, archive, pause (SPEC-09 P1.6) | [PLANNED] — seeded by SPEC-09 P1.6's own migration |
+
+The queue console is mounted on the **API origin** (`/admin/queues/*`), not the frontend origin. Every non-GET/HEAD request additionally requires a same-origin check: `Sec-Fetch-Site: same-origin` or an `Origin` equal to the API origin, otherwise `403` (SameSite=Lax does not separate same-site siblings such as `minio.`, `mail.`, `traefik.`). Callers holding only `queues:read` get the read-only handler, which rejects mutations with `403`.
+
 ---
 
 ## 5. Cross-cutting concerns
@@ -489,8 +501,8 @@ DELETE /me/sessions/{id}               revoke a specific session  [step-up]
 GET    /me/notifications               list (paginated, unread filter)
 POST   /me/notifications/read          mark IDs read
 GET    /me/notifications/stream        SSE channel for live updates
-POST   /me/web-push/subscribe          register browser push subscription
-DELETE /me/web-push/{id}               unsubscribe
+POST   /api/v1/me/push-subscriptions        register browser push subscription (SPEC-04 P1.1)
+DELETE /api/v1/me/push-subscriptions/{id}   unsubscribe (SPEC-04 P1.1)
 ```
 
 OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. (2026-07: the earlier `/auth/register` / `/auth/callback` drift is **reconciled** — the spec now documents `/auth/register` and no longer lists the retired `/auth/callback`. The `x-required-permission` / `x-step-up` annotations remain the target convention, not yet uniformly present.)

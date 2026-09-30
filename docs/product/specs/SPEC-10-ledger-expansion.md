@@ -1,6 +1,6 @@
 # SPEC-10 — Ledger expansion (module `bank`: debts, goals, recurring, cards, net worth, automation, splits, sharing)
 
-**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-09-11
+**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-09-30
 **Module:** `bank` (extends it; no new module) · **Depends on:** SPEC-03 (the ledger this builds on), SPEC-04 (notify, for reminders), SPEC-01 (media, only for P1.10 receipts)
 **Refs:** SPEC-03 §5 P0.3 (the transfer-leg predicate everything here keys on), migration 0042 (icon-first categories)
 
@@ -88,7 +88,8 @@ the transaction model come last, because everything else is additive.
   action posts a real categorised expense (seed category *Lãi vay*), because an
   accrual you cannot see in the ledger is an accrual you cannot reconcile.
 - Due reminders through `notify:dispatch`, driven by the existing Asynq scheduler
-  in `cmd/worker` (there is no OS cron in this stack).
+  in `cmd/worker` (there is no OS cron in this stack) — the
+  `bank:scan_debts_due` sweep, §4a (5).
 
 ### Phase 2 — Savings goals & vaults (requirement 2)
 
@@ -153,6 +154,38 @@ module's access model, not a feature on top of it. It also overlaps the existing
 express a shared ledger as an organization rather than invent a second membership
 system, and that deserves an ADR before any code.
 
+## 4a. Event policy
+
+SPEC-03 P0.7 emits one `bank:transaction_*` event per written row. The new write
+paths here would flood the stream, project unconfirmed drafts, or double-count
+splits if they followed it literally, so each states its policy:
+
+1. **Debt movements** (borrow / lend / repay / collect) are ordinary transfer
+   pairs through the SPEC-03 transfer path and emit
+   `bank:transaction_created|updated|deleted` per P0.7 (`is_transfer=true`, a
+   shared `transfer_id`, so SPEC-06 collapses them into one item). An **accrual**
+   is a normal categorised expense and emits per P0.7. (Shipped.)
+2. **Recurring** (phase 4): a draft emits nothing. Confirming a draft emits one
+   `bank:transaction_created`; discarding one emits nothing.
+3. **Splits** (phase 6): only the parent emits. Creating, editing or deleting
+   any leg emits one `bank:transaction_created|updated|deleted` for the parent;
+   legs never emit.
+4. **Import** (phase 7): import-batch rows emit no per-row `bank:transaction_*`
+   event — the same carve-out rationale as SPEC-03 P0.7's bulk reassign (one user
+   action, not N mutations). The batch emits one `bank:import_completed
+   {import_batch_id, user_id, account_id, row_count}` after commit. It has no
+   stream consumer (the stream projects moments); the bell may consume it later.
+5. **Due reminders** (phases 1 and 3): the daily periodic task
+   `bank:scan_debts_due` runs on the shared scheduler in `cmd/worker` (07:00
+   UTC), on the `default` queue, once per tenant via `forEachTenant`. For each
+   lead of 7, 1 and 0 days it notifies the owner of every open debt with a
+   non-zero balance whose `due_on` is exactly that many days away, through
+   `notify:dispatch` (type `bank.debt_due`), with
+   `dedup_key = <debt_id>|<due_on>|<lead>`; `bank_debt_reminders` records each
+   sent (debt, due date, lead). A day the sweep misses skips that lead (no
+   catch-up). Phase 3's card dues reuse the sweep, keyed on the card account id.
+   (Shipped for debts.)
+
 ## 5. Non-goals (and why)
 
 - **Bank API integration / open banking.** No credentials in a self-hosted app
@@ -168,12 +201,23 @@ system, and that deserves an ADR before any code.
 
 ## 6. API summary (phase 1 only; later phases extend)
 
-| Method | Path | Notes |
-|---|---|---|
-| GET/POST | `/api/v1/bank/debts` | `bank-debts:read/write:own` |
-| GET/PATCH/DELETE | `/api/v1/bank/debts/{id}` | delete refuses while the balance is non-zero |
-| POST | `/api/v1/bank/debts/{id}/movements` | `{kind: borrow\|lend\|repay\|collect, account_id, amount, occurred_at}` → a transfer pair |
-| POST | `/api/v1/bank/debts/{id}/accrue` | posts interest as a categorised expense |
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| GET | `/api/v1/bank/debts` | `bank-transactions:read:own` | |
+| POST | `/api/v1/bank/debts` | `bank-transactions:write:own` | |
+| GET | `/api/v1/bank/debts/{id}` | `bank-transactions:read:own` | |
+| PATCH | `/api/v1/bank/debts/{id}` | `bank-transactions:write:own` | |
+| DELETE | `/api/v1/bank/debts/{id}` | `bank-transactions:delete:own` | refuses while the balance is non-zero |
+| POST | `/api/v1/bank/debts/{id}/movements` | `bank-transactions:write:own` | `{kind: borrow\|lend\|repay\|collect, account_id, amount, occurred_at}` → a transfer pair |
+| POST | `/api/v1/bank/debts/{id}/accrue` | `bank-transactions:write:own` | posts interest as a categorised expense |
+
+One literal code per method (specs README AuthZ). Debts reuse the
+`bank-transactions:*` codes, as shipped (`bank/module.go`); there is no
+`bank-debts:*` code, because a debt is an account whose money moves by transfer,
+and migration `0043_bank_debts` therefore seeds no new permission. A later phase
+that adds a non-transaction surface seeds `bank-<noun>:read|write|delete:own` →
+`user` in its own migration (specs README seeding rule). Annotate each operation
+per the specs README AuthZ **OpenAPI encoding**.
 
 ## 7. Done means
 

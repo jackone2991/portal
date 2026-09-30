@@ -382,7 +382,7 @@ graph LR
     classDef deferred fill:#e0e0e0,stroke:#9e9e9e,color:#555,stroke-dasharray:4
 
     media[media<br/>asset_ready]:::next
-    comic[comic<br/>chapter_published]:::next
+    comic[comic<br/>published → bell only]:::next
     bank[bank<br/>transaction_created/updated/deleted<br/>budget_exceeded P1]:::next
 
     BUS{{Asynq bus<br/>naming: module:event<br/>payload = IDs + minimum context}}:::next

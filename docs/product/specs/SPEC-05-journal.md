@@ -1,8 +1,8 @@
 # SPEC-05 — Journal (life-stream write path)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** never
-**Module:** `journal` (new — not scaffolded) · **Depends on:** nothing hard ([ADR-10](../../adr/10-openapi-contract-direction.md) codegen cutover preferred first; P1.5 photo attachments need SPEC-01)
-**Upstream:** [briefs/05-journal-life-stream.md](../briefs/05-journal-life-stream.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), backlog §3 P1, [MODULES.md](../../../backend/MODULES.md) §8
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Module:** `journal` · **Depends on:** SPEC-01 P0.6 (`platform/events` fan-out) only; photo attachments (P1.5) are superseded by SPEC-12, which needs SPEC-01
+**Upstream:** [briefs/05-journal-life-stream.md](../briefs/05-journal-life-stream.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), 2026-07 backlog §3 P1 (archived; `git show 8d382d2^:docs/product/backlog.md`), [MODULES.md](../../../backend/MODULES.md) §8
 **Downstream consumers:** SPEC-06 (stream projection reads this table; its projection rows are maintained transactionally in this module's service — journal:entry_created stays emit-only, see P0.3), SPEC-09 P1.7 (takeout exports it).
 
 ---
@@ -10,9 +10,10 @@
 ## 1. Problem statement
 
 ADR-08 declares the first real post type to be **a journal / life event of the
-user**, not a status for friends — but nothing builds it. SPEC-01/02/03 create
-three event *producers* and SPEC-04's bell is their only consumer; the browsable
-timeline that ADR-08 calls the product has no **write path**. Meanwhile `HomeView`
+user**, not a status for friends — but nothing builds it. SPEC-01 (and later
+SPEC-02/03) create event *producers*; the only planned consumer ahead of this
+spec is SPEC-04's bell (for `media:asset_ready`); the browsable timeline that
+ADR-08 calls the product has no **write path**. Meanwhile `HomeView`
 renders a ~685-line hard-coded newsfeed, and the ported `Composer`/post/comment
 kits are exported but imported by nothing.
 
@@ -74,14 +75,23 @@ exists for SPEC-06's consumers). Add the module's depguard isolation block to
 
 **Endpoints** (§7): create / list / fetch / patch / delete under
 `/api/v1/journal/entries`. Validation: `body_md` 1–20 000 chars, else 422
-`journal/invalid-body`; `mood` optional freeform, but when present must be
-1–80 chars after trimming (an empty or whitespace-only string is 422
-`journal/invalid-mood`, matching the §6 CHECK — otherwise it would surface as
-a 500 at the DB); `occurred_at` optional, defaults to now, **backdating and
+`journal/invalid-body` (SPEC-12 later relaxes this to 0–20 000 so a photo-only
+entry can exist; a text-only entry still needs non-blank text); `mood` optional
+freeform — absent or `null` means no mood. The service validates and **stores
+`strings.TrimSpace(mood)`**: the trimmed value must be 1–80 chars, otherwise 422
+`journal/invalid-mood`; a whitespace-only mood trims to empty and is 422. Any
+stored trimmed value satisfies the §6 CHECK, so padded input can never reach
+the DB as a 500 at COMMIT. `occurred_at` optional, defaults to now, **backdating and
 future-dating unlimited** (it's a journal; resolved from the brief's open
 question). `asset_ids` in the request body is **rejected with 422
-`journal/invalid-asset` until P1.5 lands** — fail closed rather than store
+`journal/invalid-asset` until SPEC-12 lands** — fail closed rather than store
 unvalidated cross-module references.
+
+**Length unit.** Lengths (`body_md`, `mood`) are Unicode code points, as
+Postgres `char_length` counts them — the service counts with
+`utf8.RuneCountInString`, never `len` (bytes); a frontend counter uses
+`[...str].length`, never `.length` (UTF-16 units). Vietnamese text must not be
+rejected early nor pass the service and fail the CHECK.
 
 **Ordering & pagination (brief inconsistency resolved).** The brief's P0.2 text
 said cursor on `created_at` while its index sketch and stream semantics use
@@ -91,11 +101,19 @@ SPEC-06's merged stream orders the same way. `created_at` remains the audit
 timestamp only.
 
 **Acceptance criteria.**
-- Given entries by user B, when user A lists or fetches, then B's rows are absent
-  and a direct fetch is 404 (existence never leaks).
+- Given entries by user B, when user A lists, fetches, PATCHes or DELETEs one of
+  B's entries, then the list omits it and fetch/PATCH/DELETE return 404
+  `journal/entry-not-found` (existence never leaks); B's row is unchanged.
 - Given 500 entries, when paging by cursor, then results are stable, ordered
   `occurred_at DESC, id DESC`, with no duplicates or gaps across pages.
+- Given 500 entries and `limit=50`, then exactly 10 pages, the last without
+  `next_cursor`; a malformed cursor is 400 `journal/invalid-cursor`.
 - Given a body of 0 or > 20 000 chars, then 422 Problem `journal/invalid-body`.
+- Given mood `" vui "`, then it is stored as `"vui"`; given 80 non-space code
+  points padded with spaces, then 201 (not 500); given 81 non-space code points,
+  then 422 `journal/invalid-mood`.
+- Given a PATCH with `mood: null`, then the mood is cleared; given a PATCH that
+  omits a field, then that field is unchanged.
 - Given an edit, then `updated_at` changes and the entry keeps its `occurred_at`
   position unless `occurred_at` itself was edited.
 - Given a delete, then the entry is gone from list/fetch (and SPEC-06's stream
@@ -131,9 +149,13 @@ moment one exists.
 
 The home composer becomes real: the ported `Composer` kit posts to
 `POST /journal/entries` via a TanStack mutation with **optimistic insert** (D-32),
-rollback on error. The composer exposes an optional **date control**
+rollback on error. The composer exposes an optional **date-and-time control**
 (`occurred_at`, defaults to now — the backdating user story needs a UI, not
-just an API field) and a minimal freeform mood text input (P0 — Goal 1 and
+just an API field). The picker works in the user's timezone (D-17 — the same
+zone the stream renders dates in and on-this-day matches in); the client sends
+RFC 3339 with an offset, and the server stores the `timestamptz` instant
+unchanged. A date picked without a time defaults to 12:00 local. The composer
+also has a minimal freeform mood text input (P0 — Goal 1 and
 the primary user story include mood; P1.6 upgrades it with the preset emoji
 row). Rendered entry cards carry
 **edit and delete affordances** (inline dialog; optimistic per D-32) — user
@@ -143,19 +165,37 @@ SPEC-06 lands, `/` renders a journal-only list (cursor infinite scroll, newest
 `occurred_at` first) in the feed slot — SPEC-06 swaps this query for
 `GET /stream` without moving the composer.
 
+**Optimistic placement** (the list is a cursor-paginated infinite query, so a
+backdated entry may have no loaded position): insert into the loaded page whose
+range contains `occurred_at`. If it is older than the last loaded item and
+`hasNextPage`, do not insert; show a "Saved to <date>" toast. Dedupe by entry
+id (the stream's `ref_id`, SPEC-06 P0.2) against fetched pages. The same rule
+applies to edits that change `occurred_at`. On error, restore body, mood and
+`occurred_at`.
+
 Markdown renders through a **sanitizing renderer** — no raw-HTML passthrough
-(D-33's RSC shell stays; the list is a client island).
+(D-33's RSC shell stays — as defined in the specs README Frontend convention;
+the list is a client island). The composer has a **Write/Preview toggle**
+(§3's "markdown-in-textarea with preview"); Preview renders the draft through
+the same sanitizing renderer as the entry card, not as raw text.
 
 **Acceptance criteria.**
 - Given a post from the composer, then the entry appears at its `occurred_at`
   position (top, when now-dated) without a full refetch; on server error it
-  disappears and the composer restores its text.
+  disappears and the composer restores its body, mood and `occurred_at`.
+- Given a post backdated older than the last loaded entry while more pages
+  exist, then it is not inserted, a "Saved to <date>" toast shows, and it
+  appears exactly once when its page loads.
 - Given an entry edited to a different `occurred_at`, then it re-sorts to that
   position; given a delete, the card leaves the list optimistically.
 - Grep test: the fixture post array is gone from `HomeView`; every rendered entry
   is a DB row.
 - Given `<script>alert(1)</script>` in a body, then it renders as inert text.
 - Given a mood entered, the created entry stores and renders it.
+- Given `occurred_at` = yesterday 21:00 local, then it is stored at that instant
+  and listed between its neighbours.
+- Given a draft `**bold**`, then Preview renders it bold; given `<script>` in a
+  draft, then Preview renders it inert.
 
 ### P1 — nice to have
 
@@ -166,9 +206,8 @@ Markdown renders through a **sanitizing renderer** — no raw-HTML passthrough
   `media:asset_deleted` — via the `platform/events` fan-out, events.md "Delivery
   mechanics"; the event has several consumers — and strip the deleted id from any
   `asset_ids` (idempotent — the SPEC-02 P0.6 soft-cascade pattern; only relevant
-  once attachments exist). This needs creator-tier `assets:write:own` on
-  mediaapi's write path — available because the v1 owner is provisioned
-  `creator` or higher (see README AuthZ).
+  once attachments exist). Uploading needs `assets:write:own`, granted to `user` by the
+  SPEC-01 grant migration (SPEC-01 §7; README AuthZ floor).
 - **P1.6 Mood picker**: composer surfaces a preset emoji row + freeform field
   (schema carries `mood` from P0).
 
@@ -182,6 +221,8 @@ Markdown renders through a **sanitizing renderer** — no raw-HTML passthrough
 
 ## 6. Data model — migration `000N_journal_entries`
 
+**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `journal_entries` (`tenant_id` + index + `tenant_isolation` policy, added by `0020_platform_rls_enable`). The DDL below predates ADR-07 and omits the columns.
+
 ```sql
 CREATE TABLE journal_entries (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -189,7 +230,7 @@ CREATE TABLE journal_entries (
                 -- identity-anchor exception, per SPEC-04 §6 / 0007_media_assets precedent
   body_md     text NOT NULL CHECK (char_length(body_md) BETWEEN 1 AND 20000),
   mood        text CHECK (mood IS NULL OR char_length(mood) BETWEEN 1 AND 80),
-  asset_ids   uuid[] NOT NULL DEFAULT '{}',  -- media assets, validated via mediaapi (P1.5)
+  asset_ids   uuid[] NOT NULL DEFAULT '{}',  -- media assets, validated via mediaapi (SPEC-12)
   occurred_at timestamptz NOT NULL DEFAULT now(),  -- user-editable ("last night")
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
@@ -198,24 +239,30 @@ CREATE INDEX ON journal_entries (user_id, occurred_at DESC, id DESC);
 ```
 
 `asset_ids` carries **no FK** (cross-module; validated via `mediaapi`, corrected
-via the `media:asset_deleted` subscription — P1.5). Queries in
+via the `media:asset_deleted` subscription — SPEC-12). SPEC-12's migration
+relaxes the body CHECK to `char_length(body_md) <= 20000` (0–20 000) for
+photo-only entries; the text-or-attachment rule is a service rule. Queries in
 `query/journal_entries.sql`; regenerate via `make sqlc` — never hand-edit `*.sql.go`.
 
 **Module-scope decision (brief's open question, locked):** one module named
 `journal` owns both this table and SPEC-06's `stream_items`. Two micro-modules
-for one surface is boundary theater at this size; if the stream ever grows its
-own roadmap, splitting later is a mechanical move because the projection already
-only consumes bus events.
+for one surface is boundary theater at this size. If the stream ever grows its
+own roadmap, a split is **not** mechanical: system rows arrive via bus events,
+but journal rows are projected inside the entry transaction (P0.3, SPEC-06
+P0.1(a)). A split must first replace that write with
+`journal:entry_created`/`entry_updated`/`entry_deleted` events plus an
+idempotent consumer, and accept eventual consistency on the composer's
+post-create refetch.
 
 ## 7. API summary (add to `shared/openapi.yaml`)
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| POST | `/api/v1/journal/entries` | `journal:write:own` | `{body_md, mood?, occurred_at?}`; `asset_ids?` accepted from P1.5, rejected before |
-| GET | `/api/v1/journal/entries?cursor=` | `journal:read:own` | ordered `occurred_at DESC, id DESC` |
+| POST | `/api/v1/journal/entries` | `journal:write:own` | `{body_md, mood?, occurred_at?}`; `asset_ids?` accepted from SPEC-12, rejected before |
+| GET | `/api/v1/journal/entries?cursor=&limit=` | `journal:read:own` | ordered `occurred_at DESC, id DESC`; `limit` default 50, a value ≤ 0 or > 100 falls back to 50; response `{items, next_cursor}`, `next_cursor` an opaque base64url keyset of `(occurred_at, id)`, omitted on the last page; malformed cursor → 400 `journal/invalid-cursor` |
 | GET | `/api/v1/journal/entries/{id}` | `journal:read:own` | 404 for others' rows |
-| PATCH | `/api/v1/journal/entries/{id}` | `journal:write:own` | any subset of create fields |
-| DELETE | `/api/v1/journal/entries/{id}` | `journal:delete:own` | 204; idempotent 404 |
+| PATCH | `/api/v1/journal/entries/{id}` | `journal:write:own` | any subset of create fields. Absent field = unchanged; `mood: null` clears it (per SPEC-12); `body_md: null` and `occurred_at: null` are treated as absent (unchanged — neither column can be cleared); a present `body_md` or `mood` is validated as on create. The UPDATE sets `updated_at = now()` (specs README updated_at convention) |
+| DELETE | `/api/v1/journal/entries/{id}` | `journal:delete:own` | 204 on delete; 404 `journal/entry-not-found` when the id is unknown, already deleted, or foreign (a repeat DELETE is 404, never 500) |
 
 Permission codes follow the canonical scheme (README conventions): `write`
 covers create + update, matching the 0003 catalog — the earlier
@@ -223,8 +270,12 @@ covers create + update, matching the 0003 catalog — the earlier
 doesn't use *(reconciled 2026-07-10)*. The journal migration seeds all three
 codes and grants them to the base `user` role. Problem types:
 `journal/entry-not-found`, `journal/invalid-body`, `journal/invalid-mood`,
-`journal/invalid-asset` (pre-P1.5: any `asset_ids`; post-P1.5: failed
-validation).
+`journal/invalid-asset` (before SPEC-12: any `asset_ids`; after SPEC-12: failed
+validation), `journal/invalid-cursor` (400, malformed list cursor).
+
+The list follows the specs README Pagination convention (`{items, next_cursor}`);
+body-shape failures use the named `journal/invalid-*` types above rather than
+`journal/validation`. Annotate each operation per the specs README AuthZ **OpenAPI encoding**.
 
 ## 8. Success metrics (n=1 honest)
 
@@ -239,8 +290,10 @@ validation).
 1. Scaffold + migration + sqlc + depguard block (1 day)
 2. CRUD + RBAC + OpenAPI + event emit (1.5 days)
 3. Composer wiring + interim home list + fixture deletion (1.5–2 days)
-4. P1 (attachments + mood picker) (1 day, needs SPEC-01)
-P0 ≈ 4–5 dev-days; matches the brief's 5–6 including P1.
+4. P1.6 mood picker (0.5 day); attachments moved to SPEC-12
+
+P0 ≈ 4–4.5 dev-days; 4.5–5 including P1.6 (the brief estimated 5–6, which
+included attachments, now SPEC-12).
 
 ## 10. Open questions
 

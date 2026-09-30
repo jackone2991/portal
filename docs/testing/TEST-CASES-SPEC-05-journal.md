@@ -1,6 +1,6 @@
 # Test Cases — SPEC-05 Journal (life-stream write path)
 
-**Status:** current · **Last verified:** never
+**Status:** current · **Last verified:** 2026-09-30
 
 **Spec:** [SPEC-05](../product/specs/SPEC-05-journal.md) · **Module:** `journal`
 **Prefix:** `TC-JRNL-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R7 (capture not saved)
@@ -18,7 +18,8 @@
 ### Preconditions
 
 - Accounts `owner`,`userA`,`userB`,`guest`. Problem types: `journal/entry-not-found`,
-  `journal/invalid-body`, `journal/invalid-mood`, `journal/invalid-asset`.
+  `journal/invalid-body`, `journal/invalid-mood`, `journal/invalid-asset`,
+  `journal/invalid-cursor`.
 - Event `journal:entry_created {entry_id, user_id, occurred_at}` — **emit-only** at v1.
 
 ---
@@ -43,11 +44,16 @@
 | TC-JRNL-016 | Whitespace-only mood → 422 | Boundary/Neg | P0 | POST mood="   " | 422 `journal/invalid-mood` (not a 500 at DB) | ☐ |
 | TC-JRNL-017 | Mood > 80 chars → 422 | Boundary/Neg | P0 | POST 81-char mood | 422 `journal/invalid-mood` | ☐ |
 | TC-JRNL-018 | Backdate/future-date unlimited | Functional | P0 | POST occurred_at last night / next year | accepted; sits at that date position | ☐ |
-| TC-JRNL-019 | asset_ids rejected pre-P1.5 | Negative | P0 | POST with asset_ids | 422 `journal/invalid-asset` (fail closed) | ☐ |
+| TC-JRNL-019 | asset_ids rejected pre-SPEC-12 | Negative | P0 | POST with asset_ids | 422 `journal/invalid-asset` (fail closed) | ☐ |
 | TC-JRNL-020 | Edit updates updated_at, keeps position | Functional | P0 | PATCH body only | `updated_at` changes; `occurred_at` position unchanged | ☐ |
 | TC-JRNL-021 | Edit occurred_at re-sorts | Functional | P0 | PATCH occurred_at | entry re-sorts to new date position | ☐ |
 | TC-JRNL-022 | Delete removes entry + stream row | Functional | P0 | DELETE entry | gone from list/fetch; SPEC-06 stream row also removed (transactional) | ☐ |
 | TC-JRNL-023 | Idempotent delete | Idempotency | P0 | DELETE twice | 2nd → 404, never 500 | ☐ (CC-8) |
+| TC-JRNL-024 | Foreign PATCH/DELETE → 404 | AuthZ | P0(S1) | userA PATCHes and DELETEs one of userB's entries | both 404 `journal/entry-not-found` (existence never leaks); userB's row unchanged | ☐ (CC-3) |
+| TC-JRNL-025 | `limit=50` over 500 entries | Functional | P0 | seed 500 entries; page with `limit=50` until no cursor | exactly 10 pages; the last omits `next_cursor` | ☐ (CC-4) |
+| TC-JRNL-026 | Malformed cursor → 400 | Negative | P0 | GET `/journal/entries?cursor=not-a-cursor` | 400 `journal/invalid-cursor` | ☐ (CC-4) |
+| TC-JRNL-027 | Mood trimmed and stored | Boundary | P0 | POST mood=`" vui "`; POST 80 non-space code points padded with spaces; POST 81 non-space code points | stored as `"vui"`; padded 80 → 201 (not 500 at COMMIT); 81 → 422 `journal/invalid-mood` | ☐ |
+| TC-JRNL-028 | PATCH `mood: null` clears | Functional | P0 | entry with a mood; PATCH `{mood: null}`; then PATCH `{body_md}` only | mood cleared; the body-only PATCH leaves every omitted field unchanged | ☐ |
 
 ## P0.3 — Event emit
 
@@ -72,6 +78,8 @@
 | TC-JRNL-057 | Mood stored + rendered | Functional | P0 | post with mood | created entry stores + renders mood | ☐ |
 | TC-JRNL-058 | Backdate via date control | Frontend | P1 | use composer date control | occurred_at set; entry lands at that position | ☐ |
 | TC-JRNL-059 | Persistence across restart | Reliability | P0 | post; `make up` restart; reload | entries persist (DB not cache) | ☐ |
+| TC-JRNL-060 | Preview renders markdown | Frontend | P0 | composer draft `**bold**`, switch to Preview; then a draft containing `<script>` | bold renders bold (same sanitizing renderer as the entry card, not raw text); `<script>` renders inert | ☐ |
+| TC-JRNL-061 | Backdate to yesterday 21:00 | Functional | P0 | post with `occurred_at` = yesterday 21:00 local | stored at that instant; listed between its neighbours | ☐ |
 
 ## P1 — nice to have
 

@@ -1,8 +1,9 @@
 # SPEC-03 — Finance Ledger (module `bank`, ledger scope)
 
-**Status:** ready to build, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-07-10
-**Module:** `bank` (name reserved in diagrams/MODULES; no code) · **Depends on:** ADR-08 (scope amendment); SPEC-01 only for P1 receipts
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Module:** `bank` · **Depends on:** ADR-08 (scope amendment); **SPEC-09 P0 (nightly backup + exercised restore drill) live before the first real ledger entry**; SPEC-01 only for P1 receipts
 **Upstream:** [briefs/03-finance-ledger.md](../briefs/03-finance-ledger.md) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
+**Downstream consumers:** SPEC-06 (stream + dashboard widget), SPEC-09 P1.7 (bank ExportProvider), SPEC-10
 
 ---
 
@@ -84,11 +85,22 @@ accounts that may go negative (statement cycles are future). Currency is immutab
 once the account has transactions. Accounts with transactions cannot be deleted —
 only archived (delete allowed while empty).
 
+Archiving is enforced by the API, not only by the pickers: an archived account
+rejects new transactions and new transfer legs (409 `bank/account-archived`,
+including a transaction PATCH or transfer PATCH that moves a row onto it), while
+edits and deletes of its existing rows stay allowed. Unarchive via PATCH
+`{archived: false}`. GET `/bank/accounts` returns every account with its
+`archived` flag; filtering is the client's job. *(Code follow-up: the shipped
+service does not check `archived` on write.)*
+
 **Acceptance criteria.**
 - Given an archived account, then it is absent from transaction-entry pickers but
   present in historical reports and the dashboard's archived section.
 - Given an account with 1 transaction, when currency change or DELETE is attempted,
   then 409 Problem `bank/account-not-mutable` / `bank/account-not-empty`.
+- Given an archived account, when a transaction or transfer naming it is created,
+  then 409 `bank/account-archived` and no row is written; editing or deleting one
+  of its existing transactions still succeeds.
 
 ### P0.2 — Transactions (manual)
 
@@ -107,7 +119,25 @@ an expense category silently vanishes from P0.5's "Σ expense debits" math. Refu
 at v1 are therefore logged as income (seed *Hoàn tiền*); netting refunds against
 category spend is a future refinement.
 
-Entry UX: quick-add dialog reachable from anywhere in the `(bank)` group; ≤4
+Account attachment rules: `account_id` on POST/PATCH `/bank/transactions`, and
+`from_account`/`to_account` on POST/PATCH `/bank/transfers`, must resolve to an
+account the caller owns (owner-scoped lookup, `user_id = caller`). A foreign or
+nonexistent id is 404 `bank/not-found`, as if it didn't exist — never a 422 that
+confirms existence. Derived-balance, dashboard and report queries filter on
+`user_id = caller` as well as `account_id`. A PATCH that changes `account_id` to
+an account with a different `currency` is 422 `bank/currency-mismatch` (the
+integer amount would otherwise be silently reinterpreted in the new currency);
+a same-currency move re-derives both balances. *(Code follow-up: the shipped
+transaction PATCH checks ownership of the new account but not its currency.)*
+
+`transfer_id` is **server-assigned only**. It is not part of the POST/PATCH
+`/bank/transactions` request schema and is never read from a request body; only
+`/bank/transfers` mints it, so a client cannot create a one-sided leg. On the
+manual path `category_id` is required: omitted or null is 422 `bank/validation`,
+checked in the service before the insert — never left to the §6 CHECK, which
+would surface as a 500.
+
+Entry UX: quick-add dialog reachable from every `/bank/*` page; ≤4
 required fields (amount, direction defaulted to expense, account defaulted to last
 used, category defaulted to most-recently-used); date defaults to today;
 `MoneyInput` renders VND thousands separators (`1.500.000`).
@@ -118,6 +148,10 @@ used, category defaulted to most-recently-used); date defaults to today;
 - Given amount ≤ 0 or a fractional VND amount, then 422 `bank/invalid-amount`.
 - Given a debit attached to an income-kind category (or a credit to an
   expense-kind one), then 422 `bank/direction-kind-mismatch`.
+- Given POST `/bank/transactions` without `category_id`, then 422
+  `bank/validation` and no row is written.
+- Given a PATCH moving a VND transaction onto a USD account, then 422
+  `bank/currency-mismatch` and the row is unchanged.
 - Given `occurred_at` in the future, then it is accepted and included in that future
   month's reporting (simple rule; no special-casing).
 - Given a routine entry by a practiced user, then ≤ 10 s from dialog open to saved.
@@ -131,7 +165,16 @@ to_account, amount, occurred_at, note}`. Legs are **not** independently editable
 transaction; a `PATCH/DELETE` on a leg's transaction id returns 409
 `bank/is-transfer-leg` pointing at the transfer endpoint. Same-account transfers
 are rejected (422 `bank/same-account-transfer`). Cross-currency transfers are rejected at v1 (422
-`bank/currency-mismatch`) — revisit with FX.
+`bank/currency-mismatch`) — revisit with FX. *(Refines the brief, which has
+editing one leg edit the pair: pair edits go only through
+`/bank/transfers/{transfer_id}` so a leg is never half-edited; the leg endpoint
+returns 409 and names `/bank/transfers/{transfer_id}` in the Problem `detail`.)*
+
+`PATCH /bank/transfers/{transfer_id}` accepts any subset of `{from_account,
+to_account, amount, occurred_at, note}` and rewrites both legs atomically. The
+POST validations re-run on the resulting pair: own accounts (404
+`bank/not-found`, P0.2), `bank/same-account-transfer`, `bank/currency-mismatch`,
+`bank/invalid-amount`. Each leg emits one `bank:transaction_updated` (P0.7).
 
 **Transfer legs, precisely** (this predicate is load-bearing for every report): a
 *transfer leg* is a row with `transfer_id IS NOT NULL AND category_id IS NULL`.
@@ -151,6 +194,8 @@ the transfer API is P1.13.
 **Acceptance criteria.**
 - Given a 5,000,000 VND transfer TCB→Momo, then TCB −5M, Momo +5M, and the month's
   income and expense totals each move by exactly 0.
+- Given that transfer PATCHed to 4,000,000, then TCB and Momo each move back by
+  1,000,000 and the month's income and expense move by 0.
 - Given deletion of a transfer, then both legs disappear atomically (no orphan leg
   under any failure — covered by a transaction-rollback test).
 - Given a filtered transaction list, then transfer legs render with a distinct
@@ -176,9 +221,14 @@ category (`parent_id IS NULL` — this is what enforces "2 levels max") of the s
 children" roll-up would mix kinds; these violations are 422. Ownership follows the
 P0.2 convention: a `parent_id` outside the caller's visible set (own or seed) is
 **404, as if it didn't exist** — never a 422 that would leak another user's
-category ids. `kind` is immutable after creation (mirror of P0.1's currency
-immutability). `parent_id` is mutable via PATCH, but a category that has children
-cannot be assigned a parent (422 `bank/invalid-category-parent`) — together with
+category ids. `kind` is immutable after creation: a PATCH that changes it is
+422 `bank/category-immutable` (the request is well-formed but semantically
+invalid; unlike P0.1's currency, `kind` is unconditionally immutable, so it is a
+validation failure, not a state conflict). *(Code follow-up: the shipped PATCH
+body has no `kind` field, so a `kind` in the body is silently ignored instead of
+rejected.)* `parent_id` is mutable via PATCH, but a category that has children
+cannot be assigned a parent, and neither can a category be its own parent
+(`parent_id = id`) (both 422 `bank/invalid-category-parent`) — together with
 the top-level rule this enforces 2 levels max; re-parenting re-runs the same-kind
 and own-or-seed checks. "Children" always means direct children.
 
@@ -212,14 +262,18 @@ Deletion rules:
   (existence never leaks); referencing an own-or-seed but non-top-level category,
   then 422.
 - Given a DELETE on a seed category, then 404 and the seed survives.
+- Given a PATCH changing an own category's `kind`, then 422
+  `bank/category-immutable` and the row is unchanged.
 
 ### P0.5 — Monthly budgets
 
 One amount per (category, month); `month` stored as first-of-month date. Spent =
 Σ expense debits in the month for the category **including its children**,
 excluding transfer legs (leg predicate defined in P0.3). Dashboard shows
-spent/budget bars with >100% highlighted. Budgets do not roll over (rollover is
-future).
+spent/budget bars with >100% highlighted. The percent shown is
+`round(spent × 100 / amount)`, rounded half-up; the >100% highlight uses the exact
+comparison `spent > amount`, not the rounded percent. Budgets do not roll over
+(rollover is future).
 
 **Write semantics (2026-07-10 — previously undefined):** the §7 `PUT
 /bank/budgets` upserts one `(category_id, month, amount)` with `amount > 0`
@@ -255,7 +309,7 @@ parent that has no budget row).
 
 ### P0.6 — Dashboard
 
-`GET /bank/dashboard?month=` returns, grouped by currency: per-account derived
+`GET /bank/dashboard?month=` returns: per-account derived
 balances (active; archived collapsed) — always **current** balances; `month` scopes
 only the flow numbers and budget progress, never back-projects balances (see the
 §11 opening-balance note) — month income/expense totals (**transfer legs**
@@ -265,10 +319,32 @@ wrongly drop P1.13 fee rows), budget progress list (the P0.5
 drop child-only budgets; the full nested tree lives on `/bank/budgets`), and the
 10 most recently **entered** transactions (`created_at DESC` — keying recency on
 `occurred_at` would let one future-dated entry pin the list; resolved
-2026-07-10). Frontend `/bank` renders it as the `(bank)` group landing page.
+2026-07-10). Frontend `/bank` (`app/(app)/bank/page.tsx`) renders it as the
+bank landing page.
+
+**Contract.** `month` is `YYYY-MM` (the §7 month rule): when omitted it defaults
+to the current month in `users.timezone` (D-17); a malformed value is 400
+`bank/invalid-month`. Response:
+
+```
+{month, accounts: [{id, name, type, currency, opening_balance, balance, archived}],
+ income, expense,
+ budgets: [{category_id, parent_id|null, name, parent_name|null, amount|null, spent}],
+ recent: [Transaction]}
+```
+
+All money is integer minor units; `amount: null` marks a synthesized header
+entry (P0.5). `income`/`expense` are single-currency sums. Per-currency grouping
+is realised client-side by `accounts[].currency` while every account shares one
+currency; the server must split the totals by currency before a second currency
+is allowed (tracked with the §11 budgets-vs-currency question). SPEC-06's finance
+widget calls this endpoint without `month`. *(Code follow-up: the shipped
+`monthParam` defaults to the UTC month and answers a malformed month with 400
+`about:blank`.)*
 
 **Acceptance criteria.**
-- Given VND-only accounts, then the dashboard returns one currency group; given
+- Given VND-only accounts, then every `accounts[].currency` is VND and the page
+  renders one currency group; given
   `?month=2026-06`, then only flow totals and budget bars change — balances stay
   current (the §11 opening-balance rule).
 - Given an archived account with history, then it appears in the archived
@@ -279,8 +355,11 @@ drop child-only budgets; the full nested tree lives on `/bank/budgets`), and the
 
 Emit on the bus: `bank:transaction_created`, `bank:transaction_updated`,
 `bank:transaction_deleted` — payload `{transaction_id, user_id, account_id,
-amount, direction, category_id, occurred_at, is_transfer, transfer_id,
-counterparty_account_id}`.
+amount, currency, direction, category_id, occurred_at, is_transfer, transfer_id,
+counterparty_account_id}`. `currency` is the account's ISO code, so a consumer
+can format `amount` with the right exponent (VND = 0) in a multi-currency
+ledger; SPEC-06 resolves account and category names at read time. *(Code
+follow-up: the shipped payload has no `currency`.)*
 `transfer_id` is nullable and lets a consumer group one transfer's rows into a
 single story item ("moved 5M TCB→Momo", not two confusing entries); `is_transfer`
 is the P0.3 leg predicate, so a P1.13 fee row emits `is_transfer=false` with its
@@ -300,6 +379,9 @@ consumer later is a wiring change.
 **Acceptance criteria.**
 - Given a transaction create/update/delete, then exactly one matching event is
   emitted, after commit (a rolled-back write emits nothing).
+- Given POST/PATCH/DELETE `/bank/transfers`, then exactly two events are emitted
+  after commit: one per leg, each `is_transfer=true` with the same `transfer_id`
+  and `counterparty_account_id` set to the other leg's account.
 - Given a category `DELETE ?reassign_to=` moving 500 transactions, then zero
   `bank:transaction_updated` events are emitted (the documented carve-out).
 
@@ -316,18 +398,25 @@ and any dynamic `AllowsCode` check fails closed — returning false even for a `
 superadmin grant. Kebab-compound resources follow SPEC-04's `notification-prefs`
 precedent; actions follow the 0003 catalog's `read|write|delete`)*:
 
-`bank-accounts:read|write|delete:own`, `bank-transactions:read|write|delete:own`,
-`bank-categories:read|write|delete:own`, `bank-budgets:read|write:own` — all
+`bank-accounts:read:own`, `bank-accounts:write:own`, `bank-accounts:delete:own`,
+`bank-transactions:read:own`, `bank-transactions:write:own`,
+`bank-transactions:delete:own`, `bank-categories:read:own`,
+`bank-categories:write:own`, `bank-categories:delete:own`,
+`bank-budgets:read:own`, `bank-budgets:write:own` (eleven literal codes) — all
 granted to the base `user` role; the bank migration seeds the permission rows
 and grants (0003 pattern). `write` covers create + update (+ archive for
-accounts; transfers are transaction writes). **No cross-user read at any
-permission level except explicit admin wildcard** — and even admin access should be
-considered deliberately (finance data is the most sensitive in the system; flag in
-ADR-08's consequences).
+accounts; transfers are transaction writes). **No cross-user read or write at
+any level, including `*`.** The wildcard only passes the route gate; every query
+filters `user_id = caller`. Any future admin or household access is a newly
+specced surface (new `:any` code, audited endpoint, ADR), never a side effect of
+the wildcard — finance data is the most sensitive in the system.
 
 **Acceptance criteria.**
 - Given user B's accounts/transactions/categories/budgets, then user A's list
   endpoints return none of them and direct fetches are 404.
+- Given user B's account id, when user A POSTs a transaction or a transfer naming
+  it (or PATCHes a transaction onto it), then 404 `bank/not-found`, no row is
+  written, and B's derived balance is unchanged.
 - Given a seed category (`user_id NULL`), then reads include it for every user,
   and any mutation via the shipped endpoints matches zero rows → 404 (what makes
   seeds immutable, P0.4 — no `:any` mutation surface exists at v1, so this holds
@@ -347,8 +436,13 @@ retrofit — this is the whole point of doing it in migration #1.
 
 ### P1 — nice to have
 
-- **P1.10 Receipt attachments**: `receipt_asset_id` on a transaction (image asset
-  via `mediaapi`; SPEC-01). Thumbnail in the transaction row; lightbox on click.
+- **P1.10 Receipt attachments**: `receipt_asset_id uuid NULL` on a transaction,
+  with **no FK** (module boundary, specs README). On write, validate through
+  `mediaapi` (SPEC-01) that the asset exists, is owned by the caller and is an
+  image; otherwise 404 `media/asset-not-found`, or 422 for a non-image. A
+  `bank:on_asset_deleted` consumer of `media:asset_deleted` NULLs matching ids,
+  and is registered in events.md. Thumbnail in the transaction row; lightbox on
+  click.
 - **P1.11 Monthly report page**: per-category breakdown (donut or bars) +
   month-over-month comparison; per currency group.
 - **P1.12 `bank:budget_exceeded`** event, emitted once per (category, month) on
@@ -386,6 +480,8 @@ retrofit — this is the whole point of doing it in migration #1.
 
 ## 6. Data model — migration `000N_bank_core`
 
+**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `bank_accounts`, `bank_import_batches`, `bank_transactions`, `bank_budgets` (`0020_platform_rls_enable`). `bank_categories` is the shared-seed precedent: nullable `tenant_id`, policy reads own-tenant `OR tenant_id IS NULL`, writes own-tenant only. The DDL below predates ADR-07 and omits the columns.
+
 ```sql
 -- user_id columns carry the sanctioned identity-anchor FK (SPEC-04 §6 /
 -- 0007 precedent) — added 2026-07-10; without it a deleted user orphans
@@ -411,6 +507,8 @@ CREATE TABLE bank_categories (
   name      text NOT NULL CHECK (char_length(name) BETWEEN 1 AND 100),
   kind      text NOT NULL CHECK (kind IN ('income','expense'))
 );
+CREATE INDEX ON bank_categories (user_id);
+CREATE INDEX ON bank_categories (parent_id) WHERE parent_id IS NOT NULL;
 
 CREATE TABLE bank_import_batches (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -438,8 +536,9 @@ CREATE TABLE bank_transactions (
   updated_at      timestamptz NOT NULL DEFAULT now(),
   CHECK (category_id IS NOT NULL OR transfer_id IS NOT NULL)
 );
-CREATE INDEX ON bank_transactions (user_id, occurred_at DESC);
+CREATE INDEX ON bank_transactions (user_id, occurred_at DESC, id DESC);
 CREATE INDEX ON bank_transactions (account_id, occurred_at DESC);
+CREATE INDEX ON bank_transactions (category_id) WHERE category_id IS NOT NULL;
 CREATE INDEX ON bank_transactions (transfer_id) WHERE transfer_id IS NOT NULL;
 CREATE UNIQUE INDEX ON bank_transactions (account_id, dedup_hash)
   WHERE dedup_hash IS NOT NULL;
@@ -456,6 +555,20 @@ CREATE TABLE bank_budgets (
 );
 ```
 
+The indexes above mirror the shipped `0014_bank_core`. **Follow-up migration
+`000N_bank_integrity`** (not yet shipped):
+
+```sql
+CREATE INDEX ON bank_transactions (user_id, created_at DESC);  -- dashboard recency (P0.6)
+CREATE INDEX ON bank_budgets (category_id);                    -- cascade and reassign scans
+ALTER TABLE bank_categories ADD CHECK (parent_id IS DISTINCT FROM id);
+                          -- a childless top-level category could otherwise parent itself
+ALTER TABLE bank_accounts ADD CHECK (currency ~ '^[A-Z]{3}$');
+```
+
+The service already rejects `parent_id = id` with 422
+`bank/invalid-category-parent` (P0.4); the CHECK is the backstop.
+
 Category seeds ship as a data migration in the same sequence. `dedup_hash` (future)
 = sha256 of `account_id|occurred_at|amount|direction|bank_ref` — computed only by
 the import path.
@@ -464,30 +577,63 @@ the import path.
 
 | Method | Path | Permission |
 |---|---|---|
-| GET/POST | `/api/v1/bank/accounts` | `bank-accounts:read/write:own` |
-| PATCH/DELETE | `/api/v1/bank/accounts/{id}` | `bank-accounts:write/delete:own` |
-| GET/POST | `/api/v1/bank/transactions?account=&month=&category=&cursor=` | `bank-transactions:read/write:own` |
-| PATCH/DELETE | `/api/v1/bank/transactions/{id}` | `bank-transactions:write/delete:own`; 409 on transfer legs |
+| GET | `/api/v1/bank/accounts` | `bank-accounts:read:own` |
+| POST | `/api/v1/bank/accounts` | `bank-accounts:write:own` |
+| PATCH | `/api/v1/bank/accounts/{id}` | `bank-accounts:write:own` |
+| DELETE | `/api/v1/bank/accounts/{id}` | `bank-accounts:delete:own` |
+| GET | `/api/v1/bank/transactions?account=&month=&category=&cursor=` | `bank-transactions:read:own` |
+| POST | `/api/v1/bank/transactions` | `bank-transactions:write:own` |
+| PATCH | `/api/v1/bank/transactions/{id}` | `bank-transactions:write:own`; 409 on transfer legs |
+| DELETE | `/api/v1/bank/transactions/{id}` | `bank-transactions:delete:own`; 409 on transfer legs |
 | POST | `/api/v1/bank/transfers` | `bank-transactions:write:own` |
-| PATCH/DELETE | `/api/v1/bank/transfers/{transfer_id}` | `bank-transactions:write/delete:own` |
-| GET/POST | `/api/v1/bank/categories` | `bank-categories:read/write:own` |
-| PATCH/DELETE | `/api/v1/bank/categories/{id}` (`?reassign_to=` on DELETE) | `bank-categories:write/delete:own`; 404/409/422 per P0.4 |
-| GET/PUT | `/api/v1/bank/budgets?month=` | `bank-budgets:read/write:own` (PUT upserts; `amount: 0\|null` deletes — P0.5) |
+| PATCH | `/api/v1/bank/transfers/{transfer_id}` | `bank-transactions:write:own` |
+| DELETE | `/api/v1/bank/transfers/{transfer_id}` | `bank-transactions:delete:own` |
+| GET | `/api/v1/bank/categories` | `bank-categories:read:own` |
+| POST | `/api/v1/bank/categories` | `bank-categories:write:own` |
+| PATCH | `/api/v1/bank/categories/{id}` | `bank-categories:write:own`; 404/409/422 per P0.4 |
+| DELETE | `/api/v1/bank/categories/{id}` (`?reassign_to=`) | `bank-categories:delete:own`; 404/409/422 per P0.4 |
+| GET | `/api/v1/bank/budgets?month=` | `bank-budgets:read:own` |
+| PUT | `/api/v1/bank/budgets` (body `{category_id, month, amount}`) | `bank-budgets:write:own` (upserts; `amount: 0\|null` deletes — P0.5) |
 | GET | `/api/v1/bank/dashboard?month=` | `bank-accounts:read:own` |
 
 *(Codes reconciled 2026-07-10 to the 2–3-segment grammar — see P0.8.)*
 
-The transactions list paginates by **cursor**, not offset `?page=` (which
-duplicates/skips rows under inserts and `occurred_at` edits): ordering is
-`occurred_at DESC, id DESC` and the response carries a `next_cursor` field —
-matching SPEC-01's cursor convention and §8's infinite-list requirement.
+The dashboard is a deliberate composite read gated on `bank-accounts:read:own`,
+although it also returns budgets and transactions: all bank read codes are always
+granted together to `user` (P0.8). Revisit if they diverge.
+
+**Month rule.** `month` is `YYYY-MM` on the wire everywhere and is stored as the
+first-of-month date. The budgets PUT carries it in the body, not the query. An
+omitted `?month=` on a GET means the current month in the caller's timezone
+(`users.timezone`, D-17). A malformed month is 400 `bank/invalid-month`.
+*(Code follow-up: the shipped handler defaults to the UTC month and answers a
+malformed month with 400 `about:blank`.)*
+
+The transactions list paginates by **cursor**, not offset `?page=` (offset
+paging duplicates or skips rows under inserts; keyset paging is stable under
+inserts, though a row whose `occurred_at` is edited mid-scroll may cross the
+cursor — acceptable for a personal list): ordering is
+`occurred_at DESC, id DESC` and the response is `{items, next_cursor}` — the
+specs README Pagination convention and §8's infinite-list requirement.
+`?limit=` keeps the OpenAPI-declared default 50, max 100. A
+malformed cursor is 400 `bank/invalid-cursor`; a param-shape failure 422
+`bank/validation`. *(Code follow-up: the shipped handler and
+`shared/openapi.yaml` still use the pre-convention key
+`{transactions: [...], next_cursor?}`; until the retrofit, clients read
+`transactions`.)* Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation).
 
 Problem types: `bank/account-not-empty`, `bank/account-not-mutable`,
 `bank/is-transfer-leg`, `bank/same-account-transfer`, `bank/currency-mismatch`,
 `bank/category-in-use`, `bank/category-kind-mismatch`,
 `bank/direction-kind-mismatch`, `bank/invalid-amount`,
 `bank/invalid-category-parent` (P0.4's non-top-level / wrong-kind / 2-level
-violations), `bank/category-immutable` (P0.4's kind-immutability).
+violations), `bank/category-immutable` (P0.4's kind-immutability),
+`bank/invalid-cursor`, `bank/validation` (generic request-shape violations,
+including a manual transaction without `category_id`, P0.2), `bank/not-found`
+(404 — a single type for every missing or foreign account, transaction,
+transfer or category id, including ids outside the caller's visible set;
+existence never leaks), `bank/account-archived` (409, P0.1),
+`bank/invalid-month` (400, the month rule above).
 
 All money fields in `bank` request/response bodies are integer minor units (VND
 exponent 0) end-to-end — the shared Money helper owns the exponent map. **This
@@ -505,31 +651,35 @@ wider than previously acknowledged** *(2026-07-10)*:
   not accounting-grade; double-entry returns with the creator-economy scope
   that actually needs it.
 
-**Ratification vehicle** *(ADR-08 landed without carrying this — the original
-plan is stale)*: record both divergences as a **new decision entry (propose
-`D-41`) in feature-inventory.md's resolved list**, scoped "v1 personal-ledger
-only; D-14/D-15 stand for any multi-currency or creator-economy money", and
-reconcile frontend.md §5.3 + its Phase-5 component notes — all in the SPEC-03
-implementation PR.
+**Ratified as D-41** (feature-inventory.md), scoped "v1 personal-ledger only;
+D-14/D-15 stand for any multi-currency or creator-economy money". The paired
+obligation — reconciling frontend.md §5.3 and its Phase-5 component notes to
+integer minor units — is done.
 
 ## 8. Frontend (`bank` pages under the `(app)` group — resolves the blocking question)
 
 Pages live under the existing authenticated group —
-`app/(app)/bank/{page,transactions,accounts,budgets}/page.tsx` — so they inherit
+`app/(app)/bank/page.tsx` and
+`app/(app)/bank/{transactions,accounts,budgets,categories}/page.tsx` — so they inherit
 the `(app)` shell/nav and the login gate; there is **no** separate `(bank)` route
 group (only `(app)` and `(public)` exist, per CLAUDE.md). No Olympus template maps
 cleanly to finance, so pages are composed
 from the existing shell + `components/ui` primitives plus Phase-5 money components
 (frontend.md): `<MoneyDisplay />`, `<MoneyInput />` (display-layer string handling
 with VND thousands separators; the wire carries integer minor units per §7),
-Recharts for budget bars/report.
+and budget bars as inline SVG/CSS components (any chart dependency needs a
+bundle-budget check).
 
 - `/bank` — dashboard (P0.6), quick-add button (global within the group)
 - `/bank/transactions` — filterable infinite list; edit/delete inline; transfer badge
 - `/bank/accounts` — list + create/archive
 - `/bank/budgets` — month picker + per-category budget editor
+- `/bank/categories` — two-level tree per kind; seeds read-only; own categories
+  can be created, renamed and re-parented. Delete opens a reassign picker that
+  sends `?reassign_to=`, and 409 `bank/category-in-use` renders inline.
 
-RSC-first shells; the quick-add dialog and lists are client islands. Left-menu
+RSC-first shells ("RSC shell" as defined in the specs README Frontend
+convention); the quick-add dialog and lists are client islands. Left-menu
 entry added to the shell nav.
 
 **Auth gate.** Add `'/bank/:path*'` to `config.matcher` in
@@ -540,7 +690,9 @@ redirects an unauthenticated visitor to `/login`.
 (`frontend/src/templates/types.ts`), implemented under
 `templates/v1/views/...`, and each `app/(app)/bank/<route>/page.tsx` resolves it
 via `activeTemplate().views.<x>` — never a version-specific import in `app/` (keeps
-the `v2` switch intact).
+the `v2` switch intact). The P0 keys are `bankDashboard`, `bankTransactions`,
+`bankAccounts`, `bankBudgets` and `bankCategories` (`bankReports` serves P1.11;
+`bankDebts` is SPEC-10's).
 
 ## 9. Success metrics (n=1 honest)
 
@@ -553,7 +705,7 @@ the `v2` switch intact).
 
 ## 10. Timeline & phasing
 
-1. D-41 decision entry (money-model divergence, §7) + migration + seeds + sqlc (1 day)
+1. Migration + seeds + sqlc (1 day)
 2. Accounts + transactions CRUD + attachment validation (P0.2) + derived
    balances + RBAC + OpenAPI (1.5 days)
 3. Categories: CRUD, hierarchy invariants, delete/reassign matrix (P0.4) (1 day)
@@ -562,15 +714,19 @@ the `v2` switch intact).
 6. Frontend: quick-add, transactions list, dashboard, accounts, budgets tree
    (2.5 days)
 7. Events + polish (½ day)
-P0 ≈ 8.5 dev-days — the largest of the three specs (category semantics and the
-budget tree grew it past the original 7); do not start P1 before the first
+P0 ≈ 8.5 dev-days (category semantics and the budget tree grew it past the
+original 7); do not start P1 before the first
 reconciliation succeeds.
+
+**Backup gate.** Do not begin Goal 1's month of real logging until SPEC-09
+P0.2–P0.4 (nightly backup + exercised restore drill) is green.
 
 ## 11. Open questions
 
 - **(product, non-blocking)** Life-stream privacy: should `bank:*` events carry
   amounts, or only counts ("logged 3 transactions today")? Payload above carries
-  amounts; the *consumer* (notification module) decides display — revisit there.
+  amounts; the *consumer* (SPEC-06's life stream) decides display. SPEC-06 §11
+  defaults to show for n=1; revisit at household tenancy.
 - **(product, resolved for v1)** Opening-balance date semantics: timeless (applies
   before all transactions) — correct for current balances and monthly flow totals,
   which is all v1 computes (`opening_balance` never enters a flow sum, so P0.6
@@ -603,3 +759,11 @@ reconciliation succeeds.
   write semantics defined (P0.5); dashboard recency keyed on `created_at` (P0.6);
   `user_id` identity-anchor FK added to every table (§6); opening-balance date
   semantics resolved as timeless for v1 (§11).
+- **2026-09-30** — spec-gap fixes: account ownership and currency rules on
+  transaction/transfer writes, server-assigned `transfer_id` (P0.2); archive
+  enforcement (P0.1); transfer PATCH contract (P0.3); `kind`-immutability status
+  (P0.4); percent rounding (P0.5); dashboard contract and month default (P0.6);
+  two events per transfer write (P0.7); no wildcard bypass (P0.8); receipt module
+  boundary (P1.10); §6 indexes aligned to `0014` plus a follow-up integrity
+  migration; §7 month rule and Problem types `bank/not-found`,
+  `bank/account-archived`, `bank/invalid-month`; §8 categories page.
