@@ -1,6 +1,6 @@
 # SPEC-14 — Music Vertical (tracks, bulk import, enrichment, catalogue lookup, playlists, player)
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `music` (`backend/internal/modules/music/`) · **Depends on:** SPEC-01 (asset ingest, `/assets/{id}/original`, image variants for covers, `media:asset_deleted`); `platform/events` fan-out (SPEC-01 P0.6); SPEC-04 for the one consumer of its event; the playback-resume question is SPEC-07's (Decision 2026-09-30, Audio)
 **Upstream:** as-built spec, written retroactively from shipped code — migrations `0022_music_core` (`f11cf3f`), `0038_music_imports` (`6bf7c0b`), `0039_music_metadata_lookup` (`eaa0c36`), `0041_music_playlists` (`c3f3d00`); `git log --oneline -- backend/internal/modules/music` lists the rest. No brief or earlier spec existed; the root [`CLAUDE.md`](../../../CLAUDE.md) "Bulk music import", "Cover art is a SECOND pass", "Catalogue lookup" and "`/assets/{id}/original` must stay a `ServeContent` route" bullets were the only written description and are restated here as requirements. · **Refs:** [ADR-04](../../adr/04-storage-tier-budget.md) (same S3 client, MinIO dev / R2 prod), [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md) (entertainment facet), [ADR-10](../../adr/10-openapi-contract-direction.md) (spec-first), feature-inventory `D-7` (Problem types), `D-20` (per-domain progress), `D-22` (genres), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-04 (`notify:on_track_published`, the bell); the `layout` module (home-rail widget key `music`, menu item `/library/music`, `0036`); SPEC-07 `/continue` (not today — §11 (b)); SPEC-09 P1.7 takeout (§6)
@@ -82,8 +82,8 @@ is the contract; §12 lists where the code still diverges from it.
 
 Permission codes are the ones `0022_music_core` seeds (and `0003_account_rbac`
 before it): `music:read` (granted to `guest` and `user`), `music:write:own` and
-`music:publish:own` (`creator`), `music:write:any` and `music:publish:any`
-(`editor`), `music:delete:any` (`admin`). "Owner-or-X" routes use
+`music:publish:own` (`creator`; widened to `user` by P1.4), `music:write:any`
+and `music:publish:any` (`editor`), `music:delete:any` (`admin`). "Owner-or-X" routes use
 `RequireOwnerOrPermission(engine, X, byTrack)` built in `cmd/api/main.go`; a
 missing track answers 404 there. All routes sit under `authTenant`
 (RequireAuth + RequireTenant), so every request runs in one tenant-scoped
@@ -499,6 +499,19 @@ TanStack (`["tracks", …]`, `["playlists"]`). The D-34 matcher covers them thro
 - **P1.3 `bulk` queue.** `music:import_zip`, `music:enrich_track` and
   `music:lookup_track` leave the light server's `default` queue for the
   dedicated `bulk` server SPEC-02 P1.7 specifies (§12 row 11).
+- **P1.4 `user` may author music** *(Decision 2026-10-01b (D4); unbuilt — §12
+  row 26)*. A music-owned migration `000N_music_user_write_grant` (the
+  `0025_comic_user_write_grant` shape: `WITH grants(...)`, `ON CONFLICT DO
+  NOTHING`, idempotent) grants `music:write:own` and `music:publish:own` to
+  `user`, so a second approved account can create tracks, import, enrich, look
+  up and keep playlists — playlists are personal, not catalogue. `:any` codes
+  and `music:delete:any` stay with `editor` / `admin`. Uploading audio and
+  covers also needs F009 — `user` holding `assets:write:own` (SPEC-01 §11
+  row 9) — once uploads enforce that code. The down migration deletes only
+  those two `role_permissions` rows.
+  *AC:* given an account holding only `user`, then `POST /tracks`, `POST
+  /tracks/imports` and `POST /playlists` succeed and publishing its own track
+  is 200; PATCH on another member's track is still 403 *(TC-MUS-004)*.
 
 ### P2 — design for, don't build
 
@@ -552,7 +565,9 @@ created are exported as tracks.
 
 All paths are under `/api/v1`, all `security: [{bearerAuth: []}]`, all behind
 `authTenant`. Every operation carries `x-required-permission` per the specs
-README AuthZ encoding (owner-or routes: `{owner_or: <code>}`).
+README AuthZ encoding (owner-or routes: `{owner_or: <code>}`). Every
+`music:write:own` row below is open to `user` once P1.4 lands (`creator` and up
+on `HEAD`).
 
 | Method | Path | Permission | Request | Success | Errors |
 |---|---|---|---|---|---|
@@ -665,11 +680,10 @@ wait / 15 s HTTP / 8 MiB cover.
 
 ## 11. Open questions
 
-- **(a) `user` grant of `music:write:own`.** Today only `creator` and above can
-  create tracks, import, or make playlists; a `user` can only list. At n=1 the
-  owner is `superadmin` and nothing breaks; a second approved account gets a
-  read-only music library. Grant `music:write:own` to `user` (playlists are
-  personal, not catalogue), or keep music authoring creator-tier?
+(a) — whether `user` may author music — was decided on 2026-10-01: yes
+(Decision 2026-10-01b (D4), P1.4); the remaining questions keep their letters
+so citations hold.
+
 - **(b) Resume and `/continue` for tracks.** SPEC-07 (Decision 2026-09-30,
   Audio) makes audio *assets* playable with progress. Should the music player
   save progress through media's progress API on the track's audio asset (tracks
@@ -696,7 +710,8 @@ code: `git diff --stat 99b5a0b HEAD -- backend frontend shared` is empty). The
 spec text above is the target; this section lists every place the shipped code
 still diverges from it. Rows are ordered by severity: data loss or silently
 wrong data first, then integrity, authorisation, contract, UX, hygiene; row 25,
-found last, is appended (AuthZ) rather than renumbering the others. A row
+found last, is appended (AuthZ) rather than renumbering the others, and so is
+row 26 (P1, added by Decision 2026-10-01b). A row
 closes when the code matches the requirement it cites and its
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) row is regraded
 on a named test. Paths are relative to `backend/internal/modules/music/` unless
@@ -725,12 +740,13 @@ writing SPEC-14, 2026-10-01" unless it names another.
 | 17 | P0.6, P0.7, P0.8 `origin = import` | Assets music ingests carry `origin='import'`, so the bell is not flooded. | `mediaapi.Ingest` has no `origin` and always records `upload` (SPEC-01 §11 row 10); the zip importer, enrichment and lookup all ingest through it, and `completeAudio` publishes `media:asset_ready` per asset, which notify suppresses only for `origin='import'` — so a 300-track zip can put 300 entries in the bell. | **backend:** pass `import` from `importOne`, `ingestCover` (once SPEC-01 row 10 adds the parameter). **test:** TC-MUS-067. | F038; SPEC-01 §11 row 10; SPEC-04 §11 row 8 |
 | 18 | P0.5 empty MIME | A file accepted by extension uploads with the content type its extension maps to. | `BulkImportModal.tsx` `pick` admits a file by extension when `file.type` is empty, but `lib/music.ts` `uploadAudioAsset` throws "Chỉ chấp nhận tệp âm thanh." unless `file.type` starts with `audio/` — such `.wma`/`.opus` files always fail. | **frontend:** derive the type from the extension (mirror `importAudioExt`) when `file.type` is empty, and send it as `content_type`. **test:** TC-MUS-052. | — |
 | 19 | P0.5 parity | One rule set; a shared fixture table proves both implementations. | `frontend/src/lib/music.ts` `metaFromFilename` vs `import.go` `titleFromFilename`: the JS regex allows any whitespace (`\s*`) before the separator, Go only spaces (`TrimLeft(…, " ")`); the JS extension strip (`/\.[^.]+$/`) leaves a trailing `.` that Go's `filepath.Ext` removes; a blank first part becomes artist `""` in JS (sent as `""` by `BulkImportModal`) but nil in Go. Only Go has tests (`import_test.go`). | **backend:** accept tabs like the JS port (or vice versa — pick one in the fixture). **frontend:** match the trailing-dot and blank-artist rules. **test:** TC-MUS-050 (one fixture table, run by `import_test.go` and a new `frontend/src/lib/music.test.ts`). | — |
-| 20 | §6 permissions | Every seeded music code is required by some route, or removed. | `music:publish:own` (`0022`) and `music:publish` (`0003`) are seeded and granted (`creator`, `editor`) but no route requires them: the owner publishes through `PublishMW` (owner or `music:publish:any`) without any code. | **migration:** delete both codes and their grants, or **backend:** require `music:publish:own` for the owner leg — decide with §11 (a). **test:** TC-MUS-002. | — |
+| 20 | §6 permissions | Every seeded music code is required by some route, or removed. | `music:publish:own` (`0022`) and `music:publish` (`0003`) are seeded and granted (`creator`, `editor`) but no route requires them: the owner publishes through `PublishMW` (owner or `music:publish:any`) without any code. | **backend:** require `music:publish:own` for the owner leg (`RequirePermission` chained before `PublishMW`, as SPEC-15 P0.4 / SPEC-16 P0.5 specify) — no longer a lock-out for `user`, since row 26 grants it (Decision 2026-10-01b (D4)); `music:publish` (`0003`, two segments, `editor`) satisfies `music:publish:any` and may stay. **test:** TC-MUS-002. | — |
 | 21 | P2; §6 hygiene | No dead queries or indexes; bounded free-text columns; an index for the owner list. | `query/music.sql` `ListTracksNeedingLookup` has no caller and `music_tracks_lookup_pending_idx` serves only it; `ListOwnTracks` orders by `(updated_at, id)` with only `music_tracks_owner_idx (owner_user_id)`; `artist`, `album`, `description`, `genre` and `music_playlists.description` have no length bound (titles do). | **migration:** `music_tracks_owner_updated_idx (owner_user_id, updated_at DESC, id DESC)`; length CHECKs (`NOT VALID` then `VALIDATE`); drop the unused index or build the P2 sweep. **backend:** delete the query or use it. **test:** TC-MUS-003. | — |
 | 22 | §7 OpenAPI | Every route declared with its real status codes, `security`, and `x-required-permission`. | `shared/openapi.yaml` has no `/playlists*` and no `/tracks/bulk-status`; the seven `/tracks/imports*` and `/tracks/{id}/enrich|lookup` operations declare no `security`; `uploadMusicImportZip` documents 400 for "not a zip, or over a limit" (the handler answers 422, and "not a zip" is detected by the worker, not the upload); `enrichTrack` documents 400 for "no audio" (422); no list documents 400 `music/invalid-cursor`; `listMyTracks` omits 403; no operation carries `x-required-permission`; `/tracks/{id}` reuses the `AssetID` parameter. | **openapi:** add the eight missing operations and their schemas; fix the codes; add `security` and the annotations (with the cross-cutting retrofit). Commit regenerated `api.gen.go` + `types.gen.ts`. **test:** TC-MUS-124. | ADR-10; README AuthZ |
 | 23 | §7 Problem types | Every emitted music slug is in `problems.ts`. | `frontend/src/lib/problems.ts` registers `music/lookup-disabled`, `music/playlist-not-found`, `music/playlist-exists`, `music/invalid-playlist`; missing: `music/not-found`, `music/validation`, `music/invalid-cursor`, `music/invalid-audio-asset`, `music/invalid-cover-asset`, `music/not-publishable`, `music/import-not-found` (and `music/import-already-uploaded` with row 2). | **frontend:** add them to `ProblemType` and `PROBLEM_MESSAGES`. **test:** TC-MUS-123. | README Errors |
 | 24 | P1.1, P1.2 | Lookup results and per-track passes are visible; an import survives a reload. | No `.tsx` reads `lookup_status`, `lookup_note`, `release_year` or `genre`; `lib/music.ts` `enrichTrack` and `lookupTrack` have no caller; nothing calls `GET /tracks/imports` (`lib/music.ts` has no `listImports`). | **frontend:** as P1.1/P1.2 specify. **test:** TC-MUS-111…113. | — |
 | 25 | P0.2 / §7 owner-guarded routes (CC-3) | A track the caller may not see is 404 `music/not-found` on every route, byte-identical to a missing one; never 403. | `PATCH`, `DELETE`, `publish`, `unpublish`, `enrich` and `lookup` on `/tracks/{id}` sit behind `RequireOwnerOrPermission` (`backend/internal/modules/account/middleware/rbac.go`) with `cmd/api`'s `byTrack` extractor, which resolves **any** track in the tenant: another member's draft answers **403** `about:blank` (confirming it exists) and a missing or malformed id **404 `about:blank`**, not `music/not-found`. Latent while each user has a personal organisation (RLS hides other tenants' rows, so they read as missing). `http_test.go` mounts the module without the guards, so its 404 assertions do not see this. | **backend:** the `byTrack` extractor resolves only rows the caller may read (published or own) and maps the miss to `music/not-found` (a stranger's draft is then a miss; a published track a non-owner lacks the elevated code for stays 403, since its existence is public). **test:** TC-MUS-017 over the real guard. | SPEC-02 F119 pattern; CC-3 |
+| 26 | P1.4 `user` authoring grant | `user` holds `music:write:own` and `music:publish:own` (a music-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0022_music_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from every `music:write:own` route (`module.go` `m.perm("music:write:own")` on `/tracks`, `/tracks/mine`, `/tracks/bulk-status`, `/tracks/imports*`, `/playlists*` writes); `MusicIndexView.tsx`'s **Mine** tab already handles that 403. | **migration:** `000N_music_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-MUS-004. Lands with or after F009 (SPEC-01 §11 row 9); row 20 then requires `music:publish:own`. | Decision 2026-10-01b (D4) |
 
 **Already matching on HEAD.**
 - Tenancy: all four tables carry `tenant_id`, the index and the FORCE RLS

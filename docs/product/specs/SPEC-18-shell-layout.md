@@ -1,9 +1,9 @@
 # SPEC-18 — Shell Layout (data-driven navigation menu + dashboard widget placement)
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `layout` (`backend/internal/modules/layout/`) + frontend shell (`SidebarLeft`, `HomeView` rails, `/admin/layout` editor, `widget/registry.ts`) · **Depends on:** `account` — `accountapi.HasPermission` (per-caller filtering; implemented for this module, it had been a stub returning `false`), `RequireAuth`, and `RequirePermission` built by `cmd/api` from the RBAC engine; `platform/audit` (`D-25`); the frontend widget registry
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Module:** `layout` (`backend/internal/modules/layout/`) + frontend shell (`SidebarLeft`, `HomeView` rails, `/admin/layout` editor, `widget/registry.ts`) · **Depends on:** `account` — `accountapi.HasPermission` (per-caller filtering; implemented for this module, it had been a stub returning `false`), `RequireAuth`, and `RequirePermission` built by `cmd/api` from the RBAC engine; `platform/audit` (`D-25`); `platform/events` and SPEC-04 P1.5 (the `layout:changed` consumer, P1.4); the frontend widget registry
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`0036_layout_core`, `internal/modules/layout`, `frontend/src/lib/layout.ts`, `AdminLayoutView.tsx`) and the decisions it implements — the root `CLAUDE.md` "Layout module — the shell is data now (migration 0036)", feature-inventory §9.11 Widgets (`Manage Widgets.html`, customisable rails), [ADR-08](../../adr/08-life-os-pivot.md) (the home is the life-stream surface with a facet widget rail) · **Refs:** [ADR-02](../../adr/02-rbac-model-reconciliation.md) (role hierarchy is canonical; the editor's `permission` field uses its grammar), `D-7` (RFC 7807 + i18n keys), `D-25` (audit), `D-29` (envelopes; composite reads keep named arrays), `D-32`/`D-33`/`D-34` (frontend), [ADR-07](../../adr/07-tenancy-rls-model.md) (why these tables are global)
-**Downstream consumers:** every authenticated page (the left menu); the home dashboard rails ([SPEC-06](SPEC-06-life-stream-home.md) P0.4 — each widget it specifies is a row here plus a registry entry); any spec that adds a widget (its migration seeds a `layout_widgets` row)
+**Downstream consumers:** every authenticated page (the left menu); the home dashboard rails ([SPEC-06](SPEC-06-life-stream-home.md) P0.4 — each widget it specifies is a row here plus a registry entry); any spec that adds a widget (its migration seeds a `layout_widgets` row); notify (`notify:on_layout_changed`, SPEC-04 P1.5 — planned)
 
 ---
 
@@ -48,8 +48,9 @@ changed nothing visible — the seed reproduces the hardcoded shell row for row.
   an icon; no nested menus, no external links, no arbitrary HTML.
 - **No settings for the widgets themselves** (e.g. the weather location) — each
   widget owns its own configuration (SPEC-06 P0.4).
-- **No life-stream events.** Reordering a menu is not a moment in anyone's day;
-  see §8 and §10 Q1 for the ADR-08 rule.
+- **No life-stream events.** Reordering a menu is not a moment in anyone's day:
+  `layout:changed` (P1.4) is an admin notice for the bell, not projected into
+  the stream.
 
 ## 4. User stories
 
@@ -78,9 +79,9 @@ diverges, the requirement carries *(code follow-up)* and §11 has the row.
 (sqlc + `adapter.go`); a `sqlc.yaml` block; migration `0036_layout_core`; a
 `module-layout-isolation` depguard block; constructed and mounted in
 `cmd/api/main.go` (`layout.New` + `layoutMod.MountHTTP(r)`). It owns no Asynq
-task and is absent from `cmd/worker/main.go`. It has **no `api/` package**:
-nothing outside the module reads the layout; one is added (MODULES.md §8) the
-first time another module needs to.
+task and is absent from `cmd/worker/main.go`. On `HEAD` it has **no `api/`
+package** — nothing outside the module reads the layout; P1.4 adds one
+(MODULES.md §8) holding only its event name and payload.
 
 The tables are global (§6), so the routes take plain `RequireAuth`, not
 `authTenant`: there is no tenant row to fence and no tenant transaction is
@@ -256,7 +257,8 @@ check exists — §11 row 9.)*
 A successful save writes `layout.menu.saved` (metadata `{items: n}`) or
 `layout.widgets.saved` (`{widgets: n}`) through `platform/audit`, target kind
 `layout`, after the transaction commits. Best-effort per the audit rule: a
-failed audit write never fails the save.
+failed audit write never fails the save. P1.4's `layout:changed` is published
+at the same point, beside the audit row, not instead of it.
 
 ### P0.7 — Frontend
 
@@ -327,6 +329,28 @@ visible; `SidebarLeft`'s `FALLBACK` equals the 12 ungated rows.
   reordered, not only the count.
 - **P1.3 Icon picker.** The editor offers the sprite's icon names instead of a
   free-text field; the API accepts only known names.
+- **P1.4 `layout:changed` event** *(Decision 2026-10-01b (D3); unbuilt — §11
+  row 14)*. Layout is not exempt from ADR-08's "≥ 1 bus event": each successful
+  save publishes **`layout:changed`** `{event_id, occurred_at, part: "menu" |
+  "widgets", actor_id, actor_name, count}` through `platform/events` after its
+  transaction commits (the point P0.6 audits at); a failed save publishes
+  nothing, and a publish error is logged and never fails the save. `count` is
+  the number of rows saved (the audit metadata's `items` / `widgets`);
+  `actor_name` comes from the caller's token. The name and the payload struct
+  live in a new `layout/api` package; `Deps.Events` is the publisher, and
+  `cmd/api` registers `Subscribe("layout:changed",
+  "notify:on_layout_changed")`. Notify tells every superadmin except the actor
+  (SPEC-04 P1.5, type `layout.changed`, link `/admin/layout`).
+  **One event, not `layout:menu_saved` + `layout:widgets_saved`:** the two
+  saves differ only in which half of one configuration changed, they share
+  the permission, the editor and the audience, and the only consumer renders
+  both the same way; one name means one consumer task and one notify type,
+  and a future consumer that cares about one half filters on `part`. *AC:*
+  given a menu save, then exactly one `layout:changed` with `part: "menu"`,
+  the saver as `actor_id` and `count` = the submitted rows is enqueued after
+  commit *(TC-LAY-050)*; given a 422 or a rolled-back save, then none
+  *(TC-LAY-051)*; given a widget save, then `part: "widgets"`
+  *(TC-LAY-052)*.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -335,8 +359,8 @@ visible; `SidebarLeft`'s `FALLBACK` equals the 12 ungated rows.
   `bank_categories` shared-seed precedent), resolved most-specific-first.
 - **Per-user hide/collapse** of widgets, as a user preference layered on top of
   the instance placement (not a copy of it).
-- **A `layout/api` package** once another module (e.g. a future onboarding
-  checklist) needs to read the menu.
+- **A read API in `layout/api`** (the package P1.4 creates for its event) once
+  another module (e.g. a future onboarding checklist) needs to read the menu.
 
 ## 6. Data model — migration `0036_layout_core`
 
@@ -431,13 +455,15 @@ both registered in `frontend/src/lib/problems.ts`; P1.1 adds `layout/stale`
 
 ## 8. Events
 
-**None.** The module publishes no event and consumes none; nothing downstream
-cares when a menu is reordered, and the audit log (P0.6) records the change.
-[events.md](../../reference/events.md) has no `layout:*` row, which matches the
-code — **no drift**. This is a deliberate exception to ADR-08's "every new
-domain module must emit at least one bus event from its first release" (layout
-is shell configuration, not a life domain); the exception is not recorded
-anywhere yet — §10 Q1.
+| Name | Kind | Payload | Emitted by | Consumer |
+|---|---|---|---|---|
+| `layout:changed` | event — **planned** (P1.4) | `{event_id, occurred_at, part, actor_id, actor_name, count}` (`layoutapi.ChangedEvent`) | `Handler.SaveMenu` / `SaveWidgets`, after commit, in `cmd/api` | `notify:on_layout_changed` (SPEC-04 P1.5): a bell entry for every superadmin except the saver |
+
+Decision 2026-10-01b (D3) settled ADR-08's "every new domain module must emit
+at least one bus event" for this module: no exemption. `HEAD` publishes nothing
+and consumes nothing (§11 row 14); [events.md](../../reference/events.md)
+carries the event as planned. The module consumes no event, and the stream does
+not project this one.
 
 ## 9. Success metrics (n=1 honest)
 
@@ -453,11 +479,10 @@ anywhere yet — §10 Q1.
 
 ## 10. Open questions
 
-- **Q1 (owner) — ADR-08 event rule.** Record that `layout` (shell
-  configuration) is exempt from "every new domain module emits ≥ 1 bus event",
-  or ask for a `layout:changed` event (no consumer) to satisfy the letter of the
-  rule? The exemption needs a sentence in ADR-08's Consequences or the specs
-  README Events bullet.
+Q1 (the ADR-08 event rule) was decided on 2026-10-01 — Decision 2026-10-01b
+(D3), now P1.4 and §8; the remaining questions keep their numbers so citations
+hold.
+
 - **Q2 (owner, non-blocking) — Per-tenant shells.** When households arrive, does
   a household get its own menu (P2), or does the instance layout stay global?
   Decides whether `tenant_id` lands now as nullable (cheap) or later.
@@ -470,7 +495,8 @@ The baseline is `main` @ `99b5a0b` (`git log 99b5a0b..HEAD -- backend frontend
 shared` is empty: the docs commits on top of it change no code). The spec text
 above is the target; this section lists every place the shipped code diverges
 from it. Rows are ordered by severity: security first, then integrity (wrong
-rows shown or lost), then UX, contract, tests and hygiene, then unbuilt P1. A
+rows shown or lost), then UX, contract, tests and hygiene, then unbuilt P1;
+row 14 (P1, added by Decision 2026-10-01b) is appended after row 13. A
 row closes when the code matches the requirement it cites and a
 TRACEABILITY-MATRIX row for SPEC-18 is graded on a named test. The module lives
 in `backend/internal/modules/layout/`.
@@ -488,8 +514,9 @@ in `backend/internal/modules/layout/`.
 | 9 | P0.5 seed ⇔ registry parity | A mechanical check that the keys seeded by `*_layout_*` migrations equal `WIDGET_REGISTRY`'s keys. | Nothing checks it. `registry.ts` and the `0036` seed agree today (9 keys each), but a widget added to one side only either never renders (seeded, not registered — skipped silently) or can never be placed (registered, not seeded). | **test:** a check in CI (e.g. a script in the `link-check` job, or a vitest that reads the migrations) comparing the two key sets (TC-LAY-034). | Found while writing SPEC-18, 2026-10-01 |
 | 10 | P0.7 route gate | `/admin/:path*` is in `config.matcher`. | `frontend/src/middleware.ts` `config.matcher` = `["/", "/login", "/register", "/upload", "/library/:path*", "/bank/:path*", "/people/:path*"]`; `app/(app)/admin/layout/page.tsx` (and `/admin/users`, `/admin/roles`) render without the D-34 edge gate — the API still refuses, so this is a UX gap (a signed-out visitor gets the editor's error state, not `/login`). | **frontend:** add `'/admin/:path*'` together with the other F032 routes (`/weather`, `/calendar`). **test:** TC-LAY-045. | F032; backlog item 15 (extends it to `/admin`) |
 | 11 | P0.2–P0.5 HTTP and adapter tests | Status codes over the real router; the transactional save against a database. | `service_test.go` tests the service with a fake repository only. Nothing asserts 401 on `/layout`, 403 on `/admin/*`, the response shape, that `DeleteMenuItemsExcept` spares `is_system` rows, or that a failing upsert rolls back the whole save. | **test:** `http_test.go` over `MountHTTP` with `servertest` (TC-LAY-005, 011, 023, 030); an integration test on the RLS harness for the adapter (TC-LAY-027, 028). | Found while writing SPEC-18, 2026-10-01 |
-| 12 | Hygiene — stale statements in code and contract | Comments and descriptions match the code: migration `0036`; one `is_system` row; no `layout/api` package. | `backend/.golangci.yml` (layout block) and `backend/sqlc.yaml` (layout block) say "(0035)"; `HomeView.tsx` `WidgetRail` doc says "migration 0035"; `types.go` package doc says "Other modules import only layout/api" (there is none, `module.go` says so); `shared/openapi.yaml` `LayoutMenuItem.is_system` and `lib/layout.ts` `MenuItem.is_system` say "Seeded rows … never deleted/deletable", but only `admin-layout` is system; the seeded label and `FALLBACK` read "Commic". | **backend:** fix the four comments. **openapi:** "The editor's own link (`admin-layout`); renameable, reorderable, hideable, never deleted." **frontend:** same for the TS doc; "Comic" in `FALLBACK`. **migration:** none (the label is data; the operator renames it, or a `000N_layout_*` UPDATE). | Found while writing SPEC-18, 2026-10-01 |
+| 12 | Hygiene — stale statements in code and contract | Comments and descriptions match the code: migration `0036`; one `is_system` row; a `layout/api` package only once P1.4 adds it. | `backend/.golangci.yml` (layout block) and `backend/sqlc.yaml` (layout block) say "(0035)"; `HomeView.tsx` `WidgetRail` doc says "migration 0035"; `types.go` package doc says "Other modules import only layout/api" (there is none, `module.go` says so); `shared/openapi.yaml` `LayoutMenuItem.is_system` and `lib/layout.ts` `MenuItem.is_system` say "Seeded rows … never deleted/deletable", but only `admin-layout` is system; the seeded label and `FALLBACK` read "Commic". | **backend:** fix the four comments. **openapi:** "The editor's own link (`admin-layout`); renameable, reorderable, hideable, never deleted." **frontend:** same for the TS doc; "Comic" in `FALLBACK`. **migration:** none (the label is data; the operator renames it, or a `000N_layout_*` UPDATE). | Found while writing SPEC-18, 2026-10-01 |
 | 13 | P1.1–P1.3 | Optimistic concurrency (`layout/stale`), audit diff, icon picker. | Not built: both saves are last-write-wins; audit metadata is a count; `icon` is free text. | **backend · openapi · frontend · test:** as P1.1–P1.3. | This spec (P1) |
+| 14 | P1.4 `layout:changed` | Each successful save publishes `layout:changed {event_id, occurred_at, part, actor_id, actor_name, count}` after commit; `layout/api` holds the name and payload; `cmd/api` subscribes `notify:on_layout_changed`. | Not built: `module.go` `Deps` has no publisher and says there is no `api/` package; `handler.go` `SaveMenu` / `SaveWidgets` write the audit row only; `backend/cmd/api/main.go` subscribes no `layout:*` name. | **backend:** `layout/api` (constant + `ChangedEvent`); `Deps.Events`; publish beside the audit write in both handlers; the `Subscribe` edge in `cmd/api` (the consumer is SPEC-04 §11 row 23); a depguard allowance for `layout/api` if the isolation block needs one. **docs:** events.md row planned → live in the same PR. **test:** TC-LAY-050…052. | Decision 2026-10-01b (D3) |
 
 **Already matching on HEAD.**
 - `0036_layout_core` ships both tables, the slot CHECK, both order indexes, and
@@ -520,7 +547,6 @@ in `backend/internal/modules/layout/`.
   `is_system`, no "add widget", invalidation of `["layout"]` after a save; both
   slugs registered in `problems.ts`; `views.adminLayout` resolved through the
   template registry.
-- No `layout:*` event, matching events.md.
 
 **Test evidence to add or fix.**
 - The two `href` bypasses (TC-LAY-021), permission validation (TC-LAY-026),
@@ -532,6 +558,6 @@ in `backend/internal/modules/layout/`.
 
 Per-user or per-tenant layouts (P2), nested or external menu links, a widget
 catalogue in the database, widget-level settings, page building, a public (signed-out)
-shell, layout events and stream projection, and theming (the template version
+shell, stream projection of `layout:changed`, and theming (the template version
 switch, `NEXT_PUBLIC_TEMPLATE_VERSION`, is a build-time choice owned by
 `frontend/src/templates/README.md`, not data).

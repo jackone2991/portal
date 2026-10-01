@@ -1,6 +1,6 @@
 # SPEC-16 — Story Vertical (long-form text: stories and chapters)
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `story` · **Depends on:** SPEC-01 (image assets for covers, `media:asset_deleted`); pattern copied from SPEC-02 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-02](SPEC-02-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-04 (`notify:on_story_published` bell), SPEC-07 (a future `story` leg of `/continue`), SPEC-09 P1.7 (takeout)
@@ -236,7 +236,7 @@ nil or failing publisher is logged and never fails a committed publish.
 |---|---|
 | list published, read a published story, read its chapters | `stories:read` (`RequirePermission`) |
 | read own draft (detail, chapters) | owner check in `Service.GetStory` / `ChaptersVisible` |
-| create a story, list own | `stories:write:own` (`RequirePermission`) |
+| create a story, list own | `stories:write:own` (`RequirePermission`) — held by `user` and up once P1.3 lands; `creator` and up on `HEAD` |
 | update a story; add or reorder its chapters | owner, or `stories:write:any` — `RequireOwnerOrPermission(engine, "stories:write:any", byStory)` |
 | update or delete a chapter | owner, or `stories:write:any`, resolved from the chapter id (`byStoryChapter`) |
 | delete a story | owner, or `stories:delete:any` |
@@ -250,9 +250,9 @@ tenant.)*
 **Seeding** (`0023_story_core`): `stories:read` → `user`; `stories:write:own` and
 `stories:publish:own` → `creator`; `stories:write:any` and `stories:publish:any`
 → `editor`; `stories:delete:any` → `admin`. 0003 had already seeded
-`stories:read` to `guest` and the two-segment `stories:publish` to `editor`. A
-plain `user` reads but cannot write (SPEC-15 §10 asks the same question for
-movies).
+`stories:read` to `guest` and the two-segment `stories:publish` to `editor`. On
+`HEAD` a plain `user` reads but cannot write; P1.3 widens the two `:own` codes
+to `user`, as for movies (SPEC-15 P1.3) and comics (`0025`).
 
 **Acceptance criteria.**
 - Given a story with no chapters, then publish is 422 `story/not-publishable`
@@ -291,8 +291,9 @@ idempotent and skips, without retrying, a payload that does not decode or whose
 
 ### P1 — next
 
-- **P1.1 Reader and manager UI.** `/library/novel` (published + mine) and
-  `/library/novel/[id]` replace today's placeholder: cover, blurb, table of
+- **P1.1 Reader and manager UI** *(committed scope — Decision 2026-10-01b
+  (D2): story is finished to the music standard, not reverted; unbuilt)*.
+  `/library/novel` (published + mine) and `/library/novel/[id]` replace today's placeholder: cover, blurb, table of
   contents from `StoryDetail.chapters`, and a reader that fetches
   `GET /stories/{id}/chapters` and renders sanitised Markdown one chapter at a
   time with previous/next. The owner's manager adds metadata and cover upload
@@ -313,6 +314,17 @@ idempotent and skips, without retrying, a payload that does not decode or whose
   `storyapi.Continue` returning SPEC-07 items with `module: "story"`. *AC:*
   closing the reader mid-chapter and reopening another day resumes in that
   chapter; the story appears on `/continue`.
+- **P1.3 `user` may author stories** *(Decision 2026-10-01b (D4); unbuilt —
+  §11 row 20)*. A story-owned migration `000N_story_user_write_grant` (the
+  `0025_comic_user_write_grant` shape: `WITH grants(...)`, `ON CONFLICT DO
+  NOTHING`, idempotent) grants `stories:write:own` and `stories:publish:own` to
+  `user`; the role hierarchy carries them upward. `:any` codes and
+  `stories:delete:any` stay with `editor` / `admin`. A cover upload needs F009
+  as well — `user` holding `assets:write:own` (SPEC-01 §11 row 9). The down
+  migration deletes only those two `role_permissions` rows. *AC:* given an
+  account holding only `user`, then `POST /stories`, adding a chapter and
+  publishing its own story succeed; writing another member's story is still
+  403 *(TC-STY-070)*.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -386,13 +398,13 @@ id → 404 `about:blank`.
 | Method | Path | Permission | Request | 2xx response | Errors |
 |---|---|---|---|---|---|
 | GET | `/stories?cursor=&limit=` | `stories:read` | — | 200 `{items: Story[], next_cursor?}` | 400 `story/invalid-cursor` |
-| GET | `/stories/mine?cursor=&limit=` | `stories:write:own` | — | 200 `{items: Story[], next_cursor?}` | 400 `story/invalid-cursor`, 403 |
-| POST | `/stories` | `stories:write:own` | `StoryCreate {title, description?, cover_asset_id?}` | 201 `Story` | 422 `story/validation`, `story/invalid-cover-asset` |
+| GET | `/stories/mine?cursor=&limit=` | `stories:write:own` (held by `user` after P1.3) | — | 200 `{items: Story[], next_cursor?}` | 400 `story/invalid-cursor`, 403 |
+| POST | `/stories` | `stories:write:own` (held by `user` after P1.3) | `StoryCreate {title, description?, cover_asset_id?}` | 201 `Story` | 422 `story/validation`, `story/invalid-cover-asset` |
 | GET | `/stories/{id}` | `stories:read` (draft: owner only) | — | 200 `StoryDetail` | 404 `story/not-found` |
 | PATCH | `/stories/{id}` | owner, or `stories:write:any` | `StoryPatch` (absent = unchanged, `null` clears) | 200 `Story` | 404, 422 as POST |
 | DELETE | `/stories/{id}` | owner, or `stories:delete:any` | — | 204 | 404 `story/not-found` |
-| POST | `/stories/{id}/publish` | `stories:publish:own`, then owner or `stories:publish:any` | — | 200 `Story` | 422 `story/not-publishable` (+ `chapters`), 404 |
-| POST | `/stories/{id}/unpublish` | `stories:publish:own`, then owner or `stories:publish:any` | — | 200 `Story` | 404 |
+| POST | `/stories/{id}/publish` | `stories:publish:own` (held by `user` after P1.3), then owner or `stories:publish:any` | — | 200 `Story` | 422 `story/not-publishable` (+ `chapters`), 404 |
+| POST | `/stories/{id}/unpublish` | `stories:publish:own` (held by `user` after P1.3), then owner or `stories:publish:any` | — | 200 `Story` | 404 |
 | GET | `/stories/{id}/chapters` | `stories:read` (draft: owner only) | — | 200 `{items: StoryChapter[]}` | 404 `story/not-found` |
 | POST | `/stories/{id}/chapters` | owner, or `stories:write:any` | `StoryChapterCreate {title, body_md?, sort_order?}` | 201 `StoryChapter` | 422 `story/validation`, 404 |
 | PUT | `/stories/{id}/chapters:order` | owner, or `stories:write:any` | `ReorderRequest {order: [uuid]}` — the complete set | 204 | 422 `story/validation`, 404 |
@@ -443,11 +455,10 @@ link lands on a placeholder page until P1.1.
 
 ## 10. Open questions
 
-- **(product, blocking P1.1)** Finish or revert — [backlog.md](../backlog.md) P2
-  line 28 applies to story exactly as to movie (SPEC-15 §10).
-- **(product, non-blocking)** Who may write? `stories:write:own` is `creator`
-  and up; comic moved the same codes to `user` in `0025`. A personal shelf
-  argues for `user`.
+Two questions were decided on 2026-10-01 (Decision 2026-10-01b): story is
+finished, not reverted (D2 — P1.1 is committed scope), and `user` may write
+(D4 — P1.3).
+
 - **(product, non-blocking)** Published invariant after publish: keep the
   publish-time-only check (as shipped), or adopt SPEC-02 P0.2 (a) and hide
   blank chapters from non-owner readers and from `chapter_count`?
@@ -457,7 +468,8 @@ link lands on a placeholder page until P1.1.
 Baseline: `main` @ `99b5a0b` (the docs commits on top change no code). The spec
 text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
-integrity, authorization, contract, hygiene and unbuilt work. A row closes when
+integrity, authorization, contract, hygiene and unbuilt work; row 20 (P1, added
+by Decision 2026-10-01b) is appended after row 19. A row closes when
 the code matches the requirement it cites and the SPEC-16 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
@@ -483,6 +495,7 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 | 17 | §7 OpenAPI annotations | `x-required-permission` on every operation; id parameters named for stories and chapters. | No story operation is annotated; every `/stories/{id}*` and `/story-chapters/{id}` path reuses `#/components/parameters/AssetID`. | **openapi:** annotate the thirteen operations; `StoryID` / `StoryChapterID` parameters. | AuthZ convention (OpenAPI encoding) |
 | 18 | P1.1 frontend | `/library/novel` list, reader and manager. | `templates/v1/views/library/novel/NovelDetailView.tsx` is a 26-line placeholder; `app/(app)/library/page.tsx` links `/library/novel`, which has no `page.tsx` (404); no `lib/story.ts`. | **frontend:** P1.1. **test:** TC-STY-090…094. | [backlog.md](../backlog.md) P2 line 28 |
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
+| 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-01 §11 row 9). | Decision 2026-10-01b (D4) |
 
 **Already matching on HEAD.**
 - `0023_story_core`: both tables, the story CHECKs, the `DEFERRABLE` chapter
@@ -527,4 +540,4 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 - The comic vertical's own copies of rows 1–3 and 7–8 (SPEC-02 owns them).
 - The account-level `assets:write:own` grant needed to upload a cover
   (SPEC-01 §11 row 9).
-- Movie (SPEC-15) and music (no spec).
+- Movie (SPEC-15) and music (SPEC-14).

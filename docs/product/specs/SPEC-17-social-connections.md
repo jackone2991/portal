@@ -418,7 +418,9 @@ approved account can connect. Notes:
   `responded_at`; the README `updated_at` rule has nothing to apply to.
 - **No `declined` status** (P0.4). The CHECK admits two values.
 - **Account deletion** cascades both FKs, so deleting an account silently
-  removes its connections; no event fires (the account module emits none).
+  removes its connections; no social event fires (on `HEAD` the account module
+  emits none, and SPEC-13 P1.3's planned `account:user_deleted` has notify as
+  its only consumer).
 - **`app_current_user()`** is created here and dropped by the down migration.
   No later migration uses it (`grep -ln app_current_user backend/db/migrations/`);
   a future table that does must move the function's ownership to a platform

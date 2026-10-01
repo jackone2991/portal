@@ -1,10 +1,10 @@
 # SPEC-13 — Account: identity, approval gate, RBAC and the admin console
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `account` · **Depends on:** SPEC-04 (`notify:dispatch` carries the approval notification and the password-reset email; reset behaviour is SPEC-04 P0.3) · `platform/audit` ([D-25]) · `platform/server` (Problem writer, `Limit`)
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Module:** `account` · **Depends on:** SPEC-04 (`notify:dispatch` carries the approval notification and the password-reset email; reset behaviour is SPEC-04 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-04 P1.5) · SPEC-01 P0.7 (`mediaapi.PurgeOwnerAssets`, called by the user delete, P0.10) · `platform/audit` ([D-25]) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
 **Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken elsewhere and are cited, not re-decided: [ADR-02](../../adr/02-rbac-model-reconciliation.md) (role hierarchy is canonical for v1), [ADR-06](../../adr/06-local-auth-model.md) (local password auth; Portal owns credentials), [ADR-07](../../adr/07-tenancy-rls-model.md) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-01 (f)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff)
 **Refs:** [security.md](../../architecture/security.md) (design depth: token model, revocation channels, threat model — this spec owns the product requirements and the contract, not the design), [/CLAUDE.md](../../../CLAUDE.md) § Account module, [backend/MODULES.md](../../../backend/MODULES.md) §5.3 (audit taxonomy), the specs README [Timezone](README.md#conventions-binding-on-all-specs) convention and its **Per-user timezone** cross-cutting gap, which this spec now owns
-**Downstream consumers:** every module's `RequirePermission` / `RequireOwnerOrPermission` (built by `cmd/api` from `account.Module.Engine()`); `tenant` (`RequireAuth` + the caller identity); `layout` (`accountapi.HasPermission`); `people` (`accountapi.ListDirectory`; SPEC-08 P0.3/P0.4 timezone); `social` (`accountapi.GetUserNames`); `notify` (recipient email, via the account repository in `cmd/worker`); the timezone readers SPEC-03 P0.6, SPEC-05 P0.4, SPEC-06 P0.1/P0.3/P1.5, SPEC-08 P0.3/P0.4, SPEC-10 §4a; the frontend's `lib/session.ts`, `lib/admin.ts`, `/login`, `/register` and `/admin/*`
+**Downstream consumers:** every module's `RequirePermission` / `RequireOwnerOrPermission` (built by `cmd/api` from `account.Module.Engine()`); `tenant` (`RequireAuth` + the caller identity); `layout` (`accountapi.HasPermission`); `people` (`accountapi.ListDirectory`; SPEC-08 P0.3/P0.4 timezone); `social` (`accountapi.GetUserNames`); `notify` (recipient email, via the account repository in `cmd/worker`; the P1.3 `account:*` events and `SuperadminIDs`); the timezone readers SPEC-03 P0.6, SPEC-05 P0.4, SPEC-06 P0.1/P0.3/P1.5, SPEC-08 P0.3/P0.4, SPEC-10 §4a; the frontend's `lib/session.ts`, `lib/admin.ts`, `/login`, `/register` and `/admin/*`
 
 ---
 
@@ -66,6 +66,11 @@ diverges from the binding conventions.
 - As an admin who is not a superadmin, I can manage ordinary users and roles but
   cannot hand myself — or anyone — a permission I do not hold, and cannot take
   over or lock out an account that outranks me.
+- As a superadmin, I get a bell entry when another admin approves, disables,
+  deletes or re-roles an account or changes a role, and an email when a stolen
+  refresh token is replayed. *(P1.3 — decided, unbuilt)*
+- As the owner, I delete an account and its uploaded files are gone from
+  storage too, not just its rows. *(P0.10 — decided, unbuilt)*
 - As any signed-in user, my day boundaries ("today", "this month", birthday
   countdowns) follow the timezone of where I am, unless I pinned one in
   settings. *(P0.13 — decided, unbuilt)*
@@ -379,7 +384,70 @@ rejected row is kept so the email cannot re-register.
   delete: FKs that own content cascade (`ON DELETE CASCADE`), the audit,
   `granted_by`, `approved_by` and `people_persons.linked_user_id` references
   are `SET NULL`. Audit `account.user.deleted`. 204; a second delete is 404.
-  The account's stored media objects must not be orphaned (§10 Q1; §11 row 8).
+
+**Delete removes the account's stored files first** *(Decision 2026-10-01b
+(D1); unbuilt — §11 row 8)*. After every guard above has passed:
+
+1. **Disable** the target (`DisableUser`: stamps `disabled_at`, bumps
+   `token_version`), so no new authenticated request of theirs — an upload, a
+   zip import — can start. This step is part of the delete; it is not audited
+   or announced on its own.
+2. **Bulk pass.** `mediaapi.PurgeOwnerAssets(ctx, id)` (SPEC-01 P0.7)
+   tombstones every asset the target owns, deletes their objects and rows, and
+   returns how many rows are left. It is budgeted, so a large library may need
+   more than one call.
+3. **Locked final pass and delete**, in one account transaction:
+   `SELECT 1 FROM users WHERE id = $1 FOR UPDATE` (new query
+   `LockUserForDelete`); `PurgeOwnerAssets` again, with a context that does not
+   carry this transaction (media opens its own scope); only when it returns
+   `0`, `DeleteUser`; commit.
+4. Any error, or rows left after either pass: **503
+   `account/delete-incomplete`** with `Retry-After: 900` and no further
+   change. The user row stays (disabled); the tombstones stay; the hourly
+   `media:purge_orphans` finishes them, because the rows — and the user's
+   personal organisation that `forEachTenant` iterates — still exist. A
+   retried DELETE (the UI may retry at once: each pass purges every `deleting`
+   row of the owner, grace or not) continues where the last stopped and
+   completes once nothing is left. The account stays disabled until an admin
+   enables it.
+
+Why this order is the one that works:
+
+- The only record of an object is its `assets` row (`purgeObjects` derives the
+  prefixes from it; the janitor reads only `deleting` rows), and `assets.owner_id`
+  cascades from `users` (`0007`). Only tombstoning and then deleting the user
+  (the decision's first sketch) would lose the rows in the cascade before the
+  janitor's 15-minute grace has passed, so the objects would still leak. The
+  user row is therefore deleted only after media reports **zero** rows: the
+  cascade never removes an asset row whose objects may still exist.
+- **The race with a new upload.** An `assets` INSERT checks its FK by taking
+  `FOR KEY SHARE` on the referenced `users` row, which step 3's `FOR UPDATE`
+  conflicts with. An insert committed before the lock is seen by the final
+  pass and purged; one arriving after it waits, then fails its FK check when
+  the delete commits, writing no row (and, through `mediaapi.Ingest`, no
+  object — the row precedes the bytes). Disabling first limits that window to
+  worker tasks already running for the target (a zip import, a comic sync).
+- **No deadlock.** The final pass runs on media's own connection; it updates
+  `assets.status` and deletes `assets` and variant rows, none of which touches
+  the FK column or locks `users`.
+- **No event fan-out against a vanished tenant.** The owner purge publishes no
+  `media:asset_deleted` (SPEC-01 P0.7 step 5): every row that references these
+  assets is the target's own and goes in the same cascade.
+- Not covered: a browser `PUT` to an already-issued presigned URL that lands
+  after its asset row was purged leaves an object nothing references — the
+  same exposure `DELETE /assets/{id}` has for an `uploading` asset (SPEC-01
+  P0.3), not something this order can close.
+
+*Acceptance criteria (delete).*
+- Given a user with uploaded video, image and audio assets, when they are
+  deleted, then 204, no object remains under any of their prefixes, and no
+  `assets` row of theirs remains. *(TC-ACC-064)*
+- Given storage failing during the purge, then 503 `account/delete-incomplete`,
+  the user still exists and is disabled, and after the next janitor run a
+  retried DELETE answers 204 with no object left. *(TC-ACC-065)*
+- Given an `assets` INSERT for the target blocked behind step 3's lock, then
+  after the delete commits that INSERT fails and no row or object of it
+  remains. *(TC-ACC-066)*
 
 ### P0.11 — Roles, role assignment and the permission matrix
 
@@ -486,7 +554,8 @@ principal from the request context, fail-closed on every error;
 `ListDirectory(ctx, exclude, limit)` — approved, enabled accounts other than
 the caller, ordered `display_name, id`, `limit` default 50, max 200, clamped
 *(code follow-up: `HEAD` resets an out-of-range limit to 50 — §11 row 19)*;
-`GetUserNames(ctx, ids) (map[uuid]string, error)`; and P0.13's timezone reads.
+`GetUserNames(ctx, ids) (map[uuid]string, error)`; P0.13's timezone reads;
+and P1.3's `SuperadminIDs(ctx) ([]uuid.UUID, error)`.
 Not permission-gated at this layer: the caller decides who may see the result.
 
 ### P0.15 — Maintenance tasks
@@ -509,6 +578,50 @@ exist, nothing schedules them — §11 row 20)*. Both rows are registered in
 - **P1.2 Security alert on refresh reuse** — the reuse path also dispatches
   `account.security_alert` to the user; the notify side is SPEC-04 P1.4.
   *AC:* a detected reuse produces one bell row and one email.
+- **P1.3 Admin-change events** *(Decision 2026-10-01b (D3); unbuilt — §11
+  row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
+  bus event": it announces every admin-relevant change on the bus, and notify
+  turns each into a bell entry for the superadmins (SPEC-04 P1.5). The events
+  are published through `platform/events` **after the write commits** — the
+  account surface runs no request transaction (P0.5), so "after the store call
+  returns" is after commit; a failed write publishes nothing, and a publish
+  error is logged and never fails the request. Names, the payload struct and
+  the publisher dependency live in `account/api` and `account.Deps` (`Events`);
+  `cmd/api` (the only emitting binary) creates its publisher before
+  `account.New` — today `mediaEvents` is built after it — and registers each
+  consumer edge with `Subscribe`.
+
+  | Event | Emitted by (after commit) | Extra payload fields |
+  |---|---|---|
+  | `account:user_registered` | `Register` (P0.1), after the founder bootstrap | `approval_status`; `actor_id` = the registrant |
+  | `account:user_approval_decided` | `decide` (P0.9) | `decision`: `approved` \| `rejected` \| `approval_revoked`; `note` |
+  | `account:user_access_changed` | `SetDisabled` (P0.10) | `access`: `disabled` \| `enabled` |
+  | `account:user_deleted` | `DeleteUser` (P0.10), after the delete commits | — (the email and name ride in the common fields, since the row is gone when notify runs) |
+  | `account:user_roles_changed` | `SetUserRoles` (P0.11) | `roles_before`, `roles_after` (role codes) |
+  | `account:role_changed` | role create / PATCH / delete and `SetRolePermissions` (P0.11) | `role_id`, `role_code`, `change`: `created` \| `updated` \| `deleted` \| `permissions_changed` |
+  | `account:refresh_reuse_detected` | `HandleRefresh` on `auth.ErrTokenReused` (P0.4), after `RevokeChain` | `actor_id` is null (no admin acted) |
+
+  Every payload is one struct, `accountapi.AdminEvent`: `{event_id, occurred_at,
+  actor_id|null, actor_name, user_id?, user_email?, user_name?}` plus the extra
+  fields above. `event_id` is a fresh UUID per publish — the natural id notify
+  uses as `dedup_key`, since these changes have no row of their own that
+  identifies one occurrence; `actor_name` comes from the caller's token
+  (`auth.Identity.DisplayName`); the user fields are read before a delete.
+  The **superadmin set** is `accountapi.SuperadminIDs(ctx)`: enabled, approved
+  accounts holding a non-expired grant of the `superadmin` role, directly or
+  through a custom role parented under it (the recursive walk of
+  `GetEffectivePermissions`), at most 50; `cmd/worker`, which does not construct the
+  module, satisfies notify's port with the same query over the account
+  repository, as it does for `ResolveRecipient`. Registration keeps its
+  existing approver dispatch (P0.1); see SPEC-04 P1.5 for how the superadmin
+  fan-out avoids a duplicate.
+  *AC:* given an admin disabling a user, then exactly one
+  `account:user_access_changed` with `access: disabled`, the admin as
+  `actor_id` and the user's email and name is enqueued after the write; a
+  failed write enqueues none *(TC-ACC-120)*; given each of the seven
+  operations, then its event is published with the fields above
+  *(TC-ACC-121…126)*; given a refused delete (P0.10 step 4), then no
+  `account:user_deleted` *(TC-ACC-123)*.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -583,7 +696,7 @@ policy; this table copies it.
 | GET | `/admin/users/{id}` | `users:read:any` | — | 200 `AdminUser` | 404 `account/user-not-found` |
 | POST | `/admin/users` | `users:write:any` | `{email, password, display_name?}` | 201 `AdminUser` | 422 `account/invalid-email`, 422 `account/password-policy`, 409 `account/email-taken` |
 | PATCH | `/admin/users/{id}` | `users:write:any` | `{email?, display_name?, password?}` | 200 `AdminUser` | 422 (as create), 403 `account/escalation`, 404 `account/user-not-found`, 409 `account/email-taken` |
-| DELETE | `/admin/users/{id}` | `users:delete:any` | `{confirm_email}` | 204 | 422 `account/confirmation-mismatch`, 403 `account/self-target` \| `account/escalation`, 404, 409 `account/last-approver` |
+| DELETE | `/admin/users/{id}` | `users:delete:any` | `{confirm_email}` | 204 | 422 `account/confirmation-mismatch`, 403 `account/self-target` \| `account/escalation`, 404, 409 `account/last-approver`, 503 `account/delete-incomplete` (P0.10 step 4, `Retry-After`) |
 | POST | `/admin/users/{id}/approve` | `users:approve` | `{note?}` | 200 `AdminUser` | 422 `account/validation`, 403 `account/self-target` \| `account/escalation`, 404 |
 | POST | `/admin/users/{id}/reject` | `users:approve` | `{note?}` | 200 `AdminUser` | as approve, plus 409 `account/last-approver` |
 | POST | `/admin/users/{id}/revoke-approval` | `users:approve` | `{note?}` | 200 `AdminUser` | as reject |
@@ -615,14 +728,29 @@ convention; whether it moves from offset to a keyset cursor is §10 Q2.
 `account/confirmation-mismatch`, `account/unknown-role`,
 `account/unknown-permission`, `account/role-not-found`, `account/role-exists`,
 `account/role-protected`, `account/role-cycle`, `account/role-in-use`,
-`account/invalid-timezone`. `platform/rate-limited` belongs to
+`account/invalid-timezone`, `account/delete-incomplete`. `platform/rate-limited` belongs to
 `platform/middleware`. *(Code follow-up: §11 rows 16–17.)*
 
 ## 8. Events
 
-**Emitted bus events: none.** Account predates ADR-08's "every new domain
-module emits ≥ 1 event" rule and has no consumer that needs one today; §10 Q1
-decides whether user deletion becomes the first (`account:user_deleted`).
+**Emitted bus events** — P1.3, planned (Decision 2026-10-01b (D3): no
+exemption from ADR-08's "≥ 1 bus event" rule). `HEAD` emits none (§11 row 24).
+All are emitted from `cmd/api`, after commit, with the `accountapi.AdminEvent`
+payload of P1.3; each has one consumer, a SPEC-04 P1.5 notify task on the light
+server's `default` queue.
+
+| Event | Consumer task | Notify type |
+|---|---|---|
+| `account:user_registered` | `notify:on_user_registered` | `account.registration_pending` (shared with P0.1's approver dispatch, so a recipient who already has it gets no second row) |
+| `account:user_approval_decided` | `notify:on_user_approval_decided` | `account.approval_decided` |
+| `account:user_access_changed` | `notify:on_user_access_changed` | `account.user_access_changed` |
+| `account:user_deleted` | `notify:on_user_deleted` | `account.user_deleted` |
+| `account:user_roles_changed` | `notify:on_user_roles_changed` | `account.user_roles_changed` |
+| `account:role_changed` | `notify:on_role_changed` | `account.role_changed` |
+| `account:refresh_reuse_detected` | `notify:on_refresh_reuse_detected` | `account.refresh_reuse_detected` (in-app + email) |
+
+They are admin notices, not life-stream moments: the stream does not project
+them.
 
 **Tasks the module causes or owns:**
 
@@ -633,7 +761,8 @@ decides whether user deletion becomes the first (`account:user_deleted`).
 | `account:purge_reset_tokens` | periodic task | planned (P0.15) | name proposed here; lands with its `scheduler.Register` and events.md row. |
 
 **Consumed:** nothing. Audit rows (`account.*`, P0.1–P0.12) are not bus
-events; the taxonomy lives in `platform/audit/logger.go` and
+events — P1.3's events are published beside them, not instead of them; the
+audit taxonomy lives in `platform/audit/logger.go` and
 [MODULES.md §5.3](../../../backend/MODULES.md).
 
 ## 9. Success metrics (n=1 honest)
@@ -652,13 +781,10 @@ events; the taxonomy lives in `platform/audit/logger.go` and
 
 ## 10. Open questions
 
-- **Q1 (owner decision, blocks §11 row 8) — deleting a user orphans their media
-  objects.** `DeleteUser` cascades `assets` rows away, so `media:purge_orphans`
-  (which re-purges only tombstoned rows, `media/service.go` `PurgeOrphans`)
-  never sees them and every object stays in MinIO/R2. Options: (a) account
-  calls a `mediaapi` "tombstone every asset of user X" before the delete, so the
-  janitor purges them; (b) a disable-only policy and no hard delete; (c) accept
-  the leak and document a manual sweep.
+Q1 (deleting a user orphans their media objects) was decided on 2026-10-01 —
+Decision 2026-10-01b (D1), now P0.10's delete order and SPEC-01 P0.7; the
+remaining questions keep their numbers so citations hold.
+
 - **Q2 (product, non-blocking) — admin list paging.** The README Pagination
   convention says lists are keyset-paged; the admin grid pages by `offset` with
   a `total` and per-status `counts`. Keep offset for this one operator list, or
@@ -683,7 +809,9 @@ The baseline is `main` @ `99b5a0b` (the docs commits on top of it change no
 code). The spec text above is the target; this section lists every place the
 shipped code diverges from it. Rows are ordered by severity: **Sec** 1–5,
 **AuthZ** 6–7, **Data** 8, **Integ** 9–13, **Func** (timezone) 14,
-**Contract** 15–20, **UX** 21–22, **Hyg** 23. A row closes when the code
+**Contract** 15–20, **UX** 21–22, **Hyg** 23, then **P1** 24 (added by
+Decision 2026-10-01b and appended rather than renumbering rows other documents
+cite). A row closes when the code
 matches the requirement it cites and the SPEC-13 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded
 on a named test. File paths are relative to
@@ -700,7 +828,7 @@ on a named test. File paths are relative to
 | 5 | P0.2 uniform timing | An unknown email costs the same as a wrong password. | `handler/auth.go` `Login` returns 401 on `ErrUserNotFound` before `auth.VerifyPassword`, so unknown emails skip the ~64 MiB Argon2id and answer measurably faster. Moot while §10 Q3 keeps register's 409. | **backend:** on `ErrUserNotFound` (and on an empty hash) verify against a fixed dummy PHC hash before answering. **test:** TC-ACC-007 (both paths call the verifier once). | Found while writing SPEC-13, 2026-10-01; §10 Q3 |
 | 6 | P0.9, P0.10 target authority on approve / reject / revoke / disable / enable | The `targetAuthorityDenial` rule of Edit and Delete also gates the approval decisions and disable/enable → 403 `account/escalation`. | `handler/admin.go` `decide` and `SetDisabled` check self-target and last-approver only. A `users:write:any` holder (the seeded `admin`) can disable any superadmin who is not the last approver, killing their session (`DisableUser` bumps `token_version`); `/CLAUDE.md` describes only Edit/Delete as takeover-guarded. | **backend:** call `targetAuthorityDenial` in `decide` and `SetDisabled` (skip for `id == actor`, already refused). **openapi:** 403 `account/escalation` on the five operations. **test:** TC-ACC-055, TC-ACC-056. | Found while writing SPEC-13, 2026-10-01 |
 | 7 | P0.12 bootstrap re-enables | The named account ends up approved, **enabled** and holding `superadmin`. | `backend/cmd/api/main.go` `bootstrapSuperadmin` grants the role and approves, but never reads or clears `disabled_at`, although its doc comment promises "approved, enabled and holding `superadmin`". A disabled bootstrap account stays locked out. | **backend:** if `user.Disabled`, call `EnableUser` (and bump `token_version` once). **test:** TC-ACC-020 (fake adapter: disabled + unapproved + no role → all three fixed, one bump; already-correct → zero writes). | Found while writing SPEC-13, 2026-10-01 |
-| 8 | P0.10 delete — no orphaned objects | Deleting a user leaves no unreachable stored object. | `query/admin.sql` `DeleteUser` hard-deletes; `assets.owner_id` is `ON DELETE CASCADE` (`0007_media_assets`), so asset rows vanish without a `deleting` tombstone and `media/service.go` `PurgeOrphans` never visits them; the objects stay in MinIO/R2 forever. | **decision:** §10 Q1 first. Then, for option (a): **backend (media):** `mediaapi.TombstoneOwnerAssets(ctx, userID)`; **backend (account):** call it before `DeleteUser`, refuse the delete (500) if it fails. **test:** TC-ACC-064. | Found while writing SPEC-13, 2026-10-01 |
+| 8 | P0.10 delete — no orphaned objects | Deleting a user leaves no unreachable stored object: disable, purge the owner's assets (`mediaapi.PurgeOwnerAssets`), then — under `FOR UPDATE` on the user row — a final pass that must report 0 rows before `DeleteUser`; otherwise 503 `account/delete-incomplete` and the user is kept. | `handler/admin_users.go` `DeleteUser` → `query/admin.sql` `DeleteUser` hard-deletes straight after the guards; `assets.owner_id` is `ON DELETE CASCADE` (`0007_media_assets`), so asset rows vanish without a `deleting` tombstone and `media/service.go` `PurgeOrphans` (which reads only `ListAssetsForPurge` rows) never visits them; the objects stay in MinIO/R2 forever. | **backend (media):** SPEC-01 §11 row 19 (`PurgeOwnerAssets`). **backend (account):** a one-method media port in `account.Deps`, bound by `cmd/api` through a closure over `mediaMod`; `DeleteUser` runs P0.10 steps 1–4; new query `LockUserForDelete` (`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`) and a transaction for step 3 (the adapter receives `RunInTx` as other modules' do); 503 `account/delete-incomplete` with `Retry-After`. **openapi:** the 503 on `adminDeleteUser`. **frontend:** the slug in `problems.ts`; `/admin/users` offers a retry. **test:** TC-ACC-064…066. | Found while writing SPEC-13, 2026-10-01; Decision 2026-10-01b (D1) |
 | 9 | P0.11 role PATCH semantics | PATCH keeps omitted fields. | `handler/admin.go` `decodeRoleBody` sets `Name = Code` when `name` is empty — on PATCH `code` is normally absent, so `Name` becomes `""`; `query/rbac.sql` `UpdateRole` then writes `name`, `description` and `parent_id` from the body, clearing an omitted description or parent. `shared/openapi.yaml` `RoleInput` declares `name` required, which hides it; no UI calls `updateRole` today (`frontend/src/lib/admin.ts` exports it unused). | **backend:** read the target row and merge (absent JSON key ⇒ keep; explicit `""` for `parent_code` ⇒ root role); keep `name` non-empty. **openapi:** a separate `RolePatch` schema with all-optional fields. **test:** TC-ACC-073. | Found while writing SPEC-13, 2026-10-01 |
 | 10 | P0.1 first-run bootstrap race | Exactly one founder, even when the first two registrations race. | `handler/auth.go` `Register`: `CreateLocalUser`, then `CountUsers` outside any transaction — two concurrent first registrations can both count 2, so nobody is approved and nobody can approve (recoverable only with `BOOTSTRAP_SUPERADMIN_EMAIL`). | **backend:** decide the founder inside one transaction under `pg_advisory_xact_lock` (or `INSERT … SELECT … WHERE NOT EXISTS (SELECT 1 FROM users)` returning a founder flag). **test:** TC-ACC-016. | Found while writing SPEC-13, 2026-10-01 |
 | 11 | P0.11 expired grants | Re-assigning a role whose grant expired grants it afresh; `user_count` counts live grants. | `query/admin.sql` `ReplaceUserRoles` inserts `ON CONFLICT (user_id, role_id) DO NOTHING`, so an expired row is kept and the role stays invisible; `ListRolesAdmin`'s `user_count` subquery ignores `expires_at`, so `DeleteRole` refuses a role only expired grants reference. Latent: nothing sets `expires_at` today. | **query:** `ON CONFLICT … DO UPDATE SET expires_at = NULL, granted_by = EXCLUDED.granted_by, granted_at = now()`; filter `user_count` by `expires_at IS NULL OR expires_at > now()`. **test:** TC-ACC-058. | Found while writing SPEC-13, 2026-10-01 |
@@ -716,6 +844,7 @@ on a named test. File paths are relative to
 | 21 | §7 `/admin` route gate | Every `(app)` route group is in `config.matcher` (D-34 edge gate). | `frontend/src/middleware.ts` matcher lists `/`, `/login`, `/register`, `/upload`, `/library/:path*`, `/bank/:path*`, `/people/:path*` — not `/admin/:path*` (also missing `/calendar`, `/weather`; backlog #15). A signed-out visitor gets the admin shell, which then 401s. | **frontend:** add `'/admin/:path*'` (or match the whole group). **test:** TC-ACC-080. | README Frontend convention; backlog #15 |
 | 22 | P0.7 client grammar | `frontend/src/lib/session.ts` `can()` decides exactly as `rbac.Permission.Matches`. | `can()` treats `res:*` like any 2-segment grant (satisfies bare/`:any`, never `:own`); the server's `Matches` lets an action wildcard satisfy every scope, `:own` included — a `movies:*` holder is hidden affordances the API would allow. | **frontend:** if `g[1] === "*"` return true after the resource match. **test:** TC-ACC-081 (vitest table mirroring `TestMatches`). | Found while writing SPEC-13, 2026-10-01 |
 | 23 | P0.8 `q` is literal | `q` matches as a literal substring. | `query/admin.sql` `ListUsersAdmin` / `CountUsersAdmin` concatenate `'%' \|\| q \|\| '%'` into `ILIKE` without escaping `%`, `_` or `\`. | **query:** escape in the handler (or `ILIKE … ESCAPE '\'` with an escaped argument). **test:** TC-ACC-051. | Found while writing SPEC-13, 2026-10-01 |
+| 24 | P1.3 admin-change events; P0.14 `SuperadminIDs` | Seven `account:*` events published after commit with the `accountapi.AdminEvent` payload; `accountapi.SuperadminIDs`; each event's consumer edge registered in `cmd/api`; events.md rows. | Not built. `api/api.go` declares no event constant, payload or `SuperadminIDs`; `account.Deps` has no publisher; the handlers (`Register`, `decide`, `SetDisabled`, `DeleteUser`, `SetUserRoles`, `CreateRole`, `UpdateRole`, `DeleteRole`, `SetRolePermissions`, `HandleRefresh`) write audit rows only; `backend/cmd/api/main.go` builds `mediaEvents` after `account.New` and subscribes no `account:*` name. | **backend:** constants + `AdminEvent` in `account/api`; `Deps.Events`; publish after each write per P1.3; a `ListSuperadminIDs` query (recursive role walk, enabled + approved, limit 50) behind `SuperadminIDs`, and the same query for `cmd/worker`'s notify port; in `cmd/api`, build the publisher before `account.New` and add the seven `Subscribe` edges (the notify tasks are SPEC-04 §11 row 23). **docs:** events.md rows (planned → live in the same PR). **test:** TC-ACC-120…126. | Decision 2026-10-01b (D3) |
 
 **Already matching on HEAD.**
 - Argon2id `m=65536,t=3,p=2` PHC hashing with constant-time verify; HS256-only

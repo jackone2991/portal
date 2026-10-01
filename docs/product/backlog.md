@@ -66,8 +66,9 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    retraction events and their stream consumers), SPEC-01 rows 2–3, SPEC-04
    rows 3–4, SPEC-09 rows 5–6, SPEC-10 row 1, SPEC-03 rows 2–5, SPEC-02 row 6,
    the unscoped asset-deleted consumers (SPEC-02 row 18, SPEC-14 row 1,
-   SPEC-15 row 1, SPEC-16 row 1), SPEC-14 row 2, SPEC-15 row 2, SPEC-13 row 8
-   (after its §10 Q1).
+   SPEC-15 row 1, SPEC-16 row 1), SPEC-14 row 2, SPEC-15 row 2, SPEC-01
+   row 19 then SPEC-13 row 8 (deleting a user purges their media first —
+   Decision 2026-10-01b (D1)).
 3. **Cross-cutting foundations.** Timezone (account change, then its readers),
    Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
    (SPEC-01 row 16 before SPEC-07 rows 4, 5, 8).
@@ -75,8 +76,11 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    order; the `x-required-permission` retrofit with its drift check.
 5. **Unbuilt P1**: SPEC-01 row 14, SPEC-04 row 21, SPEC-06 row 16, SPEC-07
    row 14, SPEC-08 row 13, SPEC-09 row 11 (owner takeout, above), SPEC-15
-   rows 16–17 and SPEC-16 rows 18–19 (after the "finish or revert" question
-   in their §10), SPEC-18 row 13.
+   rows 16–17 and SPEC-16 rows 18–19 (committed: finish, not revert —
+   Decision 2026-10-01b (D2)), SPEC-18 row 13; the admin-change events
+   (SPEC-04 row 23 first, then SPEC-13 row 24 and SPEC-18 row 14 — D3); the
+   `user` authoring grants (SPEC-14 row 26, SPEC-15 row 18, SPEC-16 row 20,
+   with or after F009 — D4).
 
 ## P0 — code defects found by the as-built specs (2026-10-01)
 
@@ -239,9 +243,12 @@ their spec. Severity order.
     `/library/novel` has no route ([SPEC-16](specs/SPEC-16-story-vertical.md)
     P1.1, §11 row 18). Music got its UI (library, import, playlists, player)
     in 0038–0041 ([SPEC-14](specs/SPEC-14-music-vertical.md); its remaining
-    gaps are SPEC-14 §12). Finish these to the music standard or revert them
-    (audit Tier D-14) — do not leave them; the choice is the blocking open
-    question in SPEC-15 §10 and SPEC-16 §10.
+    gaps are SPEC-14 §12). **Decided: finish** to the music standard, not
+    revert (owner decision 2026-10-01b (D2), audit Tier D-14): SPEC-15 P1.1 and
+    SPEC-16 P1.1 are committed scope. Kept in this tier — specced, not built;
+    the decision only removed the blocker. The `user` authoring grants that
+    make both useful to a second account are SPEC-15 P1.3 / SPEC-16 P1.3 (P0
+    order, step 5).
 29. **Story reading progress** and its `/continue` leg (SPEC-16 P1.2, §11
     row 19), **movie/story FTS** (SPEC-15 P2, SPEC-16 P2 — not now, no corpus
     at n=1), and media's three: **HLS variant ladder** per tier (transcode

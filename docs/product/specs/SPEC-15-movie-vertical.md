@@ -1,6 +1,6 @@
 # SPEC-15 — Movie Vertical (catalogue over media video assets)
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `movie` · **Depends on:** SPEC-01 (asset lifecycle, `media:asset_deleted`, the `poster` variant), the video pipeline from ADR-01's demo loop (upload → `media:transcode` on the `heavy` server → HLS → `assets.status = ready`), SPEC-07 (asset-level resume); pattern copied from SPEC-02
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/movie/`, migration `0021_movie_core`) and the decisions it rests on — there was never a brief · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (the video loop this rides on), [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-02](SPEC-02-comic-vertical.md) (the reference vertical), feature-inventory `D-7` (RFC 7807), `D-20` (per-domain progress + continue aggregator), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend state and rendering), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-04 (`notify:on_movie_published` bell), SPEC-07 (a future `movie` leg of `/continue`), SPEC-09 P1.7 (takeout)
@@ -194,7 +194,7 @@ never fails a committed publish.
 |---|---|
 | list published, read a published movie | `movies:read` (`RequirePermission`) |
 | read own draft | owner check in `Service.GetMovie` |
-| create (`POST /movies`), list own (`GET /movies/mine`) | `movies:write:own` (`RequirePermission`) |
+| create (`POST /movies`), list own (`GET /movies/mine`) | `movies:write:own` (`RequirePermission`) — held by `user` and up once P1.3 lands; `creator` and up on `HEAD` |
 | update (`PATCH /movies/{id}`) | owner, or `movies:write:any` — `RequireOwnerOrPermission(engine, "movies:write:any", byMovie)` |
 | delete | owner, or `movies:delete:any` |
 | publish / unpublish | `RequirePermission("movies:publish:own")` chained before `RequireOwnerOrPermission(engine, "movies:publish:any", byMovie)` — the SPEC-02 P0.2 rule. *(Code follow-up: HEAD wires only the second half, so `movies:publish:own` is seeded but never checked — §11 row 6.)* |
@@ -210,9 +210,9 @@ inside one shared tenant a non-owner gets 403 and learns the draft exists —
 `creator`; `movies:write:any` and `movies:publish:any` → `editor`;
 `movies:delete:any` → `admin`. 0003 had already seeded `movies:read` to `guest`
 and the two-segment `movies:publish` to `editor` (which satisfies
-`movies:publish:any` under the grammar). A plain `user` therefore reads but
-cannot create — unlike comic, whose `0025_comic_user_write_grant` widened write
-and publish to `user` (§10).
+`movies:publish:any` under the grammar). On `HEAD` a plain `user` therefore
+reads but cannot create; P1.3 widens the two `:own` codes to `user`, as comic's
+`0025_comic_user_write_grant` did.
 
 **Acceptance criteria.**
 - Given a movie with no video, or whose video was replaced by a `processing`
@@ -287,16 +287,16 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
 
 ### P1 — next
 
-- **P1.1 Frontend.** A `/library/movies` list (published + mine), a movie
-  manager (metadata, poster upload through `lib/media-upload.ts`, video picker
+- **P1.1 Frontend** *(committed scope — Decision 2026-10-01b (D2): movie is
+  finished to the music standard, not reverted; unbuilt)*. A
+  `/library/movies` list (published + mine), a movie manager (metadata, poster upload through `lib/media-upload.ts`, video picker
   over the owner's ready video assets, publish/unpublish, delete) and a movie
   page that embeds the media player for `video_asset_id` — RSC shell plus
   TanStack client islands (D-32, D-33, specs README Frontend), views declared in
   `TemplateManifest.views` and resolved through `activeTemplate()`. The
   `/library/:path*` matcher already covers it. Today nothing exists: no route,
-  no view, no `lib/movie.ts` ([backlog.md](../backlog.md) P2 line 28, whose
-  "finish or revert" choice is §10's first question). The bell link from
-  `notify:on_movie_published` then moves from `/library/media` to the movie
+  no view, no `lib/movie.ts` ([backlog.md](../backlog.md) P2 line 28). The
+  bell link from `notify:on_movie_published` then moves from `/library/media` to the movie
   page. *AC:* a signed-in owner creates, publishes and plays a movie without
   leaving `/library/movies`; a draft of another tenant member is never listed.
 - **P1.2 `movie` leg of `/continue`.** `movieapi.Continue(ctx, user, limit)`
@@ -304,6 +304,19 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
   items with `module: "movie"`, the movie title, the poster's `thumb` variant
   and the movie page as `href`; `handleContinue` merges it and drops the
   matching `media` items. *AC:* a movie in progress appears once, as a movie.
+- **P1.3 `user` may author movies** *(Decision 2026-10-01b (D4); unbuilt — §11
+  row 18)*. A movie-owned migration `000N_movie_user_write_grant` (the
+  `0025_comic_user_write_grant` shape: `WITH grants(...)`, `ON CONFLICT DO
+  NOTHING`, idempotent) grants `movies:write:own` and `movies:publish:own` to
+  `user`; the role hierarchy carries them to every role above. `:any` codes and
+  `movies:delete:any` stay with `editor` / `admin`. It is useful together with
+  F009 — `user` holding `assets:write:own` (SPEC-01 §11 row 9), without which a
+  `user` cannot upload the video or the poster once uploads enforce that code.
+  Its down migration deletes only those two `role_permissions` rows (not the
+  codes, which `0003`/`0021` own). *AC:* given an account holding only `user`,
+  then `POST /movies` is 201, `GET /movies/mine` 200, and publishing its own
+  movie 200; PATCH or publish on another member's movie is still 403
+  *(TC-MOV-050)*.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -365,13 +378,13 @@ hidden by RLS) → 404 `about:blank`.
 | Method | Path | Permission | Request | 2xx response | Errors |
 |---|---|---|---|---|---|
 | GET | `/movies?cursor=&limit=` | `movies:read` | — | 200 `{items: Movie[], next_cursor?}` | 400 `movie/invalid-cursor` |
-| GET | `/movies/mine?cursor=&limit=` | `movies:write:own` | — | 200 `{items: Movie[], next_cursor?}` | 400 `movie/invalid-cursor`, 403 |
-| POST | `/movies` | `movies:write:own` | `MovieCreate {title, description?, video_asset_id?, poster_asset_id?, release_year?}` | 201 `Movie` | 422 `movie/validation`, `movie/invalid-video-asset`, `movie/invalid-poster-asset` |
+| GET | `/movies/mine?cursor=&limit=` | `movies:write:own` (held by `user` after P1.3) | — | 200 `{items: Movie[], next_cursor?}` | 400 `movie/invalid-cursor`, 403 |
+| POST | `/movies` | `movies:write:own` (held by `user` after P1.3) | `MovieCreate {title, description?, video_asset_id?, poster_asset_id?, release_year?}` | 201 `Movie` | 422 `movie/validation`, `movie/invalid-video-asset`, `movie/invalid-poster-asset` |
 | GET | `/movies/{id}` | `movies:read` (draft: owner only) | — | 200 `Movie` | 404 `movie/not-found` |
 | PATCH | `/movies/{id}` | owner, or `movies:write:any` | `MoviePatch` (absent = unchanged, `null` clears) | 200 `Movie` | 404, 422 as POST |
 | DELETE | `/movies/{id}` | owner, or `movies:delete:any` | — | 204 | 404 `movie/not-found` |
-| POST | `/movies/{id}/publish` | `movies:publish:own`, then owner or `movies:publish:any` | — | 200 `Movie` | 422 `movie/not-publishable`, 404 |
-| POST | `/movies/{id}/unpublish` | `movies:publish:own`, then owner or `movies:publish:any` | — | 200 `Movie` | 404 |
+| POST | `/movies/{id}/publish` | `movies:publish:own` (held by `user` after P1.3), then owner or `movies:publish:any` | — | 200 `Movie` | 422 `movie/not-publishable`, 404 |
+| POST | `/movies/{id}/unpublish` | `movies:publish:own` (held by `user` after P1.3), then owner or `movies:publish:any` | — | 200 `Movie` | 404 |
 
 **Movie**: `{id, owner_id, title, description|null, video_asset_id|null,
 poster_asset_id|null, release_year|null, status: draft|published, created_at,
@@ -420,15 +433,10 @@ request commits (§11 row 3).
 
 ## 10. Open questions
 
-- **(product, blocking P1.1)** Finish or revert? [backlog.md](../backlog.md) P2
-  line 28 says movie and story must be finished "to the music standard or
-  reverted — do not leave them". This spec assumes finish; reverting means
-  dropping the module, `0021`'s table and permissions, and the notify edge.
-- **(product, non-blocking)** Who may create? `movies:write:own` sits at
-  `creator`, so a plain `user` cannot catalogue their own films; comic widened
-  the same codes to `user` in `0025`. For a personal library the comic answer
-  looks right; it needs a grant migration and the F009 `assets:write:own` grant
-  (SPEC-01 §11 row 9) to be useful.
+Two questions were decided on 2026-10-01 (Decision 2026-10-01b): movie is
+finished, not reverted (D2 — P1.1 is committed scope), and `user` may author
+(D4 — P1.3).
+
 - **(product, non-blocking)** Should "published" ever cross the tenant fence?
   Today RLS limits it to the owner's tenant, and the video asset's own ACL
   (`0032_media_asset_acl`) would also have to admit the reader. Until a second
@@ -439,7 +447,8 @@ request commits (§11 row 3).
 Baseline: `main` @ `99b5a0b` (the docs commits on top change no code). The spec
 text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
-integrity, authorization, contract, hygiene and unbuilt work. A row closes when
+integrity, authorization, contract, hygiene and unbuilt work; row 18 (P1, added
+by Decision 2026-10-01b) is appended after row 17. A row closes when
 the code matches the requirement it cites and the SPEC-15 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded on
 a named test. Paths are relative to `backend/internal/modules/movie/` unless
@@ -464,6 +473,7 @@ stated otherwise.
 | 15 | §6 down migration | `0021`'s down removes only what `0021` added. | `0021_movie_core.down.sql` deletes `permissions WHERE code LIKE 'movies:%'`, which also removes the 0003-seeded `movies:read`, `movies:write:own`, `movies:write:any`, `movies:publish` and `movies:delete:any` with their `guest`/`creator`/`editor`/`admin` grants. Forward-only production (`D-12`) keeps this off the live path. | **migration:** a corrective down is not possible for an applied file; record it and make future vertical downs delete only their own codes. **test:** none. | Found while writing SPEC-15, 2026-10-01 |
 | 16 | P1.1 frontend | `/library/movies` list, manager and movie page. | None: no route under `frontend/src/app/(app)/library/`, no view in `templates/v1`, no `lib/movie.ts`; `notify/service.go` `workKinds` links a published movie to `/library/media`. | **frontend:** P1.1. **backend:** the notify `href` to the movie page. **test:** TC-MOV-080…083. | [backlog.md](../backlog.md) P2 line 28 |
 | 17 | P1.2 continue leg | `/continue` shows a movie as `module: "movie"`. | `cmd/api/main.go` `handleContinue` calls only `mediaMod.API().Continue`; `movie/api` has no `Continue`. | **backend:** P1.2. **test:** TC-MOV-090. | SPEC-07 §5 (D-20 fan-out); backlog P2 line 25 pattern |
+| 18 | P1.3 `user` authoring grant | `user` holds `movies:write:own` and `movies:publish:own` (a movie-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0021_movie_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /movies` and `GET /movies/mine` (`module.go` `m.perm("movies:write:own")`). | **migration:** `000N_movie_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **frontend:** none beyond P1.1 (`lib/session.ts` `can()` reads the new codes from `/auth/me`). **test:** TC-MOV-050 (RLS/migration suite: a `user` creates and publishes). Lands with or after F009 (SPEC-01 §11 row 9). | Decision 2026-10-01b (D4) |
 
 **Already matching on HEAD.**
 - `0021_movie_core`: the table, the title and year CHECKs, the status CHECK,
@@ -509,4 +519,4 @@ stated otherwise.
   transcode — backlog P2 line 29; SPEC-01 §11) and SPEC-07's resume gaps
   (SPEC-07 §11): a movie inherits them, it does not own them.
 - The account-level `assets:write:own` grant for uploads (SPEC-01 §11 row 9).
-- Story (SPEC-16) and music (no spec; `0022`, `0038`–`0041`).
+- Story (SPEC-16) and music (SPEC-14).

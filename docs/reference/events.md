@@ -38,12 +38,20 @@ the naming *rules*, this file owns the *inventory*.
 | `ops:backup_completed` | `{run_id, size_bytes}` | ops | live — emitter only (SPEC-09 P0.2); no consumer yet | — (audit + `/ops/status` today; notify later) |
 | `ops:backup_failed` | `{run_id, error}` | ops | live — emitter only (SPEC-09 P0.2); its consumer is not built yet | notify — `notify:on_backup_failed` (SPEC-09 P0.6; planned) |
 | `ops:export_ready` | `{export_id, user_id}` | ops | planned (SPEC-09 P1.7) | notify later |
+| `account:user_registered` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` + `approval_status` | account | planned (SPEC-13 P1.3; Decision 2026-10-01b (D3)) — published from `cmd/api` after the registration commits | notify — `notify:on_user_registered`: `account.registration_pending` to superadmins except the registrant, `dedup_key = registration:<user_id>` (the approver dispatch's key, so nobody gets it twice); none for the founder (`approved`) — SPEC-04 P1.5 |
+| `account:user_approval_decided` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` + `decision` (`approved`\|`rejected`\|`approval_revoked`), `note` | account | planned (SPEC-13 P1.3) | notify — `notify:on_user_approval_decided` (`account.approval_decided`, superadmins except the actor, `dedup_key = event_id`) |
+| `account:user_access_changed` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` + `access` (`disabled`\|`enabled`) | account | planned (SPEC-13 P1.3) | notify — `notify:on_user_access_changed` (`account.user_access_changed`, as above) |
+| `account:user_deleted` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` (user fields read before the delete) | account | planned (SPEC-13 P1.3) — only after the delete commits; a refused delete (P0.10) publishes none | notify — `notify:on_user_deleted` (`account.user_deleted`, as above) |
+| `account:user_roles_changed` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` + `roles_before`, `roles_after` | account | planned (SPEC-13 P1.3) | notify — `notify:on_user_roles_changed` (`account.user_roles_changed`, as above) |
+| `account:role_changed` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id, actor_name}` + `role_id`, `role_code`, `change` (`created`\|`updated`\|`deleted`\|`permissions_changed`) | account | planned (SPEC-13 P1.3) | notify — `notify:on_role_changed` (`account.role_changed`, link `/admin/roles`, as above) |
+| `account:refresh_reuse_detected` | `accountapi.AdminEvent` — `{event_id, occurred_at, actor_id\|null, actor_name, user_id, user_email, user_name}` with `actor_id = null` | account | planned (SPEC-13 P1.3) — after the chain is revoked | notify — `notify:on_refresh_reuse_detected` (`account.refresh_reuse_detected`, every superadmin, in-app + email override). The affected user's own alert is SPEC-04 P1.4's `account.security_alert` |
+| `layout:changed` | `layoutapi.ChangedEvent` — `{event_id, occurred_at, part: 'menu'\|'widgets', actor_id, actor_name, count}` | layout | planned (SPEC-18 P1.4; Decision 2026-10-01b (D3)) — published from `cmd/api` after the save commits | notify — `notify:on_layout_changed` (`layout.changed`, link `/admin/layout`, superadmins except the saver, `dedup_key = event_id`) |
 
-Two shipped modules emit no bus event: `account` (SPEC-13 §8 — audit rows are not
-events; §10 Q1 decides whether user deletion becomes the first) and `layout`
-(SPEC-18 §8 — shell configuration; whether that stands as an exception to
-ADR-08's "≥ 1 event" rule is SPEC-18 §10 Q1). No `account:*` or `layout:*`
-event row is missing.
+`account` and `layout` emit nothing on `HEAD`; the eight planned rows above are
+the owner's decision of 2026-10-01 (specs README, "Decisions recorded 2026-10-01
+(second round)", D3) that neither is exempt from ADR-08's "≥ 1 event" rule
+(SPEC-13 §8, SPEC-18 §8; code follow-ups SPEC-13 §11 row 24, SPEC-18 §11
+row 14). Each is subscribed in `cmd/api`, the only binary that emits it.
 
 ## Tasks
 
@@ -72,6 +80,14 @@ event row is missing.
 | `notify:on_track_published` | `{track_id, owner_user_id, title}` (consumer; subscribes to `music:track_published`; `dedup_key` = track id) | notify | live |
 | `notify:on_story_published` | `{story_id, owner_user_id, title}` (consumer; subscribes to `story:published`; `dedup_key` = story id) | notify | live |
 | `notify:on_connection_requested` / `notify:on_connection_accepted` | `{connection_id, requester_id, addressee_id, requester_name, addressee_name}` (consumers; subscribe to `social:connection_*`; `dedup_key = connection_id:phase`) | notify | live (0037) |
+| `notify:on_user_registered` | the `account:user_registered` payload (consumer; subscribes to `account:user_registered`; type `account.registration_pending`, `dedup_key = registration:<user_id>`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_user_approval_decided` | the `account:user_approval_decided` payload (consumer; subscribes to `account:user_approval_decided`; type `account.approval_decided`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_user_access_changed` | the `account:user_access_changed` payload (consumer; subscribes to `account:user_access_changed`; type `account.user_access_changed`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_user_deleted` | the `account:user_deleted` payload (consumer; subscribes to `account:user_deleted`; type `account.user_deleted`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_user_roles_changed` | the `account:user_roles_changed` payload (consumer; subscribes to `account:user_roles_changed`; type `account.user_roles_changed`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_role_changed` | the `account:role_changed` payload (consumer; subscribes to `account:role_changed`; type `account.role_changed`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_refresh_reuse_detected` | the `account:refresh_reuse_detected` payload (consumer; subscribes to `account:refresh_reuse_detected`; type `account.refresh_reuse_detected`, in-app + email; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
+| `notify:on_layout_changed` | the `layout:changed` payload (consumer; subscribes to `layout:changed`; type `layout.changed`; `dedup_key` = `event_id` unless stated) | notify | planned (SPEC-04 P1.5; Decision 2026-10-01b (D3); light server, `default` queue; fans out to `SuperadminIDs` minus the actor) |
 | `notify:on_backup_failed` | `{run_id, error}` (consumer; subscribes to `ops:backup_failed`, subscription in `cmd/worker`) | notify | planned (SPEC-09 P0.6 owns it; "default" queue; unbuilt) |
 | `notify:purge_old` | — (janitor sweep) | notify | planned (SPEC-04 P2; handler is a registered stub, unscheduled) |
 | `journal:backfill_stream` | — | journal | **retired** (SPEC-06 P1.6): it seeded `media:asset_ready` rows, which the stream no longer projects (`0033`) |

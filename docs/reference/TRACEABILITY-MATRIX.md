@@ -76,6 +76,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.4 | Library page + filters + cursor + LCP | TC-MEDIA-060…069 | P0 | ⚠ | `modules/media/service_test.go: TestListPaginates, TestCursorRoundTrip, TestExpandStatuses` — API list/filter/cursor proven. Page render and LCP: frontend, no tests. Spec tightened 2026-09-30: the list answers `{items, next_cursor?}` and a bad cursor 400 `media/invalid-cursor`; `HEAD` answers `{assets}` and `media/bad_request` — code follow-up (F112, Envelopes). |
 | P0.5 | Download original (checksum, private, states) | TC-MEDIA-080…086 | P0 | ⚠ | `modules/media/service_test.go: TestDownloadOriginal, TestServeVariant, TestHLSObjectSafety`; range semantics `modules/media/objectreader_test.go: TestServeContentAnswersRangeRequests, TestObjectReaderSeekEndReportsSizeWithoutReading`. `TestDownloadOriginal` exercises `Service.DownloadOriginal`, which no route calls (it is reachable only through the `mediaapi` impl): `GET /assets/{id}/original` serves through `OriginalContent`, which no test calls — retarget it (§11 "Test evidence"). Spec tightened 2026-09-30: an abandoned upload (`failed`, never past `/complete`) is 404, and `HEAD`'s `OriginalContent` blocks only `uploading`/`deleting`, so its possibly-partial object still streams (F035); an image is served with its sniffed content type, which `HEAD` never stores (F039); code follow-up. |
 | P0.6 | Event fan-out prerequisite | TC-MEDIA-090…093 | P0 | ✅ | `platform/events/events_test.go: TestPublishFansOutToEachConsumer, TestPublishNoSubscribersIsNoop, TestPublishPropagatesEnqueueError`. |
+| P0.7 | Owner purge for account deletion: `mediaapi.PurgeOwnerAssets` tombstones, purges objects and rows of one owner's assets in that owner's scope, budgeted, no `media:asset_deleted` | TC-MEDIA-052…054 | P0 | ✖ | not built (§11 row 19; Decision 2026-10-01b (D1)). |
 | P1.1/P1.2 | Metadata edit, asset_ready emit | TC-MEDIA-100…101 | P1 | ⚠ | emit: `modules/media/service_test.go: TestCompleteUploadAudioReadyWithoutTranscode` (asserts exactly one `media:asset_ready`); the video path's emit happens in the transcode worker, untested. Metadata edit: no test (`{title}` is unbuilt). The payload's `origin` is always `upload` on `HEAD` — see P1.3. |
 | P1.3 | `mediaapi.Ingest(…, origin)` for server-side producers: same sniff/HEIC/50 MB gates as `/complete`, row created with the given `origin` | TC-MEDIA-102 | P1 | ✖ | no test exercises `Ingest` (`modules/media/api/api_test.go` covers only the signed-URL helper). Added 2026-10-01 for the new requirement section: the shipped `Ingest` has no `origin` parameter and always records `upload`, so the P1.2 import-flood guard never fires; code follow-up (F038). |
 
@@ -123,6 +124,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.4 | First consumer (media:asset_ready) | TC-NOTIFY-070…074 | P0 | ⚠ | `modules/notify/service_test.go: TestOnAssetReady` (+ `TestOnComicPublished`, `TestOnWorkPublished` for the later consumers) — it pins the `origin='import'` skip. Spec tightened 2026-09-30: image uploads (journal photos, comic pages, avatars) notify nobody — "10 image uploads, zero notifications" — and `HEAD` skips only `origin='import'` (F012); `data.href` follows the kind-aware media deep-link rule (`/library/media/{id}` for video and audio), `HEAD` builds `/library/{id}` (F018, Audio); code follow-up. |
 | P0.5 | Bell wiring | TC-NOTIFY-090…094 | P0 | ✖ | frontend; no test files. Spec tightened 2026-09-30: `useInfiniteQuery`, `HEAD`'s `NotificationsMenu` uses a plain `useQuery` (F143); code follow-up. |
 | P1.1–P1.4 | Web push, SSE, prefs UI, security alert | TC-NOTIFY-110…113 | P1 | ✖ | not built. |
+| P1.5 | Admin notices to superadmins: eight `notify:on_*` consumers of the `account:*` and `layout:changed` events, the actor excluded, registration deduplicated against the approver dispatch | TC-NOTIFY-140…145 | P1 | ✖ | not built (§11 row 23; Decision 2026-10-01b (D3)). |
 
 ## SPEC-05 — Journal ([cases](../testing/TEST-CASES-SPEC-05-journal.md) · gaps: [§11](../product/specs/SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
@@ -207,13 +209,14 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P0.7 | RBAC engine: 2–3-segment grammar, wildcards, fail-closed parse, hierarchy walk, `token_version`-keyed cache | TC-ACC-060…062 | P0 | ⚠ | grammar and matching: `modules/account/rbac/permission_test.go: TestParse, TestMatches, TestSetAllows, TestSetAllowsMalformedDenied`. `CachedLoader` and the `GetEffectivePermissions` CTE are untested; the frontend's `can()` disagrees with `Matches` on `res:*` vs `:own` (§11 row 22). |
 | P0.8 | Admin directory + approval queue (`GET /admin/users`, `GET /admin/users/{id}`) | TC-ACC-050, TC-ACC-051 | P0 | ⚠ | the clamp it calls: `platform/server/server_test.go: TestLimitDefaultsAndClamps`. The handler is untested. Diverges on `HEAD`: answers `{users}`, not `{items}` (§11 row 18); `q` is not escaped (row 23). |
 | P0.9 | Approval decisions: approve / reject / revoke, no self-target, last approver kept | TC-ACC-055…057 | P0 | ⚠ | `modules/account/handler/admin_test.go: TestApproveRefusesApprovingYourself`. `decide`'s last-approver path is untested; the target-authority rule is missing from `decide` and `SetDisabled` (§11 row 6). |
-| P0.10 | User create / edit / disable / delete: approval from the creator's authority, no takeover, `confirm_email`, last approver | TC-ACC-055, TC-ACC-064 | P0 | ⚠ | `modules/account/handler/admin_test.go: TestCreateUserWithoutApprovePermissionLandsPending, TestCreateUserByAnApproverIsUsableImmediately, TestCreateUserRejectsAWeakPassword, TestCreateUserRejectsADuplicateEmail, TestDeleteUserRequiresTheEmailConfirmation, TestDeleteUserSucceedsWithTheRightConfirmation, TestDeleteUserRefusesYourself, TestDeleteUserRefusesTheLastApprover, TestDeleteUserRefusesAMorePrivilegedTarget, TestUpdateUserRefusesAMorePrivilegedTarget, TestUpdateUserPasswordBumpsAndRevokes, TestUpdateUserRejectsAWeakPasswordBeforeWritingTheProfile, TestUpdateUserAllowsEditingYourself`. `SetDisabled` is untested; delete orphans the user's media objects (§11 row 8, blocked on §10 Q1). |
+| P0.10 | User create / edit / disable / delete: approval from the creator's authority, no takeover, `confirm_email`, last approver | TC-ACC-055, TC-ACC-064…066 | P0 | ⚠ | `modules/account/handler/admin_test.go: TestCreateUserWithoutApprovePermissionLandsPending, TestCreateUserByAnApproverIsUsableImmediately, TestCreateUserRejectsAWeakPassword, TestCreateUserRejectsADuplicateEmail, TestDeleteUserRequiresTheEmailConfirmation, TestDeleteUserSucceedsWithTheRightConfirmation, TestDeleteUserRefusesYourself, TestDeleteUserRefusesTheLastApprover, TestDeleteUserRefusesAMorePrivilegedTarget, TestUpdateUserRefusesAMorePrivilegedTarget, TestUpdateUserPasswordBumpsAndRevokes, TestUpdateUserRejectsAWeakPasswordBeforeWritingTheProfile, TestUpdateUserAllowsEditingYourself`. `SetDisabled` is untested; delete orphans the user's media objects: the purge-first delete order of Decision 2026-10-01b (D1) is unbuilt (§11 row 8; SPEC-01 P0.7). |
 | P0.11 | Roles, role assignment, permission matrix: no escalation, cycle-safe hierarchy, cache re-key for descendants | TC-ACC-070…075 | P0 | ⚠ | `modules/account/handler/admin_test.go: TestSetUserRolesRefusesGrantingPermissionsTheActorLacks, TestSetUserRolesAllowsAWildcardActor, TestSetUserRolesRefusesSuperadminFromNonWildcardActor, TestSetUserRolesRefusesRevokingAPrivilegedRole, TestSetUserRolesRefusesEditingYourOwnRoles, TestSetRolePermissionsRefusesGrantingWhatTheActorLacks, TestSetRolePermissionsBumpsTokenVersionForTheRole, TestSetRolePermissionsRejectsUnknownCode, TestEffectiveRolePermissionsUnionsAncestors, TestEffectiveRolePermissionsTerminatesOnACycle, TestWouldCycleDetectsAnIndirectLoop, TestValidRoleCodeRejectsSeparatorsThatBreakTheGrammar`. `CreateRole`, `UpdateRole`, `DeleteRole` are untested; re-parenting a role is an escalation path (§11 row 1), PATCH clears omitted fields (row 9), expired grants stick (row 11). |
 | P0.12 | Superadmin bootstrap for existing installs (`BOOTSTRAP_SUPERADMIN_EMAIL`) | TC-ACC-020 | P0 | ✖ | no test for `bootstrapSuperadmin`; it never re-enables a disabled account (§11 row 7). |
 | P0.13 | Per-user timezone: `Asia/Ho_Chi_Minh` default, `timezone_manual`, `PATCH /auth/me`, 422 `account/invalid-timezone`, `accountapi` lookups | TC-ACC-100…104 | P0 | ✖ | unbuilt on `HEAD` (§11 row 14; Decisions 2026-09-30 and 2026-10-01 (f)). |
 | P0.14 | Cross-module API (`accountapi`): `GetUserByID`, `GetUserNames`, `ListDirectory`, `HasPermission` | TC-ACC-090, TC-ACC-091 | P0 | ✖ | no test (layout's tests stub `HasPermission` with a fake checker). `GetUserByID` admits non-approved accounts (§11 row 12); `ListDirectory` resets `limit` (row 19). |
 | P0.15 | Maintenance tasks: refresh-token and reset-token purges | — | P0 | ✖ | no test; the reset-token purge is not scheduled (§11 row 20). |
 | P1.1/P1.2 | Session list and revoke; security alert on refresh reuse | — | P1 | ✖ | not built. |
+| P1.3 | Admin-change events: seven `account:*` events after commit, `accountapi.AdminEvent`, `SuperadminIDs` | TC-ACC-120…126 | P1 | ✖ | not built (§11 row 24; Decision 2026-10-01b (D3)). |
 
 ## SPEC-14 — Music ([spec](../product/specs/SPEC-14-music-vertical.md); no case document yet — `TC-MUS-*` ids are proposed in its §12 · gaps: [§12](../product/specs/SPEC-14-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
@@ -231,6 +234,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P0.10 | Playback from `/assets/{id}/original` with range requests; one app-wide `<audio>` | — | P0 | ⚠ | the range-request half: `modules/media/objectreader_test.go: TestServeContentAnswersRangeRequests, TestObjectReaderSeekEndReportsSizeWithoutReading`. The player is frontend, untested. |
 | P0.11 | Frontend library (`/library/music`, import modal, detail, playlists) | TC-MUS-111…113 | P0 | ✖ | frontend; no test. |
 | P1.1–P1.3 | Lookup results in the UI; import resume after reload; `bulk` queue | TC-MUS-066, TC-MUS-111…113 | P1 | ✖ | not built (§12 rows 11, 24). |
+| P1.4 | `user` may author music: `music:write:own` and `music:publish:own` granted to `user` | TC-MUS-004 | P1 | ✖ | not built (§12 row 26; Decision 2026-10-01b (D4)). |
 
 ## SPEC-15 — Movie ([spec](../product/specs/SPEC-15-movie-vertical.md); no case document yet — `TC-MOV-*` ids are proposed in the spec · gaps: [§11](../product/specs/SPEC-15-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
@@ -244,6 +248,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P0.6 | Playback and resume ride on the video asset (SPEC-07, keyed by asset id) | TC-MOV-070, TC-MOV-071 | P0 | ✖ | no movie-level test; resume is SPEC-07's and inherits its grades. |
 | P1.1 | Frontend: `/library/movies` list, manager, movie page | TC-MOV-080…083 | P1 | ✖ | not built (§11 row 16). |
 | P1.2 | `movie` leg of `/continue` | TC-MOV-090 | P1 | ✖ | not built (§11 row 17). |
+| P1.3 | `user` may author movies: `movies:write:own` and `movies:publish:own` granted to `user` | TC-MOV-050 | P1 | ✖ | not built (§11 row 18; Decision 2026-10-01b (D4)). |
 
 ## SPEC-16 — Story ([spec](../product/specs/SPEC-16-story-vertical.md); no case document yet — `TC-STY-*` ids are proposed in the spec · gaps: [§11](../product/specs/SPEC-16-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
@@ -257,6 +262,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P0.6 | Cover lifecycle (`media:asset_deleted`) | TC-STY-080…082 | P0 | ⚠ | `modules/story/story_test.go: TestAssetDeletedClearsTheCover, TestAssetDeletedIsIdempotent` — on a fake repo; under `portal_app` the unscoped UPDATE fails (§11 row 1). |
 | P1.1 | Reader and manager UI (`/library/novel`) | TC-STY-090…094 | P1 | ✖ | not built; `NovelDetailView.tsx` is a placeholder (§11 row 18). |
 | P1.2 | Reading progress and the `story` leg of `/continue` | TC-STY-095…097 | P1 | ✖ | not built (§11 row 19). |
+| P1.3 | `user` may author stories: `stories:write:own` and `stories:publish:own` granted to `user` | TC-STY-070 | P1 | ✖ | not built (§11 row 20; Decision 2026-10-01b (D4)). |
 
 ## SPEC-17 — Social connections ([spec](../product/specs/SPEC-17-social-connections.md); no case document yet — `TC-SOC-*` ids are proposed in the spec · gaps: [§11](../product/specs/SPEC-17-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
@@ -285,6 +291,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P0.7 | Frontend: sidebar from the layout with a static fallback, rails, `/admin/layout` editor | TC-LAY-040…045 | P0 | ✖ | frontend; no test. An admin-emptied menu falls back to the seed (§11 row 5); `/admin` is missing from the D-34 matcher (row 10). |
 | P0.8 | Seed equals the former hardcoded shell | — | P0 | ✖ | no mechanical check (§11 row 9). |
 | P1.1–P1.3 | Optimistic concurrency (`layout/stale`), audit diff, icon picker | — | P1 | ✖ | not built (§11 row 13). |
+| P1.4 | `layout:changed {part}` after each save, consumed by notify | TC-LAY-050…052 | P1 | ✖ | not built (§11 row 14; Decision 2026-10-01b (D3)). |
 
 ---
 
@@ -320,24 +327,24 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 
 | Spec | P0 rows | ✅ | ⚠ | ✖ | Notes |
 |------|---------|----|----|----|-------|
-| SPEC-01 media | 6 | 2 | 4 | 0 | P0.3/P0.5 downgraded 2026-10-01 (F035–F037, F039); P1.3 added (✖) |
+| SPEC-01 media | 7 | 2 | 4 | 1 | P0.3/P0.5 downgraded 2026-10-01 (F035–F037, F039); P1.3 added (✖); P0.7 owner purge added (✖, Decision 2026-10-01b (D1)) |
 | SPEC-02 comic | 6 | 1 | 3 | 2 | P0.4 downgraded (F001 — client transport); P1.10 added (⚠); reader/library are frontend |
 | SPEC-03 bank | 8 (+2 P1) | 1 | 7 | 0 | P0.1–P0.5 downgraded (F056, F122, F123, F128, Envelopes, Timezone); tests pass, the tightened rules are unbuilt; P1.11 (report) added 2026-10-01 (⚠) |
 | SPEC-10 ledger expansion | 1 | 0 | 1 | 0 | no case document yet |
-| SPEC-04 notify | 5 | 0 | 4 | 1 | P0.2/P0.4 downgraded (F006, F012, F066, F136) |
+| SPEC-04 notify | 5 | 0 | 4 | 1 | P0.2/P0.4 downgraded (F006, F012, F066, F136); P1.5 admin notices added (✖, Decision 2026-10-01b (D3)) |
 | SPEC-05 journal | 4 | 3 | 0 | 1 | P1.5/P1.6 ⚠ via SPEC-12 (backend proven; picker not) |
 | SPEC-12 journal attachments | 6 | 6 | 0 | 0 | added 2026-09-19; P1 rows 2 ✅ / 0 ⚠ / 1 ✖ |
 | SPEC-06 stream | 4 | 0 | 3 | 1 | P0.2 downgraded (F016, F018, F075); P1.6 retired (not counted) |
 | SPEC-07 continue | 4 | 0 | 3 | 1 | P0.1–P0.3 and P1.5 downgraded (F076–F079, F161, F165, Audio); P1.6 added (✖) |
 | SPEC-08 people | 4 | 0 | 3 | 1 | P0.4 downgraded (F080, F082, F028); lunar untested |
 | SPEC-09 ops | 5 (+1 doc) | 1 | 3 | 1 | P0.6 added (✖, F091); backup/restore proven manually only |
-| SPEC-13 account | 15 | 0 | 7 | 8 | added 2026-10-01 (as-built spec); login, refresh, `RequireAuth`, bootstrap and the account HTTP surface have no test; P0.13 timezone unbuilt; P1 row ✖ |
-| SPEC-14 music | 11 | 0 | 9 | 2 | added 2026-10-01 (as-built spec); playlists and the frontend untested; P1 row ✖ |
-| SPEC-15 movie | 6 | 0 | 5 | 1 | added 2026-10-01 (as-built spec); no frontend; P1 rows ✖ |
-| SPEC-16 story | 6 | 0 | 6 | 0 | added 2026-10-01 (as-built spec); chapter CRUD untested; P1 rows ✖ |
+| SPEC-13 account | 15 | 0 | 7 | 8 | added 2026-10-01 (as-built spec); login, refresh, `RequireAuth`, bootstrap and the account HTTP surface have no test; P0.13 timezone unbuilt; P1 rows ✖ (P1.3 events added, Decision 2026-10-01b (D3)) |
+| SPEC-14 music | 11 | 0 | 9 | 2 | added 2026-10-01 (as-built spec); playlists and the frontend untested; P1 rows ✖ (P1.4 `user` grant added, D4) |
+| SPEC-15 movie | 6 | 0 | 5 | 1 | added 2026-10-01 (as-built spec); no frontend (P1.1 committed, D2); P1 rows ✖ (P1.3 `user` grant added, D4) |
+| SPEC-16 story | 6 | 0 | 6 | 0 | added 2026-10-01 (as-built spec); chapter CRUD untested; P1 rows ✖ (P1.1 committed, D2; P1.3 `user` grant added, D4) |
 | SPEC-17 social | 8 | 2 | 4 | 2 | added 2026-10-01 (as-built spec); delete and RLS isolation proven; events and frontend untested; P1 row ✖ |
-| SPEC-18 layout | 8 | 0 | 5 | 3 | added 2026-10-01 (as-built spec); service rules proven, no HTTP or adapter test; P1 row ✖ |
-| **Total** | **107 P0** | **16** | **67** | **24** | plus 1 doc row (✅), 1 retired row (—) and 24 P1 rows (2 ✅, 7 ⚠, 15 ✖) |
+| SPEC-18 layout | 8 | 0 | 5 | 3 | added 2026-10-01 (as-built spec); service rules proven, no HTTP or adapter test; P1 rows ✖ (P1.4 `layout:changed` added, D3) |
+| **Total** | **108 P0** | **16** | **67** | **25** | plus 1 doc row (✅), 1 retired row (—) and 30 P1 rows (2 ✅, 7 ⚠, 21 ✖) |
 
 Cross-cutting: CC-10/11 ✅ · CC-1/2/3/4/5/6/7/8 ⚠ (CC-2, CC-3 and CC-4 downgraded 2026-10-01: the `user` asset grant F009, two 403-not-404 answers F119/F077, and the `{items}` envelope retrofit; CC-1 and CC-8 are proven over HTTP for comic, bank, journal, movie, music, story, people, social and notify since 2026-09-19, ⚠ for the media/ops/account/tenant/layout handlers and the i18n catalogue) · CC-9 ✖.
 
