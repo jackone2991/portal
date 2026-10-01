@@ -31,8 +31,8 @@ Beneath both: no document owned any given fact. Implementation status lived in
 `MILESTONE_CHECKS.md` (deleted in `f11cf3f`), in `CLAUDE.md`, in each ADR's
 action items, and in the specs — so when one moved, the others did not.
 
-Separately, the audit at
-[analysis/remaining-work-2026-08-25.md](../product/analysis/remaining-work-2026-08-25.md)
+Separately, the audit `remaining-work-2026-08-25.md` (deleted once triaged —
+`git show 2cdda7e:docs/product/analysis/remaining-work-2026-08-25.md`)
 had already listed most of these defects, with line numbers, seventeen days
 earlier — and sat unread in a folder that neither `docs/README.md` nor ADR-09
 declared. A finding that generates no work is a finding that will be made
@@ -119,8 +119,8 @@ again.
 ## Consequences
 
 - ADR numbering: `00` is retired permanently.
-  [architecture-review-2026-05-24.md](../product/analysis/architecture-review-2026-05-24.md)
-  (formerly `adr/00-architecture-review.md`) was never a decision record — it is
+  `architecture-review-2026-05-24.md` (later deleted — `git show 2cdda7e:docs/product/analysis/architecture-review-2026-05-24.md`;
+  formerly `adr/00-architecture-review.md`) was never a decision record — it is
   a dated review of the architecture as found on 2026-05-24, all eleven of its
   false statements are descriptions of that day, and by the genre rules it
   belongs in `analysis/`. Moved, body untouched, status `historical`; the

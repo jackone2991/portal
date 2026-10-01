@@ -6,12 +6,13 @@
 former vi mirror was deleted in `f11cf3f` — see
 [ADR-11](../../adr/11-docs-canonicalisation.md)).
 
-This folder holds the **detailed, implementation-ready specs** for the features
-captured in [../briefs/](../briefs/). A brief answers *what and why in brief*;
-a spec answers *exactly what to build, how to know it's done, and what to decide
-before starting*. Most specs are promoted from a brief when it is queued for
-build (the briefs README tracks the mapping); SPEC-04, 10, 11 and 12 have none,
-and each header names its upstream.
+This folder holds the **detailed, implementation-ready specs**. A spec answers
+*exactly what to build, how to know it's done, and what to decide before
+starting*. SPEC-01…03 and 05…09 began as product briefs (brainstorm-level *what
+and why*, 2026-07-07 and 2026-07-10); once every brief had been promoted, the
+lines no spec carried yet were folded into its spec and the `briefs/` folder was
+deleted (`git show 2cdda7e:docs/product/briefs/`). SPEC-04, 10, 11 and 12 had
+no brief. Every header names its upstream.
 
 ## Documents
 
@@ -36,9 +37,8 @@ spec headers. Per-requirement coverage lives in
 | [SPEC-12](SPEC-12-journal-attachments.md) | Journal attachments — Attachments (≤ 10 image Assets) and Location as first-class Entry properties; the markdown-link workaround backfilled out of every body (issue #8) | `journal` (extends) · frontend | SPEC-01, SPEC-05, SPEC-06 | Executed 2026-09-19 (`0044`, `0045`) |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs;
-they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)
-(→ [ADR-08](../../adr/08-life-os-pivot.md)) and
-[../briefs/04-deferred.md](../briefs/04-deferred.md).
+they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
+[vision.md](../vision.md)) and [backlog.md § Deferred](../backlog.md).
 
 ## Conventions binding on all specs
 
@@ -428,7 +428,7 @@ open. The detail lives in the places named here; the gap rows cite them as
   TC-PPL-021, TC-PPL-022.
 - **(d) The weather widget is in scope** — SPEC-06 §3 (no longer a non-goal)
   and P0.4 (requirement and ACs); §11 row 14 is now the `/weather` matcher gap;
-  TC-STREAM-073…076; brief 06 annotated.
+  TC-STREAM-073…076; brief 06 annotated (since folded into SPEC-06 and deleted).
 - **(e) `limit` is lenient and clamps** — the **Pagination** convention above;
   every §7 that declares a limit; one gap row per service that resets instead
   (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
@@ -448,7 +448,8 @@ open. The detail lives in the places named here; the gap rows cite them as
 ## Review history
 
 - **2026-07-11** — first spec-gap review and fix pass:
-  [spec-gap-fix-worklog-2026-07-11.md](../analysis/spec-gap-fix-worklog-2026-07-11.md).
+  `spec-gap-fix-worklog-2026-07-11.md` (deleted once the 2026-09-30 review
+  superseded it — `git show 2cdda7e:docs/product/analysis/spec-gap-fix-worklog-2026-07-11.md`).
 - **2026-09-30** — second review (184 confirmed findings), fixed in the specs
   by `1db1e32` (PR #17); the owner decisions on envelopes, timezone and audio
   applied and the matrix regraded by `f54389b`:

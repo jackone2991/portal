@@ -132,4 +132,4 @@ For Phase 2 the v1 cut is: one queue priority, libx264 only, no hardware encoder
 2. [x] Acceptance criterion tracked and met — the loop shipped 2026-07-06. (It was tracked in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code, see `/CLAUDE.md`.)
 3. [ ] A `v1-out-of-scope` label/section in an issue tracker — there is no issue tracker; the deferred list lives in `/CLAUDE.md` § "Still deferred".
 4. [x] Scope comment at the top of `cmd/api/main.go` (path corrected 2026-09-11 to `docs/adr/01-v1-scope-cut.md`).
-5. [ ] Sprint-end retrospective — never written. The nearest thing is [analysis/spec-gap-fix-worklog-2026-07-11.md](../product/analysis/spec-gap-fix-worklog-2026-07-11.md).
+5. [ ] Sprint-end retrospective — never written. The nearest thing was the 2026-07-11 spec-gap worklog (deleted — `git show 2cdda7e:docs/product/analysis/spec-gap-fix-worklog-2026-07-11.md`).

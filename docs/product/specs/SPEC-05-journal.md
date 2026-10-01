@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` · **Depends on:** SPEC-01 P0.6 (`platform/events` fan-out) only; photo attachments (P1.5) are superseded by SPEC-12, which needs SPEC-01
-**Upstream:** [briefs/05-journal-life-stream.md](../briefs/05-journal-life-stream.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), 2026-07 backlog §3 P1 (archived; `git show 8d382d2^:docs/product/backlog.md`), [MODULES.md](../../../backend/MODULES.md) §8
+**Upstream:** brief 05 (folded into this spec, then deleted — `git show 2cdda7e:docs/product/briefs/05-journal-life-stream.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), 2026-07 backlog §3 P1 "Posts/newsfeed API", reframed per ADR-08 (archived; `git show 8d382d2^:docs/product/backlog.md`), [MODULES.md](../../../backend/MODULES.md) §8
 **Downstream consumers:** SPEC-06 (stream projection reads this table; its projection rows are maintained transactionally in this module's service — journal:entry_created stays emit-only, see P0.3), SPEC-09 P1.7 (takeout exports it).
 
 ---
@@ -20,7 +20,7 @@ kits are exported but imported by nothing.
 The urgency is asymmetric: memories not captured cannot be backfilled. Every week
 without a capture surface is life-stream data lost forever — which is why this
 spec has zero hard dependencies and is sequenced immediately after SPEC-04 in the
-[briefs build order](../briefs/README.md).
+[build order](README.md#build-state-and-what-remains).
 
 ## 2. Goals
 
@@ -36,7 +36,7 @@ spec has zero hard dependencies and is sequenced immediately after SPEC-04 in th
 ## 3. Non-goals
 
 - **Comments, reactions, sharing** — single user; entries are flat. Multi-user
-  social stays parked per [briefs/04-deferred.md](../briefs/04-deferred.md).
+  social stays parked per [backlog.md § Deferred](../backlog.md).
 - **The merged journal + system-event timeline** — that is SPEC-06. This spec ships
   an interim journal-only list on `/` (P0.4) that SPEC-06 upgrades in place.
 - **Rich-text editing** — v1 is markdown-in-textarea with preview. No WYSIWYG, no

@@ -38,7 +38,7 @@ this, when real second users appear.
 |---|---|---|
 | Entertainment | `media` (real), `comic`/`movie`/`music`/`story` | media works; comic is the first vertical (SPEC-02) |
 | Money | `bank` (ledger scope) | SPEC-03; real-bank integration deferred behind TOTP |
-| Time | calendar/events/reminders | UI widgets exist; next facet after money (briefs/04) |
+| Time | calendar/events/reminders | UI widgets exist; next facet after money (backlog § Deferred) |
 | Social | posts, friends, messaging | UI shell built; deliberately demoted until n>1 |
 | Learning | stories, library | skeleton; unshaped |
 
@@ -46,7 +46,7 @@ this, when real second users appear.
 
 1 developer · 2-week build bursts · ≤ $100/month · a single VPS. Every scope
 decision answers to this envelope. Deferred-with-conditions list:
-[briefs/04-deferred.md](briefs/04-deferred.md).
+[backlog.md § Deferred](backlog.md).
 
 ## Success, honestly measured at n=1
 

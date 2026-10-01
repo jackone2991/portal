@@ -10,8 +10,8 @@ considered* and *Trade-offs* are kept verbatim. A reversed decision gets a new
 ADR that supersedes the old one. Shape is binding: **context → decision →
 options considered → trade-offs → consequences → action items**
 ([STYLE.md](../STYLE.md)). Numbers are never reused; `00` is retired — that
-file was a review, and lives in
-[product/analysis/](../product/analysis/architecture-review-2026-05-24.md).
+file was a review; it moved to `product/analysis/` and was later deleted
+(`git show 2cdda7e:docs/product/analysis/architecture-review-2026-05-24.md`).
 
 The v1 framing constraint every ADR inherits: **1 dev · 2-week bursts · ≤$100/mo ·
 single VPS** (ADR-01).

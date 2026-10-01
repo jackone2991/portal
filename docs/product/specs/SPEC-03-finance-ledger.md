@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `bank` · **Depends on:** ADR-08 (scope amendment); **SPEC-09 P0 (nightly backup + exercised restore drill) live before the first real ledger entry**; SPEC-01 only for P1 receipts
-**Upstream:** [briefs/03-finance-ledger.md](../briefs/03-finance-ledger.md) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
+**Upstream:** brief 03 (folded into this spec, then deleted — `git show 2cdda7e:docs/product/briefs/03-finance-ledger.md`) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
 **Downstream consumers:** SPEC-06 (stream + dashboard widget), SPEC-09 P1.7 (bank ExportProvider), SPEC-10
 
 ---
@@ -13,7 +13,7 @@ The money facet of the life OS. Agreed scope: a **Money-Lover-class personal
 ledger** — multiple accounts, manual transactions, hierarchical categories, monthly
 budgets, and inter-account transfers — with a schema that is **import-ready from
 day one**, even though statement import itself is deferred (owner's bank, TCB,
-exports PDF → import means OCR; see [briefs/04-deferred.md](../briefs/04-deferred.md)).
+exports PDF → import means OCR; see [backlog.md § Deferred](../backlog.md)).
 
 Scope insight that unblocks this now: a self-hosted **manual** ledger holds no bank
 credentials, so the "MFA before bank" gate (D-27/D-28) does not apply. TOTP becomes
@@ -44,7 +44,8 @@ replacement vehicle.)*
 - **Debts, loans, investments, savings goals** (feature-inventory.md §8.3–8.6) —
   separate iterations with their own models; ledger core first. Re-entry: ledger
   reconciles cleanly ≥1 month.
-- **Splits, recurring transactions, tags** — P2 architectural insurance only.
+- **Splits, recurring transactions, tags** — the core loop works without them;
+  P2 architectural insurance only.
 - **Multi-currency FX reporting** — currency is per-account; cross-currency totals
   are excluded (no FX infrastructure at v1). The dashboard reports per currency
   group; VND-only users see one group.

@@ -13,7 +13,7 @@ ADR-11 records what replaced each.*
 
 The documentation tree had grown organically: a flat `doc/en/` (retired) mixing genres — a
 decision log (`feature.md`, then; now `product/feature-inventory.md`), design specs (`frontend.md`, `authoration.md` — renamed `security.md`), gap
-analyses (`missing-features.md` — deleted; `facebook-comparison.md`), deferred designs
+analyses (`missing-features.md` — deleted; `facebook-comparison.md` — later deleted), deferred designs
 (`archivetech*.md` — renamed under `architecture/deferred/`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
 `doc/vi/` (retired). Three pressures broke it:
 
@@ -32,7 +32,7 @@ Adopt a **Diátaxis-informed** tree rooted at `docs/` (the ecosystem-standard ro
 with genre-separated sections and an explicit lifecycle.
 
 As built (`ls docs/`): `adr/`, `product/{vision, feature-inventory, backlog,
-analysis/, briefs/, specs/}`, `architecture/{…, deferred/}`, `guides/`,
+analysis/, specs/}` (`briefs/` was folded into the specs and deleted after `2cdda7e`), `architecture/{…, deferred/}`, `guides/`,
 `operations/`, `reference/`, `testing/`. The 2026-07-07 text also listed
 `product/checklist` and `archive/`: the checklist was deleted in `efb8a70`, the
 archive in `f11cf3f`; `operations/` and `testing/` existed on disk without being

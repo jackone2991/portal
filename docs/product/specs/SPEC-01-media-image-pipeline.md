@@ -2,7 +2,7 @@
 
 **Status:** current, **rev 4** (spec-gap fixes, code-verified) · **Last verified:** 2026-10-01
 **Module:** `media` (built + wired) · **Depends on:** nothing
-**Upstream:** [briefs/01-media-image-pipeline.md](../briefs/01-media-image-pipeline.md) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
+**Upstream:** brief 01 (folded into this spec, then deleted — `git show 2cdda7e:docs/product/briefs/01-media-image-pipeline.md`) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
 **Downstream consumers:** SPEC-02, SPEC-03 P1 (receipts), SPEC-04 P0.4 (`media:asset_ready` → in-app notification), SPEC-05/SPEC-12 (entry photos), SPEC-06 (`media:asset_deleted`; playback via SPEC-07), SPEC-07, SPEC-08 P1.7 (avatars), SPEC-09 (P0.3 scheduler; P1.7 mediaapi ExportProvider)
 **Rev 2 origin:** external technical review 2026-07-09 — six findings; five accepted, one rejected. See §12.
 
@@ -38,7 +38,8 @@ and several scattered backlog items (avatar upload, photos, receipts).
   `git show 8d382d2^:docs/product/backlog.md`); this spec neither builds nor blocks them.
 - Audio asset kind (P2 placeholder only).
 - Image *editing* (crop, rotate-on-demand, filters). Auto-orientation of **served
-  variants** is in scope (§5 P0.1); user-driven editing is not.
+  variants** is in scope (§5 P0.1); user-driven editing is not. A consumer that
+  needs a crop does it client-side before upload.
 - Animated images. Animated GIF/WebP inputs are **rejected** at v1 — detected
   by the worker's ffprobe step (frame count > 1), which marks the asset
   `failed` with an explicit animated-input message; unlike HEIC's magic
@@ -49,7 +50,7 @@ and several scattered backlog items (avatar upload, photos, receipts).
   and maintaining that in the worker image is out of the v1 envelope. The rejection
   must be **explicit and helpful**: HEIC magic bytes are detected and get a
   dedicated error detail telling the user to convert/export as JPEG on-device.
-  **Re-entry condition** (recorded in [briefs/04](../briefs/04-deferred.md)): the
+  **Re-entry condition** (recorded in [backlog.md § Deferred](../backlog.md)): the
   moment dogfooding involves an iPhone user, HEIC ingest becomes P0 (likely a
   `libheif`-based pre-step, not ffmpeg).
 - De-duplication of identical uploads (content hashing) — future consideration.
@@ -606,6 +607,10 @@ events + shared-scheduler foundation)*.
 
 ## 10. Open questions
 
+- **(resolved, from brief 01)** Variant generation uses ffmpeg — already in the
+  worker image, zero new dependencies — rather than a Go imaging library (sharper
+  resizes, one more dependency). It can be swapped later behind the
+  `media:process_image` task handler without touching the contract.
 - **(engineering, non-blocking)** Storage key layout: is everything already under a
   per-asset prefix (enables prefix delete)? Verify in `platform/storage` before
   building P0.3; if not, enumerate keys from DB rows.

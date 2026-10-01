@@ -12,7 +12,7 @@ diffable, version-controlled).
 |---|---|---|
 | green | **SHIPPED** | running today, verifiable on the stack |
 | blue | **NEXT** | committed + specified (SPEC-01…03, notification — ADR-08 order) |
-| grey, dashed | **DEFERRED** | designed, explicitly out of scope (ADR-01; re-entry conditions in [briefs/04](../product/briefs/04-deferred.md)) |
+| grey, dashed | **DEFERRED** | designed, explicitly out of scope (ADR-01; re-entry conditions in [backlog.md § Deferred](../product/backlog.md)) |
 
 Eight views:
 
@@ -33,7 +33,7 @@ What actually runs (SHIPPED) plus the committed additions (NEXT). The long-horiz
 extras (CDN edge tier, LiveKit, mediamtx, observability stack, Stripe, sysjobs)
 are DEFERRED and intentionally **not drawn** — see
 [deferred/multi-tenant-backend.md](deferred/multi-tenant-backend.md) and
-[briefs/04](../product/briefs/04-deferred.md) for those designs.
+[backlog.md § Deferred](../product/backlog.md) for those designs.
 
 ```mermaid
 graph TB
@@ -455,7 +455,7 @@ graph LR
   (SPEC-02 + SPEC-03) so the life stream launches non-empty.
 - movie/music/story open only after SPEC-02 proves the vertical pattern.
 - Social/search re-enter with real second users; tenancy with household users —
-  re-entry conditions live in [briefs/04](../product/briefs/04-deferred.md).
+  re-entry conditions live in [backlog.md § Deferred](../product/backlog.md).
 
 ---
 
