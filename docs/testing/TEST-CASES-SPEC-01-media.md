@@ -97,6 +97,7 @@
 | TC-MEDIA-067 | Failed asset shows error_message | Functional | P1 | expand a `failed` asset | `error_message` on hover/expand; only delete offered | ☐ |
 | TC-MEDIA-068 | Empty state links to /upload | Frontend | P1 | new user, no assets | empty state with link to `/upload` | ☐ |
 | TC-MEDIA-069 | List owner-isolation | AuthZ | P0(S1) | userA GET `/assets` | none of userB's assets | ☐ (CC-3) |
+| TC-MEDIA-070 | `limit` lenient: default and clamp | Boundary | P0 | GET `/assets` with no `limit`, `limit=abc`, `limit=0`, `limit=500` over 120 assets | 50, 50, 50, then **100** items (clamped to the max, owner decision 2026-10-01); never a Problem | ☐ (CC-4) |
 
 ## P0.5 — Download original
 

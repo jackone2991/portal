@@ -73,7 +73,11 @@
 |----|----------|------|-----|-------|----------|--------|
 | TC-STREAM-070 | Rail renders w/ only account+media | Frontend | P0 | fresh instance, only account+media wired | rail renders w/o errors; empty states where backends absent (404) | ☐ (CC-9) |
 | TC-STREAM-071 | One widget 500 doesn't blank rail | Reliability | P0 | force one widget endpoint to 500 | other widgets render normally; no toast storm | ☐ |
-| TC-STREAM-072 | Widget sources correct | Contract | P1 | inspect widget queries | PersonalInfo←/auth/me, Activity←/me/notifications, Finance←/bank/dashboard, Continue←/continue, Birthdays←/people/upcoming-birthdays | ☐ |
+| TC-STREAM-072 | Widget sources correct | Contract | P1 | inspect widget queries | PersonalInfo←/auth/me, Activity←/me/notifications, Finance←/bank/dashboard, Continue←/continue, Birthdays←/people/upcoming-birthdays, Weather←Open-Meteo forecast API from the browser (no Portal endpoint) | ☐ |
+| TC-STREAM-073 | Weather: configured location wins | Frontend | P1 | build with `NEXT_PUBLIC_WEATHER_LAT/LON/PLACE`; open `/` | no geolocation prompt; one Open-Meteo request for those coordinates; the configured place label shown | ☐ |
+| TC-STREAM-074 | Weather: denied or failed → compact card | Reliability | P1 | no configured location; deny geolocation; separately, make `api.open-meteo.com` answer 503 | compact "Bật định vị để xem thời tiết" card; no weather values, no toast; the other widgets render normally | ☐ |
+| TC-STREAM-075 | Weather: success render, no fixtures | Frontend | P1 | allow geolocation; open `/`; grep `WeatherWidget.tsx` and `lib/weather.ts` | current temperature, high/low, WMO label and icon, feels-like and rain chance, seven daily entries starting "Nay"; the card opens `/weather`; no fixture weather in either file | ☐ (CC-9) |
+| TC-STREAM-076 | `/weather` behind the edge gate | AuthZ | P1 | unauthenticated GET `/weather` | redirected to `/login` by `middleware.ts` (SPEC-06 §11 row 14) | ☐ |
 
 ## P1 — nice to have
 

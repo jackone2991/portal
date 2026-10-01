@@ -42,7 +42,11 @@ sits on top; the widget rail carries the facets.
   anticipated this store: notifications are a delivery store, the life-stream
   archive is its own system-of-record — `stream_items` is that archive.)
 - **Push/email digest delivery** — P2 here, promotes SPEC-04's P2 digest seam.
-- **Weather widget** — dropped, not wired (closes the 2026-07 backlog §3 P2 question (archived; `git show 8d382d2^:docs/product/backlog.md`)).
+- *(No longer a non-goal: the weather widget.)* It was listed here as "dropped,
+  not wired" (closing the 2026-07 backlog §3 P2 question — archived;
+  `git show 8d382d2^:docs/product/backlog.md`), but the shipped
+  `WeatherWidget` was accepted into scope by the owner on 2026-10-01 and is
+  specified in P0.4.
 - Editing/deleting *system* stream items — they are projections of facts; the fix
   for a wrong fact is in the owning module.
 
@@ -330,10 +334,56 @@ optimistic mark-read reaches the rail. *(Code follow-up: on HEAD
 | Finance month card | `GET /bank/dashboard` | SPEC-03 |
 | Continue rail | `GET /continue` | SPEC-07 |
 | Birthdays (`BirthdayCard`) | `GET /people/upcoming-birthdays` | SPEC-08 |
+| Weather (`WeatherWidget`) | Open-Meteo forecast API, called from the browser (no Portal endpoint) | live today (accepted 2026-10-01; below) |
 
 `PersonalInfoWidget`'s `DEFAULT_ITEMS` sample data is deleted and `items` made
 required, built from `GET /auth/me`; otherwise §2 goal 4's grep test fails.
 `BirthdayCard` is reworked, not merely wired (SPEC-08 P0.5).
+
+**Weather widget** *(accepted into scope by the owner on 2026-10-01; shipped)*.
+`WeatherWidget` (`templates/v1/components/widget/WeatherWidget.tsx`, registry key
+`weather`) is seeded on the **left** rail at position 40 by `0036_layout_core`, with
+no permission, so every user gets it; the layout editor moves or removes it like
+any other widget. It has no Portal backend: the browser calls **Open-Meteo**'s
+keyless, CORS-open forecast API directly (`lib/weather.ts` `fetchWeather`,
+`https://api.open-meteo.com/v1/forecast`: current temperature, apparent
+temperature, humidity, precipitation probability, WMO weather code and wind; 24
+hourly points; seven daily min/max and precipitation maxima; metric °C;
+`timezone=auto`). Nothing about the location reaches the Portal API.
+
+- **Location source**, in order: the build-time `NEXT_PUBLIC_WEATHER_LAT` /
+  `NEXT_PUBLIC_WEATHER_LON` (with an optional `NEXT_PUBLIC_WEATHER_PLACE` label)
+  when both parse and are not 0,0 — no geolocation prompt then; otherwise the
+  browser's Geolocation API (`getCurrentPosition`, 8 s timeout, a cached position
+  up to 30 min old accepted). Coordinates go out rounded to three decimals.
+- **Refresh:** one fetch each time the widget mounts; no polling, no TanStack
+  query, no retry.
+- **States:** while locating or fetching, a compact card "Thời tiết ·
+  Đang định vị…"; when geolocation is unsupported or denied, or the fetch fails,
+  the same compact card asking to enable location ("Bật định vị để xem thời
+  tiết") — never a toast, never fabricated or fixture weather; on success, the
+  place label (or "Vị trí của bạn"), the current temperature, today's high/low,
+  the WMO label and icon, "feels like" and rain chance, and a seven-day strip
+  starting "Nay". The card links to the `/weather` page (`views.weather`:
+  current, hourly and seven-day).
+- **Days** are the forecast location's local days (Open-Meteo
+  `timezone=auto`) — a deliberate exception to the specs README Timezone
+  convention: they describe that place's weather, not the user's day.
+- Failure isolation holds as above; the `retry: false` / inline-retry rule does
+  not apply because the widget issues no Portal query. *(Code follow-up:
+  `/weather` is missing from the `middleware.ts` matcher — §11 row 14.)*
+
+**Acceptance criteria (weather).**
+- Given `NEXT_PUBLIC_WEATHER_LAT/LON` set, then the widget fetches for those
+  coordinates with no geolocation prompt and shows the configured place label.
+- Given no configured location and geolocation denied, then the compact
+  "enable location" card renders, no weather values are shown, and the rest of
+  the rail renders normally.
+- Given Open-Meteo unreachable or answering 5xx, then the same compact card, no
+  toast, other widgets unaffected.
+- Given a successful fetch, then current temperature, high/low, label,
+  feels-like and rain chance, and seven daily entries starting "Nay"; activating
+  the card opens `/weather`.
 
 **Acceptance criteria.**
 - Given only account + media wired, then the rail renders without errors or
@@ -483,13 +533,13 @@ point here. Paths are relative to `backend/` or `frontend/src/`; `stream.go` is
 | 5 | P0.1 malformed payload | A payload missing its user field, or carrying an unparseable id, is dropped **with a log line** and never retried. | `stream.go` `insertSystem`, `OnPlaybackCompleted`, `OnBirthdayUpcoming`, the `bankRef` callers and the JSON / asset-id branches of `OnAssetDeleted` all `return nil` silently; only a missing `owner_user_id` on `media:asset_deleted` is logged. | backend: `log.Warn()` with task type and reason on every drop branch, still returning nil (or `asynq.SkipRetry`). test: TC-STREAM-015 — a malformed payload returns no error and writes nothing. | F151 |
 | 6 | P0.2 bank cards — names and currency | One `bankapi.Names(ctx, userID, accountIDs, categoryIDs)` per page; "(deleted account)" / "Uncategorized" fallbacks; amounts formatted with the payload `currency`'s exponent; a transfer renders "moved <amount> <source>→<dest>", normalized on direction. | `internal/modules/bank/api/api.go` `TransactionEvent` has no `Currency`, and bankapi has no `Names`. `stream.go` `renderSystem` formats every amount with `formatVND` and titles a transfer just "Moved <amount>" (no accounts, no direction normalization). | backend (bank, SPEC-03 P0.7): `currency` in the payload (events.md); `bankapi.Names` reading inside the caller's tenant scope. backend (journal): a `Bank` dependency; `Service.Stream` collects the page's account and category ids, resolves them once, applies the fallbacks, formats by currency exponent (VND = 0), and normalizes transfers (source = `account_id` when `direction = 'debit'`, else `counterparty_account_id`). test: TC-STREAM-033, TC-STREAM-034 incl. "a USD transfer shows USD, never ₫". | F016 |
 | 7 | P0.2 media deep link | `media:playback_completed` → `/library/media/{asset_id}` (SPEC-07 P0.4 media deep-link rule; playback is video or audio, both open the player). | `stream.go` `renderSystem` returns href `/library/media` (the grid, no id). | backend: href `/library/media/` + `asset_id`. test: extend `journal_test.go: TestStreamReadMapping` with a playback item (TC-STREAM-033). | F018; Decision 2026-09-30 (Audio) |
-| 8 | P0.2 / §7 `limit` | Default 30; above 50 is **clamped to 50**; missing, non-integer or < 1 → 30. | `stream.go` `Service.Stream`: `if limit <= 0 \|\| limit > maxStreamLimit { limit = defaultStreamLimit }` — `?limit=100` returns 30. | backend: `> 50 → 50`, `≤ 0 → 30` (non-integers already arrive as 0 via `server.AtoiSafe`). test: TC-STREAM-036 over the router (`?limit=100` → at most 50 items; `?limit=abc` → 30). | F075 |
+| 8 | P0.2 / §7 `limit` | Default 30; above 50 is **clamped to 50**; missing, non-integer or < 1 → 30. | `stream.go` `Service.Stream`: `if limit <= 0 \|\| limit > maxStreamLimit { limit = defaultStreamLimit }` — `?limit=100` returns 30. | backend: `> 50 → 50`, `≤ 0 → 30` (non-integers already arrive as 0 via `server.AtoiSafe`), e.g. `platform/server.Limit(r, 30, 50)` in `handler.go`; openapi: describe `limit` as defaulted and clamped. test: TC-STREAM-036 over the router (`?limit=100` → at most 50 items; `?limit=abc` → 30). | F075; Decision 2026-10-01 (limit) |
 | 9 | P0.3 day grouping in the user's zone | Card dates, day separators and the "Saved to <date>" toast use `users.timezone` from `GET /auth/me`, never the browser's or the instance's zone. | `templates/v1/components/stream/StreamItemCard.tsx` formats with `formatDate(item.occurred_at, tc?.timezone ?? "UTC")`, where `tc` comes from `lib/time.ts` `useTimeConfig` → `GET /api/v1/time` (`APP_TIMEZONE`). | frontend: take the zone from `/auth/me` (prerequisite SPEC-05 §11 row 2: `/auth/me` returns `timezone`). test: TC-STREAM-053. | Decision 2026-09-30 (Timezone) |
 | 10 | P0.3 optimistic placement; P0.2 optimistic item | Insert into the loaded page whose range holds `occurred_at`; too old with more pages → no insert, "Saved to <date>" toast; dedupe by `ref_id`; same rule for `occurred_at` edits; the optimistic item swaps its temp `ref_id` for `entry.id` when the POST answers. | `templates/v1/views/home/HomeView.tsx` `create.onMutate` always `prepend`s into page 0; the item keeps `ref_id` = temp id until the refetch replaces it; no range check, toast or dedupe; edits never re-sort. | frontend: the `placeOptimistic` helper and `ref_id` swap of SPEC-05 §11 row 4 (one change closes both). test: TC-STREAM-051, TC-JRNL-050…052. | F015 |
 | 11 | P0.4 Activity feed shares the bell's query | The rail's Activity feed reuses SPEC-04 P0.5's `["notifications"]` query (same key and queryFn), so the bell's optimistic mark-read reaches it. | `templates/v1/components/widget/ActivityFeed.tsx` queries `["notifications", "rail"]`; the bell (`templates/v1/components/headers/NotifMenus.tsx`) owns `NOTIFICATIONS_KEY = ["notifications"]`. | frontend: move the bell's query into a shared hook (e.g. `lib/notifications.ts` `useNotifications()`) and have the feed render a slice of it. test: TC-STREAM-072 + "marked read from the bell → feed shows it read without a refetch". | F160 |
 | 12 | P0.4 widget failure handling | Each widget query sets `retry: false` (a 4xx is final → empty / "coming soon" at once); a 5xx renders an inline retry affordance. | All rail widgets set `retry: false` except `templates/v1/components/widget/BirthdayCard.tsx` (`useQuery({queryKey: ["people", "upcoming"], …})` → three retries). No widget renders a retry on a 5xx: `MusicWidget` returns null on error, the others render their empty state. | frontend: `retry: false` on `BirthdayCard`; a shared error state in `WidgetCard` with a Retry button for 5xx. test: TC-STREAM-070, TC-STREAM-071. | F159 (corrected — the worklog said every rail query used the defaults) |
 | 13 | P0.4 `PersonalInfoWidget` on real data | `DEFAULT_ITEMS` deleted, `items` required and built from `GET /auth/me`; the widget is on the rail ("live today"). | `templates/v1/components/widget/PersonalInfoWidget.tsx` still declares `DEFAULT_ITEMS` sample data as the `items` default; the widget is absent from `widget/registry.ts` and from the `0036_layout_core` seed, so it is not on the home rail at all. | frontend: delete `DEFAULT_ITEMS`, make the widget self-fetch `/auth/me`, add a `personal-info` key to the registry. migration: seed the `personal-info` layout row (the `0036` pattern). test: TC-STREAM-050 (grep), TC-STREAM-072. | F029 |
-| 14 | §3 non-goal "Weather widget — dropped, not wired" | No weather widget on the home rail. | `templates/v1/components/widget/WeatherWidget.tsx` (Open-Meteo for the browser's geolocation) is registered as `weather` in `widget/registry.ts` and seeded on the left rail by `db/migrations/0036_layout_core.up.sql`. | migration: delete the default `weather` layout row (and drop the registry key), **or** the owner amends §3 to accept the shipped widget (it shows no fixture data). Owner decision. | Found while verifying this section (no F-ID) |
+| 14 | P0.4 weather widget — `/weather` behind the D-34 gate (specs README Frontend convention) | The widget links to `/weather`, a page under `app/(app)/`; every `(app)` route is in `config.matcher` of `frontend/src/middleware.ts`, so an unauthenticated visitor is redirected to `/login` at the edge. | `middleware.ts` `config.matcher` is `["/", "/login", "/register", "/upload", "/library/:path*", "/bank/:path*", "/people/:path*"]` — no `/weather` (nor `/admin` and `/calendar`, the rest of F032); `app/(app)/weather/page.tsx` renders `views.weather` without the edge gate. | frontend: add `'/weather'` to the matcher (with the other F032 routes). test: TC-STREAM-076. | F032; Decision 2026-10-01 (weather accepted) |
 | 15 | §7 Problem types and OpenAPI encoding | `journal/invalid-cursor` has an i18n key; each operation carries `x-required-permission`; the contract describes only projected sources. | `lib/problems.ts` lacks `journal/invalid-cursor` and keeps the never-emitted `stream/invalid-cursor`. `shared/openapi.yaml` `getStream` declares no 400 and no `x-required-permission`; `StreamItem.source_module` lists `comic` and `ref_id` mentions "chapter id", neither projected since `0034`. | frontend: add `journal/invalid-cursor`, delete `stream/invalid-cursor`. openapi: `x-required-permission: stream:read:own`, a 400 `journal/invalid-cursor` response, the stale `comic` / chapter wording removed; regenerate and commit (ADR-10). test: TC-STREAM-037. | F158, F024, F025, F010 |
 | 16 | P1.5 on-this-day memories | `GET /api/v1/stream/memories` → `200 {items: [{years_ago, entries}]}`: journal entries whose `occurred_at` month/day, taken in the caller's `users.timezone`, matches today in that zone, prior years, `years_ago` ASC; Feb-29 surfaces on Feb-28 in non-leap years. | Not shipped: no route in `module.go` `MountHTTP`, no query, no `/stream/memories` in `shared/openapi.yaml`, no widget. | backend: a `ListMemories` query in `query/journal_entries.sql` (`(occurred_at AT TIME ZONE @tz)` month/day match, earlier years, the Feb-28 rule), handler under `stream:read:own`, the zone from accountapi (row 3). openapi: the path and response. frontend: one `WidgetCard` on the rail. test: TC-STREAM-090, TC-STREAM-091. | F075; Decision 2026-09-30 (Timezone) |
 
@@ -499,6 +549,7 @@ point here. Paths are relative to `backend/` or `frontend/src/`; `stream.go` is
 - P0.1(b) — `media:asset_ready`, `comic:published` and the catalogue publishes are not projected (`0033` / `0034` / `0040`; `renderSystem` has no `asset_ready` case); a transfer collapses on `transfer_id`; `bank:transaction_updated` upserts under the created-event key; `bank:transaction_deleted` deletes it; birthdays key on `notice_id`; `media:asset_deleted` deletes every `media` row for the ref across event types and users.
 - P0.2 — `GET /stream` returns `{items, next_cursor?}` with flat items carrying `id`, `source_module`, `event_type`, `ref_id`, `occurred_at`; journal items join `body_md`, `mood`, `asset_ids`, `location` from `journal_entries` in the Entry's shapes; system items carry `title` / `href` and never the raw payload; an unmapped type renders a generic card without `href`; the bank and people hrefs follow the mapping; a malformed cursor is 400 `journal/invalid-cursor`; a missing or invalid `limit` is 30.
 - P0.3 / P0.4 — the home route has no fixtures; the rail is composed from `GET /layout`, each widget has its own query, and an unknown key is skipped.
+- P0.4 weather — `WeatherWidget` and `lib/weather.ts` match the weather requirement: Open-Meteo from the browser, configured location before geolocation, one fetch per mount, the compact card while loading and on denial or failure, no fixture data, a link to `/weather`; `0036_layout_core` seeds it on the left rail with no permission.
 
 **Test evidence to add or fix:**
 - `journal_test.go` fake repository: `streamKey{src, evt, ref}` mirrors the superseded unique key (no user), so a per-user test cannot fail against it — add the user with row 1.
@@ -506,3 +557,4 @@ point here. Paths are relative to `backend/` or `frontend/src/`; `stream.go` is
 - `journal_test.go: TestStreamReadMapping` covers only `people:birthday_upcoming`; extend it to `media:playback_completed` (href with the asset id) and the bank cards (TC-STREAM-033, TC-STREAM-034).
 - Behaviour that already holds but has no test: TC-STREAM-016 (migration backfill), TC-STREAM-030 (merged cursor traversal over the router), TC-STREAM-031 (owner isolation on `/stream`), TC-STREAM-035 (unmapped type → generic card).
 - New with the rows above: TC-STREAM-005, 006, 015, 017, 018, 036, 037, 051, 053, 070…072, 090, 091, 112.
+- The weather widget (accepted 2026-10-01) has no test: TC-STREAM-073…075 (configured location, denied/failed fetch, success render) and TC-STREAM-076 (row 14's matcher).

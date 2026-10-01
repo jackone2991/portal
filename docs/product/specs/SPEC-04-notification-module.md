@@ -53,7 +53,7 @@ Every "something happened → tell the user" path is currently dead:
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/me/notifications` | `notifications:read:own` | `?status=unread\|all&cursor=&limit=` (default: `all`; `limit` default 50, max 100); returns `{items, unread_count, next_cursor}` |
+| GET | `/api/v1/me/notifications` | `notifications:read:own` | `?status=unread\|all&cursor=&limit=` (default: `all`; `limit` default 50, max 100, lenient — missing, non-integer or < 1 → 50, above 100 → clamped to 100, never a Problem); returns `{items, unread_count, next_cursor}` |
 | POST | `/api/v1/me/notifications/{id}/read` | `notifications:write:own` | idempotent; returns `200 {unread_count}` |
 | POST | `/api/v1/me/notifications/read-all` | `notifications:write:own` | `?before=<an item's cursor>`, inclusive (absent = all); returns `200 {unread_count}` |
 
@@ -256,10 +256,10 @@ CREATE INDEX password_reset_tokens_user_idx ON password_reset_tokens (user_id); 
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/me/notifications` | `notifications:read:own` | `?status=&cursor=&limit=` (default: `all`; limit default 50, max 100); `{items, unread_count, next_cursor}`; each item carries an opaque `cursor` |
+| GET | `/api/v1/me/notifications` | `notifications:read:own` | `?status=&cursor=&limit=` (default: `all`; limit default 50, max 100, lenient per the specs README Pagination rule — above 100 clamps to 100); `{items, unread_count, next_cursor}`; each item carries an opaque `cursor` |
 | POST | `/api/v1/me/notifications/{id}/read` | `notifications:write:own` | `200 {unread_count}`, idempotent |
 | POST | `/api/v1/me/notifications/read-all` | `notifications:write:own` | `?before=<item cursor>`, inclusive; `200 {unread_count}` |
-| GET | `/api/v1/me/notification-preferences` | `notification-prefs:read:own` | P1.3; every registered type + `mutable` |
+| GET | `/api/v1/me/notification-preferences` | `notification-prefs:read:own` | P1.3; every registered type + `mutable`; non-paginated, returns `{items: [...]}` (specs README Pagination) |
 | PUT | `/api/v1/me/notification-preferences` | `notification-prefs:write:own` | P1.3 |
 | POST | `/api/v1/me/push-subscriptions` | `push-subscriptions:write:own` | P1.1; upsert on `endpoint`; 201 `{id}` |
 | DELETE | `/api/v1/me/push-subscriptions/{id}` | `push-subscriptions:delete:own` | P1.1; caller's row only; 204 |
@@ -326,6 +326,7 @@ The baseline is `main` @ `99b5a0b` (the docs commits on top changed no code). Th
 | 19 · Hyg | P0.2 step 4 Long jobs off the `default` queue | Long-running jobs use the `bulk` queue on their own server so they cannot starve notify. | `backend/internal/modules/comic/import.go` `enqueueImportZip` uses `asynq.Queue("default")` with `asynq.Timeout(12*time.Hour)`; `backend/internal/modules/music/import.go` enqueues `music:import_zip` on `default` too. Both run on the light server (Concurrency 4) that serves notify. | **backend:** add a `bulk` `asynq.Server` (Concurrency 1) and mux in `cmd/worker`; move `comic:import_zip` and `music:import_zip` (and later `ops:takeout`) to it. **test:** none beyond wiring; verify in the TEST-RUN. | F095 (music: found while verifying) |
 | 20 · Hyg | §6 Tenancy | `notification_preferences` and `web_push_subscriptions` are a deviation from the ADR-07 convention, not an exemption. | `0009` creates both without `tenant_id`; `0020_platform_rls_enable` scopes only `notifications`. | **migration:** add `tenant_id` (backfilled from the owner's personal org), index, `ENABLE`/`FORCE ROW LEVEL SECURITY` and a `tenant_isolation` policy, mirroring 0020's `notifications` block; open the tenant scope on the P1.1/P1.3 request paths. | F002 |
 | 21 · P1 | P1.1–P1.4 | Web push, SSE stream, preferences API/UI, security-alert type. | Not built: no `/me/push-subscriptions` or `/me/notification-preferences` routes (`ListNotificationPreferences` / `UpsertNotificationPreference` exist in `notify.sql` but are unused); `Service.SendWebPush` is a TODO stub; no SSE endpoint; `account/auth/refresh.go` handles reuse with `RevokeChain(…, "reuse_detected")` and an audit row but dispatches no `account.security_alert`. | Build per P1.1–P1.4 and §7. **test:** TC-NOTIFY-110…114. | TRACEABILITY-MATRIX (✖) |
+| 22 · Contract | §7 list `limit` (owner decision 2026-10-01) | Missing, non-integer or < 1 → 50; above 100 → **clamped to 100**; never a Problem. | `backend/internal/modules/notify/service.go` `Service.List`: `if limit <= 0 \|\| limit > maxListLimit { limit = defaultListLimit }` — `?limit=500` returns 50 (`notify/handler.go` `List` already ignores a non-integer). | **backend:** clamp instead of resetting (`> 100 → 100`, `≤ 0 → 50`), e.g. `platform/server.Limit(r, 50, 100)`. **openapi:** describe `limit` as defaulted and clamped. **test:** TC-NOTIFY-009. | Decision 2026-10-01 (limit) |
 
 **Already matching on `HEAD`** (verified 2026-10-01):
 

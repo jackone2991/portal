@@ -54,6 +54,7 @@
 | TC-JRNL-026 | Malformed cursor → 400 | Negative | P0 | GET `/journal/entries?cursor=not-a-cursor` | 400 `journal/invalid-cursor` | ☐ (CC-4) |
 | TC-JRNL-027 | Mood trimmed and stored | Boundary | P0 | POST mood=`" vui "`; POST 80 non-space code points padded with spaces; POST 81 non-space code points | stored as `"vui"`; padded 80 → 201 (not 500 at COMMIT); 81 → 422 `journal/invalid-mood` | ☐ |
 | TC-JRNL-028 | PATCH `mood: null` clears | Functional | P0 | entry with a mood; PATCH `{mood: null}`; then PATCH `{body_md}` only | mood cleared; the body-only PATCH leaves every omitted field unchanged | ☐ |
+| TC-JRNL-029 | `limit` lenient: default and clamp | Boundary | P0 | GET `/journal/entries` with no `limit`, `limit=abc`, `limit=0`, `limit=500` over 150 entries | 50, 50, 50, then **100** items (clamped to the max, owner decision 2026-10-01); never a Problem | ☐ (CC-4) |
 
 ## P0.3 — Event emit
 

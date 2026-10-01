@@ -23,7 +23,7 @@
 
 - Accounts `owner`,`userA`,`userB`,`guest`. Owner TZ is `users.timezone`, default `Asia/Ho_Chi_Minh` (specs README Timezone, D-17).
 - Birthday wire shape: `birthday: { month:1-12, day:1-31, year?, calendar?:'solar'|'lunar', leap_month?:boolean /* lunar only */ } | null`.
-- Problem types: `people/person-not-found`, `people/invalid-birthday`, `people/invalid-cursor`, `people/validation`, `people/invalid-asset` (P1.7).
+- Problem types: `people/person-not-found`, `people/invalid-birthday`, `people/invalid-cursor`, `people/validation`, `people/already-in-registry` (409, P0.2), `people/invalid-asset` (P1.7).
 - Event `people:birthday_upcoming {notice_id, person_id, user_id, display_name, days_until}` (T∈{3,0}).
 - A controllable/relative clock for the birthday-timing cases (plan §5).
 
@@ -52,6 +52,9 @@
 | TC-PPL-017 | Unchanged birthday resend does not reset notices | Integration | P0(S1) | after the 3-day notice fired, PATCH {display_name, birthday: <unchanged>}; then PATCH changing only birth_year; run scan | notice rows untouched; no second 3-day event | ☐ |
 | TC-PPL-018 | Lunar 30/2 accepted; leap_month lunar-only | Boundary | P1 | POST {month:2, day:30, calendar:'lunar'}; POST {month:2, day:30, calendar:'lunar', leap_month:true}; POST solar with leap_month:true; lunar day 31 | 201; 201; 422 `people/invalid-birthday`; 422 | ☐ |
 | TC-PPL-019 | People list envelope | Contract | P0 | GET `/people?limit=2` over 3 people | `{items: Person[], next_cursor}` then `{items}` without cursor; no `people` key (specs README Pagination) | ☐ |
+| TC-PPL-020 | `limit` lenient: default and clamp | Boundary | P0 | GET `/people` with no `limit`, `limit=abc`, `limit=0`, `limit=500` over 250 people | 50, 50, 50, then **200** items (clamped to the max, owner decision 2026-10-01); never a Problem | ☐ (CC-4) |
+| TC-PPL-021 | Second link of one account → 409 | Negative | P0 | POST `{display_name, linked_user_id: U}`; POST again with the same U; as another owner, POST with U | second POST → 409 `people/already-in-registry`, nothing written (one person linked to U); the other owner → 201 | ☐ |
+| TC-PPL-022 | `linked_user_id` shape and existence | Negative | P1 | POST `linked_user_id: "nope"`; POST a random uuid naming no account | both 422 `people/validation`, nothing written, never 400 `about:blank` or 500 (§11 row 14) | ☐ |
 
 ## P0.3 — Upcoming birthdays endpoint
 
@@ -110,7 +113,7 @@
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
 | TC-PPL-110 | All non-2xx RFC-7807 | Contract | P0 | error paths | Problem+json + stable type | ☐ (CC-1) |
-| TC-PPL-111 | Problem types have i18n keys | Contract | P1 | grep problems.ts | all people types present | ☐ (CC-1) |
+| TC-PPL-111 | Problem types have i18n keys | Contract | P1 | grep problems.ts | all people types present, incl. `people/already-in-registry` | ☐ (CC-1) |
 | TC-PPL-112 | Permission seeding | AuthZ | P0 | inspect grants | `people:read/write/delete:own` seeded → `user` | ☐ (CC-2) |
 | TC-PPL-113 | birthday_upcoming reaches stream | Integration | P0 | run scan | event projects a stream item (keyed on notice_id) | ☐ (CC-5) |
 | TC-PPL-114 | Migration up/down | Contract | P1 | migrate + down `people_persons` | clean; CHECKs (month/day together, year needs month); notices table; identity-anchor FK | ☐ |

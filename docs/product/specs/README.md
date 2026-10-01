@@ -100,13 +100,26 @@ they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)
 - **Pagination**: list endpoints use an opaque base64 keyset
   `?cursor=&limit=`. Each spec §7 states the default and max limit; a new
   endpoint that states none uses default 30, max 50 (existing endpoints keep
-  their declared defaults and maxima). **Every** cursor-paginated list
-  endpoint responds `{items: [...], next_cursor: string}` with `next_cursor`
-  absent (or null) on the last page, and every non-paginated list responds
-  `{items: [...]}`. Extra top-level fields that are not the list itself are
-  allowed alongside `items` (e.g. notifications' `unread_count`); a resource
-  named list key (`{assets}`, `{comics}`, `{people}`, …) is not. *(Owner
-  decision 2026-09-30:)* endpoints that shipped before this rule are
+  their declared defaults and maxima). *(Owner decision 2026-10-01:)* **`limit`
+  is lenient and never an error: missing, non-integer or < 1 → the endpoint's
+  declared default; above the endpoint's max → clamped to the max.** No
+  Problem type is ever emitted for `limit`, and OpenAPI describes it that way
+  (its `minimum`/`maximum` document the range, not a 4xx). The shared
+  `platform/server.Limit(r, def, max)` helper already implements the rule.
+  **Every collection response is `{items}`** *(owner decision 2026-09-30,
+  confirmed 2026-10-01)*: a cursor-paginated list responds
+  `{items: [...], next_cursor: string}` with `next_cursor` absent (or null) on
+  the last page, and a non-paginated list responds `{items: [...]}` too — so a
+  list that later gains pagination or metadata changes no client. Extra
+  top-level fields that are not the list itself are allowed alongside `items`
+  (e.g. notifications' `unread_count`, budgets' `month`); a resource-named
+  list key (`{assets}`, `{comics}`, `{people}`, …) is not. A collection
+  response is any response whose payload is a list of resources (every list
+  endpoint, paginated or not); a single resource or a composite read — a
+  dashboard, a report, a detail with embedded children — keeps its arrays as
+  named fields of that object (`ComicDetail.chapters`, the bank report's
+  `expenses`/`incomes`/`trend`). *(Owner decision 2026-09-30:)* endpoints that
+  shipped before this rule are
   **retrofitted, not grandfathered** — only their limits are kept; each such
   spec §7 states the `{items}` shape and carries a code follow-up for the
   handler, `shared/openapi.yaml` and the frontend readers. *(Code follow-up
@@ -124,26 +137,36 @@ they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)
   unparseable → `Asia/Ho_Chi_Minh` (the column default; an unparseable stored
   name also logs a warning). There is no instance-wide fallback: `APP_TIMEZONE`,
   "the instance default" and UTC are not v1 sources for user-facing
-  boundaries. **Write path**: the frontend detects the device zone
+  boundaries. **Manual flag** *(owner decision 2026-10-01)*:
+  `users.timezone_manual boolean NOT NULL DEFAULT false`. While it is true
+  the device-detected zone never overwrites the stored one. **Write path**:
+  `PATCH /api/v1/auth/me {timezone, timezone_manual?}` (authenticated; the
+  caller's own row only) — `timezone` is required, `timezone_manual` omitted
+  leaves the flag unchanged; the response is the updated `/auth/me` body. The
+  frontend detects the device zone
   (`Intl.DateTimeFormat().resolvedOptions().timeZone`, i.e. the user's current
-  location) after sign-in and saves it through the account API
-  (`PATCH /api/v1/auth/me {timezone}`) when it differs from the stored value;
-  settings offer a manual override (an IANA picker, saved as
-  `PATCH /auth/me {timezone, timezone_manual: true}`); while
-  `users.timezone_manual` is true the automatic save is skipped, and choosing
-  "use my location" clears it. The API validates the name with
-  `time.LoadLocation` (422 `account/invalid-timezone` otherwise). **Readers**:
+  location) after sign-in and, when `timezone_manual` is false and the zone
+  differs from the stored value, saves `{timezone}`; settings offer a manual
+  override (an IANA picker, saved as `{timezone, timezone_manual: true}`) and
+  "use my location", which saves `{timezone: <device zone>, timezone_manual:
+  false}`. The API validates the name with `time.LoadLocation`; an empty or
+  unknown IANA name is 422 `account/invalid-timezone` and nothing is written.
+  The slug is registered in `frontend/src/lib/problems.ts` (Errors
+  convention). `GET /auth/me` returns both `timezone` and `timezone_manual`.
+  **Readers**:
   the frontend reads the zone from `GET /auth/me`; backend modules read it
   through `accountapi` (`UserSummary.Timezone`), never by querying `users`.
   **Sweeps**: a periodic task never uses one "today" for everyone — it runs
   often enough (hourly, D-17's per-TZ pattern) and evaluates each user's local
   date in that user's zone, relying on its dedup keys for exactly-once. SQL
   converts at the query layer (`occurred_at AT TIME ZONE $tz`), never through
-  the session zone (UTC). *(Code follow-up: `0002_account_users` ships
-  `timezone DEFAULT 'UTC'` — a new migration changes the default to
-  `'Asia/Ho_Chi_Minh'`, rewrites the untouched `'UTC'` rows and adds
-  `timezone_manual boolean NOT NULL DEFAULT false`; there is no
-  `PATCH /auth/me` and no `account/invalid-timezone` in `problems.ts`, `CurrentUser` and `accountapi.UserSummary` carry no
+  the session zone (UTC). *(Code follow-up — no spec owns the account module,
+  so it is tracked as the first item of the **Per-user timezone** cross-cutting
+  gap below: `0002_account_users` ships `timezone DEFAULT 'UTC'` — a new
+  migration changes the default to `'Asia/Ho_Chi_Minh'`, rewrites the
+  untouched `'UTC'` rows and adds `timezone_manual boolean NOT NULL DEFAULT
+  false`; there is no `PATCH /auth/me` and no `account/invalid-timezone` in
+  `problems.ts`, `CurrentUser` and `accountapi.UserSummary` carry no
   timezone, and the frontend's `lib/time.ts` takes its display zone from
   `GET /api/v1/time`, i.e. `APP_TIMEZONE` — it switches to the user's zone and
   `/time` keeps only the server clock.)*
@@ -264,22 +287,24 @@ Row ranges use each section's own severity order (its intro paragraph names
 it): **Sec** security · **Data** data loss or silently wrong / lost data ·
 **Integ** integrity or a wrong answer · **AuthZ** · **Contract** API, OpenAPI,
 Problem types · **UX** frontend behaviour · **Hyg** schema hygiene · **P1**
-unbuilt P1 feature.
+unbuilt P1 feature. Rows added by the 2026-10-01 owner decisions are appended
+at the end of their table instead of renumbering the rows other documents
+cite, so a few ranges below are split.
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
-| [SPEC-01](SPEC-01-media-image-pipeline.md) | [§11](SPEC-01-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Data 1–3 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–17 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
-| [SPEC-02](SPEC-02-comic-vertical.md) | [§11](SPEC-02-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Sec 1–5 · Integ 6–9 · Contract/UX 10–16 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
-| [SPEC-03](SPEC-03-finance-ledger.md) | [§12](SPEC-03-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Sec 1 · Data 2–5 · Contract 6–12 · UX 13–16 | balance / dashboard / report queries not filtered by the caller (1); archived accounts still accept writes (2) |
-| [SPEC-04](SPEC-04-notification-module.md) | [§11](SPEC-04-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16 · Hyg 17–20 · P1 21 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
-| [SPEC-05](SPEC-05-journal.md) | [§11](SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 7 | Data 1 · UX 2–5 · Contract 6–7 | `journal:entry_created` published before the request transaction commits (1) |
-| [SPEC-06](SPEC-06-life-stream-home.md) | [§11](SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
+| [SPEC-01](SPEC-01-media-image-pipeline.md) | [§11](SPEC-01-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Data 1–3 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
+| [SPEC-02](SPEC-02-comic-vertical.md) | [§11](SPEC-02-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Sec 1–5 · Integ 6–9 · Contract/UX 10–17 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
+| [SPEC-03](SPEC-03-finance-ledger.md) | [§12](SPEC-03-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Sec 1 · Data 2–5 · Contract 6–12, 17 · UX 13–16 | derived-balance queries (accounts, dashboard) not filtered by the caller (1); archived accounts still accept writes (2) |
+| [SPEC-04](SPEC-04-notification-module.md) | [§11](SPEC-04-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 22 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16, 22 · Hyg 17–20 · P1 21 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
+| [SPEC-05](SPEC-05-journal.md) | [§11](SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 8 | Data 1 · UX 2–5 · Contract 6–8 | `journal:entry_created` published before the request transaction commits (1) |
+| [SPEC-06](SPEC-06-life-stream-home.md) | [§11](SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home, rail, `/weather` gate) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
 | [SPEC-07](SPEC-07-continue-rail.md) | [§11](SPEC-07-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
-| [SPEC-08](SPEC-08-people-registry.md) | [§11](SPEC-08-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 13 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
+| [SPEC-08](SPEC-08-people-registry.md) | [§11](SPEC-08-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12, 14–15 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
 | [SPEC-09](SPEC-09-platform-ops.md) | [§11](SPEC-09-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
 | [SPEC-10](SPEC-10-ledger-expansion.md) | [§8](SPEC-10-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 5 | Data 1 · Scheduling 2 · Contract 3–5 | opening a debt is three writes with no enclosing transaction (1) |
 | [SPEC-12](SPEC-12-journal-attachments.md) | [section](SPEC-12-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 2 | AuthZ 1 · UX 2 (both owned by other specs) | no `user` grant of `assets:write:own` and no enforcement on upload (1) |
-| **Total** | | **138** | | |
+| **Total** | | **145** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -290,13 +315,25 @@ names:
   SPEC-10 §8 row 3; plus the unowned lists (music, social, story, people
   suggestions) the Pagination convention names. Each retrofit moves handler,
   `shared/openapi.yaml` and the frontend readers in one PR.
-- **Per-user timezone** (Timezone convention): the account change comes first —
-  the migration that sets `users.timezone DEFAULT 'Asia/Ho_Chi_Minh'`, rewrites
-  untouched `'UTC'` rows and adds `timezone_manual`; `PATCH /auth/me`;
-  `UserSummary.Timezone`; `account/invalid-timezone` (owned by the convention's
-  code follow-up; no spec row). Then its readers: SPEC-03 §12 rows 8, 16 ·
-  SPEC-05 §11 row 2 · SPEC-06 §11 rows 3, 9, 16 · SPEC-08 §11 rows 5–6 ·
-  SPEC-10 §8 row 2.
+- **Per-user timezone** (Timezone convention, Decisions 2026-09-30 and
+  2026-10-01 (f)): the account change comes first and has no spec row (no spec
+  owns the account module), so it is listed here in full:
+  1. **migration** (account-owned): `users.timezone` default
+     `'Asia/Ho_Chi_Minh'`, untouched `'UTC'` rows rewritten, and
+     `timezone_manual boolean NOT NULL DEFAULT false` added;
+  2. **backend** (`account`): `PATCH /api/v1/auth/me {timezone,
+     timezone_manual?}` validating with `time.LoadLocation` → 422
+     `account/invalid-timezone`; `GET /auth/me` / `CurrentUser` carry
+     `timezone` and `timezone_manual`; `accountapi.UserSummary.Timezone` (plus
+     a batch lookup for sweeps);
+  3. **openapi**: both operations and the 422;
+  4. **frontend**: `account/invalid-timezone` in `problems.ts`; the post-sign-in
+     device-zone save (skipped while `timezone_manual`), the settings picker and
+     "use my location"; `lib/time.ts` takes the zone from `/auth/me`, and
+     `GET /api/v1/time` keeps only the server clock.
+
+  Then its readers: SPEC-03 §12 rows 8, 16 · SPEC-05 §11 row 2 · SPEC-06 §11
+  rows 3, 9, 16 · SPEC-08 §11 rows 5–6 · SPEC-10 §8 row 2.
 - **`problems.ts` slugs** (Errors convention): SPEC-01 §11 row 12 · SPEC-02
   §11 row 10 · SPEC-03 §12 rows 2, 8 · SPEC-04 §11 row 14 · SPEC-05 §11
   row 6 · SPEC-06 §11 row 15 · SPEC-07 §11 row 13 · SPEC-08 §11 row 12 ·
@@ -306,6 +343,13 @@ names:
   row 16 · SPEC-05 §11 row 7 · SPEC-06 §11 row 15 · SPEC-09 §11 row 9 ·
   SPEC-10 §8 row 5. Best done as one retrofit together with the drift check
   the convention asks for.
+- **`limit` clamps instead of resetting** (Pagination convention, Decision
+  2026-10-01 (e)): SPEC-01 §11 row 18 · SPEC-02 §11 row 17 · SPEC-03 §12
+  row 17 · SPEC-04 §11 row 22 · SPEC-05 §11 row 8 · SPEC-06 §11 row 8 ·
+  SPEC-08 §11 row 15; plus the unowned movie, music (catalogue and imports),
+  story and people-suggestions lists, which reset the same way. Each is one
+  line (or a call to `platform/server.Limit`, which already clamps) plus a
+  test; `/continue` already clamps.
 - **F009 — `user` upload grant**: SPEC-01 §11 row 9 (owner) · SPEC-12 row 1.
   Seed the grant in the same migration that adds `RequirePermission` to the
   upload routes, or every `user` loses photo upload.
@@ -315,7 +359,9 @@ names:
   SPEC-07 rows 4, 5, 8; keepalive `PUT` instead of `sendBeacon` (F001) SPEC-02
   row 11 · SPEC-07 row 1; `bulk` queue (F095) SPEC-02 row 8 · SPEC-04 row 19 ·
   SPEC-09 row 11; people retraction events (F017) SPEC-08 row 2 · SPEC-06
-  row 2; optimistic placement (F015) SPEC-05 row 4 · SPEC-06 row 10.
+  row 2; optimistic placement (F015) SPEC-05 row 4 · SPEC-06 row 10; D-34
+  matcher (F032) SPEC-06 row 14 (`/weather`; `/admin` and `/calendar` are
+  unowned).
 
 **Suggested build order for closing gaps** (a suggestion, not a gate):
 
@@ -362,56 +408,42 @@ here; this list does not restate it. The gap rows cite them as
   P0.2, P0.4; SPEC-01 §11 row 16; the D-20 update in
   [feature-inventory.md](../feature-inventory.md).
 
-## Open owner decisions
+## Decisions recorded 2026-10-01
 
-Found during the 2026-10-01 gap verification. Each needs an owner answer, not
-an edit; the place named is where the answer lands.
+The owner settled the seven questions the 2026-10-01 gap verification left
+open. The detail lives in the places named here; the gap rows cite them as
+"Decision 2026-10-01".
 
-- **(a) `GET /bank/report` is undocumented.** It ships (`bank/module.go`,
-  behind `bank-transactions:read:own`) and SPEC-10 §1 refers to SPEC-03's
-  "monthly report", but SPEC-03 §7 lists no such endpoint (P1.11 describes
-  only a report *page*). Decide: document its contract in SPEC-03 §7 (and add
-  a §12 row if it diverges), or retire it.
-- **(b) Debt movements body.** SPEC-10 §6 says `account_id`; the handler and
-  `frontend/src/lib/bank.ts` use `wallet_id` (plus an optional `note`) —
-  SPEC-10 §8 row 4. Decide which name is the contract.
-- **(c) `people/already-in-registry`.** The handler emits it (409, the `0035`
-  `linked_user_id` unique), but neither SPEC-08 §7 nor `problems.ts` declares
-  it — SPEC-08 §11 row 12. Decide: declare it, or map the conflict to an
-  existing type.
-- **(d) Weather widget.** SPEC-06 §3 says it was dropped, but `HEAD` ships
-  `WeatherWidget`, registered as `weather` and seeded on the left rail by
-  `0036_layout_core` — SPEC-06 §11 row 14. Remove it, or accept it and revise
-  §3.
-- **(e) Out-of-range `limit`.** The Pagination convention sets default and max
-  but not what happens beyond them, and the specs disagree:
-  - *clamp to the max* — SPEC-06 P0.2 and §7 (`/stream`, above 50 → 50;
-    `HEAD` falls back to 30, §11 row 8); SPEC-07 P0.3 (`/continue`, above
-    50 → 50; `HEAD` clamps, the only list that does); TC-NOTIFY-009
-    (`limit=500` → "limit clamped"). SPEC-08's `days` on upcoming birthdays
-    (> 366 → 366) is a window, not a page size, but clamps too.
-  - *fall back to the default* — SPEC-01 §7 Pagination (out of range → 50);
-    SPEC-05 §7 (≤ 0 or > 100 → 50); SPEC-08 §7 (≤ 0 or > 200 → 50).
-  - *silent* — SPEC-02 §7 (30 / 50), SPEC-03 §7 (50 / 100), SPEC-04 §7
-    (50 / 100).
-  - `HEAD`: every list service — media, comic, bank, notify, journal, people,
-    stream — falls back to the default on both sides; only `/continue` clamps.
-
-  **Proposed rule** (one sentence for the Pagination convention): *`limit` is
-  lenient and never an error — missing, non-integer or < 1 → the endpoint's
-  default; above the endpoint's max → clamped to the max.* It is what a client
-  asking for 500 means, matches SPEC-06, SPEC-07 and TC-NOTIFY-009, and costs
-  one line in each of seven services plus their tests; SPEC-01 §7, SPEC-05 §7
-  and SPEC-08 §7 flip their sentence, and SPEC-02/03/04 gain it. (The
-  zero-code alternative — fall back everywhere — flips SPEC-06, SPEC-07,
-  TC-NOTIFY-009 and the `/continue` handler instead.)
-- **(f) `timezone_manual` and `account/invalid-timezone`.** Both were added
-  while writing the Timezone convention, to make "manual override" and
-  validation concrete; confirm the flag (column, `PATCH /auth/me` field, "use
-  my location" clears it) and the 422 slug.
-- **(g) `{items}` for non-paginated lists.** The Envelopes decision is applied
-  to non-paginated lists too (`/bank/accounts`, chapter pages, `/bank/debts`,
-  `/people/upcoming-birthdays`, …); confirm that reading.
+- **(a) `GET /bank/report` is documented, not retired** — SPEC-03 P1.11
+  (contract and ACs) and its §7 row; TC-BANK-185…190; the SPEC-03 P1.11 row
+  of the matrix. No new gap row: its month handling is SPEC-03 §12 row 8, its
+  OpenAPI annotation row 12.
+- **(b) Debt movements use `wallet_id`** — defined in SPEC-10 §6 (the user's
+  own non-debt account the money moves through). The old SPEC-10 §8 row 4
+  (rename to `account_id`) is gone; row 4 is now the non-debt check `HEAD`
+  lacks.
+- **(c) `people/already-in-registry` is declared** — SPEC-08 P0.2 (409 on a
+  second link of one account) and §7 Problem types; §11 row 12 now covers only
+  its missing `problems.ts` entry, row 14 the `linked_user_id` shape rule;
+  TC-PPL-021, TC-PPL-022.
+- **(d) The weather widget is in scope** — SPEC-06 §3 (no longer a non-goal)
+  and P0.4 (requirement and ACs); §11 row 14 is now the `/weather` matcher gap;
+  TC-STREAM-073…076; brief 06 annotated.
+- **(e) `limit` is lenient and clamps** — the **Pagination** convention above;
+  every §7 that declares a limit; one gap row per service that resets instead
+  (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
+  [feature-inventory.md](../feature-inventory.md).
+- **(f) `timezone_manual` and `account/invalid-timezone` are confirmed** — the
+  **Timezone** convention above; the D-17 update in
+  [feature-inventory.md](../feature-inventory.md);
+  [frontend.md](../../architecture/frontend.md) §5.4;
+  [security.md](../../architecture/security.md)'s route list. The code
+  follow-up is the first item of the **Per-user timezone** cross-cutting gap
+  below (no spec owns the account module).
+- **(g) `{items}` for non-paginated lists is confirmed** — the **Pagination**
+  convention above (with the rationale and what counts as a collection); the
+  D-29 update in [feature-inventory.md](../feature-inventory.md). Every spec §7
+  complies; the shipped divergences are the Envelopes rows indexed above.
 
 ## Review history
 
@@ -426,4 +458,6 @@ an edit; the place named is where the answer lands.
 - **2026-10-01** — every `[c]` finding re-verified against `99b5a0b` and
   folded into each spec's "Implementation gaps vs shipped code" section.
   **From now on that section, not a worklog, is the live list** of where the
-  code diverges; the worklogs are the dated record.
+  code diverges; the worklogs are the dated record. The same day the owner
+  decided the seven open questions; they are applied and listed under
+  "Decisions recorded 2026-10-01" (gap total 138 → 145).

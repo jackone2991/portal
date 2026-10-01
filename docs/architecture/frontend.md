@@ -652,13 +652,19 @@ Backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timez
 the user's own `users.timezone`, read from `GET /auth/me` — never the
 browser's zone and never an instance-wide `APP_TIMEZONE`; unknown →
 `Asia/Ho_Chi_Minh`. The same zone drives every "today", day separator, month
-default and date-only → instant conversion on the client. **Write path:** after
+default and date-only → instant conversion on the client. **Manual flag**
+(owner decision 2026-10-01): `users.timezone_manual boolean NOT NULL DEFAULT
+false`, returned by `GET /auth/me` beside `timezone`; while it is true the
+device-detected zone never overwrites the stored one. **Write path:** after
 sign-in the app reads the device zone with
 `Intl.DateTimeFormat().resolvedOptions().timeZone` (the user's location) and,
 when it differs from the stored value and `timezone_manual` is false, saves it
 with `PATCH /api/v1/auth/me {timezone}`; the settings page offers a manual
 override (IANA picker → `{timezone, timezone_manual: true}`) and a "use my
-location" reset. *(Code follow-up: `src/lib/time.ts` still takes its display
+location" reset (`{timezone: <device zone>, timezone_manual: false}`). An
+omitted `timezone_manual` leaves the flag unchanged. A name `time.LoadLocation`
+rejects is 422 `account/invalid-timezone`, which the settings form shows inline
+through the `problems.ts` catalog. *(Code follow-up: `src/lib/time.ts` still takes its display
 zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE`; `/time` should keep only the
 server clock, and the zone comes from `/auth/me`, which does not carry it yet.)*
 

@@ -39,7 +39,7 @@
 | TC-NOTIFY-005 | Cursor stable over 500 | Functional | P0 | page with cursor | stable, ordered `created_at DESC, id DESC`; no dupes/gaps | ☐ (CC-4) |
 | TC-NOTIFY-006 | read-all zero unread → 200 | Idempotency | P0 | read-all with nothing unread | `200 {unread_count:0}` (never 500) | ☐ |
 | TC-NOTIFY-007 | read-all `before` watermark (inclusive) | Functional | P0 | read-all with `before` = newest rendered item's `cursor`; a row created after it | that item is read; post-watermark row stays unread | ☐ |
-| TC-NOTIFY-009 | Opaque cursors + limit | Contract | P0 | GET with `limit=500`; GET with a hand-built `<created_at>_<id>` cursor | limit clamped (default 50, max 100); each item carries `cursor`; hand-built cursor → 400 `notify/invalid-cursor` | ☐ |
+| TC-NOTIFY-009 | Opaque cursors + limit | Contract | P0 | GET with `limit=500` (over 120 rows), with `limit=abc`, with no `limit`; GET with a hand-built `<created_at>_<id>` cursor | `limit=500` → 100 items (clamped to the max, owner decision 2026-10-01); `abc` / absent → 50; never a Problem; each item carries `cursor`; hand-built cursor → 400 `notify/invalid-cursor` | ☐ |
 | TC-NOTIFY-008 | Permission seeding | AuthZ | P0 | inspect grants | all six notify codes seeded → `user` role (else dead bell) | ☐ (CC-2) |
 
 ## P0.2 — Dispatch fan-out
