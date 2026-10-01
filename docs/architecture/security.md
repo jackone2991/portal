@@ -491,7 +491,8 @@ GET    /me/organizations               list orgs the user belongs to
 POST   /auth/switch-tenant             switch active org; mints new tokens  [step-up if elevated]
 
 # Identity  [BUILT]
-GET    /auth/me                        current user + roles + org context
+GET    /auth/me                        current user + roles + org context (+ timezone, timezone_manual — PLANNED)
+PATCH  /auth/me                        {timezone, timezone_manual?}; 422 account/invalid-timezone  [PLANNED — specs README Timezone]
 
 # Sessions  [PLANNED]
 GET    /me/sessions                    list active refresh tokens (devices)

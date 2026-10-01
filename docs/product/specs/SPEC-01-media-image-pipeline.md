@@ -561,7 +561,8 @@ Annotate per the README OpenAPI encoding (`security: []` for the variant row;
 **Pagination** (README convention, with this endpoint's OpenAPI-declared
 limits kept): `GET /api/v1/assets?kind=&status=&cursor=&limit=` responds
 `{items: Asset[], next_cursor?}` — `limit`
-default 50, max 100; an out-of-range value falls back to 50. Opaque cursor over
+default 50, max 100, lenient per the README rule (missing, non-integer or < 1
+→ 50; above 100 → clamped to 100; never a Problem). Opaque cursor over
 `(created_at, id)` DESC. `status=processing` expands server-side to
 `processing,uploading`; `deleting` is never returned. `next_cursor` is present
 only when another page exists. A malformed cursor is 400 `media/invalid-cursor`
@@ -647,6 +648,7 @@ stated otherwise.
 | 15 | P0.4 deep link (SPEC-07 P0.4 Media deep-link rule) | An image link is `/library/media?open={id}`; the grid reads `open` and opens that asset's lightbox, or shows a not-found toast. | `templates/v1/views/library/media/MediaIndexView.tsx` reads only `kind` and `status` from the search params. | **frontend:** read `open`, open the lightbox when the id is in the loaded pages (fetch `GET /assets/{id}` otherwise), toast on 404. | F018 |
 | 16 | Decision 2026-09-30 (Audio) — SPEC-07 P0.1 | Audio `duration_ms` is probed from the original at `/complete` so audio can save progress and join `/continue` (requirement owned by SPEC-07). | `service.go` `completeAudio` calls `MarkReady(ctx, id, "", nil, nil, nil)` — no duration. | **backend:** ffprobe the original at `/complete` for audio (or a light follow-up task) and store `duration_ms`. Tracked with SPEC-07's gap list. | Decision 2026-09-30 (Audio) |
 | 17 | §7 OpenAPI encoding | Variant row `security: []`; `x-required-permission: {owner_or: assets:delete:any}` on DELETE and `{owner_or: assets:write:any}` on PATCH `{title}`. | `shared/openapi.yaml` has no `x-required-permission` anywhere; `getAssetVariant` declares no `security`; the `completeAssetUpload` description still says images enqueue a thumbnail job. | **openapi:** add the annotations and fix the description. **test:** TC-MEDIA-112 drift check. | F025 (README OpenAPI encoding) |
+| 18 | §7 Pagination (`limit`, owner decision 2026-10-01) | `limit` is lenient: missing, non-integer or < 1 → 50; above 100 → **clamped to 100**; never a Problem. | `service.go` `Service.List`: `if limit <= 0 \|\| limit > maxListLimit { limit = defaultListLimit }` — `?limit=500` returns 50 (`handler.go` `List` already ignores a non-integer). | **backend:** clamp instead of resetting (`> 100 → 100`, `≤ 0 → 50`), e.g. through `platform/server.Limit(r, 50, 100)`. **openapi:** describe `limit` as defaulted and clamped, not a 4xx. **test:** TC-MEDIA-070. | Decision 2026-10-01 (limit) |
 
 **Already matching (verified on HEAD — do not redo).**
 - Worker admission rule: `worker/process_image.go` `checkImageDims` (area ≤ 64 MP, side ≤ 30,000 px, animated refused) and `encodeWebP` (fit within max-width × 16,000 px, never upscaled, `-map_metadata -1`); the original is never re-encoded.
@@ -658,7 +660,7 @@ stated otherwise.
 - DELETE is gated by `RequireOwnerOrPermission(engine, "assets:delete:any", extractAssetOwner)` (`cmd/api/main.go`); a missing row is 404.
 - Janitor: hourly `media:purge_orphans` on the single `asynq.Scheduler`, 15-min grace, 24 h abandoned sweep, error log after 5 consecutive failures (`PurgeOrphans`, `recordPurge`).
 - Poster: separate `media:thumbnail` task, `min(10 %, 10 s)` seek, audio-only skipped, never fails the asset (`worker/thumbnail.go`).
-- `platform/events` fan-out (P0.6) and the library keyset (`ListAssetsByOwnerCursor`, `processing` → `processing,uploading`, limit 50/100 with fallback).
+- `platform/events` fan-out (P0.6) and the library keyset (`ListAssetsByOwnerCursor`, `processing` → `processing,uploading`, limit default 50 for a missing or invalid value; above 100 resets to 50 instead of clamping — row 18).
 
 **Test evidence to add/fix.**
 - `service_test.go: TestListPaginates` reads the old `{assets}` result shape through the service; once the handler renames the key, add an HTTP test asserting `items` and 400 `media/invalid-cursor` (TC-MEDIA-063).

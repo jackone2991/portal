@@ -32,7 +32,9 @@ first screen stays fake, no individual module creates the daily habit.
 - The bell/notification UX — that is SPEC-04 (the stream is a timeline, not an
   unread queue; the two share producers, not storage).
 - Push/email digest delivery — P2 here, promotes SPEC-04's P2 seam.
-- Weather widget — dropped, not wired (kills the backlog §3 P2 question).
+- ~~Weather widget — dropped, not wired (kills the backlog §3 P2 question).~~
+  Superseded 2026-10-01: the owner accepted the shipped `WeatherWidget` into
+  scope ([SPEC-06](../specs/SPEC-06-life-stream-home.md) P0.4).
 
 ## User stories
 

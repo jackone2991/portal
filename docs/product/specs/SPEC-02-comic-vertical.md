@@ -365,14 +365,25 @@ the reference pattern for movie/music/story, which hold the same media reference
   |---|---|---|
   | Zip size | ≤ `importMaxZipBytes` (16 GiB); larger → 422 `comic/validation` at `PUT /imports/{id}/zip`, nothing stored | same |
   | Image entries | ≤ `importMaxEntries` (100,000); more → job `failed` with `error` | same |
+  | Compression ratio (zip-bomb guard) | an image entry with a ratio > `importMaxRatio` (100:1) is skipped unextracted and unreported (below); the upload itself is never refused for it | same |
   | Folders | ignored: every image is flattened into the target chapter, ordered by base filename (natural sort) | each distinct folder path becomes one chapter titled by its last segment, in natural-sort order; a wrapper folder is therefore transparent (`wrapper/ch1/*` → chapter `ch1`), and loose root-level images form one chapter |
   | Chapter placement | the existing chapter; new pages append after its current pages | `sort_order` from the chapter number in the title (numberless titles append after `MAX(sort_order)`); a title that already exists **with** pages is skipped, one that exists **empty** is refilled in place |
 
   Both modes: entries are selected as images by extension; directory entries, names
-  containing `..`, absolute paths, `__MACOSX/` entries and entries with a
-  compression ratio > 100:1 (zip-bomb guard) are skipped and never extracted; an
-  image the media pipeline cannot process fails in the per-file report. A zip that is
-  unreadable or has no valid image leaves the job `failed` with `error`.
+  containing `..`, absolute paths and `__MACOSX/` entries are skipped and never
+  extracted. **Zip-bomb guard:** an image entry whose uncompressed size divided by
+  its compressed size — both as declared in the zip directory, integer division,
+  entries with a compressed size of 0 not checked — exceeds `importMaxRatio` (100)
+  is skipped the same way, before extraction. A skipped entry is silent: it gets no
+  report row, counts in none of `total`, `succeeded` or `failed`, and does not count
+  toward `importMaxEntries`; it never fails the job by itself. Every extracted entry
+  is read through a 60 MiB cap (above SPEC-01's 50 MB image limit), so an entry whose
+  real data outgrows its declared size cannot exhaust the worker: it fails on read or
+  at ingest and is reported failed. An image the media pipeline cannot process fails
+  in the per-file report. A zip that is unreadable, or has no valid image left after
+  the skips (for example, one whose every image is a bomb entry), leaves the job
+  `failed` with `error`; none of this is a 4xx, because the guards run in the worker
+  after `PUT /imports/{id}/zip` has answered.
   **Queue (target):** a 12 h job must not share the light server's `default`
   queue with notify (SPEC-04 P0.2 step 4), so `comic:import_zip` runs on a
   dedicated **`bulk`** queue served by its own `asynq.Server` (Concurrency 1),
@@ -388,6 +399,11 @@ the reference pattern for movie/music/story, which hold the same media reference
     `comic/validation` and no object stored.
   - Given a zip entry named `../x.png`, then it is skipped and nothing is written
     outside the import.
+  - Given a zip of three ordinary images plus one image entry compressed at more
+    than 100:1, then the job is `done` with three pages and `total` = 3, and the
+    bomb entry is never extracted and has no report row; given a zip whose only
+    image is such an entry, then the job is `failed` with a job-level `error` and
+    no pages.
   - Given user U polls another user's import id, then 404 `comic/not-found`.
 - **P1.8 Bookmarks**: per user, per page; list on the detail page. Needs a
   `comic_bookmarks(user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -668,8 +684,8 @@ if and when its roadmap needs them.
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/comics?cursor=&limit=` | `comics:read` | drafts excluded; keyset paging ordered `updated_at DESC, id DESC`; the opaque cursor encodes `(updated_at, id)`, and the `id` tiebreaker is mandatory. This deliberately differs from SPEC-01's `created_at DESC, id DESC` because the library sorts by recent activity (specs README Pagination: the key ends in `id`). Limit default 30, max 50 |
-| GET | `/api/v1/comics/mine?cursor=&limit=` | `comics:write:own` | incl. drafts, status badges; same keyset (`updated_at DESC, id DESC`) over `owner_user_id`; limit default 30, max 50 |
+| GET | `/api/v1/comics?cursor=&limit=` | `comics:read` | drafts excluded; keyset paging ordered `updated_at DESC, id DESC`; the opaque cursor encodes `(updated_at, id)`, and the `id` tiebreaker is mandatory. This deliberately differs from SPEC-01's `created_at DESC, id DESC` because the library sorts by recent activity (specs README Pagination: the key ends in `id`). Limit default 30, max 50; lenient per the README rule (missing, non-integer or < 1 → 30; above 50 → clamped to 50) |
+| GET | `/api/v1/comics/mine?cursor=&limit=` | `comics:write:own` | incl. drafts, status badges; same keyset (`updated_at DESC, id DESC`) over `owner_user_id`; limit default 30, max 50, lenient as above |
 | POST | `/api/v1/comics` | `comics:write:own` | |
 | GET | `/api/v1/comics/{id}` | published: `comics:read`; own draft: owner | returns `ComicDetail` = `Comic` + `chapters[]` (ordered) + `progress: {chapter_id, page_id\|null, updated_at} \| null` for the caller; the client derives ch. N from the chapter's index and p. M from the page's index in `GET /chapters/{id}/pages` (P0.4) |
 | PATCH | `/api/v1/comics/{id}` | owner, or `comics:write:any` (`RequireOwnerOrPermission`) | update title/description/cover/reading_direction (`ComicPatch`) — **status is NOT changed here**; `… SET …, updated_at = now()` (specs README updated_at convention) |
@@ -799,6 +815,7 @@ Paths are relative to `backend/internal/modules/comic/` unless stated otherwise.
 | 14 | §7 `GET /comics/{id}` (`ComicDetail.progress`) | `progress` is `{chapter_id, page_id\|null, updated_at} \| null`. | `handler.go` `GetComic` omits the `progress` key when there is no row; `shared/openapi.yaml` `ComicDetail.progress` is not nullable. | **backend:** always emit `progress`, `null` when absent. **openapi:** `nullable: true`. **frontend:** reader of `ComicDetail` treats `null`. **test:** TC-COMIC-104. | found while verifying (2026-10-01) |
 | 15 | P1.7 step 3 (`ImportJob.status`) | `status ∈ pending\|uploaded\|processing\|done\|failed` (the `0026` CHECK). | `shared/openapi.yaml` `ImportJob.status` enum lists `running` instead of `processing`. | **openapi:** `processing`. **test:** TC-COMIC-160 drift check. | found while verifying (2026-10-01) |
 | 16 | §7 OpenAPI encoding | Each operation carries `x-required-permission` per the specs README (combined rows split per operation). | `shared/openapi.yaml` has no `x-required-permission` anywhere. | **openapi:** annotate every comic operation. **test:** TC-COMIC-160. | F025 (README OpenAPI encoding) |
+| 17 | §7 list `limit` (owner decision 2026-10-01) | Both cursor lists: missing, non-integer or < 1 → 30; above 50 → **clamped to 50**; never a Problem. | `service.go` `Service.list` (behind `ListPublished` and `ListOwn`): `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }` — `?limit=500` returns 30. | **backend:** clamp instead of resetting (`> 50 → 50`, `≤ 0 → 30`), e.g. `platform/server.Limit(r, 30, 50)` in the two handlers. **openapi:** describe `limit` as defaulted and clamped on both lists. **test:** TC-COMIC-105. | Decision 2026-10-01 (limit) |
 
 **Already matching (verified on HEAD — do not redo).**
 - Draft invisibility for reads: `service.go` `GetComic`, `ReaderPagesVisible` and `SaveProgress` answer 404 for someone else's draft before any membership check.
@@ -806,14 +823,14 @@ Paths are relative to `backend/internal/modules/comic/` unless stated otherwise.
 - Asset validation: `validateImageAsset` requires a ready image owned by the comic's owner (`c.OwnerID` / the chapter's owner), so an editor's own asset is rejected.
 - Owner-or-elevated middlewares for write (`comics:write:any`), comic delete and page delete (`comics:delete:any`) in `cmd/api/main.go`; chapter delete uses the write gate.
 - Publish validation (≥ 1 chapter, no empty chapter → 422 listing them); one `comic:published` per publish with `chapter_count`; `comic:chapter_deleted` per deleted chapter, once per chapter on comic delete.
-- Lists: keyset `updated_at DESC, id DESC`, limit 30/50, bad cursor 400 `comic/invalid-cursor`; `comics_status_updated_idx` (0015).
+- Lists: keyset `updated_at DESC, id DESC`, limit default 30 for a missing or invalid value (above 50 resets to 30 — row 17), bad cursor 400 `comic/invalid-cursor`; `comics_status_updated_idx` (0015).
 - P0.6 consumer `HandleAssetDeleted` (pages deleted, cover nulled, idempotent) via `platform/events`.
-- P1.7 guards: `importMaxZipBytes` 16 GiB (422 at upload), `importMaxEntries` 100,000, ratio 100:1, natural sort, poll timeout max(2 min, n × 5 s) ≤ 11 h, `Timeout(12h)` + `MaxRetry(0)`; `/imports/{id}` owner-only (404).
+- P1.7 guards: `importMaxZipBytes` 16 GiB (422 at upload), `importMaxEntries` 100,000, ratio 100:1 (`RunImport` skips the entry silently before extraction; nothing left → job `failed`), 60 MiB per-entry read cap (`readZipEntry`), natural sort, poll timeout max(2 min, n × 5 s) ≤ 11 h, `Timeout(12h)` + `MaxRetry(0)`; `/imports/{id}` owner-only (404).
 - P1.10: SSRF guard on create and before every scrape; second trigger while `syncing` is 422 unless stale > 15 min; cancel only while `syncing` and fails if the scraper refuses; internal handlers re-read the row inside `runInUserTenant` and compare the echoed `owner_id`; missing `owner_id` rejected; the scraper container is on the `internal` network only.
 
 **Test evidence to add/fix.**
 - `comic_test.go: TestDraftVisibility` and `http_test.go: TestHTTPDraftIsNotFoundToAStranger` cover reads only; add the mutation case (draft → 404, published → 403) — TC-COMIC-036 currently documents the old 404/403 ambiguity and must be rewritten.
-- TC-COMIC-141, TC-COMIC-142 and TC-COMIC-143 still describe the rev-9 caps (500 MB, 300 entries, nested dirs rejected); rewrite them to the P1.7 guard table, and TC-COMIC-102/TC-COMIC-140 to the `items` envelope and `origin='import'`.
+- TC-COMIC-141, TC-COMIC-142 and TC-COMIC-143 still describe the rev-9 caps (500 MB, 300 entries, nested dirs rejected); rewrite them to the P1.7 guard table, and TC-COMIC-102/TC-COMIC-140 to the `items` envelope and `origin='import'`. (TC-COMIC-144 was rewritten on 2026-10-01 to the zip-bomb behaviour above — a skipped entry, not a rejected upload; no test covers it yet.)
 - `comic_test.go: TestPublishValidation` does not exercise the middleware chain; add HTTP tests for TC-COMIC-039/041/042.
 - New: editor import owned by the comic owner (P0.1 AC), `bulk` queue option (F095), empty-chapter hiding (P0.2 (a)), `comic/sync-disabled` (P1.10), internal secret constant-time + 404 (F043), keepalive PUT (TC-COMIC-087).
 - P1.10 has no TEST-CASES rows yet; add rows for TriggerSync (202, stale rule), cancel, batch retries and finalize.

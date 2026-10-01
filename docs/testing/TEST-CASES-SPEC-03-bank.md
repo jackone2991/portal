@@ -1,6 +1,6 @@
 # Test Cases — SPEC-03 Finance Ledger (`bank`)
 
-**Status:** current · **Last verified:** never
+**Status:** current · **Last verified:** 2026-10-01
 
 **Spec:** [SPEC-03](../product/specs/SPEC-03-finance-ledger.md) · **Module:** `bank`
 **Prefix:** `TC-BANK-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
@@ -20,6 +20,7 @@
 | PATCH/DELETE | `/api/v1/bank/categories/{id}` (`?reassign_to=`) | `bank-categories:write/delete:own` |
 | GET/PUT | `/api/v1/bank/budgets?month=` | `bank-budgets:read/write:own` |
 | GET | `/api/v1/bank/dashboard?month=` | `bank-accounts:read:own` |
+| GET | `/api/v1/bank/report?month=` | `bank-transactions:read:own` (P1.11) |
 
 ### Preconditions
 
@@ -29,7 +30,7 @@
 - Problem types: `bank/account-not-empty`, `bank/account-not-mutable`,
   `bank/is-transfer-leg`, `bank/same-account-transfer`, `bank/currency-mismatch`,
   `bank/category-in-use`, `bank/category-kind-mismatch`, `bank/direction-kind-mismatch`,
-  `bank/invalid-amount`, `bank/invalid-category-parent`, `bank/category-immutable`, `bank/validation`, `bank/invalid-cursor`.
+  `bank/invalid-amount`, `bank/invalid-category-parent`, `bank/category-immutable`, `bank/validation`, `bank/invalid-cursor`, `bank/invalid-month` (P0.6, P1.11).
 
 ---
 
@@ -66,6 +67,7 @@
 | TC-BANK-033 | Transactions list cursor paging | Functional | P0 | >1 page; paginate | response `{items, next_cursor?}` (no `transactions` key); order `occurred_at DESC, id DESC`; no dupes/skips under inserts/edits | ☐ (CC-4) |
 | TC-BANK-034 | List filters account/month/category | Functional | P1 | apply each filter | correct subset | ☐ |
 | TC-BANK-035 | Non-paginated lists answer `{items}` | Contract | P0 | GET `/bank/accounts`, `/bank/categories`, `/bank/budgets?month=2026-06` | `{items}`, `{items}`, `{month, items}` — no `accounts` / `categories` / `budgets` key (specs README Pagination) | ☐ |
+| TC-BANK-036 | Transactions `limit` lenient: default and clamp | Boundary | P0 | GET `/bank/transactions` with no `limit`, `limit=abc`, `limit=0`, `limit=500` over 150 rows | 50, 50, 50, then **100** items (clamped to the max, owner decision 2026-10-01); never a Problem | ☐ (CC-4) |
 
 ## P0.3 — Transfers
 
@@ -151,6 +153,17 @@
 |----|----------|------|-----|-------|----------|--------|
 | TC-BANK-180 | Partial-unique dedup guard | Data-integrity | P1 | two inserts sharing `(account_id, dedup_hash)` | 2nd fails on partial unique index (future import dedup, testable now) | ☐ [AUTO] |
 | TC-BANK-181 | Import columns present + nullable | Contract | P1 | inspect schema | `description_raw`, `import_batch_id`, `dedup_hash` present, nullable; `bank_import_batches` table exists | ☐ |
+
+## P1.11 — Monthly report (`GET /bank/report`)
+
+| ID | Scenario | Type | Pri | Steps | Expected | Status |
+|----|----------|------|-----|-------|----------|--------|
+| TC-BANK-185 | Children roll up; split by kind; transfers excluded | Data-integrity | P1 | Aug 2026: 50,000 *Cà phê* + 250,000 *Ăn ngoài* (children of *Ăn uống*), 20,000,000 *Lương* credit, a 1,000,000 transfer between own wallets; GET `?month=2026-08` | `expenses` = one *Ăn uống* slice {total 300,000, tx_count 2}; `incomes` = one *Lương* slice of 20,000,000; `expense` 300,000, `income` 20,000,000 | ☐ |
+| TC-BANK-186 | Slices sum to the totals, fee row included | Data-integrity | P1 | the month above + a transfer with a fee row (manual or P1.13) | the fee is in its category's slice and in `expense`; `Σ expenses[].total = expense`, `Σ incomes[].total = income`; slices sorted by `total` DESC | ☐ |
+| TC-BANK-187 | Six-month trend, zero-filled | Functional | P1 | GET `?month=2026-08` with activity only in August | `trend` = 2026-03 … 2026-08 in order; empty months `{income: 0, expense: 0}`; the last bar equals the month totals | ☐ |
+| TC-BANK-188 | Month default in the user's zone; malformed month | Boundary | P1 | owner zone `Asia/Ho_Chi_Minh`; at 2026-06-30 18:00 UTC GET without `month`; GET `?month=2026-13`, `?month=abc`, `?month=2026-08-15` | `month` = `2026-07`; each malformed value → 400 `bank/invalid-month` (`YYYY-MM` only) | ☐ |
+| TC-BANK-189 | Owner isolation | AuthZ | P1(S1) | userB has transactions in the month; userA GETs the report | none of userB's rows in any slice, total or trend bar | ☐ (CC-3) |
+| TC-BANK-190 | Composite shape | Contract | P1 | inspect the 200 body; GET an empty month | `{month, income, expense, expenses, incomes, trend}` with integer minor units and no `items` key (a composite object, not a list); empty month → zeroes and `[]`, never 404 | ☐ |
 
 ## Cross-cutting / contract
 

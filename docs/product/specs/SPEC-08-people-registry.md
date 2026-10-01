@@ -123,6 +123,24 @@ with `calendar='solar'` is rejected. Violations: 422 Problem
 to lunar birthdays too, so lunar 30/2 is rejected, and has no `leap_month`
 field or column.)*
 
+**Circle and linked account** (`0035_people_circles`). POST also accepts
+`circle` (`close_friend|family|other`, default `other`; any other value → 422
+`people/validation`; PATCH may change it) and `linked_user_id` — the id of a
+portal account this person **is**, set when the person is added from a
+suggestion (`GET /people/suggestions`, unowned by this spec) so that account
+stops being suggested; absent, `null` or `""` means none. PATCH does not take
+`linked_user_id`. An owner's registry holds each linked account at most once (the
+`0035` partial unique index `people_persons_linked_user_idx` on `(user_id,
+linked_user_id) WHERE linked_user_id IS NOT NULL`): a POST whose
+`linked_user_id` is already linked to one of the caller's people is **409
+`people/already-in-registry`** and nothing is written. The insert runs `ON
+CONFLICT … DO NOTHING` and maps "no row" to that 409 — letting the unique
+violation raise would abort the request's tenant transaction and turn the 409
+into a 500 at commit. A malformed `linked_user_id`, or one that names no
+account, is 422 `people/validation`. *(Code follow-up: HEAD answers a malformed
+id with 400 `about:blank` and lets an unknown one hit the `users(id)` FK → 500 —
+§11 row 14.)*
+
 **Acceptance criteria.**
 - Given person rows of user B, then user A's list/fetch excludes them; direct
   fetch is 404.
@@ -136,6 +154,10 @@ field or column.)*
 - Given a PATCH that changes only `display_name` and resends the unchanged
   birthday after the 3-day notice fired, then no second 3-day event is emitted.
 - Given 200 people, cursor paging is stable (ordered `display_name`, `id`).
+- Given a person already created with `linked_user_id = U`, when the owner POSTs
+  another person with `linked_user_id = U`, then 409
+  `people/already-in-registry` and the registry still holds one person linked
+  to U; another owner may still link U.
 - Given a person with an emitted birthday stream item, when the person is
   deleted or the birthday edited, then `people:person_deleted` /
   `people:birthday_notice_revoked` fires and the stale stream item is gone.
@@ -417,8 +439,8 @@ before setting NOT NULL). *(Code follow-up.)* `0035_people_circles` later added
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| POST | `/api/v1/people` | `people:write:own` | `{display_name, relationship?, birthday?, contact?, note_md?}` — `birthday` shape per P0.2 |
-| GET | `/api/v1/people?cursor=&limit=&circle=` | `people:read:own` | ordered (`display_name`, `id`); `limit` default 50, max 200 (a value ≤ 0 or > 200 falls back to 50); optional `circle` filter (unknown value → 422 `people/validation`); returns `{items: Person[], next_cursor?: string}` (specs README Pagination; *code follow-up: HEAD answers `{people, next_cursor}`*); malformed cursor → 400 `people/invalid-cursor` |
+| POST | `/api/v1/people` | `people:write:own` | `{display_name, relationship?, birthday?, contact?, note_md?, circle?, linked_user_id?}` — `birthday` shape, `circle` and `linked_user_id` per P0.2; 409 `people/already-in-registry` when `linked_user_id` is already in the caller's registry |
+| GET | `/api/v1/people?cursor=&limit=&circle=` | `people:read:own` | ordered (`display_name`, `id`); `limit` default 50, max 200, lenient per the specs README rule (missing, non-integer or < 1 → 50; above 200 → clamped to 200; never a Problem); optional `circle` filter (unknown value → 422 `people/validation`); returns `{items: Person[], next_cursor?: string}` (specs README Pagination; *code follow-up: HEAD answers `{people, next_cursor}`*); malformed cursor → 400 `people/invalid-cursor` |
 | GET | `/api/v1/people/{id}` | `people:read:own` | 404 for others' rows |
 | PATCH | `/api/v1/people/{id}` | `people:write:own` | `birthday: null` clears; a birthday change that moves the occurrence resets current/future notice rows and emit `people:birthday_notice_revoked` per cleared emitted notice (P0.2); P1.7 adds `avatar_asset_id?: uuid|null` (validated via mediaapi: exists, kind image, status ready, owned — else 422 `people/invalid-asset`; null clears) |
 | DELETE | `/api/v1/people/{id}` | `people:delete:own` | 204; idempotent 404; emits `people:person_deleted` after commit (P0.2) |
@@ -435,11 +457,13 @@ returns every field except `leap_month` (P0.2 follow-up) and
 
 Problem types: `people/person-not-found`, `people/invalid-birthday`,
 `people/invalid-asset` (P1.7), `people/invalid-cursor` (400, malformed list
-cursor), `people/validation` (422, body/param shape). Each is registered in
-`frontend/src/lib/problems.ts` per the specs README Errors convention.
-*(Code follow-up: HEAD's `problems.ts` registers four of the five;
-`people/invalid-asset` lands with P1.7. HEAD also emits an undeclared
-`people/already-in-registry` 409, see §11.)*
+cursor), `people/validation` (422, body/param shape),
+`people/already-in-registry` (409, a POST whose `linked_user_id` is already
+linked to one of the caller's people — P0.2; declared 2026-10-01). Each is
+registered in `frontend/src/lib/problems.ts` per the specs README Errors
+convention. *(Code follow-up: HEAD's `problems.ts` registers four of the six —
+`people/already-in-registry` is emitted but unregistered (§11 row 12), and
+`people/invalid-asset` lands with P1.7.)*
 
 Both lists follow the specs README Pagination convention in full — cursor,
 limit, errors and the `{items}` envelope. Pre-rule endpoints are retrofitted,
@@ -508,8 +532,10 @@ The module lives in `backend/internal/modules/people/`.
 | 9 | §7 list envelopes | `GET /people` returns `{items: Person[], next_cursor?}`; `GET /people/upcoming-birthdays` returns `{items: [...]}`; handler, OpenAPI and readers change in one PR. | `handler.go` `List` writes `{"people": …}` and `Upcoming` writes `{"upcoming": …}`; `shared/openapi.yaml` `listPeople` requires `[people]` and `upcomingBirthdays` requires `[upcoming]`; `frontend/src/lib/people.ts` (`listPeople`, `upcomingBirthdays`) and `PeopleIndexView.tsx` (`people.data?.people`) read the old keys; `BirthdayCard` reads through `upcomingBirthdays`. | **backend:** rename both keys to `items`. **openapi:** both schemas → `required: [items]`. **frontend:** `PeoplePage.items`, `upcomingBirthdays` reads `r.items`, `PeopleIndexView` reads `.items`. The unowned `GET /people/suggestions` (`{suggestions}`) is on the same retrofit list. **test:** TC-PPL-019, TC-PPL-039. | Decision 2026-09-30 (Envelopes), F168 |
 | 10 | P0.3 sort | Sorted by `days_until`, then `display_name`, then `id`. | `service.go` `UpcomingBirthdays`: `sort.Slice` on `DaysUntil` only — unstable, so same-day ties come back in arbitrary order. | **backend:** one comparator over (`DaysUntil`, `DisplayName`, `PersonID`). **test:** TC-PPL-035. | F170 |
 | 11 | P0.5 `BirthdayCard` | Lists every upcoming person, shows a skeleton while loading, renders nothing when empty. | `frontend/src/templates/v1/components/widget/BirthdayCard.tsx` renders only `data[0]` and returns `null` while loading (no skeleton). Fixture props, the self-fetching query, the headlines and `age_turning` already match. | **frontend:** map over every item (headline per item); render a skeleton while `isLoading`. **test:** TC-PPL-070 (grep stays green) plus a render test for 0/1/5 days and empty. | F029 |
-| 12 | §7 problem types | Every people slug the API emits is declared in §7 and registered in `problems.ts`. | `problems.ts` has `people/person-not-found`, `people/invalid-birthday`, `people/validation`, `people/invalid-cursor`; `people/invalid-asset` waits for P1.7. `handler.go` `writePeopleErr` also emits `people/already-in-registry` (409, the `0035` `linked_user_id` unique), which neither §7 nor `problems.ts` declares. | **frontend:** register `people/already-in-registry` (and `people/invalid-asset` with P1.7). **spec:** §7 declares the slug together with POST's `circle`/`linked_user_id` fields from `0035` (owner decision; not decided here). **test:** TC-PPL-111. | F168 (corrected 2026-10-01) |
+| 12 | §7 problem types | Every people slug the API emits is declared in §7 and registered in `problems.ts`. | `handler.go` `writePeopleErr` emits `people/already-in-registry` (409, declared in §7 and P0.2 since 2026-10-01), but `frontend/src/lib/problems.ts` registers only `people/person-not-found`, `people/invalid-birthday`, `people/validation` and `people/invalid-cursor`; `people/invalid-asset` waits for P1.7. | **frontend:** add `people/already-in-registry` to `ProblemType` and `PROBLEM_MESSAGES` (and `people/invalid-asset` with P1.7). **test:** TC-PPL-111. | F168 (corrected 2026-10-01); Decision 2026-10-01 |
 | 13 | P1.6 interactions; P1.7 avatar | `people_interactions` table, three routes, `last_contact_on`; `avatar_asset_id` validated through `mediaapi`, NULLed on `media:asset_deleted`. | Not built: no `people_interactions` migration or query, no routes, no `last_contact_on` in `personJSON`; `avatar_asset_id` is stored but never validated or written by any route, and nothing subscribes to `media:asset_deleted`. | **migration · backend · openapi · frontend:** as P1.6/P1.7 and §6/§7 specify. **test:** TC-PPL-090…093. | TRACEABILITY-MATRIX SPEC-08 P1.6/P1.7 (✖) |
+| 14 | P0.2 `linked_user_id` shape and existence | A malformed `linked_user_id`, or one naming no account, is 422 `people/validation` and nothing is written. | `handler.go` `Create` answers a malformed id with `server.BadRequest` (400 `about:blank`). `service.go` `CreatePerson` never checks that the id names an account, so an unknown uuid reaches the `0035` FK `REFERENCES users(id)`, which raises inside the request's tenant transaction: 500. | **backend:** a malformed id → `ErrValidation`; before the insert, resolve the id through `accountapi` (the directory `Suggestions` already uses) and answer `ErrValidation` when it names no account. **openapi:** 409 `people/already-in-registry` and 422 `people/validation` on `createPerson`. **test:** TC-PPL-022. | Found while documenting decision (c), 2026-10-01 (no F-ID) |
+| 15 | §7 list `limit` (owner decision 2026-10-01) | Missing, non-integer or < 1 → 50; above 200 → **clamped to 200**; never a Problem. | `service.go` `ListPeople`: `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }` — `?limit=500` returns 50. The unowned `Suggestions` (same file) does the same with the same constants. | **backend:** clamp instead of resetting (`> 200 → 200`, `≤ 0 → 50`) in both, e.g. `platform/server.Limit(r, 50, 200)` in `handler.go`. **openapi:** describe `limit` as defaulted and clamped. **test:** TC-PPL-020. | Decision 2026-10-01 (limit) |
 
 **Already matching on HEAD.**
 - `0016_people_persons` ships both `people_persons` indexes, the
@@ -520,9 +546,14 @@ The module lives in `backend/internal/modules/people/`.
 - CRUD routes carry `people:read:own` / `write:own` / `delete:own`; another
   owner's row and a missing row answer the same 404
   `people/person-not-found`; a second DELETE is 404.
-- The list orders by (`display_name`, `id`) with a cursor, `limit` default 50 /
-  max 200 (out of range → 50), unknown `circle` → 422 `people/validation`,
+- The list orders by (`display_name`, `id`) with a cursor, `limit` default 50
+  for a missing or invalid value (above 200 resets to 50 — row 15), unknown
+  `circle` → 422 `people/validation`,
   malformed cursor → 400 `people/invalid-cursor`.
+- `0035` linked accounts: `CreatePerson` inserts `ON CONFLICT (user_id,
+  linked_user_id) … DO NOTHING` and maps no row to `ErrDuplicate` → 409
+  `people/already-in-registry` (`repository/adapter.go`, `handler.go`
+  `writePeopleErr`), so the conflict never aborts the tenant transaction.
 - Upcoming birthdays: `days` absent, unparseable or `< 1` → 14, `> 366` → 366;
   inclusive window with today = 0; lunar and birthday-less people excluded;
   `age_turning` only with a year; Feb-29 → Feb-28 in non-leap years through one
@@ -553,6 +584,9 @@ The module lives in `backend/internal/modules/people/`.
   `leap_month` with solar rejected (TC-PPL-018).
 - `TestUpcomingBirthdays` has no tie; add two people on the same day
   (TC-PPL-035).
+- Decision (c) and (e), 2026-10-01: no test covers the 409 on a second link
+  (TC-PPL-021), the `linked_user_id` shape and existence rule (TC-PPL-022,
+  row 14) or `limit` clamping (TC-PPL-020, row 15).
 - No test covers the PATCH notice reset, the retraction events, the
   `{items}` envelopes or the hourly per-owner scan (TC-PPL-013/014/017,
   TC-STREAM-005, TC-PPL-019/039, TC-PPL-061).

@@ -445,8 +445,9 @@ retrofit — this is the whole point of doing it in migration #1.
   `bank:on_asset_deleted` consumer of `media:asset_deleted` NULLs matching ids,
   and is registered in events.md. Thumbnail in the transaction row; lightbox on
   click.
-- **P1.11 Monthly report page**: per-category breakdown (donut or bars) +
-  month-over-month comparison; per currency group.
+- **P1.11 Monthly report** — shipped: `GET /bank/report` and the
+  `/bank/reports` page (per-category donut and breakdown + a six-month trend).
+  Specified in its own section below.
 - **P1.12 `bank:budget_exceeded`** event, emitted once per (category, month) on
   first crossing 100% (dedup via a small state table or cache key).
 - **P1.13 Structured transfer fees**: `POST /bank/transfers` gains optional
@@ -467,6 +468,73 @@ retrofit — this is the whole point of doing it in migration #1.
   the fee row renders as an ordinary expense with a badge linking to its transfer.
   Destination-charged fees stay on the P0.3 manual convention (this row is
   source-hardwired). Until P1.13 lands, the P0.3 convention applies.
+
+### P1.11 — Monthly report (shipped)
+
+`GET /api/v1/bank/report?month=` — permission `bank-transactions:read:own`, as
+`module.go` gates it (the report reads transactions and their categories; all bank
+read codes are granted to `user` together, P0.8). Owner-scoped like every bank
+read: each query filters `user_id = caller`, so no other user's rows can enter a
+slice, a total or a trend bar. It backs the `/bank/reports` page (the
+`bankReports` view, §8); SPEC-10 §7 measures its slices against the month
+totals.
+
+**Contract.** `month` follows the §7 month rule — `YYYY-MM`; omitted → the
+current month in the caller's `users.timezone` (specs README Timezone, D-17);
+malformed → 400 `bank/invalid-month`. Response `200`:
+
+```
+{month: "YYYY-MM", income, expense,
+ expenses: [CategoryTotal], incomes: [CategoryTotal],
+ trend: [{month: "YYYY-MM", income, expense}]}
+CategoryTotal = {category_id, name, kind, icon|null, color|null, total, tx_count}
+```
+
+- `income` / `expense` are the month's totals with **pure transfer legs**
+  excluded by the P0.3 predicate (a P1.13 or manual fee row counts as expense) —
+  the same numbers the dashboard shows for that month (P0.6).
+- `expenses` / `incomes` hold one slice per **top-level** category: a child's
+  transactions roll up into its parent, and `category_id`, `name`, `icon` and
+  `color` are the parent's (the per-child detail stays reachable through the
+  transactions list's `category` filter). `total` sums the slice's amounts,
+  `tx_count` counts its rows; slices are split by the category's `kind` and
+  sorted by `total` descending; own and seed categories alike. Pure legs carry
+  no category and never appear. Because every non-leg row has a category whose
+  kind matches its direction (P0.2), `Σ expenses[].total = expense` and
+  `Σ incomes[].total = income`.
+- `trend` is exactly six months (`trendMonths`) ending at `month`, oldest first;
+  a month with no activity is present with zeroes, never omitted.
+- Money is integer minor units. The sums are single-currency, under the P0.6
+  rule: per-currency grouping is client-side while every account shares one
+  currency, and the server splits the report by currency before a second
+  currency is allowed (§11 budgets-vs-currency question).
+- The report is one composite object, not a collection (specs README
+  Pagination): its arrays are named fields, there is no `{items}` envelope and no
+  `limit`. An empty month answers zeroes and empty arrays, never 404.
+
+Problems: 400 `bank/invalid-month`; 401 unauthenticated; 403 without the
+permission. *(Code follow-up: `handler.go` `Report` shares `monthParam`, so an
+omitted month is the UTC month and a malformed one 400 `about:blank`, and
+`parseMonth` also accepts `YYYY-MM-DD` — §12 row 8; `shared/openapi.yaml`
+`getBankReport` declares only the 401 and no `x-required-permission` — §12
+rows 8 and 12.)*
+
+**Acceptance criteria.**
+- Given 50,000 in *Cà phê* and 250,000 in *Ăn ngoài* (both children of *Ăn
+  uống*), a 20,000,000 *Lương* credit and a 1,000,000 transfer between two own
+  wallets in August 2026, when `GET /bank/report?month=2026-08`, then
+  `expenses` is one *Ăn uống* slice of 300,000 over 2 transactions, `incomes`
+  one *Lương* slice of 20,000,000, `expense` = 300,000 and `income` =
+  20,000,000 — the transfer counts nowhere.
+- Given a transfer with a fee row in that month, then the fee appears in its
+  category's slice and in `expense`, and the slices still sum to the totals.
+- Given `?month=2026-08`, then `trend` holds 2026-03 … 2026-08 in that order
+  and a month without activity reads `{income: 0, expense: 0}`.
+- Given no `month` at 2026-06-30 18:00 UTC for an owner in
+  `Asia/Ho_Chi_Minh`, then `month` = `2026-07`; given `?month=2026-13` or
+  `?month=abc`, then 400 `bank/invalid-month`.
+- Given user B's transactions in the same month, then user A's report never
+  includes them.
 
 ### P2 — future considerations (architectural insurance)
 
@@ -597,6 +665,7 @@ the import path.
 | GET | `/api/v1/bank/budgets?month=` | `bank-budgets:read:own` |
 | PUT | `/api/v1/bank/budgets` (body `{category_id, month, amount}`) | `bank-budgets:write:own` (upserts; `amount: 0\|null` deletes — P0.5) |
 | GET | `/api/v1/bank/dashboard?month=` | `bank-accounts:read:own` |
+| GET | `/api/v1/bank/report?month=` | `bank-transactions:read:own` (P1.11; composite object, not a list) |
 
 *(Codes reconciled 2026-07-10 to the 2–3-segment grammar — see P0.8.)*
 
@@ -620,7 +689,9 @@ inserts, though a row whose `occurred_at` is edited mid-scroll may cross the
 cursor — acceptable for a personal list): ordering is
 `occurred_at DESC, id DESC` and the response is `{items, next_cursor}` — the
 specs README Pagination convention and §8's infinite-list requirement.
-`?limit=` keeps the OpenAPI-declared default 50, max 100. A
+`?limit=` keeps the OpenAPI-declared default 50, max 100, and is lenient
+per the specs README rule (missing, non-integer or < 1 → 50; above 100 →
+clamped to 100; never a Problem). A
 malformed cursor is 400 `bank/invalid-cursor`; a param-shape failure 422
 `bank/validation`. The non-paginated lists answer `{items}` too:
 `GET /bank/accounts` and `GET /bank/categories` return `{items: [...]}`, and
@@ -685,6 +756,8 @@ bundle-budget check).
 - `/bank/transactions` — filterable infinite list; edit/delete inline; transfer badge
 - `/bank/accounts` — list + create/archive
 - `/bank/budgets` — month picker + per-category budget editor
+- `/bank/reports` — month picker, per-direction donut and breakdown, six-month
+  trend (P1.11)
 - `/bank/categories` — two-level tree per kind; seeds read-only; own categories
   can be created, renamed and re-parented. Delete opens a reassign picker that
   sends `?reassign_to=`, and 409 `bank/category-in-use` renders inline.
@@ -782,7 +855,7 @@ with `backend/`, `frontend/` or `shared/`.
 | 5 | **Data integrity** — §6 follow-up migration `000N_bank_integrity` | `(user_id, created_at DESC)` on `bank_transactions`; `(category_id)` on `bank_budgets`; `CHECK (parent_id IS DISTINCT FROM id)` on `bank_categories`; `CHECK (currency ~ '^[A-Z]{3}$')` on `bank_accounts`. | Not shipped: only `backend/db/migrations/0014_bank_core`, `0020_platform_rls_enable` and `0043_bank_debts` touch these tables. `service.go` `CreateAccount` / `UpdateAccount` check only `len(cur) != 3` after `ToUpper`, so `U$D` is accepted. | migration: new `00NN_bank_integrity` up/down with the four statements (pre-check existing rows for a bad currency or a self-parent). backend: validate currency with `^[A-Z]{3}$` (422 `bank/validation`). test: migration up/down; service rejects `U$D`. | F131 |
 | 6 | **Contract** — P0.4 `kind` immutability | A category PATCH that changes `kind` is 422 `bank/category-immutable` and the row is unchanged. | `handler.go` `UpdateCategory` decodes a body without a `kind` field and `server.Decode` ignores unknown keys, so `{"kind":"income"}` answers 200 and changes nothing. `ErrCategoryImmutable` is declared and mapped in `writeBankErr` but never returned. | backend: add `Kind *string` to the PATCH body; a value different from the stored kind → `ErrCategoryImmutable`; an equal value is a no-op. openapi: `kind` on the PATCH schema with the 422. test: TC-BANK-074. | F056 |
 | 7 | **Contract** — P0.7 event payload | The payload carries `currency` (the account's ISO code). | `api/api.go` `TransactionEvent` has no `Currency` field; `service.go` `emitTx` builds the payload from the `Transaction` alone. | backend: add a `Currency string` field (JSON `currency`) to `TransactionEvent`; pass the account currency into `emitTx` from the account each write path already loads (`DeleteTransaction` / `DeleteTransfer` must load it before deleting). docs: drop "not yet emitted" from the `events.md` bank rows. The consumer side (stream formats by currency) is SPEC-06's follow-up. test: TC-BANK-141 with `currency`. | F016 |
-| 8 | **Contract** — P0.6 and §7 month rule, P0.2 "today" | An omitted `month` is the current month in the caller's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`, never UTC); a malformed month is 400 `bank/invalid-month`; `month` is `YYYY-MM` only. The entry date defaults to today in the user's zone. | `handler.go` `monthParam` returns `time.Now().UTC()` (used by `ListBudgets`, `Dashboard`, `Report`); a malformed month is `server.Problem(400, "about:blank", …)` there, in `ListTransactions` (`?month=`) and in `SetBudget` (body `month`); `parseMonth` also accepts `YYYY-MM-DD`. `parseDateDefault` defaults an omitted `occurred_at` to the UTC date. `frontend/src/lib/bank.ts` `currentMonth()` uses `toISOString()` (UTC month) and `today()` uses the device clock. Prerequisite missing: `accountapi` exposes no timezone and `0002_account_users` defaults `timezone` to `'UTC'` (specs README Timezone follow-up). | backend (after the account follow-up ships `UserSummary.Timezone`): give `bank.Deps` a zone lookup through `accountapi`; compute the default month and the default `occurred_at` date in the caller's zone; make `parseMonth` strict `2006-01`; answer every malformed month with 400 `bank/invalid-month`. openapi: the 400 on every `month` parameter and on the PUT body. frontend: `currentMonth()` / `today()` use the zone from `GET /auth/me`; add `bank/invalid-month` to `problems.ts`. test: TC-BANK-125 plus a malformed-month case per endpoint. | F057, F128, Decision 2026-09-30 (Timezone) |
+| 8 | **Contract** — P0.6, P1.11 and §7 month rule, P0.2 "today" | An omitted `month` is the current month in the caller's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`, never UTC); a malformed month is 400 `bank/invalid-month`; `month` is `YYYY-MM` only. The entry date defaults to today in the user's zone. | `handler.go` `monthParam` returns `time.Now().UTC()` (used by `ListBudgets`, `Dashboard`, `Report`); a malformed month is `server.Problem(400, "about:blank", …)` there, in `ListTransactions` (`?month=`) and in `SetBudget` (body `month`); `parseMonth` also accepts `YYYY-MM-DD`. `parseDateDefault` defaults an omitted `occurred_at` to the UTC date. `frontend/src/lib/bank.ts` `currentMonth()` uses `toISOString()` (UTC month) and `today()` uses the device clock. Prerequisite missing: `accountapi` exposes no timezone and `0002_account_users` defaults `timezone` to `'UTC'` (specs README Timezone follow-up). | backend (after the account follow-up ships `UserSummary.Timezone`): give `bank.Deps` a zone lookup through `accountapi`; compute the default month and the default `occurred_at` date in the caller's zone; make `parseMonth` strict `2006-01`; answer every malformed month with 400 `bank/invalid-month`. openapi: the 400 on every `month` parameter (including `getBankReport`, which declares only the 401) and on the PUT body. frontend: `currentMonth()` / `today()` use the zone from `GET /auth/me`; add `bank/invalid-month` to `problems.ts`. test: TC-BANK-125 plus a malformed-month case per endpoint. | F057, F128, Decision 2026-09-30 (Timezone) |
 | 9 | **Contract** — §7 list envelopes | `GET /bank/transactions` → `{items, next_cursor?}`; `/bank/accounts` and `/bank/categories` → `{items}`; `/bank/budgets` → `{month, items}`. | `handler.go` `ListTransactions` writes `{transactions, next_cursor}`, `ListAccounts` `{accounts}`, `ListCategories` `{categories}`, `ListBudgets` `{month, budgets}`; `shared/openapi.yaml` declares the same keys; `frontend/src/lib/bank.ts` `listTransactions`, `listAccounts`, `listCategories`, `listBudgets` read them (and `BudgetsView` / `TransactionsView` consume `.budgets` / `.transactions`). | backend + openapi + frontend in one PR: rename each list key to `items`. test: TC-BANK-033, TC-BANK-035 as HTTP tests. | Decision 2026-09-30 (Envelopes) |
 | 10 | **Contract** — §7 Problem types (param-shape failures) | A body or parameter shape failure without a named type is 422 `bank/validation` (specs README Pagination rule). | `handler.go` answers malformed `account_id`, `category_id`, `from_account`, `to_account`, `parent_id`, `reassign_to`, the `account` / `category` filters and `occurred_at` with `server.Problem(400, "about:blank", …)`; invalid JSON goes through `server.Decode` → 400. Path ids that fail to parse already answer 404 `bank/not-found` (correct). | backend: route these through `writeBankErr(w, ErrValidation)`; wrap `server.Decode` in a bank helper that answers 422 `bank/validation`. openapi: 422 on the affected operations. test: TC-BANK-200 cases for each parameter. | F024 |
 | 11 | **Contract** — P0.5 / P0.6 budget entries | Budget lists (GET `/bank/budgets` and the dashboard block) include synthesized header entries (`amount: null`) for unbudgeted parents of budgeted children, so the tree renders without a client-side join; the dashboard block is filtered server-side to budgets with no budgeted ancestor. | `query/bank.sql` `ListBudgetsForMonth` returns budget rows only (`b.amount` always set; `BudgetLine.Amount` is `int64`). `service.go` `Dashboard` returns the same full list; the no-budgeted-ancestor filter runs client-side in `frontend/…/views/bank/DashboardView.tsx` (`topBudgets`). | backend: synthesize header entries (parent of a budgeted child with no budget row of its own, `amount` NULL); make `BudgetLine.Amount` `*int64`; filter the dashboard block server-side. openapi: `amount` nullable. frontend: drop the client filter. test: TC-BANK-104, TC-BANK-105, TC-BANK-106. | Verified 2026-10-01 (no F-ID) |
@@ -791,6 +864,7 @@ with `backend/`, `frontend/` or `shared/`.
 | 14 | **UX** — P0.2 / P0.3 / §8 corrections | A user corrects a transaction inline; transfer legs render with a transfer badge **and the counterparty account name**. | `frontend/src/lib/bank.ts` has no `updateTransaction` or `updateTransfer`; `TransactionsView.tsx` offers delete only. `TransactionRow` (in `DashboardView.tsx`) labels a leg "Chuyển khoản" but never names the other account; the transaction JSON (`handler.go` `transactionJSON`) carries no counterparty. | frontend: inline edit through PATCH `/bank/transactions/{id}`, and through PATCH `/bank/transfers/{transfer_id}` for a leg. backend + openapi: add `counterparty_account_id` to the transaction response (or the client resolves the sibling leg). test: TC-BANK-022, TC-BANK-053, TC-BANK-057. | Verified 2026-10-01 (no F-ID) |
 | 15 | **UX** — P0.1 / P0.6 dashboard archived section | Archived accounts appear in the dashboard's collapsed archived section at their current balance. | `DashboardView.tsx` keeps only `!a.archived && isWallet(a)` and has no archived section (only `AccountsView.tsx` lists archived accounts). | frontend: add the collapsed archived group to `/bank`. test: TC-BANK-004, TC-BANK-123. | Verified 2026-10-01 (no F-ID) |
 | 16 | **UX** — P0.2 quick-add defaults | Account defaults to the last used, category to the most recently used, date to today in the user's zone. | `frontend/…/components/bank/QuickAddModal.tsx` defaults the account to the first open wallet (`openAccounts[0]`), leaves the category unset (`null`), and takes the date from the device clock (`today()`). | frontend: remember the last account and MRU category (per-viewer storage, or derive from the dashboard's `recent`); take today from the stored zone (row 8). test: TC-BANK-031. | Verified 2026-10-01 (no F-ID) |
+| 17 | **Contract** — §7 transactions list `limit` (owner decision 2026-10-01) | Missing, non-integer or < 1 → 50; above 100 → **clamped to 100**; never a Problem. | `service.go` `ListTransactions`: `if limit <= 0 \|\| limit > maxTxLimit { limit = defaultTxLimit }` — `?limit=500` returns 50 (`handler.go` parses with `server.AtoiSafe`). | backend: clamp instead of resetting (`> 100 → 100`, `≤ 0 → 50`), e.g. `platform/server.Limit(r, 50, 100)`. openapi: describe `limit` as defaulted and clamped. test: TC-BANK-036. | Decision 2026-10-01 (limit) |
 
 Not counted above: P1.10 receipts, P1.12 `bank:budget_exceeded` and P1.13
 structured fees are unbuilt P1 features, not divergences.
@@ -823,6 +897,11 @@ structured fees are unbuilt P1 features, not divergences.
   `created_at DESC LIMIT 10`; permissions are the eleven 2–3-segment codes
   seeded by `0014` and wired per route in `module.go`; the §6 indexes and the
   P0.9 partial unique index match `0014`.
+- P1.11 report: `Service.Report` returns the month totals (`MonthFlowTotals`),
+  parent-rolled slices split by kind and sorted by total (`CategorySpendForMonth`)
+  and a six-month zero-filled trend (`MonthlyFlowSeries`, `trendMonths = 6`), all
+  filtered by `user_id`; `/report` is gated on `bank-transactions:read:own`.
+  Only the month handling diverges (row 8).
 
 **Test evidence to add or fix:**
 
@@ -840,6 +919,11 @@ structured fees are unbuilt P1 features, not divergences.
   paths (no TC row yet — add one under P0.1), transaction PATCH currency
   mismatch (extend TC-BANK-022), negative budget amount (no TC row yet),
   TC-BANK-074, TC-BANK-125, TC-BANK-200.
+- P1.11: `bank_test.go: TestReportRollsUpChildrenAndSplitsByKind` proves
+  TC-BANK-185 and TC-BANK-187; add the fee-row sum (TC-BANK-186), the month
+  default and `bank/invalid-month` over HTTP (TC-BANK-188, with row 8), owner
+  isolation (TC-BANK-189) and the composite shape (TC-BANK-190).
+- `limit` clamping (row 17): TC-BANK-036.
 - HTTP tests for the `{items}` envelopes (TC-BANK-033, TC-BANK-035), the budget
   tree and dashboard roll-up (TC-BANK-104…106), the integrity migration
   (TC-BANK-205) and the dedup index (TC-BANK-180, P0.9 has no test).
@@ -861,4 +945,6 @@ structured fees are unbuilt P1 features, not divergences.
   migration; §7 month rule and Problem types `bank/not-found`,
   `bank/account-archived`, `bank/invalid-month`; §8 categories page.
 - **2026-10-01** — Added §12 implementation gaps (self-contained follow-up
-  list); revision history renumbered to §13.
+  list); revision history renumbered to §13. Owner decisions of 2026-10-01:
+  the shipped `GET /bank/report` documented as P1.11 (§7 row, contract, ACs);
+  the transactions list's `limit` clamps above 100 (§7, §12 row 17).
