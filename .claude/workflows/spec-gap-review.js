@@ -10,7 +10,6 @@ export const meta = {
 
 const R = '/Users/kirito/data/git/ops/repo/portal'
 const S = R + '/docs/product/specs'
-const B = R + '/docs/product/briefs'
 
 const SRC = {
   readme: S + '/README.md',
@@ -24,16 +23,16 @@ const SRC = {
 }
 
 const SPECS = [
-  { file: 'SPEC-01-media-image-pipeline.md', brief: B + '/01-media-image-pipeline.md' },
-  { file: 'SPEC-02-comic-vertical.md', brief: B + '/02-comic-vertical.md' },
-  { file: 'SPEC-03-finance-ledger.md', brief: B + '/03-finance-ledger.md' },
-  { file: 'SPEC-04-notification-module.md', brief: null },
-  { file: 'SPEC-05-journal.md', brief: B + '/05-journal-life-stream.md' },
-  { file: 'SPEC-06-life-stream-home.md', brief: B + '/06-life-stream-home.md' },
-  { file: 'SPEC-07-continue-rail.md', brief: B + '/07-continue-rail.md' },
-  { file: 'SPEC-08-people-registry.md', brief: B + '/08-people-registry.md' },
-  { file: 'SPEC-09-platform-ops.md', brief: B + '/09-platform-ops.md' },
-  { file: 'README.md', brief: B + '/README.md' },
+  { file: 'SPEC-01-media-image-pipeline.md' },
+  { file: 'SPEC-02-comic-vertical.md' },
+  { file: 'SPEC-03-finance-ledger.md' },
+  { file: 'SPEC-04-notification-module.md' },
+  { file: 'SPEC-05-journal.md' },
+  { file: 'SPEC-06-life-stream-home.md' },
+  { file: 'SPEC-07-continue-rail.md' },
+  { file: 'SPEC-08-people-registry.md' },
+  { file: 'SPEC-09-platform-ops.md' },
+  { file: 'README.md' },
 ]
 
 const FIND_SCHEMA = {
@@ -94,15 +93,13 @@ const RULES = [
 
 const perSpecPrompt = (s) => RULES + [
   'TARGET SPEC: ' + S + '/' + s.file,
-  s.brief ? 'UPSTREAM BRIEF (coverage source): ' + s.brief : 'No upstream brief — this spec came straight from a gap audit.',
   'Also read for conventions/cross-refs: ' + SRC.readme + ', ' + SRC.events + ', and any file the spec links when needed to validate a specific claim.',
   '',
   'Review the target spec for:',
   '1) Internal contradictions: behavior prose vs acceptance criteria vs §6 data model vs §7 API table vs §9 timeline.',
-  '2) Brief coverage: every P0/P1/P2 requirement, user story, open question, and locked recommendation in the upstream brief must be either covered or explicitly dropped/deferred with rationale. List anything silently lost or silently changed.',
-  '3) Unimplementable or ambiguous requirements: anything an engineer could not build without guessing (missing field semantics, undefined behavior on edge cases the spec itself raises).',
-  '4) Wrong cross-references: § numbers, SPEC numbers, file paths/links, D-N ids, ADR ids, event names.',
-  '5) Acceptance-criteria quality: untestable ACs, P0 behavior without any AC, ACs contradicting each other or the data model.',
+  '2) Unimplementable or ambiguous requirements: anything an engineer could not build without guessing (missing field semantics, undefined behavior on edge cases the spec itself raises).',
+  '3) Wrong cross-references: § numbers, SPEC numbers, file paths/links, D-N ids, ADR ids, event names.',
+  '4) Acceptance-criteria quality: untestable ACs, P0 behavior without any AC, ACs contradicting each other or the data model.',
   'Return all findings via StructuredOutput. An empty findings array is a legitimate answer if the spec is clean.',
 ].join('\n')
 
@@ -122,7 +119,7 @@ const CROSS = [
     key: 'events',
     prompt: RULES + [
       'CROSS-CUTTING LENS: event/payload/consumer consistency and event-driven failure modes.',
-      'Read ' + SRC.events + ', all ten files under ' + S + '/, and ' + B + '/06-life-stream-home.md.',
+      'Read ' + SRC.events + ', all ten files under ' + S + '/.',
       'Explicitly adjudicate these candidate issues (confirm with evidence or refute), then hunt for more of the same class:',
       "(a) SPEC-06 stream_items UNIQUE(source_module, event_type, ref_id) vs recurring events: people:birthday_upcoming fires at days_until 3 AND 0 for the same person, and again every year. With ref_id = person_id, do the day-of event and every later year silently vanish on the unique key? What ref should be used (e.g. a notice id emitted in the payload)?",
       "(b) Bank transfers emit one bank:transaction_created per leg (2 rows, SPEC-03 P0.3/P0.7). Does SPEC-06 render two stream items for one transfer, contradicting SPEC-03 P0.7's 'group one transfer into a single story item' intent? Should the stream key on transfer_id for is_transfer legs?",
@@ -136,8 +133,8 @@ const CROSS = [
     key: 'deps',
     prompt: RULES + [
       'CROSS-CUTTING LENS: dependency graph, sequencing, status coherence.',
-      'Read ' + S + '/README.md, the header block (Status/Depends on/Downstream) and §9 timeline of all 9 SPEC files, and ' + B + '/README.md.',
-      'Check: dependency claims are mutually consistent and acyclic; the suggested implementation order respects every Depends-on; downstream-consumer lists are reciprocal (if X lists Y downstream, Y references X); ordinal/arithmetic claims are right (e.g. SPEC-05 claims journal would be "the third module to be wired end-to-end" — count what is wired today (account, media) plus what the build order wires first (notify per SPEC-04) and verify); the SPEC-09-P0-before-SPEC-03-data pressure is reflected consistently; §9 phase-effort sums match each stated total; statuses agree between briefs README, specs README, and spec headers.',
+      'Read ' + S + '/README.md, the header block (Status/Depends on/Downstream) and §9 timeline of all 9 SPEC files.',
+      'Check: dependency claims are mutually consistent and acyclic; the suggested implementation order respects every Depends-on; downstream-consumer lists are reciprocal (if X lists Y downstream, Y references X); ordinal/arithmetic claims are right (e.g. SPEC-05 claims journal would be "the third module to be wired end-to-end" — count what is wired today (account, media) plus what the build order wires first (notify per SPEC-04) and verify); the SPEC-09-P0-before-SPEC-03-data pressure is reflected consistently; §9 phase-effort sums match each stated total; statuses agree between the specs README and spec headers.',
     ].join('\n'),
   },
   {
@@ -191,7 +188,7 @@ const CROSS = [
     key: 'critic',
     prompt: RULES + [
       'CROSS-CUTTING LENS: completeness critic — what does the spec SET as a whole still fail to cover for its stated purpose (implementation-ready, gap-free)?',
-      'Read all ten files in ' + S + '/, ' + B + '/README.md, ' + SRC.events + ', and ' + R + '/MILESTONE_CHECKS.md if it exists.',
+      'Read all ten files in ' + S + '/, ' + SRC.events + ', and ' + R + '/MILESTONE_CHECKS.md if it exists.',
       'Consider (report only actionable gaps with concrete fixes, not philosophy):',
       '- RBAC permission seeding: multiple specs say "granted to the base user role in the seed" — does any spec own the mechanics (data migration pattern, which migration file)? Should the conventions section?',
       '- i18n: conventions say Problem type URIs are also i18n keys (D-7) — do the new specs (05-09) carry any i18n obligation note, and is that consistent with 01-04?',
@@ -200,7 +197,6 @@ const CROSS = [
       '- Header hygiene: SPEC-01 carries Status/Last-verified/rev history (§11); SPEC-02/03 lack Status headers and revision history — should the set be normalized? ',
       '- Docs-to-update-in-same-PR obligations: SPEC-03 §7 knowingly diverges from D-14/D-7 money-wire rule and asks to reconcile frontend.md §5.3 — is that tracked anywhere actionable? Similar dangling obligations elsewhere?',
       '- Definition-of-done consistency: events.md registration, openapi.yaml landing, MILESTONE_CHECKS.md updates — uniformly stated across specs?',
-      '- Anything a brief promised that NO spec picked up at all.',
     ].join('\n'),
   },
 ]

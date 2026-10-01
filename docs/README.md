@@ -24,7 +24,7 @@ frontend, Docker Compose behind Traefik.
 | [guides/](guides/) | How do I get set up to work on it | [getting-started.md](guides/getting-started.md) |
 | [operations/](operations/) | How do I run the deployed system | [backup-restore.md](operations/backup-restore.md) |
 | [reference/](reference/README.md) | Lookup: events, contracts, canonical sources — and **what is proven** by a test | [events.md](reference/events.md) · [TRACEABILITY-MATRIX.md](reference/TRACEABILITY-MATRIX.md) |
-| [testing/](testing/README.md) | What we **intend** to prove, per spec (test plan, case documents, dated runs) | [TEST-PLAN.md](testing/TEST-PLAN.md) |
+| [testing/](testing/README.md) | What we **intend** to prove, per spec (test plan, case documents) | [TEST-PLAN.md](testing/TEST-PLAN.md) |
 | [agents/](agents/) | Where the engineering skills find the issue tracker, triage labels and domain-doc rules | [issue-tracker.md](agents/issue-tracker.md) |
 
 **Outside `docs/`** — contracts live next to what they govern ([ADR-09](adr/09-docs-architecture.md)); this is the list:
@@ -65,8 +65,10 @@ move that into a spec.
 
 - A **decision** with alternatives and consequences → `adr/` (numbered, never
   reused; corrected in place by layer — see [ADR-11](adr/11-docs-canonicalisation.md)).
-- A **brief** (brainstorm-level "what & why") → `product/briefs/`.
-- An implementation-ready **spec/PRD** → `product/specs/`.
+- An implementation-ready **spec/PRD** → `product/specs/`. The brainstorm-level
+  "what & why" is the spec's opening sections, not a separate brief (the
+  `product/briefs/` folder was folded into the specs and deleted after
+  `ea100d8`).
 - An **audit** — a dated point-in-time review of the repo against its documents
   (the folder is `product/analysis/`; "review", "worklog" and "analysis" are
   the same genre, and *audit* is its name) → `product/analysis/`, filename
@@ -85,8 +87,10 @@ move that into a spec.
 - A **runbook for operating the deployed system** (backup, restore, cutover,
   tuning) → `operations/`.
 - A **test plan, a per-spec test-case document, or a dated test run** —
-  what we *intend* to prove → `testing/`. What *is* proven, by which
-  `_test.go` function, is the traceability matrix in `reference/`.
+  what we *intend* to prove → `testing/`. A dated manual run that exercises
+  one spec is a section of that spec instead (SPEC-12 § Manual run). What
+  *is* proven, by which `_test.go` function, is the traceability matrix in
+  `reference/`.
 - A **registry or pointer** you look up rather than read → `reference/`.
 - **Configuration the engineering skills read** (which issue tracker, which
   triage labels, where domain docs live) → `agents/`. Written once by

@@ -4,7 +4,7 @@
 **Module:** none — the documentation corpus, plus one CI job and four check scripts
 **Depends on:** nothing hard. Branched from the `bank` feature branch at `66709d1` (see Implementation Decisions)
 **Upstream:** design session 2026-09-11 (37 settled decisions) and a `/grill-with-docs` pass on `docs/README.md` the same day (12 more)
-**Refs:** [ADR-09](../../adr/09-docs-architecture.md) (the tree this supersedes in part) · [ADR-11](../../adr/11-docs-canonicalisation.md) (written *by* this spec, stage one) · [STYLE.md](../../STYLE.md) (§ADR shape amended) · [analysis/remaining-work-2026-08-25.md](../analysis/remaining-work-2026-08-25.md) (prior audit, triaged by stage three into [backlog.md](../backlog.md))
+**Refs:** [ADR-09](../../adr/09-docs-architecture.md) (the tree this supersedes in part) · [ADR-11](../../adr/11-docs-canonicalisation.md) (written *by* this spec, stage one) · [STYLE.md](../../STYLE.md) (§ADR shape amended) · `analysis/remaining-work-2026-08-25.md` (prior audit, deleted after `ea100d8`; triaged by stage three into [backlog.md](../backlog.md))
 **Downstream consumers:** every agent session (the project instructions are loaded unconditionally); CI; anyone onboarding
 
 ## As executed — deltas from the plan below
@@ -15,7 +15,7 @@ The plan is kept as written; this section is its fact layer. Commits `b54654e` �
 |---|---|
 | 69 broken relative links | `scripts/check-links.sh` found **95**; all fixed. |
 | "the live environment file is absent from this checkout" | `.env` **exists** and points `DATABASE_URL` at `portal_app` — RLS is enforced on this deployment. `.env.example` still seeds the superuser; that is backlog P0 #1. The connecting role was not changed, as decided. |
-| ADR-00 dated 2026-07 | First commit `755dfa8`, 2026-05-24 → `product/analysis/architecture-review-2026-05-24.md`. |
+| ADR-00 dated 2026-07 | First commit `755dfa8`, 2026-05-24 → `product/analysis/architecture-review-2026-05-24.md` (later deleted). |
 | `checklist.md` "never existed" | It did; deleted in `efb8a70`. Cited so. |
 | One script, three assertions, one job | Four scripts (`check-links.sh`, `check-doc-headers.sh`, `check-retired-names.sh`, `check-matrix-evidence.py`) as four steps of one blocking `link-check` job. The header check the plan deferred ("needs a forty-document backfill first") was done: 41 files backfilled, `Last verified: never` made a legal value. |
 | Retired-name check allow-lists the audit directory, ADR-11 and the working note | Also skips the Decision / Options / Trade-offs layers of every ADR (verbatim history may name what it knew) and accepts a retirement cue on the same line (`deleted in`, `then …`, `renamed`, `§`-citation). First run caught a third agent-instruction file, `.continue/rules/CONTINUE.md`, still calling `MILESTONE_CHECKS.md` "live status". |

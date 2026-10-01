@@ -2,14 +2,14 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `people` · **Depends on:** rides (or, if first, introduces) SPEC-01 P0.3 (shared periodic scheduler) and P0.6 (`platform/events` fan-out); P1.7 avatars need SPEC-01; birthday *delivery* compounds with SPEC-04/SPEC-06 — emission is day-one regardless
-**Upstream:** [briefs/08-people-registry.md](../briefs/08-people-registry.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), feature-inventory `D-17` (user timezone), [analysis/facebook-comparison.md](../analysis/facebook-comparison.md) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
+**Upstream:** brief 08 — contacts as *data*, not user accounts; the social facet at n=1 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/08-people-registry.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), feature-inventory `D-17` (user timezone), the Facebook comparison (deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
 **Downstream consumers:** SPEC-06 (stream + `BirthdayCard` widget), SPEC-09 P1.7 (takeout); SPEC-04 is a *future* consumer (needs a `notify:on_*` task + type row first)
 
 ---
 
 ## 1. Problem statement
 
-Brief 00's flagship life-stream example — "mom's birthday in 3 days" — is
+The life-OS pivot's flagship life-stream example ([ADR-08](../../adr/08-life-os-pivot.md)) — "mom's birthday in 3 days" — is
 impossible today: nothing stores who "mom" is or when her birthday falls. The
 cataloged "Events/birthdays" backlog item assumes multi-user social events/RSVP,
 which is parked behind real second users. Monica-CRM proves the loophole: **my
@@ -29,7 +29,7 @@ emotionally relevant events for the stream, the bell, and the dormant
 ## 3. Non-goals
 
 - **Not a friend graph.** People are rows, not accounts: no requests, no chat, no
-  user search. The [briefs/04-deferred.md](../briefs/04-deferred.md) friend-graph
+  user search. The [backlog.md § Deferred](../backlog.md) friend-graph
   row stays parked; its re-entry condition (real second users) is neither met nor
   needed here.
 - **Full Monica parity** (activities, gifts, debts-between-people) — P1 keeps one

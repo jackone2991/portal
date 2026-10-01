@@ -10,7 +10,7 @@
 descends from; everything below the Decision holds as written.*
 
 Portal's post-v1 gap analyses (`product/backlog.md` as it then was,
-`product/analysis/facebook-comparison.md`) measured the product against Facebook.
+`product/analysis/facebook-comparison.md`, since deleted) measured the product against Facebook.
 That yardstick made sense while porting the Olympus UI, but it embeds an
 assumption Portal does not satisfy: Facebook's features derive value from network
 effects, while Portal is self-hosted, single-VPS, and starts from **one user**.
@@ -114,7 +114,7 @@ What followed (2026-09-11):
 ## Action items
 
 - [x] Accept this ADR. (Executed from 2026-07-12; status field corrected 2026-09-11.)
-- [x] `product/backlog.md` ordering note points at `product/briefs/` + `product/specs/` — then the whole file was archived; the ADR-11 replacement carries the pointer.
-- [x] Historical-status header on `product/analysis/facebook-comparison.md` (label only; body untouched — analysis is immutable).
+- [x] `product/backlog.md` ordering note points at `product/briefs/` + `product/specs/` — then the whole file was archived; the ADR-11 replacement carries the pointer. `product/briefs/` was later folded into the specs and deleted.
+- [x] Historical-status header on `product/analysis/facebook-comparison.md` (label only; body untouched — analysis is immutable). The file was later deleted (`git show ea100d8:docs/product/analysis/facebook-comparison.md`).
 - [x] Build order SPEC-01 → SPEC-02 → SPEC-03; notification module next. All four shipped.
 - [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-10's eight items are all manual-entry.

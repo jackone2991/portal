@@ -13,7 +13,7 @@
 **rev 9 (2026-08-07):** **P1.7 zip chapter import implemented (full server-side).** Migration `0026_comic_imports` (persisted job + per-file report, tenant_id+RLS). Endpoints `POST /chapters/{id}/imports`, `PUT /imports/{id}/zip` (API-proxied — dev MinIO presign isn't browser-reachable; 500 MB cap), `GET /imports/{id}` (poll). Worker task `comic:import_zip` (default queue) spools the zip → unpacks (guards: 300 entries, image-only, no traversal, zip-bomb ratio) → natural-sort → `mediaapi.IngestImage` per image in a committed tenant tx → poll assets ready → create pages. Frontend `lib/comic-import.ts` (create→upload→poll) with "Nhập chương từ ZIP" (new chapter) + per-chapter "Nhập ZIP". Verified: 4-image zip `002,10,1,003` → done, natural order `1,002,003,10`, variants render. *(Note: found+fixed a latent pgx bug — under `QueryExecModeExec`, a jsonb param passed as `[]byte` is sent as bytea and rejected; pass the json as a string. The audit logger has the same latent bug.)*
 **Module:** `comic` · **Depends on:** SPEC-01 (image kind)
 **Downstream consumers:** SPEC-07 P1.6 (comic leg, `comicapi.Continue`), SPEC-04 (`comic:published` bell)
-**Upstream:** [briefs/02-comic-vertical.md](../briefs/02-comic-vertical.md) · **Refs:** feature-inventory.md §7, frontend.md Phase 4
+**Upstream:** brief 02 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/02-comic-vertical.md`) · **Refs:** feature-inventory.md §7, frontend.md Phase 4
 **Role:** reference implementation of the *media → domain vertical* pattern
 (migration → `query/` → repository → service/handler → `MountHTTP` → real view),
 to be copied by movie/music/story.
@@ -47,7 +47,7 @@ Until one vertical is real, every future vertical estimate is a guess.
   passing anti-bot challenges from the containerised scraper (host mode only).
 - Per-comic visibility/ACL: `published` = visible to **all authenticated users** at
   v1. Visibility scoping arrives with the privacy layer. (Recommendation locked
-  from the feature doc's open question.)
+  from brief 02's open question.)
 - Automatic page-spread detection (double-page art); RTL and manual double-page
   pairing shipped as R3.
 - Offline reading / PWA caching.
@@ -153,7 +153,7 @@ rework above.)*
 `editor` (the write/publish-any moderation tier, mirroring `movies:write:any` +
 `movies:publish:any`, `0021`); `comics:delete:any` → `admin` (the movies precedent —
 `movies:delete:any` is admin-tier). An unseeded code 403s everyone below
-superadmin.
+superadmin. A wildcard (`comics:*`) covers every scope, per the permission grammar.
 
 Publish validation: a comic may be published only if it has ≥1 chapter and every
 chapter has ≥1 page; otherwise 422 `comic/not-publishable` listing the offending
@@ -200,6 +200,10 @@ empty chapters, and `chapter_count` counts them.)*
   `published` and shows no chapters. (c)
 
 ### P0.3 — Reader (vertical scroll)
+
+Vertical scroll comes first because it is the dominant mode for webtoon-style
+reading and the simplest to build; paged and RTL modes follow in the phased
+redesign below.
 
 Route `/library/comic/[id]/read/[chapterId]` (client component; catalogue/detail
 stay RSC-first per D-33 — "RSC shell" as defined in the specs README Frontend

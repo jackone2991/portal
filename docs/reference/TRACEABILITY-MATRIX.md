@@ -12,8 +12,8 @@
 >
 > The real test inventory is **20 `_test.go` files** under `backend/`. Run
 > `cd backend && go test ./...`. What they actually cover, and what no test can
-> reach, is in
-> [../product/analysis/remaining-work-2026-08-25.md](../product/analysis/remaining-work-2026-08-25.md).
+> reach, was audited on 2026-08-25 (`remaining-work-2026-08-25.md`, deleted once
+> triaged — `git show ea100d8:docs/product/analysis/remaining-work-2026-08-25.md`).
 >
 > Two structural gaps this matrix does not show: the frontend has **zero** test
 > files, and until 2026-08-25 the backend had **zero** `httptest` — no test had
@@ -148,7 +148,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | T4 | `media:asset_deleted` strips the id from every Entry of the owner (order kept, empty Entry survives, other owners untouched), inside the owner's tenant scope, idempotent on redelivery; an owner-less event is dropped | — | P0 | ✅ | `modules/journal/journal_test.go: TestAssetDeletedStripsAttachmentFromEveryEntry, TestAssetDeletedWithoutOwnerIsDropped, TestStreamAssetDeletedRemoves` (+ `TestBankDeletedRunsInsideOwnerScope` for the sibling consumer scoped in the same change). |
 | T5 | PATCH `mood`: a string sets (trimmed, 1–80), null clears, absent keeps; blank or wrong type → 422 `journal/invalid-mood` | — | P1 | ✅ | `modules/journal/http_test.go: TestHTTPPatchMoodSetClearKeep`. |
 | T2 | Composer rules: a file picked twice is one tile, the eleventh is refused with a message, Save only when every photo is ready and the draft has text or a photo; card layout hero + four thumbs + "+N" | — | P1 | ✅ | the rules are pure functions under vitest, run by CI job `frontend`: `frontend/src/lib/composer-photos.test.ts` (dedup by name+size+mtime, the cap and its counts, `canPost`, tile order, stored tiles), `frontend/src/lib/entry-presentation.test.ts` (hero / four thumbs / "+N", the field reads). The composer component, the upload orchestration and the card around them stay in the T2/T5 row below. |
-| T2/T5 | Lightbox; edit in place with the composer (pre-fill, cancel, whole-Entry save); Location chip on both cards | — | P1 | ✖ | frontend components; no component or browser test (one pure rule of the picker is: `frontend/src/lib/geo.test.ts`, the longitude wrap that keeps a dropped pin on the Earth). Exercised by hand on the live stack on 2026-09-19, every step passing — [TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md) — which is a record, not evidence for this column. |
+| T2/T5 | Lightbox; edit in place with the composer (pre-fill, cancel, whole-Entry save); Location chip on both cards | — | P1 | ✖ | frontend components; no component or browser test (one pure rule of the picker is: `frontend/src/lib/geo.test.ts`, the longitude wrap that keeps a dropped pin on the Earth). Exercised by hand on the live stack on 2026-09-19, every step passing — [SPEC-12 § Manual run](../product/specs/SPEC-12-journal-attachments.md#manual-run-against-the-stack-2026-09-19) — which is a record, not evidence for this column. |
 
 ## SPEC-06 — Stream ([cases](../testing/TEST-CASES-SPEC-06-stream.md) · gaps: [§11](../product/specs/SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 

@@ -2,7 +2,7 @@
 
 **Status:** current, rev 4 · **Drafted:** 2026-07-08 · **Last verified:** 2026-10-01
 **Module:** `notify` · **Depends on:** SPEC-01 P0.6 (`platform/events` fan-out; hard, for P0.4); SPEC-01 P1.2 is not a gate (P0.4 ships the emit itself if needed); account/api (`ResolveRecipient`, plus the P0.3 reset-URL mint)
-**Upstream:** the 2026-07 gap analysis (its standalone file was never committed), folded into the 2026-07 backlog §5 (archived; `git show 8d382d2^:docs/product/backlog.md`) · **Refs:** 2026-07 backlog §1/§3/§5 (archived, as above), [facebook-comparison](../analysis/facebook-comparison.md) §14, [MODULES.md](../../../backend/MODULES.md) §5.2
+**Upstream:** the 2026-07 gap analysis (its standalone file was never committed), folded into the 2026-07 backlog §5 (archived; `git show 8d382d2^:docs/product/backlog.md`) · **Refs:** 2026-07 backlog §1/§3/§5 (archived, as above), facebook-comparison (deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`) §14, [MODULES.md](../../../backend/MODULES.md) §5.2
 **Downstream consumers:** account (password reset, security alerts), the Olympus bell/activity UI, all future social types · **Consumes (live):** `media:asset_ready` (SPEC-01 P1.2), `comic:published`, `movie:published`, `music:track_published`, `story:published`, `social:connection_requested`/`social:connection_accepted` · **Future consumers (each needs a `notify:on_*` task + type row):** `media:playback_completed`, `people:birthday_upcoming`, `ops:backup_failed`/`ops:export_ready`
 
 ---
@@ -13,7 +13,7 @@ Every "something happened → tell the user" path is currently dead:
 
 - **Password reset can't ship** — it needs an email channel that doesn't exist (2026-07 backlog §1 P1; admin/CLI only today).
 - **`media:asset_ready` has no consumer** — SPEC-01 P1.2 makes media the first life-stream *producer*, but nothing turns that event into a user-visible notification.
-- **The Olympus bell + "Activity Feed" dropdowns are hard-coded sample data** (2026-07 backlog §3, facebook-comparison §14); badges are constants. There is no store, no `GET /me/notifications`, no realtime delivery, no preferences.
+- **The Olympus bell + "Activity Feed" dropdowns are hard-coded sample data** (2026-07 backlog §3, facebook-comparison §14 — deleted, `git show ea100d8:docs/product/analysis/facebook-comparison.md`); badges are constants. There is no store, no `GET /me/notifications`, no realtime delivery, no preferences.
 - **Security alerts have nowhere to go** — `account.refresh.reuse_detected` is audited but the user is never told their session was compromised.
 
 [MODULES.md §5.2](../../../backend/MODULES.md) already **reserves the `notify:*` task prefix** ("the delivery fan-out that other modules enqueue into rather than sending mail/push themselves") and notes the account module currently *stubs* `RegisterTasks` for it. This spec makes `notify` a real module that **owns** that prefix. It is the backbone that unblocks the notification-dependent items tracked in the 2026-07 backlog §5 (archived; `git show 8d382d2^:docs/product/backlog.md`) (the notify:* module — the priority-1 gap that unblocks password reset).

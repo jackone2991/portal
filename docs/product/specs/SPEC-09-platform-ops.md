@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `ops` (owns the `ops:*` prefix) · **Depends on:** nothing hard on data — rides (or, if it lands first, introduces) SPEC-01 P0.3's shared periodic-scheduler convention; failure alerts: notify consumer `notify:on_backup_failed` (owned here, P0.6) now that SPEC-04 is live; staleness remains pull-only via P0.5 until a freshness-check task is added (P2)
-**Upstream:** [briefs/09-platform-ops.md](../briefs/09-platform-ops.md) · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (observability stays deferred), [ADR-03](../../adr/03-single-vps-topology.md), [ADR-04](../../adr/04-storage-tier-budget.md), 2026-07 backlog §7 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory `D-25` (audit types)
+**Upstream:** brief 09 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/09-platform-ops.md`) · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (observability stays deferred), [ADR-03](../../adr/03-single-vps-topology.md), [ADR-04](../../adr/04-storage-tier-budget.md), 2026-07 backlog §7 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory `D-25` (audit types)
 **Downstream consumers:** every module holding irreplaceable data (bank, journal, media, people); notify consumes `ops:backup_failed` through `notify:on_backup_failed` (P0.6, unbuilt); `ops:export_ready` is a *future* notify consumer (needs its own `notify:on_*` task + type row first)
 
 ---
@@ -14,7 +14,9 @@ hardware they operate. That deal is only honest with three properties the stack
 currently lacks: **backups that run themselves**, **a restore path that has
 actually been exercised**, and **visibility into the async machinery** (today a
 failed transcode is discoverable only by tailing worker logs). A 2026-07 docs
-audit found **no backup/DR doc exists anywhere**. The vision's credo — owned end
+audit found **no backup/DR doc exists anywhere**, and the 2026-07 backlog §7
+named the pieces without anything owning them — today a single disk failure ends
+the life-OS thesis. The vision's credo — owned end
 to end — also implies data can *leave*: ownership without an export path is a
 promise, not a property.
 
@@ -369,6 +371,25 @@ freshness-check task is added (P2). *(Unbuilt as of 2026-09-30.)*
   failed") once SPEC-04 is live.
 - **Config/secret backup guidance** (`.env`, Traefik, MinIO creds) in the
   runbook — documented manual step, not automated.
+- **Postgres connection budget** — the pool-sizing note [ADR-03](../../adr/03-single-vps-topology.md)
+  promised (folded in from the `operations/postgres-tuning.md` stub, deleted —
+  `git show ea100d8:docs/operations/postgres-tuning.md`). Two separate problems,
+  not to be conflated:
+  1. *Protocol* — pgx's prepared-statement cache breaks under PgBouncer
+     transaction pooling (a statement prepared on one server connection may not
+     exist on the next). If a transaction-mode pooler is ever put in front of
+     the app, set `DefaultQueryExecMode = QueryExecModeExec` (or the simple
+     protocol) / disable the statement cache — [ADR-07](../../adr/07-tenancy-rls-model.md)
+     § "pgx ⨯ PgBouncer transaction mode".
+  2. *Capacity* — `api`, `worker` and Asynq share one cluster; without a
+     connection budget a transcode burst can exhaust connections and starve
+     `api`. Server targets (ADR-03): `shared_buffers = 4GB`,
+     `effective_cache_size = 10GB`, `max_connections = 50`. Per-binary pgx
+     `MaxConns` for `api` and `worker` are still TBD.
+
+  Not needed at n=1. Set the numbers when a pooler is introduced, or on the
+  first measured contention (a transcode burst that raises API latency) — then
+  set the `worker`/`api` split and re-measure.
 
 ## 6. Data model — migration `000N_ops_backup_runs`
 
@@ -464,7 +485,8 @@ P0 ≈ 3.5–4 dev-days (brief's estimate holds); P1 adds ~5.
 ## 10. Open questions
 
 - **(resolved)** `pg_dump` location: the Postgres client in the worker image,
-  major version equal to the server's (currently `postgresql18-client`; P0.2).
+  major version equal to the server's (currently `postgresql18-client`; P0.2) —
+  not a separate backup sidecar: fewest moving parts.
 - **(resolved)** Dev backups: same code path as prod, MinIO bucket (P0.2).
 - **(resolved)** Sentinel placement: separate authenticated endpoint, not
   `/healthz` (P0.5).

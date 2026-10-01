@@ -9,9 +9,11 @@ priority. Anything not listed here is either done, deliberately deferred
 
 **How this file is maintained** (ADR-11 rule 6 / [docs/README.md](../README.md)
 § analysis): every audit in [analysis/](analysis/) must either produce lines here
-or be closed with a reason. This revision triaged the whole of
-[analysis/remaining-work-2026-08-25.md](analysis/remaining-work-2026-08-25.md)
-(every numbered item in its §3–§6) plus the open action items from the ADR
+or be closed with a reason. This revision triaged the whole of the 2026-08-25
+audit, `remaining-work-2026-08-25.md` (every numbered item in its §3–§6; the
+file was deleted once fully triaged — "audit §N" below cites
+`git show ea100d8:docs/product/analysis/remaining-work-2026-08-25.md`) plus the
+open action items from the ADR
 re-grade of 2026-09-11. Items the audit raised that were already closed by the
 time of triage are listed once under § Closed so the audit can be checked off
 line by line. The previous `backlog.md` (a 2026-07 Facebook-parity gap analysis,
@@ -150,11 +152,14 @@ was checked, and code moves.
     name migrations that do not exist and work that is done. Not re-verified
     line by line in this triage; treat each as suspect until its
     `Last verified` is bumped.
-36a. **`architecture/{diagrams,overview,security}.md`, `adr/diagrams/system-landscape.md`,
-    `guides/getting-started.md`, `operations/postgres-tuning.md`** still draw or
+36a. **`architecture/{diagrams,overview,security}.md`,
+    `guides/getting-started.md`** still draw or
     describe `postgres` + `pgbouncer` as compose services (gone 2026-08-21; host
     PG 18). All now carry `Last verified: never` so the reader is warned; fixing
-    the diagrams is one pass with `docker-compose.yml` open.
+    the diagrams is one pass with `docker-compose.yml` open. Two more files
+    had the same defect and were deleted instead: `adr/diagrams/system-landscape.md`
+    (a duplicate of `architecture/diagrams.md` §1) and
+    `operations/postgres-tuning.md` (a stub, folded into SPEC-09 P2).
 36. **`docs/testing/TEST-PLAN.md`** still describes a container-backed L2
     integration layer that does not exist, says `make up` starts Postgres and
     PgBouncer, and says CI runs `vitest` (audit §4.6). Correct it when line 3
@@ -171,6 +176,26 @@ not hold) · full-text search (no corpus at n=1) · native apps, i18n, push
 providers (D-5/D-6) · ADR-07 steps 5–7 (`switch-tenant`, `/admin/organizations`,
 per-tenant `user_roles`, `/t/{org}` prefix, `cmd/sysjobs`) at one user with one
 personal org.
+
+**Parked with a re-entry condition** — the trigger that puts each item back on
+the table, so the decision is not re-litigated every session. Folded in from the
+2026-07-07 parking-lot brief (deleted —
+`git show ea100d8:docs/product/briefs/04-deferred.md`).
+
+| Item | Why deferred | Re-entry condition |
+|---|---|---|
+| **Statement import** (bank) | The owner's bank (TCB) exports **PDF**, so a decent import means PDF parsing/OCR — an effort black hole. The schema is import-ready (SPEC-03 P0.9), so nothing is lost by waiting. | CSV/xlsx can be had from a bank in use, **or** the generic CSV + column-mapping path is accepted first and PDF later. The design is pre-agreed (SPEC-03 §3): mapping templates as data, not code; `dedup_hash`; per-batch rollback. |
+| **TOTP / MFA / step-up** (D-27/D-28) | It once gated "bank"; the ledger holds no bank credentials, so the gate does not apply. | Real bank credentials or API sync, or any money-*moving* feature. TOTP is then the named unlock task, not a floating P2. |
+| **Friend graph / messenger / people search** | The feature-parity trap at n=1; a life OS starts from one user. The UI shell stays as it is. | Real second users on an instance (e.g. family). Re-enter through "share to household member", not full Facebook parity. |
+| **Email verification** | No real second users. | The first real external user. |
+| **Playback ACL** | One user on LAN/VPS tolerates public-ish HLS short-term. | Any second user. (The HLS variant ladder is P2 line 29.) |
+| **Time domain** (calendar/tasks) | It was the cheapest first life domain; the owner chose money + entertainment first. | "After SPEC-03" — met, so it now waits only on a spec; it is the likely next facet, wiring the calendar widgets that already exist. The birthday slice shipped separately as SPEC-08 (contact data, not calendar/tasks). |
+| **HEIC/HEIF image ingest** | ffmpeg HEIC decode hinges on libheif/HEVC build flags — a build-matrix rabbit hole outside the v1 envelope (SPEC-01 §3). | Dogfooding involves an iPhone user: HEIC becomes P0 for photo upload (likely a libheif pre-step in the worker image). |
+
+Left the parking lot since 2026-07: the notifications module and password reset
+(SPEC-04), the music vertical (`0038`–`0041`), movie and story (P2 line 28),
+debts and loans (SPEC-10 phase 1, built) and investments (SPEC-10 phase 5),
+presigned direct upload (shipped; multipart for large originals is P2 line 29).
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
 
@@ -200,7 +225,7 @@ personal org.
   `backend` job in `ci.yml`).
 - P1 #17a **SPEC-12 residue** — closed 2026-09-19. The manual run against the
   stack: every step passed, one focus defect found and fixed
-  ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md)).
+  ([SPEC-12 § Manual run](specs/SPEC-12-journal-attachments.md#manual-run-against-the-stack-2026-09-19)).
   The `0044`/`0045` backfill loops:
   `modules/journal/backfill_test.go: TestBackfillMigrationsMoveLinksOutOfBodies`
   builds a throwaway database from the migration files, seeds old-style
@@ -221,7 +246,7 @@ personal org.
   and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
   checks on the close-out commit. Residue has owners: the frontend vitest
   files run in CI since the same day (line 10, closed); the manual run was done 2026-09-19
-  ([TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md))
+  ([SPEC-12 § Manual run](specs/SPEC-12-journal-attachments.md#manual-run-against-the-stack-2026-09-19))
   and the backfill loops are under test (17a, closed the same day).
 - P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
   starts a `postgres:18` service, applies every migration to it with
@@ -286,9 +311,10 @@ personal org.
 - §4.4 **refresh TTL 30 d vs 24 h** — CLAUDE.md and ADR-06 say 24h.
 - §4.6 **MILESTONE_CHECKS cited as live** (all sites), **`/auth/callback`
   drift claim**, **ADR status lines disagree**, **`backlog.md` inverted**,
-  **`facebook-comparison.md` unlabelled**, **TRACEABILITY-MATRIX names zero
+  **`facebook-comparison.md` unlabelled** (the file is since deleted), **TRACEABILITY-MATRIX names zero
   tests**, **a session note committed with a credential** (file deleted;
   rotation is P0 line 2) — all closed by the ADR-11 work of 2026-09-11.
 - §6 Tier A-3 **`internal/platform/server`** — exists.
 - §6 Tier C-10 **stale module READMEs** — *not* closed; line 35.
-- §6 Tier C-12 **retire the old backlog / label facebook-comparison** — this file.
+- §6 Tier C-12 **retire the old backlog / label facebook-comparison** — this file
+  (`facebook-comparison.md` itself was later deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`).

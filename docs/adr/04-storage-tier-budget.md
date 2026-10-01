@@ -158,5 +158,5 @@ What is built (2026-09-11):
 5. [x] `POST /api/v1/assets` presigns PUT; dev also has API-proxied `PUT /assets/{id}/source`.
 6. [ ] Worker `/tmp` usage cap (10 GB) — not done. `os.MkdirTemp` per job in `media/worker/{transcode,process_image,thumbnail}.go`, no cap; the guard against disk exhaustion is `heavyConcurrency = 1`.
 7. [ ] `docs/operations/r2-setup.md` (bucket creation, CORS JSON, lifecycle rules, token scope) — not written. `docs/operations/` exists now; the file does not.
-8. [x] [`diagrams/system-landscape.md`](diagrams/system-landscape.md) shows the v1 R2-only shape; [`architecture/diagrams.md`](../architecture/diagrams.md) keeps the destination architecture.
+8. [x] [`architecture/diagrams.md`](../architecture/diagrams.md) §1 is the one system-landscape view; the v1 sketch `adr/diagrams/system-landscape.md` duplicated it and was deleted (`git show ea100d8:docs/adr/diagrams/system-landscape.md`).
 9. [ ] Tenant-prefixed object keys (Decision item 4) — never implemented; see "revisit" above.

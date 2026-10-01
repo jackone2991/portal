@@ -2,15 +2,16 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` (extends SPEC-05; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-05 (hard — first content + module home); system events attach as their producers land (SPEC-01 P0.3, SPEC-03 P0.7, SPEC-07 P1.5, SPEC-08 P0.4); the widget rail additionally consumes SPEC-04's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
-**Upstream:** [briefs/06-life-stream-home.md](../briefs/06-life-stream-home.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
+**Upstream:** brief 06, which merged three candidates from the 2026-07-10 research pass — stream projection, "Today" dashboard, Home-Assistant-pattern home (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/06-life-stream-home.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
 **Downstream consumers:** this spec's own P2 daily digest (reads this projection; delivered via SPEC-04 channels), future on-this-day widgets
 
 ---
 
 ## 1. Problem statement
 
-Brief 00 deferred "does the life stream replace the newsfeed on `/` or live
-alongside it?" until two event producers existed — SPEC-05 plus SPEC-01 P1.2 gets
+The life-OS brief (ratified as ADR-08) deferred "does the life stream replace
+the newsfeed on `/` or live alongside it?" until two event producers existed —
+SPEC-05 plus SPEC-01 P1.2 gets
 there. Today `/` is fixture data end to end: fake posts, fake widgets, fake
 activity. ADR-08's thesis is that **integration beats one-app-per-domain**, and
 the only place that thesis is visible is a home screen where the facets meet. If
@@ -20,7 +21,7 @@ There is also a durability asymmetry: bus events not captured now are lost — t
 projection must exist **before** the producer modules land, not after, or the
 stream starts with holes.
 
-**Decision this spec carries (resolves brief 00's open question):** the life
+**Decision this spec carries (resolves the life-OS brief's open question):** the life
 stream **replaces** the newsfeed on `/` — no tab, no toggle. The SPEC-05 composer
 sits on top; the widget rail carries the facets.
 
@@ -416,9 +417,9 @@ hourly points; seven daily min/max and precipitation maxima; metric °C;
 
 ### P2 — future considerations (design for, don't build)
 
-- **Daily digest** — promotes SPEC-04's P2 seam with a concrete consumer: a 7am
-  rollup of yesterday's stream into one `digest.daily` notification (in-app +
-  email via SPEC-04 channels). Keep the watermark pattern in mind when shaping
+- **Daily digest** (needs SPEC-04 P0 + this projection) — promotes SPEC-04's P2
+  seam with a concrete consumer: a 7am rollup of yesterday's stream into one
+  `digest.daily` notification (in-app + email via SPEC-04 channels). Keep the watermark pattern in mind when shaping
   stream queries.
 - **Privacy tiers** (per-item visibility) arrive with household tenancy — keep
   `user_id` scoping clean so a tenant scope can layer on.

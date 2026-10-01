@@ -9,7 +9,7 @@ tiers and keeps them separate on purpose:
 
 - **SHIPPED** — running today, verifiable on the stack.
 - **NEXT** — committed and specified ([product/specs/](../product/specs/README.md), ADR-08 order).
-- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../adr/01-v1-scope-cut.md), re-entry conditions in [briefs/04](../product/briefs/04-deferred.md)).
+- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../adr/01-v1-scope-cut.md), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
 
 ## 1. What Portal is, architecturally
 
@@ -104,7 +104,7 @@ policy-bundle/file-gated authorization ([deferred/access-policies.md](deferred/a
 TOTP/step-up (unlock condition: credential-holding or money-moving features);
 social baseline at scale, search, creator economy, marketplace, safety workers,
 observability stack, LiveKit/mediamtx, CDN edge tier. Each with an explicit
-re-entry condition in [briefs/04-deferred.md](../product/briefs/04-deferred.md).
+re-entry condition in [backlog.md § Deferred](../product/backlog.md).
 
 ## 4. Cross-cutting views
 

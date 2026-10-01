@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `media`; aggregator mounts in `cmd/api` · **Depends on:** nothing hard for P0; soft on SPEC-01 P0 (`assets.title`/`original_filename`, the `deleting` status, the `poster` variant); SPEC-01 P0.6 (`platform/events` fan-out) for P1.5's event; the comic leg (P1.6) plugs in with SPEC-02's `comic_reading_progress`
-**Upstream:** [briefs/07-continue-rail.md](../briefs/07-continue-rail.md) · **Refs:** feature-inventory `D-20` (continue aggregator shape), SPEC-02 P0.4 (progress-beacon convention), frontend.md
+**Upstream:** brief 07 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/07-continue-rail.md`) · **Refs:** feature-inventory `D-20` (continue aggregator shape), SPEC-02 P0.4 (progress-beacon convention), frontend.md
 **Downstream consumers:** SPEC-06 P0.4 (continue widget); SPEC-04 is a *future* consumer of P1.5's event (needs a `notify:on_*` task first)
 
 ---
@@ -29,8 +29,8 @@ aggregator is at its cheapest right now.
 
 ## 3. Non-goals
 
-- **Movie catalog/metadata CRUD** — the [briefs/04-deferred.md](../briefs/04-deferred.md)
-  movie-vertical row stays parked; this spec hangs off existing media `assets` rows only.
+- **Movie catalog/metadata CRUD** — the movie vertical is its own backlog line
+  ([backlog.md](../backlog.md) P2 line 28); this spec hangs off existing media `assets` rows only.
 - **Cross-device conflict resolution** beyond last-write-wins on the upsert.
 - **Per-position bus events** — beacons are deliberately *not* events (too
   chatty); only the P1.5 completion fact hits the bus.
