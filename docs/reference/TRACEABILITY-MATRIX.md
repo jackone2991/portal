@@ -1,6 +1,6 @@
 # Traceability Matrix — Requirements ↔ Tests
 
-**Status:** current · **Last verified:** 2026-10-01 — every row re-graded against the specs as corrected on 2026-09-30 (commit `1db1e32` plus the 2026-10-01 owner decisions on list envelopes, timezone and audio) and against the 47 `_test.go` files on `HEAD`. Rows added for SPEC-01 P1.3, SPEC-02 P1.10, SPEC-07 P1.6 and SPEC-09 P0.6; SPEC-06 P1.6 marked retired; every ✅ whose requirement the specs tightened past what `HEAD` does was downgraded to ⚠ with a "spec tightened 2026-09-30" note naming the divergence and its F-id. (Earlier passes: 2026-09-19 added SPEC-12; 2026-09-11 re-graded every row onto named tests.) A ✅ with an empty Evidence cell is a defect in this document, not coverage.
+**Status:** current · **Last verified:** 2026-10-01 — every row re-graded against the specs as corrected on 2026-09-30 (commit `1db1e32` plus the 2026-09-30 owner decisions on list envelopes, timezone and audio) and against the 47 `_test.go` files on `HEAD`. Rows added for SPEC-01 P1.3, SPEC-02 P1.10, SPEC-07 P1.6 and SPEC-09 P0.6; SPEC-06 P1.6 marked retired; every ✅ whose requirement the specs tightened past what `HEAD` does was downgraded to ⚠ with a "spec tightened 2026-09-30" note naming the divergence and its F-id. (Earlier passes: 2026-09-19 added SPEC-12; 2026-09-11 re-graded every row onto named tests.) A ✅ with an empty Evidence cell is a defect in this document, not coverage.
 
 > **⚠️ Read this before trusting the Cov column (added 2026-08-25).**
 >
@@ -50,16 +50,23 @@ row is ⚠ even when its tests pass, and its note reads "spec tightened
 follow-ups (not done here)" list in
 [spec-gap-fix-worklog-2026-09-30.md](../product/analysis/spec-gap-fix-worklog-2026-09-30.md).
 Divergences that came from the owner decisions rather than a finding are cited
-by that list's "Added by the 2026-10-01 owner decisions" entries: **Envelopes**
+by that list's "Added by the 2026-09-30 owner decisions" entries: **Envelopes**
 (every list answers `{items}`), **Timezone** (`users.timezone`, default
 `Asia/Ho_Chi_Minh`, never UTC or `APP_TIMEZONE`), **Audio** (audio plays in
 the player, saves progress and joins `/continue`).
+
+Since 2026-10-01 the **live** list of divergences is each spec's
+"Implementation gaps vs shipped code" section, linked from every heading below
+as *gaps*: it names, row by row, the shipped file and function and the change
+needed. A divergence note in this matrix summarises; where it cites "§N row k"
+it means that spec's gap row, and when the two disagree the spec's gap section
+wins.
 
 Evidence paths are relative to `backend/internal/` unless they start with `.github/`, `scripts/` or `frontend/`.
 
 ---
 
-## SPEC-01 — Media ([cases](../testing/TEST-CASES-SPEC-01-media.md))
+## SPEC-01 — Media ([cases](../testing/TEST-CASES-SPEC-01-media.md) · gaps: [§11](../product/specs/SPEC-01-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -67,12 +74,12 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.2 | Video poster + audio-only skip + non-fatal | TC-MEDIA-030…033 | P0 | ✅ | `modules/media/worker/poster_fixture_test.go: TestPosterFromASynthesisedVideo` (Handle over an in-memory store and a recording repo, a 1280×720 clip synthesised by ffmpeg's lavfi → one `poster` row at 640×360, the WebP object uploaded), `TestAudioOnlyContainerSkipsThePosterWithoutFailing` (a sine-only container: Handle returns nil, no row, no object), `TestMissingSourceIsNonFatal`; the plan's arithmetic in `modules/media/worker/thumbnail_test.go: TestPosterPlan`; the service-level audio path in `modules/media/service_test.go: TestCompleteUploadAudioReadyWithoutTranscode`. The fixture tests need ffmpeg (CI installs it; they fail there if it is missing). |
 | P0.3 | Delete asset + janitor + event | TC-MEDIA-040…048 | P0 | ⚠ | `modules/media/service_test.go: TestDeleteAsset` (asserts `media:asset_deleted` is published), `TestPurgeOrphans`; consumers: `modules/comic/comic_test.go: TestAssetDeletedConsumer`, `modules/{movie,music}/*_test.go: TestAssetDeletedClearsBothReferences`, `modules/story/story_test.go: TestAssetDeletedClearsTheCover`. Spec tightened 2026-09-30: a storage-purge failure after the commit still answers 204 (`HEAD` answers 500 `about:blank`, F036), and workers finish under a `status='processing'` guard and clean up after losing a race with a delete (`MarkAssetReady`/`MarkAssetImageReady` have no predicate, F037); code follow-up. The janitor's supporting index is owed by a migration (F115). |
 | P0.4 | Library page + filters + cursor + LCP | TC-MEDIA-060…069 | P0 | ⚠ | `modules/media/service_test.go: TestListPaginates, TestCursorRoundTrip, TestExpandStatuses` — API list/filter/cursor proven. Page render and LCP: frontend, no tests. Spec tightened 2026-09-30: the list answers `{items, next_cursor?}` and a bad cursor 400 `media/invalid-cursor`; `HEAD` answers `{assets}` and `media/bad_request` — code follow-up (F112, Envelopes). |
-| P0.5 | Download original (checksum, private, states) | TC-MEDIA-080…086 | P0 | ⚠ | `modules/media/service_test.go: TestDownloadOriginal, TestServeVariant, TestHLSObjectSafety`; range semantics `modules/media/objectreader_test.go: TestServeContentAnswersRangeRequests, TestObjectReaderSeekEndReportsSizeWithoutReading`. Spec tightened 2026-09-30: an abandoned upload (`failed`, never past `/complete`) is 404, and `HEAD`'s `OriginalContent` blocks only `uploading`/`deleting`, so its possibly-partial object still streams (F035); an image is served with its sniffed content type, which `HEAD` never stores (F039); code follow-up. |
+| P0.5 | Download original (checksum, private, states) | TC-MEDIA-080…086 | P0 | ⚠ | `modules/media/service_test.go: TestDownloadOriginal, TestServeVariant, TestHLSObjectSafety`; range semantics `modules/media/objectreader_test.go: TestServeContentAnswersRangeRequests, TestObjectReaderSeekEndReportsSizeWithoutReading`. `TestDownloadOriginal` exercises `Service.DownloadOriginal`, which no route calls (it is reachable only through the `mediaapi` impl): `GET /assets/{id}/original` serves through `OriginalContent`, which no test calls — retarget it (§11 "Test evidence"). Spec tightened 2026-09-30: an abandoned upload (`failed`, never past `/complete`) is 404, and `HEAD`'s `OriginalContent` blocks only `uploading`/`deleting`, so its possibly-partial object still streams (F035); an image is served with its sniffed content type, which `HEAD` never stores (F039); code follow-up. |
 | P0.6 | Event fan-out prerequisite | TC-MEDIA-090…093 | P0 | ✅ | `platform/events/events_test.go: TestPublishFansOutToEachConsumer, TestPublishNoSubscribersIsNoop, TestPublishPropagatesEnqueueError`. |
 | P1.1/P1.2 | Metadata edit, asset_ready emit | TC-MEDIA-100…101 | P1 | ⚠ | emit: `modules/media/service_test.go: TestCompleteUploadAudioReadyWithoutTranscode` (asserts exactly one `media:asset_ready`); the video path's emit happens in the transcode worker, untested. Metadata edit: no test (`{title}` is unbuilt). The payload's `origin` is always `upload` on `HEAD` — see P1.3. |
 | P1.3 | `mediaapi.Ingest(…, origin)` for server-side producers: same sniff/HEIC/50 MB gates as `/complete`, row created with the given `origin` | TC-MEDIA-102 | P1 | ✖ | no test exercises `Ingest` (`modules/media/api/api_test.go` covers only the signed-URL helper). Added 2026-10-01 for the new requirement section: the shipped `Ingest` has no `origin` parameter and always records `upload`, so the P1.2 import-flood guard never fires; code follow-up (F038). |
 
-## SPEC-02 — Comic ([cases](../testing/TEST-CASES-SPEC-02-comic.md))
+## SPEC-02 — Comic ([cases](../testing/TEST-CASES-SPEC-02-comic.md) · gaps: [§11](../product/specs/SPEC-02-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -85,7 +92,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P1.7/P1.9 | Zip import, chapter events | TC-COMIC-140…148 | P1 | ⚠ | import ordering `modules/comic/comic_test.go: TestChapterSortOrder`. `comic:chapter_published` is consumed in `modules/notify/service_test.go: TestOnComicPublished` (the stream projection was removed in `0034`), but no comic test asserts it is emitted. Spec tightened 2026-09-30: the 12 h import runs on a dedicated `bulk` queue, `HEAD` enqueues it on `default` (F095); code follow-up. |
 | P1.10 | External-source sync: SSRF-guarded sources, TriggerSync/cancel state machine, batch retries, internal scraper callbacks behind a secret | — | P1 | ⚠ | source guard and callback owner check: `modules/comic/sourceguard_test.go: TestIsPublicIP, TestHostAllowed, TestShippedAllowlistCoversBothMirrors, TestValidateSourceURL_BlocksInternal, TestValidateSourceURL_SchemeAndAllowlist, TestSyncCallbacksVerifyEchoedOwner`. Untested: TriggerSync (202, the 15-min stale-`syncing` rule), cancel, batch retries, finalize. Added 2026-10-01 for the new requirement section; `HEAD` diverges: unset `COMIC_SCRAPER_URL` should answer 404 `comic/sync-disabled` (shipped: CRUD served, trigger 500, F042); the internal secret is compared with `!=`, the internal routes are publicly routed and `cmd/api/scraper.go` sends no secret header (F043); code follow-up. No TEST-CASES row exists for P1.10. |
 
-## SPEC-03 — Bank ([cases](../testing/TEST-CASES-SPEC-03-bank.md))
+## SPEC-03 — Bank ([cases](../testing/TEST-CASES-SPEC-03-bank.md) · gaps: [§12](../product/specs/SPEC-03-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -99,13 +106,13 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.8 | RBAC owner isolation + seeds | TC-BANK-160…164 | P0 | ✅ | `modules/bank/bank_test.go: TestOwnerScoping, TestSeedCategoryImmutable`; at the database: `platform/db/rls_test.go: TestRLSSharedSeedCategoriesAreVisibleToEveryTenant` (env-gated, see CC-10). |
 | P0.9 | Import scaffolding | TC-BANK-180…181 | P1 | ⚠ | no test; schema-only deliverable. |
 
-## SPEC-10 — Ledger expansion ([spec](../product/specs/SPEC-10-ledger-expansion.md); no case document yet)
+## SPEC-10 — Ledger expansion ([spec](../product/specs/SPEC-10-ledger-expansion.md); no case document yet · gaps: [§8](../product/specs/SPEC-10-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
 | Phase 1 | Debts & loans: accrual arithmetic, outstanding principal | — | P0 | ⚠ | `modules/bank/debts_test.go: TestAccrueInterest, TestOutstandingFrom` — the arithmetic; the principal-as-transfer posting, `nothing-to-accrue` refusal and the `bank:scan_debts_due` sweep are unexercised. Spec tightened 2026-09-30: the sweep runs hourly and counts days from each owner's local date (`HEAD`: daily 07:00 UTC, the UTC date for everyone — Timezone), and `GET /bank/debts` answers `{items}`, `HEAD` `{debts}` (Envelopes); code follow-up. |
 
-## SPEC-04 — Notify ([cases](../testing/TEST-CASES-SPEC-04-notify.md))
+## SPEC-04 — Notify ([cases](../testing/TEST-CASES-SPEC-04-notify.md) · gaps: [§11](../product/specs/SPEC-04-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -116,7 +123,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.5 | Bell wiring | TC-NOTIFY-090…094 | P0 | ✖ | frontend; no test files. Spec tightened 2026-09-30: `useInfiniteQuery`, `HEAD`'s `NotificationsMenu` uses a plain `useQuery` (F143); code follow-up. |
 | P1.1–P1.4 | Web push, SSE, prefs UI, security alert | TC-NOTIFY-110…113 | P1 | ✖ | not built. |
 
-## SPEC-05 — Journal ([cases](../testing/TEST-CASES-SPEC-05-journal.md))
+## SPEC-05 — Journal ([cases](../testing/TEST-CASES-SPEC-05-journal.md) · gaps: [§11](../product/specs/SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -126,7 +133,7 @@ Evidence paths are relative to `backend/internal/` unless they start with `.gith
 | P0.4 | Composer + home + sanitization | TC-JRNL-050…059 | P0 | ✖ | frontend composer/home untested; no sanitization test on either side. Spec tightened 2026-09-30: the composer's `occurred_at` date-time control in the user's `users.timezone` (absent on `HEAD`, F073, Timezone) and a markdown preview (absent, F146); code follow-up. |
 | P1.5/P1.6 | Attachments, mood picker | TC-JRNL-070…074 | P1 | ⚠ | Attachments superseded by SPEC-12 (section below) and proven there — `modules/journal/http_test.go: TestHTTPCreateStoresAttachmentsInOrder`; the mood is edited in the composer and cleared over PATCH (T5, `TestHTTPPatchMoodSetClearKeep`), but the picker itself (TC-JRNL-074, the preset row) is frontend and untested. |
 
-## SPEC-12 — Journal attachments ([spec](../product/specs/SPEC-12-journal-attachments.md); no case document — the spec's Testing Decisions name the seam)
+## SPEC-12 — Journal attachments ([spec](../product/specs/SPEC-12-journal-attachments.md); no case document — the spec's Testing Decisions name the seam · gaps: [section](../product/specs/SPEC-12-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`. The primary seam is the journal HTTP-contract file over the real router with fakes (`modules/journal/http_test.go`); the frontend half has vitest unit tests for its pure rules, run by the `frontend` CI job since 2026-09-19 — a vitest file counts as evidence for the rule it pins, never for the component around it.
 
@@ -142,7 +149,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | T2 | Composer rules: a file picked twice is one tile, the eleventh is refused with a message, Save only when every photo is ready and the draft has text or a photo; card layout hero + four thumbs + "+N" | — | P1 | ✅ | the rules are pure functions under vitest, run by CI job `frontend`: `frontend/src/lib/composer-photos.test.ts` (dedup by name+size+mtime, the cap and its counts, `canPost`, tile order, stored tiles), `frontend/src/lib/entry-presentation.test.ts` (hero / four thumbs / "+N", the field reads). The composer component, the upload orchestration and the card around them stay in the T2/T5 row below. |
 | T2/T5 | Lightbox; edit in place with the composer (pre-fill, cancel, whole-Entry save); Location chip on both cards | — | P1 | ✖ | frontend components; no component or browser test (one pure rule of the picker is: `frontend/src/lib/geo.test.ts`, the longitude wrap that keeps a dropped pin on the Earth). Exercised by hand on the live stack on 2026-09-19, every step passing — [TEST-RUN-2026-09-19-spec-12.md](../testing/TEST-RUN-2026-09-19-spec-12.md) — which is a record, not evidence for this column. |
 
-## SPEC-06 — Stream ([cases](../testing/TEST-CASES-SPEC-06-stream.md))
+## SPEC-06 — Stream ([cases](../testing/TEST-CASES-SPEC-06-stream.md) · gaps: [§11](../product/specs/SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -153,7 +160,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P1.5 | On-this-day memories | TC-STREAM-090…091 | P1 | ✖ | no test; `/stream/memories` is unshipped (F075). |
 | P1.6 | Backfill task | TC-STREAM-092 (retired) | P1 | — | retired in SPEC-06 on 2026-09-30: it seeded `media:asset_ready` rows the stream no longer projects (`0033`); journal entries are covered by the P0.1 migration backfill. Not counted. |
 
-## SPEC-07 — Continue ([cases](../testing/TEST-CASES-SPEC-07-continue.md))
+## SPEC-07 — Continue ([cases](../testing/TEST-CASES-SPEC-07-continue.md) · gaps: [§11](../product/specs/SPEC-07-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -164,17 +171,17 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | P1.5 | Completion event (latch) | TC-CONT-080…083 | P1 | ⚠ | `modules/media/service_test.go: TestPutProgressCompletionLatch` (exactly one `media:playback_completed` across repeat crossings). Spec tightened 2026-09-30: upsert, latch and Publish run in one transaction, a Publish error rolls back, and the payload carries the latched `completed_at`; `HEAD` publishes outside any transaction, discards the error and reads before it upserts (F165), with no `completed_at` in the payload (F152); code follow-up. |
 | P1.6 | Comic leg (`comicapi.Continue` in the `/continue` fan-out) | — | P1 | ✖ | not built: `handleContinue` fans out to media only. Added 2026-10-01 for the new requirement section; no TEST-CASES row exists for it. |
 
-## SPEC-08 — People ([cases](../testing/TEST-CASES-SPEC-08-people.md))
+## SPEC-08 — People ([cases](../testing/TEST-CASES-SPEC-08-people.md) · gaps: [§11](../product/specs/SPEC-08-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
 | P0.2 | CRUD + birthday validation + notice reset | TC-PPL-001…016 | P0 | ⚠ | `modules/people/people_test.go: TestBirthdayValidation`; over HTTP `modules/people/http_test.go: TestHTTPPersonIsNotFoundToAStranger, TestHTTPDeleteTwiceIs404`; notice reset has no test. Spec tightened 2026-09-30, `HEAD` diverges: notices reset only when the effective occurrence changes, inside the PATCH transaction (`HEAD` resets on every PATCH carrying a birthday, after it, F081); lunar birthdays skip the Gregorian checks and carry `leap_month` (F083); delete and revoke events are emitted (neither is on `HEAD`, F017); the list answers `{items}`, `HEAD` `{people}` (Envelopes); code follow-up. |
-| P0.3 | Upcoming endpoint (TZ, Feb-29, lunar, clamp) | TC-PPL-030…036 | P0 | ⚠ | `modules/people/people_test.go: TestNextOccurrence, TestNextOccurrenceTimezone, TestUpcomingBirthdays` — solar dates, a fixed zone and clamp proven; lunar conversion has no test. Spec tightened 2026-09-30: the zone is each owner's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`) read through `accountapi`; `HEAD` injects one `Deps.Timezone` that `cmd/api`/`cmd/worker` never set, so it runs in UTC (F028, Timezone); ties sort by `display_name`, `id` (`HEAD`: unstable on `days_until`, F170); the response is `{items}`, `HEAD` `{upcoming}` (Envelopes); code follow-up. |
-| P0.4 | Scan + event (dedup, catch-up, outbox) | TC-PPL-050…057 | P0 | ⚠ | `modules/people/people_test.go: TestScanDedupAndOutbox, TestOutboxRetry` — dedup and the outbox retry. Spec tightened 2026-09-30, `HEAD` diverges: at `days_until = 0` only the day-of event fires (`HEAD` fires both thresholds, F080); a retry recomputes `days_until` from the stored `occurrence` and expires late notices (`HEAD` has no `occurrence`/`suppressed` column and republishes the threshold, F082); the scan runs hourly per owner zone (`HEAD`: daily 06:00 UTC, one zone, F028, Timezone); code follow-up. |
-| P0.5 | Frontend (BirthdayCard, empty, gate) | TC-PPL-070…073 | P0 | ✖ | frontend; no test files. Spec tightened 2026-09-30: `BirthdayCard` ships no fixture prop defaults (F029) and reads `{items}` (Envelopes); code follow-up. |
+| P0.3 | Upcoming endpoint (TZ, Feb-29, lunar, clamp) | TC-PPL-030…036 | P0 | ⚠ | `modules/people/people_test.go: TestNextOccurrence, TestNextOccurrenceTimezone, TestUpcomingBirthdays` — solar dates, a fixed zone and clamp proven; lunar conversion has no test. Spec tightened 2026-09-30: the zone is each owner's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`) read through `accountapi`; `HEAD` injects one `Deps.Timezone` that `cmd/api`/`cmd/worker` never set, so `people.New` falls back to `Asia/Ho_Chi_Minh` (UTC only if that zone fails to load) — one zone for every owner, not UTC (F028, Timezone; §11 rows 5–6); ties sort by `display_name`, `id` (`HEAD`: unstable on `days_until`, F170); the response is `{items}`, `HEAD` `{upcoming}` (Envelopes); code follow-up. |
+| P0.4 | Scan + event (dedup, catch-up, outbox) | TC-PPL-050…057 | P0 | ⚠ | `modules/people/people_test.go: TestScanDedupAndOutbox, TestOutboxRetry` — dedup and the outbox retry. Spec tightened 2026-09-30, `HEAD` diverges: at `days_until = 0` only the day-of event fires (`HEAD` fires both thresholds, F080); a retry recomputes `days_until` from the stored `occurrence` and expires late notices (`HEAD` has no `occurrence`/`suppressed` column and republishes the threshold, F082); the scan runs hourly per owner zone (`HEAD`: daily at 06:00 UTC, evaluated in the one `Asia/Ho_Chi_Minh` fallback zone for every owner, F028, Timezone); code follow-up (§11 rows 3–6). |
+| P0.5 | Frontend (BirthdayCard, empty, gate) | TC-PPL-070…073 | P0 | ✖ | frontend; no test files. On `HEAD` `BirthdayCard` is already self-fetching (`["people","upcoming"]`) with no fixture props (F029 is closed for it). Remaining divergence (§11 rows 9 and 11): it renders only the first upcoming person, renders nothing instead of a skeleton while loading, keeps TanStack's default retries on a 4xx (no `retry: false`, F159), and reads `{upcoming}`, not `{items}` (Envelopes); code follow-up. |
 | P1.6/P1.7 | Interactions, avatar | TC-PPL-090…092 | P1 | ✖ | no test. (Directory suggestions, not in the spec's P1 list, are: `TestSuggestionsSubtractsAlreadyAdded, TestSuggestionsWithoutDirectory`.) |
 
-## SPEC-09 — Ops ([cases](../testing/TEST-CASES-SPEC-09-ops.md))
+## SPEC-09 — Ops ([cases](../testing/TEST-CASES-SPEC-09-ops.md) · gaps: [§11](../product/specs/SPEC-09-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01))
 
 | Req | Summary | Test cases | Pri | Cov | Evidence |
 |-----|---------|-----------|-----|-----|----------|
@@ -200,7 +207,7 @@ Executed 2026-09-19 as tickets T0–T6 (#9–#15) on `feat/journal-attachments`.
 | CC-6 | Money integer minor units, no floats | TC-BANK-026/202 | ⚠ | type-level (`int64` throughout `modules/bank`); `modules/bank/bank_test.go: TestInvalidAmount` rejects non-positive amounts; no test guards against a float creeping into an API body. |
 | CC-7 | Migration-only schema + generated files not hand-edited + drift gates | TC-MEDIA-112/114, TC-COMIC-164, TC-BANK-204/205, all `-*` migration cases | ⚠ | CI, not a test: `.github/workflows/ci.yml` job `openapi` regenerates `api.gen.go` + `types.gen.ts` and fails on diff (ADR-10). There is **no** sqlc drift gate — sqlc output is not committed. Migrations: job `backend` applies the whole chain to a fresh `postgres:18` on every push (since 2026-09-11), so "applies from zero" is proven; there is still no round-trip (`down`) job. Migrations the corrected specs require and `HEAD` lacks: media uploading index (F115), comic cursor/cover indexes (F048, F121), bank integrity (F131), notify indexes and reset-token CHECK (F137, F141, F142), stream unique key with `user_id` (F156), people indexes/CHECKs (F173), ops state CHECKs (F183), the `users.timezone` default and `timezone_manual` (Timezone). |
 | CC-8 | Idempotent deletes (404 not 500) | TC-MEDIA-041, TC-COMIC-163, TC-BANK-203, TC-JRNL-023, TC-PPL-016 | ⚠ | over HTTP — 204 then 404: `modules/comic/http_test.go: TestHTTPDeleteTwiceIs404` (needed `DeleteComic` to become `:execrows` — a repeat used to answer 204), `modules/bank/http_test.go: TestHTTPDeleteAccountTwiceIs404`, and since 2026-09-19 `modules/movie/http_test.go`, `modules/music/http_test.go`, `modules/story/http_test.go`, `modules/people/http_test.go`, `modules/social/http_test.go`, `modules/journal/http_test.go: TestHTTPDeleteTwiceIs404` (movie, music and story needed their `Delete*` to become `:execrows` too — the module answered 204 to a repeat and left the 404 to cmd/api's owner guard) and `modules/notify/http_test.go: TestHTTPMarkReadTwiceIsIdempotent` (its one write). Event-consumer deletes: `modules/{movie,music,story}/*_test.go: TestAssetDeletedIsIdempotent`, `modules/journal/journal_test.go: TestStreamAssetDeletedRemoves`. HTTP deletes without a twice-test: media assets, account's admin user delete, comic chapters/pages and sync sources, music playlists, bank categories/transactions/transfers/debts. Spec tightened 2026-09-30: a media DELETE whose storage purge fails, or that hits an asset already `deleting`, answers 204; `HEAD` answers 500 (F036); code follow-up. |
-| CC-9 | Frontend state ownership + no fixtures | TC-MEDIA-065, TC-COMIC-103, TC-NOTIFY-090, TC-JRNL-054, TC-STREAM-050, TC-PPL-070 | ✖ | no frontend component test; the three vitest files under `frontend/src/lib/` cover pure rules only (run in CI since 2026-09-19). Known violations on `HEAD`: `BirthdayCard` and `PersonalInfoWidget` ship fixture prop defaults (F029); the rail's Activity feed holds the bell's server state under a second key (F160); the D-34 middleware matcher misses `/admin`, `/calendar`, `/weather` (F032). |
+| CC-9 | Frontend state ownership + no fixtures | TC-MEDIA-065, TC-COMIC-103, TC-NOTIFY-090, TC-JRNL-054, TC-STREAM-050, TC-PPL-070 | ✖ | no frontend component test; the three vitest files under `frontend/src/lib/` cover pure rules only (run in CI since 2026-09-19). Known violations on `HEAD`: `PersonalInfoWidget` ships fixture prop defaults (`DEFAULT_ITEMS`, F029, SPEC-06 §11 row 13; `BirthdayCard` no longer does); the rail's Activity feed holds the bell's server state under a second key (F160); the D-34 middleware matcher misses `/admin`, `/calendar`, `/weather` (F032). |
 | CC-10 | Tenant scope per request + RLS at the database (ADR-07) | — | ✅ | request transaction: `modules/tenant/middleware/require_tenant_test.go: TestMutatingRequestCommitFailureBecomes500, TestMutatingRequestHandlerErrorRollsBack, TestMutatingRequestPanicRollsBackAndRepanics, TestUnauthenticatedRequestNeverOpensAScope, TestOversizedMutatingResponseStreamsIntact`. RLS itself: `platform/db/rls_test.go: TestRLSTenantCannotReadAnotherTenantsRows, TestRLSTenantCannotWriteIntoAnotherTenant, TestRLSTenantCannotRelocateARow, TestRLSTenantCannotDeleteAnotherTenantsRow, TestRLSWriteWithoutATenantScopeFails, TestRLSEveryProtectedTableHasAPolicyAndForce`, `platform/db/rls_media_test.go: TestRLSMediaMemberCannotReadAnotherMembersAsset, TestRLSMediaAdminOfAnotherTenantSeesNothing`, `platform/db/rls_social_test.go: TestRLSConnectionVisibleOnlyToItsTwoParties, TestRLSCannotForgeARequestFromAnotherUser`. Env-gated on `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`; CI job `backend` sets both (since 2026-09-11). |
 | CC-11 | Auth primitives | — | ✅ | `modules/account/auth/password_test.go: TestHashAndVerifyPassword, TestVerifyPasswordMalformed`; `modules/account/auth/reset_test.go` (3). No test for `/auth/login`'s lockout counters or for refresh-token reuse detection. |
 

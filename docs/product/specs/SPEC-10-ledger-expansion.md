@@ -1,6 +1,6 @@
 # SPEC-10 — Ledger expansion (module `bank`: debts, goals, recurring, cards, net worth, automation, splits, sharing)
 
-**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-09-30
+**Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-10-01
 **Module:** `bank` (extends it; no new module) · **Depends on:** SPEC-03 (the ledger this builds on), SPEC-04 (notify, for reminders), SPEC-01 (media, only for P1.10 receipts)
 **Refs:** SPEC-03 §5 P0.3 (the transfer-leg predicate everything here keys on), migration 0042 (icon-first categories)
 
@@ -232,3 +232,65 @@ Phase 1 is done when: a borrow of 10,000,000 ₫ raises a wallet balance, create
 liability of the same size, and moves **neither** income nor expense for the
 month; a repayment reduces both; an accrual appears as an expense in the donut;
 and the month totals still equal the sum of the report's slices.
+
+## 8. Implementation gaps vs shipped code (as of 2026-10-01)
+
+The baseline is `main` @ `99b5a0b` (the commits after it changed docs only).
+The spec text above is the target; each row below is a place where the shipped
+phase 1 (debts and loans) still diverges from it, verified against that commit.
+Rows are ordered by severity: data integrity first, then scheduling, then API
+contract. A row closes when the code matches the spec and the SPEC-10 row of
+`docs/reference/TRACEABILITY-MATRIX.md` is regraded. File paths are relative to
+`backend/internal/modules/bank/` unless they start with `backend/`, `frontend/`
+or `shared/`. Gaps in the SPEC-03 paths a debt reuses (archive check, event
+`currency`, month and date defaults) are tracked once, in SPEC-03 §12.
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | **Data integrity** — §3 (the terms and the money are one thing), §7 | A debt is its account plus its terms: `account_id` is 1:1 and `NOT NULL`, and opening a debt moves the principal, so a borrow of 10,000,000 ₫ always raises the wallet and creates a liability of the same size. | `debts.go` `Service.CreateDebt` runs three independent writes: `repo.CreateAccount` (the `loan_payable` / `loan_receivable` account), `debts.CreateDebt` (the terms row), then `moveDebt` → `CreateTransfer` (its own DB transaction). Nothing encloses them, so a failure after the first leaves a liability account with no terms, and a failure after the second leaves a debt with no principal movement and a zero balance. | backend: one DB transaction for the account insert, the terms insert and both principal legs (an adapter method such as `CreateDebtWithPrincipal` in `repository/debts_adapter.go`), with the two `bank:transaction_created` events emitted after commit. test: a fake that fails at each step leaves no account, no debt and no legs. | Verified 2026-10-01 (no F-ID) |
+| 2 | **Scheduling** — §4a (5) due reminders | `bank:scan_debts_due` runs **hourly**; "days away" is counted from each owner's local date in `users.timezone` (read through `accountapi`; unknown → `Asia/Ho_Chi_Minh`); an owner is notified only once their local time has reached 07:00. | `backend/cmd/worker/main.go` registers the task with cron `0 7 * * *` (daily, 07:00 UTC). `module.go` `RegisterTasks` passes `time.Now()`; `debts.go` `ScanDueDebts` sets `today := now.UTC().Truncate(24 * time.Hour)` for every owner and asks `DebtsDueBetween` for one exact date per lead across the whole tenant. Prerequisite missing: `accountapi` exposes no timezone (specs README Timezone follow-up). | backend: register `0 * * * *`; per owner, resolve the zone through `accountapi` (`UserSummary.Timezone`), skip the owner until local 07:00, and compute each lead against the owner's local date (widen the `DebtsDueBetween` window by a day each side, then filter per owner). The dedup key and `bank_debt_reminders` stay as they are, so hourly re-runs fire each (debt, due date, lead) once. docs: drop the code follow-up from the `events.md` row. test: an owner at UTC+7 at 2026-06-30 23:30 UTC (07-01 06:30 local) gets nothing; at 2026-07-01 00:30 UTC (07:30 local) the 7-day lead for a debt due 2026-07-08 fires once, and a second run sends nothing. | Decision 2026-09-30 (Timezone) |
+| 3 | **Contract** — §6 `GET /bank/debts` envelope | Non-paginated list answers `{items: [...]}`. | `debts_handler.go` `ListDebts` writes `{"debts": out}`; `frontend/src/lib/bank.ts` `listDebts` reads `r.debts`. | backend + openapi (row 5) + frontend in one PR: rename the key to `items`. test: HTTP test on the list shape. | Decision 2026-09-30 (Envelopes) |
+| 4 | **Contract** — §6 movements body | `POST /bank/debts/{id}/movements` takes `{kind, account_id, amount, occurred_at}`. | `debts_handler.go` `AddDebtMovement` reads `wallet_id` (plus an optional `note`); `frontend/src/lib/bank.ts` `addDebtMovement` and `DebtsView.tsx` send `wallet_id`. (`POST /bank/debts` also takes `wallet_id`; §6 gives no body for it.) | backend + frontend: accept `account_id` as §6 states (rename the handler field, `lib/bank.ts`, `DebtsView.tsx`); openapi documents it. If the owner prefers the shipped name, amend §6 instead — until then the spec text is the target. test: HTTP test posting `account_id`. | Verified 2026-10-01 (no F-ID) |
+| 5 | **Contract** — §6 OpenAPI and Problem convention | Every §6 operation is in `shared/openapi.yaml`, annotated per the specs README AuthZ OpenAPI encoding; a body or parameter shape failure is 422 `bank/validation` (specs README Pagination rule). | `shared/openapi.yaml` has no `/bank/debts` path at all, so the seven routes in `module.go` are undocumented. `debts_handler.go` answers a malformed `wallet_id` or date with `server.BadRequest` (400 `about:blank`). The shipped debt Problem types (`bank/debt-not-settled`, `bank/debt-closed`, `bank/nothing-to-accrue`, `bank/debt-no-interest`) are missing from `frontend/src/lib/problems.ts`. | openapi: add the seven operations with schemas (`{items}` list, row 4 body) and one `x-required-permission` each, as in the §6 table. backend: shape failures → `writeBankErr(w, ErrValidation)`. frontend: add the four slugs and messages to `problems.ts`. test: handler↔OpenAPI drift check; 422 on a malformed id. | F025, F024 |
+
+**Already matching on `99b5a0b`:**
+
+- §3 account model: migration `0043_bank_debts` adds the `loan_payable` and
+  `loan_receivable` types and `bank_debts.account_id UUID NOT NULL UNIQUE`
+  (`ON DELETE CASCADE`); the outstanding balance is derived
+  (`query/debts.sql` `DebtOutstanding`, the same arithmetic as
+  `ListAccountBalances`), never stored.
+- Phase 1 money movements: `moveDebt` sends borrow / lend / repay / collect
+  through `Service.CreateTransfer`, so every principal movement is a pure
+  transfer pair, excluded from income and expense by the SPEC-03 leg predicate,
+  and emits per SPEC-03 P0.7 (§4a (1)). A kind that does not match the debt's
+  direction is 422 `bank/validation`; the wallet fixes the debt's currency.
+- Accrual: `AccrueInterest` posts a categorised transaction on the seed
+  *Lãi vay* (expense, borrowed) or *Lãi* (income, lent), charged from the last
+  accrual, and refuses a closed debt (409) or an empty period (409
+  `bank/nothing-to-accrue`).
+- `DELETE /bank/debts/{id}` refuses while the outstanding balance is non-zero
+  (409 `bank/debt-not-settled`).
+- §6 permissions: `module.go` gates the debt routes on
+  `bank-transactions:read|write|delete:own` per method; `0043` seeds no new
+  permission.
+- §4a (5) apart from cadence and zone: leads 7, 1 and 0 days, exact-day
+  matching (a missed day skips that lead), `notify:dispatch` type
+  `bank.debt_due`, `dedup_key = <debt_id>|<due_on>|<lead>`,
+  `bank_debt_reminders` keyed on (debt, due date, lead), closed and settled
+  debts skipped, once per tenant via `ForEachTenant` on the `default` queue.
+
+**Test evidence to add or fix:**
+
+- On HEAD, `debts_test.go: TestAccrueInterest, TestOutstandingFrom` cover the
+  arithmetic only; neither asserts superseded behaviour.
+- There is no TEST-CASES document for SPEC-10 yet (TRACEABILITY-MATRIX: "no
+  case document yet"); create `docs/testing/TEST-CASES-SPEC-10-ledger.md` and
+  give each test below an ID.
+- §7 "Done means" as one service test: borrow 10,000,000 ₫ → wallet +10M,
+  liability −10M, month income and expense +0; a repayment reduces both; an
+  accrual appears as an expense; month totals equal the sum of the report's
+  slices.
+- `CreateDebt` atomicity (row 1), the hourly per-zone sweep (row 2), movement
+  kind/direction mismatch, `nothing-to-accrue`, delete refused while
+  outstanding, and the `{items}` / `account_id` HTTP contract (rows 3–4).

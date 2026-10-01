@@ -1,6 +1,6 @@
 # Spec-gap fix worklog — 2026-09-30
 
-**Status:** current · **Last verified:** 2026-09-30 (generated from the run; ticks record fix progress)
+**Status:** current · **Last verified:** 2026-10-01 (generated from the run 2026-09-30; ticks record fix progress; corrections from the 2026-10-01 gap verification at the end)
 
 **Source:** `spec-gap-review` workflow run `wf_eb011b57-514` (43 agents: 18 finders, merge, adversarial refute + fix audit). 267 raw → 189 canonical → **184 confirmed** (8 critical · 85 major · 91 minor), 5 refuted (listed at the end, not to be applied).
 
@@ -1376,9 +1376,9 @@
 
 A consistency review of the finished diff fixed ten small defects in place (missing code-follow-up flags on SPEC-02/03/09, a stale backfill mention in the specs README, `completed_at` in TC-CONT-080, `P0.1(b)` references in events.md, the comic-leg `href` in SPEC-07). These need an owner decision, not an edit:
 
-- ✅ **Decided 2026-10-01 — Pagination envelopes:** every list returns `{items[, next_cursor]}`; existing endpoints are retrofitted, not grandfathered (README Pagination; D-29 update). Was: The README rule grandfathers existing endpoints' *limits*, not their envelopes. SPEC-08 keeps `{people}` / `{upcoming}` as a deliberate exception; SPEC-01/02/03 call `{assets}` / `{comics}` / `{transactions}` a pending retrofit to `{items}`. Pick one policy in the README and align the four specs.
-- ✅ **Decided 2026-10-01 — Timezone source:** each user's own zone, detected from the device/location and stored in `users.timezone`, default `Asia/Ho_Chi_Minh`; sweeps evaluate each user's local date (README Timezone; D-17 update). Was: SPEC-03 (dashboard/budget month) cites `users.timezone` (D-17); SPEC-06 P1.5 and SPEC-08 P0.3 use `APP_TIMEZONE` at v1 because `users.timezone` has no write path; SPEC-05 P0.4 claims to match the stream's zone. Choose one v1 source and state it once in the README.
-- ✅ **Decided 2026-10-01 — Audio:** audio opens the player page (`/library/media/{id}`), plays from `/original`, saves progress and joins `/continue` (SPEC-07 P0.1/P0.2/P0.4; D-20 update). Was: SPEC-07 P0.4 sends video *and audio* to `/library/media/{id}`, but the same spec says that player 404s any non-video asset. Either drop audio from the rule or widen the player.
+- ✅ **Decided 2026-09-30 — Pagination envelopes:** every list returns `{items[, next_cursor]}`; existing endpoints are retrofitted, not grandfathered (README Pagination; D-29 update). Was: The README rule grandfathers existing endpoints' *limits*, not their envelopes. SPEC-08 keeps `{people}` / `{upcoming}` as a deliberate exception; SPEC-01/02/03 call `{assets}` / `{comics}` / `{transactions}` a pending retrofit to `{items}`. Pick one policy in the README and align the four specs.
+- ✅ **Decided 2026-09-30 — Timezone source:** each user's own zone, detected from the device/location and stored in `users.timezone`, default `Asia/Ho_Chi_Minh`; sweeps evaluate each user's local date (README Timezone; D-17 update). Was: SPEC-03 (dashboard/budget month) cites `users.timezone` (D-17); SPEC-06 P1.5 and SPEC-08 P0.3 use `APP_TIMEZONE` at v1 because `users.timezone` has no write path; SPEC-05 P0.4 claims to match the stream's zone. Choose one v1 source and state it once in the README.
+- ✅ **Decided 2026-09-30 — Audio:** audio opens the player page (`/library/media/{id}`), plays from `/original`, saves progress and joins `/continue` (SPEC-07 P0.1/P0.2/P0.4; D-20 update). Was: SPEC-07 P0.4 sends video *and audio* to `/library/media/{id}`, but the same spec says that player 404s any non-video asset. Either drop audio from the rule or widen the player.
 - ✅ **Done 2026-10-01 — Traceability matrix regrade.** Was: `docs/reference/TRACEABILITY-MATRIX.md` has no rows for the new SPEC-01 P1.3, SPEC-02 P1.10, SPEC-07 P1.6, SPEC-09 P0.6; still counts the retired SPEC-06 P1.6; and marks ✅ requirements this pass tightened and HEAD now fails (e.g. SPEC-07 P0.2 cites `TestGetProgressNoRow`, which asserts the old 404). Regrade it together with the code follow-ups.
 
 ---
@@ -1469,7 +1469,7 @@ This pass edited documentation only. Each line below is a place where the correc
 - **F183** — Code follow-up: the constraint migration.
 - **F184** — Code follow-up: no nav link on HEAD.
 
-### Added by the 2026-10-01 owner decisions
+### Added by the 2026-09-30 owner decisions
 
 - **Timezone** — `0002` ships `timezone DEFAULT 'UTC'`: new migration to default `'Asia/Ho_Chi_Minh'`, rewrite untouched `'UTC'` rows, add `timezone_manual`.
 - **Timezone** — no `PATCH /api/v1/auth/me {timezone}`; `CurrentUser` / `accountapi.UserSummary` lack timezone; `account/invalid-timezone` missing from problems.ts.
@@ -1478,6 +1478,65 @@ This pass edited documentation only. Each line below is a place where the correc
 - **Timezone** — `people:scan_birthdays` (daily 06:00 UTC) and `bank:scan_debts_due` (daily 07:00 UTC) must run hourly and evaluate each owner's local date.
 - **Envelopes** — retrofit to `{items}`: `/assets` (`{assets}`), comics (`{comics}`, `{pages}`, `{sources}`), bank (`{transactions}`, `{accounts}`, `{categories}`, `{month, budgets}`), people (`{people}`, `{upcoming}` incl. BirthdayCard), debts (`{debts}`), and unowned lists (music `{imports}`/`{playlists}`, social `{connections}`, story `{chapters}`, people `{suggestions}`) — handler + openapi + frontend readers.
 - **Audio** — `PutProgress`/`GetProgress` reject non-video (404 not-playable); `MediaDetailView` feeds audio an empty `hls_url`; `completeAudio` stores no `duration_ms`.
+
+---
+
+## Corrections found during the 2026-10-01 gap verification
+
+On 2026-10-01 every `[c]` finding was re-checked against `main` @ `99b5a0b` while
+each spec gained its "Implementation gaps vs shipped code" section. Ten findings
+above describe the shipped code wrongly or incompletely; their entries are kept
+as the record of the run, and the correction below is what holds. The spec gap
+rows already carry the corrected text.
+
+- **F028** — the people scan and `/people/upcoming-birthdays` do **not** run in
+  UTC. Neither `cmd/api` nor `cmd/worker` sets `people.Deps.Timezone`, so
+  `people.New` falls back to `Asia/Ho_Chi_Minh` (UTC only if that zone fails to
+  load). The real divergence is one zone for every owner plus a daily 06:00 UTC
+  scan instead of an hourly per-owner one (SPEC-08 §11 rows 5–6).
+- **F168** — four of the five people slugs **are** in `problems.ts`
+  (`people/person-not-found`, `people/invalid-birthday`, `people/validation`,
+  `people/invalid-cursor`); only `people/invalid-asset` is missing, and it waits
+  for P1.7. The handler also emits `people/already-in-registry` (409), which
+  neither SPEC-08 §7 nor `problems.ts` declares (SPEC-08 §11 row 12).
+- **F029** — `BirthdayCard` has **no** fixture prop defaults on `HEAD`; it is
+  self-fetching. What remains: it shows only the first upcoming person, renders
+  nothing instead of a skeleton while loading, and retries on a 4xx (SPEC-08
+  §11 row 11). `PersonalInfoWidget`'s `DEFAULT_ITEMS` is still a fixture
+  (SPEC-06 §11 row 13).
+- **F161** — the Go comparisons (the `/continue` predicate, the resume gate, the
+  latch) are equivalent to the floored ratio already. Only the SQL
+  `progress_pct` (`::int` rounds, so 94.6 % reads 95) and the `duration_ms = 0`
+  clamp (every position clamped to 0 instead of the NULL rule) remain (SPEC-07
+  §11 row 11).
+- **F159** — every rail widget already sets `retry: false` except
+  `BirthdayCard`; the remaining gap is that one widget plus the missing 5xx
+  retry affordance (SPEC-06 §11 row 12).
+- **F015** — a failed post already restores body, mood, photos and Location
+  (the composer keeps its draft when the server refuses it). What remains is the
+  placement rule: no range check, no "Saved to <date>" toast, no dedupe, edits
+  not re-sorted (SPEC-05 §11 row 4, SPEC-06 §11 row 10).
+- **F012** — the notify `origin='import'` skip never fires: the import paths
+  create assets through `mediaapi.Ingest`, which has no `origin` parameter and
+  records `upload`, so every journal photo, comic page and import notifies
+  (SPEC-04 §11 row 8, SPEC-01 §11 row 10, SPEC-12 gap row 2).
+- **F095** — `music:import_zip` also enqueues on `default`, not only
+  `comic:import_zip`; both share the light server with notify (SPEC-04 §11
+  row 19, SPEC-02 §11 row 8).
+- **F059** — besides being unscheduled, `PurgeExpiredPasswordResetTokens`
+  ignores used rows (its predicate is `expires_at < now() - 7 days` only)
+  (SPEC-04 §11 row 17).
+- **F036** — worse than recorded: the delete runs inside the `RequireTenant`
+  request transaction, which rolls back on any status ≥ 500, so the 500 undoes
+  the `deleting` tombstone **after** `purgeObjects` has already removed storage
+  objects — the asset reappears with its original or variants gone (SPEC-01
+  §11 row 1).
+
+**From 2026-10-01 the live list is each spec's gap section**, not this worklog:
+SPEC-01/02/04–09 §11, SPEC-03 §12, SPEC-10 §8 and SPEC-12's unnumbered
+"Implementation gaps vs shipped code" section, indexed in
+[the specs README](../specs/README.md). A code fix closes a gap row there; this
+file is not updated again.
 
 ---
 

@@ -1,6 +1,6 @@
 # SPEC-06 — Life-Stream Home (read path: projection + dashboard)
 
-**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` (extends SPEC-05; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-05 (hard — first content + module home); system events attach as their producers land (SPEC-01 P0.3, SPEC-03 P0.7, SPEC-07 P1.5, SPEC-08 P0.4); the widget rail additionally consumes SPEC-04's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
 **Upstream:** [briefs/06-life-stream-home.md](../briefs/06-life-stream-home.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
 **Downstream consumers:** this spec's own P2 daily digest (reads this projection; delivered via SPEC-04 channels), future on-this-day widgets
@@ -104,7 +104,8 @@ The stream projects **moments**, not library events: `media:asset_ready`,
 `music:track_published`, `story:published`) go to the bell (SPEC-04) only —
 their stream projections were removed in `0033`/`0034`/`0040`
 ([events.md](../../reference/events.md)). The two `people:*` retraction rows
-are specced, not shipped: SPEC-08 emits neither event on HEAD (code follow-up).
+are specced, not shipped: SPEC-08 emits neither event on HEAD (code follow-up,
+§11 row 2).
 
 Inserts use `ON CONFLICT (user_id, source_module, event_type, ref_id) DO
 NOTHING` (the §6 unique key; every `ON CONFLICT` in this spec uses the same
@@ -139,7 +140,8 @@ handler returns without error, or with `asynq.SkipRetry`).
 *(Code follow-up: on HEAD `journal/stream.go` `bankRef` parses the date as UTC
 midnight, the upsert overwrites `occurred_at` unconditionally, the
 `playback_completed` handler uses `time.Now()` because the payload has no
-`completed_at`, and malformed payloads are dropped without a log line.)*
+`completed_at`, and malformed payloads are dropped without a log line — §11
+rows 3–5.)*
 
 **Known residual risk (accepted at v1, documented):** a `*_created` retry
 processed *after* the corresponding `*_deleted` resurrects an item —
@@ -212,7 +214,7 @@ cursor-paginated (specs README Pagination convention). `?limit=` defaults to
 30, hard max 50 (values above are clamped to 50; aligns with the 50-item LCP
 budget in §8); a missing, non-integer or < 1 value falls back to 30 — lenient,
 no Problem type. *(Code follow-up: on HEAD a value above 50 falls back to 30
-instead of clamping.)*
+instead of clamping — §11 row 8.)*
 
 Response `200 {items: StreamItem[], next_cursor?: string}` (`next_cursor`
 absent on the last page). Every `StreamItem` carries `{id (stream_items.id),
@@ -250,14 +252,15 @@ that emits no event). Unresolvable ids render "(deleted account)" /
 "Uncategorized". Amounts are formatted with the payload `currency`'s exponent
 (VND = 0; SPEC-03 P0.7 adds `currency`), never a hard-coded ₫. *(Code
 follow-up: on HEAD `bankapi.Names` does not exist, the payload has no
-`currency`, and `journal/stream.go` formats every amount as VND.)*
+`currency`, and `journal/stream.go` formats every amount as VND — §11 row 6.)*
 
-**Optimistic journal item** (P0.3). It is built from the `POST /journal/entries`
-response in the StreamItem shape `{id: <temp client id>,
-source_module: "journal", event_type: "journal:entry_created", ref_id: entry.id,
-occurred_at, body_md, mood}`. On refetch the server item (real `id`) replaces it
-by `ref_id`. Ties at equal `occurred_at` are placed first and are corrected by
-the refetch.
+**Optimistic journal item** (P0.3). It is built from the composer draft, before
+the `POST /journal/entries` response, in the StreamItem shape `{id: <temp client
+id>, source_module: "journal", event_type: "journal:entry_created", ref_id:
+<temp client id>, occurred_at, body_md, mood, asset_ids, location}`; when the
+response arrives its `ref_id` becomes `entry.id`. On refetch the server item
+(real `id`) replaces it by `ref_id`. Ties at equal `occurred_at` are placed
+first and are corrected by the refetch.
 
 **Acceptance criteria.**
 - Given a mix of journal + system items, then one stable merged order with
@@ -292,7 +295,7 @@ date) and the "Saved to <date>" toast are computed in the user's
 the server uses for date-only payloads (P0.2) and on-this-day (P1.5), and the
 zone SPEC-05's composer picks in — never the browser's zone. *(Code follow-up:
 the home view takes its zone from `lib/time.ts`, i.e. `GET /api/v1/time` /
-`APP_TIMEZONE` — README Timezone follow-up.)*
+`APP_TIMEZONE` — README Timezone follow-up; §11 row 9.)*
 
 **Acceptance criteria.**
 - Grep test: zero fixture data anywhere on the home route.
@@ -311,13 +314,14 @@ toast storm. If a backing module isn't mounted yet (404), the widget renders its
 empty/"coming soon" state. Each widget query sets `retry: false`: a 4xx is
 final, so a 404/403 renders the empty or "coming soon" state immediately
 (TanStack's default three retries would spin for seconds first), and a 5xx
-renders an inline retry affordance. *(Code follow-up: on HEAD the rail queries
-use the `QueryClient` defaults.)*
+renders an inline retry affordance. *(Code follow-up: on HEAD `BirthdayCard`
+uses the `QueryClient` defaults — the other rail widgets already set
+`retry: false` — and no widget offers an inline retry on a 5xx — §11 row 12.)*
 
 The Activity feed reuses SPEC-04 P0.5's `["notifications"]` query (same key and
 queryFn, rendering a slice) and never defines its own key (D-32), so the bell's
 optimistic mark-read reaches the rail. *(Code follow-up: on HEAD
-`ActivityFeed.tsx` uses `["notifications", "rail"]`.)*
+`ActivityFeed.tsx` uses `["notifications", "rail"]` — §11 row 11.)*
 
 | Widget | Source | Arrives with |
 |---|---|---|
@@ -397,7 +401,7 @@ The same migration also ships the `stream:read:own` → `user` seed (the `0003`
 `WITH grants(...)` pattern) and the P0.1 journal backfill `INSERT … SELECT … ON
 CONFLICT DO NOTHING`. *(Code follow-up: on HEAD the unique key and every
 `ON CONFLICT` in `query/journal_stream.sql` omit `user_id`, so a second user's
-completion of a shared asset would be dropped.)*
+completion of a shared asset would be dropped — §11 row 1.)*
 
 No FK on `ref_id` (polymorphic and mostly cross-module). Queries in
 `query/journal_stream.sql`; regenerate via `make sqlc`.
@@ -456,3 +460,49 @@ P0 ≈ 5 dev-days; P1 adds ~1. Matches the brief's ~6.
   modules' `api/` when payload isn't enough? **Resolved for `bank:*`** (P0.2:
   `bankapi.Names` batch resolve per page); other types stay payload-only until a
   card demonstrably needs more.
+
+## 11. Implementation gaps vs shipped code (as of 2026-10-01)
+
+Baseline: `main` @ `99b5a0b` (the docs commits on top of it change no code; read
+it with `git show 99b5a0b:<path>`). The text above is the target; every row below
+is a place where the shipped code still diverges from it, ordered by severity —
+data loss and stale personal data first, then ordering and rendering, then the
+home page, then contract hygiene and the P1 item. A row closes when the code
+matches the requirement **and** the SPEC-06 rows of
+[TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded on
+test evidence; delete the row in that PR. The inline *Code follow-up* notes above
+point here. Paths are relative to `backend/` or `frontend/src/`; `stream.go` is
+`internal/modules/journal/stream.go`.
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | §6 unique key; P0.1 `ON CONFLICT` target | `UNIQUE (user_id, source_module, event_type, ref_id)`, and every `ON CONFLICT` uses it — a shared asset's playback is one item **per user**. | `db/migrations/0017_journal_stream_items.up.sql`: `UNIQUE (source_module, event_type, ref_id)`. `internal/modules/journal/query/journal_stream.sql`: `InsertStreamItem` / `UpsertStreamItem` use `ON CONFLICT (source_module, event_type, ref_id)`; `UpdateStreamOccurredAt` and `DeleteStreamItem` match without `user_id`. A second user's `media:playback_completed` for the same asset is silently swallowed by `DO NOTHING`. | migration `000N_journal_stream_items_user_key`: drop the old unique, add the new one (no data rewrite — the old key is stricter, so no row collides). backend: every `ON CONFLICT` target gains `user_id`; `DeleteStreamItem` and `UpdateStreamOccurredAt` gain `AND user_id = $n` (`OnBankDeleted` passes the payload user, `repository/adapter.go` `PatchEntry` / `DeleteEntry` the owner); `DeleteStreamByRef` stays user-less (the asset is gone for everyone); regenerate sqlc. test: the `journal_test.go` fake's `streamKey` gains the user; two users completing one asset → two items (TC-STREAM-018, TC-STREAM-112). | F156 |
+| 2 | P0.1(b) `people:birthday_notice_revoked`, `people:person_deleted` | Two consumer tasks delete a revoked notice's item and every `people` item whose payload `person_id` matches a deleted person. | `internal/modules/people/api/api.go` declares only `EventBirthdayUpcoming`; `people/service.go` emits neither event. `internal/modules/journal/api/api.go` has no `TaskStreamBirthdayRevoked` / `TaskStreamPersonDeleted`; `module.go` `RegisterTasks` registers six tasks. A deleted person's birthday card stays and links to a 404; an edited birthday leaves a stale card. | backend (SPEC-08): publish both events after commit (payloads per events.md). backend (journal): two task constants; `OnBirthdayRevoked` deletes `('people', 'people:birthday_upcoming', notice_id)` for the user; `OnPersonDeleted` runs a new `DeleteStreamPeopleByPerson` (`DELETE FROM stream_items WHERE user_id = $1 AND source_module = 'people' AND payload->>'person_id' = $2`); both through `runScoped`; register both in `RegisterTasks`; subscribe them in `cmd/api` (the people PATCH/DELETE publish there) and in `cmd/worker`; events.md Consumers column. test: TC-STREAM-005. | F017 |
+| 3 | P0.1 `occurred_at` for date-only payloads; `bank:transaction_updated` keeps position | A bank `date` becomes an instant in the owner's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`): the ingest instant when the date is the owner's local today, else 12:00 local. An update moves the item only when the date changed. | `stream.go` `bankRef` uses `time.Parse("2006-01-02", …)` — UTC midnight, i.e. 07:00 ICT and the wrong local day west of UTC. `bankUpsert(update=true)` → `UpsertStreamItem` `DO UPDATE SET payload = EXCLUDED.payload, occurred_at = EXCLUDED.occurred_at` unconditionally, so a re-categorize moves the card. The journal module has no account dependency, and `internal/modules/account/api/api.go` `UserSummary` has no timezone. | backend (account): expose the timezone through accountapi (`UserSummary.Timezone` or a `Timezone(ctx, userID)` call). backend (journal): `Deps.Accounts`, wired in `cmd/worker` and `cmd/api`; `bankRef` converts as specified. query: `UpsertStreamItem` → `DO UPDATE SET payload = EXCLUDED.payload, occurred_at = CASE WHEN (stream_items.occurred_at AT TIME ZONE @tz)::date = @payload_date THEN stream_items.occurred_at ELSE EXCLUDED.occurred_at END`; regenerate sqlc. Prerequisite: the `users.timezone` default and write path (SPEC-05 §11 row 2). test: TC-STREAM-017. | F074; Decision 2026-09-30 (Timezone) |
+| 4 | P0.1 `media:playback_completed` sorts at `completed_at` | The item sits at the payload's `completed_at` (the latched completion instant), so a late delivery sorts at its real position. | `internal/modules/media/service.go` `Service.PutProgress` (which latches completion) publishes `{asset_id, user_id, title}` — it computes `completedAt := time.Now()` but does not send it; `stream.go` `OnPlaybackCompleted` passes `time.Now()`. | backend (media): add `completed_at` (RFC 3339, the latched value) to the payload; events.md. backend (journal): parse it and use it; fall back to ingest time only when absent (events already queued). test: TC-STREAM-006 plus a late-delivery case (P0.1 AC). | F152 |
+| 5 | P0.1 malformed payload | A payload missing its user field, or carrying an unparseable id, is dropped **with a log line** and never retried. | `stream.go` `insertSystem`, `OnPlaybackCompleted`, `OnBirthdayUpcoming`, the `bankRef` callers and the JSON / asset-id branches of `OnAssetDeleted` all `return nil` silently; only a missing `owner_user_id` on `media:asset_deleted` is logged. | backend: `log.Warn()` with task type and reason on every drop branch, still returning nil (or `asynq.SkipRetry`). test: TC-STREAM-015 — a malformed payload returns no error and writes nothing. | F151 |
+| 6 | P0.2 bank cards — names and currency | One `bankapi.Names(ctx, userID, accountIDs, categoryIDs)` per page; "(deleted account)" / "Uncategorized" fallbacks; amounts formatted with the payload `currency`'s exponent; a transfer renders "moved <amount> <source>→<dest>", normalized on direction. | `internal/modules/bank/api/api.go` `TransactionEvent` has no `Currency`, and bankapi has no `Names`. `stream.go` `renderSystem` formats every amount with `formatVND` and titles a transfer just "Moved <amount>" (no accounts, no direction normalization). | backend (bank, SPEC-03 P0.7): `currency` in the payload (events.md); `bankapi.Names` reading inside the caller's tenant scope. backend (journal): a `Bank` dependency; `Service.Stream` collects the page's account and category ids, resolves them once, applies the fallbacks, formats by currency exponent (VND = 0), and normalizes transfers (source = `account_id` when `direction = 'debit'`, else `counterparty_account_id`). test: TC-STREAM-033, TC-STREAM-034 incl. "a USD transfer shows USD, never ₫". | F016 |
+| 7 | P0.2 media deep link | `media:playback_completed` → `/library/media/{asset_id}` (SPEC-07 P0.4 media deep-link rule; playback is video or audio, both open the player). | `stream.go` `renderSystem` returns href `/library/media` (the grid, no id). | backend: href `/library/media/` + `asset_id`. test: extend `journal_test.go: TestStreamReadMapping` with a playback item (TC-STREAM-033). | F018; Decision 2026-09-30 (Audio) |
+| 8 | P0.2 / §7 `limit` | Default 30; above 50 is **clamped to 50**; missing, non-integer or < 1 → 30. | `stream.go` `Service.Stream`: `if limit <= 0 \|\| limit > maxStreamLimit { limit = defaultStreamLimit }` — `?limit=100` returns 30. | backend: `> 50 → 50`, `≤ 0 → 30` (non-integers already arrive as 0 via `server.AtoiSafe`). test: TC-STREAM-036 over the router (`?limit=100` → at most 50 items; `?limit=abc` → 30). | F075 |
+| 9 | P0.3 day grouping in the user's zone | Card dates, day separators and the "Saved to <date>" toast use `users.timezone` from `GET /auth/me`, never the browser's or the instance's zone. | `templates/v1/components/stream/StreamItemCard.tsx` formats with `formatDate(item.occurred_at, tc?.timezone ?? "UTC")`, where `tc` comes from `lib/time.ts` `useTimeConfig` → `GET /api/v1/time` (`APP_TIMEZONE`). | frontend: take the zone from `/auth/me` (prerequisite SPEC-05 §11 row 2: `/auth/me` returns `timezone`). test: TC-STREAM-053. | Decision 2026-09-30 (Timezone) |
+| 10 | P0.3 optimistic placement; P0.2 optimistic item | Insert into the loaded page whose range holds `occurred_at`; too old with more pages → no insert, "Saved to <date>" toast; dedupe by `ref_id`; same rule for `occurred_at` edits; the optimistic item swaps its temp `ref_id` for `entry.id` when the POST answers. | `templates/v1/views/home/HomeView.tsx` `create.onMutate` always `prepend`s into page 0; the item keeps `ref_id` = temp id until the refetch replaces it; no range check, toast or dedupe; edits never re-sort. | frontend: the `placeOptimistic` helper and `ref_id` swap of SPEC-05 §11 row 4 (one change closes both). test: TC-STREAM-051, TC-JRNL-050…052. | F015 |
+| 11 | P0.4 Activity feed shares the bell's query | The rail's Activity feed reuses SPEC-04 P0.5's `["notifications"]` query (same key and queryFn), so the bell's optimistic mark-read reaches it. | `templates/v1/components/widget/ActivityFeed.tsx` queries `["notifications", "rail"]`; the bell (`templates/v1/components/headers/NotifMenus.tsx`) owns `NOTIFICATIONS_KEY = ["notifications"]`. | frontend: move the bell's query into a shared hook (e.g. `lib/notifications.ts` `useNotifications()`) and have the feed render a slice of it. test: TC-STREAM-072 + "marked read from the bell → feed shows it read without a refetch". | F160 |
+| 12 | P0.4 widget failure handling | Each widget query sets `retry: false` (a 4xx is final → empty / "coming soon" at once); a 5xx renders an inline retry affordance. | All rail widgets set `retry: false` except `templates/v1/components/widget/BirthdayCard.tsx` (`useQuery({queryKey: ["people", "upcoming"], …})` → three retries). No widget renders a retry on a 5xx: `MusicWidget` returns null on error, the others render their empty state. | frontend: `retry: false` on `BirthdayCard`; a shared error state in `WidgetCard` with a Retry button for 5xx. test: TC-STREAM-070, TC-STREAM-071. | F159 (corrected — the worklog said every rail query used the defaults) |
+| 13 | P0.4 `PersonalInfoWidget` on real data | `DEFAULT_ITEMS` deleted, `items` required and built from `GET /auth/me`; the widget is on the rail ("live today"). | `templates/v1/components/widget/PersonalInfoWidget.tsx` still declares `DEFAULT_ITEMS` sample data as the `items` default; the widget is absent from `widget/registry.ts` and from the `0036_layout_core` seed, so it is not on the home rail at all. | frontend: delete `DEFAULT_ITEMS`, make the widget self-fetch `/auth/me`, add a `personal-info` key to the registry. migration: seed the `personal-info` layout row (the `0036` pattern). test: TC-STREAM-050 (grep), TC-STREAM-072. | F029 |
+| 14 | §3 non-goal "Weather widget — dropped, not wired" | No weather widget on the home rail. | `templates/v1/components/widget/WeatherWidget.tsx` (Open-Meteo for the browser's geolocation) is registered as `weather` in `widget/registry.ts` and seeded on the left rail by `db/migrations/0036_layout_core.up.sql`. | migration: delete the default `weather` layout row (and drop the registry key), **or** the owner amends §3 to accept the shipped widget (it shows no fixture data). Owner decision. | Found while verifying this section (no F-ID) |
+| 15 | §7 Problem types and OpenAPI encoding | `journal/invalid-cursor` has an i18n key; each operation carries `x-required-permission`; the contract describes only projected sources. | `lib/problems.ts` lacks `journal/invalid-cursor` and keeps the never-emitted `stream/invalid-cursor`. `shared/openapi.yaml` `getStream` declares no 400 and no `x-required-permission`; `StreamItem.source_module` lists `comic` and `ref_id` mentions "chapter id", neither projected since `0034`. | frontend: add `journal/invalid-cursor`, delete `stream/invalid-cursor`. openapi: `x-required-permission: stream:read:own`, a 400 `journal/invalid-cursor` response, the stale `comic` / chapter wording removed; regenerate and commit (ADR-10). test: TC-STREAM-037. | F158, F024, F025, F010 |
+| 16 | P1.5 on-this-day memories | `GET /api/v1/stream/memories` → `200 {items: [{years_ago, entries}]}`: journal entries whose `occurred_at` month/day, taken in the caller's `users.timezone`, matches today in that zone, prior years, `years_ago` ASC; Feb-29 surfaces on Feb-28 in non-leap years. | Not shipped: no route in `module.go` `MountHTTP`, no query, no `/stream/memories` in `shared/openapi.yaml`, no widget. | backend: a `ListMemories` query in `query/journal_entries.sql` (`(occurred_at AT TIME ZONE @tz)` month/day match, earlier years, the Feb-28 rule), handler under `stream:read:own`, the zone from accountapi (row 3). openapi: the path and response. frontend: one `WidgetCard` on the rail. test: TC-STREAM-090, TC-STREAM-091. | F075; Decision 2026-09-30 (Timezone) |
+
+**Already matching on `99b5a0b`** (verified, not to be re-built):
+- P0.1(a) — journal rows are written, moved and deleted inside the entry's own transaction (`repository/adapter.go` `CreateEntry` / `PatchEntry` / `DeleteEntry`) with `source_module='journal'`, `event_type='journal:entry_created'`, `ref_id` = entry id, `payload='{}'`; `0017` backfills existing entries with the same values and seeds `stream:read:own` to `user`.
+- P0.1(b) — the six shipped consumers use their own task names (`journal/api/api.go` `TaskStream*`), subscribed in `cmd/worker` (and the five media/bank ones in `cmd/api`), never the raw event name; each writes inside the payload user's tenant scope (`runScoped`).
+- P0.1(b) — `media:asset_ready`, `comic:published` and the catalogue publishes are not projected (`0033` / `0034` / `0040`; `renderSystem` has no `asset_ready` case); a transfer collapses on `transfer_id`; `bank:transaction_updated` upserts under the created-event key; `bank:transaction_deleted` deletes it; birthdays key on `notice_id`; `media:asset_deleted` deletes every `media` row for the ref across event types and users.
+- P0.2 — `GET /stream` returns `{items, next_cursor?}` with flat items carrying `id`, `source_module`, `event_type`, `ref_id`, `occurred_at`; journal items join `body_md`, `mood`, `asset_ids`, `location` from `journal_entries` in the Entry's shapes; system items carry `title` / `href` and never the raw payload; an unmapped type renders a generic card without `href`; the bank and people hrefs follow the mapping; a malformed cursor is 400 `journal/invalid-cursor`; a missing or invalid `limit` is 30.
+- P0.3 / P0.4 — the home route has no fixtures; the rail is composed from `GET /layout`, each widget has its own query, and an unknown key is skipped.
+
+**Test evidence to add or fix:**
+- `journal_test.go` fake repository: `streamKey{src, evt, ref}` mirrors the superseded unique key (no user), so a per-user test cannot fail against it — add the user with row 1.
+- TC-STREAM-010 ("item payload + occurred_at updated") predates the rule that an update moves the item only when the date changed — align it with TC-STREAM-017.
+- `journal_test.go: TestStreamReadMapping` covers only `people:birthday_upcoming`; extend it to `media:playback_completed` (href with the asset id) and the bank cards (TC-STREAM-033, TC-STREAM-034).
+- Behaviour that already holds but has no test: TC-STREAM-016 (migration backfill), TC-STREAM-030 (merged cursor traversal over the router), TC-STREAM-031 (owner isolation on `/stream`), TC-STREAM-035 (unmapped type → generic card).
+- New with the rows above: TC-STREAM-005, 006, 015, 017, 018, 036, 037, 051, 053, 070…072, 090, 091, 112.

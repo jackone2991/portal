@@ -79,7 +79,7 @@
 | TC-CONT-080 | Emit once at ≥95% crossing | Integration | P1 | cross 95% first time (floor ratio, SPEC-07 P0.1) | `media:playback_completed {asset_id,user_id,title,completed_at}` emitted once (`completed_at` = the latched value); `completed_at` latched in the same transaction as the upsert; a Publish error rolls both back | ☐ [P1] |
 | TC-CONT-081 | No double-emit on repeat crossing | Idempotency | P1 | re-watch, cross 95% again; retry | no second emit (NULL→set latch) | ☐ [P1] |
 | TC-CONT-082 | NULL-duration never emits | Integration | P1 | NULL-duration asset | no completion event ever | ☐ [P1] |
-| TC-CONT-083 | Two consumers registered | Integration | P1 | inspect events.md | stream + notify both registered for `media:playback_completed` | ☐ [P1] (CC-5) |
+| TC-CONT-083 | One v1 consumer registered | Integration | P1 | inspect events.md and the `Subscribe(` calls in `cmd/api` / `cmd/worker` | only the stream consumer is registered for `media:playback_completed` (P1.5: v1 consumer is the stream; no notify consumer) | ☐ [P1] (CC-5) |
 
 ## Cross-cutting / contract
 

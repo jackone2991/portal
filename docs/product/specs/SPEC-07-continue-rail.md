@@ -1,6 +1,6 @@
 # SPEC-07 — Playback Resume + Continue Rail (D-20 execution)
 
-**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `media`; aggregator mounts in `cmd/api` · **Depends on:** nothing hard for P0; soft on SPEC-01 P0 (`assets.title`/`original_filename`, the `deleting` status, the `poster` variant); SPEC-01 P0.6 (`platform/events` fan-out) for P1.5's event; the comic leg (P1.6) plugs in with SPEC-02's `comic_reading_progress`
 **Upstream:** [briefs/07-continue-rail.md](../briefs/07-continue-rail.md) · **Refs:** feature-inventory `D-20` (continue aggregator shape), SPEC-02 P0.4 (progress-beacon convention), frontend.md
 **Downstream consumers:** SPEC-06 P0.4 (continue widget); SPEC-04 is a *future* consumer of P1.5's event (needs a `notify:on_*` task first)
@@ -253,7 +253,8 @@ video layout, an audio asset with `src` = `/api/v1/assets/{id}/original`
 (typed by `assets.mime_type`) and the audio layout — no poster, no HLS. Any
 other kind renders the not-playable state. This spec creates the route, adds the key to
 `templates/types.ts` and the v1 manifest, and adds it to frontend.md §2's
-`views` list (all shipped on HEAD except the frontend.md line).
+`views` list (all shipped on HEAD; frontend.md lists the key since the
+2026-09-30 docs pass).
 `mediaapi.Continue` (P0.3) builds each item's `href` to this exact path,
 `/library/media/{id}`.
 
@@ -397,3 +398,73 @@ GET read path and the player route.
 - **(product, non-blocking)** Should "Start over" also clear the progress row, or
   just play from 0 and let the next beacon overwrite? Recommendation: the latter
   (simpler; identical outcome after ~10 s of playback).
+
+## 11. Implementation gaps vs shipped code (as of 2026-10-01)
+
+The baseline is `main` @ `99b5a0b` (the docs commits on top of it change no
+code). The spec text above is the target; this section lists every place the
+shipped code still diverges from it, so an implementer needs nothing but this
+spec. Rows are ordered by severity: data loss first (a save or an event that is
+silently dropped), then wrong answers on the wire, then shape and wiring, then
+unbuilt P1. A row closes when the code matches the requirement it cites and the
+SPEC-07 row of [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md)
+is regraded on a named test. File paths are relative to the repo root;
+"F-ids" refer to [spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md).
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | P0.2 transport rule | Every save, `pagehide` included, is `fetch(url, {method: 'PUT', keepalive: true, credentials: 'include', headers: {'Content-Type': 'application/json'}, body})`; never `navigator.sendBeacon`. | `frontend/src/templates/v1/views/library/media/MediaDetailView.tsx` `sendProgressBeacon` (fired on `pagehide` and `visibilitychange`) calls `navigator.sendBeacon(url, Blob)` whenever it exists, which is a `POST` to a PUT-only route (`media/module.go` registers `r.Put("/{id}/progress")` only) → 405, hidden by fire-and-forget; the keepalive branch never runs because `sendBeacon` exists in every current browser. **The last position before the tab closes is lost on every session.** `putProgressFetch` (10 s and on-pause saves) omits `keepalive: true`. The comic reader has the same bug in `frontend/src/lib/comic.ts` (lines 118–121; SPEC-02 P0.4 cites this rule). | **frontend:** replace both helpers with one `saveProgress(assetId, positionMs)` that always sends the keepalive `PUT` above; delete the `sendBeacon` branch; fix `lib/comic.ts` in the same PR. **backend:** none (do not accept `text/plain` or `POST`). **test:** TC-CONT-026. | F001 |
+| 2 | P1.5 completion latch | One transaction: upsert position; `UPDATE media_playback_progress SET completed_at = now() WHERE user_id = $1 AND asset_id = $2 AND completed_at IS NULL RETURNING completed_at`; `events.Publish` only when that returned a row, before COMMIT; a Publish error rolls back. | `backend/internal/modules/media/service.go` `PutProgress`: reads `GetPlaybackProgress` first, sets `completedAt = time.Now()` in Go, calls `s.events.Publish` **outside any transaction and discards its error** (`_ = s.events.Publish(...)`), then `UpsertPlaybackProgress` writes `completed_at` via `COALESCE` (`query/media_progress.sql`). A failed Publish still latches `completed_at`, so the event is lost for good; two concurrent beacons both read NULL and both publish. | **backend:** split `UpsertPlaybackProgress` (position + `updated_at = now()` only) from a new sqlc query `LatchPlaybackCompleted :one` (the UPDATE … `RETURNING completed_at` above); run upsert → latch → Publish inside one `pgx.Tx` (tenant scope already open on the request), return the Publish error so the handler answers 500 and the tx rolls back. **test:** TC-CONT-080/081 (Publish error → no row change and a retry emits once; two concurrent beacons → one event). | F165 |
+| 3 | P1.5 payload; P0.1 display title | Payload `{asset_id, user_id, title, completed_at}`; `completed_at` is the latched DB value; `title` is the display title (`assets.title` → `original_filename` → `'Untitled video'`). | `PutProgress` publishes `{asset_id, user_id, title}` only; `title` falls back `Title` → `OriginalFilename` and can be `""`. The stream consumer (`backend/internal/modules/journal/stream.go`) therefore stamps the card with processing time. | **backend:** add `completed_at` (RFC 3339, from row 2's `RETURNING`) and apply the display-title rule (empty strings count as missing). events.md already documents the target payload. **test:** extend TC-CONT-080 to assert both fields. SPEC-06 P0.1(b) owns reading `completed_at` as `occurred_at`. | F152, F078 |
+| 4 | P0.1 playable kinds (audio duration) | Audio `duration_ms` is probed from the original at `/complete`, so audio has a completion ratio, appears in `/continue` and can fire P1.5. | `service.go` `completeAudio` calls `s.repo.MarkReady(ctx, asset.ID, "", nil, nil, nil)` — no duration; its comment says duration "is reported by the browser". Every audio asset is NULL-duration. The `api` image (`backend/Dockerfile`, stage `api`) has no ffprobe; only the `worker` stage installs `ffmpeg`. | **backend:** probe the stored original and pass `durationMs` to `MarkReady` — either add `ffmpeg` to the `api` stage and reuse the ffprobe call (`worker/transcode.go` `probe`, moved to a shared helper), or keep `/complete` synchronous-ready and enqueue a worker probe task that writes `duration_ms` (the asset is NULL-duration until it lands, which the NULL-duration rule already covers). A failed probe leaves NULL. **test:** extend `TestCompleteUploadAudioReadyWithoutTranscode` to assert the stored duration; TC-CONT-040. | Decision 2026-09-30 (Audio) |
+| 5 | P0.2 playable kinds (audio progress) | `video` and `audio` are playable on PUT and GET progress. | `PutProgress` returns `ErrNotPlayable` when `asset.Kind != "video"`; `GetProgress` the same → 404 `media/asset-not-playable` for audio. | **backend:** accept `kind IN ('video','audio')` in both. **test:** TC-CONT-031 (owned ready audio, PUT 90 000 then GET → 200, 90 000). | Decision 2026-09-30 (Audio) |
+| 6 | P0.2 status table | Unknown, malformed, `deleting` or foreign → 404 `media/asset-not-found` (never 403); owned non-playable → 404 `media/asset-not-playable`; owned playable in `uploading`/`processing`/`failed` → 409 `media/asset-not-ready`; no row written on any non-2xx. Same table for PUT and GET. | `service.go` `owned()` returns `ErrForbidden` for a foreign asset and `handler.go` `writeProgressProblem` maps it to **403 `about:blank`**; `PutProgress` checks kind before `deleting`, so a deleting image answers not-playable; `GetProgress` maps `deleting` to `ErrNotPlayable`; neither checks `asset.Status`, so a `processing` video saves a row and answers 204/200; `writeProgressProblem` has no `ErrNotReady` case (it would fall to 500). | **backend:** in one guard used by both methods: missing/foreign/`deleting` → `ErrNotFound`; kind not playable → `ErrNotPlayable`; status ≠ `ready` → `ErrNotReady`; map `ErrNotReady` → 409 `media/asset-not-ready` in `writeProgressProblem`; drop the 403 branch. **openapi:** add `409` to `getAssetProgress` and `putAssetProgress`. **test:** TC-CONT-021, TC-CONT-024. | F077 |
+| 7 | P0.2 GET first open | Asset passes every check but no row → 200 `{position_ms: 0, progress_pct: 0 (null when duration_ms IS NULL or ≤ 0), completed_at: null, updated_at: null}`; 404 is reserved for asset-level failures. | `GetProgress` returns the repository's `ErrNotFound` for a missing row → handler answers 404 `media/asset-not-found`; the handler always formats `updated_at` (never null). `shared/openapi.yaml` `PlaybackProgress` has `required: [position_ms, updated_at]` and `progress_pct` not nullable; `frontend/src/lib/media-assets.ts` types `updated_at: string`, and the player hides the 404 with `.catch(() => null)`. | **backend:** on no row return the zero value above; emit `updated_at: null`. **openapi:** `PlaybackProgress` → `required: [position_ms]`, `updated_at` and `progress_pct` `nullable: true`. **frontend:** `PlaybackProgress.updated_at: string \| null`, `progress_pct: number \| null`; stop treating 404 as "start at 0". **test:** rewrite `TestGetProgressNoRow`; TC-CONT-030. | F076 |
+| 8 | P0.4 playback host (audio) | Audio mounts Vidstack with `src` = `/api/v1/assets/{id}/original` (typed by `mime_type`) and the audio layout; any non-playable kind renders the not-playable state. | `MediaDetailView.tsx` passes `src={asset.hls_url \|\| ""}` and `DefaultVideoLayout` for both kinds; the server builds `hls_url` for video only (`service.go` `hlsURL`), so audio gets an empty source and never plays. Non-playable kinds render an `<img>` of the original instead of a not-playable state. | **frontend:** branch on `asset.kind`: video → HLS + `DefaultVideoLayout`; audio → `{src: baseURL + '/api/v1/assets/' + id + '/original', type: asset.mime_type}` + `DefaultAudioLayout` (no poster); other kinds → not-playable state (and link to `/library/media?open={id}`). **test:** TC-CONT-066, TC-CONT-065 (audio item click-through). | Decision 2026-09-30 (Audio) |
+| 9 | P0.4 media deep-link rule | Video/audio → `/library/media/{id}`; image → `/library/media?open={id}`; the grid reads `open` and opens its lightbox or a not-found toast. Applies to notify's `media.asset_ready` `data.href`, the stream mapping and continue items. | `backend/internal/modules/notify/service.go` (`OnAssetReady` intent, line 268) sets `href` to `/library/` + asset id for every kind; `journal/stream.go` maps `media:playback_completed` to `/library/media` (no id); `media_progress.sql` `GetContinueItems` already builds `/library/media/{id}`. `MediaIndexView.tsx` reads only `kind`/`status` from the query string, never `open`. | **backend:** notify builds the href from the payload's `kind` (already carried) with the rule; stream maps `media:playback_completed` to `/library/media/{asset_id}`. **frontend:** `MediaIndexView` reads `open`, opens the lightbox for that id or shows a not-found toast. **test:** TC-CONT-065; SPEC-06 and SPEC-04 own their mapping tests. | F018 |
+| 10 | P0.1 display title (continue item) | `title` = first non-empty of `assets.title`, `assets.original_filename`, `'Untitled video'`; never derived from `source_key`. | `media_progress.sql` `GetContinueItems`: `COALESCE(a.title, a.original_filename, a.source_key)` — an untitled asset reads `uploads/{id}/original.mp4`; empty strings are not skipped. | **backend:** `COALESCE(NULLIF(a.title, ''), NULLIF(a.original_filename, ''), 'Untitled video')`; regenerate sqlc. **test:** TC-CONT-046 (DB-backed). | F078 |
+| 11 | P0.1 completion ratio | One integer `floor(position_ms * 100 / duration_ms)` drives `progress_pct`, the `/continue` predicate, the resume gate and the latch; `duration_ms ≤ 0` is treated as NULL. | `GetContinueItems` computes `progress_pct` with a float division cast `::int`, which **rounds** (94.6 % is reported as 95 while the item is still listed; the predicate itself compares floats, which is equivalent to the floor). `PutProgress` clamps to `duration_ms` whenever it is non-NULL, so `duration_ms = 0` clamps every position to 0 instead of applying the NULL rule. | **backend:** `progress_pct` = `(mpp.position_ms * 100 / a.duration_ms)::int` on integers with `a.duration_ms > 0` in the WHERE; in `PutProgress` treat `DurationMs == nil` or `≤ 0` alike (clamp to `≥ 0` only, no latch). **test:** TC-CONT-041 with a 94.6 % row (reports 94, listed) and a `duration_ms = 0` row (excluded, position kept). | F161 |
+| 12 | P0.3 item shape | Shared Go type in a platform package (e.g. `platform/continueitem.Item`) returned by every `<module>api.Continue`; `poster_url` is null unless a `poster` variant exists (audio is always null). | The type is `mediaapi.ContinueItem` in `backend/internal/modules/media/api/api.go` with `PosterURL string` (never null); `GetContinueItems` builds `/api/v1/assets/{id}/variants/poster` for every row; `cmd/api/main.go` `handleContinue` falls back to `[]mediaapi.ContinueItem{}`. | **backend:** move the struct to `platform/continueitem` (`PosterURL *string`), have `mediaapi.Continue` return it; in SQL `LEFT JOIN media_asset_variants v ON v.asset_id = a.id AND v.variant = 'poster'` and emit the URL only when `v.asset_id IS NOT NULL`. **openapi:** `ContinueItem` already allows null; describe `limit` as clamped/defaulted (its schema's `minimum: 1`/`maximum: 50` reads as a 4xx). **test:** TC-CONT-043 (contract test on the item schema), TC-CONT-040 (audio item `poster_url` null). | F079 |
+| 13 | §7 problem types | `media/asset-not-playable` is registered in `frontend/src/lib/problems.ts`. | `problems.ts` declares `media/asset-not-found` and `media/asset-not-ready` but not `media/asset-not-playable`, although `media/handler.go` emits it. | **frontend:** add the slug to the `ProblemType` union and its message. **test:** TC-CONT-100. | F077, F031 |
+| 14 | P1.6 comic leg | `comicapi.Continue(ctx, userID, limit)` returns the P0.3 item and joins the `handleContinue` fan-out. | Not built: `handleContinue` calls `mediaMod.API().Continue` only. | **backend:** implement once SPEC-02 P0.4 is on `main`; merge, sort by `updated_at DESC`, truncate in `handleContinue`. **test:** new TEST-CASES row (none exists). | TRACEABILITY-MATRIX SPEC-07 P1.6 (✖) |
+
+**Already matching on HEAD.**
+- `0013_media_playback_progress` matches §6 (PK `(user_id, asset_id)`,
+  `position_ms ≥ 0` CHECK, nullable `completed_at`); `0020_platform_rls_enable`
+  adds `tenant_id` and the `tenant_isolation` policy.
+- The upsert sets `updated_at = now()` on conflict, so the rail orders by the
+  latest save.
+- PUT and GET progress sit behind `RequireAuth` and key the row on the
+  caller's id; the handler clamps a negative `position_ms` to 0 and the service
+  clamps above `duration_ms` (never 500).
+- `GET /api/v1/continue` lives in `cmd/api` (`handleContinue`), answers
+  `{items}`, defaults `limit` to 10, clamps to 50, falls back to 10 on a
+  missing, non-integer or `< 1` value, and the predicate is `position_ms ≥
+  30 000`, ratio `< 95`, `duration_ms IS NOT NULL`, ordered `updated_at DESC`.
+- The `/library/media/[id]` route, `TemplateManifest.views.libraryMediaDetail`
+  and the v1 manifest entry exist; continue items link to `/library/media/{id}`.
+- The player fetches GET progress before seeking, resumes at `≥ 30 s` and
+  `< 95` (any `≥ 30 s` when `progress_pct` is null), shows "Start over", and
+  saves every ~10 s and on pause.
+- Repeated ≥ 95 % crossings in sequence emit `media:playback_completed` once.
+
+**Test evidence to add or fix.**
+- `backend/internal/modules/media/service_test.go` `TestGetProgressNoRow`
+  asserts `ErrNotFound` for a missing row — superseded; rewrite to expect the
+  200 zero value (TC-CONT-030).
+- `TestPutProgressGuards` asserts `ErrForbidden` for a foreign asset — the
+  target is 404 `media/asset-not-found` (TC-CONT-021); add an owned `ready`
+  audio (accepted, TC-CONT-031), a `processing` video (`ErrNotReady`, no row,
+  TC-CONT-024), a `deleting` image (not found) and `duration_ms = 0`.
+- `TestPutProgressCompletionLatch` covers sequential crossings only; add a
+  Publish error (rollback, retry emits once), concurrent beacons and the
+  `completed_at`/title payload (TC-CONT-080/081).
+- `TestContinueItemsPredicate` runs on an in-memory fake, so it cannot see the
+  SQL rounding, title or poster bugs; add a DB-backed query test for
+  TC-CONT-041/043/046.
+- No HTTP-level progress test exists; add one asserting the problem type for
+  every row of the P0.2 status table (TC-CONT-024, TC-CONT-100).
+- Frontend: TC-CONT-026 (keepalive `PUT`, no `sendBeacon`), TC-CONT-066 (audio
+  from `/original`) and TC-CONT-065 have no test file.
+- TC-CONT-083 ("Two consumers registered", stream + notify) is stale against
+  P1.5 (v1 consumer: stream only); rewrite it to assert stream only.

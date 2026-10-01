@@ -130,7 +130,7 @@
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
 | TC-BANK-140 | One event per txn CUD, after commit | Integration | P0 | create/update/delete a txn | exactly one `bank:transaction_{created,updated,deleted}` after commit; rollback → none | ☐ (CC-5) |
-| TC-BANK-141 | Payload shape complete | Contract | P0 | inspect event payload | `{transaction_id,user_id,account_id,amount,direction,category_id,occurred_at,is_transfer,transfer_id,counterparty_account_id}` | ☐ |
+| TC-BANK-141 | Payload shape complete | Contract | P0 | inspect event payload | `{transaction_id,user_id,account_id,amount,currency,direction,category_id,occurred_at,is_transfer,transfer_id,counterparty_account_id}` (`currency` = the account's ISO code, SPEC-03 P0.7) | ☐ |
 | TC-BANK-142 | Transfer legs emit is_transfer=true + counterparty | Integration | P0 | create transfer | each leg emits `is_transfer=true`, `counterparty_account_id` = other leg's account | ☐ |
 | TC-BANK-143 | Bulk reassign emits no flood | Integration | P0 | category DELETE `?reassign_to=` moving 500 txns | **zero** `bank:transaction_updated` events (documented carve-out) | ☐ |
 | TC-BANK-144 | Event reaches stream (fan-out edge on api) | Integration | P0(S1) | create txn; check `/stream` | stream item appears (api publisher has bank→stream edges — regression for empty-routing bug) | ☐ (CC-5) |
