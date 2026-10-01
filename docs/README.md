@@ -21,11 +21,9 @@ frontend, Docker Compose behind Traefik.
 | [product/](product/README.md) | Why does this exist, what are we building, in what order | [vision.md](product/vision.md) |
 | [adr/](adr/README.md) | What did we decide and why | [adr/README.md](adr/README.md) |
 | [architecture/](architecture/README.md) | How is it designed | [diagrams.md](architecture/diagrams.md) |
-| [guides/](guides/) | How do I get set up to work on it | [getting-started.md](guides/getting-started.md) |
 | [operations/](operations/) | How do I run the deployed system | [backup-restore.md](operations/backup-restore.md) |
 | [reference/](reference/README.md) | Lookup: events, contracts, canonical sources — and **what is proven** by a test | [events.md](reference/events.md) · [TRACEABILITY-MATRIX.md](reference/TRACEABILITY-MATRIX.md) |
 | [testing/](testing/README.md) | What we **intend** to prove, per spec (test plan, case documents) | [TEST-PLAN.md](testing/TEST-PLAN.md) |
-| [agents/](agents/) | Where the engineering skills find the issue tracker, triage labels and domain-doc rules | [issue-tracker.md](agents/issue-tracker.md) |
 
 **Outside `docs/`** — contracts live next to what they govern ([ADR-09](adr/09-docs-architecture.md)); this is the list:
 
@@ -84,6 +82,8 @@ move that into a spec.
 - A **design document** for how a system works → `architecture/` (post-v1 designs
   go in `architecture/deferred/`).
 - A **how-to for working on the repo** (setup, tooling, conventions) → `guides/`.
+  This branch carries no code, so it has none: the dev-setup guide was deleted
+  with it (`git show 2cdda7e:docs/guides/getting-started.md`).
 - A **runbook for operating the deployed system** (backup, restore, cutover,
   tuning) → `operations/`.
 - A **test plan, a per-spec test-case document, or a dated test run** —
@@ -93,9 +93,11 @@ move that into a spec.
   `reference/`.
 - A **registry or pointer** you look up rather than read → `reference/`.
 - **Configuration the engineering skills read** (which issue tracker, which
-  triage labels, where domain docs live) → `agents/`. Written once by
-  `/setup-matt-pocock-skills`, edited by hand after; never a place for content
-  a human reads to learn the system.
+  triage labels, where domain docs live) → `agents/`, written by
+  `/setup-matt-pocock-skills` and found through `/CLAUDE.md`. Both went with the
+  code on this branch (`git show 2cdda7e:docs/agents/`); the one project rule
+  they held — how backlog lines and GitHub issues relate — is in
+  [product/backlog.md](product/backlog.md).
 - **Implementation status** has exactly one written owner,
   [`/CLAUDE.md`](../CLAUDE.md) § Current status, and one list of what is
   still open, [product/backlog.md](product/backlog.md). No other document —

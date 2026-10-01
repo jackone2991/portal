@@ -13,12 +13,20 @@ or be closed with a reason. This revision triaged the whole of the 2026-08-25
 audit, `remaining-work-2026-08-25.md` (every numbered item in its §3–§6; the
 file was deleted once fully triaged — "audit §N" below cites
 `git show 2cdda7e:docs/product/analysis/remaining-work-2026-08-25.md`) plus the
-open action items from the ADR
-re-grade of 2026-09-11. Items the audit raised that were already closed by the
+open action items from the ADR re-grade of 2026-09-11. Items the audit raised that were already closed by the
 time of triage are listed once under § Closed so the audit can be checked off
 line by line. The previous `backlog.md` (a 2026-07 Facebook-parity gap analysis,
 archived in place on 2026-08-25) was replaced wholesale on 2026-09-11;
 `git log --follow -- docs/product/backlog.md` finds it.
+
+**Backlog lines and GitHub issues.** This file is the triaged *list*; GitHub
+Issues on `jackone2991/portal` are the *tickets*. A line becomes issues when it
+is built (`/to-spec` → `/to-tickets`) and then links them (`#NN`); closing the
+last issue closes the line, which moves to § Closed with the issue numbers as
+evidence. Raw issues (bug reports, requests) go through `/triage` first and get a
+line only if they survive it. Triage labels are the five defaults, unrenamed:
+`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
+Never put a work item in only one of the two.
 
 Verify a line before working it — `Last verified` is the date the *whole file*
 was checked, and code moves.
@@ -152,14 +160,14 @@ was checked, and code moves.
     name migrations that do not exist and work that is done. Not re-verified
     line by line in this triage; treat each as suspect until its
     `Last verified` is bumped.
-36a. **`architecture/{diagrams,overview,security}.md`,
-    `guides/getting-started.md`** still draw or
+36a. **`architecture/{diagrams,overview,security}.md`** still draw or
     describe `postgres` + `pgbouncer` as compose services (gone 2026-08-21; host
     PG 18). All now carry `Last verified: never` so the reader is warned; fixing
-    the diagrams is one pass with `docker-compose.yml` open. Two more files
+    the diagrams is one pass with `docker-compose.yml` open. Three more files
     had the same defect and were deleted instead: `adr/diagrams/system-landscape.md`
-    (a duplicate of `architecture/diagrams.md` §1) and
-    `operations/postgres-tuning.md` (a stub, folded into SPEC-09 P2).
+    (a duplicate of `architecture/diagrams.md` §1), `operations/postgres-tuning.md`
+    (a stub, folded into SPEC-09 P2) and `guides/getting-started.md` (dev setup
+    for code this branch no longer carries).
 36. **`docs/testing/TEST-PLAN.md`** still describes a container-backed L2
     integration layer that does not exist, says `make up` starts Postgres and
     PgBouncer, and says CI runs `vitest` (audit §4.6). Correct it when line 3

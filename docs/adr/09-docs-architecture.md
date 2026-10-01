@@ -32,7 +32,7 @@ Adopt a **Diátaxis-informed** tree rooted at `docs/` (the ecosystem-standard ro
 with genre-separated sections and an explicit lifecycle.
 
 As built (`ls docs/`): `adr/`, `product/{vision, feature-inventory, backlog,
-analysis/, specs/}` (`briefs/` was folded into the specs and deleted after `2cdda7e`), `architecture/{…, deferred/}`, `guides/`,
+analysis/, specs/}` (`briefs/` was folded into the specs and deleted after `2cdda7e`), `architecture/{…, deferred/}`, `guides/` (deleted with the code after `2cdda7e`),
 `operations/`, `reference/`, `testing/`. The 2026-07-07 text also listed
 `product/checklist` and `archive/`: the checklist was deleted in `efb8a70`, the
 archive in `f11cf3f`; `operations/` and `testing/` existed on disk without being
