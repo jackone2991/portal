@@ -45,9 +45,15 @@ Until one vertical is real, every future vertical estimate is a guess.
 - Import/scraping from external sources was a v1 non-goal; reversed by rev 13
   (2026-08-15), see P1.10. Still out of scope: scheduled/automatic re-sync, and
   passing anti-bot challenges from the containerised scraper (host mode only).
-- Per-comic visibility/ACL: `published` = visible to **all authenticated users** at
-  v1. Visibility scoping arrives with the privacy layer. (Recommendation locked
-  from brief 02's open question.)
+- Per-comic visibility/ACL: `published` = visible to every member of the
+  owner's **tenant**, not to all authenticated users. `comics` is under FORCE
+  RLS since `0020_platform_rls_enable` (`tenant_isolation` on
+  `app.current_tenant`), and `RequireTenant` resolves every caller to their own
+  personal organisation, so today a published comic is readable by its owner
+  only; "published" widens nothing until a shared tenant (ADR-07) exists.
+  Per-comic ACLs and cross-tenant visibility arrive with the privacy layer.
+  (Brief 02's open question locked "all authenticated users"; RLS superseded
+  it.)
 - Automatic page-spread detection (double-page art); RTL and manual double-page
   pairing shipped as R3.
 - Offline reading / PWA caching.
@@ -797,7 +803,9 @@ Baseline: `main` @ `99b5a0b` (the docs commits on top changed no code). The spec
 text above is the target; this section lists every place the shipped code still
 diverges from it, so an implementer needs nothing beyond this file. Rows are
 ordered by severity — security and data integrity first, then contract and
-polish. A row closes when the code matches the target and the SPEC-02 rows of
+polish; rows 18–19, found while writing SPEC-14…16 on 2026-10-01, are appended
+rather than renumbering the rows other documents cite. A row closes when the
+code matches the target and the SPEC-02 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/comic/` unless stated otherwise.
 
@@ -820,6 +828,8 @@ Paths are relative to `backend/internal/modules/comic/` unless stated otherwise.
 | 15 | P1.7 step 3 (`ImportJob.status`) | `status ∈ pending\|uploaded\|processing\|done\|failed` (the `0026` CHECK). | `shared/openapi.yaml` `ImportJob.status` enum lists `running` instead of `processing`. | **openapi:** `processing`. **test:** TC-COMIC-160 drift check. | found while verifying (2026-10-01) |
 | 16 | §7 OpenAPI encoding | Each operation carries `x-required-permission` per the specs README (combined rows split per operation). | `shared/openapi.yaml` has no `x-required-permission` anywhere. | **openapi:** annotate every comic operation. **test:** TC-COMIC-160. | F025 (README OpenAPI encoding) |
 | 17 | §7 list `limit` (owner decision 2026-10-01) | Both cursor lists: missing, non-integer or < 1 → 30; above 50 → **clamped to 50**; never a Problem. | `service.go` `Service.list` (behind `ListPublished` and `ListOwn`): `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }` — `?limit=500` returns 30. | **backend:** clamp instead of resetting (`> 50 → 50`, `≤ 0 → 30`), e.g. `platform/server.Limit(r, 30, 50)` in the two handlers. **openapi:** describe `limit` as defaulted and clamped on both lists. **test:** TC-COMIC-105. | Decision 2026-10-01 (limit) |
+| 18 | P0.6 consumer tenancy; specs README Tenancy ("worker handlers open the payload user's tenant scope before any query") | `comic:on_asset_deleted` runs its DELETE and UPDATE inside the payload owner's tenant scope. | `module.go` `handleAssetDeleted` parses only `asset_id` and calls `service.go` `HandleAssetDeleted` → `repo.DeletePagesByAsset` / `NullCoverByAsset` on the bare pool (no transaction in the context), although `cmd/worker` already passes `RunInTenant: runInUserTenant` for the import. `comic_pages` and `comics` are under FORCE RLS (`0020`), so under `portal_app` the policy cannot evaluate `app.current_tenant`, the statement errors and the task fails every retry: dangling pages and covers survive, the state P0.6 exists to prevent. `TestAssetDeletedConsumer` runs on a fake repo and cannot see it. | **backend:** parse `owner_user_id` and run both statements inside one `s.runInTenant(ctx, owner, …)`; an unparseable owner is logged and dropped. The same fix as SPEC-14 §12 row 1, SPEC-15 §11 row 1, SPEC-16 §11 row 1 (README cross-cutting gap). **test:** an RLS-suite test (`platform/db`, `RLS_TEST_APP_URL`) that runs the consumer as `portal_app`. | found while writing SPEC-14…16 (2026-10-01) |
+| 19 | P0.1 chapter create (explicit `sort_order`); README Errors convention | A `sort_order` already used in the comic is a client error — 422 `comic/validation`, checked before the INSERT — never a 500. | `handler.go` `CreateChapter` decodes `sort_order` as a plain `int` (an omitted value becomes 0, although `shared/openapi.yaml` requires it); `service.go` `CreateChapter` passes it through and `query/comic.sql` `CreateChapter` inserts it. The `UNIQUE (comic_id, sort_order) DEFERRABLE INITIALLY DEFERRED` constraint (`0015`) fires at the request's COMMIT, where `tenant/middleware/require_tenant.go` replaces the buffered 201 with a 500: a duplicate `sort_order`, or a second chapter created without one, is a bare 500. (Import and sync derive `sort_order` from the chapter title and are not affected.) | **backend:** an `EXISTS` check before the INSERT → `ErrValidation`; decode `sort_order` as `*int` and refuse nil (or default it to `MAX + 10`, as SPEC-16 P0.3 does for story — decide in the PR and state it in P0.1). **test:** a duplicate → 422 `comic/validation`; an omitted value → 422 (or a distinct default). | found while writing SPEC-16 (2026-10-01; SPEC-16 §11 row 2 is story's copy) |
 
 **Already matching (verified on HEAD — do not redo).**
 - Draft invisibility for reads: `service.go` `GetComic`, `ReaderPagesVisible` and `SaveProgress` answer 404 for someone else's draft before any membership check.
@@ -828,7 +838,7 @@ Paths are relative to `backend/internal/modules/comic/` unless stated otherwise.
 - Owner-or-elevated middlewares for write (`comics:write:any`), comic delete and page delete (`comics:delete:any`) in `cmd/api/main.go`; chapter delete uses the write gate.
 - Publish validation (≥ 1 chapter, no empty chapter → 422 listing them); one `comic:published` per publish with `chapter_count`; `comic:chapter_deleted` per deleted chapter, once per chapter on comic delete.
 - Lists: keyset `updated_at DESC, id DESC`, limit default 30 for a missing or invalid value (above 50 resets to 30 — row 17), bad cursor 400 `comic/invalid-cursor`; `comics_status_updated_idx` (0015).
-- P0.6 consumer `HandleAssetDeleted` (pages deleted, cover nulled, idempotent) via `platform/events`.
+- P0.6 consumer `HandleAssetDeleted` (pages deleted, cover nulled, idempotent) via `platform/events` — the logic only; it runs without a tenant scope (row 18).
 - P1.7 guards: `importMaxZipBytes` 16 GiB (422 at upload), `importMaxEntries` 100,000, ratio 100:1 (`RunImport` skips the entry silently before extraction; nothing left → job `failed`), 60 MiB per-entry read cap (`readZipEntry`), natural sort, poll timeout max(2 min, n × 5 s) ≤ 11 h, `Timeout(12h)` + `MaxRetry(0)`; `/imports/{id}` owner-only (404).
 - P1.10: SSRF guard on create and before every scrape; second trigger while `syncing` is 422 unless stale > 15 min; cancel only while `syncing` and fails if the scraper refuses; internal handlers re-read the row inside `runInUserTenant` and compare the echoed `owner_id`; missing `owner_id` rejected; the scraper container is on the `internal` network only.
 

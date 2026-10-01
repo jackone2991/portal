@@ -85,9 +85,10 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 Portal is the identity provider. Credentials live in `users.password_hash` (Argon2id). Flow:
 
-1. `POST /auth/login {email, password, remember}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), and checks `disabled_at`. `remember=true` → persistent refresh cookie (`Max-Age` = refresh TTL); `false` → session cookie.
-2. On success, server issues access + refresh tokens, sets cookies, returns `200`. On failure it returns a generic `401` (no user-enumeration) and increments the brute-force counter.
-3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash), assigns the default `user` role, and returns `201` **without** issuing a session; the user is redirected back to `/login` to sign in (product decision). Registration may be admin-gated depending on deployment.
+1. `POST /auth/login {email, password, remember}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), then checks `disabled_at` and `approval_status`. `remember=true` → persistent refresh cookie (`Max-Age` = refresh TTL); `false` → session cookie.
+2. On success, server issues access + refresh tokens, sets cookies, returns `200`. An unknown email or a wrong password returns a generic `401` (no user-enumeration) and increments the brute-force counter; a throttled caller gets `429`. A correct password on a disabled, pending or rejected account returns `403` with its own Problem type (`account/account-disabled` | `account-pending` | `account-rejected`) — the caller has proved who they are, so naming the state leaks nothing.
+3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash) as **`pending`**, assigns the default `user` role, notifies every approver, and returns `201` **without** issuing a session. Only an `approved` account may hold a session (migration `0031`). The first account on an empty database is auto-approved and made `superadmin`; an existing install names one with `BOOTSTRAP_SUPERADMIN_EMAIL`.
+   Statuses, Problem types and the open gaps (unthrottled register, the first-run race, timing of the unknown-email path) are [SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) P0.1–P0.2 and §11.
 4. There is **no** `/auth/callback`, `state`, or `nonce` — the browser never leaves the Portal domain.
 
 New security responsibilities Portal now owns (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, and password reset (emailed token once the notification module lands; admin/CLI until then). MFA/step-up (§2.4) and "Login with Google" are now built in Portal, not configured in an IdP.
@@ -109,7 +110,7 @@ Cookies always: `HttpOnly; Secure; SameSite=Strict`. A third cookie exists: `por
 Both are needed; either alone is insufficient.
 
 - **`users.token_version`** — bump it and every existing access token fails the DB snapshot check inside `RequireAuth`. Instant logout-all.
-- **`refresh_tokens.revoked_at`** — refresh-token-side revocation. Rotation chain (`parent_id`/`replaced_by_id`) is linear; presenting an already-rotated token revokes the **entire** chain (forward + backward via recursive CTE) and emits an `auth.refresh.reuse_detected` event. Theft detection.
+- **`refresh_tokens.revoked_at`** — refresh-token-side revocation. Rotation chain (`parent_id`/`replaced_by_id`) is linear; presenting an already-rotated token revokes the **entire** chain (forward + backward via recursive CTE) and writes the audit action `account.refresh.reuse_detected` (an audit row, not a bus event). Theft detection — with one hole: rotation is check-then-mark, not an atomic claim, so two concurrent presentations of one token both succeed ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) §11 row 2).
 
 ### 2.4 TOTP / 2FA  *([PLANNED])*
 
@@ -149,15 +150,18 @@ The TOTP secret is encrypted using a process-level key derived from `TOTP_KMS_KE
 
 ### 2.6 Failure-mode mapping
 
-The middleware emits a generic `401 unauthorized` for every authn failure. The actual reason is in audit, not the response body. This avoids token-state oracles.
+The middleware emits a generic `401` (`about:blank`) for every authn failure — invalid, expired, revoked token, disabled user — so the response body is no token-state oracle. One failure is named on purpose: an **unapproved** account gets `403 account/account-not-approved`, because the caller has already proved who they are and a 401 would send the frontend to a login that cannot help.
 
-| Internal error | HTTP | Audit action |
+**As built, `RequireAuth` writes no audit row** (`account/middleware/auth.go`; its doc comment claims "specifics live only in the audit log", which is not true). The audit column below is the target design; of these actions only `account.refresh.reuse_detected` is written today, by the refresh handler, and `account.session.disabled_attempt` is defined in `platform/audit/logger.go` but never written ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) P0.5, §11 row 13).
+
+| Internal error | HTTP | Audit action (target) |
 |----------------|------|--------------|
 | `ErrTokenInvalid`     | 401 | `auth.token.invalid` |
 | `ErrTokenExpired`     | 401 | (skipped — too noisy) |
 | `ErrTokenRevoked`     | 401 | `auth.token.revoked` |
 | `ErrUserDisabled`     | 401 | `auth.disabled_user_attempt` |
-| `ErrTokenReused`      | 401 | `auth.refresh.reuse_detected` (HIGH SEVERITY) |
+| `ErrUserNotApproved`  | 403 `account/account-not-approved` | — |
+| `ErrTokenReused` (refresh) | 401 | `account.refresh.reuse_detected` (HIGH SEVERITY; written) |
 | Step-up missing/expired | 403 | `auth.stepup.required` |
 | TOTP wrong            | 401 | `auth.totp.invalid` |
 
@@ -399,9 +403,11 @@ ALTER TABLE audit_log
 CREATE INDEX audit_log_org_idx ON audit_log(organization_id, occurred_at DESC);
 ```
 
-### 5.2 Rate limiting  *([BUILT] — see breakdown)*
+### 5.2 Rate limiting  *(login [BUILT]; everything else not applied)*
 
-The `/auth/login` brute-force counter + lockout is **[BUILT], Redis-backed** ([handler/auth.go](../../backend/internal/modules/account/handler/auth.go)). The generic per-IP token bucket is **[BUILT], in-memory** at [ratelimit.go](../../backend/internal/platform/middleware/ratelimit.go). Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures) and a Redis-backed generic bucket (`redis_rate.Limiter`) are still [PLANNED].
+The `/auth/login` brute-force counter + lockout is **[BUILT], Redis-backed** ([handler/auth.go](../../backend/internal/modules/account/handler/auth.go): 5 failures per 15 min, per IP and per account, then `429`). Its per-IP key is the leftmost `X-Forwarded-For` from any peer, so a client that reaches the API without Traefik can rotate it ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) §11 row 4).
+
+The generic per-IP token bucket **exists but is wired nowhere**: [ratelimit.go](../../backend/internal/platform/middleware/ratelimit.go) `IPRateLimiter` is imported by no binary (`grep -rn "ratelimit\." backend --include=*.go` finds no caller), and the `rate-limit` middleware in `traefik/dynamic.yml` is attached to no router. `/auth/register` and `/auth/refresh` are therefore unthrottled (SPEC-13 §11 row 3; [backlog.md](../product/backlog.md) P0 #40). Stricter buckets per `(IP, action)` for sensitive endpoints (TOTP verify: 5/min/IP+user, lockout 15 min after 5 failures) and a Redis-backed generic bucket (`redis_rate.Limiter`) are still [PLANNED].
 
 ### 5.3 Secrets handling
 
@@ -450,21 +456,21 @@ Frontend uses TanStack Query + an SSE channel `/me/notifications/stream` for rea
 In order — applied to every authenticated route:
 
 ```text
-1. RealIP            ← preserve X-Forwarded-For (Traefik trusted)
-2. RequestID         ← unique per request, in logs + audit
+1. RequestID         ← unique per request, in logs + audit
+2. RealIP            ← chi's RealIP: trusts X-Forwarded-For / X-Real-IP / True-Client-IP from any peer
 3. Recoverer         ← catch panics, return 500
-4. Timeout(30s)      ← bounded request lifetime
+4. Timeout(requestWindow) ← bounded request lifetime; requestWindow is 45 min (cmd/api/main.go) so multi-GB uploads finish
 5. CORS              ← origin allowlist from config
-6. RateLimit         ← per-IP token bucket; stricter on /auth/*
+6. RateLimit         ← [NOT APPLIED] per-IP token bucket; the middleware exists, nothing mounts it (§5.2)
 7. RequireAuth       ← JWT + DB snapshot; sets auth.Identity in ctx
-8. RequireTenant     ← [PLANNED] reads org_id from JWT; sets app.current_tenant on the DB conn; sets tenant.Context in ctx
+8. RequireTenant     ← [BUILT] opens the per-request tenant-scoped transaction (ADR-07); mounted on module routes, not on the global account routes
 9. RequireStepUp     ← [PLANNED] (optional, per-route) — verifies fresh TOTP for destructive ops
 10. RequirePermission ← rbac.Engine.Authorize, returns 403 on deny
 11. Handler
 12. AuditMiddleware  ← (deferred) writes audit event for mutating ops
 ```
 
-The v1 pipeline in production is steps 1–7 + 10 (`RequirePermission`); the tenant and step-up middleware (8–9) land with the tenancy/TOTP phases.
+The v1 pipeline in production is steps 1–5, 7, 8 and 10; rate limiting (6) is built but unmounted, and step-up (9) lands with the TOTP phase. The order above is `cmd/api/main.go`'s `r.Use` order.
 
 Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-scoped but public-readable" routes use `OptionalAuth` + `RequireTenant`.
 
@@ -475,7 +481,7 @@ Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-
 ```text
 # Authentication  [BUILT]
 POST   /auth/login                     verify email+password; mint tokens
-POST   /auth/register                  create account (Argon2id); returns 201, no session — user signs in via /auth/login
+POST   /auth/register                  create account (Argon2id) as pending; returns 201, no session — user signs in via /auth/login once approved
 POST   /auth/refresh                   rotate refresh; mint access
 POST   /auth/logout                    revoke current refresh; bump token_version
 POST   /auth/logout-all                revoke all refresh; bump token_version  [step-up]
@@ -506,7 +512,9 @@ POST   /api/v1/me/push-subscriptions        register browser push subscription (
 DELETE /api/v1/me/push-subscriptions/{id}   unsubscribe (SPEC-04 P1.1)
 ```
 
-OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. (2026-07: the earlier `/auth/register` / `/auth/callback` drift is **reconciled** — the spec now documents `/auth/register` and no longer lists the retired `/auth/callback`. The `x-required-permission` / `x-step-up` annotations remain the target convention, not yet uniformly present.)
+The `[step-up]` tags are the target; no step-up exists yet (§2.4). Not listed above: the password-reset pair (`/auth/forgot-password`, `/auth/reset-password` — SPEC-04 P0.3) and the **admin console** (`/admin/users*`, `/admin/roles*`, `/admin/permission-matrix` — approval queue, user CRUD, role × permission matrix). The full route table with permissions and Problem types is [SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) §7; `account/module.go` `mountAdmin` is the authorization policy itself.
+
+OpenAPI source-of-truth at [shared/openapi.yaml](../../shared/openapi.yaml). Each endpoint annotates its required permission via `x-required-permission` and step-up requirement via `x-step-up: true`. (2026-07: the earlier `/auth/register` / `/auth/callback` drift is **reconciled** — the spec now documents `/auth/register` and no longer lists the retired `/auth/callback`. The `x-required-permission` / `x-step-up` annotations remain the target convention; no account operation carries `x-required-permission` yet, and every `/admin/*` operation lacks `security` and so reads as public — SPEC-13 §11 row 20.)
 
 ---
 
@@ -517,12 +525,12 @@ What we explicitly defend against, and how.
 | Threat | Defence |
 |--------|---------|
 | Stolen access token | Short TTL (5 min) + DB snapshot check on every request (`token_version`) — instant revocation. |
-| Stolen refresh token | Rotation per use + reuse detection burns the chain. Hashed at rest. |
+| Stolen refresh token | Rotation per use + reuse detection burns the chain. Hashed at rest. (A concurrent replay is not yet detected — SPEC-13 §11 row 2.) |
 | Session hijack via XSS | `HttpOnly` cookies; CSP enforced server-side. Never expose tokens to JS. |
 | CSRF | `SameSite=Strict` cookies on all session cookies. Login is a same-origin `POST` (no cross-site redirect), so no `Lax` relaxation is needed. |
 | Password brute force | Rate-limit + temporary lockout on `/auth/login` per IP and per account; generic `401` (no user enumeration); Argon2id (memory-hard) makes offline cracking expensive. |
 | Cross-tenant data leak via app bug | RLS enforced in Postgres. `app.current_tenant` set transactionally per request. `BYPASSRLS` role isolated to a separate Go binary. |
-| Privilege escalation by a tenant admin | `superadmin` is a system role, never grantable from tenant context. CLI bootstrap only. |
+| Privilege escalation by an admin | No-escalation guard in the admin console: you cannot grant, revoke or assign what you do not hold; only a `*` holder may touch the `superadmin` role; bootstrap is the first registrant or `BOOTSTRAP_SUPERADMIN_EMAIL` ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) P0.11–P0.12). **Open holes:** re-parenting a role under `superadmin` is not guarded, and approve/reject/disable skip the target-authority check (SPEC-13 §11 rows 1, 6). |
 | TOTP brute force | 6-digit code + 5 attempts/15-min lockout per user; constant-time compare. Recovery codes are single-use, Argon2id-hashed. |
 | Refresh-token replay across devices | Each refresh token records issuing IP + UA. Reuse from a different fingerprint emits a higher-severity audit event (still revokes chain). |
 | Password DB dump | `password_hash` is Argon2id (64 MB, t=3, p=2) with per-user salt — memory-hard, no plaintext or reversible form stored. |

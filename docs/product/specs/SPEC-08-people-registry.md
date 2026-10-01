@@ -29,9 +29,14 @@ emotionally relevant events for the stream, the bell, and the dormant
 ## 3. Non-goals
 
 - **Not a friend graph.** People are rows, not accounts: no requests, no chat, no
-  user search. The [backlog.md § Deferred](../backlog.md) friend-graph
-  row stays parked; its re-entry condition (real second users) is neither met nor
-  needed here.
+  user search. The account-to-account graph is a different module: its first
+  slice shipped as `social` (`0037_social_connections`,
+  [SPEC-17](SPEC-17-social-connections.md) — request / accept / remove). The
+  two meet in exactly one place: `GET /people/suggestions` subtracts the
+  caller's connected and requested accounts, read through
+  `socialapi.API.CounterpartIDs` (wired as `people.Deps.Connected` in
+  `cmd/api`), and a person may point at an account through `linked_user_id`
+  (P0.2). Nothing in this registry requires or creates a connection.
 - **Full Monica parity** (activities, gifts, debts-between-people) — P1 keeps one
   interactions log; the rest waits for demonstrated use.
 - **CardDAV / Google Contacts sync** — import-only later (P2), never live sync.
@@ -127,7 +132,10 @@ field or column.)*
 `circle` (`close_friend|family|other`, default `other`; any other value → 422
 `people/validation`; PATCH may change it) and `linked_user_id` — the id of a
 portal account this person **is**, set when the person is added from a
-suggestion (`GET /people/suggestions`, unowned by this spec) so that account
+suggestion (`GET /people/suggestions` — served by this module but specced
+nowhere: no spec owns its contract, envelope or `limit` yet; SPEC-17 P0.8 only
+consumes it in the UI, and its social filter is `socialapi.CounterpartIDs`,
+SPEC-17 §3) so that account
 stops being suggested; absent, `null` or `""` means none. PATCH does not take
 `linked_user_id`. An owner's registry holds each linked account at most once (the
 `0035` partial unique index `people_persons_linked_user_idx` on `(user_id,

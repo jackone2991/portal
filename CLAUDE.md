@@ -21,7 +21,7 @@ Everything below describes the **full, multi-year platform** — it is NOT the c
 **Docs live in [docs/](docs/)** — restructured 2026-07-07 into a Diátaxis-style tree ([ADR-09](docs/adr/09-docs-architecture.md)); the old flat `doc/en` + `doc/vi` mirror is retired (deleted in `f11cf3f`; git history is the archive — there is no `docs/archive/`). **English-only.** How these documents are kept true — one owner per fact, ADRs corrected in place, `Last verified` as the only freshness mark — is [ADR-11](docs/adr/11-docs-canonicalisation.md). Map:
 
 - **[docs/adr/](docs/adr/)** — decision records 01–11 (`NN-*.md`; there is no `00` — the old ADR-00 was an architecture *review*, not a decision; it was moved to `analysis/` and later deleted once every action item shipped). [ADR-08](docs/adr/08-life-os-pivot.md) repositioned Portal from Facebook-parity to a *life OS* (finance/time/etc.); [docs/product/vision.md](docs/product/vision.md) is the current yardstick. [ADR-10](docs/adr/10-openapi-contract-direction.md) made spec-first codegen CI-enforced.
-- **[docs/product/](docs/product/)** — `feature-inventory.md` (decisions `D-1`…`D-41` — cite these IDs), `backlog.md` (the live, triaged open-work list — P0 first), `vision.md`, `specs/` (SPEC-01…12, each self-contained with its own framing and an implementation-gaps section; `specs/README.md` holds the build state), `analysis/` (point-in-time audits — currently only the 2026-09-30 spec-gap worklog). There is no `briefs/` any more: commit `83082b6` folded every brief into its spec; superseded docs are cited as `git show ea100d8:<path>`.
+- **[docs/product/](docs/product/)** — `feature-inventory.md` (decisions `D-1`…`D-41` — cite these IDs), `backlog.md` (the live, triaged open-work list — P0 first), `vision.md`, `specs/` (SPEC-01…18 — every module has an owning spec; 13–18 are as-built specs written retroactively for account, music, movie, story, social and layout — each self-contained with its own framing and an implementation-gaps section; `specs/README.md` holds the build state), `analysis/` (point-in-time audits — currently only the 2026-09-30 spec-gap worklog). There is no `briefs/` any more: commit `83082b6` folded every brief into its spec; superseded docs are cited as `git show ea100d8:<path>`.
 - **[docs/architecture/](docs/architecture/)** — `diagrams.md` (Mermaid), `security.md` (auth/RBAC design, was `authoration.md`), `frontend.md`, and `deferred/access-policies.md` (the competing RBAC vision — see the schism note in the Account section).
 - **[docs/testing/](docs/testing/)** — `TEST-PLAN.md`, per-spec `TEST-CASES-SPEC-0N-*.md` (01–09; manual run results live in the spec itself, e.g. SPEC-12 § Manual run — there are no dated `TEST-RUN-*` files). The requirement→test map is [docs/reference/TRACEABILITY-MATRIX.md](docs/reference/TRACEABILITY-MATRIX.md).
 - **[docs/guides/](docs/guides/)** dev setup · **[docs/operations/](docs/operations/)** runbooks — backup/restore, RLS cutover (Postgres tuning values live in SPEC-09 P2 "Postgres connection budget") · **[docs/reference/](docs/reference/)** Asynq event/task registry, traceability matrix.
@@ -55,17 +55,17 @@ Layout:
 ```
 backend/internal/
 ├── modules/             ← one bounded context per subdir (`ls -d backend/internal/modules/*/ | wc -l`; all wired)
-│   ├── account/         users, local password/JWT auth, RBAC, sessions, audit
+│   ├── account/         users, local password/JWT auth, RBAC, sessions, audit (SPEC-13)
 │   ├── tenant/          organizations, memberships, RLS bootstrap
 │   ├── media/           assets + transcode/image/thumbnail workers (shared infra)
-│   ├── movie/ music/ story/ comic/   ← depend on media for assets
+│   ├── movie/ music/ story/ comic/   ← depend on media for assets (SPEC-15 / 14 / 16 / 02)
 │   ├── bank/            finance ledger (SPEC-03)
 │   ├── journal/         life stream / activity feed (SPEC-05, SPEC-06)
 │   ├── notify/          notification delivery fan-out (SPEC-04)
 │   ├── people/          people registry, birthdays (SPEC-08)
-│   ├── social/          connections between accounts (0037) — the social layer's first slice
+│   ├── social/          connections between accounts (0037) — the social layer's first slice (SPEC-17)
 │   ├── ops/             platform ops: backup, retention, restore drill (SPEC-09)
-│   └── layout/          shell navigation menu + dashboard widget placement (0036)
+│   └── layout/          shell navigation menu + dashboard widget placement (0036, SPEC-18)
 └── platform/            config, db, cache, storage, jobs, middleware (no business logic)
 ```
 

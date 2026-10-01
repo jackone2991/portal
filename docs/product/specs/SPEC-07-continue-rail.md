@@ -29,8 +29,11 @@ aggregator is at its cheapest right now.
 
 ## 3. Non-goals
 
-- **Movie catalog/metadata CRUD** — the movie vertical is its own backlog line
-  ([backlog.md](../backlog.md) P2 line 28); this spec hangs off existing media `assets` rows only.
+- **Movie catalog/metadata CRUD** — the movie vertical is its own spec,
+  [SPEC-15](SPEC-15-movie-vertical.md) (backend built, `0021_movie_core`; its
+  frontend is SPEC-15 P1.1). This spec hangs off existing media `assets` rows
+  only: a movie resumes through its video asset (SPEC-15 P0.6), and a `movie`
+  leg of `/continue` is SPEC-15 P1.2.
 - **Cross-device conflict resolution** beyond last-write-wins on the upsert.
 - **Per-position bus events** — beacons are deliberately *not* events (too
   chatty); only the P1.5 completion fact hits the bus.

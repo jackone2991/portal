@@ -1,6 +1,6 @@
 # Portal — Vision
 
-**Status:** current (ratification pending [ADR-08](../adr/08-life-os-pivot.md)) · **Last verified:** 2026-07-07
+**Status:** current ([ADR-08](../adr/08-life-os-pivot.md), accepted) · **Last verified:** 2026-10-01
 
 ## One sentence
 
@@ -18,8 +18,10 @@ login, on one VPS you control.
 
 Two architectural assets make "one platform" beat "one best app per domain":
 
-1. **The event bus.** Modules couple only through Asynq events
-   (`<module>:<event>`). Every life domain emits events, so the feed surface
+1. **The event bus.** Modules couple asynchronously only through Asynq events
+   (`<module>:<event>`); synchronous reads go through each module's `api/`
+   package ([backend/MODULES.md](../../backend/MODULES.md)). Every life domain
+   emits events, so the feed surface
    becomes the user's **life stream** — "spent 500k today", "mom's birthday in 3
    days", "finished chapter 3" — a timeline of a life, not of a network.
 2. **One identity + RBAC** across every facet, instead of five accounts in five
@@ -36,11 +38,11 @@ this, when real second users appear.
 
 | Facet | Modules | State |
 |---|---|---|
-| Entertainment | `media` (real), `comic`/`movie`/`music`/`story` | media works; comic is the first vertical (SPEC-02) |
-| Money | `bank` (ledger scope) | SPEC-03; real-bank integration deferred behind TOTP |
-| Time | calendar/events/reminders | UI widgets exist; next facet after money (backlog § Deferred) |
-| Social | posts, friends, messaging | UI shell built; deliberately demoted until n>1 |
-| Learning | stories, library | skeleton; unshaped |
+| Entertainment | `media`, `comic`, `music`, `movie`, `story` | comic was the first vertical ([SPEC-02](specs/SPEC-02-comic-vertical.md)); music has its full UI ([SPEC-14](specs/SPEC-14-music-vertical.md)); movie and story have a backend but no reader yet ([SPEC-15](specs/SPEC-15-movie-vertical.md), [SPEC-16](specs/SPEC-16-story-vertical.md)) |
+| Money | `bank` (ledger scope) | [SPEC-03](specs/SPEC-03-finance-ledger.md), expanding through [SPEC-10](specs/SPEC-10-ledger-expansion.md); real-bank integration deferred behind TOTP |
+| Time | calendar/events/reminders | calendar widget exists; birthdays shipped as contact data ([SPEC-08](specs/SPEC-08-people-registry.md)); next facet after money (backlog § Deferred) |
+| Social | connections between accounts; posts, messaging | only the first slice exists — mutual connections ([SPEC-17](specs/SPEC-17-social-connections.md)), built once approval-gated registration made the instance n>1; everything else stays deferred |
+| Learning | stories, library | story is the entertainment vertical above (SPEC-16); otherwise unshaped |
 
 ## Operating constraints (inherited from ADR-01)
 

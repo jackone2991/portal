@@ -1,7 +1,7 @@
 # ADR-06: Local password auth — Portal owns credentials (drop Authentik from the login path)
 
 **Status:** **accepted** 2026-07-05 · implemented 2026-07-06
-**Last verified:** 2026-09-11
+**Last verified:** 2026-10-01
 **Deciders:** kirito
 **Supersedes:** the OIDC-login decision in [ADR-05](./05-phase0-wiring-order.md) (Milestone 0.4) and the "No local password auth. OIDC via Authentik" statement that [CLAUDE.md](../../CLAUDE.md) carried at the time (Account module).
 
@@ -108,20 +108,20 @@ The decisive trade is **UX/ownership vs. security-surface-you-maintain**. Authen
 
 ## Consequences
 
-As built (checked 2026-09-11 against `account/module.go` and `shared/openapi.yaml`):
+As built (checked 2026-10-01 against `account/module.go`, `account/handler/auth.go` and `shared/openapi.yaml`). The account module's full as-built contract and its open gaps are [SPEC-13](../product/specs/SPEC-13-account-identity-admin.md):
 
 - **Route table:** `POST /auth/login {email, password, remember}` (Redis brute-force rate-limit + lockout), `POST /auth/register` (201, no session — the user returns to `/login`), `POST /auth/forgot-password`, `POST /auth/reset-password`, plus the unchanged `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/me`. All eight are in the spec; `/auth/callback` is gone from both code and spec.
 - **Hashing:** Argon2id, `m=65536,t=3,p=2`, PHC string (`account/auth/password.go`).
 - **Cookies:** three, not two — `portal_session` (Path=/, a marker the Next.js middleware gates on) accompanies `portal_access`/`portal_refresh`. A `remember` flag selects persistent vs session cookies.
 - **TTLs:** `ACCESS_TOKEN_TTL=5m`, `REFRESH_TOKEN_TTL=24h` (`platform/config`, `.env.example`). The refresh window was always 24h; nothing in the shipped code ever defaulted to 30 days.
 - **Password reset shipped** with migration `0010_account_password_reset_tokens` and the notify module (SPEC-04) — the "admin/CLI until then" interim is over.
-- **Registration requires approval** (migration `0031`, not part of this ADR): `users.approval_status`, only `approved` may hold a session, `users:approve` reachable by superadmin through `*`, first account on an empty database auto-approved. See `/CLAUDE.md` § Registration requires approval.
+- **Registration requires approval** (migration `0031`, not part of this ADR): `users.approval_status`, only `approved` may hold a session, `users:approve` reachable by superadmin through `*`, first account on an empty database auto-approved and made `superadmin`, `BOOTSTRAP_SUPERADMIN_EMAIL` for an existing install. See `/CLAUDE.md` § Registration requires approval and SPEC-13 P0.1, P0.12.
 - **`/auth/me` returns effective permission codes** so the frontend can hide what the API would refuse (added when roles became editable via the admin console).
 - One login screen, served by Portal, no cross-domain redirect. The dev stack lost authentik-server + authentik-worker + authentik-postgres + the blueprint and the container→IdP networking hack (Traefik alias + `SSL_CERT_FILE`).
 
 **What became harder, as predicted:**
 
-- Portal is a credential custodian; the brute-force guard on `/auth/login` is live (per-IP and per-account windows in `account/handler/auth.go`, `recordLoginFailure`), on top of the global limiter in `platform/middleware/ratelimit.go`.
+- Portal is a credential custodian; the brute-force guard on `/auth/login` is live (5 failures per 15 minutes, per IP and per account, Redis-backed — `account/handler/auth.go` `loginThrottled` / `recordLoginFailure`). It is the **only** throttle: `platform/middleware/ratelimit.go` `IPRateLimiter` is mounted by no binary and Traefik's `rate-limit` middleware is attached to no router, so `/auth/register` and `/auth/refresh` are unthrottled, and the login guard's per-IP key trusts any `X-Forwarded-For` ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) §11 rows 3–4).
 - **MFA / step-up** ([D-27]/[D-28]) and **"Login with Google"** are still not built. `account/module.go`'s package comment mentions "2FA/TOTP" and `api.go` reserves `totp_*` as a sensitive field, but no migration adds such columns and no route implements enrolment or verification. The bank module shipped (SPEC-03) without step-up.
 
 **Revisited:**
@@ -133,9 +133,9 @@ As built (checked 2026-09-11 against `account/module.go` and `shared/openapi.yam
 
 1. [x] Migration `0006_account_local_auth`: `users.password_hash` (+ `password_updated_at`); `user_oidc_roles` dropped; `oidc_subject` nullable.
 2. [x] `account/auth/password.go`: Argon2id hash + verify.
-3. [x] Queries/adapters: `GetUserByEmail`, `CreateUserLocal`, `SetPassword`.
+3. [x] Queries/adapters: `GetUserByEmail`, `CreateLocalUser`, `SetUserPassword`.
 4. [x] Handler: `POST /auth/login` + `POST /auth/register`; `refresh`/`logout`/`logout-all`/`me` kept.
-5. [x] Rate-limit + lockout on `/auth/login`.
+5. [x] Rate-limit + lockout on `/auth/login` (only there — see Consequences).
 6. [x] Frontend: real `/login` form; `middleware` gates guests to `/login`; SSO/Google buttons removed.
 7. [x] OIDC removed: `auth/oidc.go`, callback, `OIDC_*` config, Authentik services + blueprint, Traefik alias + `SSL_CERT_FILE` override.
 8. [x] Docs synced: CLAUDE.md Account section, [architecture/security.md](../architecture/security.md) (then `authoration.md`), [feature-inventory.md](../product/feature-inventory.md) §1; `shared/openapi.yaml` has `/auth/register` and no `/auth/callback`. (The Vietnamese mirror this item named was deleted with `docs/archive/` in `f11cf3f`.)

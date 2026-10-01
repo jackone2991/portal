@@ -31,6 +31,62 @@ was checked, and code moves.
    the next migration that touches those tables — applied files are not
    edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
 
+## P0 — code defects found by the as-built specs (2026-10-01)
+
+SPEC-13…18 were written retroactively from the shipped code, and each ends with
+an implementation-gaps table that owns its rows (cite them by spec and row).
+Only the security and data-integrity rows are raised here; the rest stay in
+their spec. Severity order.
+
+37. **Role re-parent escalates to `*`** — an `rbac:role:write` holder creates an
+    empty role, gets it assigned, then re-parents it under `superadmin`;
+    `handler/admin.go` `UpdateRole` checks existence, `is_system` and cycles
+    only. [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 1.
+    *Closes when:* a parent change is refused unless the actor holds every
+    permission the new parent adds (TC-ACC-071/072).
+38. **Layout `href` open-redirect bypass** — `/\evil.example` and a
+    TAB-split `//` pass `layout/service.go` `SaveMenu`'s leading-`/` check and
+    render in every user's sidebar.
+    [SPEC-18](specs/SPEC-18-shell-layout.md) §11 row 1. *Closes when:* `\`,
+    control characters and whitespace are refused and
+    `TestSaveMenuRejectsOffSiteLinks` covers both bypasses.
+39. **An admin can disable, reject or revoke a superadmin** — `decide` and
+    `SetDisabled` skip `targetAuthorityDenial`, which guards only edit and
+    delete; disabling bumps the target's `token_version`. SPEC-13 §11 row 6.
+    *Closes when:* the five operations answer 403 `account/escalation` for an
+    out-ranking target.
+40. **`/auth/register` and `/auth/refresh` are unthrottled** —
+    `platform/middleware/ratelimit.go` `IPRateLimiter` is imported by no
+    binary and Traefik's `rate-limit` middleware is attached to no router, so
+    each anonymous register writes a pending row and enqueues up to 50
+    approver notifications. The login throttle's per-IP key trusts any
+    `X-Forwarded-For`. SPEC-13 §11 rows 3–4. *Closes when:* the limiter is
+    mounted on both routes keyed on a trusted client IP.
+41. **Refresh rotation is not atomic** — `auth/refresh.go` `Rotate` checks
+    `revoked_at`, issues, then marks the old token replaced unconditionally,
+    so two concurrent presentations both succeed (forked chain, no theft
+    detection). SPEC-13 §11 row 2. *Closes when:* the old row is claimed with
+    `… WHERE revoked_at IS NULL RETURNING` before the successor is issued.
+42. **`media:asset_deleted` consumers run without a tenant scope** — comic,
+    movie, story and music handle the event on the bare pool, which FORCE RLS
+    refuses as `portal_app`; the task retries out and published works keep
+    pointing at deleted assets. [SPEC-14](specs/SPEC-14-music-vertical.md) §12
+    row 1, [SPEC-15](specs/SPEC-15-movie-vertical.md) §11 row 1,
+    [SPEC-16](specs/SPEC-16-story-vertical.md) §11 row 1, and comic's copy in
+    [SPEC-02](specs/SPEC-02-comic-vertical.md) §11 row 18. *Closes when:* each
+    consumer runs inside `runInUserTenant` for the payload owner, proven by an
+    RLS-suite test.
+43. **Re-uploading a music import creates every track again** —
+    `SetMusicImportUpload` has no status predicate, so a second
+    `PUT …/upload` on a `processing` or `done` job enqueues a second
+    `music:import_zip`. SPEC-14 §12 row 2. *Closes when:* only a `pending` job
+    accepts an upload (409 otherwise, checked before the store write).
+44. **A concurrent duplicate connection request is a 500** — the pair-index
+    violation aborts the request's tenant transaction, so its 409 becomes a
+    commit-failure 500. [SPEC-17](specs/SPEC-17-social-connections.md) §11
+    row 2. *Closes when:* `CreateRequest` uses `ON CONFLICT DO NOTHING` and the
+    race test (TC-SOC-006) passes.
+
 ## P1 — contract and coverage
 
 6. **No handler implements the generated `ServerInterface`** (ADR-10 action
@@ -80,9 +136,13 @@ was checked, and code moves.
     on `DATABASE_URL`. `.env.example` does not carry it and `platform/db.NewPool`
     does not set it, so a fresh clone gets the bug back. *Closes when:* `NewPool`
     sets the three pool options in code (URL params then become optional).
-15. **`/calendar` and `/weather` are not in the auth middleware matcher**
-    (`frontend/src/middleware.ts`) — audit §5 bug 9. *Closes when:* the
-    matcher lists every `(app)` route, or matches the group.
+15. **`/admin`, `/calendar` and `/weather` are not in the auth middleware
+    matcher** (`frontend/src/middleware.ts`) — audit §5 bug 9 (calendar,
+    weather); `/admin` is [SPEC-18](specs/SPEC-18-shell-layout.md) §11 row 10
+    and [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 21. The API
+    still refuses; a signed-out visitor gets an error state instead of
+    `/login`. *Closes when:* the matcher lists every `(app)` route, or matches
+    the group.
 16. **Tenant-prefixed object keys never happened** (ADR-04 decision item 4).
     Keys are `uploads/<id>/…` and `hls/<id>`; isolation is by RLS on `assets`
     and by presigned URLs, not by prefix. *Closes when:* a decision is recorded —
@@ -91,6 +151,8 @@ was checked, and code moves.
 17a. *(closed 2026-09-19 — see § Closed.)*
 17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
     depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
+    The layering itself is [SPEC-13](specs/SPEC-13-account-identity-admin.md)
+    P2; the account module's other gaps are SPEC-13 §11, not lines here.
 
 ## P2 — specced, not built (from audit §3.3, still absent 2026-09-11)
 
@@ -105,7 +167,8 @@ was checked, and code moves.
     stale. *Closes when:* SPEC-06 says what the stream projects today.
 21. SPEC-04 P1.1 **Web Push** (table exists, handler is a stub), P1.2 **SSE**,
     P1.3 **notification preferences** route (table exists), P1.4
-    **`account.security_alert`** on refresh-reuse. P2 `notify:purge_old` is
+    **`account.security_alert`** on refresh-reuse (the account half is
+    [SPEC-13](specs/SPEC-13-account-identity-admin.md) P1.2). P2 `notify:purge_old` is
     registered and never scheduled — dead code until a `scheduler.Register`.
 22. SPEC-03 P1.10 **receipt attachments**, P1.12 **`bank:budget_exceeded`**,
     P1.13 **structured transfer fees** (`fee_amount`). (P1.11 monthly report:
@@ -123,12 +186,18 @@ was checked, and code moves.
     subscribed to `media:asset_deleted`).
 27. SPEC-09 P1.7 **owner takeout** (`ops_exports`, `/me/export`, `ops:takeout`);
     P1.6 queue console.
-28. **Movie and story have no frontend.** `NovelDetailView.tsx` is still the
-    26-line placeholder; no `/movies` route exists. Music got its UI
-    (library, import, playlists, player) in 0038–0041. Finish these to the
-    music standard or revert them (audit Tier D-14) — do not leave them.
-29. **Story reading progress**, **movie/story FTS** (not now — no corpus at
-    n=1), and media's three: **HLS variant ladder** per tier (transcode
+28. **Movie and story have no frontend.** Movie: no route, view or
+    `lib/movie.ts` ([SPEC-15](specs/SPEC-15-movie-vertical.md) P1.1, §11
+    row 16). Story: `NovelDetailView.tsx` is a placeholder and
+    `/library/novel` has no route ([SPEC-16](specs/SPEC-16-story-vertical.md)
+    P1.1, §11 row 18). Music got its UI (library, import, playlists, player)
+    in 0038–0041 ([SPEC-14](specs/SPEC-14-music-vertical.md); its remaining
+    gaps are SPEC-14 §12). Finish these to the music standard or revert them
+    (audit Tier D-14) — do not leave them; the choice is the blocking open
+    question in SPEC-15 §10 and SPEC-16 §10.
+29. **Story reading progress** and its `/continue` leg (SPEC-16 P1.2, §11
+    row 19), **movie/story FTS** (SPEC-15 P2, SPEC-16 P2 — not now, no corpus
+    at n=1), and media's three: **HLS variant ladder** per tier (transcode
     produces one rendition), **S3 multipart upload** for large originals (a
     source is one presigned PUT), **audio transcode profile** (audio is served
     as-is). These were the genuine items in the module READMEs' "Open work"
@@ -168,7 +237,8 @@ was checked, and code moves.
 ## Deferred — not a gap (ADR-01 as re-affirmed by ADR-08; audit §7)
 
 Social layer beyond `social` connections (posts, feed ranking, messaging,
-groups) · advanced social (D-35) · creator economy (D-40) · marketplace · ML
+groups, block/mute, follow graph, profiles — [SPEC-17](specs/SPEC-17-social-connections.md)
+§3 and §12; each needs its own spec and envelope argument) · advanced social (D-35) · creator economy (D-40) · marketplace · ML
 safety (D-38) · LiveKit/mediamtx (D-36/D-39) · the observability stack (D-8;
 ADR-07's "same sprint as tenancy" coupling is dropped, not ignored) · real bank
 integration and with it MFA/TOTP (D-27/D-28 gate on credentials the ledger does
@@ -186,14 +256,17 @@ the table, so the decision is not re-litigated every session. Folded in from the
 |---|---|---|
 | **Statement import** (bank) | The owner's bank (TCB) exports **PDF**, so a decent import means PDF parsing/OCR — an effort black hole. The schema is import-ready (SPEC-03 P0.9), so nothing is lost by waiting. | CSV/xlsx can be had from a bank in use, **or** the generic CSV + column-mapping path is accepted first and PDF later. The design is pre-agreed (SPEC-03 §3): mapping templates as data, not code; `dedup_hash`; per-batch rollback. |
 | **TOTP / MFA / step-up** (D-27/D-28) | It once gated "bank"; the ledger holds no bank credentials, so the gate does not apply. | Real bank credentials or API sync, or any money-*moving* feature. TOTP is then the named unlock task, not a floating P2. |
-| **Friend graph / messenger / people search** | The feature-parity trap at n=1; a life OS starts from one user. The UI shell stays as it is. | Real second users on an instance (e.g. family). Re-enter through "share to household member", not full Facebook parity. |
+| **Messenger / people search** (the friend graph left — see below) | The feature-parity trap at n=1; a life OS starts from one user. | Real second users on an instance (e.g. family). Re-enter through "share to household member", not full Facebook parity. |
 | **Email verification** | No real second users. | The first real external user. |
 | **Playback ACL** | One user on LAN/VPS tolerates public-ish HLS short-term. | Any second user. (The HLS variant ladder is P2 line 29.) |
 | **Time domain** (calendar/tasks) | It was the cheapest first life domain; the owner chose money + entertainment first. | "After SPEC-03" — met, so it now waits only on a spec; it is the likely next facet, wiring the calendar widgets that already exist. The birthday slice shipped separately as SPEC-08 (contact data, not calendar/tasks). |
 | **HEIC/HEIF image ingest** | ffmpeg HEIC decode hinges on libheif/HEVC build flags — a build-matrix rabbit hole outside the v1 envelope (SPEC-01 §3). | Dogfooding involves an iPhone user: HEIC becomes P0 for photo upload (likely a libheif pre-step in the worker image). |
 
 Left the parking lot since 2026-07: the notifications module and password reset
-(SPEC-04), the music vertical (`0038`–`0041`), movie and story (P2 line 28),
+(SPEC-04), the music vertical (`0038`–`0041`, SPEC-14), movie and story
+(P2 line 28; SPEC-15, SPEC-16), the friend graph's first slice as social
+connections (`0037`, SPEC-17 — approval-gated registration made the instance
+n>1),
 debts and loans (SPEC-10 phase 1, built) and investments (SPEC-10 phase 5),
 presigned direct upload (shipped; multipart for large originals is P2 line 29).
 
@@ -211,7 +284,7 @@ presigned direct upload (shipped; multipart for large originals is P2 line 29).
   notify's second is mark-read-twice, its only write). Layout is the
   exception by shape, not by omission: it has no per-id resource, so
   "a stranger's id" and "delete twice" do not exist there — its contract is
-  the whole-set save with `layout/unknown_widget` / `layout/validation`,
+  the whole-set save with `layout/unknown-widget` / `layout/validation`,
   under `layout/service_test.go`. Writing the tests found movie, music and
   story answering 204 to a repeat DELETE — the module left the 404 to
   cmd/api's owner guard; their `Delete*` are `:execrows` now, like comic's.
