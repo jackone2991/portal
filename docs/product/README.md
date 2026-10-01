@@ -18,7 +18,7 @@ An idea moves left to right, gaining precision and shedding ambiguity:
 
 ```
 brainstorm → specs/SPEC-NN-*.md → code (status: /CLAUDE.md § Current status)
-      ↑ decisions worth recording → ../adr/ or D-N entries
+      ↑ decisions worth recording → a Decision record (ADR-NN) in the owning spec, or D-N entries
 ```
 
 A spec answers *exactly what, with acceptance criteria*; its opening sections

@@ -8,8 +8,8 @@
 > **Companion docs:**
 > - [deferred/access-policies.md](deferred/access-policies.md) (was `archivetech.md`) — full functional roadmap (UI, modules, phasing)
 > - [CLAUDE.md](../../CLAUDE.md) — architecture decisions + working agreement
-> - [ADR-02](../adr/02-rbac-model-reconciliation.md) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
-> - [ADR-06](../adr/06-local-auth-model.md) — local password auth; Authentik/OIDC removed
+> - [ADR-02](../product/specs/SPEC-01-account-identity-admin.md#adr-02) — role-hierarchy RBAC is canonical for v1; policy bundles layer on later
+> - [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) — local password auth; Authentik/OIDC removed
 >
 > For built (v1) surfaces, code + ADRs are canonical (ADR-02 explicitly
 > disregards spec-wins clauses for v1); for the post-v1 layers specced here,
@@ -18,12 +18,12 @@
 
 > **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
 > channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
-> (see [ADR-06](../adr/06-local-auth-model.md); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). The
+> (see [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). The
 > L2 tenant layer is **BUILT** too: one personal org per user, `RequireTenant`, and `FORCE` RLS enforced
-> under `portal_app` ([ADR-07](../adr/07-tenancy-rls-model.md), §3). Still **POST-V1 DESIGN**, not current
+> under `portal_app` ([ADR-07](../product/specs/SPEC-01-account-identity-admin.md#adr-07), §3). Still **POST-V1 DESIGN**, not current
 > behaviour: §2.4 TOTP, §3.5–3.6 tenant switching and cross-tenant administration, §4 policy-bundle
 > authorization, §6 step 9, and the un-numbered rows of §9. For v1, role-hierarchy RBAC is canonical per
-> [ADR-02](../adr/02-rbac-model-reconciliation.md).
+> [ADR-02](../product/specs/SPEC-01-account-identity-admin.md#adr-02).
 
 ---
 
@@ -81,7 +81,7 @@ Every request traverses three independently-enforced layers. Each layer answers 
 
 ## 2. Identity layer (authentication)
 
-> **Superseded by [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
+> **Superseded by [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) (2026-07-05).** Portal now owns credentials and authenticates locally; Authentik is removed from the login path. The **token, refresh, RBAC, revocation, and audit** machinery in §2.2 onward is unchanged and reused — only this login subsection changes. Any remaining "OIDC / callback / nonce / Authentik" mentions elsewhere in this doc are retired.
 
 ### 2.1 Local password login flow  *([BUILT])*
 
@@ -171,7 +171,7 @@ The middleware emits a generic `401` (`about:blank`) for every authn failure —
 
 ## 3. Tenant layer (data segregation)
 
-The decision is [ADR-07](../adr/07-tenancy-rls-model.md) (its "as built" section records what landed and what is deferred); this section describes the mechanism as it runs. Subsections marked *[TARGET]* are the post-v1 design and not current behaviour.
+The decision is [ADR-07](../product/specs/SPEC-01-account-identity-admin.md#adr-07) (its "as built" section records what landed and what is deferred); this section describes the mechanism as it runs. Subsections marked *[TARGET]* are the post-v1 design and not current behaviour.
 
 ### 3.1 Tenant model  *([BUILT] — one personal org per user)*
 
@@ -561,7 +561,7 @@ One numeric sequence in `backend/db/migrations/`, `000N_<owning-module>_<descrip
 | `0003_account_rbac` | L3 | `roles` (hierarchy), `permissions`, `role_permissions`, `user_roles`; the seven `is_system` roles and the seed catalogue |
 | `0004_account_sessions` | L1 | `refresh_tokens` with the rotation chain used for reuse detection |
 | `0005_platform_audit` | — | append-only `audit_log` (global; `actor_id ON DELETE SET NULL`) |
-| `0006_account_local_auth` | L1 | `users.password_hash` (Argon2id, [ADR-06](../adr/06-local-auth-model.md)); drops `user_oidc_roles` |
+| `0006_account_local_auth` | L1 | `users.password_hash` (Argon2id, [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06)); drops `user_oidc_roles` |
 | `0010_account_password_reset_tokens` | L1 | `password_reset_tokens` (the reset flow itself is SPEC-05 P0.3) |
 | `0018_tenant_core` | L2 | `organizations` + `organization_memberships`; personal org backfill (§3.2) |
 | `0019_platform_rls_roles` | L2 | `portal_app` (`NOBYPASSRLS`) and `portal_sys` (`BYPASSRLS`) roles and grants |
@@ -578,7 +578,7 @@ Every later domain migration (`0021_movie_core`, `0022_music_core`, `0023_story_
 |-------|---------|--------|
 | L1 | TOTP: `users.totp_*`, `totp_recovery_codes` | §2.4 |
 | L1 | per-user timezone: default `'Asia/Ho_Chi_Minh'`, `timezone_manual` | SPEC-01 P0.13 |
-| L3 | user groups + policy bundles (`user_groups`, `policies`, attachments) on top of roles ([ADR-02](../adr/02-rbac-model-reconciliation.md)) | §4, [deferred/access-policies.md](deferred/access-policies.md) |
+| L3 | user groups + policy bundles (`user_groups`, `policies`, attachments) on top of roles ([ADR-02](../product/specs/SPEC-01-account-identity-admin.md#adr-02)) | §4, [deferred/access-policies.md](deferred/access-policies.md) |
 | L3 | file-gated permissions | §4.4 |
 | L2 | membership-scoped RBAC, households/orgs, tenant switching | §3.5–3.6, ADR-07 deferred steps |
 

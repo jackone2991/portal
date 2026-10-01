@@ -1,7 +1,7 @@
 # Portal — Architecture Overview
 
 **Status:** current · **Last verified:** 2026-07-07
-**Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [../adr/](../adr/README.md)
+**Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [Decision records](../product/specs/README.md#decision-records)
 **Live implementation status:** `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) — trust it over any prose here.
 
 This is the narrative architecture of record. It describes the system in three
@@ -9,11 +9,11 @@ tiers and keeps them separate on purpose:
 
 - **SHIPPED** — running today, verifiable on the stack.
 - **NEXT** — committed and specified ([product/specs/](../product/specs/README.md), ADR-08 order).
-- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../adr/01-v1-scope-cut.md), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
+- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../product/specs/README.md#adr-01), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
 
 ## 1. What Portal is, architecturally
 
-A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../adr/08-life-os-pivot.md)):
+A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../product/specs/README.md#adr-08)):
 one identity, many life facets (money, time, learning, social, entertainment),
 one VPS. The architecture that serves this is:
 
@@ -41,7 +41,7 @@ always the same: the envelope.
    new domain module emits at least one event from its first release (ADR-08).
    Registry: [reference/events.md](../reference/events.md).
 3. **One identity, one authorization engine.** Local password auth (Argon2id,
-   short-lived JWT + rotating refresh with reuse detection — [ADR-06](../adr/06-local-auth-model.md));
+   short-lived JWT + rotating refresh with reuse detection — [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06));
    role-hierarchy RBAC with grammar `<resource>:<action>[:<scope>]`, enforced only
    via `RequirePermission` ([ADR-02], [security.md](security.md)). No ad-hoc checks.
 4. **Contracts and generated code are sacred.** Schema changes via numbered
@@ -145,7 +145,7 @@ i18n keys (D-7).
   discipline.
 - **OpenAPI drift.** The auth-path drift is fixed — the spec now carries
   `/auth/register` and no `/auth/callback` (reconciled per
-  [ADR-10](../adr/10-openapi-contract-direction.md)), and ci.yml adds a codegen
+  [ADR-10](../product/specs/README.md#adr-10)), and ci.yml adds a codegen
   drift gate. Residual risk: handlers are still **hand-written**, so one can
   diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-14
   documents `PATCH {status}`); the codegen-vs-handwritten decision (backlog §9)
@@ -158,7 +158,7 @@ i18n keys (D-7).
 
 ## 6. How to change this architecture
 
-Expensive-to-reverse or cross-module choices → new ADR ([adr/README.md](../adr/README.md));
+Expensive-to-reverse or cross-module choices → new decision record ([specs/README § Decision records](../product/specs/README.md#decision-records));
 feature-level decisions → `D-N` entries in [feature-inventory](../product/feature-inventory.md);
 diagrams updated **in the same PR** as the change they depict; this overview's
 tier lists updated when a spec ships (move item SHIPPED-ward, never edit history).

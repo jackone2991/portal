@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` · **Depends on:** SPEC-04 P0.6 (`platform/events` fan-out) only; photo attachments (P1.5) are superseded by SPEC-08, which needs SPEC-04
-**Upstream:** brief 05 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/05-journal-life-stream.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), 2026-07 backlog §3 P1 "Posts/newsfeed API", reframed per ADR-08 (archived; `git show 8d382d2^:docs/product/backlog.md`), [MODULES.md](../../../backend/MODULES.md) §8
+**Upstream:** brief 05 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/05-journal-life-stream.md`) · **Refs:** [ADR-08](README.md#adr-08), 2026-07 backlog §3 P1 "Posts/newsfeed API", reframed per ADR-08 (archived; `git show 8d382d2^:docs/product/backlog.md`), [MODULES.md](../../../backend/MODULES.md) §8
 **Downstream consumers:** SPEC-09 (stream projection reads this table; its projection rows are maintained transactionally in this module's service — journal:entry_created stays emit-only, see P0.3), SPEC-03 P1.7 (takeout exports it).
 
 ---

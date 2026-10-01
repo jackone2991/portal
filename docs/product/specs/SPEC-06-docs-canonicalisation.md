@@ -1,10 +1,10 @@
 # SPEC-06 — Docs Canonicalisation: retire 79 stale assertions and gate the corpus in CI
 
-**Status:** executed 2026-09-11 on branch `docs/architecture-cleanup` (rev 1 drafted the same day as "SPEC-13"; renumbered on filing because SPEC-13 is the ledger expansion) · **Last verified:** 2026-09-11
+**Status:** historical, rev 2 — executed 2026-09-11 on branch `docs/architecture-cleanup` (rev 1 drafted the same day as "SPEC-13"; renumbered on filing because SPEC-13 is the ledger expansion; filed as SPEC-11, SPEC-06 since the [2026-10-01 renumbering](README.md#renumbering-2026-10-01)); rev 2 (2026-10-01) folds in [ADR-09](#adr-09) and [ADR-11](#adr-11) when `docs/adr/` was retired · **Last verified:** 2026-10-01
 **Module:** none — the documentation corpus, plus one CI job and four check scripts
 **Depends on:** nothing hard. Branched from the `bank` feature branch at `66709d1` (see Implementation Decisions)
 **Upstream:** design session 2026-09-11 (37 settled decisions) and a `/grill-with-docs` pass on `docs/README.md` the same day (12 more)
-**Refs:** [ADR-09](../../adr/09-docs-architecture.md) (the tree this supersedes in part) · [ADR-11](../../adr/11-docs-canonicalisation.md) (written *by* this spec, stage one) · [STYLE.md](../../STYLE.md) (§ADR shape amended) · `analysis/remaining-work-2026-08-25.md` (prior audit, deleted after `ea100d8`; triaged by stage three into [backlog.md](../backlog.md))
+**Refs:** [ADR-09](#adr-09) (the tree this supersedes in part) · [ADR-11](#adr-11) (written *by* this spec, stage one) — both now recorded [below](#decision-records) · [STYLE.md](../../STYLE.md) (§ADR shape amended; since 2026-10-01 § Decision records) · `analysis/remaining-work-2026-08-25.md` (prior audit, deleted after `ea100d8`; triaged by stage three into [backlog.md](../backlog.md))
 **Downstream consumers:** every agent session (the project instructions are loaded unconditionally); CI; anyone onboarding
 
 ## As executed — deltas from the plan below
@@ -18,7 +18,7 @@ The plan is kept as written; this section is its fact layer. Commits `b54654e` �
 | ADR-00 dated 2026-07 | First commit `755dfa8`, 2026-05-24 → `product/analysis/architecture-review-2026-05-24.md` (later deleted). |
 | `checklist.md` "never existed" | It did; deleted in `efb8a70`. Cited so. |
 | One script, three assertions, one job | Four scripts (`check-links.sh`, `check-doc-headers.sh`, `check-retired-names.sh`, `check-matrix-evidence.py`) as four steps of one blocking `link-check` job. The header check the plan deferred ("needs a forty-document backfill first") was done: 41 files backfilled, `Last verified: never` made a legal value. |
-| Retired-name check allow-lists the audit directory, ADR-11 and the working note | Also skips the Decision / Options / Trade-offs layers of every ADR (verbatim history may name what it knew) and accepts a retirement cue on the same line (`deleted in`, `then …`, `renamed`, `§`-citation). First run caught a third agent-instruction file, `.continue/rules/CONTINUE.md`, still calling `MILESTONE_CHECKS.md` "live status". |
+| Retired-name check allow-lists the audit directory, ADR-11 and the working note | Also skips the Decision / Options / Trade-offs layers of every ADR (verbatim history may name what it knew — by folder while ADRs lived in `docs/adr/`; since the 2026-10-01 fold, the spans between the `adr-narrative` HTML-comment markers) and accepts a retirement cue on the same line (`deleted in`, `then …`, `renamed`, `§`-citation). First run caught a third agent-instruction file, `.continue/rules/CONTINUE.md`, still calling `MILESTONE_CHECKS.md` "live status". |
 | Matrix: 47 rows | 46 P0 rows + P1 rows re-graded: 21 ✅ · 18 ⚠ · 7 ✖; two rows added (SPEC-13 phase 1, CC-10 tenant/RLS) and CC-11. |
 | Backlog: one line per finding heading | Done, plus a Closed list so the audit can be ticked off. Three audit claims did not survive re-check (login lockout exists since 2026-07-05; music is not half-built; the media worker has its tenant scope) and are recorded as such. |
 | Module contract gains the codegen step | Done, plus depguard block, Asynq-server choice, events-registry step (§8) and the RLS-from-birth rule (§6). |
@@ -157,3 +157,310 @@ The work is sequenced in three stages with a review checkpoint after the mechani
 **Two facts corrected during planning**, recorded so they are not re-derived: the local-auth record's refresh-token TTL is correct as written (24h, matching the shipped default) — an earlier suspicion that it claimed 30 days was wrong; and the 2026-08-25 audit's list of documents citing the deleted status tracker is itself incomplete, missing the style guide.
 
 **Tracker.** This spec could not be published to the GitHub issue tracker: the authenticated account has `pull` access only on this repository (no `push`, no `triage`), so neither the `ready-for-agent` label nor an issue with labels can be created. The spec therefore lives here, which is where the genre rules this spec establishes would route it anyway. To move it onto the tracker, authenticate an account with write access and run the setup flow to establish the triage-label vocabulary.
+
+## Decision records
+
+The two decision records this spec owns: the documentation tree, and how the
+documents in it are kept true. They lived as `docs/adr/09-docs-architecture.md`
+and `docs/adr/11-docs-canonicalisation.md` until 2026-10-01, when the owner
+retired the `docs/adr/` folder and folded every record into the spec that owns
+its subject. The index of all records (ID → location) is
+[specs/README.md § Decision records](README.md#decision-records); how a record is
+written and corrected is [STYLE.md § Decision records](../../STYLE.md#decision-records-binding).
+
+<a id="adr-09"></a>
+### ADR-09 — Documentation Architecture
+
+**Decided:** 2026-07-07 · **Status:** accepted, amended by [ADR-11](#adr-11), executed (the tree shipped the same day; three of its bundled policies were replaced by ADR-11 on 2026-09-11, marked below) · **Supersedes:** the "docs are bilingual" convention (CLAUDE.md / project rules) and the `doc/en`+`doc/vi` layout
+
+#### Context
+
+*As found on 2026-07-07. The restructure ran that day; its own migration map
+(`MIGRATION.md`) and the frozen Vietnamese mirror it created were deleted twelve
+days later in `f11cf3f`, and the status tracker it deferred to went with them.
+ADR-11 records what replaced each.*
+
+The documentation tree had grown organically: a flat `doc/en/` (retired) mixing genres — a
+decision log (`feature.md`, then; now `product/feature-inventory.md`), design specs (`frontend.md`, `authoration.md` — renamed `security.md`), gap
+analyses (`missing-features.md` — deleted; `facebook-comparison.md` — later deleted), deferred designs
+(`archivetech*.md` — renamed under `architecture/deferred/`), diagrams, plus ADRs nested underneath — mirrored 1:1 into
+`doc/vi/` (retired). Three pressures broke it:
+
+1. **Mirror tax.** Every edit cost double; drift between mirrors had begun. On
+   2026-07-07 the owner switched working language to English only.
+2. **Genre confusion.** Normative (ADRs, module contract), aspirational (long-horizon
+   specs), historical (comparisons), and living (backlog) documents were visually
+   indistinguishable; the project already needed a standing warning ("trust
+   `MILESTONE_CHECKS.md` over stale doc sections" — a file since deleted in `f11cf3f`).
+3. **New genres arrived** (brainstorm briefs, implementation-ready specs) with no
+   structural home.
+
+<!-- adr-narrative -->
+#### Decision
+
+Adopt a **Diátaxis-informed** tree rooted at `docs/` (the ecosystem-standard root),
+with genre-separated sections and an explicit lifecycle.
+
+Policies bundled into this decision:
+
+- **English is canonical.** *Standing.* The bilingual rule in CLAUDE.md is
+  replaced by a pointer to this ADR. (The frozen Vietnamese mirror at
+  `docs/archive/vi-2026-07/` that this bullet created was deleted in `f11cf3f`;
+  git history holds it.)
+- **Living status stays out of `docs/`.** *Standing in spirit, changed in
+  mechanism:* `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; status is now
+  verified against the code, with `/CLAUDE.md` § Current status as the one
+  written owner (ADR-11 rule 1). Documents still defer instead of restating.
+- **Canonical-source rule**: contracts live next to what they govern
+  (`backend/MODULES.md`, `shared/openapi.yaml`); `docs/reference/` points at them
+  rather than copying them. *Standing.*
+- Every document carries a status header (`STYLE.md`). *Standing.* ~~ADRs are
+  immutable once accepted (supersede or add dated revision notes).~~ *Withdrawn
+  by ADR-11:* ADRs are corrected in place by layer; `Last verified` is the only
+  freshness mark. ADR-07 had already broken the immutability rule out of
+  necessity before it was withdrawn.
+
+#### Options considered
+
+- **A. Keep `doc/en`+`doc/vi`, just add subfolders.** Rejected: keeps the mirror
+  tax that the owner has already abandoned in practice; drift becomes silent lying.
+- **B. Diátaxis-informed `docs/`, English canonical** *(chosen)*: matches the
+  actual genres present; standard root; one language, one truth per fact.
+- **C. Wiki (GitHub wiki / Notion).** Rejected: splits docs from code review and
+  version history; violates the repo-as-single-source habit the project relies on.
+- **D. Strict Diátaxis (tutorials/how-to/reference/explanation only).** Rejected as
+  a straitjacket: a design-heavy pre-1.0 solo project is dominated by decisions,
+  briefs, and specs — genres strict Diátaxis has no first-class home for. We keep
+  its *separation principle*, not its exact four boxes.
+
+#### Trade-offs
+
+- One-time link breakage across the repo; mitigated by the migration script + grep
+  checklist in `MIGRATION.md` (deleted in `f11cf3f`), and by citing decisions via stable IDs (`D-N`, `ADR-N`)
+  going forward.
+- Vietnamese-speaking future contributors lose maintained VI docs; accepted —
+  the archive remains readable, and code/API-level naming was always English.
+- Renames (`authoration.md` → `security.md`, `archivetech*` → descriptive names)
+  trade grep-ability of old names for legibility; the mapping table preserves the
+  trail.
+<!-- /adr-narrative -->
+
+#### As built
+
+`ls docs/`: `agents/`, `architecture/{…, deferred/}`, `guides/`, `operations/`,
+`product/{vision, feature-inventory, backlog, analysis/, specs/}`, `reference/`,
+`testing/`, plus `README.md` (the genre map) and `STYLE.md`. Departures from the
+2026-07-07 text, which also listed `adr/`, `product/briefs/`, `product/checklist`
+and `archive/`: the checklist was deleted in `efb8a70`, the archive in `f11cf3f`;
+`briefs/` was folded into the specs and deleted after `ea100d8`; `adr/` was folded
+into the specs on 2026-10-01 (see Consequences). `operations/` and `testing/`
+existed on disk without being declared here until [docs/README.md](../../README.md)
+gained their genre rules (ADR-11); `agents/` (engineering-skill configuration)
+was added later and has its own genre rule there. The full old→new mapping of
+2026-07-07 was `MIGRATION.md` (deleted in `f11cf3f`).
+
+#### Consequences
+
+- CLAUDE.md and the project instructions were updated: bilingual rule removed,
+  `doc/*` paths → `docs/*`. (One `doc/en/…` link in `account/README.md` and
+  the scope comment in `cmd/api/main.go` survived until the 2026-09-11 sweep,
+  ADR-11.)
+- The standing "trust MILESTONE_CHECKS" warning got structural support and then
+  lost its object; the warning is now "verify against the code" in `/CLAUDE.md`.
+- New-document authors have exactly one correct location per genre
+  (`docs/README.md` "Genre rules"). Two folders (`operations/`, `testing/`)
+  were created without one for two months — the rules now cover them.
+- The optional CI link check became mandatory and blocking:
+  `scripts/check-links.sh` in the `link-check` job (ADR-11). It found 95
+  broken relative links when first run.
+- **The `adr/` folder was folded into the specs on 2026-10-01, by owner
+  decision** — the same move that had already folded `product/briefs/` in.
+  Every record now lives under `## Decision records` in the spec that owns its
+  subject (cross-cutting ones in [specs/README.md](README.md#decision-records)),
+  behind a fixed `<a id="adr-nn"></a>` anchor, so the `ADR-NN` IDs that code
+  comments and documents cite stay stable. A *decision* is therefore no longer
+  its own folder in the genre map; it is a section of the spec it governs.
+
+#### Action items
+
+All executed: the ADR accepted 2026-07-07 (status field corrected 2026-09-11);
+`migrate-docs.sh` run and the bundle files dropped in the same day; inbound links
+fixed (the last two on 2026-09-11) and CLAUDE.md / project instructions updated
+for the language rule and paths; the `docs/` link check landed in CI as a
+blocking job under ADR-11, not as the optional P3 `lychee` pass proposed here.
+
+<a id="adr-11"></a>
+<!-- adr-narrative -->
+### ADR-11 — Documentation Canonicalisation (ADRs are corrected in place; nothing is archived)
+
+**Decided:** 2026-09-11 · **Status:** accepted, executed (by this spec, stage one) · **Refines:** [ADR-09](#adr-09) · **Affects:** every file under `docs/`, `/CLAUDE.md`, `backend/MODULES.md`; the rules it changed live in [STYLE.md](../../STYLE.md) and the genre map it extended in [docs/README.md](../../README.md)
+
+*This whole record sits inside the narrative markers: it is the record that
+retired the names the retired-names check denies, so it names them. Its fact
+layer (Context, Consequences, Action items) is still kept true.*
+
+#### Context
+
+An audit on 2026-09-11 read all eleven ADRs against the code and found **79
+statements that are no longer true**. Not one ADR was wholly accurate. The
+pattern is the same in every file: the *decision* still holds, but the
+description of the world it was made in has rotted — services that were
+removed, files that were deleted, counts that drifted, action items ticked in
+code but never in the document.
+
+Two rules in [STYLE.md](../../STYLE.md) produced this, and they were in tension
+with each other:
+
+- *"Accepted ADRs are immutable: correct them by a dated addendum note"* — so
+  wrong facts stayed in the body and corrections piled up underneath, until a
+  reader had to know which paragraph won. [ADR-07](SPEC-01-account-identity-admin.md#adr-07)
+  had already broken this rule out of necessity ("used to read … Both were
+  false"), which is the honest signal that the rule did not fit the repo.
+- *"Replaced → move to `archive/`"* — but `docs/archive/` was deleted in
+  `f11cf3f` (2026-07-19, 33 files), and four documents still described it as
+  "frozen, never update". An archive nobody maintains is a broken link with
+  extra steps.
+
+Beneath both: no document owned any given fact. Implementation status lived in
+`MILESTONE_CHECKS.md` (deleted in `f11cf3f`), in `CLAUDE.md`, in each ADR's
+action items, and in the specs — so when one moved, the others did not.
+
+Separately, the audit `remaining-work-2026-08-25.md` (deleted once triaged —
+`git show ea100d8:docs/product/analysis/remaining-work-2026-08-25.md`)
+had already listed most of these defects, with line numbers, seventeen days
+earlier — and sat unread in a folder that neither `docs/README.md` nor ADR-09
+declared. A finding that generates no work is a finding that will be made
+again.
+
+#### Decision
+
+1. **Every fact has exactly one living owner.**
+
+   | Fact | Owner |
+   |---|---|
+   | What is implemented, wired, tested | `/CLAUDE.md` § Current status |
+   | Which folder a document belongs in | `docs/README.md` (genre rules) |
+   | How a document is written | `docs/STYLE.md` |
+   | The contract between backend modules | `backend/MODULES.md` |
+
+   Every other document *points* at the owner for that fact. It does not
+   restate it.
+
+2. **ADRs are corrected in place, by layer.** The immutability rule is
+   withdrawn. Within an ADR:
+
+   - **Fact clauses** — descriptions of current state, file paths, counts,
+     action-item checkboxes — are **rewritten** to be true.
+   - **Decision narrative** — *Options considered*, *Trade-offs*, and the
+     reasoning that led to the choice — is **kept verbatim**. That layer records
+     what was known when the decision was made; editing it would be rewriting
+     history.
+
+   The line between the two is judgement, not mechanism. When unsure, keep.
+
+3. **Nothing is archived in place. Unmaintained documents are deleted**, and
+   the deleting commit is cited wherever the document is still mentioned. Git
+   history is the archive; a folder named `archive/` is a promise to maintain
+   what it holds, and that promise was not kept.
+
+4. **`**Last verified:** YYYY-MM-DD`** — a field STYLE.md already required —
+   is the only mark that a document has been checked against the code. No
+   changelog, no "Update note" convention, no per-section stamps. One field,
+   already defined, already in the header.
+
+5. **Counts in prose are replaced by the command that produces them.**
+   STYLE.md already forbade rotting numbers; `CLAUDE.md` said "13 modules",
+   "12 modules" and "14 test files" in the same file while the disk held 14
+   and 30. The rule was right and unenforced.
+
+6. **`product/analysis/` stays immutable** — a dated audit is a record of what
+   was found, and editing its body destroys that. But an audit is not filed
+   and forgotten: when accepted it must either generate backlog lines or be
+   closed with a reason (see [docs/README.md](../../README.md) § analysis).
+
+#### Options considered
+
+- **Keep immutability; add one dated addendum per correction.** Rejected:
+  this is what produced 79 wrong statements. Addenda accumulate, the body
+  stays false, and a reader who trusts the first paragraph is misled.
+- **Supersede each stale ADR with a new one.** Rejected: eleven new ADRs
+  whose only content is "the previous one was right but the facts moved" is
+  ceremony, and doubles the file count the next audit has to read.
+- **Keep `archive/` and repopulate it.** Rejected: the folder was deleted two
+  months ago and nobody noticed. An archive that is not read is not an
+  archive.
+- **Write a `CONTEXT.md` glossary for the documentation domain.** Rejected:
+  the genre rules in `docs/README.md` *are* that glossary. Adding a fourth
+  source of "what goes where" while reconciling three is self-inflicted.
+- **Move status truth from files into code (a `/status` endpoint, a generated
+  page).** Not decided here — that was settled in `f11cf3f` when
+  `MILESTONE_CHECKS.md` was deleted in favour of "verify against the code".
+  This ADR only names `/CLAUDE.md` as where that policy is written down.
+
+#### Trade-offs
+
+- **Lost:** the guarantee that an ADR reads today as it did on acceptance.
+  Mitigated by keeping the decision narrative verbatim and by git history,
+  which has always been the real record.
+- **Lost:** a place to park documents that are "not quite dead". Accepted
+  deliberately — that is the state in which they rot.
+- **Gained:** a reader can trust the first paragraph of any ADR again.
+- **Gained:** one field (`Last verified`) answers "has anyone checked this
+  lately", instead of a reader reconstructing it from addenda dates.
+- **Cost:** every future audit must edit ADRs, not append to them. That is
+  more work per finding and less work per reader; readers outnumber auditors.
+
+#### Consequences
+
+- ADR numbering: `00` is retired permanently.
+  `architecture-review-2026-05-24.md` (later deleted — `git show ea100d8:docs/product/analysis/architecture-review-2026-05-24.md`;
+  formerly `adr/00-architecture-review.md`) was never a decision record — it is
+  a dated review of the architecture as found on 2026-05-24, all eleven of its
+  false statements are descriptions of that day, and by the genre rules it
+  belongs in `analysis/`. Moved, body untouched, status `historical`; the
+  filename carries the review's own date per STYLE.md. STYLE.md says numbers
+  are never reused, so the next ADR is 12 — still true after the 2026-10-01
+  fold, which kept every `ADR-NN` as a stable ID.
+- `docs/README.md` gains rules for `testing/`, `operations/` and `analysis/`
+  (three folders that existed on disk without a declared genre), a reading-
+  order line that put the newest audit **before** every other document, and
+  the deletion convention. (Since 2026-10-01 that first line is
+  `product/backlog.md`, the single priority list, with the audits named as its
+  evidence.)
+- `STYLE.md` loses its *Genre discipline* section (a second, shorter, already
+  diverging copy of the README's genre map), the archive references, and the
+  immutability clause.
+- A relative-link check runs in CI as its own job, blocking
+  (`scripts/check-links.sh`, job `link-check`). The audit counted 69 broken
+  relative links by hand; the script found 95 — the 26 it missed are what a
+  rule that is not checked looks like. Three more presence checks joined it on
+  the same day, each for a defect class the link checker cannot see: a status
+  header on every `docs/` file (41 lacked one), retired names cited as if alive
+  (a third agent-instruction file, `.continue/rules/CONTINUE.md`, still called
+  `MILESTONE_CHECKS.md` "live status"), and traceability-matrix evidence
+  naming tests that exist.
+- Rule 2 outlived the folder it was written for. When `docs/adr/` was folded
+  into the specs on 2026-10-01 ([ADR-09](#adr-09) § Consequences), the layers
+  became explicit: a record's narrative layer sits between the `adr-narrative`
+  HTML-comment markers, which the retired-names check skips, and everything
+  outside them is fact layer. A record carries no `Last verified` of its own —
+  the spec's header covers the whole file, records included (rule 4).
+
+#### Action items
+
+All executed on 2026-09-11 (this spec's stages one to three; deltas in "As
+executed" at the top): the session note committed with dev credentials deleted
+(`b54654e`; rotation is the operator's call, tracked in the backlog); this
+record written; `docs/README.md`, `STYLE.md` and `CLAUDE.md` changed per
+Consequences; the backup-restore and rls-cutover runbooks moved from `guides/` to
+`operations/` and the traceability matrix from `testing/` to `reference/`; the
+broken relative links fixed (95 → 0) before the link-check job was enabled; the
+fact layer of ADR-01…10 rewritten (ADR-10 and ADR-03 first — they carried 23 of
+the 79 — then reviewed before the rest); ADR-00 moved to `analysis/`;
+`TRACEABILITY-MATRIX.md` re-graded against the `_test.go` files that exist, with
+an `Evidence` column (`file:func`) — a ✅ with no evidence is what produced 47
+rows at 100%; the archived `product/backlog.md` replaced by a live one triaged
+from the 2026-08-25 audit, led by the RLS `.env.example` default and credential
+rotation; and `backend/MODULES.md` § 8 given the OpenAPI step the new-module
+checklist was missing.
+<!-- /adr-narrative -->

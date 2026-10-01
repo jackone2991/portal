@@ -2,14 +2,14 @@
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `music` (`backend/internal/modules/music/`) · **Depends on:** SPEC-04 (asset ingest, `/assets/{id}/original`, image variants for covers, `media:asset_deleted`); `platform/events` fan-out (SPEC-04 P0.6); SPEC-05 for the one consumer of its event; the playback-resume question is SPEC-10's (Decision 2026-09-30, Audio)
-**Upstream:** as-built spec, written retroactively from shipped code — migrations `0022_music_core` (`f11cf3f`), `0038_music_imports` (`6bf7c0b`), `0039_music_metadata_lookup` (`eaa0c36`), `0041_music_playlists` (`c3f3d00`); `git log --oneline -- backend/internal/modules/music` lists the rest. No brief or earlier spec existed; the root [`CLAUDE.md`](../../../CLAUDE.md) "Bulk music import", "Cover art is a SECOND pass", "Catalogue lookup" and "`/assets/{id}/original` must stay a `ServeContent` route" bullets were the only written description and are restated here as requirements. · **Refs:** [ADR-04](../../adr/04-storage-tier-budget.md) (same S3 client, MinIO dev / R2 prod), [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md) (entertainment facet), [ADR-10](../../adr/10-openapi-contract-direction.md) (spec-first), feature-inventory `D-7` (Problem types), `D-20` (per-domain progress), `D-22` (genres), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
+**Upstream:** as-built spec, written retroactively from shipped code — migrations `0022_music_core` (`f11cf3f`), `0038_music_imports` (`6bf7c0b`), `0039_music_metadata_lookup` (`eaa0c36`), `0041_music_playlists` (`c3f3d00`); `git log --oneline -- backend/internal/modules/music` lists the rest. No brief or earlier spec existed; the root [`CLAUDE.md`](../../../CLAUDE.md) "Bulk music import", "Cover art is a SECOND pass", "Catalogue lookup" and "`/assets/{id}/original` must stay a `ServeContent` route" bullets were the only written description and are restated here as requirements. · **Refs:** [ADR-04](SPEC-04-media-image-pipeline.md#adr-04) (same S3 client, MinIO dev / R2 prod), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (tenancy), [ADR-08](README.md#adr-08) (entertainment facet), [ADR-10](README.md#adr-10) (spec-first), feature-inventory `D-7` (Problem types), `D-20` (per-domain progress), `D-22` (genres), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-05 (`notify:on_track_published`, the bell); the `layout` module (home-rail widget key `music`, menu item `/library/music`, `0036`); SPEC-10 `/continue` (not today — §11 (b)); SPEC-03 P1.7 takeout (§6)
 
 ---
 
 ## 1. Problem statement
 
-The entertainment facet of the life OS ([ADR-08](../../adr/08-life-os-pivot.md))
+The entertainment facet of the life OS ([ADR-08](README.md#adr-08))
 needs the owner's own music library in the app: hundreds of files that already
 exist on disk, mostly as `NN - Artist - Title.mp3` with tags of uneven quality.
 Uploading one file at a time through the video-shaped upload studio does not

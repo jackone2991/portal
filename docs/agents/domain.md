@@ -1,6 +1,6 @@
 # Domain Docs
 
-**Status:** current · **Last verified:** 2026-09-12 · single-context layout; written by `/setup-matt-pocock-skills`
+**Status:** current · **Last verified:** 2026-10-01 · single-context layout; written by `/setup-matt-pocock-skills`
 
 How the engineering skills should consume this repo's domain documentation when exploring the codebase.
 
@@ -8,7 +8,7 @@ How the engineering skills should consume this repo's domain documentation when 
 
 - **`CONTEXT.md`** at the repo root, or
 - **`CONTEXT-MAP.md`** at the repo root if it exists: it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **Decision records (`ADR-NN`)**: read the ones that touch the area you're about to work in. This repo has **no `docs/adr/` folder** — since 2026-10-01 each record lives in the spec that owns its subject, under `## Decision records`, behind the anchor `#adr-NN`; the index is [docs/product/specs/README.md § Decision records](../product/specs/README.md#decision-records). Code comments may still cite the old `docs/adr/NN-*.md` path — read it as that anchor.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -22,17 +22,18 @@ This is a single-context repo. What exists today, and what does not:
 │                        (Entry, Attachment, Location, Asset) were resolved; grows one
 │                        resolved term at a time, never in bulk. docs/README.md § "Genre
 │                        rules" is the separate glossary of the *documentation* domain.
-├── docs/adr/            NN-<slug>.md, 01–11; corrected in place (ADR-11), never archived
+├── docs/product/specs/  SPEC-01…18 + README; decision records ADR-01…11 live inside them
+│                        (§ Decision records, anchors #adr-NN); corrected in place (ADR-11)
 ├── docs/product/feature-inventory.md   product decisions D-1…D-41 — cite the IDs
 └── backend/ frontend/ scraper/
 ```
 
-Two decision registers bind, not one: the ADRs (`docs/adr/`, cited as `ADR-NN`) and the
+Two decision registers bind, not one: the decision records (inside the specs, cited as `ADR-NN`) and the
 feature inventory (`docs/product/feature-inventory.md`, cited as `D-NN`). ADR-11 says how
 ADRs are kept true — fact layer rewritten in place, `Last verified` as the only freshness
 mark, nothing archived; an ADR is never "superseded by a note".
 
-The multi-context layout (`CONTEXT-MAP.md` + per-context `CONTEXT.md` and `docs/adr/`) is
+The multi-context layout (`CONTEXT-MAP.md` + per-context `CONTEXT.md` and per-context ADR folders) is
 not in use here and should not be introduced without a decision — backend modules are
 bounded contexts already, but their contract lives in `backend/MODULES.md` and each
 module's `README.md`, not in per-module glossaries.

@@ -1,6 +1,6 @@
 # Portal — Vision
 
-**Status:** current ([ADR-08](../adr/08-life-os-pivot.md), accepted) · **Last verified:** 2026-10-01
+**Status:** current ([ADR-08](specs/README.md#adr-08), accepted) · **Last verified:** 2026-10-01
 
 ## One sentence
 
@@ -31,8 +31,9 @@ Two architectural assets make "one platform" beat "one best app per domain":
 
 First user: the owner-operator (n=1 is a feature, not a bug — a life OS is useful
 from one user). Second ring, later: the household — the tenant module's
-`kind: household` and the deferred multi-tenancy design (ADR-07) exist for exactly
-this, when real second users appear.
+`kind: household` and the tenancy/RLS model
+([ADR-07](specs/SPEC-01-account-identity-admin.md#adr-07), executed) exist for
+exactly this, when real second users appear.
 
 ## The facets and where they stand
 
@@ -46,7 +47,8 @@ this, when real second users appear.
 
 ## Operating constraints (inherited from ADR-01)
 
-1 developer · 2-week build bursts · ≤ $100/month · a single VPS. Every scope
+1 developer · 2-week build bursts · ≤ $100/month · a single VPS
+([ADR-01](specs/README.md#adr-01)). Every scope
 decision answers to this envelope. Deferred-with-conditions list:
 [backlog.md § Deferred](backlog.md).
 

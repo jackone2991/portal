@@ -129,7 +129,7 @@ endpoint still runs `RequirePermission` per the tables.
 
 **Acceptance criteria.**
 - Given a registered email, when I POST `/auth/forgot-password`, then (dev) an email appears in Mailpit with a working reset link, and the response is an **enumeration-safe 202** regardless of whether the email exists.
-- Given a valid unexpired reset token, when I POST `/auth/reset-password`, then the password is updated (Argon2id), `token_version` is bumped (all sessions revoked, per [ADR-06](../../adr/06-local-auth-model.md)), and the token is consumed, and every other outstanding reset token of that user is then rejected with 400 `account/invalid-reset-token`.
+- Given a valid unexpired reset token, when I POST `/auth/reset-password`, then the password is updated (Argon2id), `token_version` is bumped (all sessions revoked, per [ADR-06](SPEC-01-account-identity-admin.md#adr-06)), and the token is consumed, and every other outstanding reset token of that user is then rejected with 400 `account/invalid-reset-token`.
 - Given a reused or expired reset token, then 400 Problem `account/invalid-reset-token`; nothing changes.
 - Given a reset request, then no `notify:dispatch` or `notify:email` payload (pending, retried or archived) contains a plaintext reset token or reset URL.
 - Given a `notify:email` task for a disabled or deleted user, then no email is sent and the task completes without retry; given a recipient-lookup error, then the task retries.

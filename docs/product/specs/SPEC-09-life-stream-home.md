@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` (extends SPEC-07; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-07 (hard — first content + module home); system events attach as their producers land (SPEC-04 P0.3, SPEC-12 P0.7, SPEC-10 P1.5, SPEC-11 P0.4); the widget rail additionally consumes SPEC-05's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
-**Upstream:** brief 06, which merged three candidates from the 2026-07-10 research pass — stream projection, "Today" dashboard, Home-Assistant-pattern home (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/06-life-stream-home.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), [events.md](../../reference/events.md), frontend.md
+**Upstream:** brief 06, which merged three candidates from the 2026-07-10 research pass — stream projection, "Today" dashboard, Home-Assistant-pattern home (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/06-life-stream-home.md`) · **Refs:** [ADR-08](README.md#adr-08), [events.md](../../reference/events.md), frontend.md
 **Downstream consumers:** this spec's own P2 daily digest (reads this projection; delivered via SPEC-05 channels), future on-this-day widgets
 
 ---

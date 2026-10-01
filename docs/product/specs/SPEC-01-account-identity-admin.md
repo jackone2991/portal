@@ -1,8 +1,9 @@
 # SPEC-01 — Account: identity, approval gate, RBAC and the admin console
 
-**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Status:** current, rev 3 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `account` · **Depends on:** SPEC-05 (`notify:dispatch` carries the approval notification and the password-reset email; reset behaviour is SPEC-05 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-05 P1.5) · SPEC-04 P0.7 (`mediaapi.PurgeOwnerAssets`, called by the user delete, P0.10) · `platform/audit` ([D-25]) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
-**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken elsewhere and are cited, not re-decided: [ADR-02](../../adr/02-rbac-model-reconciliation.md) (role hierarchy is canonical for v1), [ADR-06](../../adr/06-local-auth-model.md) (local password auth; Portal owns credentials), [ADR-07](../../adr/07-tenancy-rls-model.md) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-01 (f)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff)
+**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-01 (f)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff)
+**Tenancy:** the `tenant` module has no spec of its own; its decision record, [ADR-07](#adr-07) (multi-tenancy and RLS), lives in this file, and the mechanism as built is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation).
 **Refs:** [security.md](../../architecture/security.md) (design depth: token model, revocation channels, threat model — this spec owns the product requirements and the contract, not the design), [/CLAUDE.md](../../../CLAUDE.md) § Account module, [backend/MODULES.md](../../../backend/MODULES.md) §5.3 (audit taxonomy), the specs README [Timezone](README.md#conventions-binding-on-all-specs) convention and its **Per-user timezone** cross-cutting gap, which this spec now owns
 **Downstream consumers:** every module's `RequirePermission` / `RequireOwnerOrPermission` (built by `cmd/api` from `account.Module.Engine()`); `tenant` (`RequireAuth` + the caller identity); `layout` (`accountapi.HasPermission`); `people` (`accountapi.ListDirectory`; SPEC-11 P0.3/P0.4 timezone); `social` (`accountapi.GetUserNames`); `notify` (recipient email, via the account repository in `cmd/worker`; the P1.3 `account:*` events and `SuperadminIDs`); the timezone readers SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1/P0.3/P1.5, SPEC-11 P0.3/P0.4, SPEC-13 §4a; the frontend's `lib/session.ts`, `lib/admin.ts`, `/login`, `/register` and `/admin/*`
 
@@ -43,7 +44,7 @@ diverges from the binding conventions.
   (`account/invalid-reset-token`, `account/rate-limited`) and gaps are owned by
   [SPEC-05](SPEC-05-notification-module.md) P0.3 and its §11 rows 1–2 and 14.
   They appear in §7 only for completeness.
-- **MFA / TOTP / step-up** ([D-27]/[D-28]) and **Login with Google** (ADR-06
+- **MFA / TOTP / step-up** ([D-27]/[D-28]) and **Login with Google** ([ADR-06](#adr-06)
   action items 10–11) — deferred; see [backlog.md § Deferred](../backlog.md).
 - **Tenant-scoped roles, `switch-tenant`, `/admin/organizations`** (ADR-07
   steps 5–7) — deferred at one user with one personal org.
@@ -913,3 +914,626 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
 - The asynqmon queue console at `/admin/queues` (SPEC-03 P1.6) and the layout
   editor at `/admin/layout` (the `layout` module) — they share the `/admin`
   URL space, not this module.
+
+## Decision records
+
+The architecture decisions this spec stands on, folded in from the retired
+`docs/adr/` folder on 2026-10-01. The `ADR-NN` ids stay the stable citation;
+the anchors below are fixed. Each record keeps the binding shape — Context →
+Decision → Options considered → Trade-offs → Consequences → Action items. The
+Decision, Options and Trade-offs are the narrative layer, kept verbatim (it
+records what was known at the time and may name things since retired); Context,
+Consequences and Action items are the fact layer, corrected in place and true as
+of this file's `Last verified`. Where the spec above already states a fact, the
+record points to it instead of repeating it.
+
+<a id="adr-02"></a>
+### ADR-02 — Reconcile RBAC: role hierarchy (built) vs policy bundles (specced)
+
+**Decided:** 2026-05-24 · **Status:** accepted; amended by [ADR-06](#adr-06) (Authentik-synced roles removed)
+
+Deciders: kirito. Affects [D-26] in [feature-inventory.md](../feature-inventory.md)
+and [access-policies.md §2, §3.3](../../architecture/deferred/access-policies.md)
+(then `archivetech.md`).
+
+#### Context
+
+*As found on 2026-05-24. v1 shipped on the role-hierarchy model exactly as
+decided here; the policy-bundle/user-group layer and file-gating remain
+deferred and have no code. One input has since gone: [ADR-06](#adr-06)
+removed Authentik, and migration `0006` dropped `user_oidc_roles`, so effective
+permissions come from `user_roles` + role ancestors only (P0.7). The composition
+rule in Trade-offs still names that table; it is kept as written.*
+
+The project had **two specs for access control that contradicted each other**,
+and code existed for one of them.
+
+##### Spec A — Role hierarchy (CLAUDE.md + feature.md + actual code)
+
+- Permission grammar: `<resource>:<action>[:<scope>]` with `*` / `:any` / `:own` wildcards.
+- Grants flow through **roles**. `roles.parent_id` forms an adjacency-list hierarchy: `guest → user → creator → editor → moderator → admin → superadmin`.
+- Effective permission set = walk role ancestors via recursive CTE, union with directly-assigned `user_roles`, union with `user_oidc_roles` (synced from Authentik groups — retired with ADR-06). [D-26]
+- Implemented in `backend/internal/modules/account/rbac/`.
+- Two-channel revocation: `users.token_version` (instant logout-all) + `refresh_tokens.revoked_at` (chain revoke).
+- Cache key `rbac:perms:<userID>:v<N>` namespaced by `token_version`.
+
+##### Spec B — Policy bundles (`archivetech.md`, now `docs/architecture/deferred/access-policies.md`)
+
+- Same permission grammar at the leaf.
+- Grants flow through **policies** (reusable named bundles like "Radiologist", "Read-Only Auditor"). Policies attach to **user groups** or directly to **users**.
+- User groups form their own hierarchy (`user_groups.parent_id`); a user inherits every active policy attached to any ancestor group plus their own per-user policies.
+- **File-gated permissions**: certain permissions inside a policy require an uploaded file (license, certificate) to be effective. Admin review queue. File expiry → permission silently disappears.
+- Conflict resolution: **deny-wins** (AWS IAM / OPA semantics).
+- Its §1 declared "the spec wins, adjust code, not the other way around" — meaning if it were accepted, the existing role-hierarchy code was wrong.
+
+##### Why this was a real conflict
+
+These are not two views of one model. They're two different models with
+different primary entities (roles vs policies), different group concepts (the
+system roles in spec A are not the same thing as user groups in spec B),
+different cache invalidation flows (file-gating in B has no analogue in A), and
+different audit semantics (spec B logs "permission became ineffective" events
+that spec A has no concept of).
+
+You cannot ship both unmodified. You can ship one, ship both layered, or ship
+one now and migrate later. The cost differs.
+
+<!-- adr-narrative -->
+#### Decision
+
+**For v1, keep role hierarchy (Spec A) as the grant primitive. Reframe policy bundles (Spec B) as a *layer on top of* roles, deferred to a future phase. File-gated permissions stay as a Phase-3+ feature (per archivetech.md's own phasing), not v1.**
+
+Concretely:
+
+1. **Spec A is canonical for v1.** The existing role-hierarchy code stays. `users.token_version` remains the revocation channel. The recursive-CTE effective-permission walk is unchanged.
+2. **Spec B's User Groups become a future module**, not a renaming of `roles`. Call it `usergroup` (or fold it into a future `organization`/`tenant` module — see [D-24]) so the two hierarchies don't collide in vocabulary.
+3. **Spec B's Policies layer on top.** When the policy module ships, a policy expands into a set of `(role | permission)` grants; the effective-permission walk gains a "policies attached to this user/group" step *before* the role union.
+4. **File-gating becomes a permission-effectivity filter** at the end of the resolution chain. The existing matcher stays grant-only; effectivity filtering is a separate stage that prunes permissions whose required-file row is missing/expired/rejected.
+5. **Deny-wins precedence is reserved.** Spec A is grant-only and doesn't currently support deny rules. Reserve the contract — when explicit deny lands, the order is "any deny path wins". archivetech.md §2.3 already commits to this contract; record it now even though no code implements deny.
+
+For v1 itself, none of the policy/group machinery exists. The 2-week sprint ships only the role-hierarchy auth that already works. This ADR's purpose is to **prevent the two specs from being implemented simultaneously and incompatibly**, and to keep the path open for adding policies on top later.
+
+#### Options considered
+
+##### Option A — Migrate to Spec B; rewrite the role module
+
+| Dimension | Assessment |
+| --- | --- |
+| Complexity | High — rewrites every auth-touching test, migrations 0002+, RBAC engine, middleware |
+| Cost | 4–7 days of solo-dev time before v1 ships |
+| Scalability | Spec B is arguably the more flexible long-run model |
+| Team familiarity | New ground; spec B's deny-wins is unfamiliar |
+
+**Pros:** archivetech.md §1's "spec wins" clause is honoured. File-gated permissions are first-class.
+**Cons:** Burns 30–50% of the v1 sprint on a rewrite. Throws away working code with test coverage. The first thing the v1 demo proves is the auth flow — destabilising it in week 1 destabilises everything.
+
+##### Option B — Keep Spec A; layer Spec B on top in a future phase  *(chosen)*
+
+| Dimension | Assessment |
+| --- | --- |
+| Complexity | Low for v1; medium for the layering work later |
+| Cost | 0 days now; ~1 week when policies are added |
+| Scalability | Best-of-both — roles for coarse access, policies for organisational fine-grain |
+| Team familiarity | Existing code stays; no auth churn |
+
+**Pros:** v1 ships with auth that already works. Layering policies on top of roles is a well-trodden pattern (AWS IAM has both); the effective-permission walk just gains an extra union step. File-gating fits cleanly as a final-stage filter.
+**Cons:** Two concept hierarchies for grant management (roles + policies + user groups). Operators have to learn both. The "spec wins" promise in archivetech.md is *softened*, not honoured — explicit ADR needed to record the change of intent.
+
+##### Option C — Hybrid now: keep roles, add policies in v1
+
+| Dimension | Assessment |
+| --- | --- |
+| Complexity | Medium-high — two new tables, new resolution code, new admin UI |
+| Cost | 3–5 days of v1 sprint |
+| Scalability | Same as Option B long-run |
+| Team familiarity | Mixed |
+
+**Pros:** Avoids the future "we said we'd add policies" debt.
+**Cons:** Crowds v1 with non-demo features. Policy admin UI isn't demoable in the 7-step happy path. Pure scope creep against [ADR-01](README.md#adr-01).
+
+#### Trade-off analysis
+
+Option A's strongest argument is the "spec wins" clause; its weakest is that the spec it's honouring (archivetech.md) is itself a 6-screen sketch from `template-main/portal/document/anh{1,2,3}.png` with no code behind it. The spec hasn't earned the right to override working code.
+
+Option C's strongest argument is "do it right the first time"; its weakest is that "right" here means "policies + roles + groups + file-gating + review queue" — five concepts piled into a sprint that already has 8 deliverables. The auth surface gets brittle exactly when the demo needs it stable.
+
+Option B's strongest argument is sequencing — get v1 demonstrable, then add the organisational features when there's a real operator asking for them. Its weakest is the conceptual cost: anyone reading both specs has to mentally compose roles + policies + groups + file-gating into one model. This ADR's job is to make that composition explicit so future-you doesn't reverse-engineer it.
+
+The composition rule, written down once for clarity:
+
+```
+effective_permissions(user, tenant):
+    1. roles_user_holds = recursive_walk(user_roles ∪ user_oidc_roles)
+    2. policies_user_holds = ∪{
+           policies_attached(user),
+           policies_attached(group) for group in walk(user_groups(user))
+       }
+    3. grants = ∪{
+           permissions(role) for role in roles_user_holds,
+           permissions(policy) for policy in policies_user_holds
+       }
+    4. effective = filter(grants, where file_gate_satisfied(grant, user))
+    5. if any deny grant in policies_user_holds matches the required code:
+           return DENY
+    6. return effective
+```
+
+Steps 1, 3, and 5 (without deny) are what currently exists. Steps 2 and 4 are the additions when Spec B layers on. Step 5's deny path is reserved.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+**What became easier:**
+
+- v1 shipped on time; the 7-step demo was unaffected.
+- The tests in `backend/internal/modules/account/rbac/` stayed green, and
+  `rbac.Matches` was later fixed so a wildcard-action grant like `movies:*`
+  covers every scope including `:own` — consistent with, not contradicting,
+  this decision (P0.7).
+- When policies are added, the existing code is unchanged — the new code is
+  purely additive (new tables, new resolution stage). Nothing has been added yet.
+
+**What became harder:**
+
+- `access-policies.md` carries a header note saying its RBAC section is
+  **layered on top of**, not a **replacement for**, the role hierarchy, and
+  that its "spec wins" clause is suspended for v1 (done 2026-07-06).
+- Future contributors see two grant concepts and need this record to know how
+  they compose. The composition rule lives in this record's Trade-offs (and
+  the layering is P2 above); it is **not** in
+  `backend/internal/modules/account/README.md`
+  (`grep -c effective_permissions backend/internal/modules/account/README.md`
+  is 0 — action item 2).
+- The "deny-wins" promise commits us to a particular semantics. No
+  explicit-deny implementation exists; the promise stands.
+
+**What we said we'd revisit — and what happened instead:**
+
+- The admin UI was built for **roles**, not for policies + groups:
+  `/api/v1/admin/*` and the `AdminRolesView` / `AdminUsersView` screens
+  (`frontend/src/templates/v1/views/admin/`; P0.8–P0.11). Roles became
+  editable, which is why `/auth/me` returns effective permission codes (P0.6).
+  The `anh1/2/3.png` mocks did not pull Spec B's tables forward; if a
+  Policy/Group sprint happens it starts from a shipped roles UI, not a blank one.
+- File-gated permissions (object storage for licenses + review queue + expiry
+  checks) remain their own future phase, gated on the policy layer existing.
+- Cycle prevention: `roles` still has the self-only DB CHECK
+  (`roles_no_self_parent`) with deeper cycles caught at the app layer (§6,
+  P0.11). The policy/group migration, when written, must include proper cycle
+  prevention.
+
+#### Action items
+
+1. [x] Header note on `access-policies.md` referencing this decision (2026-07-06).
+2. [ ] Add the composition rule to `backend/internal/modules/account/README.md` —
+   not done; tracked as [backlog.md](../backlog.md) #17.
+3. [ ] Reserve depguard rules for `internal/modules/policy/` and
+   `internal/modules/usergroup/` — not done (`grep -n 'policy\|usergroup'
+   backend/.golangci.yml` finds nothing); tracked with item 2 as backlog #17.
+4. [ ] Tracking issue for "RBAC Phase 1.5: policy bundles + user groups" — no
+   GitHub issue is filed (`gh issue list --state all --search policy`); the
+   deferral is recorded here, in P2 above and in `/CLAUDE.md` § RBAC schism.
+5. [ ] Policy/Group sprint "before any admin UI work begins" — overtaken: the
+   roles admin UI shipped first (`0031`/`0036` era). The sprint, if scheduled,
+   layers onto it.
+
+<a id="adr-06"></a>
+### ADR-06 — Local password auth: Portal owns credentials (drop Authentik from the login path)
+
+**Decided:** 2026-07-05 · **Status:** accepted, executed 2026-07-06
+
+Deciders: kirito. Supersedes the OIDC-login decision in
+[ADR-05](SPEC-03-platform-ops.md#adr-05) (Milestone 0.4) and the "No local
+password auth. OIDC via Authentik" statement that [/CLAUDE.md](../../../CLAUDE.md)
+carried at the time (Account module).
+
+#### Context
+
+*As found on 2026-07-05. Everything decided below shipped the next day; what
+differs from the text, and what has been added since, is under Consequences.*
+
+The OIDC-via-Authentik design (built and wired in the Phase-0 sprint)
+authenticated the user **at the IdP**: the browser was redirected from Portal to
+Authentik, the user typed credentials on Authentik's page, and Authentik
+returned an authorization code that the API exchanged for the user's identity.
+
+That was architecturally clean, but produced a **user-experience objection**:
+the login always left the Portal domain for `auth.portal.localhost`, and the
+Portal login form we built was decorative (only the SSO button worked) — so
+users saw "two forms". Branding Authentik and a straight-to-IdP redirect ("Mức
+2") reduced this to one branded form, but the login screen was still **served
+by, and hosted on, Authentik**, not Portal.
+
+The product owner wanted the login form to live **on Portal itself**, with
+Portal verifying the password directly — no redirect, no separate identity
+service in the login path. This record holds that decision and its
+architecture.
+
+> This reverses a prior decision. [ADR-05](SPEC-03-platform-ops.md#adr-05)
+> chose OIDC and [ADR-02](#adr-02) assumed Authentik-synced roles. The **token,
+> refresh, RBAC, revocation, and audit machinery are unaffected** — only the
+> *front door* (how a user proves identity) changes. See "What is reused".
+
+<!-- adr-narrative -->
+#### Decision
+
+**Portal authenticates users locally against its own `users` table with a hashed password. Authentik is removed from the login path.** The login form is served by the Portal frontend; the API verifies the password and issues the same access + refresh tokens the system already uses.
+
+Concretely:
+
+1. `users` gains a `password_hash` column (Argon2id). No plaintext, ever.
+2. `POST /api/v1/auth/login {email, password}` verifies the hash and, on success, issues the **existing** access JWT + refresh token and sets the **existing** cookies. It replaces the OIDC `/auth/login` redirect **and** `/auth/callback`.
+3. The Portal `/login` page becomes a **real** form (email + password) posting to that endpoint. The frontend `middleware` gates guests to `/login` (Portal), not to Authentik.
+4. Account creation is `POST /api/v1/auth/register {email, password, display_name}` (or admin-provisioned) — the upsert-from-OIDC path is retired.
+5. Password reset (`forgot`/`reset` with an emailed token) is added when the notification module lands; until then, admin-set or a CLI reset.
+6. **Authentik is dropped from the dev stack** (frees ~1 GB RAM + its Postgres). The OIDC provider blueprint, `auth/oidc.go`, the `/auth/callback` handler, `user_oidc_roles` sync, and `OIDC_*` config become dead and are removed.
+
+#### Architecture model
+
+##### Login flow (Luồng B)
+
+```mermaid
+sequenceDiagram
+    actor U as User (Browser)
+    participant F as Frontend<br/>portal.localhost
+    participant A as API<br/>api.portal.localhost
+    participant DB as Postgres
+
+    U->>F: GET / (no session cookie)
+    F-->>U: 307 → /login
+    U->>F: GET /login (real Portal form)
+    Note over U: ★ types email + password ON PORTAL ★
+    U->>A: POST /api/v1/auth/login {email, password}
+    A->>DB: SELECT user by email
+    A->>A: argon2 verify password; check disabled_at
+    A->>DB: INSERT refresh_token (sha256 hash)
+    A-->>U: Set-Cookie portal_access (JWT) + portal_refresh; 200
+    U->>F: GET / (with cookie)
+    F-->>U: home (authenticated)
+    Note over A,DB: No Authentik anywhere in the flow.
+```
+
+Compare with the OIDC flow (retired): the browser detoured through `auth.portal.localhost`, the API never saw the password, and identity came back as an ID token. Here the password is posted straight to the API and checked against `users.password_hash`.
+
+##### What changes
+
+| Layer | OIDC (retired) | Local auth (this ADR) |
+| --- | --- | --- |
+| Credential store | Authentik | `users.password_hash` (Argon2id) in Portal Postgres |
+| Login screen | Authentik flow page (`auth.portal.localhost`) | Portal `/login` form (`portal.localhost`) |
+| API `/auth/login` | 302 redirect to IdP + `/auth/callback` code exchange | `POST {email,password}` → verify → issue tokens |
+| User provisioning | `UpsertUserFromOIDC` on callback | `POST /auth/register` (or admin) |
+| Config | `OIDC_ISSUER/CLIENT_ID/SECRET/REDIRECT_URL` | none (removed) |
+| Extra infra | authentik-server + worker + its Postgres + blueprint | **none** |
+| Who sees the password | only Authentik | Portal API (transiently, then discarded to a hash) |
+
+##### What is reused (unchanged)
+
+The hard, security-sensitive parts of the account module **do not change** — this is why the switch is contained:
+
+- **Access tokens** — HS256 JWT with rotating `kid`, `token_version`, roles (`auth.Issuer`/`Verifier`).
+- **Refresh tokens** — 256-bit, SHA-256 at rest, rotation chain + reuse detection (`auth.RefreshManager`, `refresh_tokens` table).
+- **Two-channel revocation** — `users.token_version` (logout-all) + `refresh_tokens.revoked_at`.
+- **RBAC** — role hierarchy, recursive-CTE effective permissions, Redis cache keyed by `token_version` (unchanged; roles now assigned by Portal, not synced from Authentik groups).
+- **Cookies** — `portal_access` (Path=/) + `portal_refresh` (Path=/api/v1/auth), `HttpOnly Secure SameSite=Strict`, domain `portal.localhost`.
+- **Audit log**, `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/me`.
+
+Only the **identity-proof step** at `/auth/login` and account creation change.
+
+##### New responsibilities Portal now owns
+
+Delegating to Authentik gave these for free; local auth means implementing them:
+
+- **Password hashing** — Argon2id (`golang.org/x/crypto/argon2`), sane params (e.g. 64 MB, t=3, p=2), per-user salt; constant-time verify.
+- **Brute-force defence** — rate-limit `/auth/login` per IP + per account; exponential backoff / temporary lockout on repeated failures.
+- **Password policy** — min length / breach check on register + reset.
+- **Password reset** — emailed single-use token (needs the notification module, Phase 6) or CLI/admin reset until then.
+- **MFA / step-up** (later, for the bank module) — TOTP enrolment + `acr`/`amr`-equivalent claims must be built in Portal (previously Authentik-managed, [D-27]/[D-28]).
+- **Social login** ("Login with Google") — implement Google OAuth directly in Portal (previously a one-line Authentik source).
+
+#### Options considered
+
+Recorded fully in the discussion that preceded this ADR; summarised:
+
+- **A — Keep OIDC, brand Authentik (Mức 1/2).** One branded login form, but hosted on Authentik; Portal never owns credentials; Google/MFA/step-up come free. *Rejected* for the "form must live on Portal" requirement.
+- **B — Local password auth *(chosen)*.** Login form on Portal, no redirect, Portal owns credentials. Portal must build the security surface Authentik provided.
+- **C — Hybrid (local login, keep Authentik for MFA/social).** Most complex; two identity systems to reconcile. *Deferred* — revisit if MFA/social become required and local-only proves insufficient.
+
+#### Trade-off analysis
+
+The decisive trade is **UX/ownership vs. security-surface-you-maintain**. Authentik existed precisely to own passwords, MFA, lockout, reset, and social federation — battle-tested. Moving in-house buys a single native login form and drops ~1 GB of infra, at the cost of re-implementing (and being responsible for) that security surface. For a single-operator v1 demo the surface is small; the risk grows when the **bank module** (which the corpus says needs step-up + MFA, [D-27]/[D-28]) and **social login** arrive — those were the original reasons OIDC was chosen. This ADR accepts that future cost in exchange for the desired UX now, and leaves Option C open as the escape hatch (add Authentik back purely as an MFA/social provider, keeping local password as the primary factor).
+<!-- /adr-narrative -->
+
+#### Consequences
+
+As built. The account module's full contract is this spec — route table §7,
+login and throttle P0.2, hashing / tokens / cookies / TTLs P0.3 — and its open
+gaps are §11; what follows is only what the decision changed and what has been
+learned since.
+
+- **Route table:** `/auth/login {email, password, remember}`, `/auth/register`
+  (201, no session — the user returns to `/login`), `/auth/forgot-password`,
+  `/auth/reset-password`, plus the unchanged `/auth/refresh`, `/auth/logout`,
+  `/auth/logout-all`, `/auth/me` (`account/module.go` `MountHTTP`).
+  `/auth/callback` is gone from both code and `shared/openapi.yaml`.
+- **Departures from the Decision text:** three cookies, not two —
+  `portal_session` is the marker the Next.js middleware gates on — and a
+  `remember` flag selects persistent vs session cookies (P0.3); the refresh
+  TTL is 24 h (`REFRESH_TOKEN_TTL`, `platform/config`) and nothing in the
+  shipped code ever defaulted to 30 days.
+- **Password reset shipped** with migration `0010_account_password_reset_tokens`
+  and the notify module ([SPEC-05](SPEC-05-notification-module.md) P0.3) — the
+  "admin/CLI until then" interim is over.
+- **Registration requires approval** (migration `0031`, not part of this
+  decision): only `approved` may hold a session, the first account on an empty
+  database is the founder, `BOOTSTRAP_SUPERADMIN_EMAIL` covers an existing
+  install (P0.1, P0.2, P0.5, P0.12).
+- **`/auth/me` returns effective permission codes** so the frontend can hide
+  what the API would refuse (P0.6; added when roles became editable).
+- One login screen, served by Portal, no cross-domain redirect. The dev stack
+  lost authentik-server + authentik-worker + authentik-postgres + the
+  blueprint and the container→IdP networking hack (Traefik alias +
+  `SSL_CERT_FILE`).
+
+**What became harder, as predicted:**
+
+- Portal is a credential custodian. The brute-force guard on `/auth/login` is
+  live (P0.2: 5 failures per 15 minutes per IP and per email, Redis-backed,
+  `handler/auth.go` `loginThrottled`). It is the **only** throttle —
+  `/auth/register` and `/auth/refresh` are unthrottled and the per-IP key
+  trusts any `X-Forwarded-For` (§11 rows 3–4).
+- **MFA / step-up** ([D-27]/[D-28]) and **"Login with Google"** are still not
+  built. `account/module.go`'s package comment mentions "2FA/TOTP" and
+  `api/api.go` reserves `totp_*` as a sensitive field, but no migration adds
+  such columns and no route implements enrolment or verification. The ledger
+  shipped ([SPEC-12](SPEC-12-finance-ledger.md)) without step-up; the re-entry
+  condition is [backlog.md § Deferred](../backlog.md).
+
+**Revisited:**
+
+- [ADR-02](#adr-02) — `user_oidc_roles` dropped by migration `0006`; roles are
+  Portal-assigned only (D-26.r1). ADR-02's Context says so; its composition
+  rule keeps the historical term.
+- Option C (Authentik back as a second-factor / social IdP) remains the escape
+  hatch if MFA/social prove heavy to self-build. Not exercised.
+
+#### Action items
+
+Items 1–9 are done: migration `0006_account_local_auth` (`password_hash`,
+`password_updated_at`, `user_oidc_roles` dropped, `oidc_subject` nullable);
+`auth/password.go` Argon2id; the `GetUserByEmail` / `CreateLocalUser` /
+`SetUserPassword` queries; `POST /auth/login` + `/auth/register` with
+refresh/logout/logout-all/me kept; the login rate-limit + lockout (only there —
+see Consequences); the real `/login` form with the middleware gating guests to
+it and the SSO/Google buttons removed; OIDC removed (`auth/oidc.go`, callback,
+`OIDC_*` config, the Authentik services and blueprint, the Traefik alias and
+`SSL_CERT_FILE` override); docs synced (`/CLAUDE.md` Account section,
+[security.md](../../architecture/security.md) (then `authoration.md`),
+[feature-inventory.md](../feature-inventory.md) §1, `shared/openapi.yaml` with
+`/auth/register` and no `/auth/callback` — the Vietnamese mirror the item also
+named was deleted with `docs/archive/` in `f11cf3f`); and password reset (`0010`,
+SPEC-05), which made the interim admin/CLI reset unnecessary.
+
+10. [ ] MFA/TOTP enrolment + verification, and step-up for bank
+    ([D-27]/[D-28]) — not built; deferred (P2, backlog § Deferred).
+11. [ ] "Login with Google" as a local OAuth flow — not built.
+
+<a id="adr-07"></a>
+### ADR-07 — Multi-tenancy & Row-Level Security model
+
+**Decided:** 2026-07-07 · **Status:** accepted, executed 2026-08-25 (plan steps 1–4, 8, 10); steps 5–7 deferred by scope
+
+Deciders: kirito. Relates to [ADR-01](README.md#adr-01) (v1 cut), [ADR-02](#adr-02)
+(RBAC), [ADR-03](SPEC-03-platform-ops.md#adr-03) (single VPS),
+[feature-inventory.md](../feature-inventory.md) §2 + §18 Phase 1, [D-23] [D-24]
+[D-25]; runbook [operations/rls-cutover.md](../../operations/rls-cutover.md).
+The `tenant` module has no spec of its own, so this record is its decision
+record; the mechanism as it runs today — tenant model, schema, `tenant_id`
+propagation, the three GUCs, request and worker paths, roles and the RLS test
+suite — is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation),
+and this record does not repeat it.
+
+#### Context
+
+*As found on 2026-07-07, when this was a plan. Everything the plan needed from
+the schema has since shipped (`0018_tenant_core`, `0019_platform_rls_roles`,
+`0020_platform_rls_enable`, and every tenant-scoped table since carries its own
+policy). Two premises below have moved: Postgres no longer runs in compose
+(host cluster since 2026-08-21) and PgBouncer is gone with it, so "the
+PgBouncer constraint" no longer binds — but the transaction-local GUC design it
+forced is what shipped, and it is correct without a pooler too. Where RLS is
+actually enforced today is under Consequences; read that before trusting any
+other statement about RLS in this repo.*
+
+`feature.md §2` and the Phase 1 roadmap wanted multi-tenancy — `organizations`
++ `memberships` — with **Postgres Row-Level Security (RLS) as
+defense-in-depth** (`architecture/security.md`'s L2): even a query that forgets
+`WHERE tenant_id = ?` must not leak cross-tenant data. v1 had deferred all of
+it — there was **no `tenant_id` column anywhere** at the time, and the app was
+effectively single-user.
+
+Three forces shaped the design:
+
+1. **Security posture.** The whole point of RLS is that the *database*, not the handler, is the last line. App-layer scoping alone is one forgotten filter away from a breach.
+2. **The PgBouncer constraint (load-bearing at the time).** Prod was to pool through **PgBouncer in transaction mode** ([ADR-03](SPEC-03-platform-ops.md#adr-03)). RLS needs a per-request session variable; transaction-mode pooling reuses one connection across many transactions, so the naive "`SET app.tenant_id` once per connection" leaks one request's tenant into the next. (Dev sidestepped this by connecting **direct to `postgres:5432`**, because pgx's prepared-statement cache also clashes with transaction-mode PgBouncer.)
+3. **Personal vs. org data.** Most Portal data is *personal* (a user's uploads, feed, bank); only some is org-shared. A **synthetic personal tenant** per user lets every row carry a `tenant_id` and keeps a single code path for both.
+
+<!-- adr-narrative -->
+#### Decision
+
+Adopt **PostgreSQL RLS keyed on a per-request GUC, set with `SET LOCAL` inside a per-request transaction, on a non-owner application role with `FORCE ROW LEVEL SECURITY`.** Model tenancy as `organizations` (with a `kind` discriminator `'org' | 'household' | 'personal'`) + `organization_memberships`; give every user a synthetic **personal** org. Run cross-tenant batch work as a separate **`BYPASSRLS`** role, isolated to `cmd/sysjobs` by depguard.
+
+> **GUC name:** the tenant skeleton already references `app.current_tenant`; the Phase-1 roadmap wrote `app.tenant_id`. **Pick one and use it everywhere** — this ADR standardises on **`app.current_tenant`** (matches the shipped skeleton comment). Fix `feature.md §18`'s `app.tenant_id` to match when Phase 1 lands.
+
+##### 1. Data model
+
+- `organizations(id, kind, slug, name, owner_id → users(id), created_at, updated_at)` — `kind ∈ {'org','household','personal'}` **from day one** [D-24]; adding household later must not migrate a populated table.
+- `organization_memberships(org_id, user_id, role, granted_at, ...)` — user ↔ tenant with a scoped role. Role granularity differs per kind: orgs → full RBAC hierarchy; households → `owner` + `member` (soft cap ~6); personal → single `owner`.
+- **Every user gets a `personal` org at signup** (`kind='personal'`, `owner_id=user`, one owner membership). Personal routes (`/t/me/...`) resolve `me` → that org's id.
+- **`users` stays GLOBAL** — a person is one identity across orgs (authoration.md). No `tenant_id` on `users`.
+- **Tenant-scoped tables** carry `tenant_id UUID NOT NULL REFERENCES organizations(id)`: future domain tables (movie/music/story/comic), bank, social — **and `media.assets` gains `tenant_id`** (an upload belongs to the tenant context it was made in; `me` for personal). RBAC tables (`roles`, `permissions`) stay global; `user_roles` becomes membership-scoped (see §4).
+
+##### 2. RLS enforcement (per tenant-scoped table)
+
+- A dedicated **app role `portal_app`** (`NOSUPERUSER NOBYPASSRLS`) that the API/worker connect as. **Critical:** superusers *and the table owner* bypass RLS unless `FORCE` is set — so the app role must **not** own the tables (own them as a migration/admin role, run as `portal_app`).
+- Each tenant-scoped table, in the **same migration that creates it**:
+  ```sql
+  ALTER TABLE movies ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE movies FORCE  ROW LEVEL SECURITY;      -- applies even to the owner
+  CREATE POLICY tenant_isolation ON movies
+    USING      (tenant_id = current_setting('app.current_tenant')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+  ```
+  `USING` filters read/update/delete; `WITH CHECK` blocks writing a row into *another* tenant.
+- **Fail closed:** `current_setting('app.current_tenant')` with no GUC set raises an error — a query that forgot to open a tenant scope *errors* rather than leaking. Use the 2-arg `current_setting(..., true)` (returns NULL) only where "no tenant ⇒ deny" is handled explicitly.
+
+##### 3. Connection strategy (the crux)
+
+RLS-per-request under PgBouncer transaction pooling:
+
+- **`SET LOCAL app.current_tenant = $1` inside a transaction.** `SET LOCAL` is transaction-scoped and reset at `COMMIT`/`ROLLBACK`, so a pooled connection never carries one request's tenant into the next. Plain `SET` (session-scoped) is **wrong** under transaction pooling.
+- **Every tenant-scoped request runs in one transaction.** `platform/db.BeginTenantScope(ctx, tenantID)` opens `BEGIN; SET LOCAL app.current_tenant = $1;`, hands the tx to the request's queries, and `COMMIT`s (auto-`ROLLBACK` on handler error).
+- **pgx ⨯ PgBouncer transaction mode** is incompatible with pgx's default prepared-statement caching → set the pool's `DefaultQueryExecMode = QueryExecModeExec` (or `SimpleProtocol`) / disable the statement cache. (This clash is why dev connects direct today.) Phase 1 chooses one of:
+  - **(a) Route through PgBouncer (recommended)** — transaction mode + simple/exec protocol + `SET LOCAL` per request. Keeps the connection pool.
+  - **(b) Direct-to-Postgres fallback** — keep `postgres:5432`, drop PgBouncer for the app; acceptable only while connection count stays well under `max_connections`.
+
+##### 4. Tenant resolution & RBAC
+
+- URL scheme `/api/v1/t/{tenant}/...`; `{tenant}` = an org slug or the literal `me` [D-23].
+- **Middleware order:** `RequireAuth` → **`RequireTenant`** (resolve `{tenant}` → tenant_id; `me` → caller's personal org; **verify the caller has a membership**, else 403) → `BeginTenantScope(ctx, tenant_id)` for the request tx → module handler.
+- **Single-tenant deployments** map `/api/v1/...` (no `/t/`) to a default tenant via Traefik/middleware — the common case isn't uglier.
+- **RBAC composes per-tenant:** effective permissions are computed **within the active membership** (admin in org A, member in org B). `user_roles` becomes `(user_id, org_id, role_id)`; the RBAC cache key gains the tenant ([ADR-02](#adr-02)). Roles/permissions catalogs stay global.
+
+##### 5. Cross-tenant batch (BYPASSRLS)
+
+- `cmd/sysjobs` connects as a **separate `portal_sys` role (`BYPASSRLS`)** for cross-tenant maintenance (purges, migrations, aggregate reports) via `internal/sysrepository`. **depguard blocks every other package from importing `sysrepository`** — a BYPASSRLS path reachable from the API would defeat RLS entirely (CLAUDE.md).
+
+##### Architecture model — request path
+
+```mermaid
+sequenceDiagram
+    actor U as Client
+    participant MW as API middleware
+    participant DB as Postgres (portal_app role, RLS FORCEd)
+
+    U->>MW: GET /api/v1/t/acme/movies  (cookie)
+    MW->>MW: RequireAuth → identity
+    MW->>DB: RequireTenant: resolve slug 'acme' + verify membership
+    MW->>DB: BeginTenantScope: BEGIN; SET LOCAL app.current_tenant = '<acme-id>'
+    MW->>DB: SELECT * FROM movies         (no WHERE tenant_id needed)
+    Note over DB: RLS policy filters to tenant_id = current_setting('app.current_tenant')
+    DB-->>MW: only acme's rows
+    MW->>DB: COMMIT   (SET LOCAL discarded; connection safe to reuse)
+    MW-->>U: 200
+    Note over MW,DB: A forgotten filter still can't leak — the DB enforces it.
+```
+
+#### Options considered
+
+- **A — RLS + per-request `SET LOCAL` GUC *(chosen)*.** DB-enforced isolation; a buggy query can't leak. Cost: every tenant-scoped request is a tx; PgBouncer/pgx config care.
+- **B — App-layer scoping only (`WHERE tenant_id = ?`), no RLS.** Simplest, no GUC/tx dance. **Rejected** — one forgotten filter = cross-tenant leak, exactly the failure RLS exists to prevent; unacceptable for bank/private data.
+- **C — Schema-per-tenant / DB-per-tenant.** Hard isolation, but migration/ops cost explodes with many small *personal* tenants. **Rejected** for Portal's per-user tenant shape.
+- **D — Connection-per-tenant with session `SET`.** Needs session-mode pooling → kills PgBouncer transaction-mode efficiency and blows up connection count. **Rejected.**
+
+#### Trade-off analysis
+
+RLS + `FORCE` + fail-closed GUC is the strongest containment for the least code — but it imposes two rules every dev must internalise: **(1)** tenant-scoped queries run *inside* `BeginTenantScope`, and **(2)** the app connects as a **non-owner** role. The tx-per-request + simple-protocol is a real but bounded perf/complexity tax (measure it with the observability profile, which [ADR-03] says should land the same sprint). The synthetic `personal` tenant trades one `organizations` row per user for a single, fork-free code path across personal and org data.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+**Where RLS stands — the one statement to trust.** RLS is enforced **if and
+only if the binary's `DATABASE_URL` connects as `portal_app`**. The policies
+exist on every tenant-scoped table
+(`grep -ho 'ALTER TABLE [a-z_]* FORCE ROW LEVEL SECURITY' backend/db/migrations/*.up.sql | sort -u | wc -l`)
+and `portal_app` is `NOSUPERUSER NOBYPASSRLS` and does not own them, so
+`FORCE` binds; `portal`, the migration role, is a superuser and bypasses every
+policy. This deployment's `.env` has run as `portal_app` since the cutover of
+2026-08-25 (`grep DATABASE_URL .env`; [runbook](../../operations/rls-cutover.md)),
+and since 2026-09-11 `.env.example` defaults to it too, so a fresh `make up`
+starts enforced; `portal` is used only by `MIGRATE_DATABASE_URL` and
+`BACKUP_DATABASE_URL`. Which role does what, the GUCs, and the test suite that
+proves isolation (run on every push by the `backend` CI job) are
+[security.md §3.4](../../architecture/security.md#34-postgresql-rls--the-enforcement-mechanism--built).
+
+**What shipped, against the plan:**
+
+- **Rule kept, and written down:** every migration that creates a tenant-scoped
+  table carries `ENABLE + FORCE` RLS and its policy in the same file (the
+  migrations creating global tables, such as `0036_layout_core`, carry none,
+  by design). The rule is binding in [backend/MODULES.md](../../../backend/MODULES.md)
+  §6 ("Tenant-scoped tables carry RLS from birth") and §8 step 4, and in the
+  specs README Tenancy convention.
+- `media.assets` gained `tenant_id` with backfill and policy (`0020`); `users`
+  is global; `user_roles` did **not** gain `org_id` — RBAC is not
+  tenant-scoped (P0.7, §6).
+- Migration numbers: the plan's `0008`/`0009` became `0018_tenant_core` /
+  `0020_platform_rls_enable`, with `0019_platform_rls_roles` between them.
+- GUC name: `app.current_tenant` in every migration and in `platform/db`.
+  `feature-inventory.md` still writes `app.tenant_id` in three deliverable
+  bullets under a note that says this decision's name supersedes it — legible,
+  not fixed (`grep -n 'app.tenant_id' docs/product/feature-inventory.md`).
+- `platform/db` provides `NewPool` (with `QueryExecModeExec` — which is also
+  why `[]byte` into a `jsonb` column needs the Go type, not a cast,
+  `jsonb_param_test.go`), `BeginScope` / `BeginTenantScope`, `WithTx` /
+  `TxFrom`, `RunInTx` and `Conn` (a sqlc `DBTX` that routes each query onto
+  the request transaction when one is bound). The GUCs are set
+  transaction-locally with `set_config(..., true)` rather than a literal
+  `SET LOCAL`; the effect is the same.
+- **Tenant resolution as built:** no `/t/{tenant}` URL prefix. Routes stay
+  under `/api/v1`; `RequireTenant` (tenant module middleware) resolves the
+  caller's personal org and opens the request transaction. Middleware order is
+  `RequireAuth → RequireTenant → handler`, as designed; only the URL contract
+  differs. The account surface itself runs ahead of `RequireTenant` (P0.5).
+- **A constraint violation raised inside a tenant transaction surfaces at
+  COMMIT.** For a write, `RequireTenant` buffers the response until COMMIT
+  succeeds, so a failed commit becomes a 500, not a 409. The house pattern is
+  `ON CONFLICT DO NOTHING` + treat no-rows as conflict, or a pre-check before
+  an UPDATE.
+- **Cross-tenant batch without BYPASSRLS:** `cmd/worker` runs periodic sweeps
+  through `forEachTenant` (one committed tenant scope per organisation) —
+  `people:scan_birthdays`, `bank:scan_debts_due`, `media:purge_orphans`. That
+  removed the need for `portal_sys`, `cmd/sysjobs` and
+  `internal/sysrepository` so far; the role exists (`0019`), the binary and
+  package do not, and depguard keeps the guardrail for when they land.
+- Two comments in the tree still describe the pre-cutover state as current and
+  should be read as history: the headers of migrations `0019` and `0020`
+  ("**INERT** until …"). Applied migrations are not edited; they are corrected
+  in the next migration that touches those tables. The `platform/db/db.go`
+  package comment has been corrected.
+- The observability profile did not land with tenancy
+  ([ADR-03](SPEC-03-platform-ops.md#adr-03)).
+
+#### Action items (implementation plan)
+
+Done: (1) DB roles `portal_app` (`NOBYPASSRLS`) + `portal_sys` (`BYPASSRLS`) in
+`0019`, tables owned by `portal`, runtime cutover to `portal_app` on
+2026-08-25; (2) `0018_tenant_core` — `organizations` (+`kind`) and
+`organization_memberships`, a personal org and owner membership backfilled for
+every existing user, and for new users created lazily on their first
+tenant-scoped request (`RequireTenant` → `GetOrCreatePersonalOrg` →
+`CreatePersonalOrg`), never at registration; (3) `platform/db.BeginTenantScope`
++ pool config (`QueryExecModeExec`) — the PgBouncer branch is moot, the app
+connects direct to the host cluster; (4) `0020_platform_rls_enable` — `ENABLE +
+FORCE` + `tenant_isolation` on every tenant-scoped table, `assets.tenant_id` +
+backfill + policy; (8) the RLS isolation tests (`rls_test.go`,
+`rls_media_test.go`, `rls_social_test.go`) and the MODULES.md §6/§8 entry;
+(10) `.env.example`'s `DATABASE_URL` defaults to `portal_app` (2026-09-11),
+with `MIGRATE_DATABASE_URL` for the owner DSN.
+
+5. [ ] `tenant` module beyond the personal org: `GET /me/organizations` exists;
+   `POST /auth/switch-tenant` and `/admin/organizations` do not
+   ([security.md §3.5–3.6](../../architecture/security.md#35-tenant-switching--target--not-built)).
+   Deferred at one user, one personal org.
+6. [ ] Per-tenant RBAC (`user_roles(user_id, org_id, role_id)`, cache key
+   scoped to membership) — not done; RBAC is global. Deferred with 5.
+7. [ ] `cmd/sysjobs` + `internal/sysrepository` — not written; `forEachTenant`
+   has made it unnecessary so far. The depguard rule stays.
+9. [ ] Observability profile — not landed. `feature-inventory.md` GUC bullets —
+   still `app.tenant_id` under a superseding note.
+
+**Exit (as built):** a request under `/api/v1/…` is tenant-scoped end-to-end
+through `RequireTenant`; a raw query on `portal_app` cannot read another
+tenant's rows (tested, in CI since 2026-09-11); there is no `/t/` prefix to make
+optional; cross-tenant work goes through `forEachTenant` in the worker, not a
+BYPASSRLS role.

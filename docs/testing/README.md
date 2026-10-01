@@ -6,7 +6,7 @@ This tree is the **QA source of truth** for the Portal v1 platform. It is writte
 to be executable later by a tester who did not build the features — every test
 case carries preconditions, steps, test data, and an unambiguous expected result.
 
-**Language:** English only, matching the repo doc policy ([ADR-09](../adr/09-docs-architecture.md)).
+**Language:** English only, matching the repo doc policy ([ADR-09](../product/specs/SPEC-06-docs-canonicalisation.md#adr-09)).
 
 ## Layout
 

@@ -1,8 +1,8 @@
 # SPEC-03 — Platform Ops: Backup/Restore, Queue Console, Takeout
 
-**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
+**Status:** current, rev 2 (ADR-03 and ADR-05 folded in) · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `ops` (owns the `ops:*` prefix) · **Depends on:** nothing hard on data — rides (or, if it lands first, introduces) SPEC-04 P0.3's shared periodic-scheduler convention; failure alerts: notify consumer `notify:on_backup_failed` (owned here, P0.6) now that SPEC-05 is live; staleness remains pull-only via P0.5 until a freshness-check task is added (P2)
-**Upstream:** brief 09 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/09-platform-ops.md`) · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (observability stays deferred), [ADR-03](../../adr/03-single-vps-topology.md), [ADR-04](../../adr/04-storage-tier-budget.md), 2026-07 backlog §7 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory `D-25` (audit types)
+**Upstream:** brief 09 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/09-platform-ops.md`) · **Refs:** [ADR-01](README.md#adr-01) (observability stays deferred), [ADR-03](#adr-03) and [ADR-05](#adr-05) (folded in below, § Decision records), [ADR-04](SPEC-04-media-image-pipeline.md#adr-04), 2026-07 backlog §7 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory `D-25` (audit types)
 **Downstream consumers:** every module holding irreplaceable data (bank, journal, media, people); notify consumes `ops:backup_failed` through `notify:on_backup_failed` (P0.6, unbuilt); `ops:export_ready` is a *future* notify consumer (needs its own `notify:on_*` task + type row first)
 
 ---
@@ -371,7 +371,7 @@ freshness-check task is added (P2). *(Unbuilt as of 2026-09-30.)*
   failed") once SPEC-05 is live.
 - **Config/secret backup guidance** (`.env`, Traefik, MinIO creds) in the
   runbook — documented manual step, not automated.
-- **Postgres connection budget** — the pool-sizing note [ADR-03](../../adr/03-single-vps-topology.md)
+- **Postgres connection budget** — the pool-sizing note [ADR-03](#adr-03)
   promised (folded in from the `operations/postgres-tuning.md` stub, deleted —
   `git show ea100d8:docs/operations/postgres-tuning.md`). Two separate problems,
   not to be conflated:
@@ -379,7 +379,7 @@ freshness-check task is added (P2). *(Unbuilt as of 2026-09-30.)*
      transaction pooling (a statement prepared on one server connection may not
      exist on the next). If a transaction-mode pooler is ever put in front of
      the app, set `DefaultQueryExecMode = QueryExecModeExec` (or the simple
-     protocol) / disable the statement cache — [ADR-07](../../adr/07-tenancy-rls-model.md)
+     protocol) / disable the statement cache — [ADR-07](SPEC-01-account-identity-admin.md#adr-07)
      § "pgx ⨯ PgBouncer transaction mode".
   2. *Capacity* — `api`, `worker` and Asynq share one cluster; without a
      connection budget a transcode burst can exhaust connections and starve
@@ -498,6 +498,370 @@ P0 ≈ 3.5–4 dev-days (brief's estimate holds); P1 adds ~5.
   dump. Above ~5 GiB (the single-PutObject cap), add a multipart Put (P2).
 - **(product, non-blocking)** Takeout formats are proposed per module in P1.7 —
   lock each at that module's provider implementation.
+
+## Decision records
+
+The platform decisions this spec operates inside. They were standalone ADRs
+under `docs/adr/` until the 2026-10-01 fold; the `ADR-NN` IDs are unchanged and
+each record keeps a fixed anchor. Decision, Options considered and Trade-offs
+are verbatim (ADR-11 rule 2 — [SPEC-06](SPEC-06-docs-canonicalisation.md#adr-11));
+the fact layer was re-checked against the repo on 2026-10-01.
+
+<a id="adr-03"></a>
+### ADR-03 — Single-VPS topology and compose-profile envelope for v1
+
+**Decided:** 2026-05-24 · **Status:** accepted
+
+Deciders: kirito. Affects: [docker-compose.yml](../../../docker-compose.yml),
+[Makefile](../../../Makefile), [D-8] (observability), [D-36]/[D-39] (live +
+calls) in [feature-inventory.md](../feature-inventory.md).
+
+#### Context
+
+*As found on 2026-05-24. Two things changed after the decision and are
+reflected below: [ADR-06](SPEC-01-account-identity-admin.md#adr-06) (2026-07-05) removed
+Authentik before it ever shipped, and on 2026-08-21 Postgres moved out of
+compose onto the host cluster. The sizing analysis in this section and in
+Trade-offs rests on Authentik; it is kept as written because it is why CCX23
+was chosen.*
+
+`docker-compose.yml` then brought up Traefik + Postgres + PgBouncer + Dragonfly + MinIO + API + Worker + Frontend. The corpus implied additional services landing progressively: Authentik (OIDC), Mailpit (dev email), a 5-service observability stack ([D-8]: Loki, Promtail, Prometheus, Tempo, Grafana, GlitchTip), mediamtx (live ingest, [D-36]), LiveKit (group calls, [D-39]), and FFmpeg-bound workers under bursty load.
+
+The constraint envelope is **single VPS, ≤ $100/mo**. At reasonable VPS prices, this translates to:
+
+| Tier | Example (Hetzner) | vCPU | RAM | Disk | ~$/mo |
+| --- | --- | --- | --- | --- | --- |
+| Bare minimum | CCX13 | 2 dedicated | 8 GB | 80 GB SSD | ~$13 |
+| Recommended v1 | CCX23 | 4 dedicated | 16 GB | 160 GB SSD | ~$30 |
+| With headroom | CCX33 | 8 dedicated | 32 GB | 240 GB SSD | ~$60 |
+| Ceiling | CCX43 | 16 dedicated | 64 GB | 360 GB SSD | ~$120 |
+
+Cloudflare R2 storage is ~$0.015/GB-month with no egress fees inside Cloudflare's network. 100 GB of stored HLS = $1.50/mo; bandwidth to viewers is free at the edge. So infra budget is dominated by the VPS itself.
+
+Once Authentik (~1 GB resident), Postgres (~500 MB shared_buffers + work), Dragonfly (~256 MB allocated, scales with cache), MinIO (~150 MB), Traefik (~50 MB), API + Worker (~300 MB combined idle), Frontend Next.js SSR (~250 MB), and a transcode burst (FFmpeg can spike 1–2 GB for 1080p+ content) are stacked, the **floor is ~3.5 GB RAM idle, ~6 GB under transcode**. CCX13 (8 GB) is too tight; CCX23 (16 GB) is the right v1 tier.
+
+If the observability stack ([D-8]) is brought up, add ~1.1 GB. If LiveKit + mediamtx + coturn are brought up, add ~500 MB idle plus bursty CPU/bandwidth. CCX23 cannot host both observability AND live streaming AND a transcode burst simultaneously.
+
+<!-- adr-narrative -->
+#### Decision
+
+**v1 runs on Hetzner CCX23 (4 vCPU / 16 GB / 160 GB) or equivalent (~$30/mo). The following are explicitly *out* for v1** — and none of them exists in `docker-compose.yml`: the file has no `profiles:` key at all, so "off" means "not written", not "behind a flag":
+
+- observability (Loki/Prometheus/Tempo/Grafana/GlitchTip) — defer until traffic justifies it. v1 runs with stdout JSON logs.
+- live (mediamtx) — live streaming is Phase 10. Not v1.
+- calls (LiveKit + coturn) — voice/video is Phase 12. Not v1.
+
+**The v1 service set, as built** (`grep -E '^  [a-z][a-z0-9_-]+:$' docker-compose.yml`; as decided it also carried `authentik-server` + `authentik-worker`, which ADR-06 removed before they shipped, and `postgres` + `pgbouncer`, which moved to the host on 2026-08-21):
+
+| Service | Role | RAM (idle) | Notes |
+| --- | --- | --- | --- |
+| `traefik` | TLS terminator + reverse proxy | ~50 MB | Single edge; routes by Host + path |
+| *(host)* Postgres 18 | Database | — | **Not in compose.** Runs on the host cluster, reached at `host.docker.internal:5432`; `make up` does not start it. `postgres`/`pgbouncer` are commented out in the compose file with the rollback recipe; the `postgres_data` volume is retained. |
+| `dragonfly` | Redis-compatible cache + Asynq broker | ~256 MB | `--default_lua_flags=allow-undeclared-keys` (Asynq's Lua needs it); **no `--maxmemory` cap** (action item 1) |
+| `minio` + `minio-setup` | Dev S3 origin, bind-mounted at `./data/minio` | ~150 MB | Dev only; prod is R2 ([ADR-04](SPEC-04-media-image-pipeline.md#adr-04)) |
+| `mailpit` | Dev SMTP sink + web UI (`mail.${APP_DOMAIN}`) | ~30 MB | `SMTP_HOST=mailpit` in `.env.example`; prod points `SMTP_*` at a real relay and drops it. Shipped for Portal's own mail (password reset, notify), not for Authentik. |
+| `api` | Go HTTP server (`cmd/api`) | ~150 MB | Single replica |
+| `worker` | Asynq consumer (`cmd/worker`) | ~150 MB idle, 1–2 GB during transcode | Three servers; the heavy pool is `heavyConcurrency = 1` (a const, not an env knob) |
+| `scraper` | Python comic scraper (FastAPI + headless Chrome) | Chrome-sized | Not in the original decision; see `scraper/README.md` |
+| `frontend` | Next.js SSR | ~250 MB | Single replica |
+
+Headroom on a 16 GB VPS is ample for v1 and gives room to add observability without resizing.
+
+**Cloudflare R2** is the only off-VPS dependency (storage origin; see [ADR-04](SPEC-04-media-image-pipeline.md#adr-04)). DNS via Cloudflare is assumed (free tier sufficient).
+
+**Storage** on the VPS itself: Dragonfly snapshots and the MinIO bind-mount live on the box (Postgres data lives with the host cluster). Dev uploads land in MinIO; deployed environments upload straight to R2 (ADR-04), which is what saves the disk that would otherwise hold replicated assets.
+
+#### Options considered
+
+##### Option A — CCX13 (2 vCPU / 8 GB) at ~$13/mo
+
+| Dimension | Assessment |
+| --- | --- |
+| Cost | Best — under $20/mo |
+| Headroom | None — Authentik + Postgres + transcode burst will OOM |
+| Future-proofing | Forces a migration to a bigger VPS within months |
+
+**Pros:** Cheapest possible. Fits a hobbyist who never transcodes >720p.
+**Cons:** Authentik alone is 1 GB resident; one 1080p transcode and the kernel kills something. Not viable for the 7-step demo.
+
+##### Option B — CCX23 (4 vCPU / 16 GB) at ~$30/mo  *(chosen for v1)*
+
+| Dimension | Assessment |
+| --- | --- |
+| Cost | $30/mo leaves $70 budget for R2, DNS, future paid tiers |
+| Headroom | Comfortable idle; one concurrent transcode survives |
+| Future-proofing | Can add observability profile without resize; live streaming would force a resize |
+
+**Pros:** Right-sized for v1 + Phase 0.5 expansion. Cheap to upgrade in-place to CCX33 if needed.
+**Cons:** Cannot run multiple concurrent transcodes; `TRANSCODE_CONCURRENCY=1` is a hard floor.
+
+##### Option C — CCX33 (8 vCPU / 32 GB) at ~$60/mo
+
+| Dimension | Assessment |
+| --- | --- |
+| Cost | $60/mo + ~$20 R2/Cloudflare = ~$80; still under budget |
+| Headroom | Comfortable with observability + 2-3 concurrent transcodes |
+| Future-proofing | Runway through Phase 5 (bank) before resize |
+
+**Pros:** Plenty of room; no resize until Phase 7 (social).
+**Cons:** Pays for capacity v1 doesn't use. Start smaller; upgrade in-place when needed.
+
+##### Option D — Split across two cheap VPSes (one app, one DB/storage)
+
+| Dimension | Assessment |
+| --- | --- |
+| Cost | ~$26 (2 × CCX13) |
+| Headroom | DB on dedicated box; app on the other |
+| Operational complexity | Higher — private network, certs, monitoring across two hosts |
+
+**Pros:** Cheaper than CCX23 by ~$4.
+**Cons:** Violates the "single VPS" constraint stated upfront. Adds ops complexity for marginal savings. Skip.
+
+#### Trade-off analysis
+
+The pivotal question is the **memory pressure from Authentik plus a transcode burst**. Without Authentik, an 8 GB VPS would do. With Authentik, 16 GB is the floor. The alternative (skipping Authentik in favour of a hand-rolled local password store) trades ~1 GB of RAM for 3 days of solo-dev time writing password storage + reset flow + email templates + lockout logic; the time is more valuable than the RAM.
+
+Cloudflare R2 saving the VPS disk is the second-largest decision. Storing assets locally on the VPS means provisioning ≥240 GB for any meaningful library, which forces CCX33 minimum and a backup strategy (R2 replication or rsync). Sending uploads directly to R2 sidesteps both — see [ADR-04](SPEC-04-media-image-pipeline.md#adr-04).
+
+Disabling the observability profile for v1 is the cheapest call in this ADR. Loki + Prometheus + Tempo + Grafana + GlitchTip cost 5 services and ~1.1 GB for telemetry no one is reading in week 1. `docker compose logs api worker` covers the demo loop.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+**What became easier:**
+
+- Deploying is `make up` (`docker compose up -d`, no profile flags — there are no profiles to forget). There is no deploy script beyond the Makefile.
+- Cost ceiling is predictable: $30/mo VPS + ~$5/mo R2 + Cloudflare free tier = ~$35/mo, well under budget.
+- Mailpit in the stack from day one means every mail path (password reset, notification email) is testable end-to-end in dev.
+
+**What became harder:**
+
+- No observability — when the demo breaks at the customer's site, the only diagnostics are container logs (`docker compose logs api worker`). Still true on 2026-10-01.
+- Heavy-queue concurrency of 1 means a slow source video blocks the transcode queue. Acceptable for v1 (single demo user); becomes a real bottleneck under multi-tenant usage. The per-tenant quota wiring [D-13] has not landed.
+- Postgres on the host means `make up` does not give you a database; the host cluster must be running and reachable at `host.docker.internal:5432`, and tuning lives with the host, not in compose.
+
+**What we'll need to revisit:**
+
+- When live streaming lands, mediamtx + concurrent transcodes will push the VPS over 16 GB. Plan the CCX33 upgrade (or split to a media-dedicated VPS) ahead of that sprint.
+- The backup strategy [D-10] shipped as the `ops` module — this spec (§5 P0.2 `ops:backup_database` + retention, P0.4 restore drill, runbook [backup-restore.md](../../operations/backup-restore.md)). Dragonfly snapshots are not part of it.
+- Observability was to land with tenancy so per-tenant latency is measurable from day one [D-8]. Tenancy landed ([ADR-07](SPEC-01-account-identity-admin.md#adr-07)); observability did not.
+
+#### Action items
+
+1. [ ] Cap Dragonfly memory before it competes with FFmpeg. Shipped command is `["--logtostderr", "--default_lua_flags=allow-undeclared-keys"]` (Asynq needs the Lua flag); `--maxmemory` is still absent.
+2. [x] ~~Add `authentik-server`, `authentik-worker`, and `mailpit` services.~~ Obsolete per ADR-06: Authentik dropped. `mailpit` shipped on its own merits.
+3. [ ] Document the out-of-scope services in `docker-compose.yml` with a one-line comment pointing at this record (`docs/product/specs/SPEC-03-platform-ops.md#adr-03`). Not done; the file has no such comment.
+4. [ ] `make deploy-v1` — not done, and moot: with no `profiles:` in the file, plain `make up` cannot bring up anything it shouldn't.
+5. [x] Postgres tuning values are recorded once, in §5 P2 "Postgres connection budget" above (the `operations/postgres-tuning.md` stub that first held them was folded in there and deleted). They now apply to the host cluster; there is no PgBouncer.
+6. [ ] `docs/operations/deployment.md` — still absent. The VPS sizing rationale lives only in this record.
+7. [x] Transcode concurrency is 1 — as a compile-time constant (`heavyConcurrency` in `cmd/worker/main.go`), which is the OOM guard [SPEC-04](SPEC-04-media-image-pipeline.md) P0.1 relies on. Image processing has the env knob (`IMAGE_CONCURRENCY`, default 3, in `.env.example`). `MAX_CONCURRENT_TRANSCODES_PER_USER` does not exist; per-user limits wait on [D-13].
+
+<a id="adr-05"></a>
+### ADR-05 — Phase 0 wiring order — the critical path to a running demo
+
+**Decided:** 2026-05-24 · **Status:** accepted, executed (closed 2026-07-06)
+
+Deciders: kirito. Affects: [cmd/api/main.go](../../../backend/cmd/api/main.go),
+[cmd/worker/main.go](../../../backend/cmd/worker/main.go),
+[backend/internal/modules/account/module.go](../../../backend/internal/modules/account/module.go),
+[backend/sqlc.yaml](../../../backend/sqlc.yaml),
+[backend/db/migrations/](../../../backend/db/migrations/).
+
+#### Context
+
+*As found on 2026-05-24. This record is a sequencing plan; it ran, and every
+milestone closed by 2026-07-06. It is kept for the shape of the work — the
+migrations → sqlc → adapters → construction order still applies to every new
+module (`backend/MODULES.md` § 8). Three milestones were delivered differently
+from the text below: 0.4 (OIDC) shipped as local password auth per
+[ADR-06](SPEC-01-account-identity-admin.md#adr-06); 0.5's refresh-and-return route became the
+`SessionKeeper` client-side silent refresh with Next.js middleware gating on the
+`portal_session` cookie, and no `server-only` API client was written; 0.6's CI
+landed later and larger (see Consequences). Milestone text is left as planned.*
+
+CLAUDE.md stated the blocker plainly at the time:
+
+> `cmd/api/main.go` still has a `TODO: mount OpenAPI-generated handlers` comment and does not yet call `account.New(...)` or any module's `MountHTTP`. The account module assembles its handler internally inside `backend/internal/modules/account/module.go`; the API binary just hasn't been taught to construct it. Wiring is deferred until repository adapters land.
+
+> `internal/modules/*/repository/` directories exist but are empty. The interfaces consumed by the account module (`AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`) need adapters around the sqlc-generated code once `make sqlc` runs.
+
+Every v1 deliverable depended on closing this gap. The 2-week sprint could not afford a wrong sequence — re-doing migrations after sqlc generation has run, for instance, costs the rest of a day.
+
+[ADR-01](README.md#adr-01)'s v1 cut kept 8 Phase 0 items. This record put them in execution order.
+
+<!-- adr-narrative -->
+#### Decision
+
+**Phase 0 lands in 5 strictly-sequenced milestones over Days 1–6 of the sprint, before any feature work begins.** Each milestone ends with a concrete check the developer can run.
+
+##### Milestone 0.1 — Migration tree audit (Day 1, ~4 hours)
+
+Before sqlc runs and freezes the schema, split `0001` per [D-18]:
+
+```
+0001_platform_init.up.sql          extensions (uuid-ossp, citext, pg_trgm), common helper functions
+0002_account_users.up.sql          users (no role col; +locale +timezone +token_version +disabled_at)
+0003_account_rbac.up.sql           roles, role_parents, permissions, role_permissions, user_roles,
+                                   user_oidc_roles (per [D-26])
+0004_account_sessions.up.sql       refresh_tokens (with parent_id, replaced_by_id, revoked_at)
+0005_platform_audit.up.sql         audit_log (moved from account; per [D-25])
+```
+
+Each `up.sql` has a matching `down.sql`. The `assets` table (was in old `0001`) and any media tables are deferred — they don't ship in Milestone 0.x.
+
+**Check:** `make migrate && make migrate-down && make migrate` runs clean. Document this as the v1 acceptance for migrations.
+
+##### Milestone 0.2 — sqlc generation + repository adapters (Day 2, ~6 hours)
+
+1. Run `make sqlc` for the account block. Generated code lands in `backend/internal/modules/account/repository/`.
+2. Write adapters that implement the interfaces account already declares:
+   - `AuthSnapshotFetcher` — wraps `GetUserAuthSnapshot` (returns `id`, `token_version`, `disabled_at`).
+   - `RefreshStore` — wraps `InsertRefreshToken`, `GetRefreshToken`, `RevokeRefreshTokenChain` (recursive CTE for theft detection).
+   - `PermissionFetcher` — wraps `GetEffectivePermissions` (recursive role-ancestor walk).
+   - `EventStore` — wraps `InsertAuditEvent`. Now in `platform/audit/`, not `account/audit/` (per Milestone 0.1 / [D-25]).
+   - `UserUpserter` — wraps `UpsertOidcUser`, `SyncOidcRoles`. *(As shipped: the OIDC upsert was retired with ADR-06; local-auth queries took its place.)*
+
+Adapters are 1:1 with sqlc-generated functions; no business logic. They live in `backend/internal/modules/account/repository/adapter.go` (one file, alphabetical).
+
+**Check:** `go build ./...` succeeds across all packages. No `// TODO: adapter` comments left in account.
+
+##### Milestone 0.3 — Construct the account module in `cmd/api/main.go` (Day 3, ~6 hours)
+
+The wiring sequence in `cmd/api/main.go`:
+
+```go
+func main() {
+    cfg := config.MustLoad()                                    // env loader
+    logger := platformlog.New(cfg.Env)                          // stdout JSON in v1
+    pgPool := db.MustOpen(ctx, cfg.DatabaseURL)                 // pgxpool
+    cache := cache.NewDragonfly(cfg.RedisURL)                   // Dragonfly client
+    asynqClient := jobs.NewClient(cfg.RedisURL)                 // Asynq producer
+
+    auditLogger := audit.NewLogger(pgPool, logger)              // platform/audit (per [D-25])
+
+    accountMod, err := account.New(account.Deps{
+        DB:                 pgPool,
+        Cache:              cache,
+        Audit:              auditLogger,
+        OIDCIssuerURL:      cfg.OIDCIssuerURL,
+        OIDCClientID:       cfg.OIDCClientID,
+        OIDCClientSecret:   cfg.OIDCClientSecret,
+        OIDCRedirectURL:    cfg.OIDCRedirectURL,
+        JWTSigningKeys:     cfg.JWTSigningKeys,                 // comma-separated, rotating kid
+        CookieDomain:       cfg.CookieDomain,
+        CookieSecure:       cfg.CookieSecure,
+        BootstrapAdminSubs: cfg.BootstrapAdminOIDCSubjects,     // per [D-26]
+        OIDCGroupRoleMap:   cfg.OIDCGroupRoleMap,
+    })
+    must(err)
+
+    r := chi.NewRouter()
+    r.Use(middleware.RealIP, middleware.RequestID, middleware.Recoverer)
+    r.Use(middleware.Timeout(30 * time.Second))
+    r.Use(corsMiddleware(cfg))                                  // configured per env
+    r.Use(ratelimit.Middleware(cache))
+
+    r.Route("/api/v1", func(r chi.Router) {
+        r.Get("/healthz", healthz(pgPool, cache))
+        accountMod.MountHTTP(r)                                 // mounts /auth/*, /me/*
+        // v1 stops here. Future modules append their MountHTTP under r.
+    })
+
+    server := &http.Server{Addr: ":8080", Handler: r}
+    logger.Info("api listening", "addr", server.Addr)
+    must(server.ListenAndServe())
+}
+```
+
+*(Planning sketch. As shipped the OIDC `Deps` fields are gone (ADR-06), and every module under `internal/modules/` — `ls -d backend/internal/modules/*/` — is constructed and mounted under `/api/v1` the same way.)*
+
+The same shape applies to `cmd/worker/main.go` with each module's `RegisterTasks(mux)`. (As shipped, account has no `RegisterTasks` — it enqueues into `notify:*` instead — and media splits into `RegisterHeavyTasks` / `RegisterImageTasks` / `RegisterLightTasks`, one per Asynq server; see `/CLAUDE.md` § Job queue.)
+
+**Check:** `make up && go run ./cmd/api` (or `make dev`) starts. `curl http://localhost:8080/api/v1/healthz` returns 200 with `{"status":"ok","db":true,"cache":true}`.
+
+##### Milestone 0.4 — OIDC end-to-end (Day 4, ~6 hours)
+
+With Authentik running in compose (per [ADR-03](#adr-03)), the OIDC handshake from `diagrams.md` §5 must work:
+
+1. Configure Authentik provider for Portal: client ID + secret, redirect URI `https://${APP_DOMAIN}/api/v1/auth/callback`, allow `openid profile email groups` scopes.
+2. Set `OIDC_GROUP_ROLE_MAP=portal-admins:admin` and create a `portal-admins` group in Authentik.
+3. Create your own user in Authentik, add to `portal-admins`, set `BOOTSTRAP_ADMIN_OIDC_SUBJECTS=<your-sub>`.
+4. Browser flow: visit `${APP_DOMAIN}` → frontend redirects to `/api/v1/auth/login` → 302 to Authentik → log in → callback → `users` row created, `user_oidc_roles` populated, access + refresh cookies set → redirect to `/`.
+5. `curl -b cookies.txt https://${APP_DOMAIN}/api/v1/me` returns the user payload.
+6. `curl -b cookies.txt -X POST https://${APP_DOMAIN}/api/v1/auth/logout-all` bumps `token_version`; the next `/me` returns 401.
+
+**Check:** above 6 steps work without manual SQL.
+
+##### Milestone 0.5 — Frontend server-only API client + RSC auth handoff (Day 5–6, ~10 hours)
+
+Per [D-34]:
+
+1. Create `frontend/src/lib/api-server.ts` with `import "server-only"`. Wraps `fetch` to read `cookies()` and inject `Cookie:` on outgoing API calls.
+2. Create `frontend/src/lib/api-client.ts` (no server-only guard) for client-component fetches; uses `credentials: 'include'`.
+3. Create `frontend/src/app/auth/refresh-and-return/route.ts` — receives `return_to=<path>` query param, calls `/api/v1/auth/refresh`, redirects to `return_to`.
+4. Create a `<Sign in>` button on the index page that links to `/api/v1/auth/login`.
+5. Create `/account/page.tsx` (RSC) that fetches `/api/v1/me` and renders the user. On 401, throws `redirect('/auth/refresh-and-return?return_to=/account')`.
+
+**Check:** unauth user clicks Sign in, lands at Authentik, logs in, returns to `/account`, sees their email. Refreshing after access token expiry triggers the refresh-and-return flow once and lands back on `/account`.
+
+##### Milestone 0.6 — Reserve naming + minimal CI (parallel, ~3 hours)
+
+These happen alongside but don't gate the milestones above:
+
+- Add `notify:*` Asynq prefix reservation note to `backend/MODULES.md` §5.2 (per [D-1]).
+- Add a minimal `.github/workflows/ci.yml` with just two jobs: `sqlc-drift` (`make sqlc && git diff --exit-code`) and `openapi-drift` (`make openapi && git diff --exit-code`). Skip lint/test/security for v1. Drift detection alone catches the most expensive class of bugs.
+- Add `# v1 scope: ADR-01` comment header to `cmd/api/main.go`.
+
+#### Options considered
+
+##### Option A — sqlc first, then migrations  *(rejected)*
+
+Generates code against an unaudited schema. Splitting migrations afterwards forces a regeneration that may rename functions/types, breaking adapters mid-sprint. Order matters — migrations are the contract sqlc reads.
+
+##### Option B — Construct modules before sqlc adapters exist  *(rejected)*
+
+The account module's `New(Deps)` constructor requires the adapters as inputs. Stubbing them with no-ops to get the binary running is tempting but creates a "construct then re-wire" double-pass. Worse, it hides the adapter shape bugs (interface mismatches between what sqlc generates and what the account module wants) behind a green build.
+
+##### Option C — Skip Authentik in v1, hand-roll password auth  *(rejected)*
+
+Saves ~1 GB RAM and 1 day of Authentik config. Costs 3 days of password storage + reset flow + email templates + lockout logic + recovery codes. Net loss; auth surface is exactly where security regressions cost the most. Authentik in compose is the right call for v1 even though it's heavy.
+
+##### Option D — Defer the migration split; rename inside one mega-migration  *(rejected)*
+
+Tempting because there's no prod data yet. Costs nothing now, but introduces a "this migration is actually three migrations" cognitive tax forever. The split is cheap *only* before sqlc runs against it. After, it's expensive. Pay the cheap version. [D-18]
+
+#### Trade-off analysis
+
+The order milestones 0.1 → 0.2 → 0.3 is non-negotiable: each depends on the previous (migrations → sqlc → adapters → module construction). Milestones 0.4 (OIDC) and 0.5 (frontend RSC auth) are parallel-ish — OIDC ends at "can curl /me with cookies", frontend starts at "browser does what curl just did". You could swap the order, but doing OIDC first gives you a working backend before touching the frontend, which is easier to debug because every problem is in one place at a time.
+
+Milestone 0.6 (naming + CI) is small enough to drop in any gap, but doing it before Milestone 0.4 means the drift checks catch any sqlc or openapi regressions caused by 0.1–0.3 before they compound.
+
+Total budget for Phase 0: ~35 hours, ~Days 1–6 of the sprint. That leaves Days 7–10 for the Phase 2 vertical slice (upload → transcode → playback), Days 11–12 for bugfixes + the deploy script, Days 13–14 for buffer.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+What happened (checked 2026-10-01):
+
+- The "wire it" panic ended on schedule. Every module since has attached to `r.Route("/api/v1", ...)` exactly as account did; `cmd/api/main.go` mounts every module on disk and the `TODO: mount` comment is gone.
+- Migrations landed as planned for `0001_platform_init` … `0005_platform_audit`, then kept going: `ls backend/db/migrations | wc -l` (90 files, `0001`–`0045` at last check). Media tables shipped in `0007`, tenancy in `0018`–`0020`, and so on — the `<seq>_<module>_<desc>` naming from Milestone 0.1 held throughout.
+- `repository/` directories are populated in every module: the committed `db.go` / `models.go` / `querier.go` and the hand-written `adapter.go`, plus the per-query `*.sql.go` that `make sqlc` regenerates and `.gitignore` excludes. An empty one is the signal a module is inert.
+- The 7-step demo from ADR-01 ran on 2026-07-06 and is the regression baseline.
+- **CI** landed later and larger than Milestone 0.6's two drift jobs, and different: `backend` (sqlc generate → migrate a throwaway Postgres → build → vet → test `-race`), `lint` (depguard module boundaries), `openapi` (parse + regenerate-and-diff, [ADR-10](README.md#adr-10)), `frontend` (typecheck + build), `link-check` ([ADR-11](SPEC-06-docs-canonicalisation.md#adr-11)). There is **no `sqlc-drift` job and never was** — sqlc output is not committed, so there is nothing to diff; the `backend` job regenerates it and builds.
+- The Authentik wildcard never had to be played: ADR-06 removed it before Day 4.
+- Milestone 0.5's `frontend/src/lib/api-server.ts` (`server-only`) was never written; the frontend fetches from client components through TanStack Query (`frontend/CLAUDE.md`, [D-32]/[D-33]) and `SessionKeeper` keeps the session alive ([D-34]).
+- Revisited: the Zustand/TanStack/RHF boundary doc ([D-32]) and RSC decision tree ([D-33]) landed as [`frontend/CLAUDE.md`](../../../frontend/CLAUDE.md); of the CI jobs Milestone 0.6 skipped, lint and test landed, security scan and multi-arch build did not.
+
+#### Action items
+
+All executed; the plan is closed. Milestone tracking ran in
+`MILESTONE_CHECKS.md` (deleted in `f11cf3f` once the milestones closed — status now lives in code, see
+`/CLAUDE.md` § Current status), together with the recorded milestone-check
+commands. `.env.example` was populated on Day 0 (its `OIDC_*` /
+`BOOTSTRAP_ADMIN_OIDC_SUBJECTS` entries were dropped with ADR-06;
+`BOOTSTRAP_SUPERADMIN_EMAIL` took the bootstrap role). The Day 4 Authentik
+afternoon became moot with ADR-06. The full 7-step demo ran at the end of
+Milestone 0.5 (2026-07-06).
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 

@@ -11,10 +11,15 @@
 # claim that the thing still exists.
 #
 # Skipped: template-main/ (not ours); docs/product/analysis/ (immutable audits);
-# the ADR that retired the names; and, inside every ADR, the Decision / Options /
-# Trade-offs layers (kept verbatim by ADR-11 rule 2 — history may name what it
-# knew). An ADR's Context, Consequences and Action items — its fact layer — are
-# checked like any other document.
+# and every span between a line that is exactly `<!-- adr-narrative -->` and one
+# that is exactly `<!-- /adr-narrative -->` (a marker quoted mid-line in prose
+# does not count).
+# Decision records (ADR-NN) live inside the specs since 2026-10-01; their
+# Decision / Options / Trade-offs layers are kept verbatim by ADR-11 rule 2 —
+# history may name what it knew — and are wrapped in those markers (ADR-11, the
+# record that retired the names, is wrapped whole). A record's Context,
+# Consequences and Action items — its fact layer — are checked like any other
+# text.
 set -u
 
 NAMES='MILESTONE_CHECKS\.md|docs/archive/|vi-2026-07|doc/en/|doc/vi/|archivetech(-backend)?\.md|authoration\.md|MIGRATION\.md|delivery-plan\.md|missing-features\.md|gap-audit-2026-07\.md|docker-compose\.prod\.yml|pgbouncer:6432'
@@ -23,16 +28,12 @@ ALLOW='deleted|then `|was `|formerly|renamed|never existed|no such file|does not
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 git ls-files '*.md' \
-  | grep -v -e '^template-main/' -e '^docs/product/analysis/' -e '^docs/adr/11-' \
+  | grep -v -e '^template-main/' -e '^docs/product/analysis/' \
   | while IFS= read -r file; do
-      case "$file" in
-        docs/adr/*) skip_narrative=1 ;;
-        *)          skip_narrative=0 ;;
-      esac
-      awk -v skip="$skip_narrative" '
-        skip && /^## Decision/     { off=1 }
-        skip && /^## Consequences/ { off=0 }
+      awk '
+        /^[[:space:]]*<!-- adr-narrative -->[[:space:]]*\r?$/   { off=1 }
         !off { print NR": "$0 }
+        /^[[:space:]]*<!-- \/adr-narrative -->[[:space:]]*\r?$/ { off=0 }
       ' "$file" | grep -E "$NAMES" | grep -viE "$ALLOW" | while IFS= read -r hit; do
         printf '%s:%s\n' "$file" "$hit"
         echo x >>"$tmp"

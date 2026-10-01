@@ -6,7 +6,7 @@ Companion to [feature.md](../product/feature-inventory.md). Where `feature.md` d
 
 Read [§16 Frontend](../product/feature-inventory.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34] — superseded by client-side SessionKeeper, see the §4 banner — and [D-7]); this doc expands them with concrete patterns and a build-out roadmap.
 
-> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (tracked at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code — `/CLAUDE.md` § Current status). Per [ADR-06](../adr/06-local-auth-model.md) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../adr/01-v1-scope-cut.md)).
+> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (tracked at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code — `/CLAUDE.md` § Current status). Per [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../product/specs/README.md#adr-01)).
 
 ---
 
@@ -135,7 +135,7 @@ The full route tree in §2.1 (`/t/{tenant}/(app)/...`, marketing, admin, all ver
 Two reconciliations with later sections:
 
 - **Components vs. templates.** §7 describes a cross-version primitives/feature library under `src/components/` (Radix + Tailwind). That layer is for shared, version-agnostic building blocks; `src/templates/v{N}/` composes them (plus version-specific markup) into the shells and views a given design version ships. Primitives go in `components/`, version-specific composition goes in `templates/`.
-- **Register page.** Implemented and wired per [ADR-06](../adr/06-local-auth-model.md) local auth: `AuthForm` posts email + password (+ `remember`) to `POST /api/v1/auth/login`; `RegisterView` posts `POST /api/v1/auth/register` (201, no session, redirects to `/login`). §6.1's old "Authentik handles" entry is retired — there is ONLY local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
+- **Register page.** Implemented and wired per [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) local auth: `AuthForm` posts email + password (+ `remember`) to `POST /api/v1/auth/login`; `RegisterView` posts `POST /api/v1/auth/register` (201, no session, redirects to `/login`). §6.1's old "Authentik handles" entry is retired — there is ONLY local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
 
 ---
 
@@ -439,7 +439,7 @@ const { data } = useMovies(filters);
 
 ## 4. Auth handoff ([D-34])
 
-> **Superseded (2026-07-05).** OIDC is gone ([ADR-06](../adr/06-local-auth-model.md)) and the refresh-and-return route below was replaced by client-side `SessionKeeper` (`templates/v1/partials/SessionKeeper.tsx` — 4-min interval + focus refresh, `localStorage` multi-tab throttle, hard redirect to `/login` on refresh failure). §4.2–4.4 are kept as design history; the server-only API client remains future work. §4.1 is current fact.
+> **Superseded (2026-07-05).** OIDC is gone ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06)) and the refresh-and-return route below was replaced by client-side `SessionKeeper` (`templates/v1/partials/SessionKeeper.tsx` — 4-min interval + focus refresh, `localStorage` multi-tab throttle, hard redirect to `/login` on refresh failure). §4.2–4.4 are kept as design history; the server-only API client remains future work. §4.1 is current fact.
 
 ### 4.1 Cookie scheme
 
@@ -581,7 +581,7 @@ export function handleProblem(problem: Problem): void {
 }
 ```
 
-The "Manage MFA" button in account-security settings opens Portal-native MFA enrollment (later phase — [ADR-06](../adr/06-local-auth-model.md) §"New responsibilities"). [D-28] still governs the step-up requirement, but its Authentik-dashboard deep-link is superseded — Authentik is fully removed.
+The "Manage MFA" button in account-security settings opens Portal-native MFA enrollment (later phase — [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) §"New responsibilities"). [D-28] still governs the step-up requirement, but its Authentik-dashboard deep-link is superseded — Authentik is fully removed.
 
 ---
 
@@ -704,7 +704,7 @@ Mapping every template asset to a Next.js page. Status:
 |---|---|---|---|
 | `portal/resources/views/v1/views/home/home.blade.php` | `/t/{tenant}/(app)/page.tsx` | Phase 0 stub | A |
 | `portal/resources/views/v1/public/login.blade.php` | `/login` via `app/(public)/login/page.tsx` | Phase 0 — done | A |
-| `portal/resources/views/v1/public/register.blade.php` | `/register` via `app/(public)/register/page.tsx` ([ADR-06](../adr/06-local-auth-model.md) local auth) | Phase 0 — done | A |
+| `portal/resources/views/v1/public/register.blade.php` | `/register` via `app/(public)/register/page.tsx` ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) local auth) | Phase 0 — done | A |
 | `portal/resources/views/v1/views/library/...` | `/t/{tenant}/(app)/(stories)/library/page.tsx` | Phase 4 | A |
 | `portal/resources/views/v1/components/menu/sidebarLeft.blade.php` | Component `<LeftSidebar />` | Phase 0 | A |
 | `portal/resources/views/v1/components/menu/sidebarRight.blade.php` | Component `<RightSidebar />` | Phase 0 | A |
@@ -900,7 +900,7 @@ What to take, what to leave.
 
 - Avatars / placeholders from `template-main/social/img/` — usable as dev fixtures; replace with real CDN content in prod.
 - Logo: needs redesign — current `template-main/social/img/logo.png` is "Olympus" branded.
-- **Storage origin (decided):** media bytes live in **MinIO bound to the local folder `./data/minio` in dev**, and **Cloudflare R2 in prod**. Both speak S3, so the app reads `S3_*` for either — going live is an `.env` change, not a code change (see [architecture/04-storage-tier-budget.md](../adr/04-storage-tier-budget.md)). The frontend builds media URLs from the configured S3/R2 endpoint; image optimisation in prod via Cloudflare Image Resizing on R2.
+- **Storage origin (decided):** media bytes live in **MinIO bound to the local folder `./data/minio` in dev**, and **Cloudflare R2 in prod**. Both speak S3, so the app reads `S3_*` for either — going live is an `.env` change, not a code change (see [architecture/04-storage-tier-budget.md](../product/specs/SPEC-04-media-image-pipeline.md#adr-04)). The frontend builds media URLs from the configured S3/R2 endpoint; image optimisation in prod via Cloudflare Image Resizing on R2.
 
 ### 9.4 Don't auto-port
 
@@ -916,7 +916,7 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 - **Mutation client** (`api-client.ts`) — DONE (working fetch wrapper); **server-only API client** (`api-server.ts`, [D-34]) remains future work (see §4 banner).
 - **Silent session refresh** — DONE via `SessionKeeper` (supersedes the [D-34] refresh-and-return route).
 - **Generated TS types** from OpenAPI → `frontend/src/lib/types.gen.ts` — pending (file does not exist yet; needs `make openapi`).
-- **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](../adr/06-local-auth-model.md) replaced the original OIDC deliverable).
+- **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) replaced the original OIDC deliverable).
 - **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending; includes the device-zone sync and settings override in §5.4.
 - **`frontend/CLAUDE.md` conventions doc** ([D-32, D-33]) with anti-pattern examples — pending (does not exist yet).
 - **Error pages** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled — pending.
