@@ -18,10 +18,12 @@
 
 > **Status (2026-07-06):** The identity layer (§2 — local password auth, tokens, two revocation
 > channels, audit, login brute-force lockout) is **BUILT** and shipping in the closed v1 demo loop
-> (see [ADR-06](../adr/06-local-auth-model.md); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). Everything
-> tenant/policy-shaped — §1 L2 tenant layer, §2.4 TOTP, §3 tenancy+RLS, §4 policy-bundle
-> authorization, §5.4 notifications, §6 steps 8–9, §9 migrations beyond 0007 — is **POST-V1 DESIGN**,
-> not current behavior. For v1, role-hierarchy RBAC is canonical per [ADR-02](../adr/02-rbac-model-reconciliation.md).
+> (see [ADR-06](../adr/06-local-auth-model.md); tracked then in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`). The
+> L2 tenant layer is **BUILT** too: one personal org per user, `RequireTenant`, and `FORCE` RLS enforced
+> under `portal_app` ([ADR-07](../adr/07-tenancy-rls-model.md), §3). Still **POST-V1 DESIGN**, not current
+> behaviour: §2.4 TOTP, §3.5–3.6 tenant switching and cross-tenant administration, §4 policy-bundle
+> authorization, §6 step 9, and the un-numbered rows of §9. For v1, role-hierarchy RBAC is canonical per
+> [ADR-02](../adr/02-rbac-model-reconciliation.md).
 
 ---
 
@@ -42,7 +44,7 @@ The settled answers to the open questions raised in `access-policies.md §9` (th
 
 ## 1. Three-layer security architecture
 
-Every request traverses three independently-enforced layers. Each layer answers exactly one question; they do not overlap. *(Target architecture — the shipped v1 wires L1 + role-hierarchy L3 only; the L2 tenant layer and RLS are post-v1. See the status banner above.)*
+Every request traverses three independently-enforced layers. Each layer answers exactly one question; they do not overlap. *(All three layers are wired. L2 resolves only the caller's personal org today, and L3 is role-hierarchy RBAC that is global rather than per-tenant — so the "effective perms differ per tenant" point below is the target, not current behaviour. See §3 and the status banner.)*
 
 ```text
                 ┌──────────────────────────────────────┐
@@ -169,122 +171,124 @@ The middleware emits a generic `401` (`about:blank`) for every authn failure —
 
 ## 3. Tenant layer (data segregation)
 
-### 3.1 Tenant model
+The decision is [ADR-07](../adr/07-tenancy-rls-model.md) (its "as built" section records what landed and what is deferred); this section describes the mechanism as it runs. Subsections marked *[TARGET]* are the post-v1 design and not current behaviour.
 
-A **Tenant** is the top-level data isolation boundary. In Portal, a Tenant ≡ an `organization`. Companies, hospitals, studios, archives — each gets one organization, with hard data segregation.
+### 3.1 Tenant model  *([BUILT] — one personal org per user)*
+
+A **Tenant** is a row in `organizations`. `kind ∈ {'org', 'household', 'personal'}` exists from day one [D-24], but only `personal` is in use: every user owns exactly one personal org (unique partial index `organizations_personal_owner_idx`), backfilled for pre-existing users by `0018_tenant_core` and otherwise created lazily on the user's first tenant-scoped request (`tenantapi.GetOrCreatePersonalOrg`, which runs the `CreatePersonalOrg` query; registration itself creates no org).
 
 ```text
                  ┌──────────────────┐
                  │   Organization   │  ◄── Tenant boundary. RLS enforces.
+                 │ kind = personal  │      (org / household: schema-ready, unused)
                  └────────┬─────────┘
-        sub-orgs (opt.)   │
+                          │ organization_memberships (org_id, user_id, role)
                           ▼
                  ┌──────────────────┐
-                 │ Sub-organization │  hierarchical (parent_org_id), same tenant
-                 └────────┬─────────┘
-                          ▼
-                 ┌──────────────────┐
-                 │   User Group     │  see access-policies.md §3.1
-                 └────────┬─────────┘
-                          ▼
-                 ┌──────────────────┐
-                 │      User        │
+                 │      User        │  global identity (users)
                  └──────────────────┘
 ```
 
-A user can be a member of multiple organizations (e.g., a freelance auditor working with several clinics). Each membership has its own role/policy assignments. The active organization for a session is part of the JWT and chosen at login or via explicit switch.
+- **Active tenant = the caller's personal org, always.** There is no `/t/{tenant}` URL prefix, no tenant claim in the JWT and no tenant switching (ADR-07 as built; `GET /api/v1/me/organizations` lists memberships, nothing else consumes them).
+- `organization_memberships.role` is a free-text label (`owner` by default). It is **not** RBAC: roles and permissions stay global (`user_roles` has no `org_id`), so an RBAC grant applies in every tenant.
+- *[TARGET]* Sub-organizations (`parent_org_id`), user groups (see [deferred/access-policies.md](deferred/access-policies.md) §3.1), households, and choosing the active org at login are not built.
 
-### 3.2 Schema for tenancy
+### 3.2 Schema for tenancy  *([BUILT] — `0018_tenant_core`)*
 
 ```sql
 CREATE TABLE organizations (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code            TEXT UNIQUE NOT NULL,           -- short slug e.g. 'acme-clinic'
-    name            TEXT NOT NULL,
-    parent_org_id   UUID REFERENCES organizations(id) ON DELETE RESTRICT,
-    tier            TEXT NOT NULL DEFAULT 'standard', -- 'standard' | 'enterprise'
-    is_active       BOOLEAN NOT NULL DEFAULT true,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    kind       TEXT NOT NULL CHECK (kind IN ('org', 'household', 'personal')),
+    slug       TEXT NOT NULL UNIQUE,              -- 'personal-<user id>' for personal orgs
+    name       TEXT NOT NULL,
+    owner_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE UNIQUE INDEX organizations_personal_owner_idx
+    ON organizations (owner_id) WHERE kind = 'personal';
 
 CREATE TABLE organization_memberships (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    organization_id   UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    user_id           UUID NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
-    is_default        BOOLEAN NOT NULL DEFAULT false, -- chosen at login if no explicit
-    invited_by        UUID REFERENCES users(id) ON DELETE SET NULL,
-    joined_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (organization_id, user_id)
+    org_id     UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role       TEXT NOT NULL DEFAULT 'owner',
+    granted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (org_id, user_id)
 );
-CREATE INDEX organization_memberships_user_idx ON organization_memberships(user_id);
 ```
+
+Both tables are the tenancy **control plane** and are global (no RLS), like `users`.
 
 ### 3.3 `tenant_id` propagation
 
-Every tenant-scoped table carries `organization_id` and a corresponding RLS policy.
-
-| Table | `organization_id` column | RLS enforced |
-|-------|-------------------------|--------------|
-| `user_groups` | YES | YES |
-| `user_group_members` | inherited via group | YES |
-| `policies` | YES (system-wide policies use NULL — special case) | YES |
-| `group_policy_attachments` | inherited via group | YES |
-| `user_policy_attachments` | YES (denormalized for RLS) | YES |
-| `assets` | YES | YES |
-| `movies`, `music`, `stories` | YES | YES |
-| `audit_log` | YES (NULL for system events) | YES |
-| `users` | NO — global identity | n/a (read scoped via membership join) |
-| `refresh_tokens` | NO — bound to user, not tenant | n/a |
-| `organizations`, `organization_memberships` | n/a | special policies |
-
-**Why `users` is global**: a person is a person across orgs. Their email identifies them once. Their access in a given org is mediated by `organization_memberships`. Denormalising `organization_id` onto users would force unique users per org — wrong shape.
-
-### 3.4 PostgreSQL RLS — the enforcement mechanism
-
-For every tenant-scoped table:
+Every tenant-scoped table carries
 
 ```sql
-ALTER TABLE assets ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY assets_tenant_isolation ON assets
-    USING (organization_id = current_setting('app.current_tenant')::uuid);
-
-CREATE POLICY assets_tenant_insert ON assets
-    FOR INSERT
-    WITH CHECK (organization_id = current_setting('app.current_tenant')::uuid);
+tenant_id UUID NOT NULL DEFAULT current_setting('app.current_tenant')::uuid REFERENCES organizations(id)
 ```
 
-Application middleware sets `app.current_tenant` per request, **before** any query runs:
+plus `<table>_tenant_idx`. `0020_platform_rls_enable` added it to the 17 tables that existed then; every later migration that creates a domain table ships the column and its policy itself (the binding convention is the Tenancy bullet of the [specs README](../product/specs/README.md)). The one-argument `current_setting` in the DEFAULT is deliberate: an INSERT with no tenant context **fails** rather than landing somewhere arbitrary.
 
-```go
-// pseudocode in tenant middleware
-conn.Exec(ctx, "SELECT set_config('app.current_tenant', $1, true)", tenantID)
+| Class | Tables (verify: `grep -ho 'ALTER TABLE [a-z_]* FORCE ROW LEVEL SECURITY' backend/db/migrations/*.up.sql \| sort -u`) | Rule |
+|-------|------|------|
+| Tenant-scoped, `FORCE` RLS | media (`assets`, `media_asset_variants`, `media_playback_progress`), `notifications`, journal (`journal_entries`, `stream_items`), bank (`bank_*`), comic (`comics`, `comic_*`), `movies`, music (`music_*`), story (`stories`, `story_chapters`), people (`people_*`) | `tenant_isolation`: `USING`/`WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid)` |
+| Tenant-scoped + shared seed | `bank_categories` | `tenant_id` nullable; reads own tenant **or** `tenant_id IS NULL` (global seed taxonomy), writes own tenant only |
+| Tenant + per-user ACL | `assets`, `media_asset_variants` (`0032_media_asset_acl`) | inside the tenant: readable if `public`, or yours, or you administer the tenant |
+| Per-user RLS (cross-tenant by nature) | `social_connections` (`0037`) | a connection spans two accounts' personal orgs, so the policy keys on `app.current_user` ∈ {requester, addressee}, not on a tenant |
+| Global, no RLS | `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `refresh_tokens`, `password_reset_tokens`, `audit_log`, `organizations`, `organization_memberships`, `notification_preferences`, `web_push_subscriptions`, `layout_menu_items`, `layout_widgets`, `ops_backup_runs` | identity, RBAC, control plane, per-user settings keyed by `user_id`, instance-wide shell layout, system bookkeeping |
+
+**Why `users` is global**: a person is a person across orgs. Their email identifies them once; their presence in an org is a membership row. Denormalising a tenant onto `users` would force one account per org — the wrong shape.
+
+### 3.4 PostgreSQL RLS — the enforcement mechanism  *([BUILT])*
+
+```sql
+ALTER TABLE movies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE movies FORCE ROW LEVEL SECURITY;      -- applies to the table owner too
+CREATE POLICY tenant_isolation ON movies
+    USING      (tenant_id = current_setting('app.current_tenant')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
 ```
 
-`set_config(..., true)` makes the setting transaction-local — it does not leak across pooled connections. Combined with **PgBouncer in transaction pooling mode**, this is safe.
+**Three session GUCs** carry the actor, all set transaction-locally by `platform/db` `BeginScope` (`set_config(..., true)`, discarded at COMMIT/ROLLBACK — safe under transaction pooling, though there is no PgBouncer today):
 
-#### Bypass for system operations
+| GUC | Meaning |
+|-----|---------|
+| `app.current_tenant` | the active org (`tenant_isolation`, the column DEFAULT) |
+| `app.current_user` | the acting user; empty for a backend job (`0032` media ACL, `0037` social) |
+| `app.tenant_admin` | `on` for the tenant's owner and for trusted backend scopes (the worker processes every member's media) |
 
-A small set of background jobs (cross-tenant audit aggregation, billing rollups) need to read across tenants. They use a dedicated role `portal_system` for which `BYPASSRLS` is set, AND those operations live in a separate Go binary (`cmd/sysjobs/`) that never serves user traffic. **The API server never connects as this role.**
+The `0032`/`0037` policies read the GUCs with the two-argument `current_setting(..., true)` wrapped in `NULLIF`, so an unset value matches nothing (public rows only) instead of raising.
 
-### 3.5 Tenant switching
+**Request path.** `RequireAuth → RequireTenant → handler` ([tenant/middleware/require_tenant.go](../../backend/internal/modules/tenant/middleware/require_tenant.go)): `RequireTenant` resolves the caller's personal org, opens `BeginScope{OrgID, UserID, Admin: owner == caller}` and runs the whole handler in that transaction. A 5xx or panic rolls back. For `POST`/`PUT`/`PATCH`/`DELETE` the response is buffered until COMMIT succeeds, so a failed commit becomes a 500 instead of a lost 201. `OptionalTenant` is the same for routes that also serve anonymous callers (media variants/HLS): an anonymous request runs with no transaction and so sees public rows only.
 
-A user with multiple memberships chooses one at login (default-selected if `is_default=true`). To switch:
+**Worker path.** A worker handler opens the payload owner's scope (`runInUserTenant` in `cmd/worker`) before any query; periodic sweeps iterate tenants with `forEachTenant` (one committed scope per tenant). Known gap: the comic, movie, music and story `media:asset_deleted` consumers query the bare pool and are refused under `portal_app` — [backlog](../product/backlog.md) #42.
+
+**Roles.** Enforcement depends on the connecting role ([operations/rls-cutover.md](../operations/rls-cutover.md)):
+
+- `portal_app` (`0019`, `NOSUPERUSER NOBYPASSRLS`) — the API and worker `DATABASE_URL`; RLS applies.
+- `portal` (superuser/owner) — `MIGRATE_DATABASE_URL` and `BACKUP_DATABASE_URL` only; `pg_dump` must see every tenant.
+- `portal_sys` (`0019`, `BYPASSRLS`) — reserved for the planned `cmd/sysjobs` binary; nothing connects as it today, and depguard already restricts `internal/sysrepository` to `cmd/sysjobs`. **The API server never connects as a bypass role.**
+
+**Proof.** `go test ./internal/platform/db -run TestRLS` (with `RLS_TEST_ADMIN_URL` / `RLS_TEST_APP_URL`) proves cross-tenant read/write/relocate/delete isolation on a representative table (`comics`), the no-scope write failure and the shared-seed exception, and `TestRLSEveryProtectedTableHasAPolicyAndForce` asserts that every RLS-enabled table is `FORCE`d and has a policy (`rls_media_test.go` and `rls_social_test.go` cover the per-user policies); the `backend` CI job runs it against a throwaway `postgres:18` and fails, rather than skips, when unpointed under `CI=true`.
+
+### 3.5 Tenant switching  *([TARGET] — not built)*
+
+With one personal org per user there is nothing to switch to. The design, kept for when orgs/households land:
 
 ```text
 POST /auth/switch-tenant
   body: { "organization_id": "..." }
 ```
 
-Server validates membership, **requires fresh TOTP if the user has it enrolled**, mints a new access token with the new `org_id` claim, and bumps `token_version` for the *previous* token (so it cannot be used to access the old tenant after switching).
+The server validates membership, requires a fresh TOTP if the user has one enrolled (§2.4, not built), mints a new access token carrying the new org, and bumps `token_version` so the previous token cannot reach the old tenant.
 
-### 3.6 Cross-tenant administrators
+### 3.6 Cross-tenant administrators  *([TARGET] — not built)*
 
-The `superadmin` role is *system-level*, not tenant-level. It exists in a virtual "system organization" (`organization_id = NULL` for matching system policies). Concretely:
+Today `superadmin` is a global RBAC role with no cross-tenant data access: a superadmin's requests are scoped to their own personal org like anyone else's, and the admin console (`/api/v1/admin/*`, [SPEC-13](../product/specs/SPEC-13-account-identity-admin.md)) reads only global tables. Bootstrapping a superadmin is the first registrant or `BOOTSTRAP_SUPERADMIN_EMAIL` (SPEC-13 P0.1/P0.12) — there is no `cmd/admin` CLI. The target design:
 
-- A user with `superadmin` can switch into any organization via `POST /auth/switch-tenant` without being a member, **with TOTP step-up always required**.
-- Their session is flagged `system_impersonation = true`; every action is audited with both their identity and the impersonated tenant.
-- Tenant admins can never grant themselves `superadmin`. Bootstrapping requires `cmd/admin grant-superadmin` (CLI), which itself requires a runtime secret unavailable to the API process.
+- A `superadmin` may enter any organization via `POST /auth/switch-tenant` without a membership, always behind TOTP step-up.
+- Such a session is flagged `system_impersonation = true`; every action is audited with both the operator and the impersonated tenant.
+- Tenant admins can never grant themselves `superadmin`.
 
 ---
 
@@ -472,7 +476,7 @@ In order — applied to every authenticated route:
 
 The v1 pipeline in production is steps 1–5, 7, 8 and 10; rate limiting (6) is built but unmounted, and step-up (9) lands with the TOTP phase. The order above is `cmd/api/main.go`'s `r.Use` order.
 
-Public routes (e.g. `GET /movies` for guests) skip 7–10. A handful of "tenant-scoped but public-readable" routes use `OptionalAuth` + `RequireTenant`.
+Public routes (`/auth/login`, `/auth/register`, `/auth/refresh`, health) skip 7–10; every catalogue route (`/movies`, `/tracks`, `/comics`, …) requires authentication. The only "tenant-scoped but public-readable" routes are media's variant/HLS proxies, which use `OptionalAuth` + `OptionalTenant` (§3.4): an anonymous caller runs unscoped and sees `public` assets only.
 
 ---
 
@@ -492,9 +496,9 @@ POST   /auth/totp/verify               verify code; activate enrolment OR perfor
 POST   /auth/totp/recovery-codes/regen regenerate recovery codes  [step-up]
 DELETE /auth/totp                      disenrol  [step-up + recovery-code]
 
-# Tenant  [PLANNED]
-GET    /me/organizations               list orgs the user belongs to
-POST   /auth/switch-tenant             switch active org; mints new tokens  [step-up if elevated]
+# Tenant
+GET    /me/organizations               list orgs the user belongs to  [BUILT — today only the personal org]
+POST   /auth/switch-tenant             switch active org; mints new tokens  [step-up if elevated]  [TARGET — §3.5]
 
 # Identity  [BUILT]
 GET    /auth/me                        current user + roles + org context (+ timezone, timezone_manual — PLANNED)
@@ -529,14 +533,14 @@ What we explicitly defend against, and how.
 | Session hijack via XSS | `HttpOnly` cookies; CSP enforced server-side. Never expose tokens to JS. |
 | CSRF | `SameSite=Strict` cookies on all session cookies. Login is a same-origin `POST` (no cross-site redirect), so no `Lax` relaxation is needed. |
 | Password brute force | Rate-limit + temporary lockout on `/auth/login` per IP and per account; generic `401` (no user enumeration); Argon2id (memory-hard) makes offline cracking expensive. |
-| Cross-tenant data leak via app bug | RLS enforced in Postgres. `app.current_tenant` set transactionally per request. `BYPASSRLS` role isolated to a separate Go binary. |
+| Cross-tenant data leak via app bug | `FORCE` RLS in Postgres under `portal_app`; `app.current_tenant` set transactionally per request (§3.4); `TestRLS*` in CI. The `BYPASSRLS` role `portal_sys` is reserved for the planned `cmd/sysjobs` and used by nothing today. Known gap: four `media:asset_deleted` consumers run unscoped and are refused, not leaking (backlog #42). |
 | Privilege escalation by an admin | No-escalation guard in the admin console: you cannot grant, revoke or assign what you do not hold; only a `*` holder may touch the `superadmin` role; bootstrap is the first registrant or `BOOTSTRAP_SUPERADMIN_EMAIL` ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) P0.11–P0.12). **Open holes:** re-parenting a role under `superadmin` is not guarded, and approve/reject/disable skip the target-authority check (SPEC-13 §11 rows 1, 6). |
 | TOTP brute force | 6-digit code + 5 attempts/15-min lockout per user; constant-time compare. Recovery codes are single-use, Argon2id-hashed. |
 | Refresh-token replay across devices | Each refresh token records issuing IP + UA. Reuse from a different fingerprint emits a higher-severity audit event (still revokes chain). |
 | Password DB dump | `password_hash` is Argon2id (64 MB, t=3, p=2) with per-user salt — memory-hard, no plaintext or reversible form stored. |
 | TOTP secret extraction at rest | Encrypted with separate `TOTP_KMS_KEY`; only decrypted in-memory at verify time. |
 | Audit log tampering | Append-only at app layer. Long-term retention to R2 archive bucket (immutable bucket policy). |
-| Permission cache poisoning | Redis cache key includes `token_version` and `org_id`; mutations bump version → forces re-fetch from DB. |
+| Permission cache poisoning | Redis cache key is `rbac:perms:<userID>:v<token_version>`; role/permission mutations bump `token_version` → forces re-fetch from DB. (No `org_id` in the key: RBAC is global, §3.1.) |
 | Insider with DB write access | `audit_log` replication to a write-once R2 bucket (separate credentials). Out-of-band log forwarding to SIEM. |
 
 What we do **NOT** defend against (out of scope for v1):
@@ -549,33 +553,44 @@ What we do **NOT** defend against (out of scope for v1):
 
 ## 9. Migration roadmap
 
-Numbered to fit the existing migration sequence in `backend/db/migrations/` (single numeric sequence, `000N_<owning-module>_<description>` naming). Migrations 0001–0007 are applied (schema v7, 2026-07-06); tenancy/policy migrations start at 0008.
+One numeric sequence in `backend/db/migrations/`, `000N_<owning-module>_<description>` naming; the next free number is whatever `ls backend/db/migrations | tail -2` says. The table lists only the migrations that shape **identity, authorization or tenant isolation**; domain migrations add their own `tenant_id` + policy as they create tables (§3.3).
 
-| # | File | Purpose |
-|---|------|---------|
-| 0001 | `0001_platform_init` | [BUILT/APPLIED] database extensions + shared helpers |
-| 0002 | `0002_account_users` | [BUILT/APPLIED] users table (identity core, token_version, disabled_at) |
-| 0003 | `0003_account_rbac` | [BUILT/APPLIED] roles (hierarchy) + permissions + role_permissions + user_roles |
-| 0004 | `0004_account_sessions` | [BUILT/APPLIED] refresh_tokens with rotation-chain theft detection |
-| 0005 | `0005_platform_audit` | [BUILT/APPLIED] append-only audit_log |
-| 0006 | `0006_account_local_auth` | [BUILT/APPLIED] users.password_hash (ADR-06); drops user_oidc_roles |
-| 0007 | `0007_media_assets` | [BUILT/APPLIED] media assets table (upload/transcode lifecycle) |
-| 0008 | `0008_tenant_organizations` | [PLANNED] organizations + organization_memberships; RLS scaffolding |
-| 0009 | `0009_account_user_groups` | [PLANNED] user_groups + user_group_members (org-scoped) |
-| 0010 | `0010_account_policies` | [PLANNED] policies + policy_permissions + group_policy_attachments + user_policy_attachments |
-| 0011 | `0011_account_file_gated_permissions` | [PLANNED] user_permission_files + review workflow |
-| 0012 | `0012_account_totp` | [PLANNED] users.totp_*, totp_recovery_codes |
-| 0013 | `0013_notification_core` | [PLANNED] notifications + web_push_subscriptions |
-| 0014 | `0014_tenant_rls_enable` | [PLANNED] enable RLS + policies on every tenant-scoped table |
-| 0015 | `0015_platform_audit_org` | [PLANNED] add organization_id to audit_log |
+| Migration | Layer | What it does for security |
+|-----------|-------|---------------------------|
+| `0002_account_users` | L1 | `users`: `token_version`, `disabled_at`, `timezone` |
+| `0003_account_rbac` | L3 | `roles` (hierarchy), `permissions`, `role_permissions`, `user_roles`; the seven `is_system` roles and the seed catalogue |
+| `0004_account_sessions` | L1 | `refresh_tokens` with the rotation chain used for reuse detection |
+| `0005_platform_audit` | — | append-only `audit_log` (global; `actor_id ON DELETE SET NULL`) |
+| `0006_account_local_auth` | L1 | `users.password_hash` (Argon2id, [ADR-06](../adr/06-local-auth-model.md)); drops `user_oidc_roles` |
+| `0010_account_password_reset_tokens` | L1 | `password_reset_tokens` (the reset flow itself is SPEC-04 P0.3) |
+| `0018_tenant_core` | L2 | `organizations` + `organization_memberships`; personal org backfill (§3.2) |
+| `0019_platform_rls_roles` | L2 | `portal_app` (`NOBYPASSRLS`) and `portal_sys` (`BYPASSRLS`) roles and grants |
+| `0020_platform_rls_enable` | L2 | `tenant_id` + `FORCE` RLS + `tenant_isolation` on the 17 tenant-scoped tables of the time |
+| `0031_account_user_approval` | L1 | `users.approval_status` — only `approved` may hold a session ([SPEC-13](../product/specs/SPEC-13-account-identity-admin.md) P0.1) |
+| `0032_media_asset_acl` | L2 | per-user ACL on `assets` / `media_asset_variants` (`app.current_user`, `app.tenant_admin`, `visibility`) |
+| `0037_social_connections` | L2 | first per-user (cross-tenant) RLS policy set |
 
-RLS is intentionally enabled in **a separate, late migration** so that earlier development can proceed without RLS hassle. Production deployment must include `0014_tenant_rls_enable` before the tenancy phase goes live; CI gate verifies it.
+Every later domain migration (`0021_movie_core`, `0022_music_core`, `0023_story_core`, `0026`–`0030` comic, `0038`–`0041` music, `0043_bank_debts`, …) ships `tenant_id`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and `tenant_isolation` in the same file, and `TestRLSEveryProtectedTableHasAPolicyAndForce` fails CI if one forgets the `FORCE` or the policy.
+
+**Not yet numbered** — the post-v1 layers this document designs, each landing as the next free number when built:
+
+| Layer | Content | Design |
+|-------|---------|--------|
+| L1 | TOTP: `users.totp_*`, `totp_recovery_codes` | §2.4 |
+| L1 | per-user timezone: default `'Asia/Ho_Chi_Minh'`, `timezone_manual` | SPEC-13 P0.13 |
+| L3 | user groups + policy bundles (`user_groups`, `policies`, attachments) on top of roles ([ADR-02](../adr/02-rbac-model-reconciliation.md)) | §4, [deferred/access-policies.md](deferred/access-policies.md) |
+| L3 | file-gated permissions | §4.4 |
+| L2 | membership-scoped RBAC, households/orgs, tenant switching | §3.5–3.6, ADR-07 deferred steps |
+
+The original plan numbered these `0008`–`0015` and enabled RLS in a single late migration; that plan was overtaken — the numbers went to domain modules, and RLS landed in `0020` once the worker could open tenant scopes ([operations/rls-cutover.md](../operations/rls-cutover.md) is the cutover record).
 
 ---
 
 ## 10. Implementation pointers
 
-### 10.1 Tenant middleware skeleton  *([PLANNED])*
+### 10.1 Tenant middleware skeleton  *([BUILT] differently — see below)*
+
+The shipped middleware is [tenant/middleware/require_tenant.go](../../backend/internal/modules/tenant/middleware/require_tenant.go) and differs from this sketch in three ways (§3.4): the org comes from `GetOrCreatePersonalOrg`, not a JWT claim, so there is no membership check or `tenant_missing`/`tenant_denied` path; it calls `BeginScope{OrgID, UserID, Admin}` (three GUCs), not `BeginTenantScope`, which is reserved for backend jobs; and mutating responses are buffered until COMMIT succeeds. Errors are RFC 7807 Problems via `platform/server`. The sketch is kept as the shape for when `/t/{tenant}` routing and memberships land.
 
 ```go
 // internal/modules/tenant/middleware/tenant.go  (module layout per backend/MODULES.md)
@@ -646,9 +661,9 @@ Every PR that adds a tenant-scoped table must include an integration test that:
 
 1. Inserts rows with `organization_id = A` while `app.current_tenant = A` — succeeds.
 2. Switches to `app.current_tenant = B` — `SELECT *` returns 0 rows; `INSERT ... organization_id = A` is rejected.
-3. Connects as `portal_system` (`BYPASSRLS`) — sees both tenants.
+3. Connects as the owner/superuser (`RLS_TEST_ADMIN_URL`) — sees both tenants. (`portal_sys`, the `BYPASSRLS` role, is unused until `cmd/sysjobs` exists.)
 
-Place under the owning module's repository package (e.g. `backend/internal/modules/tenant/repository/rls_test.go` — repositories are per-module; there is no shared `internal/repository/`). Do not let CI green without these.
+In practice the suite is centralised in `backend/internal/platform/db/rls_test.go` (plus `rls_media_test.go`, `rls_social_test.go`); `TestRLSEveryProtectedTableHasAPolicyAndForce` already catches a new table that forgets `FORCE` or its policy, so a PR adding a table with a non-standard policy (per-user, shared seed) adds its own test there. CI runs the suite on every push and fails rather than skips when unpointed.
 
 ---
 

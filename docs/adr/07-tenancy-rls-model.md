@@ -150,7 +150,7 @@ superuser and bypasses every policy.
 ## Implementation plan
 
 1. [x] DB roles `portal_app` (`NOBYPASSRLS`) + `portal_sys` (`BYPASSRLS`) — `0019`. Tables owned by `portal`. Runtime cutover to `portal_app` done here 2026-08-25; **not** the `.env.example` default.
-2. [x] `0018_tenant_core`: `organizations`(+`kind`) + `organization_memberships`; personal org + owner membership backfilled for every existing user; `CreatePersonalOrg` on register.
+2. [x] `0018_tenant_core`: `organizations`(+`kind`) + `organization_memberships`; personal org + owner membership backfilled for every existing user; for new users the personal org is created lazily on their first tenant-scoped request (`RequireTenant` → `GetOrCreatePersonalOrg` → the `CreatePersonalOrg` query) — registration itself creates none.
 3. [x] `platform/db.BeginTenantScope` + pool config (`QueryExecModeExec`). The PgBouncer branch is moot — there is no pooler; the app connects direct to the host cluster.
 4. [x] `0020_platform_rls_enable`: `ENABLE + FORCE` + `tenant_isolation` on every tenant-scoped table; `assets.tenant_id` + backfill + policy.
 5. [ ] `tenant` module beyond the personal org: `GET /me/organizations` exists (`listOrganizations`); `POST /auth/switch-tenant` and `/admin/organizations` do not. Deferred at one user, one personal org.

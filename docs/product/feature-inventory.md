@@ -45,15 +45,16 @@ Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant
 
 ## 3. Media Pipeline — module `media` ✅
 
-Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (has `worker/transcode.go`, `worker/thumbnail.go`, `query/assets.sql`).
+Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (`service.go`, `objectreader.go`, `worker/{transcode,process_image,thumbnail}.go`). The contract — image ingest, poster, delete, library, download, event fan-out — and its open gaps are [SPEC-01](specs/SPEC-01-media-image-pipeline.md); playback resume is [SPEC-07](specs/SPEC-07-continue-rail.md).
 
-- **Asset upload** — `POST /assets` returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` enqueues the transcode. *(No tenant prefixes in v1.)*
-- **Transcode worker** (Asynq queue `transcode`, priority 5) — FFmpeg VOD HLS (h264/aac; multi-rung ladder planned).
-- **Thumbnail worker** (queue `thumbnail`, priority 3) — *(stub — registered but not implemented; poster + sprite generation planned)*.
-- **Asset state machine** — `pending → processing → ready | failed` ✓; the `media:asset_ready` event is **not yet emitted** (no consumer module exists yet).
-- **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` for time-limited playback *(planned — v1 ships a public HLS proxy at `GET /assets/{id}/hls/*` instead)*.
-- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](../adr/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target.
-- **HLS playback** — frontend uses Vidstack.
+- **Asset upload** — `POST /assets` (kinds `video`, `audio`, `image`) returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` routes by kind: video → transcode, image → image pipeline, audio → marked `ready` at once (no transcode; the music player streams the original). Other modules ingest server-side through `mediaapi.Ingest` (comic and music imports, cover extraction).
+- **Three worker pools** (`cmd/worker`, one Asynq server each — never collapse them into queue weights): **heavy** (`heavy` queue, concurrency 1 — `media:transcode`, FFmpeg VOD HLS h264/aac, single rung; a multi-rung ladder is not built), **image** (`image` queue, `IMAGE_CONCURRENCY`, default 3 — `media:process_image`, metadata-stripped WebP `thumb`/`medium` variants, SPEC-01 P0.1), **light** (`thumbnail`/`default` — `media:thumbnail`, the video `poster` variant, SPEC-01 P0.2; plus the hourly `media:purge_orphans` sweep run per tenant).
+- **Asset state machine** — `pending → processing → ready | failed`. **`media:asset_ready` is emitted** by the transcode and image workers and, for audio, by `/complete` itself; `notify` consumes it (`notify:on_asset_ready`). The life stream deliberately does not project it (`journal/stream.go`). **`media:asset_deleted`** is emitted on delete and consumed by comic, movie, music and story to reap references — those consumers currently run without a tenant scope (backlog #42).
+- **Visibility / ACL** — every asset is `private` by default; `PATCH /assets/{id} {visibility}` makes it `public`. Migration `0032_media_asset_acl` narrows reads inside a tenant to *public, or yours, or you administer the tenant*; the anonymous variant/HLS routes (`OptionalTenant`) therefore serve public rows only.
+- **Delivery** — `GET /assets/{id}/hls/*` (HLS proxy), `GET /assets/{id}/variants/{variant}` (image/poster variants), `GET /assets/{id}/original` (a `http.ServeContent` route with Range support — the source every `<audio>`/`<video>` element plays from; seeking depends on it). `mediaapi.SignedURL(assetID, ttl)` is built (`Service.SignedOriginalURL`, a presigned GET on the original) for another module's player.
+- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](../adr/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target. No tenant prefix in object keys; isolation is the database's (RLS on `assets`, `media_asset_variants`, `media_playback_progress`).
+- **HLS playback** — frontend uses Vidstack; progress is stored per asset (`media_playback_progress`, SPEC-07).
+- **Not built** — transcode quotas/backpressure and a dead-letter queue [D-13], sprite sheets, the multi-rung ladder.
 
 ---
 
@@ -636,7 +637,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 2 — Media pipeline end-to-end
 
-> **Update (2026-07-06):** exit criterion met by the v1 slice (single-pipeline VOD HLS h264/aac → Vidstack playback). Still open: multi-rung ladder, quotas/backpressure, poster/sprite, `media:asset_ready` emission [D-13].
+> **As built:** the first exit sentence is met (single-rung VOD HLS h264/aac → Vidstack playback); the second is not — there are no quotas or backpressure, so a second user *can* queue behind the first (the heavy pool runs one job at a time). Since built: the poster (SPEC-01 P0.2), `media:asset_ready` emission, and `mediaapi.GetAsset` / `SignedURL` (§3). Still open: the multi-rung ladder, sprites, quotas/backpressure, the `transcode:dead` queue [D-13], and `TRANSCODE_ENCODER` (no such setting exists — the encoder is fixed to `libx264`).
 
 - Pick **video** first (it's the highest-fidelity test of the full pipeline).
 - Upload endpoint → `platform/storage` → MinIO origin → enqueue Asynq `transcode`.
