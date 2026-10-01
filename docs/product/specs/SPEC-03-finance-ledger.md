@@ -1,6 +1,6 @@
 # SPEC-03 — Finance Ledger (module `bank`, ledger scope)
 
-**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `bank` · **Depends on:** ADR-08 (scope amendment); **SPEC-09 P0 (nightly backup + exercised restore drill) live before the first real ledger entry**; SPEC-01 only for P1 receipts
 **Upstream:** [briefs/03-finance-ledger.md](../briefs/03-finance-ledger.md) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
 **Downstream consumers:** SPEC-06 (stream + dashboard widget), SPEC-09 P1.7 (bank ExportProvider), SPEC-10
@@ -762,7 +762,89 @@ P0.2–P0.4 (nightly backup + exercised restore drill) is green.
   fine for years of personal data; add a materialized running balance only if the
   dashboard ever exceeds budget (measure first).
 
-## 12. Revision history
+## 12. Implementation gaps vs shipped code (as of 2026-10-01)
+
+The baseline is `main` @ `99b5a0b` (the commits after it changed docs only).
+The spec text above is the target; each row below is a place where the shipped
+code still diverges from it, verified against that commit. Rows are ordered by
+severity: security first, then data integrity (silent wrong numbers or lost
+rows), then API contract, then UX. A row closes when the code matches the spec
+and the SPEC-03 rows of `docs/reference/TRACEABILITY-MATRIX.md` are regraded.
+File paths are relative to `backend/internal/modules/bank/` unless they start
+with `backend/`, `frontend/` or `shared/`.
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | **Security** — P0.2 account attachment, P0.8 | Derived-balance, dashboard and report queries filter `user_id = caller` as well as `account_id`. | `query/bank.sql` `ListAccountBalances` and `GetAccountBalance` join `bank_transactions t ON t.account_id = a.id` and filter only `a.user_id`; `CountAccountTransactions` filters `account_id` alone. Writes cannot attach a foreign account today (`service.go` calls `repo.GetAccount(ctx, userID, id)` first), and nothing in the schema ties `bank_transactions.user_id` to the account's owner, so the query filter is the only second fence. | backend: add `AND t.user_id = a.user_id` to both balance joins; give `CountAccountTransactions` a `user_id` parameter; regenerate sqlc. test: fake-repo case with a row whose `user_id` differs from the account owner, asserting it never enters the balance. | F053 |
+| 2 | **Data integrity** — P0.1 archive enforcement (also P0.3) | An archived account rejects new transactions and new transfer legs with 409 `bank/account-archived`, including a transaction or transfer PATCH that moves a row onto it; edits and deletes of its existing rows stay allowed. | `service.go` `CreateTransaction`, `UpdateTransaction` (when `account_id` changes), `CreateTransfer` and `UpdateTransfer` call `repo.GetAccount` and never read `Account.Archived`. There is no `ErrAccountArchived`; `handler.go` `writeBankErr` has no mapping; `frontend/src/lib/problems.ts` has no `bank/account-archived`. Debt movements inherit the gap through `CreateTransfer`. | backend: add `ErrAccountArchived` → 409 `bank/account-archived`; check it on create, on a transaction PATCH whose `account_id` names a different account, on both legs of a transfer POST, and on a transfer PATCH only for an account that changes. openapi: 409 on POST/PATCH `/bank/transactions` and `/bank/transfers`. frontend: slug and message in `problems.ts`. test: service cases for all four paths, plus "edit and delete on an archived account still succeed". | F122 |
+| 3 | **Data integrity** — P0.2 currency on a transaction PATCH | A PATCH that changes `account_id` to an account of another currency is 422 `bank/currency-mismatch` and the row is unchanged. | `service.go` `UpdateTransaction` calls `repo.GetAccount(ctx, in.UserID, *in.AccountID)`, discards the result and never compares currencies, so the integer amount is silently reinterpreted in the new currency. | backend: load the current and the target account, return `ErrCurrencyMismatch` when the currencies differ; make the `writeBankErr` detail generic (today it reads "cross-currency transfers are not supported"). openapi: 422 on PATCH `/bank/transactions/{id}`. test: VND row moved onto a USD account → 422, row unchanged; same-currency move re-derives both balances. | F123 |
+| 4 | **Data integrity** — P0.5 budget write semantics | PUT upserts with `amount > 0`; only `amount: 0` or `null` deletes. | `service.go` `SetBudget` deletes on `amount <= 0`, so a negative amount silently deletes the budget instead of being rejected. | backend: `amount < 0` → `ErrInvalidAmount` (422 `bank/invalid-amount`); keep 0/null → delete. test: PUT −5 → 422 and the budget survives. | Verified 2026-10-01 (no F-ID) |
+| 5 | **Data integrity** — §6 follow-up migration `000N_bank_integrity` | `(user_id, created_at DESC)` on `bank_transactions`; `(category_id)` on `bank_budgets`; `CHECK (parent_id IS DISTINCT FROM id)` on `bank_categories`; `CHECK (currency ~ '^[A-Z]{3}$')` on `bank_accounts`. | Not shipped: only `backend/db/migrations/0014_bank_core`, `0020_platform_rls_enable` and `0043_bank_debts` touch these tables. `service.go` `CreateAccount` / `UpdateAccount` check only `len(cur) != 3` after `ToUpper`, so `U$D` is accepted. | migration: new `00NN_bank_integrity` up/down with the four statements (pre-check existing rows for a bad currency or a self-parent). backend: validate currency with `^[A-Z]{3}$` (422 `bank/validation`). test: migration up/down; service rejects `U$D`. | F131 |
+| 6 | **Contract** — P0.4 `kind` immutability | A category PATCH that changes `kind` is 422 `bank/category-immutable` and the row is unchanged. | `handler.go` `UpdateCategory` decodes a body without a `kind` field and `server.Decode` ignores unknown keys, so `{"kind":"income"}` answers 200 and changes nothing. `ErrCategoryImmutable` is declared and mapped in `writeBankErr` but never returned. | backend: add `Kind *string` to the PATCH body; a value different from the stored kind → `ErrCategoryImmutable`; an equal value is a no-op. openapi: `kind` on the PATCH schema with the 422. test: TC-BANK-074. | F056 |
+| 7 | **Contract** — P0.7 event payload | The payload carries `currency` (the account's ISO code). | `api/api.go` `TransactionEvent` has no `Currency` field; `service.go` `emitTx` builds the payload from the `Transaction` alone. | backend: add a `Currency string` field (JSON `currency`) to `TransactionEvent`; pass the account currency into `emitTx` from the account each write path already loads (`DeleteTransaction` / `DeleteTransfer` must load it before deleting). docs: drop "not yet emitted" from the `events.md` bank rows. The consumer side (stream formats by currency) is SPEC-06's follow-up. test: TC-BANK-141 with `currency`. | F016 |
+| 8 | **Contract** — P0.6 and §7 month rule, P0.2 "today" | An omitted `month` is the current month in the caller's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`, never UTC); a malformed month is 400 `bank/invalid-month`; `month` is `YYYY-MM` only. The entry date defaults to today in the user's zone. | `handler.go` `monthParam` returns `time.Now().UTC()` (used by `ListBudgets`, `Dashboard`, `Report`); a malformed month is `server.Problem(400, "about:blank", …)` there, in `ListTransactions` (`?month=`) and in `SetBudget` (body `month`); `parseMonth` also accepts `YYYY-MM-DD`. `parseDateDefault` defaults an omitted `occurred_at` to the UTC date. `frontend/src/lib/bank.ts` `currentMonth()` uses `toISOString()` (UTC month) and `today()` uses the device clock. Prerequisite missing: `accountapi` exposes no timezone and `0002_account_users` defaults `timezone` to `'UTC'` (specs README Timezone follow-up). | backend (after the account follow-up ships `UserSummary.Timezone`): give `bank.Deps` a zone lookup through `accountapi`; compute the default month and the default `occurred_at` date in the caller's zone; make `parseMonth` strict `2006-01`; answer every malformed month with 400 `bank/invalid-month`. openapi: the 400 on every `month` parameter and on the PUT body. frontend: `currentMonth()` / `today()` use the zone from `GET /auth/me`; add `bank/invalid-month` to `problems.ts`. test: TC-BANK-125 plus a malformed-month case per endpoint. | F057, F128, Decision 2026-09-30 (Timezone) |
+| 9 | **Contract** — §7 list envelopes | `GET /bank/transactions` → `{items, next_cursor?}`; `/bank/accounts` and `/bank/categories` → `{items}`; `/bank/budgets` → `{month, items}`. | `handler.go` `ListTransactions` writes `{transactions, next_cursor}`, `ListAccounts` `{accounts}`, `ListCategories` `{categories}`, `ListBudgets` `{month, budgets}`; `shared/openapi.yaml` declares the same keys; `frontend/src/lib/bank.ts` `listTransactions`, `listAccounts`, `listCategories`, `listBudgets` read them (and `BudgetsView` / `TransactionsView` consume `.budgets` / `.transactions`). | backend + openapi + frontend in one PR: rename each list key to `items`. test: TC-BANK-033, TC-BANK-035 as HTTP tests. | Decision 2026-09-30 (Envelopes) |
+| 10 | **Contract** — §7 Problem types (param-shape failures) | A body or parameter shape failure without a named type is 422 `bank/validation` (specs README Pagination rule). | `handler.go` answers malformed `account_id`, `category_id`, `from_account`, `to_account`, `parent_id`, `reassign_to`, the `account` / `category` filters and `occurred_at` with `server.Problem(400, "about:blank", …)`; invalid JSON goes through `server.Decode` → 400. Path ids that fail to parse already answer 404 `bank/not-found` (correct). | backend: route these through `writeBankErr(w, ErrValidation)`; wrap `server.Decode` in a bank helper that answers 422 `bank/validation`. openapi: 422 on the affected operations. test: TC-BANK-200 cases for each parameter. | F024 |
+| 11 | **Contract** — P0.5 / P0.6 budget entries | Budget lists (GET `/bank/budgets` and the dashboard block) include synthesized header entries (`amount: null`) for unbudgeted parents of budgeted children, so the tree renders without a client-side join; the dashboard block is filtered server-side to budgets with no budgeted ancestor. | `query/bank.sql` `ListBudgetsForMonth` returns budget rows only (`b.amount` always set; `BudgetLine.Amount` is `int64`). `service.go` `Dashboard` returns the same full list; the no-budgeted-ancestor filter runs client-side in `frontend/…/views/bank/DashboardView.tsx` (`topBudgets`). | backend: synthesize header entries (parent of a budgeted child with no budget row of its own, `amount` NULL); make `BudgetLine.Amount` `*int64`; filter the dashboard block server-side. openapi: `amount` nullable. frontend: drop the client filter. test: TC-BANK-104, TC-BANK-105, TC-BANK-106. | Verified 2026-10-01 (no F-ID) |
+| 12 | **Contract** — §7 OpenAPI AuthZ encoding | Each operation is annotated per the specs README AuthZ OpenAPI encoding (one literal code per method). | `shared/openapi.yaml` carries no `x-required-permission` on any `/bank/*` operation. | openapi: annotate every bank operation with the §7 code (`/bank/report` with `bank-transactions:read:own`, as `module.go` gates it). test: TC-BANK-204. | F025 |
+| 13 | **UX** — P0.5 budgets page | `/bank/budgets` renders an indented tree (child bars nested under their parent; unbudgeted parents as non-bar headers); the percent shown is `round(spent × 100 / amount)` half-up; the >100 % highlight uses `spent > amount`. | `frontend/…/views/bank/BudgetsView.tsx` builds its own tree from `listCategories`, lists budgeted rows first as a flat list with no indentation or header rows, and shows amounts but no percent (the dashboard bars likewise). Its highlight compares the float `pct > 100`. | frontend: render the server's entries as an indented tree with header rows; show the half-up integer percent; highlight on `spent > amount`. test: TC-BANK-103, TC-BANK-104 (vitest). | Verified 2026-10-01 (no F-ID) |
+| 14 | **UX** — P0.2 / P0.3 / §8 corrections | A user corrects a transaction inline; transfer legs render with a transfer badge **and the counterparty account name**. | `frontend/src/lib/bank.ts` has no `updateTransaction` or `updateTransfer`; `TransactionsView.tsx` offers delete only. `TransactionRow` (in `DashboardView.tsx`) labels a leg "Chuyển khoản" but never names the other account; the transaction JSON (`handler.go` `transactionJSON`) carries no counterparty. | frontend: inline edit through PATCH `/bank/transactions/{id}`, and through PATCH `/bank/transfers/{transfer_id}` for a leg. backend + openapi: add `counterparty_account_id` to the transaction response (or the client resolves the sibling leg). test: TC-BANK-022, TC-BANK-053, TC-BANK-057. | Verified 2026-10-01 (no F-ID) |
+| 15 | **UX** — P0.1 / P0.6 dashboard archived section | Archived accounts appear in the dashboard's collapsed archived section at their current balance. | `DashboardView.tsx` keeps only `!a.archived && isWallet(a)` and has no archived section (only `AccountsView.tsx` lists archived accounts). | frontend: add the collapsed archived group to `/bank`. test: TC-BANK-004, TC-BANK-123. | Verified 2026-10-01 (no F-ID) |
+| 16 | **UX** — P0.2 quick-add defaults | Account defaults to the last used, category to the most recently used, date to today in the user's zone. | `frontend/…/components/bank/QuickAddModal.tsx` defaults the account to the first open wallet (`openAccounts[0]`), leaves the category unset (`null`), and takes the date from the device clock (`today()`). | frontend: remember the last account and MRU category (per-viewer storage, or derive from the dashboard's `recent`); take today from the stored zone (row 8). test: TC-BANK-031. | Verified 2026-10-01 (no F-ID) |
+
+Not counted above: P1.10 receipts, P1.12 `bank:budget_exceeded` and P1.13
+structured fees are unbuilt P1 features, not divergences.
+
+**Already matching on `99b5a0b`:**
+
+- Ownership and existence: `GetAccount`, `GetTransaction`, `ListTransferLegs`
+  and every mutation are owner-scoped; a foreign or unknown id is 404
+  `bank/not-found` with a body identical to a missing one
+  (`http_test.go: TestHTTPAnotherUsersAccountIsNotFound`). Category reads span
+  own + seed (`GetVisibleCategory`); seed mutations match zero rows → 404.
+- `transfer_id` is server-assigned only: the transaction POST/PATCH bodies have
+  no such field and only `CreateTransfer` mints `uuid.New()`; a manual
+  transaction without `category_id` is 422 `bank/validation` before the insert.
+- The transfer-leg predicate `NOT (transfer_id IS NOT NULL AND category_id IS
+  NULL)` is used by `MonthFlowTotals`, `CategorySpendForMonth` and
+  `MonthlyFlowSeries`; budget spent drops legs through the category join and
+  includes direct children.
+- Transfers: create and update run in one DB transaction
+  (`repository/adapter.go` `CreateTransfer` / `UpdateTransfer`), delete is one
+  statement; PATCH accepts any subset of `{from_account, to_account, amount,
+  occurred_at, note}` and re-runs the POST validations; a leg PATCH/DELETE is
+  409 `bank/is-transfer-leg` naming `/bank/transfers/{transfer_id}`; each
+  transfer write emits one event per leg with `counterparty_account_id`
+  (`emitTransferLegs`).
+- Categories: parent must be top-level and the same kind, a category with
+  children cannot take a parent, self-parent is 422, delete with
+  `?reassign_to=` moves rows in the same transaction and emits nothing.
+- Dashboard: balances are always current (`ListAccountBalances`), recent is
+  `created_at DESC LIMIT 10`; permissions are the eleven 2–3-segment codes
+  seeded by `0014` and wired per route in `module.go`; the §6 indexes and the
+  P0.9 partial unique index match `0014`.
+
+**Test evidence to add or fix:**
+
+- No test on HEAD asserts superseded behaviour (`bank_test.go`, `http_test.go`
+  pass and stay valid). `docs/testing/TEST-CASES-SPEC-03-bank.md` TC-BANK-141
+  still lists the payload without `currency`; update it with row 7.
+- `TestDerivedBalanceReconciles` is a fixed two-row case, not the P0.2
+  property test: add the random create/edit/delete reconciliation test
+  (TC-BANK-024).
+- `emitTx` is unexercised: add a fake `EventPublisher` and assert one event per
+  transaction write, two per transfer write, zero on a bulk reassign, and the
+  full payload including `currency` (TC-BANK-140…143).
+- `UpdateTransfer` has no test: the 5,000,000 → 4,000,000 AC (TC-BANK-053).
+- New cases for rows 2, 3, 4, 6, 8 and 10: archived 409 on all four write
+  paths (no TC row yet — add one under P0.1), transaction PATCH currency
+  mismatch (extend TC-BANK-022), negative budget amount (no TC row yet),
+  TC-BANK-074, TC-BANK-125, TC-BANK-200.
+- HTTP tests for the `{items}` envelopes (TC-BANK-033, TC-BANK-035), the budget
+  tree and dashboard roll-up (TC-BANK-104…106), the integrity migration
+  (TC-BANK-205) and the dedup index (TC-BANK-180, P0.9 has no test).
+
+## 13. Revision history
 
 - **rev 1 · 2026-07-10** — reconciliation pass: permission codes moved to the
   2–3-segment grammar (`bank-accounts:*` etc., P0.8); the money-model divergence
@@ -778,3 +860,5 @@ P0.2–P0.4 (nightly backup + exercised restore drill) is green.
   boundary (P1.10); §6 indexes aligned to `0014` plus a follow-up integrity
   migration; §7 month rule and Problem types `bank/not-found`,
   `bank/account-archived`, `bank/invalid-month`; §8 categories page.
+- **2026-10-01** — Added §12 implementation gaps (self-contained follow-up
+  list); revision history renumbered to §13.

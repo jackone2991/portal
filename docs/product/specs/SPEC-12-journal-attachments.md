@@ -1,6 +1,6 @@
 # SPEC-12 — Journal attachments: Attachments and Location leave the body
 
-**Status:** executed 2026-09-19 on branch `feat/journal-attachments` (T0–T6, #9–#15; rev 1 drafted 2026-09-12; manual run against the stack done 2026-09-19 — [TEST-RUN-2026-09-19-spec-12.md](../../testing/TEST-RUN-2026-09-19-spec-12.md)) · **Last verified:** 2026-09-19
+**Status:** executed 2026-09-19 on branch `feat/journal-attachments` (T0–T6, #9–#15; rev 1 drafted 2026-09-12; manual run against the stack done 2026-09-19 — [TEST-RUN-2026-09-19-spec-12.md](../../testing/TEST-RUN-2026-09-19-spec-12.md)) · **Last verified:** 2026-10-01
 **Module:** `journal` (extends: one migration, service, handler, one consumer) · frontend journal composer, entry card, stream card · **Depends on:** SPEC-01 (image variants — shipped), SPEC-05 (entries — shipped), SPEC-06 (stream join — shipped). Nothing pending.
 **Upstream:** `/grill-with-docs` session 2026-09-12 (sixteen settled decisions, four glossary terms) · [backlog](../backlog.md) P2 #18 · **Refs:** [CONTEXT.md](../../../CONTEXT.md) (Entry, Attachment, Location, Asset) · [SPEC-05 P1.5](SPEC-05-journal.md) (the original photo-attachments item this supersedes) · [SPEC-06](SPEC-06-life-stream-home.md) (stream card promise "asset thumbs — joined from journal_entries") · [ADR-07](../../adr/07-tenancy-rls-model.md) (tenant scope on every lookup) · [ADR-10](../../adr/10-openapi-contract-direction.md) (contract first, codegen committed)
 **Downstream consumers:** the stream (SPEC-06) reads the new columns through its existing join; takeout (SPEC-09 P1.7) — bodies stay plain markdown, which this spec makes true for every row
@@ -272,6 +272,40 @@ runs them, so they are CI evidence for the rules, not for the components around 
 **Prior art.** Comic and bank HTTP-contract tests (router-driven, fakes); the four
 modules' identical Asset-validation pattern; the comic importer's poll-to-ready loop for
 the composer's Save gating; SPEC-02 P0.6's soft-cascade consumer for asset deletion.
+
+## Implementation gaps vs shipped code (as of 2026-10-01)
+
+Baseline: `main` @ `99b5a0b` (the docs commits on top of it change no code; read
+it with `git show 99b5a0b:<path>`). The decisions above are the target. Everything
+this spec builds itself matches the shipped code; the two rows below are
+divergences in **other modules** that this spec's flows depend on, ordered by
+severity (permission floor first). Each is owned and fixed by the spec named in
+the row; it closes here when that code lands **and** the SPEC-12 rows of
+[TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
+Paths are relative to `backend/`.
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | Implementation Decisions › Service — "uploading is the media module's existing write path (`assets:write:own`, granted to `user` by the SPEC-01 grant migration)" | A `user` uploads journal photos because `user` holds `assets:write:own`, and the upload routes enforce it. | No grant migration exists: `db/migrations/0003_account_rbac.up.sql` grants `assets:write:own` to `creator` only (no later migration, up to `0045`, grants it to `user`). `internal/modules/media/module.go` `MountHTTP` mounts `POST /assets` (upload session), `PUT /assets/{id}/source`, `POST /assets/{id}/complete` and `PATCH /assets/{id}` behind authentication only, with no `RequirePermission`. A `user` can attach photos today only because nothing checks the permission. | migration (owned by SPEC-01 §7): `000N_media_user_asset_grants` seeding `('user','assets:write:own')` and `('user','assets:delete:own')` with the `0003` `WITH grants(...)` pattern. backend: **then**, in a later deploy, `RequirePermission("assets:write:own")` on those routes. The order is load-bearing: enforcing before the grant is applied breaks the journal composer for every `user`. openapi: `x-required-permission` on the upload operations. test: a router test that a `user` with the seeded grant can open an upload session and one without any grant gets 403. | F009 |
+| 2 | Frontend — "the composer uploads several files at once" (up to ten); SPEC-04 P0.4 notification rule | A journal photo upload produces no bell notification: only `kind='video'` with `origin='upload'` notifies (SPEC-04 P0.4). | `internal/modules/notify/service.go` `Service.OnAssetReady` skips only `origin == "import"`, so every image the composer uploads (up to ten per Entry) raises its own "ready" notification. | backend (owned by SPEC-04 P0.4): notify only when `kind == "video" && origin == "upload"`; events.md consumer text already says so. test: "10 image uploads for one Entry → zero notifications; one video upload reaching ready → exactly one". | F012 |
+
+No other divergence: no `[c]` finding of the 2026-09-30 review names this spec's own
+behaviour, and the 2026-10-01 decisions (Envelopes, Timezone, Audio) do not touch it —
+the journal list and `GET /stream` already return `{items, next_cursor?}`, nothing here
+reads a timezone, and video or audio Attachments stay out of scope.
+
+**Already matching on `99b5a0b`** (verified, not to be re-built):
+- Migrations `0044_journal_attachments_in_columns` / `0045_journal_location_in_columns` exist with the backfill, the self-checking DO blocks, the relaxed body CHECK, the all-or-nothing Location CHECK and the re-encoding `down` (restoring the old CHECK `NOT VALID`).
+- `internal/modules/journal/service.go` `validateAssets`: at most ten, no duplicates, each id an existing image Asset with status `ready` owned by the caller, through the narrow `MediaAPI` inside the request's tenant transaction; a nil lookup (the worker) fails closed; the first violation is a 422 `journal/invalid-asset` whose `detail` names the id and the reason (`handler.go` `writeJournalErr`; a non-uuid element is named too, `entryReq.assetIDs`).
+- `validBody` judges "text or at least one Attachment" on the **patched result**; a Location alone is refused; `normalizeLocation` + `entryReq.location` give 422 `journal/invalid-location` for partial, blank or out-of-range places; PATCH `asset_ids` replaces the whole list, `location: null` and `mood: null` clear, absent keeps (`query/journal_entries.sql` `PatchEntry`).
+- `OnAssetDeleted` strips the id from every Entry of the owner (`StripAssetFromEntries`, `array_remove` keeps order) inside the owner's tenant scope, idempotently, keeps an emptied Entry, and drops an owner-less event with a log line.
+- The stream join (`query/journal_stream.sql` `ListStreamCursor`) returns `asset_ids` and the three Location columns; `handler.go` renders Entry and stream item with the same shapes (`[]`, explicit `null`); `shared/openapi.yaml` `JournalEntry`, `JournalEntryWrite` and `StreamItem` carry them.
+- Frontend: the composer dedups, caps at ten, gates Save on every photo ready and on text-or-photo (`lib/composer-photos.ts`), edits in place, and the shared `AttachmentGallery` shows a `medium` hero, up to four `thumb` tiles with "+N", and a `medium` lightbox in array order; the markdown link codec is gone; the module README names the media lookup and the `media:asset_deleted` subscription.
+
+**Test evidence to add or fix:**
+- No test on `99b5a0b` asserts superseded behaviour for this spec.
+- Add with row 1: the upload-permission router test above (SPEC-01 owns it). Add with row 2: the notify test above (SPEC-04 owns it).
+- Still without evidence (unchanged, TRACEABILITY-MATRIX T2/T5 ✖): the lightbox, the in-place edit composer and the Location chip — a component or browser test, now that vitest runs in the `frontend` CI job.
 
 ## Out of Scope
 

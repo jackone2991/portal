@@ -1,6 +1,6 @@
 # SPEC-08 — People Registry (contacts + birthdays, n=1)
 
-**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-09-30
+**Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `people` · **Depends on:** rides (or, if first, introduces) SPEC-01 P0.3 (shared periodic scheduler) and P0.6 (`platform/events` fan-out); P1.7 avatars need SPEC-01; birthday *delivery* compounds with SPEC-04/SPEC-06 — emission is day-one regardless
 **Upstream:** [briefs/08-people-registry.md](../briefs/08-people-registry.md) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), feature-inventory `D-17` (user timezone), [analysis/facebook-comparison.md](../analysis/facebook-comparison.md) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
 **Downstream consumers:** SPEC-06 (stream + `BirthdayCard` widget), SPEC-09 P1.7 (takeout); SPEC-04 is a *future* consumer (needs a `notify:on_*` task + type row first)
@@ -157,7 +157,8 @@ frontend keeps it current from the device's location, with a manual override
 in settings. Unknown or unparseable → `Asia/Ho_Chi_Minh`. "Today" is the
 owner's local date in that zone; there is no instance-wide zone. *(Code
 follow-up: HEAD injects one zone as `people.Deps.Timezone`, and `cmd/api` and
-`cmd/worker` build `people.Deps` without it, so everything runs in UTC; the
+`cmd/worker` build `people.Deps` without it, so `people.New` falls back to
+`Asia/Ho_Chi_Minh` for every owner (UTC only if the zone fails to load); the
 fix drops `Deps.Timezone` for a per-owner lookup through `accountapi`, which
 first needs the README Timezone follow-up.)* Response items:
 `{person_id, display_name, next_occurrence (date), days_until, age_turning?}`
@@ -243,7 +244,7 @@ everyone. Re-running every hour is safe because an emit needs a missing
 emits nothing. So each threshold is recognized within the first hour of the
 owner's local day, whatever the zone, and a DST change cannot skip a local
 date. *(Code follow-up: HEAD registers the scan daily at 06:00 UTC and
-evaluates one zone for all owners — UTC in practice, see P0.3.)*
+evaluates one zone for all owners — `Asia/Ho_Chi_Minh` in practice, see P0.3.)*
 
 **Acceptance criteria.**
 - Given a birthday 3 days out, then exactly one 3-day event fires; day-of fires
@@ -436,7 +437,9 @@ Problem types: `people/person-not-found`, `people/invalid-birthday`,
 `people/invalid-asset` (P1.7), `people/invalid-cursor` (400, malformed list
 cursor), `people/validation` (422, body/param shape). Each is registered in
 `frontend/src/lib/problems.ts` per the specs README Errors convention.
-*(Code follow-up: none of the people slugs is in `problems.ts` on HEAD.)*
+*(Code follow-up: HEAD's `problems.ts` registers four of the five;
+`people/invalid-asset` lands with P1.7. HEAD also emits an undeclared
+`people/already-in-registry` 409, see §11.)*
 
 Both lists follow the specs README Pagination convention in full — cursor,
 limit, errors and the `{items}` envelope. Pre-rule endpoints are retrofitted,
@@ -478,3 +481,78 @@ P0 ≈ 4.5 dev-days, matching the brief; P1 adds ~1.
 - **(product, non-blocking)** Should day-of events also carry `age_turning` for
   the stream card copy ("Mẹ turns 60")? Cheap to add to the payload when known —
   decide at implementation with SPEC-06's card design.
+
+## 11. Implementation gaps vs shipped code (as of 2026-10-01)
+
+The baseline is `main` @ `99b5a0b` (the docs commits on top of it change no
+code). The spec text above is the target; this section lists every place the
+shipped code still diverges from it, so an implementer needs nothing but this
+spec. Rows are ordered by severity: lost or duplicated birthday events first,
+then wrong dates, then schema, contract and UI, then unbuilt P1. A row closes
+when the code matches the requirement it cites and the SPEC-08 row of
+[TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) is regraded on
+a named test. File paths are relative to the repo root; "F-ids" refer to
+[spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md).
+The module lives in `backend/internal/modules/people/`.
+
+| # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
+|---|---|---|---|---|---|
+| 1 | P0.2 notice reset on PATCH | Delete the person's notice rows with `year >=` the owner's current year **only when the effective occurrence changes** (month or day differ, calendar changes, or the birthday is cleared), **in the same transaction** as the update. Resending an identical birthday or changing only `birth_year` leaves notices untouched. | `service.go` `UpdatePerson`: whenever the PATCH carries `birthday` (`in.SetBirthday`), it calls `repo.DeleteFutureNotices` **after** `repo.UpdatePerson` returned, outside any transaction, and only logs a failure. Every ordinary save resends the whole birthday object, so a rename after the 3-day notice fired deletes it and the next scan re-emits under a new `notice_id` — **a duplicate stream item**; a failed delete instead leaves the old date's notices suppressing the corrected date for the rest of the year. The year comes from the single `Service.loc` (row 5). | **backend:** read the stored row and update it in one `pgx.Tx`; compute "occurrence changed" from (month, day, calendar, cleared); only then run `DeleteFutureNotices` in that tx, changed to `RETURNING id, emitted_at` so row 2 can revoke; use the owner's zone for the year. Return the delete error (no best-effort). **test:** TC-PPL-013, TC-PPL-014, TC-PPL-017. | F081 |
+| 2 | P0.2 retraction events; §7 DELETE | After commit, `people:birthday_notice_revoked {notice_id, person_id, user_id}` per cleared notice that had `emitted_at IS NOT NULL`, and `people:person_deleted {person_id, user_id}` on DELETE, so SPEC-06 drops stale and dangling birthday cards. | Neither event exists: `api/api.go` declares only `EventBirthdayUpcoming`; `service.go` `DeletePerson` and `UpdatePerson` publish nothing. A deleted person's birthday card stays in the stream linking to a 404; an edited birthday keeps its old-date card. | **backend:** add both constants and payload structs to `people/api`; publish after commit from `DeletePerson` and from row 1's reset (one revoke per emitted cleared notice); `cmd/api` already passes `Events` to `people.Deps`. Flip both rows in events.md from planned to live; SPEC-06 P0.1(b) adds the two `journal:stream_*` consumers and the `cmd/worker` subscriptions. **test:** TC-STREAM-005 plus a people unit test that a delete and an occurrence-changing PATCH publish the expected payloads and a no-op PATCH publishes none. | F017 |
+| 3 | P0.4 emit rule (day-0 collapse) | Emit threshold `T` when `lower(T) ≤ days_until ≤ T` with `lower(3) = 1`, `lower(0) = 0`: on the day itself only the day-of notice fires. | `service.go` `ScanBirthdays`: `if daysUntil >= 0 && daysUntil <= T` for both `T ∈ {3, 0}`, so a person created or edited on the birthday, or a scanner down days −3..−1, gets **two items for one day**. | **backend:** use the lower bound above. **test:** TC-PPL-058, TC-PPL-052 (catch-up still fires the 3-day notice at 1 or 2 days out). | F080 |
+| 4 | P0.4 re-publish payload; §6 notices | Notice rows store `occurrence date NOT NULL` and `suppressed boolean`; a re-publish recomputes `days_until = occurrence − today` in the owner's zone, expires the row unpublished when `< 0`, and suppresses a pending larger threshold when a smaller one emits for the same (person, year). | `0016_people_persons` has no `occurrence` or `suppressed` column; `query/people.sql` `InsertNotice` stores `(person_id, year, threshold)` only; `ScanBirthdays` re-publishes every `emitted_at IS NULL` row with `DaysUntil: n.Threshold` however late, so a crash before the birthday re-publishes "in 3 days" after the date has passed. | **migration:** `000N_people_checks` adds `occurrence date` (backfill existing rows from the person's month/day and `year`, Feb-29 → Feb-28 in non-leap years, then `SET NOT NULL`) and `suppressed boolean NOT NULL DEFAULT false`. **backend:** `InsertNotice` stores the occurrence; `PendingNotices` returns it; the publish loop applies the expire and suppress rules and marks such rows `emitted_at = now()` without publishing. **test:** TC-PPL-054, TC-PPL-059. | F082 |
+| 5 | P0.3 TZ source (scan and endpoint) | Each owner's `users.timezone`, read through `accountapi` (`UserSummary.Timezone`); unknown or unparseable → `Asia/Ho_Chi_Minh`; no instance-wide zone. | `module.go` `Deps.Timezone` → one `Service.loc` for every owner; `cmd/api/main.go` and `cmd/worker/main.go` build `people.Deps` without it, so `people.New` loads `Asia/Ho_Chi_Minh` for everyone (UTC only if loading fails; both images install `tzdata`). `0002_account_users` defaults `timezone` to `'UTC'`; nothing writes it; `account/api/api.go` `UserSummary` is `{ID, Email, DisplayName}`. | **migration (account):** default `'Asia/Ho_Chi_Minh'`, rewrite untouched `'UTC'` rows, add `timezone_manual` (specs README Timezone). **backend (account):** `PATCH /api/v1/auth/me {timezone}` with `account/invalid-timezone`; expose the zone on `accountapi` (single lookup plus a batch by user ids for the scan). **backend (people):** drop `Deps.Timezone`/`Service.loc`; inject a zone lookup from `accountapi` in both binaries; pass the owner's `*time.Location` to `nextOccurrence`, the endpoint and row 1's year. **openapi/frontend:** the `/auth/me` field and `problems.ts` slug (owned by the README Timezone follow-up). **test:** TC-PPL-030, TC-PPL-038. | F028, Decision 2026-09-30 (Timezone) |
+| 6 | P0.4 schedule | Hourly at minute 5 on the shared scheduler, once per tenant via `forEachTenant`; each run evaluates every owner's own local date. | `cmd/worker/main.go` registers `scheduler.Register("0 6 * * *", people:scan_birthdays)` — daily at 06:00 UTC, one zone for all owners (row 5); a day-of notice lands at 13:00 local for a Ho Chi Minh owner and a DST shift can skip a local date. | **backend:** change the cron to `"5 * * * *"`; resolve each owner's zone once per run (row 5's batch lookup). Dedup already makes re-runs safe. **test:** TC-PPL-061. | F028, Decision 2026-09-30 (Timezone) |
+| 7 | P0.2 lunar validation; `leap_month` | Gregorian and Feb-29 checks only for `calendar='solar'`; lunar: month 1–12, day 1–30, optional `leap_month` (default false), `leap_month: true` with solar → 422 `people/invalid-birthday`; `PATCH {birthday: null}` also resets `birth_leap_month`; the Person response carries `leap_month`. | `service.go` `validateBirthday` applies `validCalendarDate` to every calendar, so lunar 30/2 is rejected; `handler.go` `birthdayReq`, `types.go` `Birthday`, `personJSON` and `frontend/src/lib/people.ts` `Birthday` have no `leap_month`; `0016` has no `birth_leap_month` column. | **migration:** `000N_people_checks` adds `birth_leap_month boolean NOT NULL DEFAULT false`, `CHECK (NOT birth_leap_month OR birth_calendar = 'lunar')`, `CHECK (birth_calendar = 'solar' OR birth_day IS NULL OR birth_day <= 30)`. **backend:** branch `validateBirthday` on calendar; carry `leap_month` through request, domain, `CreatePerson`/`UpdatePerson` queries (cleared on `birthday: null`) and `personJSON`. **openapi:** `leap_month` on the birthday object. **frontend:** add it to `Birthday`. **test:** TC-PPL-018. | F083 |
+| 8 | §6 CHECKs and pending index | `birth_year IS NULL OR birth_year >= 1900`; `threshold IN (0, 3)`; partial index `people_birthday_notices (person_id) WHERE emitted_at IS NULL`. | `0016` has `birth_year INT` with no bound, `threshold INT NOT NULL` with no CHECK, and no pending index (the app layer already rejects years < 1900). | **migration:** add both CHECKs (`NOT VALID` then `VALIDATE`) and the partial index in `000N_people_checks`. **test:** TC-PPL-114 (migration up/down). | F173 |
+| 9 | §7 list envelopes | `GET /people` returns `{items: Person[], next_cursor?}`; `GET /people/upcoming-birthdays` returns `{items: [...]}`; handler, OpenAPI and readers change in one PR. | `handler.go` `List` writes `{"people": …}` and `Upcoming` writes `{"upcoming": …}`; `shared/openapi.yaml` `listPeople` requires `[people]` and `upcomingBirthdays` requires `[upcoming]`; `frontend/src/lib/people.ts` (`listPeople`, `upcomingBirthdays`) and `PeopleIndexView.tsx` (`people.data?.people`) read the old keys; `BirthdayCard` reads through `upcomingBirthdays`. | **backend:** rename both keys to `items`. **openapi:** both schemas → `required: [items]`. **frontend:** `PeoplePage.items`, `upcomingBirthdays` reads `r.items`, `PeopleIndexView` reads `.items`. The unowned `GET /people/suggestions` (`{suggestions}`) is on the same retrofit list. **test:** TC-PPL-019, TC-PPL-039. | Decision 2026-09-30 (Envelopes), F168 |
+| 10 | P0.3 sort | Sorted by `days_until`, then `display_name`, then `id`. | `service.go` `UpcomingBirthdays`: `sort.Slice` on `DaysUntil` only — unstable, so same-day ties come back in arbitrary order. | **backend:** one comparator over (`DaysUntil`, `DisplayName`, `PersonID`). **test:** TC-PPL-035. | F170 |
+| 11 | P0.5 `BirthdayCard` | Lists every upcoming person, shows a skeleton while loading, renders nothing when empty. | `frontend/src/templates/v1/components/widget/BirthdayCard.tsx` renders only `data[0]` and returns `null` while loading (no skeleton). Fixture props, the self-fetching query, the headlines and `age_turning` already match. | **frontend:** map over every item (headline per item); render a skeleton while `isLoading`. **test:** TC-PPL-070 (grep stays green) plus a render test for 0/1/5 days and empty. | F029 |
+| 12 | §7 problem types | Every people slug the API emits is declared in §7 and registered in `problems.ts`. | `problems.ts` has `people/person-not-found`, `people/invalid-birthday`, `people/validation`, `people/invalid-cursor`; `people/invalid-asset` waits for P1.7. `handler.go` `writePeopleErr` also emits `people/already-in-registry` (409, the `0035` `linked_user_id` unique), which neither §7 nor `problems.ts` declares. | **frontend:** register `people/already-in-registry` (and `people/invalid-asset` with P1.7). **spec:** §7 declares the slug together with POST's `circle`/`linked_user_id` fields from `0035` (owner decision; not decided here). **test:** TC-PPL-111. | F168 (corrected 2026-10-01) |
+| 13 | P1.6 interactions; P1.7 avatar | `people_interactions` table, three routes, `last_contact_on`; `avatar_asset_id` validated through `mediaapi`, NULLed on `media:asset_deleted`. | Not built: no `people_interactions` migration or query, no routes, no `last_contact_on` in `personJSON`; `avatar_asset_id` is stored but never validated or written by any route, and nothing subscribes to `media:asset_deleted`. | **migration · backend · openapi · frontend:** as P1.6/P1.7 and §6/§7 specify. **test:** TC-PPL-090…093. | TRACEABILITY-MATRIX SPEC-08 P1.6/P1.7 (✖) |
+
+**Already matching on HEAD.**
+- `0016_people_persons` ships both `people_persons` indexes, the
+  month/day-together and year-needs-month CHECKs, the notices table with the
+  composite PRIMARY KEY and `id` UNIQUE surrogate, and seeds the three
+  permission codes to `user`; `0020` adds `tenant_id` and the policy;
+  `0035` adds `circle` and `linked_user_id`.
+- CRUD routes carry `people:read:own` / `write:own` / `delete:own`; another
+  owner's row and a missing row answer the same 404
+  `people/person-not-found`; a second DELETE is 404.
+- The list orders by (`display_name`, `id`) with a cursor, `limit` default 50 /
+  max 200 (out of range → 50), unknown `circle` → 422 `people/validation`,
+  malformed cursor → 400 `people/invalid-cursor`.
+- Upcoming birthdays: `days` absent, unparseable or `< 1` → 14, `> 366` → 366;
+  inclusive window with today = 0; lunar and birthday-less people excluded;
+  `age_turning` only with a year; Feb-29 → Feb-28 in non-leap years through one
+  `nextOccurrence` shared with the scan.
+- The scan runs once per tenant through `forEachTenant`, skips lunar rows,
+  inserts notices `ON CONFLICT DO NOTHING` and re-publishes `emitted_at IS NULL`
+  rows (at-least-once).
+- Frontend: `/people/:path*` is in the `middleware.ts` matcher;
+  `views.peopleList` / `views.peopleDetail` resolve through the template
+  registry; `BirthdayCard` is self-fetching (`["people","upcoming"]`) with no
+  fixture props and the Today / Tomorrow / In N days headlines; `HomeView` has
+  no inline copy (the card is the `birthdays` widget); list rows use the base
+  `Card` with the initials `Avatar` (no friend-graph controls); `/people` has an
+  empty state with a create action and renders 422 details inline.
+
+**Test evidence to add or fix.**
+- `people_test.go` builds `Service` with a fixed `loc` and
+  `http_test.go` passes `Deps{Timezone: "UTC"}`; both change when row 5 drops
+  the field — rewrite `TestNextOccurrenceTimezone` around per-owner zones
+  (TC-PPL-030, TC-PPL-038).
+- `TestScanDedupAndOutbox` only crosses T=3 and T=0 on separate days; add the
+  day-0 collapse (TC-PPL-058) and the catch-up case (TC-PPL-052).
+- `TestOutboxRetry` re-publishes on the same day only; add a retry after the
+  occurrence (expires) and on the day itself (3-day row suppressed)
+  (TC-PPL-059). The fake `MarkNoticeEmitted` marks every pending row, which
+  hides per-notice bugs; key it on the notice id.
+- `TestBirthdayValidation` has no lunar case; add lunar 30/2 accepted and
+  `leap_month` with solar rejected (TC-PPL-018).
+- `TestUpcomingBirthdays` has no tie; add two people on the same day
+  (TC-PPL-035).
+- No test covers the PATCH notice reset, the retraction events, the
+  `{items}` envelopes or the hourly per-owner scan (TC-PPL-013/014/017,
+  TC-STREAM-005, TC-PPL-019/039, TC-PPL-061).

@@ -1,6 +1,6 @@
 # Portal — Detailed Feature Specs (PRD level)
 
-**Status:** current · **Last verified:** never
+**Status:** current · **Last verified:** 2026-10-01
 
 **Language policy:** English only, per owner decision 2026-07-07 (ADR-09; the
 former vi mirror was deleted in `f11cf3f` — see
@@ -245,3 +245,185 @@ contrary to SPEC-06 §1; any event published before it was never projected
 
 - SPEC-09 P1.7 owner takeout — unbuilt (no `ExportProvider` in code).
 - SPEC-10 phases after phase 1 (debts) — build on SPEC-03 + SPEC-04.
+- Every built spec still diverges from its shipped code in places: see the
+  [Implementation gaps index](#implementation-gaps-index-2026-10-01) below.
+
+## Implementation gaps index (2026-10-01)
+
+Every built spec ends with a section **"Implementation gaps vs shipped code (as
+of 2026-10-01)"**: one row per place where `main` @ `99b5a0b` still diverges
+from the spec text, naming the shipped file and function, the change needed
+(migration · backend · openapi · frontend · test) and the finding id. That
+section is the **live list**: a row closes, and is deleted, in the PR that makes
+the code match and regrades the spec's
+[TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) rows. This
+index only counts and routes; the detail lives in the spec. SPEC-11 is a
+historical docs-only spec and has no gap section.
+
+Row ranges use each section's own severity order (its intro paragraph names
+it): **Sec** security · **Data** data loss or silently wrong / lost data ·
+**Integ** integrity or a wrong answer · **AuthZ** · **Contract** API, OpenAPI,
+Problem types · **UX** frontend behaviour · **Hyg** schema hygiene · **P1**
+unbuilt P1 feature.
+
+| Spec | Gap section | Rows | By severity (row numbers) | Most severe |
+|------|-------------|-----:|---------------------------|-------------|
+| [SPEC-01](SPEC-01-media-image-pipeline.md) | [§11](SPEC-01-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Data 1–3 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–17 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
+| [SPEC-02](SPEC-02-comic-vertical.md) | [§11](SPEC-02-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Sec 1–5 · Integ 6–9 · Contract/UX 10–16 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
+| [SPEC-03](SPEC-03-finance-ledger.md) | [§12](SPEC-03-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Sec 1 · Data 2–5 · Contract 6–12 · UX 13–16 | balance / dashboard / report queries not filtered by the caller (1); archived accounts still accept writes (2) |
+| [SPEC-04](SPEC-04-notification-module.md) | [§11](SPEC-04-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16 · Hyg 17–20 · P1 21 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
+| [SPEC-05](SPEC-05-journal.md) | [§11](SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 7 | Data 1 · UX 2–5 · Contract 6–7 | `journal:entry_created` published before the request transaction commits (1) |
+| [SPEC-06](SPEC-06-life-stream-home.md) | [§11](SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
+| [SPEC-07](SPEC-07-continue-rail.md) | [§11](SPEC-07-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
+| [SPEC-08](SPEC-08-people-registry.md) | [§11](SPEC-08-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 13 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
+| [SPEC-09](SPEC-09-platform-ops.md) | [§11](SPEC-09-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
+| [SPEC-10](SPEC-10-ledger-expansion.md) | [§8](SPEC-10-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 5 | Data 1 · Scheduling 2 · Contract 3–5 | opening a debt is three writes with no enclosing transaction (1) |
+| [SPEC-12](SPEC-12-journal-attachments.md) | [section](SPEC-12-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 2 | AuthZ 1 · UX 2 (both owned by other specs) | no `user` grant of `assets:write:own` and no enforcement on upload (1) |
+| **Total** | | **138** | | |
+
+**Cross-cutting gaps** — one change closes rows in several specs; land it as
+one change (or one PR per module in a fixed order) and close every row it
+names:
+
+- **Envelopes retrofit to `{items}`** (Pagination convention): SPEC-01 §11
+  row 12 · SPEC-02 §11 row 12 · SPEC-03 §12 row 9 · SPEC-08 §11 rows 9, 11 ·
+  SPEC-10 §8 row 3; plus the unowned lists (music, social, story, people
+  suggestions) the Pagination convention names. Each retrofit moves handler,
+  `shared/openapi.yaml` and the frontend readers in one PR.
+- **Per-user timezone** (Timezone convention): the account change comes first —
+  the migration that sets `users.timezone DEFAULT 'Asia/Ho_Chi_Minh'`, rewrites
+  untouched `'UTC'` rows and adds `timezone_manual`; `PATCH /auth/me`;
+  `UserSummary.Timezone`; `account/invalid-timezone` (owned by the convention's
+  code follow-up; no spec row). Then its readers: SPEC-03 §12 rows 8, 16 ·
+  SPEC-05 §11 row 2 · SPEC-06 §11 rows 3, 9, 16 · SPEC-08 §11 rows 5–6 ·
+  SPEC-10 §8 row 2.
+- **`problems.ts` slugs** (Errors convention): SPEC-01 §11 row 12 · SPEC-02
+  §11 row 10 · SPEC-03 §12 rows 2, 8 · SPEC-04 §11 row 14 · SPEC-05 §11
+  row 6 · SPEC-06 §11 row 15 · SPEC-07 §11 row 13 · SPEC-08 §11 row 12 ·
+  SPEC-10 §8 row 5; plus `account/invalid-timezone`.
+- **OpenAPI `x-required-permission`** (AuthZ convention, OpenAPI encoding):
+  SPEC-01 §11 row 17 · SPEC-02 §11 row 16 · SPEC-03 §12 row 12 · SPEC-04 §11
+  row 16 · SPEC-05 §11 row 7 · SPEC-06 §11 row 15 · SPEC-09 §11 row 9 ·
+  SPEC-10 §8 row 5. Best done as one retrofit together with the drift check
+  the convention asks for.
+- **F009 — `user` upload grant**: SPEC-01 §11 row 9 (owner) · SPEC-12 row 1.
+  Seed the grant in the same migration that adds `RequirePermission` to the
+  upload routes, or every `user` loses photo upload.
+- Smaller shared items: `origin='import'` (F038/F012) SPEC-01 row 10 · SPEC-02
+  row 7 · SPEC-04 row 8 · SPEC-12 row 2; media deep link (F018) SPEC-01 row 15
+  · SPEC-04 row 9 · SPEC-06 row 7 · SPEC-07 row 9; Audio SPEC-01 row 16 ·
+  SPEC-07 rows 4, 5, 8; keepalive `PUT` instead of `sendBeacon` (F001) SPEC-02
+  row 11 · SPEC-07 row 1; `bulk` queue (F095) SPEC-02 row 8 · SPEC-04 row 19 ·
+  SPEC-09 row 11; people retraction events (F017) SPEC-08 row 2 · SPEC-06
+  row 2; optimistic placement (F015) SPEC-05 row 4 · SPEC-06 row 10.
+
+**Suggested build order for closing gaps** (a suggestion, not a gate):
+
+1. **Security.** SPEC-02 §11 rows 1–3 (internal endpoints off the public edge,
+   constant-time secret), SPEC-04 §11 rows 1–2 (no plaintext reset token;
+   atomic consume + revoke-all), SPEC-09 §11 row 1 (queue console read/write
+   split + CSRF), SPEC-01 §11 rows 4–6 and 1 (`/original` states and size; the
+   delete commit), SPEC-03 §12 row 1 (caller filter on balance queries). Then
+   the remaining Sec / AuthZ rows: SPEC-02 rows 4–5, SPEC-09 rows 2–4, F009.
+2. **Data loss.** SPEC-07 rows 1–3, SPEC-05 row 1, SPEC-06 rows 1–2 together
+   with SPEC-08 rows 1–4 (the retraction events and their stream consumers),
+   SPEC-01 rows 2–3, SPEC-04 rows 3–4, SPEC-09 rows 5–6, SPEC-10 row 1,
+   SPEC-03 rows 2–5, SPEC-02 row 6.
+3. **Cross-cutting foundations.** Timezone (account change, then its readers),
+   Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
+   (SPEC-01 row 16 before SPEC-07 rows 4, 5, 8).
+4. **Remaining integrity, contract and UX rows**, per spec, in each section's
+   order; the `x-required-permission` retrofit with its drift check.
+5. **Unbuilt P1**: SPEC-01 row 14, SPEC-04 row 21, SPEC-06 row 16, SPEC-07
+   row 14, SPEC-08 row 13, SPEC-09 row 11 (owner takeout, above).
+
+## Decisions recorded 2026-09-30
+
+The owner settled the three decisions the 2026-09-30 review left open (marked
+decided in the
+[2026-09-30 worklog](../analysis/spec-gap-fix-worklog-2026-09-30.md), "Open
+decisions left by the post-fix review"). The detail lives in the places named
+here; this list does not restate it. The gap rows cite them as
+"Decision 2026-09-30".
+
+- **Envelopes** — every list answers `{items}` (paginated lists add
+  `next_cursor`), non-paginated lists included; shipped endpoints are
+  retrofitted, not grandfathered. Detail: the **Pagination** convention above;
+  each spec §7; the D-29 update in
+  [feature-inventory.md](../feature-inventory.md); the Envelopes rows indexed
+  above.
+- **Timezone** — per user, from the device location, default
+  `Asia/Ho_Chi_Minh`, with a `timezone_manual` override; sweeps evaluate each
+  owner's local date. Detail: the **Timezone** convention above; the D-17
+  update in [feature-inventory.md](../feature-inventory.md); SPEC-03 P0.6,
+  SPEC-05 P0.4, SPEC-06 P0.1 / P0.3 / P1.5, SPEC-08 P0.3 / P0.4, SPEC-10 §4a.
+- **Audio opens the player** — audio is a playable kind: player page, plays
+  from `/original`, saves progress, joins `/continue`. Detail: SPEC-07 P0.1,
+  P0.2, P0.4; SPEC-01 §11 row 16; the D-20 update in
+  [feature-inventory.md](../feature-inventory.md).
+
+## Open owner decisions
+
+Found during the 2026-10-01 gap verification. Each needs an owner answer, not
+an edit; the place named is where the answer lands.
+
+- **(a) `GET /bank/report` is undocumented.** It ships (`bank/module.go`,
+  behind `bank-transactions:read:own`) and SPEC-10 §1 refers to SPEC-03's
+  "monthly report", but SPEC-03 §7 lists no such endpoint (P1.11 describes
+  only a report *page*). Decide: document its contract in SPEC-03 §7 (and add
+  a §12 row if it diverges), or retire it.
+- **(b) Debt movements body.** SPEC-10 §6 says `account_id`; the handler and
+  `frontend/src/lib/bank.ts` use `wallet_id` (plus an optional `note`) —
+  SPEC-10 §8 row 4. Decide which name is the contract.
+- **(c) `people/already-in-registry`.** The handler emits it (409, the `0035`
+  `linked_user_id` unique), but neither SPEC-08 §7 nor `problems.ts` declares
+  it — SPEC-08 §11 row 12. Decide: declare it, or map the conflict to an
+  existing type.
+- **(d) Weather widget.** SPEC-06 §3 says it was dropped, but `HEAD` ships
+  `WeatherWidget`, registered as `weather` and seeded on the left rail by
+  `0036_layout_core` — SPEC-06 §11 row 14. Remove it, or accept it and revise
+  §3.
+- **(e) Out-of-range `limit`.** The Pagination convention sets default and max
+  but not what happens beyond them, and the specs disagree:
+  - *clamp to the max* — SPEC-06 P0.2 and §7 (`/stream`, above 50 → 50;
+    `HEAD` falls back to 30, §11 row 8); SPEC-07 P0.3 (`/continue`, above
+    50 → 50; `HEAD` clamps, the only list that does); TC-NOTIFY-009
+    (`limit=500` → "limit clamped"). SPEC-08's `days` on upcoming birthdays
+    (> 366 → 366) is a window, not a page size, but clamps too.
+  - *fall back to the default* — SPEC-01 §7 Pagination (out of range → 50);
+    SPEC-05 §7 (≤ 0 or > 100 → 50); SPEC-08 §7 (≤ 0 or > 200 → 50).
+  - *silent* — SPEC-02 §7 (30 / 50), SPEC-03 §7 (50 / 100), SPEC-04 §7
+    (50 / 100).
+  - `HEAD`: every list service — media, comic, bank, notify, journal, people,
+    stream — falls back to the default on both sides; only `/continue` clamps.
+
+  **Proposed rule** (one sentence for the Pagination convention): *`limit` is
+  lenient and never an error — missing, non-integer or < 1 → the endpoint's
+  default; above the endpoint's max → clamped to the max.* It is what a client
+  asking for 500 means, matches SPEC-06, SPEC-07 and TC-NOTIFY-009, and costs
+  one line in each of seven services plus their tests; SPEC-01 §7, SPEC-05 §7
+  and SPEC-08 §7 flip their sentence, and SPEC-02/03/04 gain it. (The
+  zero-code alternative — fall back everywhere — flips SPEC-06, SPEC-07,
+  TC-NOTIFY-009 and the `/continue` handler instead.)
+- **(f) `timezone_manual` and `account/invalid-timezone`.** Both were added
+  while writing the Timezone convention, to make "manual override" and
+  validation concrete; confirm the flag (column, `PATCH /auth/me` field, "use
+  my location" clears it) and the 422 slug.
+- **(g) `{items}` for non-paginated lists.** The Envelopes decision is applied
+  to non-paginated lists too (`/bank/accounts`, chapter pages, `/bank/debts`,
+  `/people/upcoming-birthdays`, …); confirm that reading.
+
+## Review history
+
+- **2026-07-11** — first spec-gap review and fix pass:
+  [spec-gap-fix-worklog-2026-07-11.md](../analysis/spec-gap-fix-worklog-2026-07-11.md).
+- **2026-09-30** — second review (184 confirmed findings), fixed in the specs
+  by `1db1e32` (PR #17); the owner decisions on envelopes, timezone and audio
+  applied and the matrix regraded by `f54389b`:
+  [spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md)
+  (its last section before "Refuted" records the corrections found on
+  2026-10-01).
+- **2026-10-01** — every `[c]` finding re-verified against `99b5a0b` and
+  folded into each spec's "Implementation gaps vs shipped code" section.
+  **From now on that section, not a worklog, is the live list** of where the
+  code diverges; the worklogs are the dated record.
