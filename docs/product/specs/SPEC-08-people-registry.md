@@ -21,8 +21,9 @@ emotionally relevant events for the stream, the bell, and the dormant
 ## 2. Goals
 
 1. The owner records people (family, friends) with birthdays and contact notes.
-2. Upcoming birthdays surface as bus events days ahead, computed in the v1
-   timezone (`APP_TIMEZONE`, P0.3), exactly once per threshold per year.
+2. Upcoming birthdays surface as bus events days ahead, computed in the
+   owner's own timezone (`users.timezone`, P0.3), exactly once per threshold
+   per year.
 3. `BirthdayCard` and the people list render real rows, not fixtures.
 
 ## 3. Non-goals
@@ -88,8 +89,8 @@ month/day travel together by design).
 **When a PATCH changes the effective occurrence** (`birth_month` or
 `birth_day` differ from the stored values, `birth_calendar` changes, or the
 birthday is cleared), the same transaction deletes the person's
-`people_birthday_notices` rows with `year >=` the current year in
-`APP_TIMEZONE` (P0.3) — otherwise old-date notices suppress the corrected
+`people_birthday_notices` rows with `year >=` the current year in the
+owner's timezone (P0.3) — otherwise old-date notices suppress the corrected
 date's events for the rest of the year (stale-dedup bug), while past years'
 history stays. Resending an identical birthday object, or changing only
 `birth_year`, leaves the notice rows untouched: every PATCH that carries a
@@ -144,20 +145,21 @@ field or column.)*
 `GET /api/v1/people/upcoming-birthdays?days=14` (default 14; a value below 1,
 absent or unparseable means the default; above 366 is clamped to 366) —
 permission `people:read:own`. Computes each person's **next occurrence** in the
-v1 timezone (below) and returns people with `0 ≤ days_until ≤ days`
+caller's timezone (below) and returns people with `0 ≤ days_until ≤ days`
 (inclusive; today = 0; people without a birthday are excluded), sorted by
 `days_until`, then `display_name`, then `id`. *(Code follow-up: HEAD sorts by
 `days_until` only, with an unstable sort, so same-day ties have no fixed
 order.)*
 
-**TZ source at v1** (D-17 names user-TZ boundaries; this is a declared v1
-deviation): the existing platform setting `APP_TIMEZONE` (`platform/config`,
-IANA, default `UTC`), injected into people as `Deps.Timezone`.
-`users.timezone` has no write path and is not in `accountapi.UserSummary`;
-per-user TZ needs both and is out of scope. An unparseable name falls back to
-UTC with a warning. *(Code follow-up: `cmd/api` and `cmd/worker` build
-`people.Deps` without `Timezone`, so it runs in UTC regardless of
-`APP_TIMEZONE`.)* Response items:
+**TZ source** (specs README Timezone, D-17): the owner's own
+`users.timezone`, read through `accountapi` (`UserSummary.Timezone`); the
+frontend keeps it current from the device's location, with a manual override
+in settings. Unknown or unparseable → `Asia/Ho_Chi_Minh`. "Today" is the
+owner's local date in that zone; there is no instance-wide zone. *(Code
+follow-up: HEAD injects one zone as `people.Deps.Timezone`, and `cmd/api` and
+`cmd/worker` build `people.Deps` without it, so everything runs in UTC; the
+fix drops `Deps.Timezone` for a per-owner lookup through `accountapi`, which
+first needs the README Timezone follow-up.)* Response items:
 `{person_id, display_name, next_occurrence (date), days_until, age_turning?}`
 (`age_turning` only when `birth_year` is known). Powers SPEC-06's `BirthdayCard`.
 
@@ -167,8 +169,12 @@ the scan (P0.4) and this endpoint share one `nextOccurrence` function and one
 test suite.
 
 **Acceptance criteria.**
-- Given a birthday tomorrow in `APP_TIMEZONE` but today in UTC, then
-  `days_until = 1` (timezone-correct, regression test).
+- Given a birthday tomorrow in the owner's `users.timezone` but today in UTC,
+  then `days_until = 1` (timezone-correct, regression test).
+- Given an owner who never set a zone, then the endpoint evaluates in
+  `Asia/Ho_Chi_Minh`; given two owners in `Asia/Ho_Chi_Minh` and
+  `America/Los_Angeles` queried at 20:00 UTC, then a birthday date that is 2
+  days away for the Los Angeles owner is 1 day away for the Ho Chi Minh owner.
 - Given a Feb-29 birthday queried in a non-leap year, then `next_occurrence` is
   Feb-28.
 - Given `lunar` rows, then they are omitted at v1 (not wrong dates — absent).
@@ -185,7 +191,7 @@ test suite.
 Daily periodic task **`people:scan_birthdays`** on the shared periodic runner
 (SPEC-01 P0.3's convention — no OS cron). For each tenant (`forEachTenant` in
 `cmd/worker`, one committed tenant scope each), for every user's people, evaluate
-`days_until` in `APP_TIMEZONE` (P0.3) and emit **`people:birthday_upcoming`**
+`days_until` in that user's own timezone (P0.3) and emit **`people:birthday_upcoming`**
 `{notice_id, person_id, user_id, display_name, days_until}` for thresholds
 `T ∈ {3, 0}` — **once per (person, threshold, occurrence-year)**. Rows with
 `birth_calendar='lunar'` are skipped at v1 (§3).
@@ -215,7 +221,7 @@ row's `id` column — a UNIQUE surrogate; the table's PRIMARY KEY is the
 composite (person_id, year, threshold) (§6).
 
 **Re-publish payload.** The insert stores the row's `occurrence` date (§6). A
-re-publish recomputes `days_until = occurrence − today` (in `APP_TIMEZONE`)
+re-publish recomputes `days_until = occurrence − today` (in the owner's timezone)
 and rebuilds the payload from the current person row. If `days_until < 0`, it
 does not publish: it sets `emitted_at = now()` and logs the notice as expired.
 If a smaller threshold also emits for the same (person, year) in this scan,
@@ -228,12 +234,16 @@ Register the event in [events.md](../../reference/events.md). Consumers —
 stream (SPEC-06) today; notify (SPEC-04) once specced — attach as they land;
 **emission is day-one regardless** (ADR-08 rule).
 
-**Schedule:** daily at 06:00 UTC on the shared scheduler, once per tenant via
-`forEachTenant`, evaluated in `APP_TIMEZONE`. This deliberately deviates from
-D-17's hourly per-TZ pattern: a threshold can be recognized up to ~a day late
-depending on run hour vs the TZ (the catch-up rule absorbs it), and a fixed-UTC
-run near local midnight can skip one local date across a DST change, losing
-that day-of notice. The re-entry fix is D-17's hourly pattern.
+**Schedule** (D-17's hourly per-TZ pattern, specs README Timezone): **hourly**
+at minute 5 on the shared scheduler, once per tenant via `forEachTenant`. Each
+run resolves every owner's zone once through `accountapi` and evaluates
+`days_until` against **that owner's local date** — no run uses one "today" for
+everyone. Re-running every hour is safe because an emit needs a missing
+`(person, occurrence-year, threshold)` notice row: a run that finds the row
+emits nothing. So each threshold is recognized within the first hour of the
+owner's local day, whatever the zone, and a DST change cannot skip a local
+date. *(Code follow-up: HEAD registers the scan daily at 06:00 UTC and
+evaluates one zone for all owners — UTC in practice, see P0.3.)*
 
 **Acceptance criteria.**
 - Given a birthday 3 days out, then exactly one 3-day event fires; day-of fires
@@ -249,6 +259,11 @@ that day-of notice. The re-entry fix is D-17's hourly pattern.
   duplicate item; if the next scan runs after the occurrence date, the row
   expires unpublished; if it runs on the day itself, only the day-of event is
   published and the pending 3-day row is suppressed.
+- Given owners in `Asia/Ho_Chi_Minh` and `America/Los_Angeles` with a
+  birthday on the same date, then each owner's day-of event fires in the first
+  hourly run after that owner's local midnight (17:05 UTC the day before for
+  Ho Chi Minh, 07:05 or 08:05 UTC for Los Angeles depending on DST), and later
+  runs that day emit nothing.
 - Given a lunar row, then the scan inserts no notice and emits nothing.
 - Given the same person next year, then events fire again (new occurrence-year).
 - Given a person deleted between scans, then no event (and their notice rows are
@@ -364,9 +379,9 @@ CREATE INDEX people_persons_user_bday_idx ON people_persons (user_id, birth_mont
 CREATE TABLE people_birthday_notices (
   id         uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
   person_id  uuid NOT NULL REFERENCES people_persons(id) ON DELETE CASCADE,
-  year       int  NOT NULL,           -- occurrence year, in APP_TIMEZONE (P0.3)
+  year       int  NOT NULL,           -- occurrence year, in the owner's timezone (P0.3)
   threshold  int  NOT NULL CHECK (threshold IN (0, 3)),
-  occurrence date NOT NULL,           -- celebrated date (Feb-28-adjusted) in APP_TIMEZONE at insert
+  occurrence date NOT NULL,           -- celebrated date (Feb-28-adjusted) in the owner's timezone at insert
   suppressed boolean NOT NULL DEFAULT false,  -- superseded by a smaller threshold; never published
   emitted_at timestamptz,             -- NULL until published, expired or suppressed
   PRIMARY KEY (person_id, year, threshold)
@@ -402,11 +417,11 @@ before setting NOT NULL). *(Code follow-up.)* `0035_people_circles` later added
 | Method | Path | Permission | Notes |
 |---|---|---|---|
 | POST | `/api/v1/people` | `people:write:own` | `{display_name, relationship?, birthday?, contact?, note_md?}` — `birthday` shape per P0.2 |
-| GET | `/api/v1/people?cursor=&limit=&circle=` | `people:read:own` | ordered (`display_name`, `id`); `limit` default 50, max 200 (a value ≤ 0 or > 200 falls back to 50); optional `circle` filter (unknown value → 422 `people/validation`); shipped envelope `{people: Person[], next_cursor?: string}`, not the README's `{items}` (existing shape kept); malformed cursor → 400 `people/invalid-cursor` |
+| GET | `/api/v1/people?cursor=&limit=&circle=` | `people:read:own` | ordered (`display_name`, `id`); `limit` default 50, max 200 (a value ≤ 0 or > 200 falls back to 50); optional `circle` filter (unknown value → 422 `people/validation`); returns `{items: Person[], next_cursor?: string}` (specs README Pagination; *code follow-up: HEAD answers `{people, next_cursor}`*); malformed cursor → 400 `people/invalid-cursor` |
 | GET | `/api/v1/people/{id}` | `people:read:own` | 404 for others' rows |
 | PATCH | `/api/v1/people/{id}` | `people:write:own` | `birthday: null` clears; a birthday change that moves the occurrence resets current/future notice rows and emit `people:birthday_notice_revoked` per cleared emitted notice (P0.2); P1.7 adds `avatar_asset_id?: uuid|null` (validated via mediaapi: exists, kind image, status ready, owned — else 422 `people/invalid-asset`; null clears) |
 | DELETE | `/api/v1/people/{id}` | `people:delete:own` | 204; idempotent 404; emits `people:person_deleted` after commit (P0.2) |
-| GET | `/api/v1/people/upcoming-birthdays?days=` | `people:read:own` | `APP_TIMEZONE` (P0.3); sorted `days_until`, `display_name`, `id`; non-paginated — shipped as `{upcoming: [...]}`, not the README's `{items}` (existing shape kept) |
+| GET | `/api/v1/people/upcoming-birthdays?days=` | `people:read:own` | caller's `users.timezone` (P0.3); sorted `days_until`, `display_name`, `id`; non-paginated, returns `{items: [...]}` (specs README Pagination; *code follow-up: HEAD answers `{upcoming: [...]}`*) |
 | POST | `/api/v1/people/{id}/interactions` | `people:write:own` | P1.6 |
 | GET | `/api/v1/people/{id}/interactions` | `people:read:own` | P1.6 |
 | DELETE | `/api/v1/people/{id}/interactions/{interaction_id}` | `people:delete:own` | P1.6; 204; 404 for others' rows |
@@ -423,8 +438,12 @@ cursor), `people/validation` (422, body/param shape). Each is registered in
 `frontend/src/lib/problems.ts` per the specs README Errors convention.
 *(Code follow-up: none of the people slugs is in `problems.ts` on HEAD.)*
 
-The list follows the specs README Pagination convention for cursor, limit and
-errors; its envelope is the shipped `{people, next_cursor}` (row above).
+Both lists follow the specs README Pagination convention in full — cursor,
+limit, errors and the `{items}` envelope. Pre-rule endpoints are retrofitted,
+not grandfathered (owner decision 2026-09-30), so neither keeps its shipped
+`people` / `upcoming` key. *(Code follow-up: the retrofit renames both keys to
+`items` in the handler, `shared/openapi.yaml` and the frontend readers — the
+`/people` list and `BirthdayCard` — in one PR.)*
 Annotate each operation per the specs README AuthZ **OpenAPI encoding**.
 
 ## 8. Success metrics (n=1 honest)

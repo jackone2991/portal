@@ -82,7 +82,7 @@ app/(app)/page.tsx ──────────┼─→ activeTemplate() ─�
 app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
 ```
 
-- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-07 P0.4 player with resume; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
+- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-07 P0.4 video/audio player with resume — audio plays from `/original`; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
 - **`templates/registry.ts`** — the single switch point: maps version id → manifest, picks the active one from `NEXT_PUBLIC_TEMPLATE_VERSION`, throws on an unknown id.
 - **`templates/v1/index.ts`** — the v1 manifest binding the Olympus components to the contract.
 
@@ -648,6 +648,20 @@ export function formatMoney(money: Money, locale: string): string {
 
 Backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timezone`.
 
+**Which zone** (specs README "Timezone" convention, D-17 update 2026-09-30):
+the user's own `users.timezone`, read from `GET /auth/me` — never the
+browser's zone and never an instance-wide `APP_TIMEZONE`; unknown →
+`Asia/Ho_Chi_Minh`. The same zone drives every "today", day separator, month
+default and date-only → instant conversion on the client. **Write path:** after
+sign-in the app reads the device zone with
+`Intl.DateTimeFormat().resolvedOptions().timeZone` (the user's location) and,
+when it differs from the stored value and `timezone_manual` is false, saves it
+with `PATCH /api/v1/auth/me {timezone}`; the settings page offers a manual
+override (IANA picker → `{timezone, timezone_manual: true}`) and a "use my
+location" reset. *(Code follow-up: `src/lib/time.ts` still takes its display
+zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE`; `/time` should keep only the
+server clock, and the zone comes from `/auth/me`, which does not carry it yet.)*
+
 ```typescript
 // frontend/src/lib/format.ts
 import { Temporal } from "@js-temporal/polyfill";
@@ -897,7 +911,7 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 - **Silent session refresh** — DONE via `SessionKeeper` (supersedes the [D-34] refresh-and-return route).
 - **Generated TS types** from OpenAPI → `frontend/src/lib/types.gen.ts` — pending (file does not exist yet; needs `make openapi`).
 - **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](../adr/06-local-auth-model.md) replaced the original OIDC deliverable).
-- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending.
+- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending; includes the device-zone sync and settings override in §5.4.
 - **`frontend/CLAUDE.md` conventions doc** ([D-32, D-33]) with anti-pattern examples — pending (does not exist yet).
 - **Error pages** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled — pending.
 - **Component library kickoff** — partial: v1 template ships `Avatar`, `Icon`, `TopMenu`, sidebars; the cross-version `components/ui/` primitives (`<Button />`, `<Dialog />`, `<Toast />`) are pending.

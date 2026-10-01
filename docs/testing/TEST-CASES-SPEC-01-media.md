@@ -90,7 +90,7 @@
 | TC-MEDIA-060 | Grid renders owner assets | Functional | P0 | open `/library/media` as owner with mixed assets | grid shows poster/thumb, title, kind badge, status badge, created date | ☐ |
 | TC-MEDIA-061 | Filter kind=image/video/all | Functional | P0 | apply each kind filter | list matches filter | ☐ |
 | TC-MEDIA-062 | Filter status; processing includes uploading | Functional | P0 | filter status=processing with a fresh `uploading` asset present | freshly-created `uploading` asset **appears** under processing filter (never invisible under every filter) | ☐ |
-| TC-MEDIA-063 | Cursor pagination stable | Functional | P0 | 100+ assets; page via cursor | order `created_at DESC, id DESC`; no dupes/gaps | ☐ (CC-4) |
+| TC-MEDIA-063 | Cursor pagination stable | Functional | P0 | 100+ assets; page via cursor | response `{items, next_cursor?}` (no `assets` key — specs README Pagination retrofit); order `created_at DESC, id DESC`; no dupes/gaps | ☐ (CC-4) |
 | TC-MEDIA-064 | LCP < 2.5 s (100 assets) | Performance | P0 | measure first-page LCP; thumb variants only | < 2.5 s; grid uses thumb, never originals | ☐ [MANUAL] |
 | TC-MEDIA-065 | Optimistic delete, no full refetch | Frontend | P0 | delete via confirm dialog | card disappears via TanStack cache mutation (no full refetch); rollback on error | ☐ (CC-9) |
 | TC-MEDIA-066 | Image lightbox + download original | Frontend | P0 | open image → lightbox | shows `medium`; Download-original action present & works | ☐ |

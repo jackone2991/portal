@@ -100,13 +100,53 @@ they remain in [../briefs/00-life-os-pivot.md](../briefs/00-life-os-pivot.md)
 - **Pagination**: list endpoints use an opaque base64 keyset
   `?cursor=&limit=`. Each spec §7 states the default and max limit; a new
   endpoint that states none uses default 30, max 50 (existing endpoints keep
-  their OpenAPI-declared limits). Responses are
-  `{items: [...], next_cursor: string}` with `next_cursor` absent (or null) on
-  the last page; extra top-level fields are allowed (e.g. `unread_count`), and a
-  new non-paginated list still returns `{items}`. The ordering key ends in `id`.
-  A malformed cursor is 400 `<module>/invalid-cursor`, and a body/param-shape
-  failure without a named type is 422 `<module>/validation`. Each §7 lists both
-  for every list endpoint.
+  their declared defaults and maxima). **Every** cursor-paginated list
+  endpoint responds `{items: [...], next_cursor: string}` with `next_cursor`
+  absent (or null) on the last page, and every non-paginated list responds
+  `{items: [...]}`. Extra top-level fields that are not the list itself are
+  allowed alongside `items` (e.g. notifications' `unread_count`); a resource
+  named list key (`{assets}`, `{comics}`, `{people}`, …) is not. *(Owner
+  decision 2026-09-30:)* endpoints that shipped before this rule are
+  **retrofitted, not grandfathered** — only their limits are kept; each such
+  spec §7 states the `{items}` shape and carries a code follow-up for the
+  handler, `shared/openapi.yaml` and the frontend readers. *(Code follow-up
+  for lists no spec owns: music `{imports}` and `{playlists}`, social
+  `{connections}`, story `{chapters}` and people `{suggestions}` retrofit to
+  `{items}` the same way.)* The ordering key
+  ends in `id`. A malformed cursor is 400 `<module>/invalid-cursor`, and a
+  body/param-shape failure without a named type is 422 `<module>/validation`.
+  Each §7 lists both for every list endpoint.
+- **Timezone** *(owner decision 2026-09-30; D-17)*: every user-facing day or
+  month boundary — "today", "this month", a default month, a date-only value
+  turned into an instant, day grouping, on-this-day, birthday and due-date
+  countdowns — is computed in **the user's own timezone**: `users.timezone`, an
+  IANA name taken from the user's location, stored per user. Unknown or
+  unparseable → `Asia/Ho_Chi_Minh` (the column default; an unparseable stored
+  name also logs a warning). There is no instance-wide fallback: `APP_TIMEZONE`,
+  "the instance default" and UTC are not v1 sources for user-facing
+  boundaries. **Write path**: the frontend detects the device zone
+  (`Intl.DateTimeFormat().resolvedOptions().timeZone`, i.e. the user's current
+  location) after sign-in and saves it through the account API
+  (`PATCH /api/v1/auth/me {timezone}`) when it differs from the stored value;
+  settings offer a manual override (an IANA picker, saved as
+  `PATCH /auth/me {timezone, timezone_manual: true}`); while
+  `users.timezone_manual` is true the automatic save is skipped, and choosing
+  "use my location" clears it. The API validates the name with
+  `time.LoadLocation` (422 `account/invalid-timezone` otherwise). **Readers**:
+  the frontend reads the zone from `GET /auth/me`; backend modules read it
+  through `accountapi` (`UserSummary.Timezone`), never by querying `users`.
+  **Sweeps**: a periodic task never uses one "today" for everyone — it runs
+  often enough (hourly, D-17's per-TZ pattern) and evaluates each user's local
+  date in that user's zone, relying on its dedup keys for exactly-once. SQL
+  converts at the query layer (`occurred_at AT TIME ZONE $tz`), never through
+  the session zone (UTC). *(Code follow-up: `0002_account_users` ships
+  `timezone DEFAULT 'UTC'` — a new migration changes the default to
+  `'Asia/Ho_Chi_Minh'`, rewrites the untouched `'UTC'` rows and adds
+  `timezone_manual boolean NOT NULL DEFAULT false`; there is no
+  `PATCH /auth/me` and no `account/invalid-timezone` in `problems.ts`, `CurrentUser` and `accountapi.UserSummary` carry no
+  timezone, and the frontend's `lib/time.ts` takes its display zone from
+  `GET /api/v1/time`, i.e. `APP_TIMEZONE` — it switches to the user's zone and
+  `/time` keeps only the server clock.)*
 - **updated_at**: there is no trigger; every UPDATE and every
   `ON CONFLICT … DO UPDATE` in `query/*.sql` sets `updated_at = now()`
   explicitly.

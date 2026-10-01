@@ -79,7 +79,8 @@
 | TC-JRNL-058 | Backdate via date control | Frontend | P1 | use composer date control | occurred_at set; entry lands at that position | ☐ |
 | TC-JRNL-059 | Persistence across restart | Reliability | P0 | post; `make up` restart; reload | entries persist (DB not cache) | ☐ |
 | TC-JRNL-060 | Preview renders markdown | Frontend | P0 | composer draft `**bold**`, switch to Preview; then a draft containing `<script>` | bold renders bold (same sanitizing renderer as the entry card, not raw text); `<script>` renders inert | ☐ |
-| TC-JRNL-061 | Backdate to yesterday 21:00 | Functional | P0 | post with `occurred_at` = yesterday 21:00 local | stored at that instant; listed between its neighbours | ☐ |
+| TC-JRNL-061 | Backdate to yesterday 21:00 | Functional | P0 | post with `occurred_at` = yesterday 21:00 in the user's `users.timezone` | stored at that instant; listed between its neighbours | ☐ |
+| TC-JRNL-062 | Composer zone is the user's, not the browser's | Frontend | P0 | user zone `Asia/Ho_Chi_Minh`, browser zone `UTC`; pick the date 2026-07-01 with no time | request carries `occurred_at` = `2026-07-01T12:00:00+07:00`; the entry lands on 2026-07-01 in the stream (specs README Timezone) | ☐ |
 
 ## P1 — nice to have
 

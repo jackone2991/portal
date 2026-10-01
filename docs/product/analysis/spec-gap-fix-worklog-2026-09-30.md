@@ -1376,10 +1376,10 @@
 
 A consistency review of the finished diff fixed ten small defects in place (missing code-follow-up flags on SPEC-02/03/09, a stale backfill mention in the specs README, `completed_at` in TC-CONT-080, `P0.1(b)` references in events.md, the comic-leg `href` in SPEC-07). These need an owner decision, not an edit:
 
-- **Pagination envelopes.** The README rule grandfathers existing endpoints' *limits*, not their envelopes. SPEC-08 keeps `{people}` / `{upcoming}` as a deliberate exception; SPEC-01/02/03 call `{assets}` / `{comics}` / `{transactions}` a pending retrofit to `{items}`. Pick one policy in the README and align the four specs.
-- **Timezone source.** SPEC-03 (dashboard/budget month) cites `users.timezone` (D-17); SPEC-06 P1.5 and SPEC-08 P0.3 use `APP_TIMEZONE` at v1 because `users.timezone` has no write path; SPEC-05 P0.4 claims to match the stream's zone. Choose one v1 source and state it once in the README.
-- **Media deep link for audio.** SPEC-07 P0.4 sends video *and audio* to `/library/media/{id}`, but the same spec says that player 404s any non-video asset. Either drop audio from the rule or widen the player.
-- **Traceability matrix regrade.** `docs/reference/TRACEABILITY-MATRIX.md` has no rows for the new SPEC-01 P1.3, SPEC-02 P1.10, SPEC-07 P1.6, SPEC-09 P0.6; still counts the retired SPEC-06 P1.6; and marks ✅ requirements this pass tightened and HEAD now fails (e.g. SPEC-07 P0.2 cites `TestGetProgressNoRow`, which asserts the old 404). Regrade it together with the code follow-ups.
+- ✅ **Decided 2026-10-01 — Pagination envelopes:** every list returns `{items[, next_cursor]}`; existing endpoints are retrofitted, not grandfathered (README Pagination; D-29 update). Was: The README rule grandfathers existing endpoints' *limits*, not their envelopes. SPEC-08 keeps `{people}` / `{upcoming}` as a deliberate exception; SPEC-01/02/03 call `{assets}` / `{comics}` / `{transactions}` a pending retrofit to `{items}`. Pick one policy in the README and align the four specs.
+- ✅ **Decided 2026-10-01 — Timezone source:** each user's own zone, detected from the device/location and stored in `users.timezone`, default `Asia/Ho_Chi_Minh`; sweeps evaluate each user's local date (README Timezone; D-17 update). Was: SPEC-03 (dashboard/budget month) cites `users.timezone` (D-17); SPEC-06 P1.5 and SPEC-08 P0.3 use `APP_TIMEZONE` at v1 because `users.timezone` has no write path; SPEC-05 P0.4 claims to match the stream's zone. Choose one v1 source and state it once in the README.
+- ✅ **Decided 2026-10-01 — Audio:** audio opens the player page (`/library/media/{id}`), plays from `/original`, saves progress and joins `/continue` (SPEC-07 P0.1/P0.2/P0.4; D-20 update). Was: SPEC-07 P0.4 sends video *and audio* to `/library/media/{id}`, but the same spec says that player 404s any non-video asset. Either drop audio from the rule or widen the player.
+- ✅ **Done 2026-10-01 — Traceability matrix regrade.** Was: `docs/reference/TRACEABILITY-MATRIX.md` has no rows for the new SPEC-01 P1.3, SPEC-02 P1.10, SPEC-07 P1.6, SPEC-09 P0.6; still counts the retired SPEC-06 P1.6; and marks ✅ requirements this pass tightened and HEAD now fails (e.g. SPEC-07 P0.2 cites `TestGetProgressNoRow`, which asserts the old 404). Regrade it together with the code follow-ups.
 
 ---
 
@@ -1468,6 +1468,16 @@ This pass edited documentation only. Each line below is a place where the correc
 - **F179** — Code follow-up: restore-drill.sh lacks these checks/prefix.
 - **F183** — Code follow-up: the constraint migration.
 - **F184** — Code follow-up: no nav link on HEAD.
+
+### Added by the 2026-10-01 owner decisions
+
+- **Timezone** — `0002` ships `timezone DEFAULT 'UTC'`: new migration to default `'Asia/Ho_Chi_Minh'`, rewrite untouched `'UTC'` rows, add `timezone_manual`.
+- **Timezone** — no `PATCH /api/v1/auth/me {timezone}`; `CurrentUser` / `accountapi.UserSummary` lack timezone; `account/invalid-timezone` missing from problems.ts.
+- **Timezone** — `lib/time.ts` takes the display zone from `GET /api/v1/time` (`APP_TIMEZONE`); `/time` should report only the server clock.
+- **Timezone** — SPEC-03 month default needs the caller's zone via accountapi; SPEC-08 `Deps.Timezone` → per-owner lookup.
+- **Timezone** — `people:scan_birthdays` (daily 06:00 UTC) and `bank:scan_debts_due` (daily 07:00 UTC) must run hourly and evaluate each owner's local date.
+- **Envelopes** — retrofit to `{items}`: `/assets` (`{assets}`), comics (`{comics}`, `{pages}`, `{sources}`), bank (`{transactions}`, `{accounts}`, `{categories}`, `{month, budgets}`), people (`{people}`, `{upcoming}` incl. BirthdayCard), debts (`{debts}`), and unowned lists (music `{imports}`/`{playlists}`, social `{connections}`, story `{chapters}`, people `{suggestions}`) — handler + openapi + frontend readers.
+- **Audio** — `PutProgress`/`GetProgress` reject non-video (404 not-playable); `MediaDetailView` feeds audio an empty `hls_url`; `completeAudio` stores no `duration_ms`.
 
 ---
 

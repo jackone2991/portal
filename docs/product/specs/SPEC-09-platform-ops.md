@@ -123,7 +123,8 @@ in `running` forever.
    (step 5) must never delete it or its target.
 5. **Retention** after a successful run. Input = `ops_backup_runs` rows with
    `status='ok'` and non-null `storage_key`, de-duplicated by key (never a
-   storage listing). All dates are UTC: a dump's date is the `<yyyy-mm-dd>` in
+   storage listing). All dates are UTC (operator-facing retention dates, not a
+   user-facing day boundary, so the specs README Timezone rule does not apply): a dump's date is the `<yyyy-mm-dd>` in
    its key, which is `started_at` in UTC. Keep = the 7 most recent dump dates ∪,
    for each of the 4 most recent ISO weeks (Mon–Sun, UTC) that contain an ok
    dump, the latest ok dump in that week ∪ the current `LATEST.json` target.

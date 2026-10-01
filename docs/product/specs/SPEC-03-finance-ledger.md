@@ -139,7 +139,8 @@ would surface as a 500.
 
 Entry UX: quick-add dialog reachable from every `/bank/*` page; ≤4
 required fields (amount, direction defaulted to expense, account defaulted to last
-used, category defaulted to most-recently-used); date defaults to today;
+used, category defaulted to most-recently-used); date defaults to today in the
+user's timezone (specs README Timezone);
 `MoneyInput` renders VND thousands separators (`1.500.000`).
 
 **Acceptance criteria.**
@@ -323,7 +324,8 @@ drop child-only budgets; the full nested tree lives on `/bank/budgets`), and the
 bank landing page.
 
 **Contract.** `month` is `YYYY-MM` (the §7 month rule): when omitted it defaults
-to the current month in `users.timezone` (D-17); a malformed value is 400
+to the current month in the caller's `users.timezone` (specs README Timezone,
+D-17); a malformed value is 400
 `bank/invalid-month`. Response:
 
 ```
@@ -605,9 +607,12 @@ granted together to `user` (P0.8). Revisit if they diverge.
 **Month rule.** `month` is `YYYY-MM` on the wire everywhere and is stored as the
 first-of-month date. The budgets PUT carries it in the body, not the query. An
 omitted `?month=` on a GET means the current month in the caller's timezone
-(`users.timezone`, D-17). A malformed month is 400 `bank/invalid-month`.
-*(Code follow-up: the shipped handler defaults to the UTC month and answers a
-malformed month with 400 `about:blank`.)*
+(`users.timezone`, read through `accountapi` — specs README Timezone, D-17;
+unknown → `Asia/Ho_Chi_Minh`, never UTC). A malformed month is 400
+`bank/invalid-month`. *(Code follow-up: the shipped handler defaults to the UTC
+month and answers a malformed month with 400 `about:blank`; it needs the
+caller's zone from `accountapi`, which does not expose it yet — README
+Timezone follow-up.)*
 
 The transactions list paginates by **cursor**, not offset `?page=` (offset
 paging duplicates or skips rows under inserts; keyset paging is stable under
@@ -617,10 +622,16 @@ cursor — acceptable for a personal list): ordering is
 specs README Pagination convention and §8's infinite-list requirement.
 `?limit=` keeps the OpenAPI-declared default 50, max 100. A
 malformed cursor is 400 `bank/invalid-cursor`; a param-shape failure 422
-`bank/validation`. *(Code follow-up: the shipped handler and
-`shared/openapi.yaml` still use the pre-convention key
-`{transactions: [...], next_cursor?}`; until the retrofit, clients read
-`transactions`.)* Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation).
+`bank/validation`. The non-paginated lists answer `{items}` too:
+`GET /bank/accounts` and `GET /bank/categories` return `{items: [...]}`, and
+`GET /bank/budgets` returns `{month, items: [...]}` (`month` is an extra
+top-level field, not the list). Pre-rule endpoints are retrofitted, not
+grandfathered (specs README Pagination, owner decision 2026-09-30); there is no
+`transactions`, `accounts`, `categories` or `budgets` list key. *(Code
+follow-up: the shipped handlers and `shared/openapi.yaml` still answer
+`{transactions: [...], next_cursor?}`, `{accounts}`, `{categories}` and
+`{month, budgets}`; the retrofit renames each key to `items` in the handler,
+`shared/openapi.yaml` and the `lib/bank.ts` readers in one PR.)* Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation).
 
 Problem types: `bank/account-not-empty`, `bank/account-not-mutable`,
 `bank/is-transfer-leg`, `bank/same-account-transfer`, `bank/currency-mismatch`,
@@ -734,7 +745,7 @@ P0.2–P0.4 (nightly backup + exercised restore drill) is green.
   trend charts** (net worth over time): a timeless opening balance back-projects
   today's opening amount into months before the account was tracked — a false
   plateau. A historical series must start each account's line at
-  `LEAST(created_at::date, MIN(occurred_at))` (cast in the user's timezone;
+  `LEAST(created_at::date, MIN(occurred_at))` (cast in the user's timezone, specs README Timezone;
   backdated entries are legal per P0.2, and an account with no transactions still
   enters at creation), with the opening balance applying **at** that anchor, never
   before it. Corollary while backdating: an entry dated before the account was

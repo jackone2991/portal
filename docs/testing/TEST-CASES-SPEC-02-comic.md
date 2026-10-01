@@ -86,6 +86,7 @@
 | TC-COMIC-064 | End-of-last-chapter panel | Frontend | P0 | reach last chapter end | panel offers "back to comic" (no dead end) | ☐ |
 | TC-COMIC-065 | Per-page error tile on bad asset | Reliability | P0 | one page's asset failed/deleted | per-page error tile; chapter continues (one bad page never blanks it) | ☐ |
 | TC-COMIC-066 | Reader via template registry | Frontend | P1 | inspect route resolution | view via `activeTemplate().views.<x>`; no version import in `app/` | ☐ |
+| TC-COMIC-067 | Reader payload envelope | Contract | P0 | GET `/chapters/{id}/pages`; GET `/comics/{id}/sync-sources` | `{items: [{page_id, asset_id, width, height}]}` in reading order; `{items: [SyncSource]}` — no `pages` / `sources` key (specs README Pagination) | ☐ |
 
 ## P0.4 — Reading progress (keyed by page_id)
 
@@ -107,7 +108,7 @@
 |----|----------|------|-----|-------|----------|--------|
 | TC-COMIC-100 | Reader sees only published | AuthZ | P0 | userA opens `/library/comic` (published + others' draft exist) | only published shown (cover=thumb, title, chapter count, updated date) | ☐ (CC-3) |
 | TC-COMIC-101 | My comics tab shows drafts | Functional | P0 | creator opens My comics | both draft+published w/ status badges + Create button | ☐ |
-| TC-COMIC-102 | Pagination no duplicates | Functional | P0 | >1 page of comics | keyset paging ordered `updated_at DESC, id DESC` (cursor encodes `(updated_at, id)`); no duplicates or skips provided no comic in the set is modified between fetches (an edited comic legitimately moves to the head); malformed cursor → 400 `comic/invalid-cursor` | ☐ (CC-4) |
+| TC-COMIC-102 | Pagination no duplicates | Functional | P0 | >1 page of comics | keyset paging ordered `updated_at DESC, id DESC` (cursor encodes `(updated_at, id)`); no duplicates or skips provided no comic in the set is modified between fetches (an edited comic legitimately moves to the head); response `{items, next_cursor?}` for both `/comics` and `/comics/mine` (no `comics` key); malformed cursor → 400 `comic/invalid-cursor` | ☐ (CC-4) |
 | TC-COMIC-103 | Placeholder component gone | Frontend | P0 | grep route | pre-existing placeholder removed | ☐ (CC-9) |
 | TC-COMIC-104 | Detail Continue iff progress | Functional | P1 | detail with/without progress | Continue shown only when progress exists | ☐ |
 

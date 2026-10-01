@@ -20,10 +20,10 @@ aggregator is at its cheapest right now.
 
 ## 2. Goals
 
-1. Reopening a video resumes within ±10 s of where playback stopped — across
-   devices (same account).
+1. Reopening a video or audio asset resumes within ±10 s of where playback
+   stopped — across devices (same account).
 2. One `GET /api/v1/continue` returns the cross-module in-progress list — video
-   today; comics join via P1.6 once SPEC-02 P0.4 exists, with **no
+   and audio today; comics join via P1.6 once SPEC-02 P0.4 exists, with **no
    response-shape changes** at that point.
 3. ≥95%-watched emits the first "watched X" life-stream fact (P1.5).
 
@@ -75,6 +75,21 @@ fires. `duration_ms <= 0` is treated as NULL (the NULL-duration rule applies).
 title from `assets.source_key`: it is always `uploads/{id}/original{ext}`, so
 every item would read "original.mp4".
 
+**Playable kinds** *(owner decision 2026-09-30; binding on P0.2–P0.4 and
+P1.5)*: `video` and `audio` assets are playable; every other kind (`image`,
+documents) is not. A video plays from its HLS output
+(`/api/v1/assets/{id}/hls/index.m3u8`) and may have a `poster` variant. An
+audio asset has neither: it is marked `ready` at `/complete` with no transcode
+step and plays from its stored original, `GET /api/v1/assets/{id}/original`
+(SPEC-01 P0.5 — owner-authenticated, `inline`, Range-capable via
+`http.ServeContent`, so seeking and resume work). Audio resumes, saves
+progress and completes exactly like video. Its `duration_ms` is probed from the
+original at `/complete` (the same ffprobe call the video poster step uses), so
+audio has a completion ratio and appears in `/continue`; an audio asset whose
+probe failed falls under the NULL-duration rule like any video. *(Code
+follow-up: HEAD's `completeAudio` stores no `duration_ms`, so every audio
+asset is NULL-duration — it resumes but never reaches `/continue` or P1.5.)*
+
 ### P0.2 — Beacon
 
 `PUT /api/v1/assets/{id}/progress {position_ms}` — **authenticated
@@ -92,14 +107,17 @@ table, which applies to both the PUT and the GET:
 | Asset state | Status | Problem type |
 |---|---|---|
 | Unknown id, malformed id, `deleting`, or owned by another user (asset visibility is owner-only at v1; no role or permission bypass) | 404 | `media/asset-not-found` |
-| Owned, not a video | 404 | `media/asset-not-playable` (404 keeps existence hidden beyond ownership) |
-| Owned video in `uploading`, `processing` or `failed` (no HLS output to resume) | 409 | `media/asset-not-ready` |
+| Owned, kind neither `video` nor `audio` (an image or document) | 404 | `media/asset-not-playable` (404 keeps existence hidden beyond ownership) |
+| Owned video or audio in `uploading`, `processing` or `failed` (nothing playable yet) | 409 | `media/asset-not-ready` |
 
 Until SPEC-01 P0 ships the `deleting` status, that clause is a no-op (no asset
 can be in that state yet). No row is written on any non-2xx.
 *(Code follow-up: on HEAD the handler maps `ErrForbidden` to a 403, `GetProgress`
 maps `deleting` to `media/asset-not-playable`, and neither checks the asset
-status; all three change to match this table.)*
+status; all three change to match this table. Both `PutProgress` and
+`GetProgress` also reject every non-video kind (`asset.Kind != "video"` →
+`ErrNotPlayable`), so audio answers 404 `media/asset-not-playable`; they
+accept `audio` too.)*
 
 `GET /api/v1/assets/{id}/progress` — same auth/owner-scoped construction as
 the PUT above, returns `{position_ms, progress_pct (null when duration_ms IS
@@ -146,6 +164,9 @@ call `navigator.sendBeacon` first; both switch to the keepalive `PUT`.)*
   `media/asset-not-found` (never 403).
 - Given an owned image asset, when PUT or GET progress is called, then 404
   `media/asset-not-playable`.
+- Given an owned `ready` audio asset, when PUT progress is called with
+  `position_ms` 90 000 and GET progress follows, then both answer 200 and GET
+  returns `position_ms` 90 000.
 - Given an owned video still `processing`, when PUT or GET progress is called,
   then 409 `media/asset-not-ready` and no row.
 - Given a playable owned video never played, when GET progress is called, then
@@ -206,7 +227,8 @@ the brief's threshold question: accidental clicks below 30 s never appear; the
 completed drop-off is a P0 predicate, not a P1 afterthought).
 
 **Acceptance criteria.**
-- Given only media wired, then the endpoint returns video items and no errors.
+- Given only media wired, then the endpoint returns video and audio items and
+  no errors; an audio item's `poster_url` is null.
 - Given items at 20 s watched and at 97% watched, then neither appears.
 - Given 12 in-progress items and no `?limit=`, then 10 items sorted by
   `updated_at DESC`.
@@ -226,7 +248,10 @@ completed drop-off is a P0 predicate, not a P1 afterthought).
 `app/(app)/library/media/[id]/page.tsx` (an "RSC shell", specs README
 Frontend), resolving `TemplateManifest.views.libraryMediaDetail`
 (`ComponentType<{ id: string }>`; v1 → `views/library/media/MediaDetailView.tsx`),
-which mounts Vidstack. This spec creates the route, adds the key to
+which mounts Vidstack for both playable kinds: a video with its HLS source and
+video layout, an audio asset with `src` = `/api/v1/assets/{id}/original`
+(typed by `assets.mime_type`) and the audio layout — no poster, no HLS. Any
+other kind renders the not-playable state. This spec creates the route, adds the key to
 `templates/types.ts` and the v1 manifest, and adds it to frontend.md §2's
 `views` list (all shipped on HEAD except the frontend.md line).
 `mediaapi.Continue` (P0.3) builds each item's `href` to this exact path,
@@ -236,13 +261,17 @@ which mounts Vidstack. This spec creates the route, adds the key to
 SPEC-04 P0.4 and SPEC-06 P0.2 cite it)*: a **video or audio** asset links to
 `/library/media/{id}` (this detail player); an **image** asset links to
 `/library/media?open={id}`. SPEC-01 P0.4's grid reads `open` and opens its
-lightbox for that id, or shows a not-found toast. The player route 404s a
-non-video asset (P0.2), so no producer may send an image there. Every producer
+lightbox for that id, or shows a not-found toast. The player route accepts
+video and audio and answers `media/asset-not-playable` for every other kind
+(P0.2), so no producer may send an image there. Every producer
 or consumer that builds a media href uses this kind-aware rule: notify's
 `media.asset_ready` `data.href`, the stream render mapping, and continue items.
 *(Code follow-up: on HEAD the three have diverged — `media_progress.sql` builds
 `/library/media/{id}`, `journal/stream.go` builds `/library/media`, and notify
-builds `/library/{id}`; the grid does not read `open` yet.)*
+builds `/library/{id}`; the grid does not read `open` yet. `MediaDetailView`
+feeds audio the empty `hls_url` (the server builds it for video only) under
+`DefaultVideoLayout`, so an audio asset opened here never plays; it switches
+to the `/original` source and the audio layout.)*
 
 Before initializing Vidstack, the player fetches `GET
 /api/v1/assets/{id}/progress` (P0.2) to obtain the exact saved `position_ms` —
@@ -257,7 +286,10 @@ visible "Start over" affordance; otherwise starts at 0.
   restarts at 0 (and the next beacon overwrites the old position).
 - Given progress at 97%, then playback starts at 0 (finished content replays).
 - Given an in-progress item on `/continue`, when its `href` is opened, then
-  `/library/media/{id}` mounts the player at the saved position.
+  `/library/media/{id}` mounts the player at the saved position — for an audio
+  item too, playing from `/original`.
+- Given an audio asset's `media.asset_ready` notification, when it is opened,
+  then it lands on `/library/media/{id}`, never the image lightbox.
 
 ### P1 — nice to have
 
