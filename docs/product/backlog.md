@@ -2,10 +2,23 @@
 
 **Status:** current · **Last verified:** 2026-09-19
 
-The live, triaged list of open work. One line per item; the line says what is
-wrong, where the evidence is, and what closes it. Ordering inside a tier is
-priority. Anything not listed here is either done, deliberately deferred
-(§ Deferred), or has not been found yet.
+The **single priority list** for open work: what to do next, in what order.
+Ordering inside a tier is priority; nothing else in `docs/` ranks work.
+
+Two kinds of work are ranked here, and they are recorded differently:
+
+- **Spec↔code divergences** are *recorded* in each spec's "Implementation
+  gaps vs shipped code" section (indexed in
+  [specs/README.md](specs/README.md#implementation-gaps-index-2026-10-01)),
+  which owns the detail and the closing condition. This file only *ranks*
+  them — by spec and row in § "P0 — order for closing spec gaps", with a
+  numbered line of its own only when a row needs to stand out. A gap row not
+  named here is still open; it is worked in its tier's order.
+- **Everything else** — ops, docs, CI, unspecced work — is one numbered line
+  here, saying what is wrong, where the evidence is, and what closes it.
+
+Anything in neither place is done, deliberately deferred (§ Deferred), or has
+not been found yet.
 
 **How this file is maintained** (ADR-11 rule 6 / [docs/README.md](../README.md)
 § analysis): every audit in [analysis/](analysis/) must either produce lines here
@@ -30,6 +43,40 @@ was checked, and code moves.
 1. **Re-word the `0019`/`0020` migration headers** ("**INERT** until …") in
    the next migration that touches those tables — applied files are not
    edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
+
+## P0 — order for closing spec gaps
+
+Moved here from the specs README on 2026-10-01 so that one file ranks all
+work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
+#37–#44 below lift the most severe of them out for visibility.
+
+1. **Security.** SPEC-02 §11 rows 1–3 (internal endpoints off the public edge,
+   constant-time secret), SPEC-04 §11 rows 1–2 (no plaintext reset token;
+   atomic consume + revoke-all), SPEC-09 §11 row 1 (queue console read/write
+   split + CSRF), SPEC-01 §11 rows 4–6 and 1 (`/original` states and size; the
+   delete commit), SPEC-03 §12 row 1 (caller filter on balance queries),
+   SPEC-13 §11 rows 1–5 (role re-parent escalation, atomic refresh rotation,
+   the unwired `IPRateLimiter`, trusted client IP, uniform login timing),
+   SPEC-18 §11 row 1 (`href` bypass). Then the remaining Sec / AuthZ rows:
+   SPEC-02 rows 4–5, SPEC-09 rows 2–4, F009, SPEC-13 rows 6–7, SPEC-14 row 25,
+   SPEC-15 rows 6–7, SPEC-16 rows 7–8.
+2. **Data loss.** SPEC-07 rows 1–3, SPEC-05 row 1 together with the other
+   publish-after-commit rows (SPEC-14 row 4, SPEC-15 row 3, SPEC-16 row 4,
+   SPEC-17 row 1), SPEC-06 rows 1–2 together with SPEC-08 rows 1–4 (the
+   retraction events and their stream consumers), SPEC-01 rows 2–3, SPEC-04
+   rows 3–4, SPEC-09 rows 5–6, SPEC-10 row 1, SPEC-03 rows 2–5, SPEC-02 row 6,
+   the unscoped asset-deleted consumers (SPEC-02 row 18, SPEC-14 row 1,
+   SPEC-15 row 1, SPEC-16 row 1), SPEC-14 row 2, SPEC-15 row 2, SPEC-13 row 8
+   (after its §10 Q1).
+3. **Cross-cutting foundations.** Timezone (account change, then its readers),
+   Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
+   (SPEC-01 row 16 before SPEC-07 rows 4, 5, 8).
+4. **Remaining integrity, contract and UX rows**, per spec, in each section's
+   order; the `x-required-permission` retrofit with its drift check.
+5. **Unbuilt P1**: SPEC-01 row 14, SPEC-04 row 21, SPEC-06 row 16, SPEC-07
+   row 14, SPEC-08 row 13, SPEC-09 row 11 (owner takeout, above), SPEC-15
+   rows 16–17 and SPEC-16 rows 18–19 (after the "finish or revert" question
+   in their §10), SPEC-18 row 13.
 
 ## P0 — code defects found by the as-built specs (2026-10-01)
 

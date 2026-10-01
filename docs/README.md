@@ -44,10 +44,11 @@ frontend, Docker Compose behind Traefik.
 ## Reading order for a new contributor
 
 0. [product/backlog.md](product/backlog.md) — the open work, P0 first, **before
-   trusting any other document here**. It is the newest audit *after triage*:
-   what is still wrong, what was closed, and what was found not to be a gap.
-   The audits themselves ([product/analysis/](product/analysis/)) are the
-   evidence behind it.
+   trusting any other document here**. It is the **single priority list**: it
+   ranks everything, including the spec↔code divergences whose detail lives in
+   each spec's "Implementation gaps" section (indexed in
+   [product/specs/README.md](product/specs/README.md)). The audits
+   ([product/analysis/](product/analysis/)) are the evidence behind both.
 1. [product/vision.md](product/vision.md) — what Portal is (life OS) and the v1
    envelope (1 dev · single VPS · ≤$100/mo).
 2. [adr/README.md](adr/README.md) → skim ADR-01 (scope cut), ADR-06 (local auth),

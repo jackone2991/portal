@@ -304,7 +304,9 @@ Every built spec ends with a section **"Implementation gaps vs shipped code (as
 of 2026-10-01)"**: one row per place where `main` @ `99b5a0b` still diverges
 from the spec text, naming the shipped file and function, the change needed
 (migration · backend · openapi · frontend · test) and the finding id. That
-section is the **live list**: a row closes, and is deleted, in the PR that makes
+section is the **live record of the divergence** (what is wrong and what
+closes it); *when* it is worked is ranked only in [backlog.md](../backlog.md). A
+row closes, and is deleted, in the PR that makes
 the code match and regrades the spec's
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) rows. This
 index only counts and routes; the detail lives in the spec. SPEC-11 is a
@@ -423,35 +425,9 @@ names:
   SPEC-13 row 21 and SPEC-18 row 10 (both `/admin` — one change closes both);
   `/calendar` is unowned.
 
-**Suggested build order for closing gaps** (a suggestion, not a gate):
-
-1. **Security.** SPEC-02 §11 rows 1–3 (internal endpoints off the public edge,
-   constant-time secret), SPEC-04 §11 rows 1–2 (no plaintext reset token;
-   atomic consume + revoke-all), SPEC-09 §11 row 1 (queue console read/write
-   split + CSRF), SPEC-01 §11 rows 4–6 and 1 (`/original` states and size; the
-   delete commit), SPEC-03 §12 row 1 (caller filter on balance queries),
-   SPEC-13 §11 rows 1–5 (role re-parent escalation, atomic refresh rotation,
-   the unwired `IPRateLimiter`, trusted client IP, uniform login timing),
-   SPEC-18 §11 row 1 (`href` bypass). Then the remaining Sec / AuthZ rows:
-   SPEC-02 rows 4–5, SPEC-09 rows 2–4, F009, SPEC-13 rows 6–7, SPEC-14 row 25,
-   SPEC-15 rows 6–7, SPEC-16 rows 7–8.
-2. **Data loss.** SPEC-07 rows 1–3, SPEC-05 row 1 together with the other
-   publish-after-commit rows (SPEC-14 row 4, SPEC-15 row 3, SPEC-16 row 4,
-   SPEC-17 row 1), SPEC-06 rows 1–2 together with SPEC-08 rows 1–4 (the
-   retraction events and their stream consumers), SPEC-01 rows 2–3, SPEC-04
-   rows 3–4, SPEC-09 rows 5–6, SPEC-10 row 1, SPEC-03 rows 2–5, SPEC-02 row 6,
-   the unscoped asset-deleted consumers (SPEC-02 row 18, SPEC-14 row 1,
-   SPEC-15 row 1, SPEC-16 row 1), SPEC-14 row 2, SPEC-15 row 2, SPEC-13 row 8
-   (after its §10 Q1).
-3. **Cross-cutting foundations.** Timezone (account change, then its readers),
-   Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
-   (SPEC-01 row 16 before SPEC-07 rows 4, 5, 8).
-4. **Remaining integrity, contract and UX rows**, per spec, in each section's
-   order; the `x-required-permission` retrofit with its drift check.
-5. **Unbuilt P1**: SPEC-01 row 14, SPEC-04 row 21, SPEC-06 row 16, SPEC-07
-   row 14, SPEC-08 row 13, SPEC-09 row 11 (owner takeout, above), SPEC-15
-   rows 16–17 and SPEC-16 rows 18–19 (after the "finish or revert" question
-   in their §10), SPEC-18 row 13.
+**Order of work.** This index says *what* diverges; the order in which to
+close it is [backlog.md](../backlog.md) § "P0 — order for closing spec gaps",
+the single priority list for all open work.
 
 ## Decisions recorded 2026-09-30
 
@@ -515,6 +491,42 @@ open. The detail lives in the places named here; the gap rows cite them as
   D-29 update in [feature-inventory.md](../feature-inventory.md). Every spec §7
   complies; the shipped divergences are the Envelopes rows indexed above.
 
+## Open owner decisions (2026-10-01)
+
+The 2026-09-30 and 2026-10-01 rounds are closed (above). The as-built specs
+SPEC-13…18 raised 22 new questions. Each is stated, with its options, in the
+spec's "Open questions" section; this list only routes. **Blocking** means a gap
+row or a P1 cannot close until it is answered. When one is decided, move it
+to a "Decisions recorded" list like the ones above and correct the spec text.
+
+**Blocking**
+
+- SPEC-13 §10 Q1 — deleting a user orphans their media objects (blocks §11
+  row 8): tombstone assets before the delete, disable-only, or accept the leak.
+- SPEC-15 §10 / SPEC-16 §10 — finish or revert movie and story (blocks P1.1;
+  [backlog.md](../backlog.md) P2 line 28).
+- SPEC-18 §10 Q1 — `layout` (and `account`, SPEC-13 §8) emit no bus event:
+  record an exemption from ADR-08's "≥ 1 event" rule, or add an event with no
+  consumer.
+
+**Non-blocking**
+
+- Who may author — `music:write:own` (SPEC-14 §11 a), `movies:write:own`
+  (SPEC-15 §10), `stories:write:own` (SPEC-16 §10) sit at `creator`; comic
+  moved the same codes to `user` in `0025`. One decision covers all three.
+- Account — admin list paging stays offset (SPEC-13 Q2); register's 409
+  reveals emails (Q3); single-device logout bumps `token_version` (Q4); the
+  per-account lockout is triggerable by anyone (Q5).
+- Music — resume through media progress vs `music.listen_progress` (SPEC-14
+  b); genre as free text vs D-22 (c); bulk publish floods the bell (d); who can
+  play a published track (e).
+- Publishing across the tenant fence — SPEC-15 §10 (movie), SPEC-14 e (music).
+- Story — keep the publish-time-only chapter check, or adopt SPEC-02 P0.2 (a)
+  (SPEC-16 §10).
+- Social — re-request after decline (SPEC-17 Q1); removal as an event (Q2);
+  opting out of being askable (Q3).
+- Layout — per-tenant shells (SPEC-18 Q2); concurrent editors (Q3).
+
 ## Review history
 
 - **2026-07-11** — first spec-gap review and fix pass:
@@ -528,7 +540,7 @@ open. The detail lives in the places named here; the gap rows cite them as
   2026-10-01).
 - **2026-10-01** — every `[c]` finding re-verified against `99b5a0b` and
   folded into each spec's "Implementation gaps vs shipped code" section.
-  **From now on that section, not a worklog, is the live list** of where the
+  **From now on that section, not a worklog, is the live record** of where the
   code diverges; the worklogs are the dated record. The same day the owner
   decided the seven open questions; they are applied and listed under
   "Decisions recorded 2026-10-01" (gap total 138 → 145). Later that day the
