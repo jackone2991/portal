@@ -63,8 +63,9 @@
 | TC-BANK-030 | Future occurred_at accepted | Boundary | P0 | POST occurred_at next month | accepted; counts in that future month | ☐ |
 | TC-BANK-031 | Quick-add ≤ 10 s | Performance | P1 | practiced user opens dialog→save | ≤ 10 s; ≤4 required fields; defaults applied (expense, last account, MRU category, today) | ☐ [MANUAL] |
 | TC-BANK-032 | MoneyInput thousands separators | Frontend | P1 | type 1500000 | renders `1.500.000`; wire = integer minor units | ☐ |
-| TC-BANK-033 | Transactions list cursor paging | Functional | P0 | >1 page; paginate | order `occurred_at DESC, id DESC`; `next_cursor`; no dupes/skips under inserts/edits | ☐ (CC-4) |
+| TC-BANK-033 | Transactions list cursor paging | Functional | P0 | >1 page; paginate | response `{items, next_cursor?}` (no `transactions` key); order `occurred_at DESC, id DESC`; no dupes/skips under inserts/edits | ☐ (CC-4) |
 | TC-BANK-034 | List filters account/month/category | Functional | P1 | apply each filter | correct subset | ☐ |
+| TC-BANK-035 | Non-paginated lists answer `{items}` | Contract | P0 | GET `/bank/accounts`, `/bank/categories`, `/bank/budgets?month=2026-06` | `{items}`, `{items}`, `{month, items}` — no `accounts` / `categories` / `budgets` key (specs README Pagination) | ☐ |
 
 ## P0.3 — Transfers
 
@@ -122,6 +123,7 @@
 | TC-BANK-122 | Totals exclude legs (predicate, not transfer_id null) | Data-integrity | P0(S1) | dashboard with transfers + a P1.13 fee row | income/expense exclude legs but include the fee row | ☐ |
 | TC-BANK-123 | Archived account at current balance | Functional | P0 | archived account w/ history | appears in archived section at current balance; its txns count in past months' flows | ☐ |
 | TC-BANK-124 | Recent 10 by created_at | Functional | P0 | add a future-dated txn | recent list keyed `created_at DESC` (future entry doesn't pin the list) | ☐ |
+| TC-BANK-125 | Default month in the user's zone | Boundary | P0(S1) | owner `users.timezone` = `Asia/Ho_Chi_Minh`; at 2026-06-30 18:00 UTC (2026-07-01 01:00 local) GET `/bank/dashboard` and `/bank/budgets` without `month`; repeat for an owner whose zone was never set | `month` = `2026-07` in both cases (the unset zone defaults to `Asia/Ho_Chi_Minh`), never the UTC month `2026-06` | ☐ |
 
 ## P0.7 — Events
 

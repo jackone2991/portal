@@ -605,7 +605,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Run `make sqlc`** for the `account` block; commit the generated `internal/modules/account/repository/*.sql.go` artefacts (these are gitignored — they're regenerated locally, not checked in).
 - **Write repository adapters** behind the interfaces account already consumes: `AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`.
 - **Split migration `0001`** — currently mixes `users` + `assets` (different modules) and has an orphan `users.role` text col that overlaps with the RBAC tables. Rewrite into `0001_platform_init` (extensions), `0002_account_users` (users only, +`locale`+`timezone`), `0003_account_rbac` (renumbered), `0005_media_assets`, etc. [D-18]
-- **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7]
+- **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7] *(Update 2026-09-30: the default becomes `'Asia/Ho_Chi_Minh'` in a follow-up migration [D-17].)*
 - **Move `audit/` from account → `platform/audit/`** — audit is cross-cutting; account becomes a consumer. Rename event `auth.refresh.reuse_detected` → `account.refresh.reuse_detected` to fit the new `<module>.<resource>.<action>` taxonomy. [D-25]
 - **Define event-type taxonomy registry** in `backend/MODULES.md` §5.3 to prevent collisions. [D-25]
 - ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](../adr/06-local-auth-model.md) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
@@ -935,7 +935,7 @@ Backend strings interpolated into UI alerts is a known late-stage tax. Avoid it 
 1. **Error contract** — every 4xx/5xx returns RFC 7807 `Problem` with a stable `type` URI (e.g. `https://portal/errors/auth.refresh.reuse`). Lands in [shared/openapi.yaml](../../shared/openapi.yaml) in Phase 0.
 2. **Money** — always `{ amount: "12345.67", currency: "USD" }` in API; never pre-formatted. Frontend uses `Intl.NumberFormat(user.locale, { style: 'currency', currency })`.
 3. **Dates** — backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timezone`.
-4. **User columns** — `users.locale TEXT NOT NULL DEFAULT 'en-US'` (BCP 47), `users.timezone TEXT NOT NULL DEFAULT 'UTC'` (IANA). Added during the migration `0001` audit (§16.C-18).
+4. **User columns** — `users.locale TEXT NOT NULL DEFAULT 'en-US'` (BCP 47), `users.timezone TEXT NOT NULL DEFAULT 'UTC'` (IANA). Added during the migration `0001` audit (§16.C-18). **Update (2026-09-30):** the `users.timezone` default becomes `'Asia/Ho_Chi_Minh'`, and the value comes from the user's location — see the D-17 update.
 
 Frontend uses `next-intl`. Backend translation deferred until non-English content actually arrives — message catalogues stay on the frontend.
 
@@ -1171,6 +1171,8 @@ UTC storage is the easy half. The hard half is **"when does a day start?"** — 
 
 Cross-cutting; lands wherever date-bounded reports first ship (Phase 5g for bank snapshots).
 
+**Update (2026-09-30, owner decision):** the v1 timezone source is the **user's own zone, taken from the user's location** and stored per user in `users.timezone` (IANA). The default for an unknown zone changes from `'UTC'` to **`'Asia/Ho_Chi_Minh'`**. It replaces every v1 use of `APP_TIMEZONE`, "the instance default" or a UTC fallback for user-facing day/month boundaries — SPEC-03's month default, SPEC-05's composer, SPEC-06's day grouping, bank-date conversion and on-this-day, SPEC-08's birthday endpoint and scan, SPEC-10's due reminders. **Write path:** the frontend detects the device zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and saves it via `PATCH /api/v1/auth/me {timezone}` when it differs; settings offer a manual override (`timezone_manual`) that suspends the automatic save. **Readers:** the frontend via `GET /auth/me`, modules via `accountapi` (`UserSummary.Timezone`). **Sweeps** follow the hourly per-TZ pattern above: they run hourly and evaluate each user's local date in that user's zone, with dedup keys giving exactly-once — so SPEC-08's former "declared v1 deviation" (one `APP_TIMEZONE`, daily 06:00 UTC) is withdrawn. The rule is stated once in the [specs README](specs/README.md) "Timezone" convention. Code follow-up: `0002_account_users` ships `DEFAULT 'UTC'`, so a new migration changes the default, rewrites untouched `'UTC'` rows and adds `timezone_manual`; `PATCH /auth/me`, `CurrentUser.timezone` and `UserSummary.Timezone` do not exist yet; the frontend's `lib/time.ts` still takes its zone from `GET /api/v1/time` (`APP_TIMEZONE`).
+
 ### D-18 — Migration `0001` audit: full split *(resolves §16.C-18)*
 
 No production data yet — splitting once costs less than living with mixed-concerns naming.
@@ -1239,6 +1241,8 @@ type ContinuingItem struct {
 `GET /api/v1/continue` aggregator in `cmd/api` fans out, merges, returns sorted by `updated_at DESC`. Lands in Phase 4.
 
 **Update (2026-09-30, SPEC-07 P0.3):** the item schema above is revised. `ContinuingItem{Kind, ID, Title, Position, Duration, Thumbnail, UpdatedAt}` becomes `ContinueItem{module, ref_id, title, poster_url, progress_pct, href, updated_at}` (the openapi `ContinueItem` schema) — the rail item carries a percentage and a link, not a raw position. The exact seek position comes from `GET /api/v1/assets/{id}/progress`. The shared Go type is still to live in a platform package. The fan-out decision itself is unchanged. See [SPEC-07](specs/SPEC-07-continue-rail.md).
+
+**Update (2026-09-30, owner decision):** audio is a playable kind alongside video. An audio asset opens the player page `/library/media/{id}` (the SPEC-07 media deep-link rule is unchanged: video/audio → player, image → `/library/media?open={id}`), plays from its stored original (`/api/v1/assets/{id}/original`, no HLS, no poster), resumes and saves progress like video, and may appear on the continue rail. `media/asset-not-playable` now covers only non-video, non-audio kinds. Code follow-up: HEAD's progress routes reject every non-video asset, the player feeds audio an empty HLS source, and `completeAudio` stores no `duration_ms`.
 
 ### D-21 — Ratings: per-domain tables; no shared module *(resolves §16.C-21)*
 
@@ -1456,6 +1460,8 @@ The OpenAPI spec is the contract for both Go server stubs and TS client types. L
   - `ContinueItem` schema for `/api/v1/continue` aggregator [D-20] (renamed from `ContinuingItem` by SPEC-07 P0.3).
   - Standard 4xx/5xx response component refs.
 - **Per-module endpoints** land with each module's `MountHTTP` (movie endpoints when movie ships, bank endpoints when bank ships). Aggregator endpoints + cross-module schemas land in Phase 0.
+
+**Update (2026-09-30, owner decision):** `PaginatedResult<T>`'s `{items, next_cursor}` is binding on **every** cursor-paginated list endpoint, and every non-paginated list answers `{items}`. Endpoints that shipped with a resource-named key — `{assets}`, `{comics}`, `{transactions}`, `{people}`, `{upcoming}`, `{accounts}`, `{categories}`, `{budgets}`, `{debts}`, `{pages}`, `{sources}` and the unspecced music/social/story lists — are **retrofitted, not grandfathered**; they keep only their declared limits. Extra top-level fields that are not the list (notifications' `unread_count`, budgets' `month`) stay alongside `items`. Stated in the [specs README](specs/README.md) Pagination convention; each retrofit is a code follow-up (handler + `shared/openapi.yaml` + frontend readers).
 
 ### D-31 — API versioning: URL versioning `/api/v{N}`; additive within major; RFC 9745 sunset for v2 *(resolves §16.E-31)*
 

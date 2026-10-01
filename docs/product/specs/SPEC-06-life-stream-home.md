@@ -116,8 +116,9 @@ handler returns without error, or with `asynq.SkipRetry`).
 
 `occurred_at` per event:
 - **Date-only payloads** (bank `occurred_at` is a `date`, SPEC-03 §6): convert
-  explicitly in the owner's timezone — `APP_TIMEZONE` at v1 (as P1.5), the
-  owner's `users.timezone` once it has a write path (D-17). Use the ingest
+  explicitly in the owner's timezone — the owner's `users.timezone`, read
+  through `accountapi` (specs README Timezone, D-17; unknown →
+  `Asia/Ho_Chi_Minh`). Use the ingest
   instant if the date equals the owner's local today at ingest, else 12:00
   local on that date. Never rely on the implicit date→timestamptz cast (the
   session TZ is UTC, so a bare date lands at 07:00 ICT and on the wrong local
@@ -183,8 +184,10 @@ vanish from home the day the stream replaces the interim list.
   above a journal entry written at 08:00 local that day.
 - Given that transaction later re-categorized, then its stream position does
   not change.
-- Given a transaction dated 2026-07-01 for a UTC+7 owner, then its item falls on
-  2026-07-01 local, not 2026-06-30.
+- Given a transaction dated 2026-07-01 for an owner whose `users.timezone` is
+  `Asia/Ho_Chi_Minh` (UTC+7), then its item falls on 2026-07-01 local, not
+  2026-06-30; given the same date for an owner in `America/New_York`, then it
+  falls on 2026-07-01 in New York.
 - Given two users completing playback of the same shared asset, then each has
   their own `playback_completed` item.
 - Given a `playback_completed` event delivered after worker downtime, then its
@@ -283,6 +286,14 @@ item and `hasNextPage`, do not insert; show a "Saved to <date>" toast. Dedupe by
 that change `occurred_at`. On error, restore body, mood and `occurred_at`. The
 optimistic item's shape is defined in P0.2.
 
+**Day grouping.** Card dates, any day separators ("Today", "Yesterday", a
+date) and the "Saved to <date>" toast are computed in the user's
+`users.timezone` from `GET /auth/me` (specs README Timezone) — the same zone
+the server uses for date-only payloads (P0.2) and on-this-day (P1.5), and the
+zone SPEC-05's composer picks in — never the browser's zone. *(Code follow-up:
+the home view takes its zone from `lib/time.ts`, i.e. `GET /api/v1/time` /
+`APP_TIMEZONE` — README Timezone follow-up.)*
+
 **Acceptance criteria.**
 - Grep test: zero fixture data anywhere on the home route.
 - Given a new journal post, then it appears at its `occurred_at` position (top,
@@ -334,16 +345,17 @@ required, built from `GET /auth/me`; otherwise §2 goal 4's grep test fails.
 
 - **P1.5 On-this-day memories**: `GET /api/v1/stream/memories` — **journal
   entries only** (system items are noise as memories; scope crisped 2026-07-10)
-  whose `occurred_at` month/day matches today in the instance timezone
-  `APP_TIMEZONE` (the same v1 TZ source as SPEC-08 P0.3; per-user TZ is out of
-  scope until `users.timezone` has a write path),
+  whose `occurred_at` month/day, taken in the caller's `users.timezone`,
+  matches today in that same zone (specs README Timezone — the same source as
+  SPEC-08 P0.3 and the stream's day grouping),
   from prior years, grouped by years-ago; rendered as one `WidgetCard`. Feb-29
   memories surface on Feb-28 in non-leap years (match SPEC-08's rule).
-  Response `200 {groups: [{years_ago: int, entries: JournalEntry[]}]}`, groups
-  ordered `years_ago` ASC; an empty `groups` means none. *Acceptance:* given
+  Response `200 {items: [{years_ago: int, entries: JournalEntry[]}]}` (a
+  non-paginated list, specs README Pagination), groups ordered `years_ago`
+  ASC; an empty `items` means none. *Acceptance:* given
   entries on today's month/day one and three years ago plus a system item on
   the same day, then two groups (1, 3) holding only the journal entries; given
-  none, then `200 {groups: []}`.
+  none, then `200 {items: []}`.
 - **P1.6 Backfill task — retired.** It seeded `media:asset_ready` rows, which
   the stream no longer projects (`0033`; P0.1(b) note). Journal entries need no
   task — the §P0.1 migration backfill covers them.
@@ -395,7 +407,7 @@ No FK on `ref_id` (polymorphic and mostly cross-module). Queries in
 | Method | Path | Permission | Notes |
 |---|---|---|---|
 | GET | `/api/v1/stream?cursor=&limit=` | `stream:read:own` | merged timeline; `limit` default 30, max 50 (above is clamped; missing/invalid → 30); returns `{items, next_cursor?}` (P0.2) |
-| GET | `/api/v1/stream/memories` | `stream:read:own` | P1.5; `APP_TIMEZONE` month/day match; returns `{groups}` |
+| GET | `/api/v1/stream/memories` | `stream:read:own` | P1.5; month/day match in the caller's `users.timezone` (specs README Timezone); non-paginated, returns `{items: [{years_ago, entries}]}` (specs README Pagination) |
 
 Problem types: `journal/invalid-cursor` (400; the stream is served by the
 `journal` module, so the slug is `journal/…` — shared with SPEC-05's

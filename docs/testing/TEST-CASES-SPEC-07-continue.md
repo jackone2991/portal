@@ -38,11 +38,12 @@
 | TC-CONT-021 | Cross-owner beacon → 404 | AuthZ | P0(S1) | userB PUT progress on userA's asset (any role/grant) | 404 `media/asset-not-found` (never 403); **no** row (no permission-based bypass) | ☐ (CC-3) |
 | TC-CONT-022 | Clamp beyond duration | Boundary | P0 | PUT position_ms > duration | clamped to `[0, duration_ms]`, never 500 | ☐ |
 | TC-CONT-023 | Clamp negative | Boundary | P0 | PUT position_ms < 0 | clamped to ≥0 | ☐ |
-| TC-CONT-024 | Asset status table (PUT + GET) | Negative | P0 | PUT and GET on unknown, malformed-id, deleting, owned image, and owned `processing` video | unknown/malformed/deleting → 404 `media/asset-not-found`; owned image → 404 `media/asset-not-playable`; `processing` video → 409 `media/asset-not-ready`; no row on any | ☐ |
+| TC-CONT-024 | Asset status table (PUT + GET) | Negative | P0 | PUT and GET on unknown, malformed-id, deleting, owned image, owned document, owned `ready` audio, and owned `processing` video | unknown/malformed/deleting → 404 `media/asset-not-found`; owned image or document → 404 `media/asset-not-playable`; `ready` audio → 200 (audio is playable); `processing` video → 409 `media/asset-not-ready`; no row on any | ☐ |
 | TC-CONT-025 | Fire-and-forget under API outage | Reliability | P0 | API briefly down; keep playing | playback unaffected; no error UI; beacon failures silent | ☐ |
 | TC-CONT-026 | pagehide save is a keepalive PUT (SPEC-07 P0.2 transport rule) | Frontend | P0 | close the tab mid-playback; inspect the network log and API access log | one `fetch` `PUT` with `keepalive: true`, `credentials: 'include'`, `Content-Type: application/json`; API logs a `PUT` 2xx, never a `POST` 405; no `navigator.sendBeacon` call (code follow-up: `MediaDetailView.tsx` still calls it — fails until fixed) | ☐ |
 | TC-CONT-027 | GET progress read path | Functional | P0 | GET `/assets/{id}/progress` | `{position_ms, progress_pct (null if no duration), completed_at, updated_at}`; same status table as PUT; userB on userA's asset → 404 `media/asset-not-found` | ☐ |
 | TC-CONT-030 | GET progress on first open (no row) | Functional | P0 | GET progress on a playable owned video never played | 200 `{position_ms: 0, progress_pct: 0, completed_at: null, updated_at: null}`; playback starts at 0 (code follow-up: HEAD returns 404 — fails until fixed) | ☐ |
+| TC-CONT-031 | Audio progress round-trip | Functional | P0 | owned `ready` audio; PUT `{position_ms: 90000}`; GET | both 200; GET returns `position_ms` 90000; reopening resumes at ~1:30 | ☐ |
 | TC-CONT-028 | Cross-device continuity | Functional | P1 | stop at 43:00 desktop; open phone (same account) | resumes at 43:00 | ☐ [MANUAL] |
 | TC-CONT-029 | SameSite=Strict (no CSRF) | Security | P1 | third-party page fires beacon | cookies not sent (Strict) → no cross-site write | ☐ |
 
@@ -50,7 +51,7 @@
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-CONT-040 | Media-only returns video items | Functional | P0 | GET `/continue` with only media wired | video items; no errors | ☐ |
+| TC-CONT-040 | Media-only returns video and audio items | Functional | P0 | GET `/continue` with only media wired (an in-progress video and an in-progress audio asset with known duration) | both items; the audio item's `poster_url` is null and its `href` is `/library/media/{id}`; no errors | ☐ |
 | TC-CONT-041 | Inclusion predicate (≥30 s AND <95%) | Functional | P0(S1) | items at 20 s and at 97% | **neither** appears (accidental-click + finished drop-off) | ☐ |
 | TC-CONT-042 | In-progress item appears | Functional | P0 | item at 40% watched, >30 s | appears with progress bar + href `/library/media/{id}` | ☐ |
 | TC-CONT-043 | Response shape module-agnostic | Contract | P0 | inspect item schema | `{module, ref_id, title, poster_url, progress_pct, href, updated_at}`; no video special-casing (contract test) | ☐ |
@@ -68,7 +69,8 @@
 | TC-CONT-062 | 97% starts at 0 (replay) | Functional | P0 | saved progress at 97% | starts at 0 (finished content replays) | ☐ |
 | TC-CONT-063 | NULL-duration resume + Start over | Functional | P1 | NULL-duration asset, saved ≥30 s | resumes at saved position (percent gate skipped); visible "Start over" | ☐ |
 | TC-CONT-064 | Player route exists | Contract | P0 | GET `/library/media/{id}` | route resolves `TemplateManifest.views.libraryMediaDetail` mounting Vidstack | ☐ |
-| TC-CONT-065 | Continue item click-through | Frontend | P0 | open a `/continue` item's `href` | `/library/media/{id}` mounts the player at the saved position | ☐ |
+| TC-CONT-065 | Continue item click-through | Frontend | P0 | open a `/continue` item's `href` (video and audio) | `/library/media/{id}` mounts the player at the saved position for both kinds | ☐ |
+| TC-CONT-066 | Audio plays from the original | Frontend | P0 | open `/library/media/{id}` for an audio asset | player source is `/api/v1/assets/{id}/original` (Range requests 206), audio layout, no poster, no HLS request; seeking works | ☐ |
 
 ## P1 — Completion event
 

@@ -148,7 +148,7 @@ endpoint still runs `RequirePermission` per the tables.
 
 **Dependency (beyond the header's P0.6 prerequisite):** the emit side is SPEC-01 **P1.2 — a nice-to-have that may not ship with SPEC-01's P0**. **Decided: P0.4 is not gated.** If SPEC-01 P1.2 hasn't landed when phase 4 starts, this item includes the one-line `platform/events.Publish("media:asset_ready", …)` in media's ready-transition (coordinated with the media owner); the consumer never ships without a producer.
 
-**Click-through contract** (user story 4 depends on it): every in-app type declares how its `data` becomes a link — the dispatch intent carries a required **`data.href`** (relative app path; for `media.asset_ready` it follows SPEC-07 P0.4's **media deep-link rule** — `/library/media/{id}` for a video. *Code follow-up: the shipped handler builds `/library/{id}`*). The bell renders `title` + navigates to `data.href`; no per-type frontend mapping tables, no improvisation per type.
+**Click-through contract** (user story 4 depends on it): every in-app type declares how its `data` becomes a link — the dispatch intent carries a required **`data.href`** (relative app path; for `media.asset_ready` it follows SPEC-07 P0.4's **media deep-link rule** — `/library/media/{id}` for a video or audio asset (the player page, which plays both), `/library/media?open={id}` for an image. *Code follow-up: the shipped handler builds `/library/{id}`*). The bell renders `title` + navigates to `data.href`; no per-type frontend mapping tables, no improvisation per type.
 
 **Acceptance criteria.**
 - Given 10 image uploads for one journal entry, then zero notifications; given a video upload reaching `ready`, then exactly one.
@@ -182,7 +182,7 @@ The bell UI is in scope, not an afterthought: Goal 1 and §8's "zero hard-coded 
 
 - Social types (`social.friend_request`, `social.comment`, `social.reaction`, …) register against the same store the moment the social backend exists — keep `type` an open string with a documented registry (it lives in `notify/README.md`, cross-linked from [docs/reference/events.md](../../reference/events.md)), not an enum.
 - Aggregation/digest ("and 4 others") — keep `data` jsonb flexible enough to fold.
-- Quiet hours / timezone-aware delivery (users already carry a timezone).
+- Quiet hours / timezone-aware delivery (users already carry a timezone — `users.timezone`, the specs README Timezone source, which such a feature must use).
 - **Retention janitor `notify:purge_old`** — an Asynq **periodic task** (nightly, `default` queue), the same periodic-runner infrastructure SPEC-01 P0.3's `media:purge_orphans` introduces (no OS cron exists in this stack; account's committed-but-unscheduled `PurgeExpiredRefreshTokens` should ride the same runner). **Batched** deletes — the §6 indexes don't cover a global `read_at`/`created_at` predicate, so don't promise "indexed"; add one only if measured — of read > 90 d and unread > 180 d, **exempting non-mutable types** (`account.security_alert`). At n=1 volume (~10–20k rows/yr) this is hygiene, not performance: the realistic low-VPS pressure is dead-tuple churn on the partial unread index from mark-read updates, which autovacuum handles and purging does not — don't "fix" badge slowness with a more aggressive purge.
 
 ## 6. Data model

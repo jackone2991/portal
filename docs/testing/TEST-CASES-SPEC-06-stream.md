@@ -42,7 +42,7 @@
 | TC-STREAM-014 | Redelivery idempotent | Idempotency | P0(S1) | Asynq retry any consumer | no duplicate item (ON CONFLICT DO NOTHING) | ☐ (CC-5) |
 | TC-STREAM-015 | Unknown event_type skipped | Reliability | P0 | inject a future/unmapped event | skipped with a log line, never an error loop | ☐ |
 | TC-STREAM-016 | Migration backfill of pre-existing entries | Integration | P0 | journal entries created before SPEC-06 landed | appear in `/stream` (migration `INSERT…SELECT` backfill) | ☐ |
-| TC-STREAM-017 | occurred_at from payload, TZ-explicit | Functional | P0 | bank txn dated today created 21:00 local; bank txn dated 2026-07-01 for a UTC+7 owner; re-categorize a txn; playback_completed delivered late | today's txn sorts above an 08:00-local journal entry; the 07-01 item falls on 07-01 local; re-categorize leaves its position unchanged; playback item sits at payload `completed_at` (SPEC-06 P0.1) | ☐ |
+| TC-STREAM-017 | occurred_at from payload, TZ-explicit | Functional | P0 | bank txn dated today created 21:00 local; bank txn dated 2026-07-01 for an owner whose `users.timezone` is `Asia/Ho_Chi_Minh`; re-categorize a txn; playback_completed delivered late | today's txn sorts above an 08:00-local journal entry; the 07-01 item falls on 07-01 local; re-categorize leaves its position unchanged; playback item sits at payload `completed_at` (SPEC-06 P0.1) | ☐ |
 | TC-STREAM-018 | Update before create; per-user unique key | Integration | P0 | `bank:transaction_updated` delivered before its created event; two users complete playback of one shared asset | one bank item showing the updated amount; each user has their own playback item (`UNIQUE (user_id, source_module, event_type, ref_id)`) | ☐ |
 
 ## P0.2 — Stream read API
@@ -65,6 +65,7 @@
 | TC-STREAM-050 | Zero fixture data (grep) | Frontend | P0 | grep home route | no fixture data anywhere on `/` | ☐ (CC-9) |
 | TC-STREAM-051 | New post survives refetch | Frontend | P0 | post; immediate refetch | appears at occurred_at position optimistically **and** survives refetch (projection in create tx) | ☐ |
 | TC-STREAM-052 | Infinite scroll | Frontend | P1 | scroll stream | TanStack infinite query against `/stream`; composer stays on top | ☐ |
+| TC-STREAM-053 | Day grouping in the user's zone | Frontend | P0 | user zone `Asia/Ho_Chi_Minh`, browser zone `America/New_York`; journal entry at 2026-07-01T08:00+07:00 (2026-06-30 21:00 in New York) | card dated 2026-07-01 under that day's separator, never 2026-06-30; "Today"/"Yesterday" computed in `Asia/Ho_Chi_Minh` | ☐ |
 
 ## P0.4 — Widget rail
 
@@ -78,7 +79,7 @@
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-STREAM-090 | On-this-day memories (journal only) | Functional | P1 | GET `/stream/memories` | journal entries whose occurred_at month/day = today in `APP_TIMEZONE`, prior years, grouped years-ago; no system items | ☐ [P1] |
+| TC-STREAM-090 | On-this-day memories (journal only) | Functional | P1 | GET `/stream/memories` | journal entries whose occurred_at month/day = today, both taken in the caller's `users.timezone`, prior years; response `{items: [{years_ago, entries}]}` ordered `years_ago` ASC (`{items: []}` when none); no system items | ☐ [P1] |
 | TC-STREAM-091 | Feb-29 memory on Feb-28 | Boundary | P1 | Feb-29 memory in non-leap year | surfaces on Feb-28 (matches SPEC-08 rule) | ☐ [P1] |
 | TC-STREAM-092 | *(retired with SPEC-06 P1.6 — the backfill seeded `media:asset_ready` rows, which are no longer projected)* | — | — | — | — | — |
 

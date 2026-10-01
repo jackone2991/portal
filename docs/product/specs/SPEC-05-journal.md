@@ -151,10 +151,15 @@ The home composer becomes real: the ported `Composer` kit posts to
 `POST /journal/entries` via a TanStack mutation with **optimistic insert** (D-32),
 rollback on error. The composer exposes an optional **date-and-time control**
 (`occurred_at`, defaults to now — the backdating user story needs a UI, not
-just an API field). The picker works in the user's timezone (D-17 — the same
-zone the stream renders dates in and on-this-day matches in); the client sends
-RFC 3339 with an offset, and the server stores the `timestamptz` instant
-unchanged. A date picked without a time defaults to 12:00 local. The composer
+just an API field). The picker works in the user's timezone — `users.timezone`
+from `GET /auth/me` (specs README Timezone, D-17) — which is by construction
+the zone the stream groups days in and on-this-day matches in (SPEC-06 cites
+the same rule), not the browser's zone when the two differ; the client sends
+RFC 3339 with that zone's offset, and the server stores the `timestamptz`
+instant unchanged. A date picked without a time defaults to 12:00 in that zone.
+*(Code follow-up: the home Composer has no `occurred_at` control yet, and
+`lib/time.ts` reads its zone from `GET /api/v1/time` (`APP_TIMEZONE`), not the
+user — README Timezone follow-up.)* The composer
 also has a minimal freeform mood text input (P0 — Goal 1 and
 the primary user story include mood; P1.6 upgrades it with the preset emoji
 row). Rendered entry cards carry
@@ -192,7 +197,7 @@ the same sanitizing renderer as the entry card, not as raw text.
   is a DB row.
 - Given `<script>alert(1)</script>` in a body, then it renders as inert text.
 - Given a mood entered, the created entry stores and renders it.
-- Given `occurred_at` = yesterday 21:00 local, then it is stored at that instant
+- Given `occurred_at` = yesterday 21:00 in the user's zone, then it is stored at that instant
   and listed between its neighbours.
 - Given a draft `**bold**`, then Preview renders it bold; given `<script>` in a
   draft, then Preview renders it inert.

@@ -682,13 +682,13 @@ if and when its roadmap needs them.
 | POST | `/api/v1/chapters/{id}/pages` | owner, or `comics:write:any` | body `{pages: [{asset_id, sort_order}]}` (`PagesCreate`) — **wrapped object, not a bare array** |
 | PUT | `/api/v1/chapters/{id}/pages:order` | owner, or `comics:write:any` | `[page_id…]` |
 | DELETE | `/api/v1/pages/{id}` | owner, or `comics:delete:any` (moderation) | removes the page row only; the media asset is untouched (P0.1) |
-| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `{pages: [{page_id, asset_id, width, height}]}` in reading order; the client renders the `medium` variant via `variantURL(asset_id, 'medium')` (no URL in the payload); `width`/`height` are the asset's dimensions (nullable) for layout reservation. Draft invisibility applies here too (404, not 403) |
+| GET | `/api/v1/chapters/{id}/pages` | published: `comics:read`; own draft: owner | reader payload: `{items: [{page_id, asset_id, width, height}]}` in reading order (non-paginated list — specs README Pagination; *code follow-up: HEAD answers `{pages: [...]}`*); the client renders the `medium` variant via `variantURL(asset_id, 'medium')` (no URL in the payload); `width`/`height` are the asset's dimensions (nullable) for layout reservation. Draft invisibility applies here too (404, not 403) |
 | PUT | `/api/v1/comics/{id}/progress` | authenticated | `{chapter_id, page_id}`; membership-validated (P0.4) |
 | POST | `/api/v1/chapters/{id}/imports` | owner, or `comics:write:any` | P1.7 per-chapter job; 201 `ImportJob` (`owner_user_id` = caller) |
 | POST | `/api/v1/comics/{id}/imports` | owner, or `comics:write:any` | P1.7 whole-comic job; 201 `ImportJob` |
 | PUT | `/api/v1/imports/{id}/zip` | authenticated; caller must be the job's `owner_user_id` (else 404 `comic/not-found`) | raw zip body; 200 `ImportJob`; over `importMaxZipBytes` → 422 `comic/validation` |
 | GET | `/api/v1/imports/{id}` | authenticated; caller must be the job's `owner_user_id` (else 404 `comic/not-found`) | 200 `ImportJob` (poll) |
-| GET | `/api/v1/comics/{id}/sync-sources` | owner, or `comics:write:any` | P1.10; 200 `{sources: [SyncSource]}` (unpaginated) |
+| GET | `/api/v1/comics/{id}/sync-sources` | owner, or `comics:write:any` | P1.10; 200 `{items: [SyncSource]}` (unpaginated — specs README Pagination; *code follow-up: HEAD answers `{sources: [...]}`*) |
 | POST | `/api/v1/comics/{id}/sync-sources` | owner, or `comics:write:any` | P1.10; body `{source_url, chapters_hint?}`; 201 `SyncSource` (`owner_user_id` = caller); SSRF-guard failure → 422 `comic/validation` |
 | POST | `/api/v1/sync-sources/{id}/sync` | authenticated; caller must be the source's `owner_user_id` (else 404 `comic/not-found`) | P1.10; 202 `SyncSource`; already syncing → 422 `comic/validation` |
 | POST | `/api/v1/sync-sources/{id}/cancel` | authenticated; caller must be the source's `owner_user_id` (else 404 `comic/not-found`) | P1.10; 200 `SyncSource` (`cancelled`); not syncing → 422 `comic/validation` |
@@ -741,7 +741,7 @@ zip, an SSRF-rejected source URL, and sync/cancel in the wrong state), and
 follow-up). The earlier `comic/zip-rejected` was never emitted and is dropped:
 archive-level import failures surface as the job's `status=failed` + `error` (P1.7).
 
-Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation). Both list endpoints return `{items, next_cursor}` (specs README Pagination). *(Code follow-up: the shipped handler and `shared/openapi.yaml` still use the pre-convention key `{comics: [...], next_cursor?}`; until the retrofit, clients read `comics`.)*
+Annotate each operation per the specs README AuthZ **OpenAPI encoding** (combined-method rows split per operation). Both list endpoints return `{items, next_cursor}` (specs README Pagination, which retrofits pre-rule endpoints — owner decision 2026-09-30; there is no `comics` key), and the two non-paginated lists (chapter pages, sync sources) return `{items}`. *(Code follow-up: the shipped handlers and `shared/openapi.yaml` still answer `{comics: [...], next_cursor?}`, `{pages: [...]}` and `{sources: [...]}`; the retrofit renames each key to `items` in the handler, `shared/openapi.yaml` and the frontend readers (library grid, reader, sync panel) in one PR.)*
 
 ## 8. Success metrics
 

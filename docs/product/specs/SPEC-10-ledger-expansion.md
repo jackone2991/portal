@@ -175,16 +175,23 @@ splits if they followed it literally, so each states its policy:
    action, not N mutations). The batch emits one `bank:import_completed
    {import_batch_id, user_id, account_id, row_count}` after commit. It has no
    stream consumer (the stream projects moments); the bell may consume it later.
-5. **Due reminders** (phases 1 and 3): the daily periodic task
-   `bank:scan_debts_due` runs on the shared scheduler in `cmd/worker` (07:00
-   UTC), on the `default` queue, once per tenant via `forEachTenant`. For each
+5. **Due reminders** (phases 1 and 3): the periodic task
+   `bank:scan_debts_due` runs **hourly** on the shared scheduler in
+   `cmd/worker`, on the `default` queue, once per tenant via `forEachTenant`.
+   "Days away" is counted from **each owner's local date** in that owner's
+   `users.timezone`, read through `accountapi` (specs README Timezone, D-17's
+   hourly per-TZ pattern; unknown → `Asia/Ho_Chi_Minh`), and an owner is
+   notified only once their local time has reached 07:00. For each
    lead of 7, 1 and 0 days it notifies the owner of every open debt with a
    non-zero balance whose `due_on` is exactly that many days away, through
    `notify:dispatch` (type `bank.debt_due`), with
    `dedup_key = <debt_id>|<due_on>|<lead>`; `bank_debt_reminders` records each
    sent (debt, due date, lead). A day the sweep misses skips that lead (no
    catch-up). Phase 3's card dues reuse the sweep, keyed on the card account id.
-   (Shipped for debts.)
+   Hourly re-runs are safe: the `dedup_key` and `bank_debt_reminders` make
+   each (debt, due date, lead) fire at most once. (Shipped for debts. *Code
+   follow-up: HEAD runs the sweep once a day at 07:00 UTC and counts days from
+   the UTC date for every owner.*)
 
 ## 5. Non-goals (and why)
 
@@ -203,7 +210,7 @@ splits if they followed it literally, so each states its policy:
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/bank/debts` | `bank-transactions:read:own` | |
+| GET | `/api/v1/bank/debts` | `bank-transactions:read:own` | non-paginated; returns `{items: [...]}` (specs README Pagination; *code follow-up: HEAD answers `{debts: [...]}`*) |
 | POST | `/api/v1/bank/debts` | `bank-transactions:write:own` | |
 | GET | `/api/v1/bank/debts/{id}` | `bank-transactions:read:own` | |
 | PATCH | `/api/v1/bank/debts/{id}` | `bank-transactions:write:own` | |

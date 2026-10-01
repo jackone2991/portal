@@ -346,7 +346,8 @@ loads the row owner-scoped (`owner_id = caller`). There is **no
 **Behavior.** Streams the source object (Range-capable, via
 `http.ServeContent`) with `Content-Disposition: inline;
 filename="<original filename>"` — `inline`, because the same route is the
-playback source for audio — and `assets.mime_type` as the content type
+playback source for audio (the SPEC-07 player page plays audio from it; there
+is no HLS or poster for audio) — and `assets.mime_type` as the content type
 (sniffed for images per P0.1, client-declared otherwise). When
 `original_filename` is null (assets predating the §6
 migration), fall back to `{asset_id}.{ext}` where `ext` is derived from the
@@ -558,16 +559,19 @@ Annotate per the README OpenAPI encoding (`security: []` for the variant row;
 `{owner_or: assets:write:any}` for PATCH `{title}`).
 
 **Pagination** (README convention, with this endpoint's OpenAPI-declared
-limits kept): `GET /api/v1/assets?kind=&status=&cursor=&limit=` — `limit`
+limits kept): `GET /api/v1/assets?kind=&status=&cursor=&limit=` responds
+`{items: Asset[], next_cursor?}` — `limit`
 default 50, max 100; an out-of-range value falls back to 50. Opaque cursor over
 `(created_at, id)` DESC. `status=processing` expands server-side to
 `processing,uploading`; `deleting` is never returned. `next_cursor` is present
 only when another page exists. A malformed cursor is 400 `media/invalid-cursor`
-and a param-shape failure 422 `media/validation`. *(Rev 4. Code follow-up: the
-shipped handler and `shared/openapi.yaml` still use the pre-convention list key
-— `{assets: [...], next_cursor?}` rather than the README's `{items, …}` — and
-answer a bad cursor with 400 `media/bad_request` ("invalid cursor"). Until
-the retrofit, clients read `assets`.)*
+and a param-shape failure 422 `media/validation`. The `{items}` envelope is
+the README rule, which retrofits pre-rule endpoints (owner decision
+2026-09-30); there is no `assets` key. *(Rev 4. Code follow-up: the shipped
+handler and `shared/openapi.yaml` still answer `{assets: [...], next_cursor?}`
+and a bad cursor with 400 `media/bad_request` ("invalid cursor"); the
+retrofit renames the key to `items` in the handler, `shared/openapi.yaml` and
+every frontend reader of `/assets` in one PR.)*
 
 Problem types: `media/unsupported-format` (detail names HEIC when detected),
 `media/file-too-large`, `media/asset-not-found`, `media/asset-not-ready`,
