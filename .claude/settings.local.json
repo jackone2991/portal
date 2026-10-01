@@ -7,7 +7,8 @@
       "mcp__lean-ctx__ctx_edit",
       "mcp__lean-ctx__ctx_search",
       "PowerShell($g = \\(Get-Command go -ErrorAction SilentlyContinue\\); if \\($g\\) { \"GO: $\\($g.Source\\)\" } else { \"go not on PATH\"; foreach \\($p in @\\(\"$env:ProgramFiles\\\\Go\\\\bin\\\\go.exe\",\"$env:LOCALAPPDATA\\\\Programs\\\\Go\\\\bin\\\\go.exe\",\"C:\\\\Go\\\\bin\\\\go.exe\"\\)\\) { if \\(Test-Path $p\\) { \"FOUND: $p\" } } })",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Workflow(spec-gap-review)"
     ]
   },
   "enabledMcpjsonServers": [

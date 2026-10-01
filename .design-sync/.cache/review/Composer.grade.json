@@ -1,8 +1,0 @@
-{
-  "cells": {
-    "Empty": { "verdict": "good", "note": "Placeholder copy shows, Post Status correctly disabled." },
-    "Drafting": { "verdict": "good", "note": "Draft text, avatar initials, accent submit all render." },
-    "Submitting": { "verdict": "good", "note": "Button swaps to 'Posting…' and disables." },
-    "WithError": { "verdict": "good", "note": "Error banner renders above the field in the red tone." }
-  }
-}

@@ -65,3 +65,8 @@ frontend/package-lock.json
 scraper/__pycache__/
 scraper/downloaded_files/
 scraper/*.log
+.claude/
+.lean-ctx/
+.tar
+.zip
+.agents/

@@ -1,9 +1,0 @@
-{
-  "namespace": "PortalUI",
-  "source": "portal-frontend@0.1.0",
-  "shape": "package",
-  "provider": "DSProvider",
-  "componentCount": 98,
-  "skippedStoryIds": [],
-  "runtimeFontPrefixes": []
-}
