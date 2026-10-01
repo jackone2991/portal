@@ -50,41 +50,41 @@ Moved here from the specs README on 2026-10-01 so that one file ranks all
 work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
 #37–#44 below lift the most severe of them out for visibility.
 
-1. **Security.** SPEC-02 §11 rows 1–3 (internal endpoints off the public edge,
-   constant-time secret), SPEC-04 §11 rows 1–2 (no plaintext reset token;
-   atomic consume + revoke-all), SPEC-09 §11 row 1 (queue console read/write
-   split + CSRF), SPEC-01 §11 rows 4–6 and 1 (`/original` states and size; the
-   delete commit), SPEC-03 §12 row 1 (caller filter on balance queries),
-   SPEC-13 §11 rows 1–5 (role re-parent escalation, atomic refresh rotation,
+1. **Security.** SPEC-14 §11 rows 1–3 (internal endpoints off the public edge,
+   constant-time secret), SPEC-05 §11 rows 1–2 (no plaintext reset token;
+   atomic consume + revoke-all), SPEC-03 §11 row 1 (queue console read/write
+   split + CSRF), SPEC-04 §11 rows 4–6 and 1 (`/original` states and size; the
+   delete commit), SPEC-12 §12 row 1 (caller filter on balance queries),
+   SPEC-01 §11 rows 1–5 (role re-parent escalation, atomic refresh rotation,
    the unwired `IPRateLimiter`, trusted client IP, uniform login timing),
-   SPEC-18 §11 row 1 (`href` bypass). Then the remaining Sec / AuthZ rows:
-   SPEC-02 rows 4–5, SPEC-09 rows 2–4, F009, SPEC-13 rows 6–7, SPEC-14 row 25,
-   SPEC-15 rows 6–7, SPEC-16 rows 7–8.
-2. **Data loss.** SPEC-07 rows 1–3, SPEC-05 row 1 together with the other
-   publish-after-commit rows (SPEC-14 row 4, SPEC-15 row 3, SPEC-16 row 4,
-   SPEC-17 row 1), SPEC-06 rows 1–2 together with SPEC-08 rows 1–4 (the
-   retraction events and their stream consumers), SPEC-01 rows 2–3, SPEC-04
-   rows 3–4, SPEC-09 rows 5–6, SPEC-10 row 1, SPEC-03 rows 2–5, SPEC-02 row 6,
-   the unscoped asset-deleted consumers (SPEC-02 row 18, SPEC-14 row 1,
-   SPEC-15 row 1, SPEC-16 row 1), SPEC-14 row 2, SPEC-15 row 2, SPEC-01
-   row 19 then SPEC-13 row 8 (deleting a user purges their media first —
+   SPEC-02 §11 row 1 (`href` bypass). Then the remaining Sec / AuthZ rows:
+   SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01 rows 6–7, SPEC-15 row 25,
+   SPEC-16 rows 6–7, SPEC-17 rows 7–8.
+2. **Data loss.** SPEC-10 rows 1–3, SPEC-07 row 1 together with the other
+   publish-after-commit rows (SPEC-15 row 4, SPEC-16 row 3, SPEC-17 row 4,
+   SPEC-18 row 1), SPEC-09 rows 1–2 together with SPEC-11 rows 1–4 (the
+   retraction events and their stream consumers), SPEC-04 rows 2–3, SPEC-05
+   rows 3–4, SPEC-03 rows 5–6, SPEC-13 row 1, SPEC-12 rows 2–5, SPEC-14 row 6,
+   the unscoped asset-deleted consumers (SPEC-14 row 18, SPEC-15 row 1,
+   SPEC-16 row 1, SPEC-17 row 1), SPEC-15 row 2, SPEC-16 row 2, SPEC-04
+   row 19 then SPEC-01 row 8 (deleting a user purges their media first —
    Decision 2026-10-01b (D1)).
 3. **Cross-cutting foundations.** Timezone (account change, then its readers),
    Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
-   (SPEC-01 row 16 before SPEC-07 rows 4, 5, 8).
+   (SPEC-04 row 16 before SPEC-10 rows 4, 5, 8).
 4. **Remaining integrity, contract and UX rows**, per spec, in each section's
    order; the `x-required-permission` retrofit with its drift check.
-5. **Unbuilt P1**: SPEC-01 row 14, SPEC-04 row 21, SPEC-06 row 16, SPEC-07
-   row 14, SPEC-08 row 13, SPEC-09 row 11 (owner takeout, above), SPEC-15
-   rows 16–17 and SPEC-16 rows 18–19 (committed: finish, not revert —
-   Decision 2026-10-01b (D2)), SPEC-18 row 13; the admin-change events
-   (SPEC-04 row 23 first, then SPEC-13 row 24 and SPEC-18 row 14 — D3); the
-   `user` authoring grants (SPEC-14 row 26, SPEC-15 row 18, SPEC-16 row 20,
+5. **Unbuilt P1**: SPEC-04 row 14, SPEC-05 row 21, SPEC-09 row 16, SPEC-10
+   row 14, SPEC-11 row 13, SPEC-03 row 11 (owner takeout, above), SPEC-16
+   rows 16–17 and SPEC-17 rows 18–19 (committed: finish, not revert —
+   Decision 2026-10-01b (D2)), SPEC-02 row 13; the admin-change events
+   (SPEC-05 row 23 first, then SPEC-01 row 24 and SPEC-02 row 14 — D3); the
+   `user` authoring grants (SPEC-15 row 26, SPEC-16 row 18, SPEC-17 row 20,
    with or after F009 — D4).
 
 ## P0 — code defects found by the as-built specs (2026-10-01)
 
-SPEC-13…18 were written retroactively from the shipped code, and each ends with
+The as-built specs SPEC-01, 02 and 15–18 were written retroactively from the shipped code, and each ends with
 an implementation-gaps table that owns its rows (cite them by spec and row).
 Only the security and data-integrity rows are raised here; the rest stay in
 their spec. Severity order.
@@ -92,18 +92,18 @@ their spec. Severity order.
 37. **Role re-parent escalates to `*`** — an `rbac:role:write` holder creates an
     empty role, gets it assigned, then re-parents it under `superadmin`;
     `handler/admin.go` `UpdateRole` checks existence, `is_system` and cycles
-    only. [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 1.
+    only. [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 1.
     *Closes when:* a parent change is refused unless the actor holds every
     permission the new parent adds (TC-ACC-071/072).
 38. **Layout `href` open-redirect bypass** — `/\evil.example` and a
     TAB-split `//` pass `layout/service.go` `SaveMenu`'s leading-`/` check and
     render in every user's sidebar.
-    [SPEC-18](specs/SPEC-18-shell-layout.md) §11 row 1. *Closes when:* `\`,
+    [SPEC-02](specs/SPEC-02-shell-layout.md) §11 row 1. *Closes when:* `\`,
     control characters and whitespace are refused and
     `TestSaveMenuRejectsOffSiteLinks` covers both bypasses.
 39. **An admin can disable, reject or revoke a superadmin** — `decide` and
     `SetDisabled` skip `targetAuthorityDenial`, which guards only edit and
-    delete; disabling bumps the target's `token_version`. SPEC-13 §11 row 6.
+    delete; disabling bumps the target's `token_version`. SPEC-01 §11 row 6.
     *Closes when:* the five operations answer 403 `account/escalation` for an
     out-ranking target.
 40. **`/auth/register` and `/auth/refresh` are unthrottled** —
@@ -111,30 +111,30 @@ their spec. Severity order.
     binary and Traefik's `rate-limit` middleware is attached to no router, so
     each anonymous register writes a pending row and enqueues up to 50
     approver notifications. The login throttle's per-IP key trusts any
-    `X-Forwarded-For`. SPEC-13 §11 rows 3–4. *Closes when:* the limiter is
+    `X-Forwarded-For`. SPEC-01 §11 rows 3–4. *Closes when:* the limiter is
     mounted on both routes keyed on a trusted client IP.
 41. **Refresh rotation is not atomic** — `auth/refresh.go` `Rotate` checks
     `revoked_at`, issues, then marks the old token replaced unconditionally,
     so two concurrent presentations both succeed (forked chain, no theft
-    detection). SPEC-13 §11 row 2. *Closes when:* the old row is claimed with
+    detection). SPEC-01 §11 row 2. *Closes when:* the old row is claimed with
     `… WHERE revoked_at IS NULL RETURNING` before the successor is issued.
 42. **`media:asset_deleted` consumers run without a tenant scope** — comic,
     movie, story and music handle the event on the bare pool, which FORCE RLS
     refuses as `portal_app`; the task retries out and published works keep
-    pointing at deleted assets. [SPEC-14](specs/SPEC-14-music-vertical.md) §12
-    row 1, [SPEC-15](specs/SPEC-15-movie-vertical.md) §11 row 1,
-    [SPEC-16](specs/SPEC-16-story-vertical.md) §11 row 1, and comic's copy in
-    [SPEC-02](specs/SPEC-02-comic-vertical.md) §11 row 18. *Closes when:* each
+    pointing at deleted assets. [SPEC-15](specs/SPEC-15-music-vertical.md) §12
+    row 1, [SPEC-16](specs/SPEC-16-movie-vertical.md) §11 row 1,
+    [SPEC-17](specs/SPEC-17-story-vertical.md) §11 row 1, and comic's copy in
+    [SPEC-14](specs/SPEC-14-comic-vertical.md) §11 row 18. *Closes when:* each
     consumer runs inside `runInUserTenant` for the payload owner, proven by an
     RLS-suite test.
 43. **Re-uploading a music import creates every track again** —
     `SetMusicImportUpload` has no status predicate, so a second
     `PUT …/upload` on a `processing` or `done` job enqueues a second
-    `music:import_zip`. SPEC-14 §12 row 2. *Closes when:* only a `pending` job
+    `music:import_zip`. SPEC-15 §12 row 2. *Closes when:* only a `pending` job
     accepts an upload (409 otherwise, checked before the store write).
 44. **A concurrent duplicate connection request is a 500** — the pair-index
     violation aborts the request's tenant transaction, so its 409 becomes a
-    commit-failure 500. [SPEC-17](specs/SPEC-17-social-connections.md) §11
+    commit-failure 500. [SPEC-18](specs/SPEC-18-social-connections.md) §11
     row 2. *Closes when:* `CreateRequest` uses `ON CONFLICT DO NOTHING` and the
     race test (TC-SOC-006) passes.
 
@@ -174,8 +174,8 @@ their spec. Severity order.
 12. **No spec lint** (ADR-10 decision item 5a). The `openapi` job parses the
     YAML and diffs codegen; nothing checks the spec for structural mistakes.
     *Closes when:* `redocly lint` or `vacuum` runs in the job.
-13. **Bank and comic never assert their own event emits** (matrix SPEC-03 P0.7,
-    SPEC-02 P1.9). Consumers are tested; `emitTx` / `chapter_published` are
+13. **Bank and comic never assert their own event emits** (matrix SPEC-12 P0.7,
+    SPEC-14 P1.9). Consumers are tested; `emitTx` / `chapter_published` are
     not. *Closes when:* each service test asserts the publish.
 14. **Rollback errors discarded** in `platform/db/db.go` (3 sites) — audit §5
     bug 8. Lower severity than the commit case (fixed) but hides connection
@@ -189,8 +189,8 @@ their spec. Severity order.
     sets the three pool options in code (URL params then become optional).
 15. **`/admin`, `/calendar` and `/weather` are not in the auth middleware
     matcher** (`frontend/src/middleware.ts`) — audit §5 bug 9 (calendar,
-    weather); `/admin` is [SPEC-18](specs/SPEC-18-shell-layout.md) §11 row 10
-    and [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 21. The API
+    weather); `/admin` is [SPEC-02](specs/SPEC-02-shell-layout.md) §11 row 10
+    and [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 21. The API
     still refuses; a signed-out visitor gets an error state instead of
     `/login`. *Closes when:* the matcher lists every `(app)` route, or matches
     the group.
@@ -202,55 +202,55 @@ their spec. Severity order.
 17a. *(closed 2026-09-19 — see § Closed.)*
 17. **Composition rule not in `account/README.md`** (ADR-02 item 2) and no
     depguard reservation for `policy`/`usergroup` (item 3). Small; do together.
-    The layering itself is [SPEC-13](specs/SPEC-13-account-identity-admin.md)
-    P2; the account module's other gaps are SPEC-13 §11, not lines here.
+    The layering itself is [SPEC-01](specs/SPEC-01-account-identity-admin.md)
+    P2; the account module's other gaps are SPEC-01 §11, not lines here.
 
 ## P2 — specced, not built (from audit §3.3, still absent 2026-09-11)
 
-18. *(closed 2026-09-19 — SPEC-12 executed; see § Closed. Number kept so
+18. *(closed 2026-09-19 — SPEC-08 executed; see § Closed. Number kept so
     citations of "backlog #18" still resolve.)*
-19. SPEC-06 P1.5 **on-this-day** `GET /stream/memories`; P1.6
+19. SPEC-09 P1.5 **on-this-day** `GET /stream/memories`; P1.6
     `journal:backfill_stream`.
-20. SPEC-06 **stream de-projection is a decision, not a gap** — `0033`/`0034`/
+20. SPEC-09 **stream de-projection is a decision, not a gap** — `0033`/`0034`/
     `0040` (2026-08-28) removed `asset_ready`, comic chapter and catalogue
     publishes from the stream on purpose (library events belong in the bell).
-    SPEC-06 P0.1 still describes them as projected: the spec's fact layer is
-    stale. *Closes when:* SPEC-06 says what the stream projects today.
-21. SPEC-04 P1.1 **Web Push** (table exists, handler is a stub), P1.2 **SSE**,
+    SPEC-09 P0.1 still describes them as projected: the spec's fact layer is
+    stale. *Closes when:* SPEC-09 says what the stream projects today.
+21. SPEC-05 P1.1 **Web Push** (table exists, handler is a stub), P1.2 **SSE**,
     P1.3 **notification preferences** route (table exists), P1.4
     **`account.security_alert`** on refresh-reuse (the account half is
-    [SPEC-13](specs/SPEC-13-account-identity-admin.md) P1.2). P2 `notify:purge_old` is
+    [SPEC-01](specs/SPEC-01-account-identity-admin.md) P1.2). P2 `notify:purge_old` is
     registered and never scheduled — dead code until a `scheduler.Register`.
-22. SPEC-03 P1.10 **receipt attachments**, P1.12 **`bank:budget_exceeded`**,
+22. SPEC-12 P1.10 **receipt attachments**, P1.12 **`bank:budget_exceeded`**,
     P1.13 **structured transfer fees** (`fee_amount`). (P1.11 monthly report:
     `GET /bank/report` and `/bank/reports` shipped with 0042 — check the spec's
     acceptance before calling it done.)
-23. SPEC-10 phases 2–8 — savings goals, recurring, credit-card cycles,
+23. SPEC-13 phases 2–8 — savings goals, recurring, credit-card cycles,
     investments/net worth, automation rules, splits/tags, shared ledgers — in
     the order the spec gives. Phase 1 (debts) shipped `017ebfe`.
-24. SPEC-02 P1.8 **bookmarks** (`comic_bookmarks`) — note the P-number collision
+24. SPEC-14 P1.8 **bookmarks** (`comic_bookmarks`) — note the P-number collision
     with the shipped external-source sync (audit §4.6); fix the spec numbering
     when this is picked up.
-25. SPEC-07 P2 **comic leg of `/continue`** — `handleContinue` calls only
+25. SPEC-10 P2 **comic leg of `/continue`** — `handleContinue` calls only
     `mediaMod.API().Continue`.
-26. SPEC-08 P1.6 **interactions log**, P1.7 **avatar reap** (`people` is not
+26. SPEC-11 P1.6 **interactions log**, P1.7 **avatar reap** (`people` is not
     subscribed to `media:asset_deleted`).
-27. SPEC-09 P1.7 **owner takeout** (`ops_exports`, `/me/export`, `ops:takeout`);
+27. SPEC-03 P1.7 **owner takeout** (`ops_exports`, `/me/export`, `ops:takeout`);
     P1.6 queue console.
 28. **Movie and story have no frontend.** Movie: no route, view or
-    `lib/movie.ts` ([SPEC-15](specs/SPEC-15-movie-vertical.md) P1.1, §11
+    `lib/movie.ts` ([SPEC-16](specs/SPEC-16-movie-vertical.md) P1.1, §11
     row 16). Story: `NovelDetailView.tsx` is a placeholder and
-    `/library/novel` has no route ([SPEC-16](specs/SPEC-16-story-vertical.md)
+    `/library/novel` has no route ([SPEC-17](specs/SPEC-17-story-vertical.md)
     P1.1, §11 row 18). Music got its UI (library, import, playlists, player)
-    in 0038–0041 ([SPEC-14](specs/SPEC-14-music-vertical.md); its remaining
-    gaps are SPEC-14 §12). **Decided: finish** to the music standard, not
-    revert (owner decision 2026-10-01b (D2), audit Tier D-14): SPEC-15 P1.1 and
-    SPEC-16 P1.1 are committed scope. Kept in this tier — specced, not built;
+    in 0038–0041 ([SPEC-15](specs/SPEC-15-music-vertical.md); its remaining
+    gaps are SPEC-15 §12). **Decided: finish** to the music standard, not
+    revert (owner decision 2026-10-01b (D2), audit Tier D-14): SPEC-16 P1.1 and
+    SPEC-17 P1.1 are committed scope. Kept in this tier — specced, not built;
     the decision only removed the blocker. The `user` authoring grants that
-    make both useful to a second account are SPEC-15 P1.3 / SPEC-16 P1.3 (P0
+    make both useful to a second account are SPEC-16 P1.3 / SPEC-17 P1.3 (P0
     order, step 5).
-29. **Story reading progress** and its `/continue` leg (SPEC-16 P1.2, §11
-    row 19), **movie/story FTS** (SPEC-15 P2, SPEC-16 P2 — not now, no corpus
+29. **Story reading progress** and its `/continue` leg (SPEC-17 P1.2, §11
+    row 19), **movie/story FTS** (SPEC-16 P2, SPEC-17 P2 — not now, no corpus
     at n=1), and media's three: **HLS variant ladder** per tier (transcode
     produces one rendition), **S3 multipart upload** for large originals (a
     source is one presigned PUT), **audio transcode profile** (audio is served
@@ -262,7 +262,7 @@ their spec. Severity order.
 31. **Dragonfly `--maxmemory` cap** (ADR-03 item 1) and the worker `/tmp` cap
     (ADR-04 item 6) — both absent; the OOM guard is `heavyConcurrency = 1`.
 32. **Prove the restore drill against a real nightly dump and record the date**
-    (SPEC-09 P0.4; audit Tier D-16). The script exists; whether it has ever
+    (SPEC-03 P0.4; audit Tier D-16). The script exists; whether it has ever
     passed is not in the tree.
 33. **`frontend/src/templates/README.md` still describes OIDC auth** and
     `frontend/CLAUDE.md` names React Hook Form as the form-state owner
@@ -282,7 +282,7 @@ their spec. Severity order.
     the diagrams is one pass with `docker-compose.yml` open. Two more files
     had the same defect and were deleted instead: `adr/diagrams/system-landscape.md`
     (a duplicate of `architecture/diagrams.md` §1) and
-    `operations/postgres-tuning.md` (a stub, folded into SPEC-09 P2).
+    `operations/postgres-tuning.md` (a stub, folded into SPEC-03 P2).
 36. **`docs/testing/TEST-PLAN.md`** still describes a container-backed L2
     integration layer that does not exist, says `make up` starts Postgres and
     PgBouncer, and says CI runs `vitest` (audit §4.6). Correct it when line 3
@@ -291,7 +291,7 @@ their spec. Severity order.
 ## Deferred — not a gap (ADR-01 as re-affirmed by ADR-08; audit §7)
 
 Social layer beyond `social` connections (posts, feed ranking, messaging,
-groups, block/mute, follow graph, profiles — [SPEC-17](specs/SPEC-17-social-connections.md)
+groups, block/mute, follow graph, profiles — [SPEC-18](specs/SPEC-18-social-connections.md)
 §3 and §12; each needs its own spec and envelope argument) · advanced social (D-35) · creator economy (D-40) · marketplace · ML
 safety (D-38) · LiveKit/mediamtx (D-36/D-39) · the observability stack (D-8;
 ADR-07's "same sprint as tenancy" coupling is dropped, not ignored) · real bank
@@ -308,20 +308,20 @@ the table, so the decision is not re-litigated every session. Folded in from the
 
 | Item | Why deferred | Re-entry condition |
 |---|---|---|
-| **Statement import** (bank) | The owner's bank (TCB) exports **PDF**, so a decent import means PDF parsing/OCR — an effort black hole. The schema is import-ready (SPEC-03 P0.9), so nothing is lost by waiting. | CSV/xlsx can be had from a bank in use, **or** the generic CSV + column-mapping path is accepted first and PDF later. The design is pre-agreed (SPEC-03 §3): mapping templates as data, not code; `dedup_hash`; per-batch rollback. |
+| **Statement import** (bank) | The owner's bank (TCB) exports **PDF**, so a decent import means PDF parsing/OCR — an effort black hole. The schema is import-ready (SPEC-12 P0.9), so nothing is lost by waiting. | CSV/xlsx can be had from a bank in use, **or** the generic CSV + column-mapping path is accepted first and PDF later. The design is pre-agreed (SPEC-12 §3): mapping templates as data, not code; `dedup_hash`; per-batch rollback. |
 | **TOTP / MFA / step-up** (D-27/D-28) | It once gated "bank"; the ledger holds no bank credentials, so the gate does not apply. | Real bank credentials or API sync, or any money-*moving* feature. TOTP is then the named unlock task, not a floating P2. |
 | **Messenger / people search** (the friend graph left — see below) | The feature-parity trap at n=1; a life OS starts from one user. | Real second users on an instance (e.g. family). Re-enter through "share to household member", not full Facebook parity. |
 | **Email verification** | No real second users. | The first real external user. |
 | **Playback ACL** | One user on LAN/VPS tolerates public-ish HLS short-term. | Any second user. (The HLS variant ladder is P2 line 29.) |
-| **Time domain** (calendar/tasks) | It was the cheapest first life domain; the owner chose money + entertainment first. | "After SPEC-03" — met, so it now waits only on a spec; it is the likely next facet, wiring the calendar widgets that already exist. The birthday slice shipped separately as SPEC-08 (contact data, not calendar/tasks). |
-| **HEIC/HEIF image ingest** | ffmpeg HEIC decode hinges on libheif/HEVC build flags — a build-matrix rabbit hole outside the v1 envelope (SPEC-01 §3). | Dogfooding involves an iPhone user: HEIC becomes P0 for photo upload (likely a libheif pre-step in the worker image). |
+| **Time domain** (calendar/tasks) | It was the cheapest first life domain; the owner chose money + entertainment first. | "After SPEC-12" — met, so it now waits only on a spec; it is the likely next facet, wiring the calendar widgets that already exist. The birthday slice shipped separately as SPEC-11 (contact data, not calendar/tasks). |
+| **HEIC/HEIF image ingest** | ffmpeg HEIC decode hinges on libheif/HEVC build flags — a build-matrix rabbit hole outside the v1 envelope (SPEC-04 §3). | Dogfooding involves an iPhone user: HEIC becomes P0 for photo upload (likely a libheif pre-step in the worker image). |
 
 Left the parking lot since 2026-07: the notifications module and password reset
-(SPEC-04), the music vertical (`0038`–`0041`, SPEC-14), movie and story
-(P2 line 28; SPEC-15, SPEC-16), the friend graph's first slice as social
-connections (`0037`, SPEC-17 — approval-gated registration made the instance
+(SPEC-05), the music vertical (`0038`–`0041`, SPEC-15), movie and story
+(P2 line 28; SPEC-16, SPEC-17), the friend graph's first slice as social
+connections (`0037`, SPEC-18 — approval-gated registration made the instance
 n>1),
-debts and loans (SPEC-10 phase 1, built) and investments (SPEC-10 phase 5),
+debts and loans (SPEC-13 phase 1, built) and investments (SPEC-13 phase 5),
 presigned direct upload (shipped; multipart for large originals is P2 line 29).
 
 ## Closed since the 2026-08-25 audit (so it can be checked off)
@@ -345,14 +345,14 @@ presigned direct upload (shipped; multipart for large originals is P2 line 29).
   Matrix CC-1 / CC-3 / CC-8 name every file.
 - P1 #10 **`pnpm test` not in CI** — closed 2026-09-19: the `frontend` job
   runs `pnpm test` between typecheck and build (`vitest.config.ts` gives the
-  suite the app's `@/` alias); the three vitest files SPEC-12 added are the
+  suite the app's `@/` alias); the three vitest files SPEC-08 added are the
   first frontend suite CI has ever run, and the matrix checker accepts a
-  `frontend/…/x.test.ts` reference as evidence, so the SPEC-12 T2 row is ✅
+  `frontend/…/x.test.ts` reference as evidence, so the SPEC-08 T2 row is ✅
   on them. The job's display name is unchanged (why: the note on the
   `backend` job in `ci.yml`).
-- P1 #17a **SPEC-12 residue** — closed 2026-09-19. The manual run against the
+- P1 #17a **SPEC-08 residue** — closed 2026-09-19. The manual run against the
   stack: every step passed, one focus defect found and fixed
-  ([SPEC-12 § Manual run](specs/SPEC-12-journal-attachments.md#manual-run-against-the-stack-2026-09-19)).
+  ([SPEC-08 § Manual run](specs/SPEC-08-journal-attachments.md#manual-run-against-the-stack-2026-09-19)).
   The `0044`/`0045` backfill loops:
   `modules/journal/backfill_test.go: TestBackfillMigrationsMoveLinksOutOfBodies`
   builds a throwaway database from the migration files, seeds old-style
@@ -360,20 +360,20 @@ presigned direct upload (shipped; multipart for large originals is P2 line 29).
   `RLS_TEST_ADMIN_URL` CI already provides. Its first run found that
   `0044 down` could not complete on a row the up had emptied (a link-only
   body whose Asset was gone) — the restored CHECK is now `NOT VALID`.
-- P2 #18 **journal photo attachments** (SPEC-05 P1.5) — closed 2026-09-19 by
-  [SPEC-12](specs/SPEC-12-journal-attachments.md), executed as tickets
+- P2 #18 **journal photo attachments** (SPEC-07 P1.5) — closed 2026-09-19 by
+  [SPEC-08](specs/SPEC-08-journal-attachments.md), executed as tickets
   #9–#15 on `feat/journal-attachments` (`d8b2910`, `b6d8a89`, `1e1f12a`,
   `ebe97ca`, `4215701`, `aba8785`): up to ten Attachments in `asset_ids`
   validated as a whole, the Location in three columns, both backfilled out of
   every body by self-asserting migrations `0044`/`0045` (applied to the live
   database), the asset-deleted consumer stripping the id in the owner's
   scope, one composer for create and in-place edit, and
-  `frontend/src/lib/attachments.ts` deleted. Evidence: the SPEC-12 section of
+  `frontend/src/lib/attachments.ts` deleted. Evidence: the SPEC-08 section of
   the [traceability matrix](../reference/TRACEABILITY-MATRIX.md). Tracker #8
   and #9–#14 closed 2026-09-19; #15 closes when CI confirms the four docs
   checks on the close-out commit. Residue has owners: the frontend vitest
   files run in CI since the same day (line 10, closed); the manual run was done 2026-09-19
-  ([SPEC-12 § Manual run](specs/SPEC-12-journal-attachments.md#manual-run-against-the-stack-2026-09-19))
+  ([SPEC-08 § Manual run](specs/SPEC-08-journal-attachments.md#manual-run-against-the-stack-2026-09-19))
   and the backfill loops are under test (17a, closed the same day).
 - P0 **RLS suite not run in CI** — closed 2026-09-11: the `backend` job
   starts a `postgres:18` service, applies every migration to it with
@@ -394,7 +394,7 @@ presigned direct upload (shipped; multipart for large originals is P2 line 29).
   `.env.example` defaults `DATABASE_URL` to `portal_app` with the password
   `0019` seeds; `MIGRATE_DATABASE_URL` (owner) added and `make migrate` uses
   it; `BACKUP_DATABASE_URL` stays on `portal`. Evidence the switch is safe:
-  this deployment ran as `portal_app` from 2026-08-25 through today's SPEC-10
+  this deployment ran as `portal_app` from 2026-08-25 through today's SPEC-13
   work, and all 19 RLS tests pass against the live cluster as `portal_app`.
 - P0 **committed dev credential** — closed 2026-09-11. It was the password of
   local *application* accounts (`@portal.localhost`), not a Postgres role; two
@@ -429,7 +429,7 @@ presigned direct upload (shipped; multipart for large originals is P2 line 29).
   every module including movies/music/stories/tenant/platform.
 - §3.2 **cutover chain** steps 1 (runtime), 4, 8 — done here 2026-08-25;
   ADR-07 re-graded.
-- §3.3 SPEC-01 P1.1 `PATCH /assets/{id}` — mounted (visibility only, 0032); metadata edit itself is still open, folded into the matrix's P1.1 ⚠.
+- §3.3 SPEC-04 P1.1 `PATCH /assets/{id}` — mounted (visibility only, 0032); metadata edit itself is still open, folded into the matrix's P1.1 ⚠.
 - §3.4 **music** is no longer half-built (0038–0041); movie/story still are
   (line 28).
 - §4.2 **`events.md` wrong** — re-derived 2026-08-25.

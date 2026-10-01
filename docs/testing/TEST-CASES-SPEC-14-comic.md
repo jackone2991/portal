@@ -1,9 +1,9 @@
-# Test Cases — SPEC-02 Comic Vertical
+# Test Cases — SPEC-14 Comic Vertical
 
 **Status:** current · **Last verified:** 2026-09-30
 
-**Spec:** [SPEC-02](../product/specs/SPEC-02-comic-vertical.md) · **Module:** `comic`
-**Prefix:** `TC-COMIC-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Depends on:** SPEC-01 (ready image assets)
+**Spec:** [SPEC-14](../product/specs/SPEC-14-comic-vertical.md) · **Module:** `comic`
+**Prefix:** `TC-COMIC-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Depends on:** SPEC-04 (ready image assets)
 
 ### Endpoints under test
 
@@ -29,7 +29,7 @@
 
 - Accounts `owner`(creator), `userA`(user), `userB`(user), `editor`(comics:write:any),
   `admin`(comics:delete:any), `guest`.
-- `owner` has ≥3 ready **image** assets (from SPEC-01) + a non-image (video) asset +
+- `owner` has ≥3 ready **image** assets (from SPEC-04) + a non-image (video) asset +
   a `processing` asset for negative validation.
 - Problem types: `comic/invalid-page-asset`, `comic/invalid-cover-asset`,
   `comic/invalid-progress-target`, `comic/not-publishable`, `comic/not-found`,
@@ -67,13 +67,13 @@
 | TC-COMIC-033 | Publish requires ≥1 chapter | Negative | P0 | publish comic with 0 chapters | 422 `comic/not-publishable` | ☐ |
 | TC-COMIC-034 | Valid publish | Functional | P0 | publish comic w/ ≥1 chapter each ≥1 page (owner+`comics:publish:own`) | 200; `status=published`; appears in `/comics` | ☐ |
 | TC-COMIC-035 | Unpublish → draft | Functional | P1 | PATCH status=draft | returns to `draft`; leaves public list | ☐ |
-| TC-COMIC-036 | `:own` alone can't cross-edit | AuthZ | P0(S1) | creatorD (holds `comics:write:own` only) mutates creatorC's comic (a) while it is **published**, (b) while it is a **draft** | (a) 403; (b) 404 `comic/not-found` (a draft is invisible to a non-owner without the endpoint's `:any` code); no change in either case. *Code follow-up per SPEC-02 P0.2: the shipped extractor returns 403 on the draft too* | ☐ (CC-2) |
+| TC-COMIC-036 | `:own` alone can't cross-edit | AuthZ | P0(S1) | creatorD (holds `comics:write:own` only) mutates creatorC's comic (a) while it is **published**, (b) while it is a **draft** | (a) 403; (b) 404 `comic/not-found` (a draft is invisible to a non-owner without the endpoint's `:any` code); no change in either case. *Code follow-up per SPEC-14 P0.2: the shipped extractor returns 403 on the draft too* | ☐ (CC-2) |
 | TC-COMIC-037 | `comics:write:any` cross-edit allowed | AuthZ | P0 | editor edits another creator's comic | 200; change applied | ☐ |
 | TC-COMIC-038 | `comics:delete:any` allowed | AuthZ | P0 | admin DELETE another creator's comic | 2xx; deleted | ☐ |
 | TC-COMIC-039 | `comics:publish:any` allowed | AuthZ | P1 | editor publishes another creator's comic | 200 | ☐ |
 | TC-COMIC-040 | Permission seeding present | AuthZ | P0 | inspect seed grants | `comics:read`→user, `write/publish:own`→creator (widened to `user` by `0025`), `write/publish:any`→editor, `delete:any`→admin | ☐ (CC-2) |
 | TC-COMIC-041 | Editor unpublishes another creator's comic | AuthZ | P1 | editor (`comics:publish:any`) `POST /comics/{C}/unpublish` on creatorC's published comic | 200; `status=draft`; leaves the public list | ☐ |
-| TC-COMIC-042 | Owner lacking `comics:publish:own` can't publish | AuthZ | P0(S1) | revoke `comics:publish:own` from the owner's effective permissions; owner `POST /comics/{id}/publish` on their own draft | 403; status stays `draft`. *Code follow-up per SPEC-02 P0.2: `cmd/api` wires only the `RequireOwnerOrPermission` half, so the shipped route returns 200* | ☐ (CC-2) |
+| TC-COMIC-042 | Owner lacking `comics:publish:own` can't publish | AuthZ | P0(S1) | revoke `comics:publish:own` from the owner's effective permissions; owner `POST /comics/{id}/publish` on their own draft | 403; status stays `draft`. *Code follow-up per SPEC-14 P0.2: `cmd/api` wires only the `RequireOwnerOrPermission` half, so the shipped route returns 200* | ☐ (CC-2) |
 
 ## P0.3 — Reader (vertical scroll)
 
@@ -126,7 +126,7 @@
 
 | ID | Scenario | Type | Pri | Steps | Expected | Status |
 |----|----------|------|-----|-------|----------|--------|
-| TC-COMIC-140 | Zip import happy path | Functional | P1 | `POST /chapters/{id}/imports` (201 `ImportJob`, `pending`); `PUT /imports/{id}/zip` with a valid `chapter.zip` (API-proxied → `uploaded`); poll `GET /imports/{id}` | worker (`comic:import_zip`) ingests each image via SPEC-01 P1.3 `mediaapi.Ingest(..., origin="import")` with owner = `comics.owner_user_id`, polls `mediaapi.AssetStatuses`, creates pages for `ready` assets in filename natural-sort; job `done`; zip object deleted after | ☐ [P1] |
+| TC-COMIC-140 | Zip import happy path | Functional | P1 | `POST /chapters/{id}/imports` (201 `ImportJob`, `pending`); `PUT /imports/{id}/zip` with a valid `chapter.zip` (API-proxied → `uploaded`); poll `GET /imports/{id}` | worker (`comic:import_zip`) ingests each image via SPEC-04 P1.3 `mediaapi.Ingest(..., origin="import")` with owner = `comics.owner_user_id`, polls `mediaapi.AssetStatuses`, creates pages for `ready` assets in filename natural-sort; job `done`; zip object deleted after | ☐ [P1] |
 | TC-COMIC-141 | Zip over `importMaxZipBytes` (16 GiB) rejected | Boundary | P1 | `PUT /imports/{id}/zip` with a body over 16 GiB, per-chapter and whole-comic | 422 `comic/validation` at upload; no object stored, job stays `pending` (P1.7 guard table, both modes) | ☐ [P1] |
 | TC-COMIC-142 | Zip over `importMaxEntries` (100,000 image entries) fails the job | Boundary | P1 | zip with 100,001 image entries (and one with exactly 100,000), per-chapter and whole-comic | over the cap: job `failed` with a job-level `error`, no pages created; at the cap: accepted (P1.7 guard table, both modes) | ☐ [P1] |
 | TC-COMIC-143 | Path traversal skipped; folders flattened (per-chapter) or one chapter per folder (whole-comic) | Security | P1 | `traversal.zip` (`../x.png`, an absolute path, `__MACOSX/`); per-chapter zip `a/2.png`, `b/1.png`; whole-comic zip `wrapper/ch1/*`, `wrapper/ch2/*` | traversal, absolute and `__MACOSX/` entries skipped, nothing written outside the import; per-chapter: both images become pages of the target chapter in order `1.png`, `2.png` (folders ignored); whole-comic: chapters `ch1`, `ch2` in natural order (the wrapper folder is transparent) | ☐ [P1] |

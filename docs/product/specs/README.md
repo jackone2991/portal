@@ -8,11 +8,11 @@ former vi mirror was deleted in `f11cf3f` — see
 
 This folder holds the **detailed, implementation-ready specs**. A spec answers
 *exactly what to build, how to know it's done, and what to decide before
-starting*. SPEC-01…03 and 05…09 began as product briefs (brainstorm-level *what
+starting*. SPEC-03, 04, 07, 09, 10, 11, 12 and 14 began as product briefs (brainstorm-level *what
 and why*, 2026-07-07 and 2026-07-10); once every brief had been promoted, the
 lines no spec carried yet were folded into its spec and the `briefs/` folder was
-deleted (`git show ea100d8:docs/product/briefs/`). SPEC-04, 10, 11 and 12 had
-no brief. SPEC-13…18 are **as-built specs**, written retroactively on
+deleted (`git show ea100d8:docs/product/briefs/`). SPEC-05, 06, 08 and 13 had
+no brief. SPEC-01, 02 and 15–18 are **as-built specs**, written retroactively on
 2026-10-01 from the shipped code of the six modules no spec owned (`account`,
 `music`, `movie`, `story`, `social`, `layout`); they record decisions taken
 elsewhere rather than re-deciding them. Every header names its upstream.
@@ -26,34 +26,73 @@ spec headers. Per-requirement coverage lives in
 
 | Spec | Feature | Module | Depends on | Status |
 |------|---------|--------|------------|--------|
-| [SPEC-01](SPEC-01-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — | Built (`0008_media_image_pipeline`) |
-| [SPEC-02](SPEC-02-comic-vertical.md) | Comic vertical, end-to-end | `comic` | SPEC-01 | Built (`0015_comic_core`; reader + import + sync `0024`–`0030`) |
-| [SPEC-03](SPEC-03-finance-ledger.md) | Finance ledger (Money-Lover-class) | `bank` | ADR-08; SPEC-09 P0 live before the first real ledger entry; SPEC-01 (P1 receipts only) | Built (`0014_bank_core`, `0042`) |
-| [SPEC-04](SPEC-04-notification-module.md) | Notification module (life-stream backbone) | `notify` | SPEC-01 P0.6 (fan-out); P1.2 not a gate | Built (`0009_notify_notifications`, `0010`) |
-| [SPEC-05](SPEC-05-journal.md) | Journal — life-stream write path | `journal` | SPEC-01 P0.6 (fan-out) only; photos via SPEC-12 | Built (`0011_journal_entries`) |
-| [SPEC-06](SPEC-06-life-stream-home.md) | Life-stream home — projection + dashboard | `journal` + home | SPEC-05; producers attach as they land | Built (`0017_journal_stream_items`) |
-| [SPEC-07](SPEC-07-continue-rail.md) | Playback resume + continue rail (D-20) | `media` | SPEC-01 P0.6 (P1.5 event); comic leg after SPEC-02 | Built (`0013_media_playback_progress`) |
-| [SPEC-08](SPEC-08-people-registry.md) | People registry — contacts + birthdays | `people` | SPEC-01 P0.3 (scheduler) + P0.6 (fan-out); avatars need SPEC-01 | Built (`0016_people_persons`, `0035`) |
-| [SPEC-09](SPEC-09-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-03 data accrues) | P0 built (`0012_ops_backup_runs`); P1.7 takeout unbuilt |
-| [SPEC-10](SPEC-10-ledger-expansion.md) | Ledger expansion — debts, goals, recurring, cards, net worth, automation, splits, sharing | `bank` (extends) | SPEC-03; SPEC-04 for reminders; SPEC-01 (receipts only, via SPEC-03 P1.10) | Phase 1 (debts, `0043_bank_debts`) built; later phases open |
-| [SPEC-11](SPEC-11-docs-canonicalisation.md) | Docs canonicalisation — 79 stale ADR statements, 95 links, four CI docs checks | none (docs + CI) | ADR-11 | Executed 2026-09-11 |
-| [SPEC-12](SPEC-12-journal-attachments.md) | Journal attachments — Attachments (≤ 10 image Assets) and Location as first-class Entry properties; the markdown-link workaround backfilled out of every body (issue #8) | `journal` (extends) · frontend | SPEC-01, SPEC-05, SPEC-06 | Executed 2026-09-19 (`0044`, `0045`) |
-| [SPEC-13](SPEC-13-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | ADR-02, ADR-06; SPEC-04 (`notify:dispatch`; reset is SPEC-04 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone unbuilt |
-| [SPEC-14](SPEC-14-music-vertical.md) | Music vertical — tracks, zip/multi-file import, enrich + MusicBrainz lookup, playlists, player (as-built, retroactive) | `music` | SPEC-01 (ingest, `/original`, covers, `media:asset_deleted`); SPEC-04 (bell consumer) | Built (`0022_music_core`; `0038`, `0039`, `0041`) |
-| [SPEC-15](SPEC-15-movie-vertical.md) | Movie vertical — catalogue over media video assets (as-built, retroactive) | `movie` | SPEC-01, SPEC-02 (pattern), SPEC-07 (asset-level resume) | Backend built (`0021_movie_core`); no frontend |
-| [SPEC-16](SPEC-16-story-vertical.md) | Story vertical — stories + Markdown chapters (as-built, retroactive) | `story` | SPEC-01 (covers), SPEC-02 (pattern) | Backend built (`0023_story_core`); reader is a placeholder |
-| [SPEC-17](SPEC-17-social-connections.md) | Social connections — request / accept / decline / disconnect; the social layer's first slice (as-built, retroactive) | `social` | account (`accountapi`); SPEC-04 (bell consumers); SPEC-08 (`/people/suggestions`) | Built (`0037_social_connections`) |
-| [SPEC-18](SPEC-18-shell-layout.md) | Shell layout — data-driven navigation menu + registry-backed dashboard widget placement (as-built, retroactive) | `layout` + frontend shell | account (`accountapi.HasPermission`, RBAC); SPEC-06 P0.4 consumes the rails | Built (`0036_layout_core`) |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | ADR-02, ADR-06; SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone unbuilt |
+| [SPEC-02](SPEC-02-shell-layout.md) | Shell layout — data-driven navigation menu + registry-backed dashboard widget placement (as-built, retroactive) | `layout` + frontend shell | account (`accountapi.HasPermission`, RBAC); SPEC-09 P0.4 consumes the rails | Built (`0036_layout_core`) |
+| [SPEC-03](SPEC-03-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-12 data accrues) | P0 built (`0012_ops_backup_runs`); P1.7 takeout unbuilt |
+| [SPEC-04](SPEC-04-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — | Built (`0008_media_image_pipeline`) |
+| [SPEC-05](SPEC-05-notification-module.md) | Notification module (life-stream backbone) | `notify` | SPEC-04 P0.6 (fan-out); P1.2 not a gate | Built (`0009_notify_notifications`, `0010`) |
+| [SPEC-06](SPEC-06-docs-canonicalisation.md) | Docs canonicalisation — 79 stale ADR statements, 95 links, four CI docs checks | none (docs + CI) | ADR-11 | Executed 2026-09-11 |
+| [SPEC-07](SPEC-07-journal.md) | Journal — life-stream write path | `journal` | SPEC-04 P0.6 (fan-out) only; photos via SPEC-08 | Built (`0011_journal_entries`) |
+| [SPEC-08](SPEC-08-journal-attachments.md) | Journal attachments — Attachments (≤ 10 image Assets) and Location as first-class Entry properties; the markdown-link workaround backfilled out of every body (issue #8) | `journal` (extends) · frontend | SPEC-04, SPEC-07, SPEC-09 | Executed 2026-09-19 (`0044`, `0045`) |
+| [SPEC-09](SPEC-09-life-stream-home.md) | Life-stream home — projection + dashboard | `journal` + home | SPEC-07; producers attach as they land | Built (`0017_journal_stream_items`) |
+| [SPEC-10](SPEC-10-continue-rail.md) | Playback resume + continue rail (D-20) | `media` | SPEC-04 P0.6 (P1.5 event); comic leg after SPEC-14 | Built (`0013_media_playback_progress`) |
+| [SPEC-11](SPEC-11-people-registry.md) | People registry — contacts + birthdays | `people` | SPEC-04 P0.3 (scheduler) + P0.6 (fan-out); avatars need SPEC-04 | Built (`0016_people_persons`, `0035`) |
+| [SPEC-12](SPEC-12-finance-ledger.md) | Finance ledger (Money-Lover-class) | `bank` | ADR-08; SPEC-03 P0 live before the first real ledger entry; SPEC-04 (P1 receipts only) | Built (`0014_bank_core`, `0042`) |
+| [SPEC-13](SPEC-13-ledger-expansion.md) | Ledger expansion — debts, goals, recurring, cards, net worth, automation, splits, sharing | `bank` (extends) | SPEC-12; SPEC-05 for reminders; SPEC-04 (receipts only, via SPEC-12 P1.10) | Phase 1 (debts, `0043_bank_debts`) built; later phases open |
+| [SPEC-14](SPEC-14-comic-vertical.md) | Comic vertical, end-to-end | `comic` | SPEC-04 | Built (`0015_comic_core`; reader + import + sync `0024`–`0030`) |
+| [SPEC-15](SPEC-15-music-vertical.md) | Music vertical — tracks, zip/multi-file import, enrich + MusicBrainz lookup, playlists, player (as-built, retroactive) | `music` | SPEC-04 (ingest, `/original`, covers, `media:asset_deleted`); SPEC-05 (bell consumer) | Built (`0022_music_core`; `0038`, `0039`, `0041`) |
+| [SPEC-16](SPEC-16-movie-vertical.md) | Movie vertical — catalogue over media video assets (as-built, retroactive) | `movie` | SPEC-04, SPEC-14 (pattern), SPEC-10 (asset-level resume) | Backend built (`0021_movie_core`); no frontend |
+| [SPEC-17](SPEC-17-story-vertical.md) | Story vertical — stories + Markdown chapters (as-built, retroactive) | `story` | SPEC-04 (covers), SPEC-14 (pattern) | Backend built (`0023_story_core`); reader is a placeholder |
+| [SPEC-18](SPEC-18-social-connections.md) | Social connections — request / accept / decline / disconnect; the social layer's first slice (as-built, retroactive) | `social` | account (`accountapi`); SPEC-05 (bell consumers); SPEC-11 (`/people/suggestions`) | Built (`0037_social_connections`) |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs;
 they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
 [vision.md](../vision.md)) and [backlog.md § Deferred](../backlog.md).
 
+## Renumbering (2026-10-01)
+
+On 2026-10-01 the specs were renumbered by **build priority**: the platform and
+configuration specs every feature stands on come first, then the features in
+dependency order. Files, links and every `SPEC-NN` in `docs/` and `/CLAUDE.md`
+were moved to the new numbers in one commit.
+
+**Code was not touched**: comments, test names, `shared/openapi.yaml` and
+`.github/workflows/ci.yml` still cite the **old** numbers, and so do commit
+messages, GitHub issues and the dated audit
+[spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md)
+(whose text is never edited). Translate with this table. A code comment is
+corrected to the new number when its file is next touched.
+
+| New | Old | Spec | Group |
+|-----|-----|------|-------|
+| SPEC-01 | SPEC-13 | Account — identity, approval, RBAC, admin console | Platform |
+| SPEC-02 | SPEC-18 | Shell layout — menu + widgets | Platform |
+| SPEC-03 | SPEC-09 | Platform ops — backup/restore, queue console, takeout | Platform |
+| SPEC-04 | SPEC-01 | Media image pipeline + asset management | Platform |
+| SPEC-05 | SPEC-04 | Notification module | Platform |
+| SPEC-06 | SPEC-11 | Docs canonicalisation | Platform (docs + CI) |
+| SPEC-07 | SPEC-05 | Journal | Feature |
+| SPEC-08 | SPEC-12 | Journal attachments | Feature |
+| SPEC-09 | SPEC-06 | Life-stream home | Feature |
+| SPEC-10 | SPEC-07 | Continue rail | Feature |
+| SPEC-11 | SPEC-08 | People registry | Feature |
+| SPEC-12 | SPEC-03 | Finance ledger | Feature |
+| SPEC-13 | SPEC-10 | Ledger expansion | Feature |
+| SPEC-14 | SPEC-02 | Comic vertical | Feature |
+| SPEC-15 | SPEC-14 | Music vertical | Feature |
+| SPEC-16 | SPEC-15 | Movie vertical | Feature |
+| SPEC-17 | SPEC-16 | Story vertical | Feature |
+| SPEC-18 | SPEC-17 | Social connections | Feature |
+
+Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→07 · 06→09 ·
+07→10 · 08→11 · 09→03 · 10→13 · 11→06 · 12→08 · 13→01 · 14→15 · 15→16 ·
+16→17 · 17→18 · 18→02.
+
 ## Conventions binding on all specs
 
 - **Spec header**: `Status:` uses [STYLE.md](../../STYLE.md)'s vocabulary
   (`draft` before build; `current` once the spec describes shipped behaviour;
-  `historical` for executed one-shot specs such as SPEC-11). There is exactly
+  `historical` for executed one-shot specs such as SPEC-06). There is exactly
   one `Last verified:` field. Implementation state is not restated in headers:
   it lives in `/CLAUDE.md` § Current status and
   [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md). The PR that
@@ -64,7 +103,7 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   specs can claim numbers concurrently.
 - **Module boundaries**: cross-module access only via the other module's `api/`
   package; coupling via Asynq events `<module>:<event>`; no cross-module JOINs or
-  FKs — with two sanctioned **identity-anchor FKs**: `users(id)` (SPEC-04 §6,
+  FKs — with two sanctioned **identity-anchor FKs**: `users(id)` (SPEC-05 §6,
   matching the `0007_media_assets` precedent) and `organizations(id)` via
   `tenant_id` ([ADR-07](../../adr/07-tenancy-rls-model.md)).
 - **Tenancy (ADR-07)**: every user/org-data table carries
@@ -83,13 +122,13 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   RLS it would see no tenant's rows. Global tables are exempt: the account
   tables (`users`, `roles`, `permissions`, `role_permissions`, `user_roles`,
   `refresh_tokens`, `password_reset_tokens` — read before any tenant is
-  resolved, SPEC-13 §6) and the shell tables `layout_menu_items` /
+  resolved, SPEC-01 §6) and the shell tables `layout_menu_items` /
   `layout_widgets` (one instance-wide shell of configuration rows, readable by
   every signed-in user and filtered per permission in the service; fenced per
-  tenant, each personal tenant would get an empty menu — SPEC-18 §6). So are
+  tenant, each personal tenant would get an empty menu — SPEC-02 §6). So are
   system tables (`ops_backup_runs`). `social_connections` has no `tenant_id`
   but is not exempt: it is fenced by **per-user** RLS on `app.current_user`
-  (`0037`, SPEC-17 §6), because a connection spans two personal tenants. Each
+  (`0037`, SPEC-18 §6), because a connection spans two personal tenants. Each
   spec §6 states per table whether it is
   tenant-scoped; DDL in specs drafted before ADR-07 omits the columns, and this
   bullet governs.
@@ -99,11 +138,11 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   There is no exemption *(owner decision 2026-10-01b (D3))*: `account` and
   `layout`, the two shipped modules that emit none on `HEAD`, emit — seven
   `account:*` admin-change events and `layout:changed`, which notify delivers
-  to superadmins (SPEC-13 §8 and P1.3, SPEC-18 §8 and P1.4, SPEC-04 P1.5;
-  code follow-up SPEC-13 §11 row 24, SPEC-18 §11 row 14). The
+  to superadmins (SPEC-01 §8 and P1.3, SPEC-02 §8 and P1.4, SPEC-05 P1.5;
+  code follow-up SPEC-01 §11 row 24, SPEC-02 §11 row 14). The
   `platform/events` fan-out helper (`Publish(ctx, name, payload)` + the
-  event-name→consumer-task subscription table) was built by SPEC-01 P0.6 — a
-  prerequisite of the first spec to land (SPEC-01 P0.6 in the build order;
+  event-name→consumer-task subscription table) was built by SPEC-04 P0.6 — a
+  prerequisite of the first spec to land (SPEC-04 P0.6 in the build order;
   otherwise whichever lands first builds it). The table is **per-binary**: every
   binary that **emits** an event registers that event's consumer edges on its
   own publisher (`cmd/api/main.go` for HTTP-emitted events, `cmd/worker/main.go`
@@ -146,11 +185,11 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   spec §7 states the `{items}` shape and carries a code follow-up for the
   handler, `shared/openapi.yaml` and the frontend readers. *(The lists this
   note once called unowned now have specs: music `{tracks}`, `{imports}` and
-  `{playlists}` — SPEC-14 §12 row 15; social `{connections}` — SPEC-17 §11
-  row 4; story `{stories}` and `{chapters}` — SPEC-16 §11 row 9. Code
+  `{playlists}` — SPEC-15 §12 row 15; social `{connections}` — SPEC-18 §11
+  row 4; story `{stories}` and `{chapters}` — SPEC-17 §11 row 9. Code
   follow-up for the one list no spec owns: people `{suggestions}` — the route
-  is the `people` module's, but SPEC-08 P0.2 leaves its contract unowned and
-  SPEC-17 only consumes it — retrofits to `{items}` the same way.)* The
+  is the `people` module's, but SPEC-11 P0.2 leaves its contract unowned and
+  SPEC-18 only consumes it — retrofits to `{items}` the same way.)* The
   ordering key
   ends in `id`. A malformed cursor is 400 `<module>/invalid-cursor`, and a
   body/param-shape failure without a named type is 422 `<module>/validation`.
@@ -186,7 +225,7 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   often enough (hourly, D-17's per-TZ pattern) and evaluates each user's local
   date in that user's zone, relying on its dedup keys for exactly-once. SQL
   converts at the query layer (`occurred_at AT TIME ZONE $tz`), never through
-  the session zone (UTC). *(Code follow-up — SPEC-13 P0.13, tracked as SPEC-13
+  the session zone (UTC). *(Code follow-up — SPEC-01 P0.13, tracked as SPEC-01
   §11 row 14 and as the first item of the **Per-user timezone** cross-cutting
   gap below: `0002_account_users` ships `timezone DEFAULT 'UTC'` — a new
   migration changes the default to `'Asia/Ho_Chi_Minh'`, rewrites the
@@ -240,7 +279,7 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   implement `ServerInterface`.
 - **Money**: integer minor units, never floats. VND exponent = 0. *(Ratified
   divergence: D-41 — integer minor units for the v1 ledger only; D-14/D-15
-  still govern multi-currency/creator-economy money. Rationale in SPEC-03 §7.)*
+  still govern multi-currency/creator-economy money. Rationale in SPEC-12 §7.)*
 - **Frontend**: RSC-first (D-33), TanStack owns server state (D-32), performance
   budgets from `frontend.md` §8 apply to all new pages. **"RSC shell"** (binding
   until `src/lib/api-server.ts` exists): the route `page.tsx` is a server
@@ -252,10 +291,10 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
   in `frontend/src/middleware.ts` (D-34 edge gate) in the same PR; a route group
   absent from the matcher is a DoD failure.
 - **Takeout**: every module that stores user-authored or user-history data
-  implements the `opsapi.ExportProvider` interface (SPEC-09 P1.7) from its own
+  implements the `opsapi.ExportProvider` interface (SPEC-03 P1.7) from its own
   `api/` package, in the PR that creates the table — or its spec states the
   exclusion and the reason. The spec's §6 names the export format per table.
-  (The interface itself is unbuilt until SPEC-09 P1.7 lands; until then, the
+  (The interface itself is unbuilt until SPEC-03 P1.7 lands; until then, the
   spec records the intended format.)
 - **Definition of done (every spec PR)** also includes a
   `docs/testing/TEST-CASES-SPEC-NN-<module>.md` with rows citing the real
@@ -267,33 +306,33 @@ they live in [ADR-08](../../adr/08-life-os-pivot.md) (with
 ADR-10's spec-first CI gate is in force; the `ServerInterface` retrofit is
 per-module-as-touched (ADR-10 action items) and gates nothing.
 
-**As built.** Every spec from SPEC-01 to SPEC-09 landed on 2026-07-12, in
+**As built.** Every spec that existed then (today's SPEC-03, 04, 05, 07, 09, 10, 11, 12 and 14) landed on 2026-07-12, in
 migration order `0008` (media) → `0009`/`0010` (notify) → `0011` (journal) →
 `0012` (ops backups) → `0013` (playback progress) → `0014` (bank) → `0015`
 (comic) → `0016` (people) → `0017` (stream projection)
-(`git log --diff-filter=A --format='%h %ad' -- backend/db/migrations/`). SPEC-09
-P0 (`0012`, `6160f8e`) therefore preceded the SPEC-03 ledger (`0014`,
+(`git log --diff-filter=A --format='%h %ad' -- backend/db/migrations/`). SPEC-03
+P0 (`0012`, `6160f8e`) therefore preceded the SPEC-12 ledger (`0014`,
 `66c036f`). The stream projection (`0017`) landed *after* its producers,
-contrary to SPEC-06 §1; any event published before it was never projected
-(SPEC-06's P1.6 backfill, which only ever covered media assets, is retired).
+contrary to SPEC-09 §1; any event published before it was never projected
+(SPEC-09's P1.6 backfill, which only ever covered media assets, is retired).
 
 **Sequencing rules that still bind** (for rebuilds and new producers):
 
-1. **SPEC-01** (shared bottleneck; P0.6 fan-out is everyone's prerequisite).
-2. **SPEC-04** (consumer for `media:asset_ready`; unblocks password reset).
-3. **SPEC-05** + **SPEC-06 P0.1** (journal module + the `stream_items`
+1. **SPEC-04** (shared bottleneck; P0.6 fan-out is everyone's prerequisite).
+2. **SPEC-05** (consumer for `media:asset_ready`; unblocks password reset).
+3. **SPEC-07** + **SPEC-09 P0.1** (journal module + the `stream_items`
    projection and its `journal:stream_*` consumers; must precede every producer
-   below, SPEC-06 §1).
-4. **SPEC-02** and **SPEC-09 P0** (backups — hard gate immediately before
-   SPEC-03).
-5. **SPEC-03** (after SPEC-09 P0 is live; in parallel with SPEC-07, the
-   burst-filler); **SPEC-09 P1** here or later.
-6. **SPEC-08**, then **SPEC-06 P0.2–P0.4 + P1** (read API, home, rail).
+   below, SPEC-09 §1).
+4. **SPEC-14** and **SPEC-03 P0** (backups — hard gate immediately before
+   SPEC-12).
+5. **SPEC-12** (after SPEC-03 P0 is live; in parallel with SPEC-10, the
+   burst-filler); **SPEC-03 P1** here or later.
+6. **SPEC-11**, then **SPEC-09 P0.2–P0.4 + P1** (read API, home, rail).
 
 **What remains open** (verify against the matrix before starting):
 
-- SPEC-09 P1.7 owner takeout — unbuilt (no `ExportProvider` in code).
-- SPEC-10 phases after phase 1 (debts) — build on SPEC-03 + SPEC-04.
+- SPEC-03 P1.7 owner takeout — unbuilt (no `ExportProvider` in code).
+- SPEC-13 phases after phase 1 (debts) — build on SPEC-12 + SPEC-05.
 - Every built spec still diverges from its shipped code in places: see the
   [Implementation gaps index](#implementation-gaps-index-2026-10-01) below.
 
@@ -308,7 +347,7 @@ closes it); *when* it is worked is ranked only in [backlog.md](../backlog.md). A
 row closes, and is deleted, in the PR that makes
 the code match and regrades the spec's
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) rows. This
-index only counts and routes; the detail lives in the spec. SPEC-11 is a
+index only counts and routes; the detail lives in the spec. SPEC-06 is a
 historical docs-only spec and has no gap section.
 
 Row ranges use each section's own severity order (its intro paragraph names
@@ -316,46 +355,46 @@ it): **Sec** security · **Data** data loss or silently wrong / lost data ·
 **Integ** integrity or a wrong answer · **AuthZ** · **Contract** API, OpenAPI,
 Problem types · **UX** frontend behaviour · **Hyg** schema hygiene · **P1**
 unbuilt P1 feature. Rows added by the 2026-10-01 owner decisions, rows found
-later the same day while writing SPEC-13…18 (SPEC-02 rows 18–19, SPEC-14 row
-25), and rows added by the second round of decisions (SPEC-01 row 19, SPEC-04
-row 23, SPEC-13 row 24, SPEC-14 row 26, SPEC-15 row 18, SPEC-16 row 20,
-SPEC-18 row 14) are appended at the end of their table instead of renumbering
+later the same day while writing SPEC-01…18 (SPEC-14 rows 18–19, SPEC-15 row
+25), and rows added by the second round of decisions (SPEC-04 row 19, SPEC-05
+row 23, SPEC-01 row 24, SPEC-15 row 26, SPEC-16 row 18, SPEC-17 row 20,
+SPEC-02 row 14) are appended at the end of their table instead of renumbering
 the rows other documents cite, so a few ranges below are split.
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
-| [SPEC-01](SPEC-01-media-image-pipeline.md) | [§11](SPEC-01-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
-| [SPEC-02](SPEC-02-comic-vertical.md) | [§11](SPEC-02-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Sec 1–5 · Integ 6–9 · Contract/UX 10–17 · Data 18 · Integ 19 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
-| [SPEC-03](SPEC-03-finance-ledger.md) | [§12](SPEC-03-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Sec 1 · Data 2–5 · Contract 6–12, 17 · UX 13–16 | derived-balance queries (accounts, dashboard) not filtered by the caller (1); archived accounts still accept writes (2) |
-| [SPEC-04](SPEC-04-notification-module.md) | [§11](SPEC-04-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16, 22 · Hyg 17–20 · P1 21, 23 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
-| [SPEC-05](SPEC-05-journal.md) | [§11](SPEC-05-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 8 | Data 1 · UX 2–5 · Contract 6–8 | `journal:entry_created` published before the request transaction commits (1) |
-| [SPEC-06](SPEC-06-life-stream-home.md) | [§11](SPEC-06-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home, rail, `/weather` gate) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
-| [SPEC-07](SPEC-07-continue-rail.md) | [§11](SPEC-07-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
-| [SPEC-08](SPEC-08-people-registry.md) | [§11](SPEC-08-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12, 14–15 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
-| [SPEC-09](SPEC-09-platform-ops.md) | [§11](SPEC-09-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
-| [SPEC-10](SPEC-10-ledger-expansion.md) | [§8](SPEC-10-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 5 | Data 1 · Scheduling 2 · Contract 3–5 | opening a debt is three writes with no enclosing transaction (1) |
-| [SPEC-12](SPEC-12-journal-attachments.md) | [section](SPEC-12-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 2 | AuthZ 1 · UX 2 (both owned by other specs) | no `user` grant of `assets:write:own` and no enforcement on upload (1) |
-| [SPEC-13](SPEC-13-account-identity-admin.md) | [§11](SPEC-13-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 24 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
-| [SPEC-14](SPEC-14-music-vertical.md) | [§12](SPEC-14-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 26 | Data 1–2, 4 · Integ 3, 5–13 · Contract 14–17, 22–23 · UX 18–19, 24 · Hyg 20–21 · AuthZ 25 (appended) · P1 26 | the `media:asset_deleted` consumer runs with no tenant scope, so a deleted audio asset leaves a published track pointing at nothing (1); a second zip upload re-imports every track (2) |
-| [SPEC-15](SPEC-15-movie-vertical.md) | [§11](SPEC-15-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
-| [SPEC-16](SPEC-16-story-vertical.md) | [§11](SPEC-16-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 20 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
-| [SPEC-17](SPEC-17-social-connections.md) | [§11](SPEC-17-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 12 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| [SPEC-18](SPEC-18-shell-layout.md) | [§11](SPEC-18-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13–14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 24 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
+| [SPEC-02](SPEC-02-shell-layout.md) | [§11](SPEC-02-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13–14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
+| [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
+| [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
+| [SPEC-05](SPEC-05-notification-module.md) | [§11](SPEC-05-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16, 22 · Hyg 17–20 · P1 21, 23 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
+| [SPEC-07](SPEC-07-journal.md) | [§11](SPEC-07-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 8 | Data 1 · UX 2–5 · Contract 6–8 | `journal:entry_created` published before the request transaction commits (1) |
+| [SPEC-08](SPEC-08-journal-attachments.md) | [section](SPEC-08-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 2 | AuthZ 1 · UX 2 (both owned by other specs) | no `user` grant of `assets:write:own` and no enforcement on upload (1) |
+| [SPEC-09](SPEC-09-life-stream-home.md) | [§11](SPEC-09-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home, rail, `/weather` gate) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
+| [SPEC-10](SPEC-10-continue-rail.md) | [§11](SPEC-10-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
+| [SPEC-11](SPEC-11-people-registry.md) | [§11](SPEC-11-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12, 14–15 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
+| [SPEC-12](SPEC-12-finance-ledger.md) | [§12](SPEC-12-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Sec 1 · Data 2–5 · Contract 6–12, 17 · UX 13–16 | derived-balance queries (accounts, dashboard) not filtered by the caller (1); archived accounts still accept writes (2) |
+| [SPEC-13](SPEC-13-ledger-expansion.md) | [§8](SPEC-13-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 5 | Data 1 · Scheduling 2 · Contract 3–5 | opening a debt is three writes with no enclosing transaction (1) |
+| [SPEC-14](SPEC-14-comic-vertical.md) | [§11](SPEC-14-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Sec 1–5 · Integ 6–9 · Contract/UX 10–17 · Data 18 · Integ 19 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
+| [SPEC-15](SPEC-15-music-vertical.md) | [§12](SPEC-15-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 26 | Data 1–2, 4 · Integ 3, 5–13 · Contract 14–17, 22–23 · UX 18–19, 24 · Hyg 20–21 · AuthZ 25 (appended) · P1 26 | the `media:asset_deleted` consumer runs with no tenant scope, so a deleted audio asset leaves a published track pointing at nothing (1); a second zip upload re-imports every track (2) |
+| [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
+| [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 20 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
+| [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 12 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
 | **Total** | | **263** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
 names:
 
-- **Envelopes retrofit to `{items}`** (Pagination convention): SPEC-01 §11
-  row 12 · SPEC-02 §11 row 12 · SPEC-03 §12 row 9 · SPEC-08 §11 rows 9, 11 ·
-  SPEC-10 §8 row 3 · SPEC-13 §11 row 18 · SPEC-14 §12 row 15 · SPEC-15 §11
-  row 8 · SPEC-16 §11 row 9 · SPEC-17 §11 row 4; plus the one unowned list
+- **Envelopes retrofit to `{items}`** (Pagination convention): SPEC-04 §11
+  row 12 · SPEC-14 §11 row 12 · SPEC-12 §12 row 9 · SPEC-11 §11 rows 9, 11 ·
+  SPEC-13 §8 row 3 · SPEC-01 §11 row 18 · SPEC-15 §12 row 15 · SPEC-16 §11
+  row 8 · SPEC-17 §11 row 9 · SPEC-18 §11 row 4; plus the one unowned list
   (people `{suggestions}`) the Pagination convention names. Each retrofit
   moves handler, `shared/openapi.yaml` and the frontend readers in one PR.
 - **Per-user timezone** (Timezone convention, Decisions 2026-09-30 and
-  2026-10-01 (f)): the account change comes first; it is SPEC-13 P0.13 and its
-  gap row is SPEC-13 §11 row 14, summarised here:
+  2026-10-01 (f)): the account change comes first; it is SPEC-01 P0.13 and its
+  gap row is SPEC-01 §11 row 14, summarised here:
   1. **migration** (account-owned): `users.timezone` default
      `'Asia/Ho_Chi_Minh'`, untouched `'UTC'` rows rewritten, and
      `timezone_manual boolean NOT NULL DEFAULT false` added;
@@ -370,36 +409,36 @@ names:
      "use my location"; `lib/time.ts` takes the zone from `/auth/me`, and
      `GET /api/v1/time` keeps only the server clock.
 
-  Then its readers: SPEC-03 §12 rows 8, 16 · SPEC-05 §11 row 2 · SPEC-06 §11
-  rows 3, 9, 16 · SPEC-08 §11 rows 5–6 · SPEC-10 §8 row 2.
-- **`problems.ts` slugs** (Errors convention): SPEC-01 §11 row 12 · SPEC-02
-  §11 row 10 · SPEC-03 §12 rows 2, 8 · SPEC-04 §11 row 14 · SPEC-05 §11
-  row 6 · SPEC-06 §11 row 15 · SPEC-07 §11 row 13 · SPEC-08 §11 row 12 ·
-  SPEC-10 §8 row 5 · SPEC-13 §11 row 16 (`account/invalid-timezone` among
-  them) · SPEC-14 §12 row 23 · SPEC-15 §11 row 10 · SPEC-16 §11 row 11 ·
-  SPEC-17 §11 row 6.
+  Then its readers: SPEC-12 §12 rows 8, 16 · SPEC-07 §11 row 2 · SPEC-09 §11
+  rows 3, 9, 16 · SPEC-11 §11 rows 5–6 · SPEC-13 §8 row 2.
+- **`problems.ts` slugs** (Errors convention): SPEC-04 §11 row 12 · SPEC-14
+  §11 row 10 · SPEC-12 §12 rows 2, 8 · SPEC-05 §11 row 14 · SPEC-07 §11
+  row 6 · SPEC-09 §11 row 15 · SPEC-10 §11 row 13 · SPEC-11 §11 row 12 ·
+  SPEC-13 §8 row 5 · SPEC-01 §11 row 16 (`account/invalid-timezone` among
+  them) · SPEC-15 §12 row 23 · SPEC-16 §11 row 10 · SPEC-17 §11 row 11 ·
+  SPEC-18 §11 row 6.
 - **OpenAPI `x-required-permission`** (AuthZ convention, OpenAPI encoding):
-  SPEC-01 §11 row 17 · SPEC-02 §11 row 16 · SPEC-03 §12 row 12 · SPEC-04 §11
-  row 16 · SPEC-05 §11 row 7 · SPEC-06 §11 row 15 · SPEC-09 §11 row 9 ·
-  SPEC-10 §8 row 5 · SPEC-13 §11 row 20 · SPEC-14 §12 row 22 · SPEC-15 §11
-  row 13 · SPEC-16 §11 row 17 · SPEC-17 §11 row 10 · SPEC-18 §11 row 6. Best
+  SPEC-04 §11 row 17 · SPEC-14 §11 row 16 · SPEC-12 §12 row 12 · SPEC-05 §11
+  row 16 · SPEC-07 §11 row 7 · SPEC-09 §11 row 15 · SPEC-03 §11 row 9 ·
+  SPEC-13 §8 row 5 · SPEC-01 §11 row 20 · SPEC-15 §12 row 22 · SPEC-16 §11
+  row 13 · SPEC-17 §11 row 17 · SPEC-18 §11 row 10 · SPEC-02 §11 row 6. Best
   done as one retrofit together with the drift check the convention asks for.
 - **`limit` clamps instead of resetting** (Pagination convention, Decision
-  2026-10-01 (e)): SPEC-01 §11 row 18 · SPEC-02 §11 row 17 · SPEC-03 §12
-  row 17 · SPEC-04 §11 row 22 · SPEC-05 §11 row 8 · SPEC-06 §11 row 8 ·
-  SPEC-08 §11 row 15 · SPEC-13 §11 row 19 (`accountapi.ListDirectory`) ·
-  SPEC-14 §12 row 16 (catalogue and imports) · SPEC-15 §11 row 9 · SPEC-16
+  2026-10-01 (e)): SPEC-04 §11 row 18 · SPEC-14 §11 row 17 · SPEC-12 §12
+  row 17 · SPEC-05 §11 row 22 · SPEC-07 §11 row 8 · SPEC-09 §11 row 8 ·
+  SPEC-11 §11 row 15 · SPEC-01 §11 row 19 (`accountapi.ListDirectory`) ·
+  SPEC-15 §12 row 16 (catalogue and imports) · SPEC-16 §11 row 9 · SPEC-17
   §11 row 10; plus the unowned people-suggestions list, which resets the same
   way. Each is one line (or a call to `platform/server.Limit`, which already
   clamps) plus a test; `/continue` already clamps.
-- **Publish after commit** (CC-5; the mechanism SPEC-05 §11 row 1
-  introduces): SPEC-05 §11 row 1 · SPEC-14 §12 row 4 · SPEC-15 §11 row 3 ·
-  SPEC-16 §11 row 4 · SPEC-17 §11 row 1. Each emits its bus event inside the
+- **Publish after commit** (CC-5; the mechanism SPEC-07 §11 row 1
+  introduces): SPEC-07 §11 row 1 · SPEC-15 §12 row 4 · SPEC-16 §11 row 3 ·
+  SPEC-17 §11 row 4 · SPEC-18 §11 row 1. Each emits its bus event inside the
   open `RequireTenant` transaction, so a failed COMMIT still leaves a bell
   entry; land one after-commit hook (or outbox) and move every emitter onto it.
 - **Unscoped `media:asset_deleted` consumers** (Tenancy convention: worker
-  handlers open the payload user's tenant scope before any query): SPEC-02
-  §11 row 18 · SPEC-14 §12 row 1 · SPEC-15 §11 row 1 · SPEC-16 §11 row 1. The
+  handlers open the payload user's tenant scope before any query): SPEC-14
+  §11 row 18 · SPEC-15 §12 row 1 · SPEC-16 §11 row 1 · SPEC-17 §11 row 1. The
   comic, movie, music and story consumers run their UPDATE/DELETE on the bare
   pool; under `portal_app` the FORCE RLS policy cannot evaluate
   `app.current_tenant`, so the task fails every retry and dangling references
@@ -408,37 +447,37 @@ names:
   `runInUserTenant` (movie and story need a `RunInTenant` dep first; comic and
   music already receive one but their consumers ignore it), plus one RLS-suite
   test that runs a consumer as `portal_app`. A payload owner who no longer
-  has a personal organisation (the account was deleted, SPEC-13 P0.10) has
+  has a personal organisation (the account was deleted, SPEC-01 P0.10) has
   nothing left to repair: the consumer drops the task instead of retrying.
-- **F009 — `user` upload grant**: SPEC-01 §11 row 9 (owner) · SPEC-12 row 1.
+- **F009 — `user` upload grant**: SPEC-04 §11 row 9 (owner) · SPEC-08 row 1.
   Seed the grant in the same migration that adds `RequirePermission` to the
   upload routes, or every `user` loses photo upload.
 - **`user` may author music, movies and stories** (Decision 2026-10-01b (D4)):
-  SPEC-14 §12 row 26 · SPEC-15 §11 row 18 · SPEC-16 §11 row 20 — one grant
+  SPEC-15 §12 row 26 · SPEC-16 §11 row 18 · SPEC-17 §11 row 20 — one grant
   migration per owning module (`000N_<module>_user_write_grant`, the `0025`
-  shape), each useful only with F009 above; SPEC-14 row 20 then requires
+  shape), each useful only with F009 above; SPEC-15 row 20 then requires
   `music:publish:own`.
 - **Admin-change events → superadmin notices** (Decision 2026-10-01b (D3)):
-  SPEC-13 §11 row 24 (`account:*` emits, `SuperadminIDs`) · SPEC-18 §11 row 14
-  (`layout:changed`) · SPEC-04 §11 row 23 (the eight `notify:on_*` consumers).
+  SPEC-01 §11 row 24 (`account:*` emits, `SuperadminIDs`) · SPEC-02 §11 row 14
+  (`layout:changed`) · SPEC-05 §11 row 23 (the eight `notify:on_*` consumers).
   Land the notify consumers with or before the first emitter; a `Publish`
   whose consumer edge is not registered is a silent no-op.
 - **Deleting a user purges their media first** (Decision 2026-10-01b (D1)):
-  SPEC-01 §11 row 19 (`mediaapi.PurgeOwnerAssets`) before SPEC-13 §11 row 8
+  SPEC-04 §11 row 19 (`mediaapi.PurgeOwnerAssets`) before SPEC-01 §11 row 8
   (the delete order that calls it).
-- Smaller shared items: `origin='import'` (F038/F012) SPEC-01 row 10 · SPEC-02
-  row 7 · SPEC-04 row 8 · SPEC-12 row 2 · SPEC-14 row 17; media deep link
-  (F018) SPEC-01 row 15 · SPEC-04 row 9 · SPEC-06 row 7 · SPEC-07 row 9; Audio
-  SPEC-01 row 16 · SPEC-07 rows 4, 5, 8; keepalive `PUT` instead of
-  `sendBeacon` (F001) SPEC-02 row 11 · SPEC-07 row 1; `bulk` queue (F095)
-  SPEC-02 row 8 · SPEC-04 row 19 · SPEC-09 row 11 · SPEC-14 row 11; people
-  retraction events (F017) SPEC-08 row 2 · SPEC-06 row 2; optimistic placement
-  (F015) SPEC-05 row 4 · SPEC-06 row 10; `:publish:own` never checked (F051)
-  SPEC-02 row 4 · SPEC-15 row 6 · SPEC-16 row 7; a stranger's draft answers
-  403 on guarded writes (F119) SPEC-02 row 5 · SPEC-14 row 25 · SPEC-15 row 7
-  · SPEC-16 row 8; chapter `sort_order` on create → 500 at COMMIT SPEC-02
-  row 19 · SPEC-16 row 2; D-34 matcher (F032) SPEC-06 row 14 (`/weather`) ·
-  SPEC-13 row 21 and SPEC-18 row 10 (both `/admin` — one change closes both);
+- Smaller shared items: `origin='import'` (F038/F012) SPEC-04 row 10 · SPEC-14
+  row 7 · SPEC-05 row 8 · SPEC-08 row 2 · SPEC-15 row 17; media deep link
+  (F018) SPEC-04 row 15 · SPEC-05 row 9 · SPEC-09 row 7 · SPEC-10 row 9; Audio
+  SPEC-04 row 16 · SPEC-10 rows 4, 5, 8; keepalive `PUT` instead of
+  `sendBeacon` (F001) SPEC-14 row 11 · SPEC-10 row 1; `bulk` queue (F095)
+  SPEC-14 row 8 · SPEC-05 row 19 · SPEC-03 row 11 · SPEC-15 row 11; people
+  retraction events (F017) SPEC-11 row 2 · SPEC-09 row 2; optimistic placement
+  (F015) SPEC-07 row 4 · SPEC-09 row 10; `:publish:own` never checked (F051)
+  SPEC-14 row 4 · SPEC-16 row 6 · SPEC-17 row 7; a stranger's draft answers
+  403 on guarded writes (F119) SPEC-14 row 5 · SPEC-15 row 25 · SPEC-16 row 7
+  · SPEC-17 row 8; chapter `sort_order` on create → 500 at COMMIT SPEC-14
+  row 19 · SPEC-17 row 2; D-34 matcher (F032) SPEC-09 row 14 (`/weather`) ·
+  SPEC-01 row 21 and SPEC-02 row 10 (both `/admin` — one change closes both);
   `/calendar` is unowned.
 
 **Order of work.** This index says *what* diverges; the order in which to
@@ -463,11 +502,11 @@ here; this list does not restate it. The gap rows cite them as
 - **Timezone** — per user, from the device location, default
   `Asia/Ho_Chi_Minh`, with a `timezone_manual` override; sweeps evaluate each
   owner's local date. Detail: the **Timezone** convention above; the D-17
-  update in [feature-inventory.md](../feature-inventory.md); SPEC-03 P0.6,
-  SPEC-05 P0.4, SPEC-06 P0.1 / P0.3 / P1.5, SPEC-08 P0.3 / P0.4, SPEC-10 §4a.
+  update in [feature-inventory.md](../feature-inventory.md); SPEC-12 P0.6,
+  SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4, SPEC-13 §4a.
 - **Audio opens the player** — audio is a playable kind: player page, plays
-  from `/original`, saves progress, joins `/continue`. Detail: SPEC-07 P0.1,
-  P0.2, P0.4; SPEC-01 §11 row 16; the D-20 update in
+  from `/original`, saves progress, joins `/continue`. Detail: SPEC-10 P0.1,
+  P0.2, P0.4; SPEC-04 §11 row 16; the D-20 update in
   [feature-inventory.md](../feature-inventory.md).
 
 ## Decisions recorded 2026-10-01
@@ -476,21 +515,21 @@ The owner settled the seven questions the 2026-10-01 gap verification left
 open. The detail lives in the places named here; the gap rows cite them as
 "Decision 2026-10-01".
 
-- **(a) `GET /bank/report` is documented, not retired** — SPEC-03 P1.11
-  (contract and ACs) and its §7 row; TC-BANK-185…190; the SPEC-03 P1.11 row
-  of the matrix. No new gap row: its month handling is SPEC-03 §12 row 8, its
+- **(a) `GET /bank/report` is documented, not retired** — SPEC-12 P1.11
+  (contract and ACs) and its §7 row; TC-BANK-185…190; the SPEC-12 P1.11 row
+  of the matrix. No new gap row: its month handling is SPEC-12 §12 row 8, its
   OpenAPI annotation row 12.
-- **(b) Debt movements use `wallet_id`** — defined in SPEC-10 §6 (the user's
-  own non-debt account the money moves through). The old SPEC-10 §8 row 4
+- **(b) Debt movements use `wallet_id`** — defined in SPEC-13 §6 (the user's
+  own non-debt account the money moves through). The old SPEC-13 §8 row 4
   (rename to `account_id`) is gone; row 4 is now the non-debt check `HEAD`
   lacks.
-- **(c) `people/already-in-registry` is declared** — SPEC-08 P0.2 (409 on a
+- **(c) `people/already-in-registry` is declared** — SPEC-11 P0.2 (409 on a
   second link of one account) and §7 Problem types; §11 row 12 now covers only
   its missing `problems.ts` entry, row 14 the `linked_user_id` shape rule;
   TC-PPL-021, TC-PPL-022.
-- **(d) The weather widget is in scope** — SPEC-06 §3 (no longer a non-goal)
+- **(d) The weather widget is in scope** — SPEC-09 §3 (no longer a non-goal)
   and P0.4 (requirement and ACs); §11 row 14 is now the `/weather` matcher gap;
-  TC-STREAM-073…076; brief 06 annotated (since folded into SPEC-06 and deleted).
+  TC-STREAM-073…076; brief 06 annotated (since folded into SPEC-09 and deleted).
 - **(e) `limit` is lenient and clamps** — the **Pagination** convention above;
   every §7 that declares a limit; one gap row per service that resets instead
   (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
@@ -500,7 +539,7 @@ open. The detail lives in the places named here; the gap rows cite them as
   [feature-inventory.md](../feature-inventory.md);
   [frontend.md](../../architecture/frontend.md) §5.4;
   [security.md](../../architecture/security.md)'s route list. The code
-  follow-up is SPEC-13 P0.13 (§11 row 14), the first item of the **Per-user
+  follow-up is SPEC-01 P0.13 (§11 row 14), the first item of the **Per-user
   timezone** cross-cutting gap below.
 - **(g) `{items}` for non-paginated lists is confirmed** — the **Pagination**
   convention above (with the rationale and what counts as a collection); the
@@ -509,59 +548,59 @@ open. The detail lives in the places named here; the gap rows cite them as
 
 ## Decisions recorded 2026-10-01 (second round)
 
-The owner settled four of the questions SPEC-13…18 raised (seven spec
+The owner settled four of the questions the as-built specs (SPEC-01, 02 and 15–18) raised (seven spec
 questions, since one decision covered three specs and another two). The detail
 lives in the places named here; the gap rows cite them as "Decision
 2026-10-01b".
 
-- **(D1) Deleting a user purges their media first** — SPEC-13 P0.10 (the
+- **(D1) Deleting a user purges their media first** — SPEC-01 P0.10 (the
   delete order: disable → `mediaapi.PurgeOwnerAssets` → a final pass under
   `FOR UPDATE` on the user row that must leave zero rows → `DeleteUser`;
   otherwise 503 `account/delete-incomplete` and the user is kept, with the
-  reasoning why tombstoning alone would not survive the cascade) and SPEC-01
-  P0.7 (the media method). Gap rows: SPEC-13 §11 row 8 (rewritten),
-  SPEC-01 §11 row 19 (new); TC-ACC-064…066, TC-MEDIA-052…054.
-- **(D2) Movie and story are finished, not reverted** — SPEC-15 P1.1 and
-  SPEC-16 P1.1 are committed scope (still unbuilt), to the music standard;
+  reasoning why tombstoning alone would not survive the cascade) and SPEC-04
+  P0.7 (the media method). Gap rows: SPEC-01 §11 row 8 (rewritten),
+  SPEC-04 §11 row 19 (new); TC-ACC-064…066, TC-MEDIA-052…054.
+- **(D2) Movie and story are finished, not reverted** — SPEC-16 P1.1 and
+  SPEC-17 P1.1 are committed scope (still unbuilt), to the music standard;
   [backlog.md](../backlog.md) P2 line 28 records the decision. No new gap row:
-  the frontends are SPEC-15 §11 row 16 and SPEC-16 §11 row 18.
+  the frontends are SPEC-16 §11 row 16 and SPEC-17 §11 row 18.
 - **(D3) `account` and `layout` emit bus events; notify tells the
   superadmins** — no exemption from ADR-08's rule (the **Events** convention
-  above). SPEC-13 P1.3 and §8 (seven `account:*` events, `accountapi.AdminEvent`,
-  `SuperadminIDs`), SPEC-18 P1.4 and §8 (one `layout:changed {part}`), SPEC-04
+  above). SPEC-01 P1.3 and §8 (seven `account:*` events, `accountapi.AdminEvent`,
+  `SuperadminIDs`), SPEC-02 P1.4 and §8 (one `layout:changed {part}`), SPEC-05
   P1.5 (eight `notify:on_*` consumers, recipients = superadmins minus the actor,
   registration deduplicated against the approver dispatch, email forced only
   for refresh-token reuse); [events.md](../../reference/events.md) planned rows.
-  Gap rows: SPEC-13 §11 row 24, SPEC-18 §11 row 14, SPEC-04 §11 row 23;
+  Gap rows: SPEC-01 §11 row 24, SPEC-02 §11 row 14, SPEC-05 §11 row 23;
   TC-ACC-120…126, TC-LAY-050…052, TC-NOTIFY-140…145.
-- **(D4) `user` may author music, movies and stories** — SPEC-14 P1.4,
-  SPEC-15 P1.3, SPEC-16 P1.3 (each a module-owned `000N_<module>_user_write_grant`
+- **(D4) `user` may author music, movies and stories** — SPEC-15 P1.4,
+  SPEC-16 P1.3, SPEC-17 P1.3 (each a module-owned `000N_<module>_user_write_grant`
   granting `:write:own` and `:publish:own` to `user`, the
   `0025_comic_user_write_grant` shape; `:any` and delete-any unchanged; useful
-  with F009). Gap rows: SPEC-14 §12 row 26, SPEC-15 §11 row 18, SPEC-16 §11
+  with F009). Gap rows: SPEC-15 §12 row 26, SPEC-16 §11 row 18, SPEC-17 §11
   row 20; TC-MUS-004, TC-MOV-050, TC-STY-070.
 
 ## Open owner decisions (2026-10-01)
 
 The 2026-09-30 round and both 2026-10-01 rounds are closed (above). Of the 22
-questions the as-built specs SPEC-13…18 raised, seven were decided in the
+questions the as-built specs (SPEC-01, 02 and 15–18) raised, seven were decided in the
 second round; the **15** below remain, and none of them blocks a gap row or a
 P1. Each is stated, with its options, in the spec's "Open questions" section;
 this list only routes. When one is decided, move it to a "Decisions recorded"
 list like the ones above and correct the spec text.
 
-- Account — admin list paging stays offset (SPEC-13 Q2); register's 409
+- Account — admin list paging stays offset (SPEC-01 Q2); register's 409
   reveals emails (Q3); single-device logout bumps `token_version` (Q4); the
   per-account lockout is triggerable by anyone (Q5).
-- Music — resume through media progress vs `music.listen_progress` (SPEC-14
+- Music — resume through media progress vs `music.listen_progress` (SPEC-15
   b); genre as free text vs D-22 (c); bulk publish floods the bell (d); who can
   play a published track (e).
-- Publishing across the tenant fence — SPEC-15 §10 (movie), SPEC-14 e (music).
-- Story — keep the publish-time-only chapter check, or adopt SPEC-02 P0.2 (a)
-  (SPEC-16 §10).
-- Social — re-request after decline (SPEC-17 Q1); removal as an event (Q2);
+- Publishing across the tenant fence — SPEC-16 §10 (movie), SPEC-15 e (music).
+- Story — keep the publish-time-only chapter check, or adopt SPEC-14 P0.2 (a)
+  (SPEC-17 §10).
+- Social — re-request after decline (SPEC-18 Q1); removal as an event (Q2);
   opting out of being askable (Q3).
-- Layout — per-tenant shells (SPEC-18 Q2); concurrent editors (Q3).
+- Layout — per-tenant shells (SPEC-02 Q2); concurrent editors (Q3).
 
 ## Review history
 
@@ -580,8 +619,8 @@ list like the ones above and correct the spec text.
   code diverges; the worklogs are the dated record. The same day the owner
   decided the seven open questions; they are applied and listed under
   "Decisions recorded 2026-10-01" (gap total 138 → 145). Later that day the
-  six modules no spec owned got as-built specs (SPEC-13…18, `8308fdf`), each
-  with its own gap section, and SPEC-02 gained two rows found while writing
+  six modules no spec owned got as-built specs (SPEC-01, 02 and 15–18, `8308fdf`), each
+  with its own gap section, and SPEC-14 gained two rows found while writing
   them (gap total 145 → 256). Still the same day, a second round of owner
   decisions (D1–D4, "Decisions recorded 2026-10-01 (second round)") closed
   seven of the 22 questions those specs raised and added seven gap rows (gap

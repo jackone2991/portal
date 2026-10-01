@@ -12,15 +12,15 @@ Status legend: **✅ shipped** = wired, mounted, tested end-to-end, **✓ scaffo
 
 ## 1. Identity, Auth & Access — module `account` ✅
 
-Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module". The as-built contract (registration with approval, login, refresh, RBAC, admin console) and its gaps are [SPEC-13](specs/SPEC-13-account-identity-admin.md).
+Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module". The as-built contract (registration with approval, login, refresh, RBAC, admin console) and its gaps are [SPEC-01](specs/SPEC-01-account-identity-admin.md).
 
 > **Auth direction updated — [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
 
-- **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account as `pending` and returns 201 **without a session**; the user can sign in once an approver approves it (migration `0031`; SPEC-13 P0.1). No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
+- **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account as `pending` and returns 201 **without a session**; the user can sign in once an approver approves it (migration `0031`; SPEC-01 P0.1). No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
 - **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 256-bit refresh token (SHA-256 at rest; TTL via `REFRESH_TOKEN_TTL`, currently 24h). Login's `remember` flag selects a persistent 24h cookie vs a session cookie.
 - **Cookie + Bearer modes** — `portal_access` (Path=/) / `portal_refresh` (Path=/api/v1/auth) HttpOnly Secure cookies for browser, plus a `portal_session` marker cookie (Path=/) read by the Next.js middleware auth gate; `Authorization: Bearer` for API clients.
 - **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bumps `users.token_version`).
-- **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and writes the audit action `account.refresh.reuse_detected` (rotation is not yet atomic under concurrent presentation — SPEC-13 §11 row 2).
+- **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and writes the audit action `account.refresh.reuse_detected` (rotation is not yet atomic under concurrent presentation — SPEC-01 §11 row 2).
 - **`/auth/me`** — returns the current user snapshot.
 - **RBAC engine** — `<resource>:<action>[:<scope>]` permission grammar, wildcards, fail-closed parser, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) with recursive-CTE effective-permission walk.
 - **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](../adr/06-local-auth-model.md); no IdP groups to sync.~~)*
@@ -45,59 +45,59 @@ Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant
 
 ## 3. Media Pipeline — module `media` ✅
 
-Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (`service.go`, `objectreader.go`, `worker/{transcode,process_image,thumbnail}.go`). The contract — image ingest, poster, delete, library, download, event fan-out — and its open gaps are [SPEC-01](specs/SPEC-01-media-image-pipeline.md); playback resume is [SPEC-07](specs/SPEC-07-continue-rail.md).
+Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (`service.go`, `objectreader.go`, `worker/{transcode,process_image,thumbnail}.go`). The contract — image ingest, poster, delete, library, download, event fan-out — and its open gaps are [SPEC-04](specs/SPEC-04-media-image-pipeline.md); playback resume is [SPEC-10](specs/SPEC-10-continue-rail.md).
 
 - **Asset upload** — `POST /assets` (kinds `video`, `audio`, `image`) returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` routes by kind: video → transcode, image → image pipeline, audio → marked `ready` at once (no transcode; the music player streams the original). Other modules ingest server-side through `mediaapi.Ingest` (comic and music imports, cover extraction).
-- **Three worker pools** (`cmd/worker`, one Asynq server each — never collapse them into queue weights): **heavy** (`heavy` queue, concurrency 1 — `media:transcode`, FFmpeg VOD HLS h264/aac, single rung; a multi-rung ladder is not built), **image** (`image` queue, `IMAGE_CONCURRENCY`, default 3 — `media:process_image`, metadata-stripped WebP `thumb`/`medium` variants, SPEC-01 P0.1), **light** (`thumbnail`/`default` — `media:thumbnail`, the video `poster` variant, SPEC-01 P0.2; plus the hourly `media:purge_orphans` sweep run per tenant).
+- **Three worker pools** (`cmd/worker`, one Asynq server each — never collapse them into queue weights): **heavy** (`heavy` queue, concurrency 1 — `media:transcode`, FFmpeg VOD HLS h264/aac, single rung; a multi-rung ladder is not built), **image** (`image` queue, `IMAGE_CONCURRENCY`, default 3 — `media:process_image`, metadata-stripped WebP `thumb`/`medium` variants, SPEC-04 P0.1), **light** (`thumbnail`/`default` — `media:thumbnail`, the video `poster` variant, SPEC-04 P0.2; plus the hourly `media:purge_orphans` sweep run per tenant).
 - **Asset state machine** — `pending → processing → ready | failed`. **`media:asset_ready` is emitted** by the transcode and image workers and, for audio, by `/complete` itself; `notify` consumes it (`notify:on_asset_ready`). The life stream deliberately does not project it (`journal/stream.go`). **`media:asset_deleted`** is emitted on delete and consumed by comic, movie, music and story to reap references — those consumers currently run without a tenant scope (backlog #42).
 - **Visibility / ACL** — every asset is `private` by default; `PATCH /assets/{id} {visibility}` makes it `public`. Migration `0032_media_asset_acl` narrows reads inside a tenant to *public, or yours, or you administer the tenant*; the anonymous variant/HLS routes (`OptionalTenant`) therefore serve public rows only.
 - **Delivery** — `GET /assets/{id}/hls/*` (HLS proxy), `GET /assets/{id}/variants/{variant}` (image/poster variants), `GET /assets/{id}/original` (a `http.ServeContent` route with Range support — the source every `<audio>`/`<video>` element plays from; seeking depends on it). `mediaapi.SignedURL(assetID, ttl)` is built (`Service.SignedOriginalURL`, a presigned GET on the original) for another module's player.
 - **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](../adr/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target. No tenant prefix in object keys; isolation is the database's (RLS on `assets`, `media_asset_variants`, `media_playback_progress`).
-- **HLS playback** — frontend uses Vidstack; progress is stored per asset (`media_playback_progress`, SPEC-07).
+- **HLS playback** — frontend uses Vidstack; progress is stored per asset (`media_playback_progress`, SPEC-10).
 - **Not built** — transcode quotas/backpressure and a dead-letter queue [D-13], sprite sheets, the multi-rung ladder.
 
 ---
 
 ## 4. Movies — module `movie` ✓
 
-Source: [backend/internal/modules/movie/](../../backend/internal/modules/movie/) (migration `0021_movie_core`). As-built spec, scope and gaps: [SPEC-15](specs/SPEC-15-movie-vertical.md) — backend built, no frontend (SPEC-15 P1.1).
+Source: [backend/internal/modules/movie/](../../backend/internal/modules/movie/) (migration `0021_movie_core`). As-built spec, scope and gaps: [SPEC-16](specs/SPEC-16-movie-vertical.md) — backend built, no frontend (SPEC-16 P1.1).
 
-- **Catalog CRUD** — title, description, release year, poster, video (SPEC-15 P0.2). Synopsis/cast/genre/rating are non-goals there (SPEC-15 §3).
-- **Episodes / seasons** — not built; SPEC-15 P2.
-- **Asset binding** — a movie references one `ready` video asset through `mediaapi`, checked when it is attached (SPEC-15 P0.2). The module does **not** subscribe to `media:asset_ready` and has no `processing` status; it consumes only `media:asset_deleted` (SPEC-15 P0.5, §3).
-- **Browse / search / filter** — published and own lists only; FTS deferred (SPEC-15 §3).
-- **Watch progress** — rides on the video asset's media progress (SPEC-07), not a movie table (SPEC-15 P0.6).
-- **Continue watching** rail — a movie appears as a media item; the `movie` leg is SPEC-15 P1.2.
-- **Ratings & reviews** (△ likely overlaps with social comments) — not built; SPEC-15 P2.
+- **Catalog CRUD** — title, description, release year, poster, video (SPEC-16 P0.2). Synopsis/cast/genre/rating are non-goals there (SPEC-16 §3).
+- **Episodes / seasons** — not built; SPEC-16 P2.
+- **Asset binding** — a movie references one `ready` video asset through `mediaapi`, checked when it is attached (SPEC-16 P0.2). The module does **not** subscribe to `media:asset_ready` and has no `processing` status; it consumes only `media:asset_deleted` (SPEC-16 P0.5, §3).
+- **Browse / search / filter** — published and own lists only; FTS deferred (SPEC-16 §3).
+- **Watch progress** — rides on the video asset's media progress (SPEC-10), not a movie table (SPEC-16 P0.6).
+- **Continue watching** rail — a movie appears as a media item; the `movie` leg is SPEC-16 P1.2.
+- **Ratings & reviews** (△ likely overlaps with social comments) — not built; SPEC-16 P2.
 
 ---
 
 ## 5. Music — module `music` ✅
 
-Source: [backend/internal/modules/music/](../../backend/internal/modules/music/) (migrations `0022_music_core`, `0038`, `0039`, `0041`); template page `Music And Playlists.html`. As-built spec, scope and gaps: [SPEC-14](specs/SPEC-14-music-vertical.md).
+Source: [backend/internal/modules/music/](../../backend/internal/modules/music/) (migrations `0022_music_core`, `0038`, `0039`, `0041`); template page `Music And Playlists.html`. As-built spec, scope and gaps: [SPEC-15](specs/SPEC-15-music-vertical.md).
 
-- **Tracks** — title, artist, album, cover, audio asset via `mediaapi`; bulk import, enrichment and catalogue lookup (SPEC-14 P0.2–P0.8). No audio `duration` (SPEC-14 §3).
-- **Albums**, **artists** — not entities: `artist` and `album` are free-text columns on the track (SPEC-14 §3, out of scope).
-- **Playlists** — one owner's private selection of their own tracks (SPEC-14 P0.9). Public, shared or collaborative playlists are out of scope (SPEC-14 §3).
-- **Queue & playback state** — frontend-side, in memory; not persisted (SPEC-14 §3; resume is SPEC-14 §11 (b)).
-- **"Now playing"** — one app-wide player (SPEC-14 P0.10); the home rail's `music` widget is a layout row (SPEC-18).
+- **Tracks** — title, artist, album, cover, audio asset via `mediaapi`; bulk import, enrichment and catalogue lookup (SPEC-15 P0.2–P0.8). No audio `duration` (SPEC-15 §3).
+- **Albums**, **artists** — not entities: `artist` and `album` are free-text columns on the track (SPEC-15 §3, out of scope).
+- **Playlists** — one owner's private selection of their own tracks (SPEC-15 P0.9). Public, shared or collaborative playlists are out of scope (SPEC-15 §3).
+- **Queue & playback state** — frontend-side, in memory; not persisted (SPEC-15 §3; resume is SPEC-15 §11 (b)).
+- **"Now playing"** — one app-wide player (SPEC-15 P0.10); the home rail's `music` widget is a layout row (SPEC-02).
 
 ---
 
 ## 6. Stories — module `story` ✓
 
-Source: [backend/internal/modules/story/](../../backend/internal/modules/story/) (migration `0023_story_core`). As-built spec, scope and gaps: [SPEC-16](specs/SPEC-16-story-vertical.md) — backend built, the reader is a placeholder (SPEC-16 P1.1).
+Source: [backend/internal/modules/story/](../../backend/internal/modules/story/) (migration `0023_story_core`). As-built spec, scope and gaps: [SPEC-17](specs/SPEC-17-story-vertical.md) — backend built, the reader is a placeholder (SPEC-17 P1.1).
 
-- **Story** with **chapters** (ordered, Markdown bodies) — SPEC-16 P0.2–P0.3.
-- **Reader** — not built; SPEC-16 P1.1.
-- **Reading progress** per-user — not built; SPEC-16 P1.2.
-- **Drafts** and **publish workflow** — built (SPEC-16 P0.5). **Bookmarks** — SPEC-16 P2.
+- **Story** with **chapters** (ordered, Markdown bodies) — SPEC-17 P0.2–P0.3.
+- **Reader** — not built; SPEC-17 P1.1.
+- **Reading progress** per-user — not built; SPEC-17 P1.2.
+- **Drafts** and **publish workflow** — built (SPEC-17 P0.5). **Bookmarks** — SPEC-17 P2.
 
 ---
 
 ## 7. Comics — module `comic` ✅
 
-Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/) (migration `0015_comic_core` onward). Spec, scope and gaps: [SPEC-02](specs/SPEC-02-comic-vertical.md); the bullets below are the original wish list, not the built state.
+Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/) (migration `0015_comic_core` onward). Spec, scope and gaps: [SPEC-14](specs/SPEC-14-comic-vertical.md); the bullets below are the original wish list, not the built state.
 
 - **Comic** with **chapters** and **pages** (image assets via `mediaapi`).
 - **Reader** — single-page, double-page, vertical-scroll modes.
@@ -108,7 +108,7 @@ Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/)
 
 ## 8. Personal Finance / Bank — module `bank` ✓
 
-Tracks **every form of money a user has** in one place: accounts, transactions, debts (owed), loans (lent out), investments, savings, budgets. The module exists; what is built is [SPEC-03](specs/SPEC-03-finance-ledger.md) (ledger) and [SPEC-10](specs/SPEC-10-ledger-expansion.md) (expansion, phase by phase). The subsections below are the original long-horizon wish list, not the built state.
+Tracks **every form of money a user has** in one place: accounts, transactions, debts (owed), loans (lent out), investments, savings, budgets. The module exists; what is built is [SPEC-12](specs/SPEC-12-finance-ledger.md) (ledger) and [SPEC-13](specs/SPEC-13-ledger-expansion.md) (expansion, phase by phase). The subsections below are the original long-horizon wish list, not the built state.
 
 ### 8.1 Accounts
 - **Account types**: cash, checking, savings, credit card, loan account, investment account, retirement, crypto wallet, gift card, "other".
@@ -190,7 +190,7 @@ Bank tables land in their own migration block, e.g. `00NN_bank_init.up.sql` foll
 
 ## 9. Social Layer △ (first slice built as module `social`; the rest deferred)
 
-Source: [template-main/social/](../../template-main/social/) page inventory. A `social` module exists (migration `0037_social_connections`) and holds only the first slice — mutual connections between accounts, [SPEC-17](specs/SPEC-17-social-connections.md). Everything else below stays deferred ([backlog.md § Deferred](backlog.md)); each further item needs its own spec (SPEC-17 §3).
+Source: [template-main/social/](../../template-main/social/) page inventory. A `social` module exists (migration `0037_social_connections`) and holds only the first slice — mutual connections between accounts, [SPEC-18](specs/SPEC-18-social-connections.md). Everything else below stays deferred ([backlog.md § Deferred](backlog.md)); each further item needs its own spec (SPEC-18 §3).
 
 ### 9.1 Newsfeed
 - Reverse-chronological + algorithmic feed (`Newsfeed.html`, `Newsfeed - Masonry.html`).
@@ -204,9 +204,9 @@ Source: [template-main/social/](../../template-main/social/) page inventory. A `
 - **Cover & avatar**, custom widgets (`Manage Widgets.html`).
 
 ### 9.3 Friend graph
-- **Friend requests** (`Your Account - Friends Requests.html`) — built as connections: request, accept, decline, withdraw, disconnect ([SPEC-17](specs/SPEC-17-social-connections.md) P0.2–P0.4).
-- **Friend groups** (`Friend Groups.html`) — close friends, work, family, etc. Not on the connection: grouping lives in the private people registry (`people_persons.circle`, SPEC-08; SPEC-17 §3).
-- **Block / mute** — not built (SPEC-17 §3, P2).
+- **Friend requests** (`Your Account - Friends Requests.html`) — built as connections: request, accept, decline, withdraw, disconnect ([SPEC-18](specs/SPEC-18-social-connections.md) P0.2–P0.4).
+- **Friend groups** (`Friend Groups.html`) — close friends, work, family, etc. Not on the connection: grouping lives in the private people registry (`people_persons.circle`, SPEC-11; SPEC-18 §3).
+- **Block / mute** — not built (SPEC-18 §3, P2).
 
 ### 9.4 Communities / "Favourite Pages"
 - **Page Feed** (`Favorit Page Feed.html`), **About** (`Favorit Page - About.html`), **Events** (`Favorit Page - Events.html`), **Tabs** (`Favourite Page With Tabs.html`).
@@ -237,7 +237,7 @@ Source: [template-main/social/](../../template-main/social/) page inventory. A `
 - Per-user engagement view (`Statistics.html`).
 
 ### 9.11 Widgets
-- **Weather widget** (`Weather Widget.html`), **sticky sidebars**, customisable per profile (`Sticky Sidebars.html`, `Manage Widgets.html`). Built as instance-wide, not per-profile: the `layout` module places registry-backed widgets on the home rails and an admin edits them at `/admin/layout` ([SPEC-18](specs/SPEC-18-shell-layout.md) P0.5); per-tenant layouts and per-user hide/collapse are SPEC-18 P2.
+- **Weather widget** (`Weather Widget.html`), **sticky sidebars**, customisable per profile (`Sticky Sidebars.html`, `Manage Widgets.html`). Built as instance-wide, not per-profile: the `layout` module places registry-backed widgets on the home rails and an admin edits them at `/admin/layout` ([SPEC-02](specs/SPEC-02-shell-layout.md) P0.5); per-tenant layouts and per-user hide/collapse are SPEC-02 P2.
 
 ### 9.12 Asymmetric follow graph (alongside friendship)
 
@@ -637,7 +637,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 2 — Media pipeline end-to-end
 
-> **As built:** the first exit sentence is met (single-rung VOD HLS h264/aac → Vidstack playback); the second is not — there are no quotas or backpressure, so a second user *can* queue behind the first (the heavy pool runs one job at a time). Since built: the poster (SPEC-01 P0.2), `media:asset_ready` emission, and `mediaapi.GetAsset` / `SignedURL` (§3). Still open: the multi-rung ladder, sprites, quotas/backpressure, the `transcode:dead` queue [D-13], and `TRANSCODE_ENCODER` (no such setting exists — the encoder is fixed to `libx264`).
+> **As built:** the first exit sentence is met (single-rung VOD HLS h264/aac → Vidstack playback); the second is not — there are no quotas or backpressure, so a second user *can* queue behind the first (the heavy pool runs one job at a time). Since built: the poster (SPEC-04 P0.2), `media:asset_ready` emission, and `mediaapi.GetAsset` / `SignedURL` (§3). Still open: the multi-rung ladder, sprites, quotas/backpressure, the `transcode:dead` queue [D-13], and `TRANSCODE_ENCODER` (no such setting exists — the encoder is fixed to `libx264`).
 
 - Pick **video** first (it's the highest-fidelity test of the full pipeline).
 - Upload endpoint → `platform/storage` → MinIO origin → enqueue Asynq `transcode`.
@@ -652,7 +652,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 3 — First domain vertical: Movies
 
-> **As built** ([SPEC-15](specs/SPEC-15-movie-vertical.md)): comic, not movie, became the first vertical (SPEC-02). The movie module has no `seasons`/`episodes` and no `ready` status — a video is attachable only once its asset is already `ready`, so the module never subscribes to `media:asset_ready` (SPEC-15 §3); progress is the media asset's (SPEC-15 P0.6); there is no frontend (SPEC-15 P1.1).
+> **As built** ([SPEC-16](specs/SPEC-16-movie-vertical.md)): comic, not movie, became the first vertical (SPEC-14). The movie module has no `seasons`/`episodes` and no `ready` status — a video is attachable only once its asset is already `ready`, so the module never subscribes to `media:asset_ready` (SPEC-16 §3); progress is the media asset's (SPEC-16 P0.6); there is no frontend (SPEC-16 P1.1).
 
 - `movies`, `seasons`, `episodes` schema + queries.
 - Movie subscribes to `media:asset_ready` and flips `movies.status = ready`.
@@ -703,7 +703,7 @@ Standalone `notification` module — decision settled in [D-1]. Channel decision
 - `notification` module owns `notifications`, `notification_preferences`, `delivery_attempts`, `push_subscriptions`.
 - Asynq fan-out: every emitter publishes `notify:*` tasks; the module's worker dispatches per-channel.
 - **Channels:**
-  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/me/notifications/stream`; the client invalidates and refetches on each event (SPEC-04 P1.2). [D-3]
+  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/me/notifications/stream`; the client invalidates and refetches on each event (SPEC-05 P1.2). [D-3]
   - **Email** — `platform/mail/` SMTP (`wneessen/go-mail`); templates under `backend/templates/email/<category>/`. [D-4]
   - **Web Push** — VAPID via `SherClockHolmes/webpush-go`; subscriptions in `notification.push_subscriptions`. No APNS/FCM in v1. [D-5]
 - User preferences per category × per channel.
@@ -718,7 +718,7 @@ Core social baseline. Advanced formats (stories/reels/live/audio/voting/articles
 1. **Newsfeed** — posts (text/image/link/poll), **rich reactions** (§9.19), comments, **quote-shares** (§9.15), nested threading.
 2. **Profile** — `social.profiles` (1:1 with `users`) for bio/education/employment/hobbies/cover/widgets. Identity-critical fields stay on `users` [D-19].
 3. **Asymmetric follow graph** (§9.12) — distinct from §9.3 friendship. Following / followers, "Following" feed.
-4. **Friend graph** — requests, groups, block/mute (§9.3). *Requests shipped out of sequence as the `social` module's first slice ([SPEC-17](specs/SPEC-17-social-connections.md), `0037`); groups live in the people registry and block/mute is SPEC-17 P2.*
+4. **Friend graph** — requests, groups, block/mute (§9.3). *Requests shipped out of sequence as the `social` module's first slice ([SPEC-18](specs/SPEC-18-social-connections.md), `0037`); groups live in the people registry and block/mute is SPEC-18 P2.*
 5. **Communities** — pages, memberships, page-scoped RBAC, **basic moderation** (§9.30 core: report, mod queue, remove/lock/pin/ban).
 6. **Events** — calendar, RSVP, reminders.
 7. **Messaging** — DM 1:1 + group via [D-3].
@@ -886,7 +886,7 @@ Self-hosted users push back on every extra service. Postgres FTS (`tsvector` + `
 Three real-time needs: notification stream (push-only), media events (push-only), chat (bi-directional with typing/presence). The first two are SSE-shaped; only chat genuinely needs WS.
 
 **Decision:** new `backend/internal/platform/realtime/` package exposing `Publish(ctx, channel, event)` / `Subscribe(ctx, channel) <-chan Event` over Dragonfly pub/sub. Endpoints:
-- `GET /api/v1/me/notifications/stream` (SSE, authed, channel = `user:<id>`; client invalidates and refetches on each event per SPEC-04 P1.2) — Phase 6.
+- `GET /api/v1/me/notifications/stream` (SSE, authed, channel = `user:<id>`; client invalidates and refetches on each event per SPEC-05 P1.2) — Phase 6.
 - `GET /api/v1/chat/ws` (WebSocket via `coder/websocket`, formerly `nhooyr/websocket`) — Phase 7.
 
 No external service (Centrifugo, Soketi, etc.) unless scale demands.
@@ -1174,9 +1174,9 @@ UTC storage is the easy half. The hard half is **"when does a day start?"** — 
 
 Cross-cutting; lands wherever date-bounded reports first ship (Phase 5g for bank snapshots).
 
-**Update (2026-09-30, owner decision):** the v1 timezone source is the **user's own zone, taken from the user's location** and stored per user in `users.timezone` (IANA). The default for an unknown zone changes from `'UTC'` to **`'Asia/Ho_Chi_Minh'`**. It replaces every v1 use of `APP_TIMEZONE`, "the instance default" or a UTC fallback for user-facing day/month boundaries — SPEC-03's month default, SPEC-05's composer, SPEC-06's day grouping, bank-date conversion and on-this-day, SPEC-08's birthday endpoint and scan, SPEC-10's due reminders. **Write path:** the frontend detects the device zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and saves it via `PATCH /api/v1/auth/me {timezone}` when it differs; settings offer a manual override (`timezone_manual`) that suspends the automatic save. **Readers:** the frontend via `GET /auth/me`, modules via `accountapi` (`UserSummary.Timezone`). **Sweeps** follow the hourly per-TZ pattern above: they run hourly and evaluate each user's local date in that user's zone, with dedup keys giving exactly-once — so SPEC-08's former "declared v1 deviation" (one `APP_TIMEZONE`, daily 06:00 UTC) is withdrawn. The rule is stated once in the [specs README](specs/README.md) "Timezone" convention. Code follow-up: owned by [SPEC-13](specs/SPEC-13-account-identity-admin.md) P0.13 (the account half — migration, `PATCH /auth/me`, `accountapi`, frontend save) and its §11 row 14; none of it is built yet.
+**Update (2026-09-30, owner decision):** the v1 timezone source is the **user's own zone, taken from the user's location** and stored per user in `users.timezone` (IANA). The default for an unknown zone changes from `'UTC'` to **`'Asia/Ho_Chi_Minh'`**. It replaces every v1 use of `APP_TIMEZONE`, "the instance default" or a UTC fallback for user-facing day/month boundaries — SPEC-12's month default, SPEC-07's composer, SPEC-09's day grouping, bank-date conversion and on-this-day, SPEC-11's birthday endpoint and scan, SPEC-13's due reminders. **Write path:** the frontend detects the device zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and saves it via `PATCH /api/v1/auth/me {timezone}` when it differs; settings offer a manual override (`timezone_manual`) that suspends the automatic save. **Readers:** the frontend via `GET /auth/me`, modules via `accountapi` (`UserSummary.Timezone`). **Sweeps** follow the hourly per-TZ pattern above: they run hourly and evaluate each user's local date in that user's zone, with dedup keys giving exactly-once — so SPEC-11's former "declared v1 deviation" (one `APP_TIMEZONE`, daily 06:00 UTC) is withdrawn. The rule is stated once in the [specs README](specs/README.md) "Timezone" convention. Code follow-up: owned by [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.13 (the account half — migration, `PATCH /auth/me`, `accountapi`, frontend save) and its §11 row 14; none of it is built yet.
 
-**Update (2026-10-01, owner decision):** the manual override and the validation slug are confirmed as specified. `users.timezone_manual boolean NOT NULL DEFAULT false`; while it is true the device-detected zone never overwrites the stored one. The account API is `PATCH /api/v1/auth/me {timezone, timezone_manual?}` (an omitted `timezone_manual` leaves the flag unchanged; "use my location" sends the device zone with `timezone_manual: false`); `GET /auth/me` returns both fields. A `timezone` that `time.LoadLocation` rejects is 422 `account/invalid-timezone`, registered in `frontend/src/lib/problems.ts`. Stated in the [specs README](specs/README.md) "Timezone" convention; the code follow-up (migration, handler, `accountapi`, `problems.ts`, frontend) is [SPEC-13](specs/SPEC-13-account-identity-admin.md) P0.13 / §11 row 14, the first item of the README's "Per-user timezone" cross-cutting gap.
+**Update (2026-10-01, owner decision):** the manual override and the validation slug are confirmed as specified. `users.timezone_manual boolean NOT NULL DEFAULT false`; while it is true the device-detected zone never overwrites the stored one. The account API is `PATCH /api/v1/auth/me {timezone, timezone_manual?}` (an omitted `timezone_manual` leaves the flag unchanged; "use my location" sends the device zone with `timezone_manual: false`); `GET /auth/me` returns both fields. A `timezone` that `time.LoadLocation` rejects is 422 `account/invalid-timezone`, registered in `frontend/src/lib/problems.ts`. Stated in the [specs README](specs/README.md) "Timezone" convention; the code follow-up (migration, handler, `accountapi`, `problems.ts`, frontend) is [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.13 / §11 row 14, the first item of the README's "Per-user timezone" cross-cutting gap.
 
 ### D-18 — Migration `0001` audit: full split *(resolves §16.C-18)*
 
@@ -1245,11 +1245,11 @@ type ContinuingItem struct {
 
 `GET /api/v1/continue` aggregator in `cmd/api` fans out, merges, returns sorted by `updated_at DESC`. Lands in Phase 4.
 
-**Update (2026-09-30, SPEC-07 P0.3):** the item schema above is revised. `ContinuingItem{Kind, ID, Title, Position, Duration, Thumbnail, UpdatedAt}` becomes `ContinueItem{module, ref_id, title, poster_url, progress_pct, href, updated_at}` (the openapi `ContinueItem` schema) — the rail item carries a percentage and a link, not a raw position. The exact seek position comes from `GET /api/v1/assets/{id}/progress`. The shared Go type is still to live in a platform package. The fan-out decision itself is unchanged. See [SPEC-07](specs/SPEC-07-continue-rail.md).
+**Update (2026-09-30, SPEC-10 P0.3):** the item schema above is revised. `ContinuingItem{Kind, ID, Title, Position, Duration, Thumbnail, UpdatedAt}` becomes `ContinueItem{module, ref_id, title, poster_url, progress_pct, href, updated_at}` (the openapi `ContinueItem` schema) — the rail item carries a percentage and a link, not a raw position. The exact seek position comes from `GET /api/v1/assets/{id}/progress`. The shared Go type is still to live in a platform package. The fan-out decision itself is unchanged. See [SPEC-10](specs/SPEC-10-continue-rail.md).
 
-**Update (2026-09-30, owner decision):** audio is a playable kind alongside video. An audio asset opens the player page `/library/media/{id}` (the SPEC-07 media deep-link rule is unchanged: video/audio → player, image → `/library/media?open={id}`), plays from its stored original (`/api/v1/assets/{id}/original`, no HLS, no poster), resumes and saves progress like video, and may appear on the continue rail. `media/asset-not-playable` now covers only non-video, non-audio kinds. Code follow-up: HEAD's progress routes reject every non-video asset, the player feeds audio an empty HLS source, and `completeAudio` stores no `duration_ms`.
+**Update (2026-09-30, owner decision):** audio is a playable kind alongside video. An audio asset opens the player page `/library/media/{id}` (the SPEC-10 media deep-link rule is unchanged: video/audio → player, image → `/library/media?open={id}`), plays from its stored original (`/api/v1/assets/{id}/original`, no HLS, no poster), resumes and saves progress like video, and may appear on the continue rail. `media/asset-not-playable` now covers only non-video, non-audio kinds. Code follow-up: HEAD's progress routes reject every non-video asset, the player feeds audio an empty HLS source, and `completeAudio` stores no `duration_ms`.
 
-**Per vertical, as specced:** comic owns `comic_reading_progress` (`0015`, SPEC-02). Movie deliberately keeps **no** `movie.watch_progress`: one movie is one video asset, so the asset-level progress of SPEC-07 already is movie-level progress, and a `movie` leg of `/continue` changes presentation only ([SPEC-15](specs/SPEC-15-movie-vertical.md) P0.6, P1.2). Story's `story_reading_progress` and its `/continue` leg are unbuilt ([SPEC-16](specs/SPEC-16-story-vertical.md) P1.2). Music has no progress; whether tracks resume through media's asset progress or a `music.listen_progress` table is open ([SPEC-14](specs/SPEC-14-music-vertical.md) §11 (b)).
+**Per vertical, as specced:** comic owns `comic_reading_progress` (`0015`, SPEC-14). Movie deliberately keeps **no** `movie.watch_progress`: one movie is one video asset, so the asset-level progress of SPEC-10 already is movie-level progress, and a `movie` leg of `/continue` changes presentation only ([SPEC-16](specs/SPEC-16-movie-vertical.md) P0.6, P1.2). Story's `story_reading_progress` and its `/continue` leg are unbuilt ([SPEC-17](specs/SPEC-17-story-vertical.md) P1.2). Music has no progress; whether tracks resume through media's asset progress or a `music.listen_progress` table is open ([SPEC-15](specs/SPEC-15-music-vertical.md) §11 (b)).
 
 ### D-21 — Ratings: per-domain tables; no shared module *(resolves §16.C-21)*
 
@@ -1269,7 +1269,7 @@ Three different beasts (closed genre enumerations, user-input free-text labels, 
 
 No centralised `tags` table. No `platform/tags/` package. Just a documented convention.
 
-**Divergence on record:** music's catalogue lookup (`0039`) stores one free-text MusicBrainz tag in `genre text`, not a `genre TEXT[]` validated against a seed list; ratifying that or mapping tags onto a seed list is open in [SPEC-14](specs/SPEC-14-music-vertical.md) §11 (c). No other vertical has a genre column.
+**Divergence on record:** music's catalogue lookup (`0039`) stores one free-text MusicBrainz tag in `genre text`, not a `genre TEXT[]` validated against a seed list; ratifying that or mapping tags onto a seed list is open in [SPEC-15](specs/SPEC-15-music-vertical.md) §11 (c). No other vertical has a genre column.
 
 ### D-23 — Tenant identification: URL prefix `/t/{tenant}/...`; synthetic `me` tenant *(resolves §16.C-23)*
 
@@ -1335,9 +1335,9 @@ Examples:
 - `tenant.member.invited`, `tenant.organization.created`
 - `media.asset.failed`
 - `notification.delivery.failed`
-- `ops.backup.completed`, `ops.backup.failed` — system-written (`actor_kind='system'`, `target_kind='ops_backup_run'`, `target_id=<run id>`); registered 2026-09-30 for SPEC-09 P0.2 (already written by the shipped `ops` backup task)
+- `ops.backup.completed`, `ops.backup.failed` — system-written (`actor_kind='system'`, `target_kind='ops_backup_run'`, `target_id=<run id>`); registered 2026-09-30 for SPEC-03 P0.2 (already written by the shipped `ops` backup task)
 
-The canonical list of codes is the constants in `backend/internal/platform/audit/logger.go`. Account's actions and where it fails to write one (`account.session.disabled_attempt` is defined and never written) are [SPEC-13](specs/SPEC-13-account-identity-admin.md) §8 and §11 row 13; layout writes `layout.menu.saved` / `layout.widgets.saved` ([SPEC-18](specs/SPEC-18-shell-layout.md) P0.6).
+The canonical list of codes is the constants in `backend/internal/platform/audit/logger.go`. Account's actions and where it fails to write one (`account.session.disabled_attempt` is defined and never written) are [SPEC-01](specs/SPEC-01-account-identity-admin.md) §8 and §11 row 13; layout writes `layout.menu.saved` / `layout.widgets.saved` ([SPEC-02](specs/SPEC-02-shell-layout.md) P0.6).
 
 Audit remains best-effort, non-blocking (per CLAUDE.md). Lands in Phase 0 alongside the migration `0001` audit ([D-18]) — the audit-log table moves files at the same time as the rename.
 
@@ -1378,7 +1378,7 @@ BOOTSTRAP_ADMIN_GROUPS=
 
 Lands in Phase 0 (`user_oidc_roles` table) and the OIDC callback handler.
 
-**D-26.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is the first account registered on an empty database (auto-approved, given `superadmin`) or, on an existing database, the account named by `BOOTSTRAP_SUPERADMIN_EMAIL`, re-asserted on every API start ([SPEC-13](specs/SPEC-13-account-identity-admin.md) P0.1, P0.12). Roles are edited in the admin console under the no-escalation rule (SPEC-13 P0.11).
+**D-26.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is the first account registered on an empty database (auto-approved, given `superadmin`) or, on an existing database, the account named by `BOOTSTRAP_SUPERADMIN_EMAIL`, re-asserted on every API start ([SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.1, P0.12). Roles are edited in the admin console under the no-escalation rule (SPEC-01 P0.11).
 
 ### D-27 — Step-up auth: OIDC ACR-based; sensitive ops annotated explicitly *(resolves §16.D-27)*
 
@@ -1468,13 +1468,13 @@ The OpenAPI spec is the contract for both Go server stubs and TS client types. L
   - `Money` schema (`{ amount: string, currency: string }`) [D-7, D-14].
   - `PaginatedResult<T>` (cursor-based: `{ items: T[], next_cursor: string|null }`).
   - `TenantContext` path parameter contract [D-23].
-  - `ContinueItem` schema for `/api/v1/continue` aggregator [D-20] (renamed from `ContinuingItem` by SPEC-07 P0.3).
+  - `ContinueItem` schema for `/api/v1/continue` aggregator [D-20] (renamed from `ContinuingItem` by SPEC-10 P0.3).
   - Standard 4xx/5xx response component refs.
 - **Per-module endpoints** land with each module's `MountHTTP` (movie endpoints when movie ships, bank endpoints when bank ships). Aggregator endpoints + cross-module schemas land in Phase 0.
 
-**Update (2026-09-30, owner decision):** `PaginatedResult<T>`'s `{items, next_cursor}` is binding on **every** cursor-paginated list endpoint, and every non-paginated list answers `{items}`. Endpoints that shipped with a resource-named key — `{assets}`, `{comics}`, `{transactions}`, `{people}`, `{upcoming}`, `{accounts}`, `{categories}`, `{budgets}`, `{debts}`, `{pages}`, `{sources}` and the music, movie, social, story and admin-user lists (owned since 2026-10-01 by [SPEC-14](specs/SPEC-14-music-vertical.md) §12 row 15, [SPEC-15](specs/SPEC-15-movie-vertical.md) §11 row 8, [SPEC-17](specs/SPEC-17-social-connections.md) §11 row 4, [SPEC-16](specs/SPEC-16-story-vertical.md) §11 row 9 and [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 18) — are **retrofitted, not grandfathered**; they keep only their declared limits. Extra top-level fields that are not the list (notifications' `unread_count`, budgets' `month`) stay alongside `items`. Stated in the [specs README](specs/README.md) Pagination convention; each retrofit is a code follow-up (handler + `shared/openapi.yaml` + frontend readers).
+**Update (2026-09-30, owner decision):** `PaginatedResult<T>`'s `{items, next_cursor}` is binding on **every** cursor-paginated list endpoint, and every non-paginated list answers `{items}`. Endpoints that shipped with a resource-named key — `{assets}`, `{comics}`, `{transactions}`, `{people}`, `{upcoming}`, `{accounts}`, `{categories}`, `{budgets}`, `{debts}`, `{pages}`, `{sources}` and the music, movie, social, story and admin-user lists (owned since 2026-10-01 by [SPEC-15](specs/SPEC-15-music-vertical.md) §12 row 15, [SPEC-16](specs/SPEC-16-movie-vertical.md) §11 row 8, [SPEC-18](specs/SPEC-18-social-connections.md) §11 row 4, [SPEC-17](specs/SPEC-17-story-vertical.md) §11 row 9 and [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 18) — are **retrofitted, not grandfathered**; they keep only their declared limits. Extra top-level fields that are not the list (notifications' `unread_count`, budgets' `month`) stay alongside `items`. Stated in the [specs README](specs/README.md) Pagination convention; each retrofit is a code follow-up (handler + `shared/openapi.yaml` + frontend readers).
 
-**Update (2026-10-01, owner decisions):** (1) `{items}` for non-paginated lists is confirmed: every collection response is `{items}` (plus `next_cursor` when paginated, plus non-list sibling fields such as `unread_count` or `month`), so a list can gain pagination or metadata later without breaking clients; a single resource or composite read (a dashboard, a report, a detail with embedded children) keeps its arrays as named fields. (2) `limit` is lenient and never an error: missing, non-integer or < 1 → the endpoint's declared default; above the endpoint's max → clamped to the max. `platform/server.Limit` already implements it; the media, comic, bank, notify, journal, people and stream services reset to the default above the max instead and carry one gap row each in their spec — as do music, movie and story (SPEC-14 §12 row 16, SPEC-15 §11 row 9, SPEC-16 §11 row 10) and `accountapi.ListDirectory` (SPEC-13 §11 row 19). Both are stated in the [specs README](specs/README.md) "Pagination" convention.
+**Update (2026-10-01, owner decisions):** (1) `{items}` for non-paginated lists is confirmed: every collection response is `{items}` (plus `next_cursor` when paginated, plus non-list sibling fields such as `unread_count` or `month`), so a list can gain pagination or metadata later without breaking clients; a single resource or composite read (a dashboard, a report, a detail with embedded children) keeps its arrays as named fields. (2) `limit` is lenient and never an error: missing, non-integer or < 1 → the endpoint's declared default; above the endpoint's max → clamped to the max. `platform/server.Limit` already implements it; the media, comic, bank, notify, journal, people and stream services reset to the default above the max instead and carry one gap row each in their spec — as do music, movie and story (SPEC-15 §12 row 16, SPEC-16 §11 row 9, SPEC-17 §11 row 10) and `accountapi.ListDirectory` (SPEC-01 §11 row 19). Both are stated in the [specs README](specs/README.md) "Pagination" convention.
 
 ### D-31 — API versioning: URL versioning `/api/v{N}`; additive within major; RFC 9745 sunset for v2 *(resolves §16.E-31)*
 
@@ -1559,7 +1559,7 @@ Three sub-problems:
 
 Lands in Phase 0 (server-only API client + refresh-and-return route).
 
-**D-34.r1 (2026-07-06)** — refresh strategy superseded: `SessionKeeper` does client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker cookie; no refresh-and-return route exists. `portal_refresh`'s path is `/api/v1/auth` (not `/auth`). Cookie forwarding via `api-server.ts` and the same-site domain mandate are unchanged. The middleware gate works only for route groups listed in `frontend/src/middleware.ts` `config.matcher`; `/admin`, `/calendar` and `/weather` are missing ([SPEC-18](specs/SPEC-18-shell-layout.md) §11 row 10, [SPEC-13](specs/SPEC-13-account-identity-admin.md) §11 row 21, [backlog.md](backlog.md) #15). The multi-tab refresh claim is not atomic, so two tabs can still present one refresh token (SPEC-13 §11 row 2).
+**D-34.r1 (2026-07-06)** — refresh strategy superseded: `SessionKeeper` does client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker cookie; no refresh-and-return route exists. `portal_refresh`'s path is `/api/v1/auth` (not `/auth`). Cookie forwarding via `api-server.ts` and the same-site domain mandate are unchanged. The middleware gate works only for route groups listed in `frontend/src/middleware.ts` `config.matcher`; `/admin`, `/calendar` and `/weather` are missing ([SPEC-02](specs/SPEC-02-shell-layout.md) §11 row 10, [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 21, [backlog.md](backlog.md) #15). The multi-tab refresh claim is not atomic, so two tabs can still present one refresh token (SPEC-01 §11 row 2).
 
 ### D-35 — "For You" feed: hand-tuned three-layer pipeline; "Following" chronological is default; DSA-aligned transparency *(resolves §16.G-35)*
 
@@ -1790,16 +1790,16 @@ PAYOUT_HOLD_DAYS=7                    # delay after balance change to allow char
 
 Lands in Phase 11.
 
-### D-41 — Bank v1 ledger money model: integer minor units (`bigint`), a scoped divergence from D-14/D-15 *(SPEC-03 §7)*
+### D-41 — Bank v1 ledger money model: integer minor units (`bigint`), a scoped divergence from D-14/D-15 *(SPEC-12 §7)*
 
-SPEC-03's personal ledger (module `bank`, ledger scope) represents money as **integer minor units** end-to-end — `bigint` columns in storage and JSON-integer minor units on the wire — with the exponent map owned by the shared Money helper (VND exponent 0: 1 unit = 1 đồng, never floats anywhere). This **knowingly diverges** from two earlier money decisions, and the divergence is **scoped to the v1 personal ledger only**:
+SPEC-12's personal ledger (module `bank`, ledger scope) represents money as **integer minor units** end-to-end — `bigint` columns in storage and JSON-integer minor units on the wire — with the exponent map owned by the shared Money helper (VND exponent 0: 1 unit = 1 đồng, never floats anywhere). This **knowingly diverges** from two earlier money decisions, and the divergence is **scoped to the v1 personal ledger only**:
 
 - **vs [D-14] (wire + storage)** — D-14 resolves money as `numeric(20,8)` + `shopspring/decimal` + decimal *strings* on the wire ("never JSON numbers"). For an exponent-0 currency (VND) an integer is exact and avoids the string-parsing layer the Money helper exists to remove. D-14 still governs any **multi-currency** or fractional-unit money.
-- **vs [D-15] (bookkeeping model)** — D-15 resolves hybrid double-entry internals (`ledger_entries` + a per-transaction balance CHECK). SPEC-03 is deliberately **single-row** (+ paired debit/credit legs for transfers, sharing a `transfer_id`) — Money-Lover-class, not accounting-grade. D-15's double-entry returns with the **creator-economy** scope that actually needs it (payouts, [D-40]).
+- **vs [D-15] (bookkeeping model)** — D-15 resolves hybrid double-entry internals (`ledger_entries` + a per-transaction balance CHECK). SPEC-12 is deliberately **single-row** (+ paired debit/credit legs for transfers, sharing a `transfer_id`) — Money-Lover-class, not accounting-grade. D-15's double-entry returns with the **creator-economy** scope that actually needs it (payouts, [D-40]).
 
 **Scope guard:** D-41 governs only the v1 self-hosted personal ledger (single owner, per-account currency, no cross-currency totals). The moment money crosses currencies, accrues creator-economy balances, or needs audit-grade double-entry, [D-14]/[D-15] are the governing decisions — D-41 does not repeal them.
 
-Lands with SPEC-03 (Sprint 6).
+Lands with SPEC-12 (Sprint 6).
 
 ---
 

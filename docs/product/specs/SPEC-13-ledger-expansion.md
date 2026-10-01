@@ -1,14 +1,14 @@
-# SPEC-10 — Ledger expansion (module `bank`: debts, goals, recurring, cards, net worth, automation, splits, sharing)
+# SPEC-13 — Ledger expansion (module `bank`: debts, goals, recurring, cards, net worth, automation, splits, sharing)
 
 **Status:** phase 1 building, rev 1 · **Drafted:** 2026-09-11 · **Last verified:** 2026-10-01
-**Module:** `bank` (extends it; no new module) · **Depends on:** SPEC-03 (the ledger this builds on), SPEC-04 (notify, for reminders), SPEC-01 (media, only for P1.10 receipts)
-**Refs:** SPEC-03 §5 P0.3 (the transfer-leg predicate everything here keys on), migration 0042 (icon-first categories)
+**Module:** `bank` (extends it; no new module) · **Depends on:** SPEC-12 (the ledger this builds on), SPEC-05 (notify, for reminders), SPEC-04 (media, only for P1.10 receipts)
+**Refs:** SPEC-12 §5 P0.3 (the transfer-leg predicate everything here keys on), migration 0042 (icon-first categories)
 
 ---
 
 ## 1. Problem statement
 
-SPEC-03 shipped a Money-Lover-class ledger: accounts, categories, transactions,
+SPEC-12 shipped a Money-Lover-class ledger: accounts, categories, transactions,
 transfers, budgets, and a monthly report. It tracks **what you spent**. It cannot
 answer **what you are worth**, **what you owe**, **what is coming**, or **what you
 are saving for** — and those four questions are the reason people keep a ledger
@@ -21,7 +21,7 @@ invariant each must not break.
 
 ## 2. The invariant every phase is measured against
 
-SPEC-03 P0.3 established that reporting keys on **leg-ness**, not on the presence
+SPEC-12 P0.3 established that reporting keys on **leg-ness**, not on the presence
 of `transfer_id`:
 
 ```sql
@@ -46,14 +46,14 @@ That is why this spec exists before the code.
 The alternative — a `debt_id` column on `bank_transactions` plus a widened
 exclusion predicate — was rejected. It would mean editing the leg predicate in
 every reporting query (`MonthFlowTotals`, the report donut, budget spend,
-dashboard), and SPEC-03's own warning applies: diverge in one place and the donut
+dashboard), and SPEC-12's own warning applies: diverge in one place and the donut
 stops summing to the month total.
 
 What falls out of the account model for free:
 
 | Need | How it is already solved |
 |---|---|
-| Outstanding balance of a debt | `bank_accounts` balance is **derived** from transactions (SPEC-03 P0.1) — it cannot drift |
+| Outstanding balance of a debt | `bank_accounts` balance is **derived** from transactions (SPEC-12 P0.1) — it cannot drift |
 | Borrowing is not income | it is a transfer leg: `category_id IS NULL` ⇒ already excluded |
 | Interest **is** an expense | a normal categorised transaction — exactly the fee-row precedent |
 | Net worth (phase 5) | `Σ asset accounts − Σ liability accounts`, both already derived |
@@ -139,7 +139,7 @@ tests that assert the parent is never counted alongside its legs.
 
 Rule engine first (`contains "Grab" → category Di chuyển`), because it is pure
 and testable and improves manual entry immediately. **CSV/PDF import second** —
-SPEC-03 P0.9 already shipped the schema (`import_batch_id`, `dedup_hash`,
+SPEC-12 P0.9 already shipped the schema (`import_batch_id`, `dedup_hash`,
 `description_raw`) for exactly this. **SMS/notification capture is out of scope
 until a mobile client exists**: there is no Android/iOS app in this repo, and
 reading notifications requires one. Saying so here is cheaper than discovering it
@@ -156,14 +156,14 @@ system, and that deserves an ADR before any code.
 
 ## 4a. Event policy
 
-SPEC-03 P0.7 emits one `bank:transaction_*` event per written row. The new write
+SPEC-12 P0.7 emits one `bank:transaction_*` event per written row. The new write
 paths here would flood the stream, project unconfirmed drafts, or double-count
 splits if they followed it literally, so each states its policy:
 
 1. **Debt movements** (borrow / lend / repay / collect) are ordinary transfer
-   pairs through the SPEC-03 transfer path and emit
+   pairs through the SPEC-12 transfer path and emit
    `bank:transaction_created|updated|deleted` per P0.7 (`is_transfer=true`, a
-   shared `transfer_id`, so SPEC-06 collapses them into one item). An **accrual**
+   shared `transfer_id`, so SPEC-09 collapses them into one item). An **accrual**
    is a normal categorised expense and emits per P0.7. (Shipped.)
 2. **Recurring** (phase 4): a draft emits nothing. Confirming a draft emits one
    `bank:transaction_created`; discarding one emits nothing.
@@ -171,7 +171,7 @@ splits if they followed it literally, so each states its policy:
    any leg emits one `bank:transaction_created|updated|deleted` for the parent;
    legs never emit.
 4. **Import** (phase 7): import-batch rows emit no per-row `bank:transaction_*`
-   event — the same carve-out rationale as SPEC-03 P0.7's bulk reassign (one user
+   event — the same carve-out rationale as SPEC-12 P0.7's bulk reassign (one user
    action, not N mutations). The batch emits one `bank:import_completed
    {import_batch_id, user_id, account_id, row_count}` after commit. It has no
    stream consumer (the stream projects moments); the bell may consume it later.
@@ -196,12 +196,12 @@ splits if they followed it literally, so each states its policy:
 ## 5. Non-goals (and why)
 
 - **Bank API integration / open banking.** No credentials in a self-hosted app
-  (SPEC-03's own reasoning); manual + import only.
+  (SPEC-12's own reasoning); manual + import only.
 - **Live market prices.** Phase 5 records valuations you enter. A price feed is an
   outbound dependency with rate limits and a contact policy — the MusicBrainz
   lesson — and is not worth it for a monthly net-worth line.
 - **Multi-currency FX.** Accounts already carry a currency and transfers refuse to
-  cross it (SPEC-03). Debts and goals inherit that refusal rather than inventing
+  cross it (SPEC-12). Debts and goals inherit that refusal rather than inventing
   conversion.
 - **Amortisation schedules** beyond simple/compound projection. A mortgage
   planner is a product; this is a ledger.
@@ -251,11 +251,11 @@ The baseline is `main` @ `99b5a0b` (the commits after it changed docs only).
 The spec text above is the target; each row below is a place where the shipped
 phase 1 (debts and loans) still diverges from it, verified against that commit.
 Rows are ordered by severity: data integrity first, then scheduling, then API
-contract. A row closes when the code matches the spec and the SPEC-10 row of
+contract. A row closes when the code matches the spec and the SPEC-13 row of
 `docs/reference/TRACEABILITY-MATRIX.md` is regraded. File paths are relative to
 `backend/internal/modules/bank/` unless they start with `backend/`, `frontend/`
-or `shared/`. Gaps in the SPEC-03 paths a debt reuses (archive check, event
-`currency`, month and date defaults) are tracked once, in SPEC-03 §12.
+or `shared/`. Gaps in the SPEC-12 paths a debt reuses (archive check, event
+`currency`, month and date defaults) are tracked once, in SPEC-12 §12.
 
 | # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
 |---|---|---|---|---|---|
@@ -274,8 +274,8 @@ or `shared/`. Gaps in the SPEC-03 paths a debt reuses (archive check, event
   `ListAccountBalances`), never stored.
 - Phase 1 money movements: `moveDebt` sends borrow / lend / repay / collect
   through `Service.CreateTransfer`, so every principal movement is a pure
-  transfer pair, excluded from income and expense by the SPEC-03 leg predicate,
-  and emits per SPEC-03 P0.7 (§4a (1)). A kind that does not match the debt's
+  transfer pair, excluded from income and expense by the SPEC-12 leg predicate,
+  and emits per SPEC-12 P0.7 (§4a (1)). A kind that does not match the debt's
   direction is 422 `bank/validation`; the wallet fixes the debt's currency.
 - Accrual: `AccrueInterest` posts a categorised transaction on the seed
   *Lãi vay* (expense, borrowed) or *Lãi* (income, lent), charged from the last
@@ -296,8 +296,8 @@ or `shared/`. Gaps in the SPEC-03 paths a debt reuses (archive check, event
 
 - On HEAD, `debts_test.go: TestAccrueInterest, TestOutstandingFrom` cover the
   arithmetic only; neither asserts superseded behaviour.
-- There is no TEST-CASES document for SPEC-10 yet (TRACEABILITY-MATRIX: "no
-  case document yet"); create `docs/testing/TEST-CASES-SPEC-10-ledger.md` and
+- There is no TEST-CASES document for SPEC-13 yet (TRACEABILITY-MATRIX: "no
+  case document yet"); create `docs/testing/TEST-CASES-SPEC-13-ledger.md` and
   give each test below an ID.
 - §7 "Done means" as one service test: borrow 10,000,000 ₫ → wallet +10M,
   liability −10M, month income and expense +0; a repayment reduces both; an

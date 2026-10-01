@@ -130,7 +130,7 @@ Disabling the observability profile for v1 is the cheapest call in this ADR. Lok
 **What we'll need to revisit:**
 
 - When live streaming lands, mediamtx + concurrent transcodes will push the VPS over 16 GB. Plan the CCX33 upgrade (or split to a media-dedicated VPS) ahead of that sprint.
-- The backup strategy [D-10] shipped as the `ops` module (SPEC-09: `ops:backup_database`, retention, restore drill — [docs/operations/backup-restore.md](../operations/backup-restore.md)). Dragonfly snapshots are not part of it.
+- The backup strategy [D-10] shipped as the `ops` module (SPEC-03: `ops:backup_database`, retention, restore drill — [docs/operations/backup-restore.md](../operations/backup-restore.md)). Dragonfly snapshots are not part of it.
 - Observability was to land with tenancy so per-tenant latency is measurable from day one [D-8]. Tenancy landed (ADR-07); observability did not.
 
 ## Action items
@@ -139,6 +139,6 @@ Disabling the observability profile for v1 is the cheapest call in this ADR. Lok
 2. [x] ~~Add `authentik-server`, `authentik-worker`, and `mailpit` services.~~ Obsolete per ADR-06: Authentik dropped. `mailpit` shipped on its own merits.
 3. [ ] Document the out-of-scope services in `docker-compose.yml` with a one-line comment pointing at this ADR (`docs/adr/03-single-vps-topology.md`). Not done; the file has no such comment.
 4. [ ] `make deploy-v1` — not done, and moot: with no `profiles:` in the file, plain `make up` cannot bring up anything it shouldn't.
-5. [x] Postgres tuning values (`shared_buffers = 4GB`, `effective_cache_size = 10GB`, `max_connections = 50`) are recorded in [SPEC-09](../product/specs/SPEC-09-platform-ops.md) P2 "Postgres connection budget" (the `operations/postgres-tuning.md` stub that first held them was folded in there and deleted). They now apply to the host cluster; there is no PgBouncer.
+5. [x] Postgres tuning values (`shared_buffers = 4GB`, `effective_cache_size = 10GB`, `max_connections = 50`) are recorded in [SPEC-03](../product/specs/SPEC-03-platform-ops.md) P2 "Postgres connection budget" (the `operations/postgres-tuning.md` stub that first held them was folded in there and deleted). They now apply to the host cluster; there is no PgBouncer.
 6. [ ] `docs/operations/deployment.md` — still absent. The VPS sizing rationale lives only here.
-7. [x] Transcode concurrency is 1 — as a compile-time constant (`heavyConcurrency` in `cmd/worker/main.go`), which is the OOM guard SPEC-01 P0.1 relies on. Image processing has the env knob (`IMAGE_CONCURRENCY`, default 3, in `.env.example`). `MAX_CONCURRENT_TRANSCODES_PER_USER` does not exist; per-user limits wait on [D-13].
+7. [x] Transcode concurrency is 1 — as a compile-time constant (`heavyConcurrency` in `cmd/worker/main.go`), which is the OOM guard SPEC-04 P0.1 relies on. Image processing has the env knob (`IMAGE_CONCURRENCY`, default 3, in `.env.example`). `MAX_CONCURRENT_TRANSCODES_PER_USER` does not exist; per-user limits wait on [D-13].

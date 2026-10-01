@@ -38,11 +38,11 @@ this, when real second users appear.
 
 | Facet | Modules | State |
 |---|---|---|
-| Entertainment | `media`, `comic`, `music`, `movie`, `story` | comic was the first vertical ([SPEC-02](specs/SPEC-02-comic-vertical.md)); music has its full UI ([SPEC-14](specs/SPEC-14-music-vertical.md)); movie and story have a backend but no reader yet ([SPEC-15](specs/SPEC-15-movie-vertical.md), [SPEC-16](specs/SPEC-16-story-vertical.md)) |
-| Money | `bank` (ledger scope) | [SPEC-03](specs/SPEC-03-finance-ledger.md), expanding through [SPEC-10](specs/SPEC-10-ledger-expansion.md); real-bank integration deferred behind TOTP |
-| Time | calendar/events/reminders | calendar widget exists; birthdays shipped as contact data ([SPEC-08](specs/SPEC-08-people-registry.md)); next facet after money (backlog § Deferred) |
-| Social | connections between accounts; posts, messaging | only the first slice exists — mutual connections ([SPEC-17](specs/SPEC-17-social-connections.md)), built once approval-gated registration made the instance n>1; everything else stays deferred |
-| Learning | stories, library | story is the entertainment vertical above (SPEC-16); otherwise unshaped |
+| Entertainment | `media`, `comic`, `music`, `movie`, `story` | comic was the first vertical ([SPEC-14](specs/SPEC-14-comic-vertical.md)); music has its full UI ([SPEC-15](specs/SPEC-15-music-vertical.md)); movie and story have a backend but no reader yet ([SPEC-16](specs/SPEC-16-movie-vertical.md), [SPEC-17](specs/SPEC-17-story-vertical.md)) |
+| Money | `bank` (ledger scope) | [SPEC-12](specs/SPEC-12-finance-ledger.md), expanding through [SPEC-13](specs/SPEC-13-ledger-expansion.md); real-bank integration deferred behind TOTP |
+| Time | calendar/events/reminders | calendar widget exists; birthdays shipped as contact data ([SPEC-11](specs/SPEC-11-people-registry.md)); next facet after money (backlog § Deferred) |
+| Social | connections between accounts; posts, messaging | only the first slice exists — mutual connections ([SPEC-18](specs/SPEC-18-social-connections.md)), built once approval-gated registration made the instance n>1; everything else stays deferred |
+| Learning | stories, library | story is the entertainment vertical above (SPEC-17); otherwise unshaped |
 
 ## Operating constraints (inherited from ADR-01)
 

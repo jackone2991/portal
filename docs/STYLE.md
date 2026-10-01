@@ -43,7 +43,9 @@ Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE
 
 - Folders and files: `kebab-case.md`. ADRs: `NN-kebab-title.md`, two-digit,
   monotonic, never reused (`00` is retired — see ADR-11).
-- Specs: `SPEC-NN-kebab-title.md`, numbered by intended build order.
+- Specs: `SPEC-NN-kebab-title.md`, numbered by build priority — platform and
+  configuration first, then features in dependency order (renumbered on
+  2026-10-01; the old→new table is [specs/README.md § Renumbering](product/specs/README.md#renumbering-2026-10-01)).
 - Audits in `product/analysis/`: `topic-YYYY-MM-DD.md` — the one place a date
   belongs in a filename, because the date *is* the identity of an audit. The
   genre is called *audit* everywhere, whatever the file calls itself.

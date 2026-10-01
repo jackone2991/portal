@@ -1,6 +1,7 @@
 # Spec-gap fix worklog — 2026-09-30
 
 **Status:** current · **Last verified:** 2026-10-01 (generated from the run 2026-09-30; ticks record fix progress; corrections from the 2026-10-01 gap verification at the end)
+**Spec numbers:** this audit cites the pre-2026-10-01 numbering; only its link targets were moved — translate with [specs/README.md § Renumbering](../specs/README.md#renumbering-2026-10-01).
 
 **Source:** `spec-gap-review` workflow run `wf_eb011b57-514` (43 agents: 18 finders, merge, adversarial refute + fix audit). 267 raw → 189 canonical → **184 confirmed** (8 critical · 85 major · 91 minor), 5 refuted (listed at the end, not to be applied).
 

@@ -1,7 +1,7 @@
 # Portal v1 — Master Test Plan
 
 **Status:** current · **Last verified:** never (as a whole; the 2026-08-25 audit found §5 L2 layer, §"make up starts Postgres", and "CI runs vitest" false — [backlog](../product/backlog.md) line 36)
-**Version:** 1.0 · **Author:** QA Lead · **Date:** 2026-07-12 · **Applies to:** Portal v1 (SPEC-01 … SPEC-09)
+**Version:** 1.0 · **Author:** QA Lead · **Date:** 2026-07-12 · **Applies to:** Portal v1 (the nine specs written by 2026-07-12: SPEC-03, 04, 05, 07, 09, 10, 11, 12, 14)
 
 ---
 
@@ -24,15 +24,15 @@ companion `TEST-CASES-SPEC-*.md` files, and tracks coverage in
 
 | Area | Modules | Spec |
 |------|---------|------|
-| Media image pipeline + asset lifecycle | `media` | SPEC-01 |
-| Comic vertical (create→publish→read→resume) | `comic` | SPEC-02 |
-| Finance ledger (accounts/txn/transfer/category/budget/dashboard) | `bank` | SPEC-03 |
-| Notification store + dispatch + email + password reset | `notify`, `account` | SPEC-04 |
-| Journal write path | `journal` | SPEC-05 |
-| Life-stream home (projection + read + widgets) | `journal`/stream + home | SPEC-06 |
-| Playback resume + continue rail | `media` + `cmd/api` aggregator | SPEC-07 |
-| People registry + birthday scan | `people` | SPEC-08 |
-| Platform ops (backup/restore/queue/takeout) | `ops` | SPEC-09 |
+| Media image pipeline + asset lifecycle | `media` | SPEC-04 |
+| Comic vertical (create→publish→read→resume) | `comic` | SPEC-14 |
+| Finance ledger (accounts/txn/transfer/category/budget/dashboard) | `bank` | SPEC-12 |
+| Notification store + dispatch + email + password reset | `notify`, `account` | SPEC-05 |
+| Journal write path | `journal` | SPEC-07 |
+| Life-stream home (projection + read + widgets) | `journal`/stream + home | SPEC-09 |
+| Playback resume + continue rail | `media` + `cmd/api` aggregator | SPEC-10 |
+| People registry + birthday scan | `people` | SPEC-11 |
+| Platform ops (backup/restore/queue/takeout) | `ops` | SPEC-03 |
 | Cross-cutting: auth/RBAC, RFC-7807 errors, events fan-out, cursor pagination | account, `platform/*` | all specs' "Conventions" (README) |
 
 ### 2.2 Out of scope (v1)
@@ -85,7 +85,7 @@ express it.
 |-----|---------|----------|-------|
 | **DEV-LOCAL** | Primary functional/API/E2E | `make up` (Postgres, PgBouncer, Dragonfly, MinIO+setup, Traefik, api, worker, frontend, Mailpit) + `make migrate` | HTTPS via `*.portal.localhost` mkcert certs; `COOKIE_SECURE` may be `false` only for plain-http. Storage = MinIO bind-mount. |
 | **CI** | L1/L2 gate on every PR | GitHub Actions (`.github/workflows/ci.yml`) | `go test ./...`, `vitest run`, golangci-lint, sqlc-drift + openapi-drift gates. `-race` needs cgo. |
-| **DEV-STACK (prod-like)** | Restore drill, backup, email | `make up` with R2-shaped config, `make restore-drill` | SPEC-09 P0.4 restore drill runs on a **fresh** dev stack. |
+| **DEV-STACK (prod-like)** | Restore drill, backup, email | `make up` with R2-shaped config, `make restore-drill` | SPEC-03 P0.4 restore drill runs on a **fresh** dev stack. |
 
 **Access matrix (create these once, reuse across cases):**
 
@@ -163,20 +163,20 @@ build/commit, environment, steps to reproduce, expected vs actual, evidence
 
 | Metric | Target | Source |
 |--------|--------|--------|
-| Image processing p95 (12 MP) | < 10 s | SPEC-01 §8 |
-| Worker/API OOM kills w/ image processing live | **0** | SPEC-01 §8 |
-| Heavy-queue concurrent decodes | ≤ configured (1–2) | SPEC-01 P0.1 |
-| Library first page LCP (100 assets) | < 2.5 s | SPEC-01 P0.4 |
-| Comic reader time-to-first-page (Fast 3G) | < 2 s | SPEC-02 §8 |
-| Comic reader CLS | < 0.1 | SPEC-02 P0.3 |
-| Quick-add expense (dialog→saved) | < 10 s | SPEC-03 §9 |
-| Journal composer open→saved | < 10 s | SPEC-05 §8 |
-| Home LCP (50-item stream) | < 2.5 s | SPEC-06 §8 |
-| Video resume accuracy | ± 10 s of true position | SPEC-07 §8 |
-| Password-reset email (dev, Mailpit) | < 5 s | SPEC-04 §8 |
-| `media:asset_ready` → bell (poll) | ≤ 60 s; (SSE P1.2) < 10 s p95 | SPEC-04 §8 |
-| Backup freshness | `hours_since_success` never > 26 (outside induced) | SPEC-09 §8 |
-| Money on the wire | integer minor units, **never** floats/strings | SPEC-03 §7 (D-41) |
+| Image processing p95 (12 MP) | < 10 s | SPEC-04 §8 |
+| Worker/API OOM kills w/ image processing live | **0** | SPEC-04 §8 |
+| Heavy-queue concurrent decodes | ≤ configured (1–2) | SPEC-04 P0.1 |
+| Library first page LCP (100 assets) | < 2.5 s | SPEC-04 P0.4 |
+| Comic reader time-to-first-page (Fast 3G) | < 2 s | SPEC-14 §8 |
+| Comic reader CLS | < 0.1 | SPEC-14 P0.3 |
+| Quick-add expense (dialog→saved) | < 10 s | SPEC-12 §9 |
+| Journal composer open→saved | < 10 s | SPEC-07 §8 |
+| Home LCP (50-item stream) | < 2.5 s | SPEC-09 §8 |
+| Video resume accuracy | ± 10 s of true position | SPEC-10 §8 |
+| Password-reset email (dev, Mailpit) | < 5 s | SPEC-05 §8 |
+| `media:asset_ready` → bell (poll) | ≤ 60 s; (SSE P1.2) < 10 s p95 | SPEC-05 §8 |
+| Backup freshness | `hours_since_success` never > 26 (outside induced) | SPEC-03 §8 |
+| Money on the wire | integer minor units, **never** floats/strings | SPEC-12 §7 (D-41) |
 
 ## 9. Cross-cutting conventions to assert everywhere (from specs README)
 
@@ -212,13 +212,13 @@ irreplaceable-data box.
 
 | Rank | Risk | Where | Mitigating tests |
 |------|------|-------|------------------|
-| R1 | **Money incorrectness** (transfer double-count, reconciliation drift) | SPEC-03 | reconciliation property test, transfer/fee leg-predicate, direction/kind guard |
-| R2 | **Irreplaceable data loss** (backup never restored, delete strands storage) | SPEC-09, SPEC-01 | restore drill against real dump, sha256 verify, storage-gone-after-delete, janitor |
+| R1 | **Money incorrectness** (transfer double-count, reconciliation drift) | SPEC-12 | reconciliation property test, transfer/fee leg-predicate, direction/kind guard |
+| R2 | **Irreplaceable data loss** (backup never restored, delete strands storage) | SPEC-03, SPEC-04 | restore drill against real dump, sha256 verify, storage-gone-after-delete, janitor |
 | R3 | **Cross-user data leak** (finance/journal/people are private) | all | owner-isolation 404 suite per module |
-| R4 | **Stream/event correctness** (event never projected, dup items, resurrect) | SPEC-06 + producers | fan-out integration, idempotency, transfer collapse, birthday notice_id keying |
-| R5 | **Account takeover** (reset token reuse, enumeration, session revocation) | SPEC-04, account | token single-use/expiry, enumeration-safe timing, `token_version` bump |
-| R6 | **Worker OOM / stuck queue** | SPEC-01 | heavy-queue concurrency cap, dimension/size caps, stuck-purge error log |
-| R7 | **Data-loss on capture** (journal/people not saved) | SPEC-05, SPEC-08 | persistence-across-restart, optimistic-then-refetch survives |
+| R4 | **Stream/event correctness** (event never projected, dup items, resurrect) | SPEC-09 + producers | fan-out integration, idempotency, transfer collapse, birthday notice_id keying |
+| R5 | **Account takeover** (reset token reuse, enumeration, session revocation) | SPEC-05, account | token single-use/expiry, enumeration-safe timing, `token_version` bump |
+| R6 | **Worker OOM / stuck queue** | SPEC-04 | heavy-queue concurrency cap, dimension/size caps, stuck-purge error log |
+| R7 | **Data-loss on capture** (journal/people not saved) | SPEC-07, SPEC-11 | persistence-across-restart, optimistic-then-refetch survives |
 
 ## 11. Automation vs manual
 
@@ -237,16 +237,16 @@ irreplaceable-data box.
 Mirrors the specs' dependency order so producers are tested before consumers.
 
 1. **Foundations:** auth/RBAC conventions, `platform/events` fan-out (CC-2, CC-5).
-2. **SPEC-01** media (shared bottleneck) → **SPEC-07** progress/continue.
-3. **SPEC-05** journal → **SPEC-06** stream projection & home (consumes producers).
-4. **SPEC-02** comic → **SPEC-03** bank (largest) → **SPEC-08** people.
-5. **SPEC-04** notify (email/reset/bell) → **SPEC-09** ops (backup/restore/takeout).
+2. **SPEC-04** media (shared bottleneck) → **SPEC-10** progress/continue.
+3. **SPEC-07** journal → **SPEC-09** stream projection & home (consumes producers).
+4. **SPEC-14** comic → **SPEC-12** bank (largest) → **SPEC-11** people.
+5. **SPEC-05** notify (email/reset/bell) → **SPEC-03** ops (backup/restore/takeout).
 6. **Full regression** of cross-module E2E + NFR budgets before v1 sign-off.
 
 ## 13. Assumptions & dependencies
 
 - The stack runs via `make up`; migrations current; the six test accounts exist.
-- Mailpit is reachable in dev for email cases (SPEC-04).
+- Mailpit is reachable in dev for email cases (SPEC-05).
 - Some P1/P2 features may be unbuilt — their cases read `➖ N/A` until landed; this
   is tracked, not a defect (see README "spec vs as-built").
 - A controllable clock (or run-relative fixtures) is available for time cases.

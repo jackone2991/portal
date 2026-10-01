@@ -1,9 +1,9 @@
-# SPEC-08 — People Registry (contacts + birthdays, n=1)
+# SPEC-11 — People Registry (contacts + birthdays, n=1)
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
-**Module:** `people` · **Depends on:** rides (or, if first, introduces) SPEC-01 P0.3 (shared periodic scheduler) and P0.6 (`platform/events` fan-out); P1.7 avatars need SPEC-01; birthday *delivery* compounds with SPEC-04/SPEC-06 — emission is day-one regardless
+**Module:** `people` · **Depends on:** rides (or, if first, introduces) SPEC-04 P0.3 (shared periodic scheduler) and P0.6 (`platform/events` fan-out); P1.7 avatars need SPEC-04; birthday *delivery* compounds with SPEC-05/SPEC-09 — emission is day-one regardless
 **Upstream:** brief 08 — contacts as *data*, not user accounts; the social facet at n=1 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/08-people-registry.md`) · **Refs:** [ADR-08](../../adr/08-life-os-pivot.md), feature-inventory `D-17` (user timezone), the Facebook comparison (deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
-**Downstream consumers:** SPEC-06 (stream + `BirthdayCard` widget), SPEC-09 P1.7 (takeout); SPEC-04 is a *future* consumer (needs a `notify:on_*` task + type row first)
+**Downstream consumers:** SPEC-09 (stream + `BirthdayCard` widget), SPEC-03 P1.7 (takeout); SPEC-05 is a *future* consumer (needs a `notify:on_*` task + type row first)
 
 ---
 
@@ -31,7 +31,7 @@ emotionally relevant events for the stream, the bell, and the dormant
 - **Not a friend graph.** People are rows, not accounts: no requests, no chat, no
   user search. The account-to-account graph is a different module: its first
   slice shipped as `social` (`0037_social_connections`,
-  [SPEC-17](SPEC-17-social-connections.md) — request / accept / remove). The
+  [SPEC-18](SPEC-18-social-connections.md) — request / accept / remove). The
   two meet in exactly one place: `GET /people/suggestions` subtracts the
   caller's connected and requested accounts, read through
   `socialapi.API.CounterpartIDs` (wired as `people.Deps.Connected` in
@@ -105,10 +105,10 @@ duplicate it in the stream. *(Code follow-up: HEAD resets on every PATCH that
 carries `birthday`, after the update rather than in its transaction.)*
 For every cleared notice that had already been emitted (`emitted_at IS NOT
 NULL`), the service emits **`people:birthday_notice_revoked`**
-`{notice_id, person_id, user_id}` after commit, so SPEC-06 deletes the stale
+`{notice_id, person_id, user_id}` after commit, so SPEC-09 deletes the stale
 stream item; the corrected date emits fresh events under new notice_ids.
 Deleting a person emits **`people:person_deleted`** `{person_id, user_id}`
-after commit (§7 DELETE), so SPEC-06 drops every birthday card that would link
+after commit (§7 DELETE), so SPEC-09 drops every birthday card that would link
 to the deleted person's 404. Both are registered in
 [events.md](../../reference/events.md). Consumers must not re-fetch by
 notice_id (the row may be gone); the payload is self-sufficient for rendering.
@@ -133,9 +133,9 @@ field or column.)*
 `people/validation`; PATCH may change it) and `linked_user_id` — the id of a
 portal account this person **is**, set when the person is added from a
 suggestion (`GET /people/suggestions` — served by this module but specced
-nowhere: no spec owns its contract, envelope or `limit` yet; SPEC-17 P0.8 only
+nowhere: no spec owns its contract, envelope or `limit` yet; SPEC-18 P0.8 only
 consumes it in the UI, and its social filter is `socialapi.CounterpartIDs`,
-SPEC-17 §3) so that account
+SPEC-18 §3) so that account
 stops being suggested; absent, `null` or `""` means none. PATCH does not take
 `linked_user_id`. An owner's registry holds each linked account at most once (the
 `0035` partial unique index `people_persons_linked_user_idx` on `(user_id,
@@ -192,7 +192,7 @@ follow-up: HEAD injects one zone as `people.Deps.Timezone`, and `cmd/api` and
 fix drops `Deps.Timezone` for a per-owner lookup through `accountapi`, which
 first needs the README Timezone follow-up.)* Response items:
 `{person_id, display_name, next_occurrence (date), days_until, age_turning?}`
-(`age_turning` only when `birth_year` is known). Powers SPEC-06's `BirthdayCard`.
+(`age_turning` only when `birth_year` is known). Powers SPEC-09's `BirthdayCard`.
 
 **Feb-29 rule (locked from the brief's open question): celebrate Feb-28 in
 non-leap years** — a reminder that fires a day early beats one that never fires;
@@ -220,7 +220,7 @@ test suite.
 ### P0.4 — Birthday scan + event
 
 Daily periodic task **`people:scan_birthdays`** on the shared periodic runner
-(SPEC-01 P0.3's convention — no OS cron). For each tenant (`forEachTenant` in
+(SPEC-04 P0.3's convention — no OS cron). For each tenant (`forEachTenant` in
 `cmd/worker`, one committed tenant scope each), for every user's people, evaluate
 `days_until` in that user's own timezone (P0.3) and emit **`people:birthday_upcoming`**
 `{notice_id, person_id, user_id, display_name, days_until}` for thresholds
@@ -244,10 +244,10 @@ at-most-once):** inside the scan's transaction, insert the
 `people_birthday_notices` row with `emitted_at NULL` (`ON CONFLICT DO
 NOTHING`); after commit, publish the event (via `platform/events`; v1
 consumer: stream only — notify attaches when a `notify:on_*` task is specced in
-SPEC-04 §7) and set `emitted_at`. Rows left with `emitted_at
+SPEC-05 §7) and set `emitted_at`. Rows left with `emitted_at
 NULL` (crash/enqueue failure between commit and publish) are re-published by
 the next scan — at-least-once delivery, with consumers idempotent by
-`notice_id` (SPEC-06 keys stream items on it). `notice_id` is the notices
+`notice_id` (SPEC-09 keys stream items on it). `notice_id` is the notices
 row's `id` column — a UNIQUE surrogate; the table's PRIMARY KEY is the
 composite (person_id, year, threshold) (§6).
 
@@ -262,7 +262,7 @@ the pending larger-threshold row is marked suppressed (`emitted_at = now()`,
 publishes `days_until` = the matched threshold on every retry, however late.)*
 
 Register the event in [events.md](../../reference/events.md). Consumers —
-stream (SPEC-06) today; notify (SPEC-04) once specced — attach as they land;
+stream (SPEC-09) today; notify (SPEC-05) once specced — attach as they land;
 **emission is day-one regardless** (ADR-08 rule).
 
 **Schedule** (D-17's hourly per-TZ pattern, specs README Timezone): **hourly**
@@ -311,10 +311,10 @@ friend-graph actions §3 rules out. A card view reuses only its layout (cover,
 renders no stats row and no `ControlBlockButtons`; its subtitle shows
 relationship and next birthday. The detail view may use `PersonalInfoWidget`.
 Both kits hard-code sample data as prop defaults today; those defaults are
-removed before either renders people (SPEC-06 P0.4 covers
+removed before either renders people (SPEC-09 P0.4 covers
 `PersonalInfoWidget`). On HEAD the list and detail views use neither kit: rows
 are the base `Card` with the initials `Avatar`. **`BirthdayCard` is reworked, not wired** (the
-widget slot itself is SPEC-06 P0.4's rail): it becomes a self-fetching client
+widget slot itself is SPEC-09 P0.4's rail): it becomes a self-fetching client
 island (TanStack query `["people","upcoming"]` →
 `GET /people/upcoming-birthdays?days=14`) with no fixture defaults. The
 headline is "Today is" at `days_until=0`, "Tomorrow is" at 1, else "In N days";
@@ -328,7 +328,7 @@ covers the new route. The people list and detail views are declared in
 `app/(app)/people/[id]/page.tsx` resolve `activeTemplate().views.peopleList`
 and `views.peopleDetail` (`ComponentType<{ id: string }>`) — no
 version-specific import in `app/`. The detail path `/people/{person_id}` is
-the link target of SPEC-06's birthday stream item.
+the link target of SPEC-09's birthday stream item.
 
 **Acceptance criteria.**
 - Grep test: `BirthdayCard` and the people views render zero fixture rows (no
@@ -354,12 +354,12 @@ the link target of SPEC-06's birthday stream item.
   *AC:* given interactions logged on two dates, then the person card shows the
   latest `occurred_on`; given one deleted, then it no longer counts.
 - **P1.7 Avatar**: `avatar_asset_id` via `mediaapi` (ready image, owner —
-  SPEC-01), falling back to the deterministic-hue initials `Avatar`. Subscribe to
+  SPEC-04), falling back to the deterministic-hue initials `Avatar`. Subscribe to
   `media:asset_deleted` — via the `platform/events` fan-out (events.md "Delivery
-  mechanics") — → NULL matching `avatar_asset_id` (SPEC-02 P0.6 pattern). The
+  mechanics") — → NULL matching `avatar_asset_id` (SPEC-14 P0.6 pattern). The
   field lands on `PATCH` (and `POST`, same validation) once P1.7 ships (§7).
   Uploading the avatar asset needs `assets:write:own`, granted to `user` by the
-  SPEC-01 grant migration (SPEC-01 §7; README AuthZ floor).
+  SPEC-04 grant migration (SPEC-04 §7; README AuthZ floor).
   *AC:* given `media:asset_deleted` for an avatar, then `avatar_asset_id` is
   NULL and the initials `Avatar` renders.
 
@@ -379,7 +379,7 @@ the link target of SPEC-06's birthday stream item.
 CREATE TABLE people_persons (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                    -- identity-anchor exception (SPEC-04 §6 precedent)
+                    -- identity-anchor exception (SPEC-05 §6 precedent)
   display_name    text NOT NULL CHECK (char_length(display_name) BETWEEN 1 AND 120),
   relationship    text,                     -- 'mẹ', 'bạn đại học' — freeform
   birth_month     int  CHECK (birth_month BETWEEN 1 AND 12),
@@ -402,7 +402,7 @@ CREATE INDEX people_persons_user_idx ON people_persons (user_id, display_name, i
 CREATE INDEX people_persons_user_bday_idx ON people_persons (user_id, birth_month, birth_day);
 
 -- P0.4 dedup + outbox: one emit per (person, occurrence-year, threshold).
--- `id` is the event's notice_id — SPEC-06 keys stream items on it, which is
+-- `id` is the event's notice_id — SPEC-09 keys stream items on it, which is
 -- what lets recurring years/thresholds coexist under the stream's unique key.
 -- `threshold` stores the T that matched (3|0) — the observed days_until may
 -- be smaller under the catch-up rule. `emitted_at NULL` = written but not
@@ -488,10 +488,10 @@ Annotate each operation per the specs README AuthZ **OpenAPI encoding**.
 - Leading: over the first month, zero missed and zero duplicated
   `people:birthday_upcoming` emissions against the known registry (auditable from
   the notices table for people whose birthday was not edited and who were not
-  deleted in the window, cross-checked against SPEC-06 `stream_items` where
+  deleted in the window, cross-checked against SPEC-09 `stream_items` where
   `event_type = 'people:birthday_upcoming'`).
 - Lagging: `BirthdayCard` renders real rows (grep); the "mom's birthday" story
-  demonstrably works end-to-end once SPEC-06 lands.
+  demonstrably works end-to-end once SPEC-09 lands.
 
 ## 9. Timeline & phasing
 
@@ -512,7 +512,7 @@ P0 ≈ 4.5 dev-days, matching the brief; P1 adds ~1.
   it is deliberately not schema.
 - **(product, non-blocking)** Should day-of events also carry `age_turning` for
   the stream card copy ("Mẹ turns 60")? Cheap to add to the payload when known —
-  decide at implementation with SPEC-06's card design.
+  decide at implementation with SPEC-09's card design.
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -521,7 +521,7 @@ code). The spec text above is the target; this section lists every place the
 shipped code still diverges from it, so an implementer needs nothing but this
 spec. Rows are ordered by severity: lost or duplicated birthday events first,
 then wrong dates, then schema, contract and UI, then unbuilt P1. A row closes
-when the code matches the requirement it cites and the SPEC-08 row of
+when the code matches the requirement it cites and the SPEC-11 row of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) is regraded on
 a named test. File paths are relative to the repo root; "F-ids" refer to
 [spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md).
@@ -530,7 +530,7 @@ The module lives in `backend/internal/modules/people/`.
 | # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
 |---|---|---|---|---|---|
 | 1 | P0.2 notice reset on PATCH | Delete the person's notice rows with `year >=` the owner's current year **only when the effective occurrence changes** (month or day differ, calendar changes, or the birthday is cleared), **in the same transaction** as the update. Resending an identical birthday or changing only `birth_year` leaves notices untouched. | `service.go` `UpdatePerson`: whenever the PATCH carries `birthday` (`in.SetBirthday`), it calls `repo.DeleteFutureNotices` **after** `repo.UpdatePerson` returned, outside any transaction, and only logs a failure. Every ordinary save resends the whole birthday object, so a rename after the 3-day notice fired deletes it and the next scan re-emits under a new `notice_id` — **a duplicate stream item**; a failed delete instead leaves the old date's notices suppressing the corrected date for the rest of the year. The year comes from the single `Service.loc` (row 5). | **backend:** read the stored row and update it in one `pgx.Tx`; compute "occurrence changed" from (month, day, calendar, cleared); only then run `DeleteFutureNotices` in that tx, changed to `RETURNING id, emitted_at` so row 2 can revoke; use the owner's zone for the year. Return the delete error (no best-effort). **test:** TC-PPL-013, TC-PPL-014, TC-PPL-017. | F081 |
-| 2 | P0.2 retraction events; §7 DELETE | After commit, `people:birthday_notice_revoked {notice_id, person_id, user_id}` per cleared notice that had `emitted_at IS NOT NULL`, and `people:person_deleted {person_id, user_id}` on DELETE, so SPEC-06 drops stale and dangling birthday cards. | Neither event exists: `api/api.go` declares only `EventBirthdayUpcoming`; `service.go` `DeletePerson` and `UpdatePerson` publish nothing. A deleted person's birthday card stays in the stream linking to a 404; an edited birthday keeps its old-date card. | **backend:** add both constants and payload structs to `people/api`; publish after commit from `DeletePerson` and from row 1's reset (one revoke per emitted cleared notice); `cmd/api` already passes `Events` to `people.Deps`. Flip both rows in events.md from planned to live; SPEC-06 P0.1(b) adds the two `journal:stream_*` consumers and the `cmd/worker` subscriptions. **test:** TC-STREAM-005 plus a people unit test that a delete and an occurrence-changing PATCH publish the expected payloads and a no-op PATCH publishes none. | F017 |
+| 2 | P0.2 retraction events; §7 DELETE | After commit, `people:birthday_notice_revoked {notice_id, person_id, user_id}` per cleared notice that had `emitted_at IS NOT NULL`, and `people:person_deleted {person_id, user_id}` on DELETE, so SPEC-09 drops stale and dangling birthday cards. | Neither event exists: `api/api.go` declares only `EventBirthdayUpcoming`; `service.go` `DeletePerson` and `UpdatePerson` publish nothing. A deleted person's birthday card stays in the stream linking to a 404; an edited birthday keeps its old-date card. | **backend:** add both constants and payload structs to `people/api`; publish after commit from `DeletePerson` and from row 1's reset (one revoke per emitted cleared notice); `cmd/api` already passes `Events` to `people.Deps`. Flip both rows in events.md from planned to live; SPEC-09 P0.1(b) adds the two `journal:stream_*` consumers and the `cmd/worker` subscriptions. **test:** TC-STREAM-005 plus a people unit test that a delete and an occurrence-changing PATCH publish the expected payloads and a no-op PATCH publishes none. | F017 |
 | 3 | P0.4 emit rule (day-0 collapse) | Emit threshold `T` when `lower(T) ≤ days_until ≤ T` with `lower(3) = 1`, `lower(0) = 0`: on the day itself only the day-of notice fires. | `service.go` `ScanBirthdays`: `if daysUntil >= 0 && daysUntil <= T` for both `T ∈ {3, 0}`, so a person created or edited on the birthday, or a scanner down days −3..−1, gets **two items for one day**. | **backend:** use the lower bound above. **test:** TC-PPL-058, TC-PPL-052 (catch-up still fires the 3-day notice at 1 or 2 days out). | F080 |
 | 4 | P0.4 re-publish payload; §6 notices | Notice rows store `occurrence date NOT NULL` and `suppressed boolean`; a re-publish recomputes `days_until = occurrence − today` in the owner's zone, expires the row unpublished when `< 0`, and suppresses a pending larger threshold when a smaller one emits for the same (person, year). | `0016_people_persons` has no `occurrence` or `suppressed` column; `query/people.sql` `InsertNotice` stores `(person_id, year, threshold)` only; `ScanBirthdays` re-publishes every `emitted_at IS NULL` row with `DaysUntil: n.Threshold` however late, so a crash before the birthday re-publishes "in 3 days" after the date has passed. | **migration:** `000N_people_checks` adds `occurrence date` (backfill existing rows from the person's month/day and `year`, Feb-29 → Feb-28 in non-leap years, then `SET NOT NULL`) and `suppressed boolean NOT NULL DEFAULT false`. **backend:** `InsertNotice` stores the occurrence; `PendingNotices` returns it; the publish loop applies the expire and suppress rules and marks such rows `emitted_at = now()` without publishing. **test:** TC-PPL-054, TC-PPL-059. | F082 |
 | 5 | P0.3 TZ source (scan and endpoint) | Each owner's `users.timezone`, read through `accountapi` (`UserSummary.Timezone`); unknown or unparseable → `Asia/Ho_Chi_Minh`; no instance-wide zone. | `module.go` `Deps.Timezone` → one `Service.loc` for every owner; `cmd/api/main.go` and `cmd/worker/main.go` build `people.Deps` without it, so `people.New` loads `Asia/Ho_Chi_Minh` for everyone (UTC only if loading fails; both images install `tzdata`). `0002_account_users` defaults `timezone` to `'UTC'`; nothing writes it; `account/api/api.go` `UserSummary` is `{ID, Email, DisplayName}`. | **migration (account):** default `'Asia/Ho_Chi_Minh'`, rewrite untouched `'UTC'` rows, add `timezone_manual` (specs README Timezone). **backend (account):** `PATCH /api/v1/auth/me {timezone}` with `account/invalid-timezone`; expose the zone on `accountapi` (single lookup plus a batch by user ids for the scan). **backend (people):** drop `Deps.Timezone`/`Service.loc`; inject a zone lookup from `accountapi` in both binaries; pass the owner's `*time.Location` to `nextOccurrence`, the endpoint and row 1's year. **openapi/frontend:** the `/auth/me` field and `problems.ts` slug (owned by the README Timezone follow-up). **test:** TC-PPL-030, TC-PPL-038. | F028, Decision 2026-09-30 (Timezone) |
@@ -541,7 +541,7 @@ The module lives in `backend/internal/modules/people/`.
 | 10 | P0.3 sort | Sorted by `days_until`, then `display_name`, then `id`. | `service.go` `UpcomingBirthdays`: `sort.Slice` on `DaysUntil` only — unstable, so same-day ties come back in arbitrary order. | **backend:** one comparator over (`DaysUntil`, `DisplayName`, `PersonID`). **test:** TC-PPL-035. | F170 |
 | 11 | P0.5 `BirthdayCard` | Lists every upcoming person, shows a skeleton while loading, renders nothing when empty. | `frontend/src/templates/v1/components/widget/BirthdayCard.tsx` renders only `data[0]` and returns `null` while loading (no skeleton). Fixture props, the self-fetching query, the headlines and `age_turning` already match. | **frontend:** map over every item (headline per item); render a skeleton while `isLoading`. **test:** TC-PPL-070 (grep stays green) plus a render test for 0/1/5 days and empty. | F029 |
 | 12 | §7 problem types | Every people slug the API emits is declared in §7 and registered in `problems.ts`. | `handler.go` `writePeopleErr` emits `people/already-in-registry` (409, declared in §7 and P0.2 since 2026-10-01), but `frontend/src/lib/problems.ts` registers only `people/person-not-found`, `people/invalid-birthday`, `people/validation` and `people/invalid-cursor`; `people/invalid-asset` waits for P1.7. | **frontend:** add `people/already-in-registry` to `ProblemType` and `PROBLEM_MESSAGES` (and `people/invalid-asset` with P1.7). **test:** TC-PPL-111. | F168 (corrected 2026-10-01); Decision 2026-10-01 |
-| 13 | P1.6 interactions; P1.7 avatar | `people_interactions` table, three routes, `last_contact_on`; `avatar_asset_id` validated through `mediaapi`, NULLed on `media:asset_deleted`. | Not built: no `people_interactions` migration or query, no routes, no `last_contact_on` in `personJSON`; `avatar_asset_id` is stored but never validated or written by any route, and nothing subscribes to `media:asset_deleted`. | **migration · backend · openapi · frontend:** as P1.6/P1.7 and §6/§7 specify. **test:** TC-PPL-090…093. | TRACEABILITY-MATRIX SPEC-08 P1.6/P1.7 (✖) |
+| 13 | P1.6 interactions; P1.7 avatar | `people_interactions` table, three routes, `last_contact_on`; `avatar_asset_id` validated through `mediaapi`, NULLed on `media:asset_deleted`. | Not built: no `people_interactions` migration or query, no routes, no `last_contact_on` in `personJSON`; `avatar_asset_id` is stored but never validated or written by any route, and nothing subscribes to `media:asset_deleted`. | **migration · backend · openapi · frontend:** as P1.6/P1.7 and §6/§7 specify. **test:** TC-PPL-090…093. | TRACEABILITY-MATRIX SPEC-11 P1.6/P1.7 (✖) |
 | 14 | P0.2 `linked_user_id` shape and existence | A malformed `linked_user_id`, or one naming no account, is 422 `people/validation` and nothing is written. | `handler.go` `Create` answers a malformed id with `server.BadRequest` (400 `about:blank`). `service.go` `CreatePerson` never checks that the id names an account, so an unknown uuid reaches the `0035` FK `REFERENCES users(id)`, which raises inside the request's tenant transaction: 500. | **backend:** a malformed id → `ErrValidation`; before the insert, resolve the id through `accountapi` (the directory `Suggestions` already uses) and answer `ErrValidation` when it names no account. **openapi:** 409 `people/already-in-registry` and 422 `people/validation` on `createPerson`. **test:** TC-PPL-022. | Found while documenting decision (c), 2026-10-01 (no F-ID) |
 | 15 | §7 list `limit` (owner decision 2026-10-01) | Missing, non-integer or < 1 → 50; above 200 → **clamped to 200**; never a Problem. | `service.go` `ListPeople`: `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }` — `?limit=500` returns 50. The unowned `Suggestions` (same file) does the same with the same constants. | **backend:** clamp instead of resetting (`> 200 → 200`, `≤ 0 → 50`) in both, e.g. `platform/server.Limit(r, 50, 200)` in `handler.go`. **openapi:** describe `limit` as defaulted and clamped. **test:** TC-PPL-020. | Decision 2026-10-01 (limit) |
 

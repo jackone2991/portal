@@ -1,8 +1,8 @@
-# Test Cases — SPEC-05 Journal (life-stream write path)
+# Test Cases — SPEC-07 Journal (life-stream write path)
 
 **Status:** current · **Last verified:** 2026-09-30
 
-**Spec:** [SPEC-05](../product/specs/SPEC-05-journal.md) · **Module:** `journal`
+**Spec:** [SPEC-07](../product/specs/SPEC-07-journal.md) · **Module:** `journal`
 **Prefix:** `TC-JRNL-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R7 (capture not saved)
 
 ### Endpoints under test
@@ -44,10 +44,10 @@
 | TC-JRNL-016 | Whitespace-only mood → 422 | Boundary/Neg | P0 | POST mood="   " | 422 `journal/invalid-mood` (not a 500 at DB) | ☐ |
 | TC-JRNL-017 | Mood > 80 chars → 422 | Boundary/Neg | P0 | POST 81-char mood | 422 `journal/invalid-mood` | ☐ |
 | TC-JRNL-018 | Backdate/future-date unlimited | Functional | P0 | POST occurred_at last night / next year | accepted; sits at that date position | ☐ |
-| TC-JRNL-019 | asset_ids rejected pre-SPEC-12 | Negative | P0 | POST with asset_ids | 422 `journal/invalid-asset` (fail closed) | ☐ |
+| TC-JRNL-019 | asset_ids rejected pre-SPEC-08 | Negative | P0 | POST with asset_ids | 422 `journal/invalid-asset` (fail closed) | ☐ |
 | TC-JRNL-020 | Edit updates updated_at, keeps position | Functional | P0 | PATCH body only | `updated_at` changes; `occurred_at` position unchanged | ☐ |
 | TC-JRNL-021 | Edit occurred_at re-sorts | Functional | P0 | PATCH occurred_at | entry re-sorts to new date position | ☐ |
-| TC-JRNL-022 | Delete removes entry + stream row | Functional | P0 | DELETE entry | gone from list/fetch; SPEC-06 stream row also removed (transactional) | ☐ |
+| TC-JRNL-022 | Delete removes entry + stream row | Functional | P0 | DELETE entry | gone from list/fetch; SPEC-09 stream row also removed (transactional) | ☐ |
 | TC-JRNL-023 | Idempotent delete | Idempotency | P0 | DELETE twice | 2nd → 404, never 500 | ☐ (CC-8) |
 | TC-JRNL-024 | Foreign PATCH/DELETE → 404 | AuthZ | P0(S1) | userA PATCHes and DELETEs one of userB's entries | both 404 `journal/entry-not-found` (existence never leaks); userB's row unchanged | ☐ (CC-3) |
 | TC-JRNL-025 | `limit=50` over 500 entries | Functional | P0 | seed 500 entries; page with `limit=50` until no cursor | exactly 10 pages; the last omits `next_cursor` | ☐ (CC-4) |

@@ -1,8 +1,8 @@
-# Test Cases — SPEC-08 People Registry
+# Test Cases — SPEC-11 People Registry
 
 **Status:** current · **Last verified:** never
 
-**Spec:** [SPEC-08](../product/specs/SPEC-08-people-registry.md) · **Module:** `people`
+**Spec:** [SPEC-11](../product/specs/SPEC-11-people-registry.md) · **Module:** `people`
 **Prefix:** `TC-PPL-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md)
 
 ### Endpoints under test

@@ -1,9 +1,9 @@
-# SPEC-15 — Movie Vertical (catalogue over media video assets)
+# SPEC-16 — Movie Vertical (catalogue over media video assets)
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `movie` · **Depends on:** SPEC-01 (asset lifecycle, `media:asset_deleted`, the `poster` variant), the video pipeline from ADR-01's demo loop (upload → `media:transcode` on the `heavy` server → HLS → `assets.status = ready`), SPEC-07 (asset-level resume); pattern copied from SPEC-02
-**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/movie/`, migration `0021_movie_core`) and the decisions it rests on — there was never a brief · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (the video loop this rides on), [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-02](SPEC-02-comic-vertical.md) (the reference vertical), feature-inventory `D-7` (RFC 7807), `D-20` (per-domain progress + continue aggregator), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend state and rendering), [backlog.md](../backlog.md) P2 lines 28–29
-**Downstream consumers:** SPEC-04 (`notify:on_movie_published` bell), SPEC-07 (a future `movie` leg of `/continue`), SPEC-09 P1.7 (takeout)
+**Module:** `movie` · **Depends on:** SPEC-04 (asset lifecycle, `media:asset_deleted`, the `poster` variant), the video pipeline from ADR-01's demo loop (upload → `media:transcode` on the `heavy` server → HLS → `assets.status = ready`), SPEC-10 (asset-level resume); pattern copied from SPEC-14
+**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/movie/`, migration `0021_movie_core`) and the decisions it rests on — there was never a brief · **Refs:** [ADR-01](../../adr/01-v1-scope-cut.md) (the video loop this rides on), [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-14](SPEC-14-comic-vertical.md) (the reference vertical), feature-inventory `D-7` (RFC 7807), `D-20` (per-domain progress + continue aggregator), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend state and rendering), [backlog.md](../backlog.md) P2 lines 28–29
+**Downstream consumers:** SPEC-05 (`notify:on_movie_published` bell), SPEC-10 (a future `movie` leg of `/continue`), SPEC-03 P1.7 (takeout)
 
 ---
 
@@ -18,7 +18,7 @@ that Portal can upload, transcode and play a video; it did not give the owner a
 The `movie` module is that catalogue. A movie is one row that names a single
 ready video asset and an optional poster image, carries editorial metadata, and
 moves between `draft` and `published`. It was built on 2026-07-19 (`f11cf3f`,
-migration `0021_movie_core`) as the first copy of the comic pattern (SPEC-02),
+migration `0021_movie_core`) as the first copy of the comic pattern (SPEC-14),
 deliberately slimmer: a movie *is* one video — no chapters, pages or
 module-owned progress. No spec was written at the time; this one records what
 shipped, states the contract the code should meet, and lists every place it
@@ -40,7 +40,7 @@ does not (§11).
 - **Series, seasons, episodes, cast, genres, ratings, watchlists** — the
   feature-inventory §4 wish list and the module README's "planned tables". None
   is built, none is scheduled; ratings would follow `D-21`, genres `D-22`.
-- **Transcoding, variants, playback URLs** — owned by `media` (SPEC-01, ADR-01).
+- **Transcoding, variants, playback URLs** — owned by `media` (SPEC-04, ADR-01).
   The movie module never touches storage keys or HLS manifests.
 - **A `processing` status.** A video can only be attached once it is `ready`
   (P0.2); the module never waits on `media:asset_ready`, unlike the README's
@@ -61,7 +61,7 @@ does not (§11).
 - As the owner, I delete a video from my media library and the movie that used
   it quietly drops back to draft instead of offering a broken player.
 - As the owner, I stop a film at minute 43 and resume there later — on any
-  device — because the progress lives on the video asset (SPEC-07).
+  device — because the progress lives on the video asset (SPEC-10).
 - Edge: as an editor (`movies:write:any`), I fix a typo in someone else's
   published movie; I cannot attach my own asset to it.
 
@@ -101,7 +101,7 @@ release_year?, status}` owned by `owner_user_id` (§6).
   else 422 `movie/invalid-video-asset` and nothing is written.
 - **Poster**: optional; the same rule with `kind = image` → else 422
   `movie/invalid-poster-asset`.
-- No cross-module FK on either id (SPEC-02 P0.1 pattern): validation happens at
+- No cross-module FK on either id (SPEC-14 P0.1 pattern): validation happens at
   write time, reaping happens through P0.5.
 
 `POST /movies` creates a `draft` (201, the Movie). `PATCH /movies/{id}` is
@@ -146,7 +146,7 @@ the 422 — §11 row 5.)*
   (§6), and every request runs inside the caller's personal-org scope
   (`RequireTenant`). "Published" therefore means *visible to the members of the
   owner's tenant*; with personal orgs that is the owner alone. Comic's "published
-  = all authenticated users" (SPEC-02 §3) does not hold here as shipped (§10).
+  = all authenticated users" (SPEC-14 §3) does not hold here as shipped (§10).
 - **`GET /movies`** lists published movies; **`GET /movies/mine`** lists the
   caller's own, drafts included. Both are keyset-paginated on
   (`updated_at DESC`, `id DESC`); the opaque cursor encodes both keys
@@ -182,7 +182,7 @@ emits **`movie:published`** `{movie_id, owner_user_id, title}` **after the
 request transaction commits**; a publish that does not commit emits nothing.
 *(Code follow-up: HEAD publishes inside the still-open request transaction —
 §11 row 3.)* Publishing an already-published movie is allowed and emits again;
-SPEC-04's consumer dedups on the movie id, so the bell stays silent.
+SPEC-05's consumer dedups on the movie id, so the bell stays silent.
 `POST /movies/{id}/unpublish` sets `draft` (200) and emits nothing; it is
 idempotent. `DELETE /movies/{id}` is 204, then 404 `movie/not-found` on a
 repeat. Event emission is best-effort: a nil or failing publisher is logged and
@@ -197,10 +197,10 @@ never fails a committed publish.
 | create (`POST /movies`), list own (`GET /movies/mine`) | `movies:write:own` (`RequirePermission`) — held by `user` and up once P1.3 lands; `creator` and up on `HEAD` |
 | update (`PATCH /movies/{id}`) | owner, or `movies:write:any` — `RequireOwnerOrPermission(engine, "movies:write:any", byMovie)` |
 | delete | owner, or `movies:delete:any` |
-| publish / unpublish | `RequirePermission("movies:publish:own")` chained before `RequireOwnerOrPermission(engine, "movies:publish:any", byMovie)` — the SPEC-02 P0.2 rule. *(Code follow-up: HEAD wires only the second half, so `movies:publish:own` is seeded but never checked — §11 row 6.)* |
+| publish / unpublish | `RequirePermission("movies:publish:own")` chained before `RequireOwnerOrPermission(engine, "movies:publish:any", byMovie)` — the SPEC-14 P0.2 rule. *(Code follow-up: HEAD wires only the second half, so `movies:publish:own` is seeded but never checked — §11 row 6.)* |
 
 An owner-or-elevated guard answers 404 for a draft when the caller is neither
-the owner nor a holder of the endpoint's `:any` code (SPEC-02 P0.2 AC). *(Code
+the owner nor a holder of the endpoint's `:any` code (SPEC-14 P0.2 AC). *(Code
 follow-up: `cmd/api` `ownerExtractor` resolves the owner whatever the status;
 inside one shared tenant a non-owner gets 403 and learns the draft exists —
 §11 row 7. Across personal orgs RLS already turns it into 404.)*
@@ -262,16 +262,16 @@ unscoped, which the FORCE RLS policy refuses under `portal_app` — §11 row 1.)
 
 ### P0.6 — Playback and resume ride on the video asset
 
-The movie module stores no playback state. Upload is SPEC-01's `/assets` flow
+The movie module stores no playback state. Upload is SPEC-04's `/assets` flow
 (MinIO in dev, R2 in prod — ADR-04); the transcode is `media:transcode` on the
-`heavy` server (concurrency-capped, the SPEC-01 P0.1 OOM guard), which produces
+`heavy` server (concurrency-capped, the SPEC-04 P0.1 OOM guard), which produces
 the HLS rendition and sets the asset `ready`; the `poster` variant is
 `media:thumbnail` on the light server. A movie's video plays through the media
 player (`frontend/src/templates/v1/views/library/media/MediaDetailView.tsx`,
 Vidstack over `hls_url`) at `/library/media/{video_asset_id}`, and resume is
-SPEC-07's `media_playback_progress`, keyed by **asset id**. The `/continue` rail
+SPEC-10's `media_playback_progress`, keyed by **asset id**. The `/continue` rail
 therefore shows a movie as a `module: "media"` item titled with the asset's
-title, not the movie's (SPEC-07 P0.3).
+title, not the movie's (SPEC-10 P0.3).
 
 This deliberately diverges from `D-20`'s per-domain `movie.watch_progress`
 table: one video is one asset, so asset-level progress is already
@@ -280,7 +280,7 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
 
 **Acceptance criteria.**
 - Given a movie whose video was watched to 43:00 on one device, when the asset
-  is opened on another, then playback resumes within ±10 s (SPEC-07 P0.2 AC,
+  is opened on another, then playback resumes within ±10 s (SPEC-10 P0.2 AC,
   inherited). *(TC-MOV-070)*
 - Given a movie deleted, then the video asset and its progress row survive
   (assets have their own lifecycle). *(TC-MOV-071)*
@@ -300,7 +300,7 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
   page. *AC:* a signed-in owner creates, publishes and plays a movie without
   leaving `/library/movies`; a draft of another tenant member is never listed.
 - **P1.2 `movie` leg of `/continue`.** `movieapi.Continue(ctx, user, limit)`
-  maps the owner's in-progress video assets to their movies and returns SPEC-07
+  maps the owner's in-progress video assets to their movies and returns SPEC-10
   items with `module: "movie"`, the movie title, the poster's `thumb` variant
   and the movie page as `href`; `handleContinue` merges it and drops the
   matching `media` items. *AC:* a movie in progress appears once, as a movie.
@@ -310,7 +310,7 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
   NOTHING`, idempotent) grants `movies:write:own` and `movies:publish:own` to
   `user`; the role hierarchy carries them to every role above. `:any` codes and
   `movies:delete:any` stay with `editor` / `admin`. It is useful together with
-  F009 — `user` holding `assets:write:own` (SPEC-01 §11 row 9), without which a
+  F009 — `user` holding `assets:write:own` (SPEC-04 §11 row 9), without which a
   `user` cannot upload the video or the poster once uploads enforce that code.
   Its down migration deletes only those two `role_permissions` rows (not the
   codes, which `0003`/`0021` own). *AC:* given an account holding only `user`,
@@ -323,7 +323,7 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
 - Series → seasons → episodes (each episode one video asset, the same P0.2
   rule), cast, genres per `D-22`, per-movie ratings per `D-21`.
 - FTS over title and description (`D-2`) once there is a corpus.
-- Watch history (the SPEC-07 table already records first completion).
+- Watch history (the SPEC-10 table already records first completion).
 
 ## 6. Data model — migration `0021_movie_core`
 
@@ -357,14 +357,14 @@ CREATE INDEX movies_tenant_idx ON movies (tenant_id);
 Queries live in `backend/internal/modules/movie/query/movie.sql`; regenerate with
 `make sqlc`. Every UPDATE there sets `updated_at = now()` (specs README).
 `DeleteMovie` is `:execrows` so the adapter can answer `ErrNotFound` for a
-repeat. **Target indexes** (SPEC-02 §11 row 13 pattern, not shipped):
+repeat. **Target indexes** (SPEC-14 §11 row 13 pattern, not shipped):
 `movies_owner_cursor_idx (owner_user_id, updated_at DESC, id DESC)` for
 `/movies/mine`, and partial indexes on `video_asset_id` / `poster_asset_id`
 `WHERE … IS NOT NULL` for the P0.5 UPDATEs, in a new `000N_movie_indexes`
 (`ls backend/db/migrations | tail -2` for the number).
 
 **Takeout** (specs README): movies are user-authored, so `movie/api` implements
-`opsapi.ExportProvider` when SPEC-09 P1.7 lands — one JSON array of Movie
+`opsapi.ExportProvider` when SPEC-03 P1.7 lands — one JSON array of Movie
 objects (the §7 shape), asset ids as references; the assets themselves export
 through media.
 
@@ -413,7 +413,7 @@ specs README AuthZ **OpenAPI encoding** (the publish rows carry the chained
 
 Not projected into the life stream: `0040_journal_drop_catalogue_publish_stream`
 removed the stream consumer — a publish is a library event, not a moment in the
-day (SPEC-06 P0.1). The module emits no event on unpublish, edit or delete.
+day (SPEC-09 P0.1). The module emits no event on unpublish, edit or delete.
 
 **Drift against [events.md](../../reference/events.md).** The two rows match the
 names, payloads and consumers. Three facts are missing there: the consumer also
@@ -449,31 +449,31 @@ text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
 integrity, authorization, contract, hygiene and unbuilt work; row 18 (P1, added
 by Decision 2026-10-01b) is appended after row 17. A row closes when
-the code matches the requirement it cites and the SPEC-15 rows of
+the code matches the requirement it cites and the SPEC-16 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded on
 a named test. Paths are relative to `backend/internal/modules/movie/` unless
 stated otherwise.
 
 | # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
 |---|---|---|---|---|---|
-| 1 | P0.5 tenant scope | The `movie:on_asset_deleted` handler runs inside the payload owner's tenant scope. | `cmd/worker/main.go` builds `movie.New(movie.Deps{Repo: movierepo.NewAdapter(conn)})` with no tenant runner; `module.go` `handleAssetDeleted` → `service.go` `HandleAssetDeleted` → `NullVideoByAsset`/`NullPosterByAsset` run on the bare pool (`platform/db.Conn` with no tx in the context). Under `portal_app` the FORCE RLS policy evaluates `current_setting('app.current_tenant')` with no scope and the UPDATE errors, so the task retries and dies: deleted videos stay referenced and published movies keep a dangling video. No test runs the consumer against Postgres. | **backend:** add `RunInTenant func(ctx, userID, fn) error` to `Deps`; `cmd/worker` passes `runInUserTenant`; `handleAssetDeleted` parses `owner_user_id` and runs `HandleAssetDeleted` inside it (skip, without retry, when it is missing). **test:** TC-MOV-063 (RLS suite, `RLS_TEST_APP_URL`) plus a unit test that the handler calls the runner with the payload owner. | Found while writing SPEC-15, 2026-10-01 (comic and story share it — see SPEC-16 §11 row 1) |
-| 2 | P0.2 clearing the video | `PATCH {video_asset_id: null}` on a published movie also sets `status = 'draft'`. | `query/movie.sql` `UpdateMovie` sets the column only; `service.go` `UpdateMovie` never looks at `status`. The movie stays published with nothing to play — the state `NullVideoByAsset` exists to prevent. | **backend:** in `UpdateMovie`, `status = CASE WHEN @set_video AND sqlc.narg('video_asset_id') IS NULL THEN 'draft' ELSE status END`; `make sqlc`. **test:** TC-MOV-012. | Found while writing SPEC-15, 2026-10-01 |
-| 3 | P0.4 event after commit | `movie:published` is enqueued only after the request transaction commits. | `service.go` `Publish` → `emitPublished` calls `events.Publish` right after `repo.SetStatus`, inside the transaction `tenant/middleware/require_tenant.go` commits only after the handler returns. A COMMIT that fails (the middleware then turns the buffered 200 into a 500) still leaves a bell notification for a publish that never happened. | **backend:** register `emitPublished` through the after-commit hook SPEC-05 §11 row 1 introduces (`db.AfterCommit`). **test:** TC-MOV-043 (a failing outer COMMIT publishes nothing). | Found while writing SPEC-15, 2026-10-01 (SPEC-05 row 1 pattern) |
-| 4 | P0.2 release year | Outside 1880–2200 → 422 `movie/validation`. | `service.go` `CreateMovie`/`UpdateMovie` never check `ReleaseYear`; the `0021` CHECK raises, `writeMovieErr` falls to its default and the request is a 500 `about:blank` (and the tenant transaction rolls back). | **backend:** validate in both service methods → `ErrValidation`. **test:** TC-MOV-007. | Found while writing SPEC-15, 2026-10-01 |
-| 5 | P0.2 / P0.4 lookup failures | A `mediaapi.GetAsset` infrastructure error is a 500; only "no such / wrong kind / not ready / not owned" is a 422. | `service.go` `validateVideoAsset`/`validateImageAsset` return the lookup error, and `CreateMovie`, `UpdateMovie` and `Publish` replace every non-nil result with `ErrInvalidVideoAsset` / `ErrInvalidPosterAsset` / `ErrNotPublishable`. A database blip reads as "your asset is invalid". | **backend:** return the sentinel only for `ErrValidation` or the media not-found error; pass anything else through. **test:** a fake `GetAsset` returning a plain error → 500. | Found while writing SPEC-15, 2026-10-01 |
-| 6 | P0.4 publish RBAC | `RequirePermission("movies:publish:own")` chained before the owner-or-`movies:publish:any` guard on `/publish` and `/unpublish`. | `cmd/api/main.go` builds `PublishMW` as `RequireOwnerOrPermission(engine, "movies:publish:any", byMovie)` only; `module.go` `MountHTTP` mounts both routes with it. `movies:publish:own` (seeded to `creator` in `0021`) is never checked. | **backend:** mount `m.perm("movies:publish:own")` before `PublishMW` on both routes. **test:** TC-MOV-046, TC-MOV-047. | SPEC-02 §11 row 4 pattern (F051) |
-| 7 | P0.4 draft is 404 on guarded routes | A non-owner without the endpoint's `:any` code gets 404 for a draft on PATCH / DELETE / publish / unpublish. | `cmd/api/main.go` `ownerExtractor` over `OwnerByMovie` (`query/movie.sql` `GetMovieOwner`) resolves the owner whatever the status; `accountmw.RequireOwnerOrPermission` then answers 403. Reachable only inside a shared tenant (RLS hides other tenants' rows → 404). | **backend:** `GetMovieOwner` also returns `status`; the extractor returns `ErrOwnerNotFound` for a draft unless the caller is the owner or holds the `:any` code (same change as SPEC-02 §11 row 5). **test:** TC-MOV-049. | SPEC-02 §11 row 5 pattern (F119) |
+| 1 | P0.5 tenant scope | The `movie:on_asset_deleted` handler runs inside the payload owner's tenant scope. | `cmd/worker/main.go` builds `movie.New(movie.Deps{Repo: movierepo.NewAdapter(conn)})` with no tenant runner; `module.go` `handleAssetDeleted` → `service.go` `HandleAssetDeleted` → `NullVideoByAsset`/`NullPosterByAsset` run on the bare pool (`platform/db.Conn` with no tx in the context). Under `portal_app` the FORCE RLS policy evaluates `current_setting('app.current_tenant')` with no scope and the UPDATE errors, so the task retries and dies: deleted videos stay referenced and published movies keep a dangling video. No test runs the consumer against Postgres. | **backend:** add `RunInTenant func(ctx, userID, fn) error` to `Deps`; `cmd/worker` passes `runInUserTenant`; `handleAssetDeleted` parses `owner_user_id` and runs `HandleAssetDeleted` inside it (skip, without retry, when it is missing). **test:** TC-MOV-063 (RLS suite, `RLS_TEST_APP_URL`) plus a unit test that the handler calls the runner with the payload owner. | Found while writing SPEC-16, 2026-10-01 (comic and story share it — see SPEC-17 §11 row 1) |
+| 2 | P0.2 clearing the video | `PATCH {video_asset_id: null}` on a published movie also sets `status = 'draft'`. | `query/movie.sql` `UpdateMovie` sets the column only; `service.go` `UpdateMovie` never looks at `status`. The movie stays published with nothing to play — the state `NullVideoByAsset` exists to prevent. | **backend:** in `UpdateMovie`, `status = CASE WHEN @set_video AND sqlc.narg('video_asset_id') IS NULL THEN 'draft' ELSE status END`; `make sqlc`. **test:** TC-MOV-012. | Found while writing SPEC-16, 2026-10-01 |
+| 3 | P0.4 event after commit | `movie:published` is enqueued only after the request transaction commits. | `service.go` `Publish` → `emitPublished` calls `events.Publish` right after `repo.SetStatus`, inside the transaction `tenant/middleware/require_tenant.go` commits only after the handler returns. A COMMIT that fails (the middleware then turns the buffered 200 into a 500) still leaves a bell notification for a publish that never happened. | **backend:** register `emitPublished` through the after-commit hook SPEC-07 §11 row 1 introduces (`db.AfterCommit`). **test:** TC-MOV-043 (a failing outer COMMIT publishes nothing). | Found while writing SPEC-16, 2026-10-01 (SPEC-07 row 1 pattern) |
+| 4 | P0.2 release year | Outside 1880–2200 → 422 `movie/validation`. | `service.go` `CreateMovie`/`UpdateMovie` never check `ReleaseYear`; the `0021` CHECK raises, `writeMovieErr` falls to its default and the request is a 500 `about:blank` (and the tenant transaction rolls back). | **backend:** validate in both service methods → `ErrValidation`. **test:** TC-MOV-007. | Found while writing SPEC-16, 2026-10-01 |
+| 5 | P0.2 / P0.4 lookup failures | A `mediaapi.GetAsset` infrastructure error is a 500; only "no such / wrong kind / not ready / not owned" is a 422. | `service.go` `validateVideoAsset`/`validateImageAsset` return the lookup error, and `CreateMovie`, `UpdateMovie` and `Publish` replace every non-nil result with `ErrInvalidVideoAsset` / `ErrInvalidPosterAsset` / `ErrNotPublishable`. A database blip reads as "your asset is invalid". | **backend:** return the sentinel only for `ErrValidation` or the media not-found error; pass anything else through. **test:** a fake `GetAsset` returning a plain error → 500. | Found while writing SPEC-16, 2026-10-01 |
+| 6 | P0.4 publish RBAC | `RequirePermission("movies:publish:own")` chained before the owner-or-`movies:publish:any` guard on `/publish` and `/unpublish`. | `cmd/api/main.go` builds `PublishMW` as `RequireOwnerOrPermission(engine, "movies:publish:any", byMovie)` only; `module.go` `MountHTTP` mounts both routes with it. `movies:publish:own` (seeded to `creator` in `0021`) is never checked. | **backend:** mount `m.perm("movies:publish:own")` before `PublishMW` on both routes. **test:** TC-MOV-046, TC-MOV-047. | SPEC-14 §11 row 4 pattern (F051) |
+| 7 | P0.4 draft is 404 on guarded routes | A non-owner without the endpoint's `:any` code gets 404 for a draft on PATCH / DELETE / publish / unpublish. | `cmd/api/main.go` `ownerExtractor` over `OwnerByMovie` (`query/movie.sql` `GetMovieOwner`) resolves the owner whatever the status; `accountmw.RequireOwnerOrPermission` then answers 403. Reachable only inside a shared tenant (RLS hides other tenants' rows → 404). | **backend:** `GetMovieOwner` also returns `status`; the extractor returns `ErrOwnerNotFound` for a draft unless the caller is the owner or holds the `:any` code (same change as SPEC-14 §11 row 5). **test:** TC-MOV-049. | SPEC-14 §11 row 5 pattern (F119) |
 | 8 | P0.3 / §7 list envelope | Both lists answer `{items, next_cursor?}`. | `handler.go` `writeMovieList` writes `{"movies": …}`; `shared/openapi.yaml` `MovieList` is `required: [movies]`. No frontend reader exists. | **backend:** key `items`. **openapi:** `MovieList` → `required: [items]`. **test:** TC-MOV-026. | Decision 2026-09-30 (Envelopes); specs README unowned-list note |
 | 9 | P0.3 `limit` | Missing / non-integer / < 1 → 30; > 50 → clamped to 50. | `service.go` `list`: `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }` — `?limit=500` returns 30. | **backend:** `server.Limit(r, 30, 50)` in `handler.go` (or clamp in `list`). **openapi:** describe `limit` as defaulted and clamped. **test:** TC-MOV-024. | Decision 2026-10-01 (limit) |
 | 10 | §7 problem types | Every `movie/*` slug the API emits is in `ProblemType` and `PROBLEM_MESSAGES`. | `grep -n 'movie/' frontend/src/lib/problems.ts` finds nothing; `handler.go` `writeMovieErr` emits six slugs. | **frontend:** add the six. **test:** the CC-1 catalogue check (TC-MOV-110). | Errors convention (D-7) |
 | 11 | §7 shape failures | Malformed JSON, or a non-uuid `video_asset_id`/`poster_asset_id`, is 422 `movie/validation`. | `handler.go` `CreateMovie`/`UpdateMovie` answer `server.Decode`'s 400 `about:blank` ("invalid JSON body") and `server.BadRequest("invalid video_asset_id")` (400 `about:blank`). | **backend:** map both to `ErrValidation`. **openapi:** drop the 400 from `createMovie`/`updateMovie`. **test:** TC-MOV-009. | Pagination/Errors convention (README) |
-| 12 | P0.2 `null` clears | `PATCH {description: null}` / `{release_year: null}` clears the field, as `MoviePatch` documents. | `query/movie.sql` `UpdateMovie` uses `COALESCE(sqlc.narg('description'), description)` and the same for `release_year`; `handler.go` decodes both as plain pointers, so `null` and absent are indistinguishable. | **backend:** three-state decoding (`json.RawMessage`, as the asset ids already do) plus `set_description` / `set_release_year` flags in the query; `make sqlc`. **test:** TC-MOV-010. | Found while writing SPEC-15, 2026-10-01 (openapi vs handler) |
+| 12 | P0.2 `null` clears | `PATCH {description: null}` / `{release_year: null}` clears the field, as `MoviePatch` documents. | `query/movie.sql` `UpdateMovie` uses `COALESCE(sqlc.narg('description'), description)` and the same for `release_year`; `handler.go` decodes both as plain pointers, so `null` and absent are indistinguishable. | **backend:** three-state decoding (`json.RawMessage`, as the asset ids already do) plus `set_description` / `set_release_year` flags in the query; `make sqlc`. **test:** TC-MOV-010. | Found while writing SPEC-16, 2026-10-01 (openapi vs handler) |
 | 13 | §7 OpenAPI annotations | Every operation carries `x-required-permission`; the path parameter is named for a movie. | No movie operation is annotated; all `/movies/{id}*` paths reuse `#/components/parameters/AssetID`. | **openapi:** annotate the eight operations (publish rows chained); a `MovieID` parameter. **test:** the drift check the AuthZ convention asks for. | AuthZ convention (OpenAPI encoding) |
-| 14 | §6 indexes | `movies_owner_cursor_idx (owner_user_id, updated_at DESC, id DESC)`; partial indexes on the two asset columns. | `0021` ships `movies_owner_idx (owner_user_id)` only; `ListOwnMovies` and the two P0.5 UPDATEs run without a matching index. | **migration:** `000N_movie_indexes` creates them and drops `movies_owner_idx`. **test:** migration up/down (TC-MOV-111). | SPEC-02 §11 row 13 pattern |
-| 15 | §6 down migration | `0021`'s down removes only what `0021` added. | `0021_movie_core.down.sql` deletes `permissions WHERE code LIKE 'movies:%'`, which also removes the 0003-seeded `movies:read`, `movies:write:own`, `movies:write:any`, `movies:publish` and `movies:delete:any` with their `guest`/`creator`/`editor`/`admin` grants. Forward-only production (`D-12`) keeps this off the live path. | **migration:** a corrective down is not possible for an applied file; record it and make future vertical downs delete only their own codes. **test:** none. | Found while writing SPEC-15, 2026-10-01 |
+| 14 | §6 indexes | `movies_owner_cursor_idx (owner_user_id, updated_at DESC, id DESC)`; partial indexes on the two asset columns. | `0021` ships `movies_owner_idx (owner_user_id)` only; `ListOwnMovies` and the two P0.5 UPDATEs run without a matching index. | **migration:** `000N_movie_indexes` creates them and drops `movies_owner_idx`. **test:** migration up/down (TC-MOV-111). | SPEC-14 §11 row 13 pattern |
+| 15 | §6 down migration | `0021`'s down removes only what `0021` added. | `0021_movie_core.down.sql` deletes `permissions WHERE code LIKE 'movies:%'`, which also removes the 0003-seeded `movies:read`, `movies:write:own`, `movies:write:any`, `movies:publish` and `movies:delete:any` with their `guest`/`creator`/`editor`/`admin` grants. Forward-only production (`D-12`) keeps this off the live path. | **migration:** a corrective down is not possible for an applied file; record it and make future vertical downs delete only their own codes. **test:** none. | Found while writing SPEC-16, 2026-10-01 |
 | 16 | P1.1 frontend | `/library/movies` list, manager and movie page. | None: no route under `frontend/src/app/(app)/library/`, no view in `templates/v1`, no `lib/movie.ts`; `notify/service.go` `workKinds` links a published movie to `/library/media`. | **frontend:** P1.1. **backend:** the notify `href` to the movie page. **test:** TC-MOV-080…083. | [backlog.md](../backlog.md) P2 line 28 |
-| 17 | P1.2 continue leg | `/continue` shows a movie as `module: "movie"`. | `cmd/api/main.go` `handleContinue` calls only `mediaMod.API().Continue`; `movie/api` has no `Continue`. | **backend:** P1.2. **test:** TC-MOV-090. | SPEC-07 §5 (D-20 fan-out); backlog P2 line 25 pattern |
-| 18 | P1.3 `user` authoring grant | `user` holds `movies:write:own` and `movies:publish:own` (a movie-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0021_movie_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /movies` and `GET /movies/mine` (`module.go` `m.perm("movies:write:own")`). | **migration:** `000N_movie_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **frontend:** none beyond P1.1 (`lib/session.ts` `can()` reads the new codes from `/auth/me`). **test:** TC-MOV-050 (RLS/migration suite: a `user` creates and publishes). Lands with or after F009 (SPEC-01 §11 row 9). | Decision 2026-10-01b (D4) |
+| 17 | P1.2 continue leg | `/continue` shows a movie as `module: "movie"`. | `cmd/api/main.go` `handleContinue` calls only `mediaMod.API().Continue`; `movie/api` has no `Continue`. | **backend:** P1.2. **test:** TC-MOV-090. | SPEC-10 §5 (D-20 fan-out); backlog P2 line 25 pattern |
+| 18 | P1.3 `user` authoring grant | `user` holds `movies:write:own` and `movies:publish:own` (a movie-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0021_movie_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /movies` and `GET /movies/mine` (`module.go` `m.perm("movies:write:own")`). | **migration:** `000N_movie_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **frontend:** none beyond P1.1 (`lib/session.ts` `can()` reads the new codes from `/auth/me`). **test:** TC-MOV-050 (RLS/migration suite: a `user` creates and publishes). Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
 
 **Already matching on HEAD.**
 - `0021_movie_core`: the table, the title and year CHECKs, the status CHECK,
@@ -516,7 +516,7 @@ stated otherwise.
 - Everything in §3: series/episodes, cast, genres, ratings, watchlists, FTS,
   cross-tenant publishing.
 - The media pipeline's own gaps (HLS ladder per tier, multipart upload, audio
-  transcode — backlog P2 line 29; SPEC-01 §11) and SPEC-07's resume gaps
-  (SPEC-07 §11): a movie inherits them, it does not own them.
-- The account-level `assets:write:own` grant for uploads (SPEC-01 §11 row 9).
-- Story (SPEC-16) and music (SPEC-14).
+  transcode — backlog P2 line 29; SPEC-04 §11) and SPEC-10's resume gaps
+  (SPEC-10 §11): a movie inherits them, it does not own them.
+- The account-level `assets:write:own` grant for uploads (SPEC-04 §11 row 9).
+- Story (SPEC-17) and music (SPEC-15).

@@ -1,12 +1,12 @@
 # ADR-08 — Life-OS Positioning + Finance Ledger Scope
 
-**Status:** **accepted** — drafted 2026-07-07 from that day's brainstorm; executed from 2026-07-12 (`6160f8e` SPEC-01/02, `66c036f` SPEC-03 ledger), never formally flipped until 2026-09-11
+**Status:** **accepted** — drafted 2026-07-07 from that day's brainstorm; executed from 2026-07-12 (`6160f8e` SPEC-04/14, `66c036f` SPEC-12 ledger), never formally flipped until 2026-09-11
 **Last verified:** 2026-09-11
 **Amends:** [ADR-01](01-v1-scope-cut.md) · **Relates to:** D-27/D-28 (step-up/MFA), [ADR-06](06-local-auth-model.md) · yardstick: [product/vision.md](../product/vision.md)
 
 ## Context
 
-*As found on 2026-07-07. This is the decision the whole SPEC-01…10 line
+*As found on 2026-07-07. This is the decision the whole spec line
 descends from; everything below the Decision holds as written.*
 
 Portal's post-v1 gap analyses (`product/backlog.md` as it then was,
@@ -40,7 +40,7 @@ The immediate scope tension: the owner wanted **money** first, but ADR-01 deferr
    stream**, fed by domain events. Every new domain module must emit at least one
    bus event from its first release.
 3. **"Bank" is split.** A **finance ledger** (manual multi-account bookkeeping:
-   accounts, transactions, categories, budgets, transfers — `product/specs/SPEC-03`)
+   accounts, transactions, categories, budgets, transfers — `product/specs/SPEC-12`)
    enters v1 scope. **Real bank integration** (credentials, API sync, money
    movement) remains deferred exactly as ADR-01 had it.
 4. **MFA/TOTP gating is re-anchored**: D-27/D-28's "MFA before bank" applies to
@@ -83,27 +83,27 @@ The immediate scope tension: the owner wanted **money** first, but ADR-01 deferr
 
 What followed (2026-09-11):
 
-- **The build order ran as decided and kept going:** SPEC-01 (media image
-  pipeline) → SPEC-02 (comic) → SPEC-03 (ledger) landed 2026-07-12; SPEC-04
+- **The build order ran as decided and kept going:** SPEC-04 (media image
+  pipeline) → SPEC-14 (comic) → SPEC-12 (ledger) landed 2026-07-12; SPEC-05
   (notify), 05/06 (journal + life stream), 07, 08 (people/birthdays), 09 (ops)
   and 10 (ledger expansion: debts first) followed. The `bank` module is the
   finance ledger; real bank integration (credentials, API sync, money
   movement) is still deferred, exactly as item 3 said.
 - **The life stream exists:** `journal` projects `media:asset_ready`,
   `comic:chapter_published`, `bank:transaction_created` and the rest into the
-  stream (SPEC-06). `bank:*`, `comic:*`, `journal:*`, `people:*` are in
+  stream (SPEC-09). `bank:*`, `comic:*`, `journal:*`, `people:*` are in
   [`reference/events.md`](../reference/events.md); `notify:*` stayed reserved
   for the notification module, which shipped.
 - **Backlog re-rank:** happened in the July backlog. That file has since been
   archived-in-place (2026-08-25) and is replaced under ADR-11 by a live one
   triaged from the 2026-08-25 audit. Of the demoted items, email password-reset
-  came back and shipped (`0010`, SPEC-04); friend graph shipped a first slice as
+  came back and shipped (`0010`, SPEC-05); friend graph shipped a first slice as
   the `social` module (`0037`); messaging and people search did not.
 - **Admin wildcard permissions still reach finance data.** `bank:*` is not
-  excluded from `*`; there is one operator. SPEC-03 §P0.8 still carries the
+  excluded from `*`; there is one operator. SPEC-12 §P0.8 still carries the
   flag for any multi-user deployment.
 - **MFA/TOTP is still the named unlock for real bank integration** and is not
-  built (ADR-06). The ledger — including debts and interest accrual (SPEC-10) —
+  built (ADR-06). The ledger — including debts and interest accrual (SPEC-13) —
   runs under password-only auth, as the trade-off accepted.
 - "Posts" changed meaning as predicted: the journal entry is the first real
   post type.
@@ -116,5 +116,5 @@ What followed (2026-09-11):
 - [x] Accept this ADR. (Executed from 2026-07-12; status field corrected 2026-09-11.)
 - [x] `product/backlog.md` ordering note points at `product/briefs/` + `product/specs/` — then the whole file was archived; the ADR-11 replacement carries the pointer. `product/briefs/` was later folded into the specs and deleted.
 - [x] Historical-status header on `product/analysis/facebook-comparison.md` (label only; body untouched — analysis is immutable). The file was later deleted (`git show ea100d8:docs/product/analysis/facebook-comparison.md`).
-- [x] Build order SPEC-01 → SPEC-02 → SPEC-03; notification module next. All four shipped.
-- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-10's eight items are all manual-entry.
+- [x] Build order SPEC-04 → SPEC-14 → SPEC-12; notification module next. All four shipped.
+- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-13's eight items are all manual-entry.

@@ -1,9 +1,9 @@
-# SPEC-03 — Finance Ledger (module `bank`, ledger scope)
+# SPEC-12 — Finance Ledger (module `bank`, ledger scope)
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
-**Module:** `bank` · **Depends on:** ADR-08 (scope amendment); **SPEC-09 P0 (nightly backup + exercised restore drill) live before the first real ledger entry**; SPEC-01 only for P1 receipts
+**Module:** `bank` · **Depends on:** ADR-08 (scope amendment); **SPEC-03 P0 (nightly backup + exercised restore drill) live before the first real ledger entry**; SPEC-04 only for P1 receipts
 **Upstream:** brief 03 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/03-finance-ledger.md`) · **Refs:** feature-inventory.md §8 (implements a subset of §8.1–8.2 plus monthly budgets from §8.7), frontend.md Phase 5
-**Downstream consumers:** SPEC-06 (stream + dashboard widget), SPEC-09 P1.7 (bank ExportProvider), SPEC-10
+**Downstream consumers:** SPEC-09 (stream + dashboard widget), SPEC-03 P1.7 (bank ExportProvider), SPEC-13
 
 ---
 
@@ -340,7 +340,7 @@ All money is integer minor units; `amount: null` marks a synthesized header
 entry (P0.5). `income`/`expense` are single-currency sums. Per-currency grouping
 is realised client-side by `accounts[].currency` while every account shares one
 currency; the server must split the totals by currency before a second currency
-is allowed (tracked with the §11 budgets-vs-currency question). SPEC-06's finance
+is allowed (tracked with the §11 budgets-vs-currency question). SPEC-09's finance
 widget calls this endpoint without `month`. *(Code follow-up: the shipped
 `monthParam` defaults to the UTC month and answers a malformed month with 400
 `about:blank`.)*
@@ -361,7 +361,7 @@ Emit on the bus: `bank:transaction_created`, `bank:transaction_updated`,
 amount, currency, direction, category_id, occurred_at, is_transfer, transfer_id,
 counterparty_account_id}`. `currency` is the account's ISO code, so a consumer
 can format `amount` with the right exponent (VND = 0) in a multi-currency
-ledger; SPEC-06 resolves account and category names at read time. *(Code
+ledger; SPEC-09 resolves account and category names at read time. *(Code
 follow-up: the shipped payload has no `currency`.)*
 `transfer_id` is nullable and lets a consumer group one transfer's rows into a
 single story item ("moved 5M TCB→Momo", not two confusing entries); `is_transfer`
@@ -369,13 +369,13 @@ is the P0.3 leg predicate, so a P1.13 fee row emits `is_transfer=false` with its
 `transfer_id` set. Emitted for transfer legs too (with `is_transfer=true`).
 `counterparty_account_id` is nullable — on a transfer leg it is the OTHER leg's
 `account_id`, so either leg's payload alone renders the identical "moved 5M
-TCB→Momo" card (SPEC-06 owns the direction-normalizing render rule); it is NULL
+TCB→Momo" card (SPEC-09 owns the direction-normalizing render rule); it is NULL
 on non-transfer rows.
 Category-delete reassignment (P0.4) emits **no** per-row `transaction_updated`
 flood — a bulk reassignment is one user action, not N money mutations (a
 single-row PATCH that recategorizes still emits normally); v1 emits nothing for
 the bulk path (Goal 3's one carve-out). No consumer required to ship, but these
-events already have a registered first consumer (SPEC-06's stream) — publish via
+events already have a registered first consumer (SPEC-09's stream) — publish via
 the `platform/events` helper (events.md "Delivery mechanics") so a second
 consumer later is a wiring change.
 
@@ -398,7 +398,7 @@ Permissions *(2026-07-10 reconciliation — the earlier `bank:account:read:own`
 family was 4-segment, which is rejected by `rbac.Parse`: wired through
 `RequirePermission` it panics at server start (`MustParse` on the required code),
 and any dynamic `AllowsCode` check fails closed — returning false even for a `*`
-superadmin grant. Kebab-compound resources follow SPEC-04's `notification-prefs`
+superadmin grant. Kebab-compound resources follow SPEC-05's `notification-prefs`
 precedent; actions follow the 0003 catalog's `read|write|delete`)*:
 
 `bank-accounts:read:own`, `bank-accounts:write:own`, `bank-accounts:delete:own`,
@@ -441,7 +441,7 @@ retrofit — this is the whole point of doing it in migration #1.
 
 - **P1.10 Receipt attachments**: `receipt_asset_id uuid NULL` on a transaction,
   with **no FK** (module boundary, specs README). On write, validate through
-  `mediaapi` (SPEC-01) that the asset exists, is owned by the caller and is an
+  `mediaapi` (SPEC-04) that the asset exists, is owned by the caller and is an
   image; otherwise 404 `media/asset-not-found`, or 422 for a non-image. A
   `bank:on_asset_deleted` consumer of `media:asset_deleted` NULLs matching ids,
   and is registered in events.md. Thumbnail in the transaction row; lightbox on
@@ -477,7 +477,7 @@ retrofit — this is the whole point of doing it in migration #1.
 read codes are granted to `user` together, P0.8). Owner-scoped like every bank
 read: each query filters `user_id = caller`, so no other user's rows can enter a
 slice, a total or a trend bar. It backs the `/bank/reports` page (the
-`bankReports` view, §8); SPEC-10 §7 measures its slices against the month
+`bankReports` view, §8); SPEC-13 §7 measures its slices against the month
 totals.
 
 **Contract.** `month` follows the §7 month rule — `YYYY-MM`; omitted → the
@@ -554,7 +554,7 @@ rows 8 and 12.)*
 **Tenancy** (specs README convention, ADR-07). Tenant-scoped: `bank_accounts`, `bank_import_batches`, `bank_transactions`, `bank_budgets` (`0020_platform_rls_enable`). `bank_categories` is the shared-seed precedent: nullable `tenant_id`, policy reads own-tenant `OR tenant_id IS NULL`, writes own-tenant only. The DDL below predates ADR-07 and omits the columns.
 
 ```sql
--- user_id columns carry the sanctioned identity-anchor FK (SPEC-04 §6 /
+-- user_id columns carry the sanctioned identity-anchor FK (SPEC-05 §6 /
 -- 0007 precedent) — added 2026-07-10; without it a deleted user orphans
 -- finance rows forever.
 CREATE TABLE bank_accounts (
@@ -777,7 +777,7 @@ redirects an unauthenticated visitor to `/login`.
 via `activeTemplate().views.<x>` — never a version-specific import in `app/` (keeps
 the `v2` switch intact). The P0 keys are `bankDashboard`, `bankTransactions`,
 `bankAccounts`, `bankBudgets` and `bankCategories` (`bankReports` serves P1.11;
-`bankDebts` is SPEC-10's).
+`bankDebts` is SPEC-13's).
 
 ## 9. Success metrics (n=1 honest)
 
@@ -803,14 +803,14 @@ P0 ≈ 8.5 dev-days (category semantics and the budget tree grew it past the
 original 7); do not start P1 before the first
 reconciliation succeeds.
 
-**Backup gate.** Do not begin Goal 1's month of real logging until SPEC-09
+**Backup gate.** Do not begin Goal 1's month of real logging until SPEC-03
 P0.2–P0.4 (nightly backup + exercised restore drill) is green.
 
 ## 11. Open questions
 
 - **(product, non-blocking)** Life-stream privacy: should `bank:*` events carry
   amounts, or only counts ("logged 3 transactions today")? Payload above carries
-  amounts; the *consumer* (SPEC-06's life stream) decides display. SPEC-06 §11
+  amounts; the *consumer* (SPEC-09's life stream) decides display. SPEC-09 §11
   defaults to show for n=1; revisit at household tenancy.
 - **(product, resolved for v1)** Opening-balance date semantics: timeless (applies
   before all transactions) — correct for current balances and monthly flow totals,
@@ -843,7 +843,7 @@ The spec text above is the target; each row below is a place where the shipped
 code still diverges from it, verified against that commit. Rows are ordered by
 severity: security first, then data integrity (silent wrong numbers or lost
 rows), then API contract, then UX. A row closes when the code matches the spec
-and the SPEC-03 rows of `docs/reference/TRACEABILITY-MATRIX.md` are regraded.
+and the SPEC-12 rows of `docs/reference/TRACEABILITY-MATRIX.md` are regraded.
 File paths are relative to `backend/internal/modules/bank/` unless they start
 with `backend/`, `frontend/` or `shared/`.
 
@@ -855,7 +855,7 @@ with `backend/`, `frontend/` or `shared/`.
 | 4 | **Data integrity** — P0.5 budget write semantics | PUT upserts with `amount > 0`; only `amount: 0` or `null` deletes. | `service.go` `SetBudget` deletes on `amount <= 0`, so a negative amount silently deletes the budget instead of being rejected. | backend: `amount < 0` → `ErrInvalidAmount` (422 `bank/invalid-amount`); keep 0/null → delete. test: PUT −5 → 422 and the budget survives. | Verified 2026-10-01 (no F-ID) |
 | 5 | **Data integrity** — §6 follow-up migration `000N_bank_integrity` | `(user_id, created_at DESC)` on `bank_transactions`; `(category_id)` on `bank_budgets`; `CHECK (parent_id IS DISTINCT FROM id)` on `bank_categories`; `CHECK (currency ~ '^[A-Z]{3}$')` on `bank_accounts`. | Not shipped: only `backend/db/migrations/0014_bank_core`, `0020_platform_rls_enable` and `0043_bank_debts` touch these tables. `service.go` `CreateAccount` / `UpdateAccount` check only `len(cur) != 3` after `ToUpper`, so `U$D` is accepted. | migration: new `00NN_bank_integrity` up/down with the four statements (pre-check existing rows for a bad currency or a self-parent). backend: validate currency with `^[A-Z]{3}$` (422 `bank/validation`). test: migration up/down; service rejects `U$D`. | F131 |
 | 6 | **Contract** — P0.4 `kind` immutability | A category PATCH that changes `kind` is 422 `bank/category-immutable` and the row is unchanged. | `handler.go` `UpdateCategory` decodes a body without a `kind` field and `server.Decode` ignores unknown keys, so `{"kind":"income"}` answers 200 and changes nothing. `ErrCategoryImmutable` is declared and mapped in `writeBankErr` but never returned. | backend: add `Kind *string` to the PATCH body; a value different from the stored kind → `ErrCategoryImmutable`; an equal value is a no-op. openapi: `kind` on the PATCH schema with the 422. test: TC-BANK-074. | F056 |
-| 7 | **Contract** — P0.7 event payload | The payload carries `currency` (the account's ISO code). | `api/api.go` `TransactionEvent` has no `Currency` field; `service.go` `emitTx` builds the payload from the `Transaction` alone. | backend: add a `Currency string` field (JSON `currency`) to `TransactionEvent`; pass the account currency into `emitTx` from the account each write path already loads (`DeleteTransaction` / `DeleteTransfer` must load it before deleting). docs: drop "not yet emitted" from the `events.md` bank rows. The consumer side (stream formats by currency) is SPEC-06's follow-up. test: TC-BANK-141 with `currency`. | F016 |
+| 7 | **Contract** — P0.7 event payload | The payload carries `currency` (the account's ISO code). | `api/api.go` `TransactionEvent` has no `Currency` field; `service.go` `emitTx` builds the payload from the `Transaction` alone. | backend: add a `Currency string` field (JSON `currency`) to `TransactionEvent`; pass the account currency into `emitTx` from the account each write path already loads (`DeleteTransaction` / `DeleteTransfer` must load it before deleting). docs: drop "not yet emitted" from the `events.md` bank rows. The consumer side (stream formats by currency) is SPEC-09's follow-up. test: TC-BANK-141 with `currency`. | F016 |
 | 8 | **Contract** — P0.6, P1.11 and §7 month rule, P0.2 "today" | An omitted `month` is the current month in the caller's `users.timezone` (unknown → `Asia/Ho_Chi_Minh`, never UTC); a malformed month is 400 `bank/invalid-month`; `month` is `YYYY-MM` only. The entry date defaults to today in the user's zone. | `handler.go` `monthParam` returns `time.Now().UTC()` (used by `ListBudgets`, `Dashboard`, `Report`); a malformed month is `server.Problem(400, "about:blank", …)` there, in `ListTransactions` (`?month=`) and in `SetBudget` (body `month`); `parseMonth` also accepts `YYYY-MM-DD`. `parseDateDefault` defaults an omitted `occurred_at` to the UTC date. `frontend/src/lib/bank.ts` `currentMonth()` uses `toISOString()` (UTC month) and `today()` uses the device clock. Prerequisite missing: `accountapi` exposes no timezone and `0002_account_users` defaults `timezone` to `'UTC'` (specs README Timezone follow-up). | backend (after the account follow-up ships `UserSummary.Timezone`): give `bank.Deps` a zone lookup through `accountapi`; compute the default month and the default `occurred_at` date in the caller's zone; make `parseMonth` strict `2006-01`; answer every malformed month with 400 `bank/invalid-month`. openapi: the 400 on every `month` parameter (including `getBankReport`, which declares only the 401) and on the PUT body. frontend: `currentMonth()` / `today()` use the zone from `GET /auth/me`; add `bank/invalid-month` to `problems.ts`. test: TC-BANK-125 plus a malformed-month case per endpoint. | F057, F128, Decision 2026-09-30 (Timezone) |
 | 9 | **Contract** — §7 list envelopes | `GET /bank/transactions` → `{items, next_cursor?}`; `/bank/accounts` and `/bank/categories` → `{items}`; `/bank/budgets` → `{month, items}`. | `handler.go` `ListTransactions` writes `{transactions, next_cursor}`, `ListAccounts` `{accounts}`, `ListCategories` `{categories}`, `ListBudgets` `{month, budgets}`; `shared/openapi.yaml` declares the same keys; `frontend/src/lib/bank.ts` `listTransactions`, `listAccounts`, `listCategories`, `listBudgets` read them (and `BudgetsView` / `TransactionsView` consume `.budgets` / `.transactions`). | backend + openapi + frontend in one PR: rename each list key to `items`. test: TC-BANK-033, TC-BANK-035 as HTTP tests. | Decision 2026-09-30 (Envelopes) |
 | 10 | **Contract** — §7 Problem types (param-shape failures) | A body or parameter shape failure without a named type is 422 `bank/validation` (specs README Pagination rule). | `handler.go` answers malformed `account_id`, `category_id`, `from_account`, `to_account`, `parent_id`, `reassign_to`, the `account` / `category` filters and `occurred_at` with `server.Problem(400, "about:blank", …)`; invalid JSON goes through `server.Decode` → 400. Path ids that fail to parse already answer 404 `bank/not-found` (correct). | backend: route these through `writeBankErr(w, ErrValidation)`; wrap `server.Decode` in a bank helper that answers 422 `bank/validation`. openapi: 422 on the affected operations. test: TC-BANK-200 cases for each parameter. | F024 |
@@ -907,7 +907,7 @@ structured fees are unbuilt P1 features, not divergences.
 **Test evidence to add or fix:**
 
 - No test on HEAD asserts superseded behaviour (`bank_test.go`, `http_test.go`
-  pass and stay valid). `docs/testing/TEST-CASES-SPEC-03-bank.md` TC-BANK-141
+  pass and stay valid). `docs/testing/TEST-CASES-SPEC-12-bank.md` TC-BANK-141
   still lists the payload without `currency`; update it with row 7.
 - `TestDerivedBalanceReconciles` is a fixed two-row case, not the P0.2
   property test: add the random create/edit/delete reconciliation test

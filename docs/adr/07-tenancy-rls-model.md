@@ -123,7 +123,7 @@ superuser and bypasses every policy.
 - **`.env.example` defaults `DATABASE_URL` to `portal_app`** since 2026-09-11
   (with the placeholder password `0019` seeds), so a fresh `make up` starts
   enforced. The evidence that no query relied on superuser rights: this
-  deployment ran as `portal_app` from 2026-08-25 through the SPEC-10 debts
+  deployment ran as `portal_app` from 2026-08-25 through the SPEC-13 debts
   work, and the 19 RLS tests pass against the live cluster
   (`go test ./internal/platform/db -run TestRLS`, run 2026-09-11). The
   superuser `portal` is used only by `MIGRATE_DATABASE_URL` (`make migrate`)

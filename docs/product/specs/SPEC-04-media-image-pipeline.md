@@ -1,9 +1,9 @@
-# SPEC-01 — Media Image Pipeline + Asset Management
+# SPEC-04 — Media Image Pipeline + Asset Management
 
 **Status:** current, **rev 5** (owner purge for account deletion) · **Last verified:** 2026-10-01
 **Module:** `media` (built + wired) · **Depends on:** nothing
 **Upstream:** brief 01 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/01-media-image-pipeline.md`) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
-**Downstream consumers:** SPEC-02, SPEC-03 P1 (receipts), SPEC-04 P0.4 (`media:asset_ready` → in-app notification), SPEC-05/SPEC-12 (entry photos), SPEC-06 (`media:asset_deleted`; playback via SPEC-07), SPEC-07, SPEC-08 P1.7 (avatars), SPEC-09 (P0.3 scheduler; P1.7 mediaapi ExportProvider), SPEC-13 P0.10 (user delete → P0.7 owner purge)
+**Downstream consumers:** SPEC-14, SPEC-12 P1 (receipts), SPEC-05 P0.4 (`media:asset_ready` → in-app notification), SPEC-07/SPEC-08 (entry photos), SPEC-09 (`media:asset_deleted`; playback via SPEC-10), SPEC-10, SPEC-11 P1.7 (avatars), SPEC-03 (P0.3 scheduler; P1.7 mediaapi ExportProvider), SPEC-01 P0.10 (user delete → P0.7 owner purge)
 **Rev 2 origin:** external technical review 2026-07-09 — six findings; five accepted, one rejected. See §12.
 
 ---
@@ -58,7 +58,7 @@ and several scattered backlog items (avatar upload, photos, receipts).
 ## 4. User stories
 
 - As a comic creator, I upload page images and get web-optimized variants so readers
-  load fast on mobile. *(primary — feeds SPEC-02)*
+  load fast on mobile. *(primary — feeds SPEC-14)*
 - As an asset owner, I delete an asset and it disappears from listings, playback,
   and object storage, so disk/R2 usage doesn't grow forever.
 - As the owner of a personal archive, I download the **byte-identical original** of
@@ -116,7 +116,7 @@ follow-up: the shipped `completeImage` discards the sniffed type, so
    memory guard), if either side > **30,000 px** (sanity ceiling for malformed
    input), if animated (frame count > 1), or if decode fails →
    `status='failed'`, `error_message` set. The cap is on **area**, not side
-   length, so the tall webtoon strips SPEC-02 ingests (e.g. 704×18,000 ≈ 13 MP)
+   length, so the tall webtoon strips SPEC-14 ingests (e.g. 704×18,000 ≈ 13 MP)
    are admitted while an 8,001×8,000 image is refused *(rev 4; rev 2 had a
    per-side 8,000 px cap, was 12,000 — review pt 1)*. Memory rationale: decoded
    RGBA at 8,000² ≈ 256 MB peak vs ≈ 576 MB at 12,000² — the difference between
@@ -232,7 +232,7 @@ prefixes — shipped: `uploads/{id}/`, the HLS output prefix, `variants/{id}/`);
 (4) delete variant rows + asset row; (5) once the asset row is gone (via this path **or** the
 janitor's), emit `media:asset_deleted` `{asset_id, owner_user_id}` (registry:
 `docs/reference/events.md`) so domain modules that hold the id with no cross-module FK
-— e.g. comic — can drop dangling references (SPEC-02 P0.6). Best-effort, like all
+— e.g. comic — can drop dangling references (SPEC-14 P0.6). Best-effort, like all
 cross-module events; a dropped event is recoverable by a consumer-side reconcile.
 
 **Response** *(rev 4)*. Once step (2) commits, the delete is irrevocable. If
@@ -271,8 +271,8 @@ near-empty sets — trigger cadence is about *definedness*, not CPU.
 stands up **one** `asynq.Scheduler` (`PeriodicTaskManager`) as the single place
 all periodic tasks register. `media:purge_orphans` is the first entry; later
 specs register their periodic tasks here too — `ops:backup_database` and
-`ops:purge_exports` (SPEC-09), `people:scan_birthdays` (SPEC-08 P0.4),
-`notify:purge_old` (SPEC-04), account's
+`ops:purge_exports` (SPEC-03), `people:scan_birthdays` (SPEC-11 P0.4),
+`notify:purge_old` (SPEC-05), account's
 `PurgeExpiredRefreshTokens` — rather than each standing up its own scheduler or
 reaching for OS cron. This is the runner the other specs "borrow the convention
 of (Asynq periodic, never OS cron), not the code."
@@ -347,7 +347,7 @@ loads the row owner-scoped (`owner_id = caller`). There is **no
 **Behavior.** Streams the source object (Range-capable, via
 `http.ServeContent`) with `Content-Disposition: inline;
 filename="<original filename>"` — `inline`, because the same route is the
-playback source for audio (the SPEC-07 player page plays audio from it; there
+playback source for audio (the SPEC-10 player page plays audio from it; there
 is no HLS or poster for audio) — and `assets.mime_type` as the content type
 (sniffed for images per P0.1, client-declared otherwise). When
 `original_filename` is null (assets predating the §6
@@ -387,14 +387,14 @@ semi-public, originals are private archive.
 subscription table** registered in each emitting binary (`cmd/api` and/or
 `cmd/worker` — the table is per-binary, see the specs README Events convention), so a published event
 (`<module>:<event>`) fans out to every subscribed Asynq task (events.md
-"Delivery mechanics"). SPEC-01 is the first producer (`media:asset_deleted` at
+"Delivery mechanics"). SPEC-04 is the first producer (`media:asset_deleted` at
 P0.3; `media:asset_ready` at P1.2) and therefore owns building the fan-out;
-**every later multi-consumer stream/notify feature gates on this** (SPEC-04
-bell, SPEC-06 stream, …). Asynq's `ServeMux` panics on duplicate handler
+**every later multi-consumer stream/notify feature gates on this** (SPEC-05
+bell, SPEC-09 stream, …). Asynq's `ServeMux` panics on duplicate handler
 registration, so two consumers can never both handle the raw event task type;
 the registry must exist before any event gains a second consumer. Publishing
 with zero subscriptions is a silent no-op by design (events.md), and no
-consumer is required for SPEC-01 itself to land *(rev 4)*.
+consumer is required for SPEC-04 itself to land *(rev 4)*.
 
 **Acceptance criteria** *(rev 4)*.
 - Given two subscriptions for an event, when it is published, then `Publish`
@@ -414,7 +414,7 @@ account hard-deletes a user, the cascade removes the rows — tombstoned or not 
 and with them every way to find the objects. Marking the assets `deleting` and
 leaving the rest to the janitor therefore does not work: the objects have to be
 gone **before** the user row is. This requirement gives account a way to do
-that; SPEC-13 P0.10 owns the order of the delete.
+that; SPEC-01 P0.10 owns the order of the delete.
 
 **Contract.** `mediaapi.PurgeOwnerAssets(ctx, ownerID uuid.UUID) (remaining
 int, err error)` in `media/api`, called only by account's user delete:
@@ -445,7 +445,7 @@ int, err error)` in `media/api`, called only by account's user delete:
 5. **No `media:asset_deleted`.** Every row that can reference an owner's asset
    belongs to that owner: comic, movie, music and story accept only an asset
    whose `owner_id` is the referencing row's owner (`validate*Asset` in each
-   service), journal attachments likewise (`journal/service.go`), and SPEC-03
+   service), journal attachments likewise (`journal/service.go`), and SPEC-12
    P1.10 receipts must keep the same rule. Those rows leave in the same
    `ON DELETE CASCADE`, so there is nothing to reap, and a consumer run after
    the user is gone would find no personal organisation to scope into. Rows
@@ -500,7 +500,7 @@ closure — the pattern `cmd/api` already uses for `AssetOwner`.
   an import of thousands of assets — the whole-comic zip import cap is
   `importMaxEntries` in `comic/import.go`, 100,000 as of 2026-09; a 9,129-image
   archive is verified) *(rev 3; persistence F009)*. mediaapi asset listings also
-  expose `origin`. Its only consumer is notify (SPEC-04 P0.4); it is not
+  expose `origin`. Its only consumer is notify (SPEC-05 P0.4); it is not
   projected into the stream since `0033` ([events.md](../../reference/events.md)).
 - **P1.3 mediaapi ingest for server-side producers** *(rev 4)*:
   `mediaapi.Ingest(ctx, ownerID, filename, contentType string, data []byte,
@@ -508,8 +508,8 @@ closure — the pattern `cmd/api` already uses for `AssetOwner`.
   `/complete` path as a browser upload, so the magic-byte sniff, HEIC
   rejection and 50 MB cap apply unchanged, with the same errors as the HTTP
   Problem types. The row is created with the given `origin` (`import` for
-  SPEC-02 P1.7 and other bulk producers; the HTTP upload-session endpoint
-  always passes `upload`). Media owns it; SPEC-02 P1.7 is the first caller.
+  SPEC-14 P1.7 and other bulk producers; the HTTP upload-session endpoint
+  always passes `upload`). Media owns it; SPEC-14 P1.7 is the first caller.
   *(Code follow-up: the shipped `Ingest` has no `origin` parameter and always
   records `'upload'`, so the P1.2 import-flood guard never fires — see the
   comment in `cmd/worker/main.go`.)*
@@ -519,7 +519,7 @@ closure — the pattern `cmd/api` already uses for `AssetOwner`.
 - Audio kind: schema allows it; keep the task-per-kind dispatch shape so
   `media:process_audio` slots in. (The variant enum will need e.g. `waveform` —
   see the deliberate migration-cost note in §6.)
-- Bulk upload (multi-file / zip) from the browser: SPEC-02 P1.7 is the concrete
+- Bulk upload (multi-file / zip) from the browser: SPEC-14 P1.7 is the concrete
   consumer; server-side producers already use P1.3 `mediaapi.Ingest`, and the
   HTTP API shape should not preclude a browser-facing batch upload.
 - Content-hash dedup: nullable `content_sha256` column decision stays open.
@@ -588,7 +588,7 @@ migration may have NULL `title`/`original_filename`, so every read (grid,
 P1.2 (the `media:asset_ready` payload's flood guard): set at row creation —
 `'upload'` by the upload-session endpoint, `'import'` by P1.3
 `mediaapi.Ingest` for bulk producers — and exposed on mediaapi asset listings
-(originally for SPEC-06's P1.6 backfill, since retired). The indexes back the P0.3 janitor scans
+(originally for SPEC-09's P1.6 backfill, since retired). The indexes back the P0.3 janitor scans
 (`assets_deleting_idx`, `assets_uploading_idx`) and the P0.4 keyset
 (`assets_owner_cursor_idx`, replacing reliance on `assets_owner_idx` for the
 library cursor). *(Rev 4: `assets_uploading_idx` is not in the applied
@@ -617,7 +617,7 @@ closed — returning false even for a `*` superadmin grant.)*
 
 **`user`-tier grant (README AuthZ floor).** 0003 seeds `assets:write:own` and
 `assets:delete:own` to `creator` only, but comics (0025), journal photos
-(SPEC-12) and avatars (SPEC-08 P1.7) are `user` features that upload. A new
+(SPEC-08) and avatars (SPEC-11 P1.7) are `user` features that upload. A new
 migration `000N_media_user_asset_grants` seeds `('user','assets:write:own')` and
 `('user','assets:delete:own')` via the 0003 `WITH grants(...)` pattern
 (`ON CONFLICT DO NOTHING`); 0008 is applied and is not edited. Only after that
@@ -660,7 +660,7 @@ Problem types: `media/unsupported-format` (detail names HEIC when detected),
   rate < 2% excluding deliberately invalid files.
 - Leading *(rev 2)*: **zero OOM-killed worker/API processes** during the first
   dogfood month with image processing live (check `dmesg`/container restarts).
-- Leading: comic page loads in SPEC-02 use `medium` variants 100% of the time.
+- Leading: comic page loads in SPEC-14 use `medium` variants 100% of the time.
 - Lagging: storage stops ratcheting — deletes reclaim space (MinIO metrics after a
   delete pass); original downloads verify byte-identical at spot checks.
 
@@ -694,7 +694,7 @@ events + shared-scheduler foundation)*.
   VPS with < 4 GB RAM. Decided at deploy from the box's RAM; the `heavy`
   (transcode) server stays at 1 *(rev 4)*.
 - **(engineering, non-blocking)** WebP quality 80 vs 85 for `medium` — eyeball on
-  real comic pages during SPEC-02.
+  real comic pages during SPEC-14.
 - **(product, non-blocking)** Should `/upload` merge into `/library/media` later?
   Note for the frontend IA pass.
 
@@ -707,7 +707,7 @@ ordered by severity — data loss and integrity first, then authorization, then
 contract and polish; row 19 (data loss, added by Decision 2026-10-01b) is
 appended rather than renumbering rows other documents cite. A row closes when
 the code matches the target and the
-SPEC-01 rows of [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md)
+SPEC-04 rows of [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md)
 are regraded. Paths are relative to `backend/internal/modules/media/` unless
 stated otherwise.
 
@@ -727,11 +727,11 @@ stated otherwise.
 | 12 | §7 Pagination (list envelope, Problems) | `GET /assets` answers `{items, next_cursor?}`; malformed cursor 400 `media/invalid-cursor`; param-shape failure 422 `media/validation`. | `handler.go` `List` answers `{assets: [...]}` and a bad cursor with 400 `media/bad_request` ("invalid cursor"); unknown `kind`/`status` values are passed through unvalidated (an empty page, never 422). `shared/openapi.yaml` `listAssets` declares `required: [assets]`. Frontend `lib/media-assets.ts` `ListAssetsPage.assets` and `MediaIndexView.tsx` read `page.assets`. `frontend/src/lib/problems.ts` lacks `media/invalid-cursor` and `media/validation`. | One PR: **backend** renames the key to `items`, emits `media/invalid-cursor`, and answers an unknown `kind`/`status` with 422 `media/validation`; **openapi** `required: [items]` + 400/422 responses; **frontend** readers switch to `items`; add both slugs to `problems.ts`. **test:** `TestListPaginates` asserts `items`; add a bad-cursor HTTP test (TC-MEDIA-063). | F112, F024, Decision 2026-09-30 (Envelopes) |
 | 13 | §6 indexes; P0.3 janitor | `assets_uploading_idx ON assets (updated_at) WHERE status='uploading'` backs the abandoned-upload sweep. | Not in `0008_media_image_pipeline` or any later migration; `query/assets.sql` `ListAbandonedUploads` scans without it. | **migration:** new `000N_media_uploading_idx` (0008 is applied and is not edited). **test:** TC-MEDIA-114 up/down. | F115 |
 | 14 | P1.1 metadata edit | `PATCH /assets/{id} {title}` (trimmed 1–200 chars; `""` → 422 `media/validation`; `null` → reset to `original_filename`) behind `RequireOwnerOrPermission(engine, "assets:write:any", extractAssetOwner)`; `{visibility}` stays owner-only; inline rename in the library. | `handler.go` `Patch` accepts only `{visibility}` (`"nothing to update"` otherwise); no `title` query; no owner-or-permission middleware on PATCH. `MediaIndexView.tsx` has no rename control. | **backend:** add `SetAssetTitle` query + handler branch; mount the owner-or-`assets:write:any` middleware for the `title` branch only (visibility keeps its owner predicate). **openapi:** `title` in the PATCH body, 422 `media/validation`. **frontend:** inline rename. **test:** TC-MEDIA-100. | §5 P1.1 inline note (rev 4) |
-| 15 | P0.4 deep link (SPEC-07 P0.4 Media deep-link rule) | An image link is `/library/media?open={id}`; the grid reads `open` and opens that asset's lightbox, or shows a not-found toast. | `templates/v1/views/library/media/MediaIndexView.tsx` reads only `kind` and `status` from the search params. | **frontend:** read `open`, open the lightbox when the id is in the loaded pages (fetch `GET /assets/{id}` otherwise), toast on 404. | F018 |
-| 16 | Decision 2026-09-30 (Audio) — SPEC-07 P0.1 | Audio `duration_ms` is probed from the original at `/complete` so audio can save progress and join `/continue` (requirement owned by SPEC-07). | `service.go` `completeAudio` calls `MarkReady(ctx, id, "", nil, nil, nil)` — no duration. | **backend:** ffprobe the original at `/complete` for audio (or a light follow-up task) and store `duration_ms`. Tracked with SPEC-07's gap list. | Decision 2026-09-30 (Audio) |
+| 15 | P0.4 deep link (SPEC-10 P0.4 Media deep-link rule) | An image link is `/library/media?open={id}`; the grid reads `open` and opens that asset's lightbox, or shows a not-found toast. | `templates/v1/views/library/media/MediaIndexView.tsx` reads only `kind` and `status` from the search params. | **frontend:** read `open`, open the lightbox when the id is in the loaded pages (fetch `GET /assets/{id}` otherwise), toast on 404. | F018 |
+| 16 | Decision 2026-09-30 (Audio) — SPEC-10 P0.1 | Audio `duration_ms` is probed from the original at `/complete` so audio can save progress and join `/continue` (requirement owned by SPEC-10). | `service.go` `completeAudio` calls `MarkReady(ctx, id, "", nil, nil, nil)` — no duration. | **backend:** ffprobe the original at `/complete` for audio (or a light follow-up task) and store `duration_ms`. Tracked with SPEC-10's gap list. | Decision 2026-09-30 (Audio) |
 | 17 | §7 OpenAPI encoding | Variant row `security: []`; `x-required-permission: {owner_or: assets:delete:any}` on DELETE and `{owner_or: assets:write:any}` on PATCH `{title}`. | `shared/openapi.yaml` has no `x-required-permission` anywhere; `getAssetVariant` declares no `security`; the `completeAssetUpload` description still says images enqueue a thumbnail job. | **openapi:** add the annotations and fix the description. **test:** TC-MEDIA-112 drift check. | F025 (README OpenAPI encoding) |
 | 18 | §7 Pagination (`limit`, owner decision 2026-10-01) | `limit` is lenient: missing, non-integer or < 1 → 50; above 100 → **clamped to 100**; never a Problem. | `service.go` `Service.List`: `if limit <= 0 \|\| limit > maxListLimit { limit = defaultListLimit }` — `?limit=500` returns 50 (`handler.go` `List` already ignores a non-integer). | **backend:** clamp instead of resetting (`> 100 → 100`, `≤ 0 → 50`), e.g. through `platform/server.Limit(r, 50, 100)`. **openapi:** describe `limit` as defaulted and clamped, not a 4xx. **test:** TC-MEDIA-070. | Decision 2026-10-01 (limit) |
-| 19 | P0.7 owner purge (data loss) | `mediaapi.PurgeOwnerAssets(ctx, ownerID)` tombstones, purges objects and rows of every asset of one owner inside that owner's scope, within a time budget, emits no `media:asset_deleted`, and returns the rows left. | Not built. `api/api.go` has no such method and `query/assets.sql` has no owner-wide tombstone or listing. So `account/handler/admin_users.go` `DeleteUser` → `DeleteUser` (`account/query/admin.sql`) cascades every `assets` row away (`0007_media_assets` `owner_id … ON DELETE CASCADE`) and `PurgeOrphans` — which finds work only through `ListAssetsForPurge` rows — never sees them: the user's objects stay in MinIO/R2 forever. | **backend:** queries `TombstoneOwnerAssets` and `ListOwnerAssetsForPurge` (`make sqlc`); `Service.PurgeOwnerAssets` (scope per P0.7 step 1, `purgeObjects` outside any transaction, row deletes in short scopes, 20 s budget, no emit); expose it on `mediaapi.API` / `Impl`; `cmd/api` binds it into account's port (SPEC-13 §11 row 8, which owns the caller). **test:** TC-MEDIA-052…054. | Decision 2026-10-01b (D1); SPEC-13 §11 row 8 |
+| 19 | P0.7 owner purge (data loss) | `mediaapi.PurgeOwnerAssets(ctx, ownerID)` tombstones, purges objects and rows of every asset of one owner inside that owner's scope, within a time budget, emits no `media:asset_deleted`, and returns the rows left. | Not built. `api/api.go` has no such method and `query/assets.sql` has no owner-wide tombstone or listing. So `account/handler/admin_users.go` `DeleteUser` → `DeleteUser` (`account/query/admin.sql`) cascades every `assets` row away (`0007_media_assets` `owner_id … ON DELETE CASCADE`) and `PurgeOrphans` — which finds work only through `ListAssetsForPurge` rows — never sees them: the user's objects stay in MinIO/R2 forever. | **backend:** queries `TombstoneOwnerAssets` and `ListOwnerAssetsForPurge` (`make sqlc`); `Service.PurgeOwnerAssets` (scope per P0.7 step 1, `purgeObjects` outside any transaction, row deletes in short scopes, 20 s budget, no emit); expose it on `mediaapi.API` / `Impl`; `cmd/api` binds it into account's port (SPEC-01 §11 row 8, which owns the caller). **test:** TC-MEDIA-052…054. | Decision 2026-10-01b (D1); SPEC-01 §11 row 8 |
 
 **Already matching (verified on HEAD — do not redo).**
 - Worker admission rule: `worker/process_image.go` `checkImageDims` (area ≤ 64 MP, side ≤ 30,000 px, animated refused) and `encodeWebP` (fit within max-width × 16,000 px, never upscaled, `-map_metadata -1`); the original is never re-encoded.
@@ -759,7 +759,7 @@ stated otherwise.
 |---|---|---|
 | r1 | 2026-07-07 | Initial spec from brief 01. |
 | r2 | 2026-07-09 | External review integrated — 6 findings: **(1)** OOM guard: dimension cap 12,000→8,000 px + shared low-concurrency heavy queue *(accepted)*; **(2)** HEIC: explicit v1 non-goal with detected-and-helpful rejection + re-entry condition *(accepted)*; **(3)** originals preserved byte-identical (EXIF intact), metadata stripped on variants only, new authenticated download endpoint P0.5 *(accepted, sharpened — review asked for a download button; the EXIF split and private-URL requirement follow from it)*; **(4)** janitor mechanics defined: hourly periodic task, 15-min grace, error-log after 5 failures *(accepted; CPU-cost rationale trimmed)*; **(5)** audio-only-container branch in poster step *(accepted)*; **(6)** drop variant CHECK constraint *(rejected — DB integrity kept; migration cost accepted deliberately)*. |
-| r3 | 2026-07-10 | Code-verified corrections from the multi-lens spec review: **(1)** table is `assets`, not `media_assets` — DDL/prose fixed, `assets` gains `title`/`original_filename` (P0.4/P0.5/P1.1/P1.2 were unimplementable without them); **(2)** ingest aligned to the shipped presigned-PUT + `/complete` lifecycle (`uploading→processing→ready\|failed`; no `uploaded` state) — sniffing/size checks moved to `/complete`, animated rejection stays worker-side; **(3)** permission codes reconciled to the seeded 3-segment catalog (`assets:read/write/delete:own`) — 4-segment drafts are unparseable; **(4)** heavy-queue guardrail mechanism corrected: second `asynq.Server` with own concurrency (weights cannot cap parallelism); **(5)** `media:asset_ready` payload gains `origin` (import-flood suppression for SPEC-02 P1.7 consumers); **(6)** list pagination resolved to cursor; status filter covers `uploading`; `media/asset-not-ready` given its use (P0.5 on `uploading`); **(7)** P0.6 `platform/events` fan-out (F007); **(8)** single shared `asynq.Scheduler` (F002); **(9)** abandoned `uploading` sweep (F038); **(10)** `assets.origin` (F009) and `assets_deleting_idx`/`assets_owner_cursor_idx` (F040); **(11)** unsupported-format → object deleted + `failed` (F010); `original_filename` fallback (F039); template-registry note (F006). |
+| r3 | 2026-07-10 | Code-verified corrections from the multi-lens spec review: **(1)** table is `assets`, not `media_assets` — DDL/prose fixed, `assets` gains `title`/`original_filename` (P0.4/P0.5/P1.1/P1.2 were unimplementable without them); **(2)** ingest aligned to the shipped presigned-PUT + `/complete` lifecycle (`uploading→processing→ready\|failed`; no `uploaded` state) — sniffing/size checks moved to `/complete`, animated rejection stays worker-side; **(3)** permission codes reconciled to the seeded 3-segment catalog (`assets:read/write/delete:own`) — 4-segment drafts are unparseable; **(4)** heavy-queue guardrail mechanism corrected: second `asynq.Server` with own concurrency (weights cannot cap parallelism); **(5)** `media:asset_ready` payload gains `origin` (import-flood suppression for SPEC-14 P1.7 consumers); **(6)** list pagination resolved to cursor; status filter covers `uploading`; `media/asset-not-ready` given its use (P0.5 on `uploading`); **(7)** P0.6 `platform/events` fan-out (F007); **(8)** single shared `asynq.Scheduler` (F002); **(9)** abandoned `uploading` sweep (F038); **(10)** `assets.origin` (F009) and `assets_deleting_idx`/`assets_owner_cursor_idx` (F040); **(11)** unsupported-format → object deleted + `failed` (F010); `original_filename` fallback (F039); template-registry note (F006). |
 | r4 | 2026-09-30 | Spec-gap fixes, code-verified: image cap is **area** (≤ 64 MP, ≤ 30,000 px per side) with a 16,000 px variant height clamp, admitting webtoon strips; `media:process_image` on its own `image` queue (`IMAGE_CONCURRENCY`, default 3), transcode alone on `heavy`; original download and PATCH `{title}` ownership-gated (no `:any`/`*` bypass for originals; `RequireOwnerOrPermission` + `assets:write:any` for PATCH), P0.3 gate rationale corrected; DELETE 204 once `deleting` commits; worker status guard for delete-in-flight; poster via a separate `media:thumbnail` task; sniffed `mime_type` stored; P1.3 `mediaapi.Ingest` with `origin`; `title` set at creation + COALESCE reads + PATCH validation; list contract (`limit`, `next_cursor`, status expansion); variant `Cache-Control`; `assets_uploading_idx`; `process_image` payload per events.md; scheduler list attributions; POST `/assets` row in §7; missing ACs (P0.3 events/sweep/scheduler, P0.5 abandoned, P0.6). Code follow-ups flagged inline. |
 | r4 | 2026-10-01 | Added §11 implementation gaps (self-contained follow-up list); Revision history renumbered §12. |
 | r5 | 2026-10-01 | Owner decision 2026-10-01b (D1): P0.7 `mediaapi.PurgeOwnerAssets` — the media half of deleting a user without orphaning objects (tombstone + synchronous purge before the cascade, budgeted, no `media:asset_deleted`); §7 cross-module surface; §11 row 19. |

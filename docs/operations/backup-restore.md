@@ -2,7 +2,7 @@
 
 **Status:** current · **Last verified:** 2026-09-30
 
-**Scope:** SPEC-09 P0 — nightly Postgres backups, the freshness sentinel, and the
+**Scope:** SPEC-03 P0 — nightly Postgres backups, the freshness sentinel, and the
 quarterly restore drill. Followable start-to-finish by someone who did not write
 the code.
 
@@ -24,7 +24,7 @@ even though the bytes survive. So the nightly job dumps Postgres and nothing els
   exists to exercise the machinery; nothing there is precious.
 
 Never "fix" backup coverage by streaming buckets through the pg_dump job — that is
-an explicit non-goal (SPEC-09 §3). If media durability ever needs more, it is a
+an explicit non-goal (SPEC-03 §3). If media durability ever needs more, it is a
 storage-lifecycle change, not a database change.
 
 **Not automated (manual, documented here):** `.env`, Traefik config, and MinIO/R2
@@ -53,7 +53,7 @@ scheduled on the worker's shared scheduler (there is no OS cron). Each run:
    for each of the **4 most recent ISO weeks** with an ok dump, that week's
    latest dump; never deletes the `LATEST.json` target or `LATEST.json` itself.
    Objects with no ok row are left alone (after a disaster restore the ledger is
-   older than the bucket). See SPEC-09 P0.2 step 5. *(The shipped selector
+   older than the bucket). See SPEC-03 P0.2 step 5. *(The shipped selector
    still keeps the 4 most recent Sunday dumps as the weekly set, not the latest
    dump of each ISO week — code follow-up.)*
 6. Emits `ops:backup_completed` / `ops:backup_failed` and writes an audit record
@@ -90,7 +90,7 @@ server, so bump the client in the same change that moves the server major.
 
 **First, verify the owner account holds the `admin` role** (or superadmin). The
 ops surfaces (`/ops/status`, `/admin/queues`) require `admin`; an owner
-provisioned as `creator` gets 403 by design (SPEC-09 P0.1).
+provisioned as `creator` gets 403 by design (SPEC-03 P0.1).
 
 `GET /api/v1/ops/status` (permission `ops:read`, admin-tier) returns:
 
@@ -145,7 +145,7 @@ make restore-drill
    - `count(*) FROM users` ≥ 1, and `SELECT count(*) FROM assets` succeeds;
    - the 7 system roles seeded by `0003_account_rbac` are present.
 
-   Any failed check exits non-zero. SPEC-09 P0.4 step 3 is the contract
+   Any failed check exits non-zero. SPEC-03 P0.4 step 3 is the contract
    (`RESTORE DRILL FAILED: <check>`); the shipped script does not yet check
    `dirty` or `users ≥ 1`.
 5. Drops the scratch DB and prints `RESTORE DRILL PASSED`.
@@ -171,7 +171,7 @@ The script auto-reads `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and
 (default `portal_restore_check`) from the environment.
 
 **Backup source.** The stack's single `S3_*` set points at the disposable dev
-MinIO, so it cannot reach last night's prod dump. SPEC-09 P0.4 step 0 defines an
+MinIO, so it cannot reach last night's prod dump. SPEC-03 P0.4 step 0 defines an
 explicit source: `RESTORE_S3_ENDPOINT`, `RESTORE_S3_BUCKET`,
 `RESTORE_S3_ACCESS_KEY`, `RESTORE_S3_SECRET_KEY`, each falling back to `S3_*`
 only when unset. The prod drill uses a read-only R2 token scoped to

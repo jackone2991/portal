@@ -35,7 +35,7 @@ On disk that claim was aspirational, not real:
   The *pattern* — regenerate, then `git diff --exit-code` — was still the right
   one; it just had no precedent in this repo.)
 
-The forcing function: **SPEC-01/02/03 (and SPEC-04) were about to add ~30
+The forcing function: **SPEC-04/14/12 (and SPEC-05) were about to add ~30
 endpoints** across media/comic/bank/notify onto a contract nothing
 machine-checked. Each spec's Definition of Done said *"fix the drift in the same
 or an earlier PR"* — but there was no mechanism to enforce that, so it would
@@ -73,7 +73,7 @@ enforced (spec→code).** Concretely:
    `writeErr` → `Problem` helper, so the error contract stops lying.
 
 Scope: do the cutover **now** on the two wired modules (account, media), before
-SPEC-01. Thereafter each spec adds its paths spec-first, and an endpoint missing
+SPEC-04. Thereafter each spec adds its paths spec-first, and an endpoint missing
 from the spec fails CI — the specs' DoD becomes mechanical, not aspirational.
 
 ## Options considered
@@ -177,8 +177,8 @@ What followed, checked against the tree on 2026-09-11:
 - [x] CI regenerate-and-diff for Go + TS (`openapi` job, `6160f8e`).
 - [ ] Replace the parse-check with a real lint (`redocly lint` / `vacuum`) —
       the job still only checks that the YAML parses.
-- [x] Every spec since SPEC-01 added its paths spec-first (the gate makes the
-      alternative fail CI). The "cutover PR before SPEC-01" as scoped — handlers
+- [x] Every spec since SPEC-04 added its paths spec-first (the gate makes the
+      alternative fail CI). The "cutover PR before SPEC-04" as scoped — handlers
       onto `ServerInterface` — never landed; only the gate did.
 - [x] `backend/MODULES.md` §8: "declare the endpoints in `shared/openapi.yaml`
       first; `make openapi`; commit the generated files" (2026-09-11).

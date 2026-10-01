@@ -1,8 +1,8 @@
-# Test Cases — SPEC-04 Notification Module
+# Test Cases — SPEC-05 Notification Module
 
 **Status:** current · **Last verified:** never
 
-**Spec:** [SPEC-04](../product/specs/SPEC-04-notification-module.md) · **Module:** `notify` (+ `account` for reset)
+**Spec:** [SPEC-05](../product/specs/SPEC-05-notification-module.md) · **Module:** `notify` (+ `account` for reset)
 **Prefix:** `TC-NOTIFY-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R5 (account takeover)
 
 ### Endpoints under test

@@ -1,9 +1,9 @@
-# SPEC-16 — Story Vertical (long-form text: stories and chapters)
+# SPEC-17 — Story Vertical (long-form text: stories and chapters)
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `story` · **Depends on:** SPEC-01 (image assets for covers, `media:asset_deleted`); pattern copied from SPEC-02 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
-**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-02](SPEC-02-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
-**Downstream consumers:** SPEC-04 (`notify:on_story_published` bell), SPEC-07 (a future `story` leg of `/continue`), SPEC-09 P1.7 (takeout)
+**Module:** `story` · **Depends on:** SPEC-04 (image assets for covers, `media:asset_deleted`); pattern copied from SPEC-14 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
+**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](../../adr/07-tenancy-rls-model.md) (tenancy), [ADR-08](../../adr/08-life-os-pivot.md), [SPEC-14](SPEC-14-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
+**Downstream consumers:** SPEC-05 (`notify:on_story_published` bell), SPEC-10 (a future `story` leg of `/continue`), SPEC-03 P1.7 (takeout)
 
 ---
 
@@ -11,13 +11,13 @@
 
 Portal stores videos, music, images and comics, but nothing a person *writes at
 length*: a novel in progress, a serial, a translated web-novel read chapter by
-chapter. The journal (SPEC-05) is for moments, not for a 40-chapter text with an
+chapter. The journal (SPEC-07) is for moments, not for a 40-chapter text with an
 order, a cover and a "this is ready" switch.
 
 The `story` module is that shelf. A story owns ordered chapters whose bodies are
 inline Markdown; it has an optional cover image and moves between `draft` and
 `published`. It was built on 2026-07-19 (`f11cf3f`, migration `0023_story_core`)
-as a slimmed copy of comic (SPEC-02): text chapters instead of image pages, no
+as a slimmed copy of comic (SPEC-14): text chapters instead of image pages, no
 reading progress. No spec was written at the time; this one records what
 shipped, states the contract the code should meet, and lists every place it
 does not (§11). The reading UI was never built — `/library/novel/[id]` renders a
@@ -39,11 +39,11 @@ placeholder — so today the module is a working API without a reader.
 - **Authors, bookmarks, ratings, comments.** The module README's planned
   `story_authors` / `story_bookmarks` tables are not built and not scheduled.
 - **Inline media in chapters.** Bodies are Markdown text; images in a chapter
-  would be SPEC-12-style attachments, not specced. The README's "audio
+  would be SPEC-08-style attachments, not specced. The README's "audio
   narration assets" is likewise unbuilt.
 - **Rendering policy for Markdown on the server.** The API stores and returns
   raw Markdown; sanitising and rendering is the reader's job (P1.1).
-- **Visibility beyond the tenant** — as for movies (SPEC-15 §10).
+- **Visibility beyond the tenant** — as for movies (SPEC-16 §10).
 - **Search** — FTS (`D-2`) waits for a corpus ([backlog.md](../backlog.md) P2
   line 29).
 
@@ -126,7 +126,7 @@ A chapter is `{title, body_md, sort_order}` belonging to one story.
   (`MAX(sort_order) + 10`, or 10 for the first chapter); present → it must not
   equal another chapter's `sort_order`, else 422 `story/validation`. Gaps are
   allowed; display numbering is derived from position, never from
-  `sort_order` (SPEC-02 §10 recommendation). *(Code follow-up: HEAD inserts the
+  `sort_order` (SPEC-14 §10 recommendation). *(Code follow-up: HEAD inserts the
   client value verbatim, an absent value decodes to 0, and a duplicate trips
   the `DEFERRABLE` unique only at COMMIT — the client gets a bare 500; §11
   row 2.)*
@@ -135,7 +135,7 @@ A chapter is `{title, body_md, sort_order}` belonging to one story.
 - **Delete** `DELETE /story-chapters/{id}` is 204; the remaining chapters keep
   their order with no renumbering.
 - **Reorder** `PUT /stories/{id}/chapters:order {order: [chapter_id…]}` (204) is
-  the SPEC-02 §6 canonical pattern: the body is the **complete** ordered set of
+  the SPEC-14 §6 canonical pattern: the body is the **complete** ordered set of
   the story's chapter ids, and inside one transaction every row is rewritten to
   `(index + 1) × 10`; the `UNIQUE (story_id, sort_order) DEFERRABLE INITIALLY
   DEFERRED` constraint makes transient duplicates legal until COMMIT. A list
@@ -191,11 +191,11 @@ emit no event and never change the story's status.
   row 10.)* A malformed cursor is 400 `story/invalid-cursor`.
 - **Tenancy fences visibility first**: `stories` and `story_chapters` are
   tenant-scoped under FORCE RLS (§6), so "published" means visible within the
-  owner's tenant — the owner alone with personal orgs (SPEC-15 P0.3, §10).
+  owner's tenant — the owner alone with personal orgs (SPEC-16 P0.3, §10).
 - `chapter_count` counts every chapter, empty ones included. Once published,
   chapters may be emptied or deleted; readers then see what remains (the
-  invariant is checked at publish only — SPEC-02 P0.2 (c); §10 asks whether to
-  adopt SPEC-02 P0.2 (a)).
+  invariant is checked at publish only — SPEC-14 P0.2 (c); §10 asks whether to
+  adopt SPEC-14 P0.2 (a)).
 
 **Acceptance criteria.**
 - Given C's draft with one chapter, when stranger S in C's tenant GETs the
@@ -225,7 +225,7 @@ chapters), and the status is unchanged. The Problem is written through
 `published` (200, the Story) and **`story:published`** `{story_id,
 owner_user_id, title}` is emitted **after the request transaction commits**.
 *(Code follow-up: HEAD publishes before COMMIT — §11 row 4.)* Re-publishing is
-allowed; SPEC-04's consumer dedups on the story id. `POST
+allowed; SPEC-05's consumer dedups on the story id. `POST
 /stories/{id}/unpublish` sets `draft` (200), emits nothing and is idempotent.
 `DELETE /stories/{id}` is 204 (chapters cascade), then 404 `story/not-found`. A
 nil or failing publisher is logged and never fails a committed publish.
@@ -240,7 +240,7 @@ nil or failing publisher is logged and never fails a committed publish.
 | update a story; add or reorder its chapters | owner, or `stories:write:any` — `RequireOwnerOrPermission(engine, "stories:write:any", byStory)` |
 | update or delete a chapter | owner, or `stories:write:any`, resolved from the chapter id (`byStoryChapter`) |
 | delete a story | owner, or `stories:delete:any` |
-| publish / unpublish | `RequirePermission("stories:publish:own")` chained before `RequireOwnerOrPermission(engine, "stories:publish:any", byStory)` (SPEC-02 P0.2). *(Code follow-up: only the second half is wired — §11 row 7.)* |
+| publish / unpublish | `RequirePermission("stories:publish:own")` chained before `RequireOwnerOrPermission(engine, "stories:publish:any", byStory)` (SPEC-14 P0.2). *(Code follow-up: only the second half is wired — §11 row 7.)* |
 
 A guard answers 404 for a draft when the caller is neither the owner nor a
 holder of the endpoint's `:any` code. *(Code follow-up: the extractor resolves
@@ -252,7 +252,7 @@ tenant.)*
 → `editor`; `stories:delete:any` → `admin`. 0003 had already seeded
 `stories:read` to `guest` and the two-segment `stories:publish` to `editor`. On
 `HEAD` a plain `user` reads but cannot write; P1.3 widens the two `:own` codes
-to `user`, as for movies (SPEC-15 P1.3) and comics (`0025`).
+to `user`, as for movies (SPEC-16 P1.3) and comics (`0025`).
 
 **Acceptance criteria.**
 - Given a story with no chapters, then publish is 422 `story/not-publishable`
@@ -309,9 +309,9 @@ idempotent and skips, without retrying, a payload that does not decode or whose
   three-chapter story without leaving `/library/novel`.
 - **P1.2 Reading progress and the `story` leg of `/continue`.** Per `D-20`, a
   story-owned `story_reading_progress (user_id, story_id, chapter_id,
-  position, updated_at)` (tenant-scoped; chapter anchor like SPEC-02 P0.4, so a
+  position, updated_at)` (tenant-scoped; chapter anchor like SPEC-14 P0.4, so a
   reorder does not move the reader), `PUT /stories/{id}/progress`, and
-  `storyapi.Continue` returning SPEC-07 items with `module: "story"`. *AC:*
+  `storyapi.Continue` returning SPEC-10 items with `module: "story"`. *AC:*
   closing the reader mid-chapter and reopening another day resumes in that
   chapter; the story appears on `/continue`.
 - **P1.3 `user` may author stories** *(Decision 2026-10-01b (D4); unbuilt —
@@ -320,7 +320,7 @@ idempotent and skips, without retrying, a payload that does not decode or whose
   NOTHING`, idempotent) grants `stories:write:own` and `stories:publish:own` to
   `user`; the role hierarchy carries them upward. `:any` codes and
   `stories:delete:any` stay with `editor` / `admin`. A cover upload needs F009
-  as well — `user` holding `assets:write:own` (SPEC-01 §11 row 9). The down
+  as well — `user` holding `assets:write:own` (SPEC-04 §11 row 9). The down
   migration deletes only those two `role_permissions` rows. *AC:* given an
   account holding only `user`, then `POST /stories`, adding a chapter and
   publishing its own story succeed; writing another member's story is still
@@ -372,7 +372,7 @@ CREATE INDEX story_chapters_story_idx  ON story_chapters (story_id, sort_order);
 CREATE INDEX story_chapters_tenant_idx ON story_chapters (tenant_id);
 ```
 
-The `DEFERRABLE` unique cannot be an `ON CONFLICT` arbiter (SPEC-02 §6 caveat),
+The `DEFERRABLE` unique cannot be an `ON CONFLICT` arbiter (SPEC-14 §6 caveat),
 and because it fires at COMMIT, a duplicate surfaces after the handler has
 answered — which `RequireTenant`'s buffered mutating path turns into a 500. That
 is why P0.3 checks duplicates in the service before the INSERT. List
@@ -385,7 +385,7 @@ updated_at DESC, id DESC)` for `/stories/mine`, and a partial index on
 `cover_asset_id WHERE cover_asset_id IS NOT NULL` for P0.6.
 
 **Takeout** (specs README): user-authored, so `story/api` implements
-`opsapi.ExportProvider` when SPEC-09 P1.7 lands — one JSON document per story
+`opsapi.ExportProvider` when SPEC-03 P1.7 lands — one JSON document per story
 (the Story fields plus `chapters: [{title, sort_order, body_md}]`), the cover
 as an asset reference.
 
@@ -437,7 +437,7 @@ row 12.)*
 | `story:on_asset_deleted` | consumer task | `{asset_id, owner_user_id}` | `Module.handleAssetDeleted`, light server, `default` queue | `Subscribe(media.EventAssetDeleted, storyapi.TaskOnAssetDeleted)` in both binaries |
 
 Not projected into the life stream (`0040_journal_drop_catalogue_publish_stream`,
-SPEC-06 P0.1). No event on unpublish, edit, chapter change or delete.
+SPEC-09 P0.1). No event on unpublish, edit, chapter change or delete.
 
 **Drift against [events.md](../../reference/events.md).** Names, payloads and
 the single consumer match. Missing there: the consumer runs unscoped today (§11
@@ -460,7 +460,7 @@ finished, not reverted (D2 — P1.1 is committed scope), and `user` may write
 (D4 — P1.3).
 
 - **(product, non-blocking)** Published invariant after publish: keep the
-  publish-time-only check (as shipped), or adopt SPEC-02 P0.2 (a) and hide
+  publish-time-only check (as shipped), or adopt SPEC-14 P0.2 (a) and hide
   blank chapters from non-owner readers and from `chapter_count`?
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
@@ -470,32 +470,32 @@ text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
 integrity, authorization, contract, hygiene and unbuilt work; row 20 (P1, added
 by Decision 2026-10-01b) is appended after row 19. A row closes when
-the code matches the requirement it cites and the SPEC-16 rows of
+the code matches the requirement it cites and the SPEC-17 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 
 | # | Requirement (§) | Spec requires | Shipped code today (file / function) | Change needed (migration · backend · openapi · frontend · test) | Source |
 |---|---|---|---|---|---|
-| 1 | P0.6 tenant scope | `story:on_asset_deleted` runs inside the payload owner's tenant scope. | `cmd/worker/main.go` builds `story.New(story.Deps{Repo: storyrepo.NewAdapter(conn, tdb.RunInTx)})` with no tenant runner; `module.go` `handleAssetDeleted` → `service.go` `HandleAssetDeleted` → `NullCoverByAsset` runs on the bare pool. Under `portal_app` the FORCE RLS policy refuses an unscoped statement, so the task fails and retries out; covers stay dangling. `comic:on_asset_deleted` and `movie:on_asset_deleted` are built the same way. | **backend:** `Deps.RunInTenant` (`runInUserTenant` in `cmd/worker`); the handler parses `owner_user_id` and runs inside it. **test:** TC-STY-082 (RLS suite). | Found while writing SPEC-16, 2026-10-01 (same as SPEC-15 §11 row 1) |
-| 2 | P0.3 chapter `sort_order` on create | Optional; absent → `MAX + 10`; a duplicate → 422 `story/validation`, checked before the INSERT. | `handler.go` `CreateChapter` decodes `sort_order` as a plain `int` (absent → 0); `service.go` `CreateChapter` passes it through; `query/story.sql` `CreateStoryChapter` inserts it. The `DEFERRABLE INITIALLY DEFERRED` unique fires at the request's COMMIT, and `tenant/middleware/require_tenant.go` replaces the buffered 201 with a 500: the second chapter created without `sort_order`, or any duplicate, is a bare 500. | **backend:** `sort_order *int`; when nil, `SELECT COALESCE(MAX(sort_order), 0) + 10`; when set, an `EXISTS` check → `ErrValidation` (new queries, `make sqlc`). **openapi:** `StoryChapterCreate.required` drops `sort_order`. **test:** TC-STY-020, TC-STY-021. | Found while writing SPEC-16, 2026-10-01 (comic's `CreateChapter` has the same shape) |
-| 3 | P0.3 reorder takes the complete set | `order` must be exactly the story's chapter ids, each once; otherwise 422 and nothing changes. | `repository/adapter.go` `ReorderChapters` loops `UpdateStoryChapterOrder ... WHERE id = $1 AND story_id = $3`: a foreign id updates nothing, a repeated id is renumbered twice, an omitted chapter keeps its old value and can collide with a renumbered one at COMMIT (500). `service.go` `ReorderChapters` validates nothing. `shared/openapi.yaml` `reorderStoryChapters` says a partial list "is a truncation" — nothing is deleted. | **backend:** in `ReorderChapters`, load the story's chapter ids and compare as sets (length, no repeats, same members) → `ErrValidation`. **openapi:** replace the truncation sentence with the 422 rule. **test:** TC-STY-024 (extend `TestReorderPassesTheOrderThrough`). | Found while writing SPEC-16, 2026-10-01 (openapi vs handler) |
-| 4 | P0.5 event after commit | `story:published` is enqueued only after the request transaction commits. | `service.go` `Publish` → `emitPublished` runs right after `repo.SetStatus`, inside the open request transaction. | **backend:** emit through the `db.AfterCommit` hook SPEC-05 §11 row 1 introduces. **test:** TC-STY-063. | Found while writing SPEC-16, 2026-10-01 (SPEC-05 row 1 pattern) |
-| 5 | P0.4 detail chapters | A chapter-load failure is a 500. | `handler.go` `GetStory`: `chapters, _ := h.svc.ListChapters(...)` — on error the detail answers 200 with `chapter_count: 0` and `chapters: []`. | **backend:** return the error through `writeStoryErr`. **test:** fake `ListChapters` error → 500. | Found while writing SPEC-16, 2026-10-01 |
-| 6 | P0.2 lookup failures | A `mediaapi.GetAsset` infrastructure error is a 500. | `service.go` `CreateStory`/`UpdateStory` replace any `validateImageAsset` error with `ErrInvalidCoverAsset`. | **backend:** sentinel only for validation / not-found; pass the rest through. **test:** fake lookup error → 500. | Found while writing SPEC-16, 2026-10-01 |
-| 7 | P0.5 publish RBAC | `stories:publish:own` chained before the owner-or-`stories:publish:any` guard. | `cmd/api/main.go` `PublishMW` = `RequireOwnerOrPermission(engine, "stories:publish:any", byStory)` only; `module.go` mounts `/publish` and `/unpublish` with it. | **backend:** mount `m.perm("stories:publish:own")` first. **test:** TC-STY-065, 066. | SPEC-02 §11 row 4 pattern (F051) |
-| 8 | P0.5 draft is 404 on guarded routes | A non-owner without the `:any` code gets 404 for a draft on every guarded route. | `cmd/api/main.go` `ownerExtractor` over `OwnerByStory` / `OwnerByChapter` (`query/story.sql` `GetStoryOwner`, `GetStoryOwnerByChapter`) ignores status → 403. | **backend:** both owner queries return `status`; draft → `ErrOwnerNotFound` unless owner or `:any`. **test:** TC-STY-069. | SPEC-02 §11 row 5 pattern (F119) |
+| 1 | P0.6 tenant scope | `story:on_asset_deleted` runs inside the payload owner's tenant scope. | `cmd/worker/main.go` builds `story.New(story.Deps{Repo: storyrepo.NewAdapter(conn, tdb.RunInTx)})` with no tenant runner; `module.go` `handleAssetDeleted` → `service.go` `HandleAssetDeleted` → `NullCoverByAsset` runs on the bare pool. Under `portal_app` the FORCE RLS policy refuses an unscoped statement, so the task fails and retries out; covers stay dangling. `comic:on_asset_deleted` and `movie:on_asset_deleted` are built the same way. | **backend:** `Deps.RunInTenant` (`runInUserTenant` in `cmd/worker`); the handler parses `owner_user_id` and runs inside it. **test:** TC-STY-082 (RLS suite). | Found while writing SPEC-17, 2026-10-01 (same as SPEC-16 §11 row 1) |
+| 2 | P0.3 chapter `sort_order` on create | Optional; absent → `MAX + 10`; a duplicate → 422 `story/validation`, checked before the INSERT. | `handler.go` `CreateChapter` decodes `sort_order` as a plain `int` (absent → 0); `service.go` `CreateChapter` passes it through; `query/story.sql` `CreateStoryChapter` inserts it. The `DEFERRABLE INITIALLY DEFERRED` unique fires at the request's COMMIT, and `tenant/middleware/require_tenant.go` replaces the buffered 201 with a 500: the second chapter created without `sort_order`, or any duplicate, is a bare 500. | **backend:** `sort_order *int`; when nil, `SELECT COALESCE(MAX(sort_order), 0) + 10`; when set, an `EXISTS` check → `ErrValidation` (new queries, `make sqlc`). **openapi:** `StoryChapterCreate.required` drops `sort_order`. **test:** TC-STY-020, TC-STY-021. | Found while writing SPEC-17, 2026-10-01 (comic's `CreateChapter` has the same shape) |
+| 3 | P0.3 reorder takes the complete set | `order` must be exactly the story's chapter ids, each once; otherwise 422 and nothing changes. | `repository/adapter.go` `ReorderChapters` loops `UpdateStoryChapterOrder ... WHERE id = $1 AND story_id = $3`: a foreign id updates nothing, a repeated id is renumbered twice, an omitted chapter keeps its old value and can collide with a renumbered one at COMMIT (500). `service.go` `ReorderChapters` validates nothing. `shared/openapi.yaml` `reorderStoryChapters` says a partial list "is a truncation" — nothing is deleted. | **backend:** in `ReorderChapters`, load the story's chapter ids and compare as sets (length, no repeats, same members) → `ErrValidation`. **openapi:** replace the truncation sentence with the 422 rule. **test:** TC-STY-024 (extend `TestReorderPassesTheOrderThrough`). | Found while writing SPEC-17, 2026-10-01 (openapi vs handler) |
+| 4 | P0.5 event after commit | `story:published` is enqueued only after the request transaction commits. | `service.go` `Publish` → `emitPublished` runs right after `repo.SetStatus`, inside the open request transaction. | **backend:** emit through the `db.AfterCommit` hook SPEC-07 §11 row 1 introduces. **test:** TC-STY-063. | Found while writing SPEC-17, 2026-10-01 (SPEC-07 row 1 pattern) |
+| 5 | P0.4 detail chapters | A chapter-load failure is a 500. | `handler.go` `GetStory`: `chapters, _ := h.svc.ListChapters(...)` — on error the detail answers 200 with `chapter_count: 0` and `chapters: []`. | **backend:** return the error through `writeStoryErr`. **test:** fake `ListChapters` error → 500. | Found while writing SPEC-17, 2026-10-01 |
+| 6 | P0.2 lookup failures | A `mediaapi.GetAsset` infrastructure error is a 500. | `service.go` `CreateStory`/`UpdateStory` replace any `validateImageAsset` error with `ErrInvalidCoverAsset`. | **backend:** sentinel only for validation / not-found; pass the rest through. **test:** fake lookup error → 500. | Found while writing SPEC-17, 2026-10-01 |
+| 7 | P0.5 publish RBAC | `stories:publish:own` chained before the owner-or-`stories:publish:any` guard. | `cmd/api/main.go` `PublishMW` = `RequireOwnerOrPermission(engine, "stories:publish:any", byStory)` only; `module.go` mounts `/publish` and `/unpublish` with it. | **backend:** mount `m.perm("stories:publish:own")` first. **test:** TC-STY-065, 066. | SPEC-14 §11 row 4 pattern (F051) |
+| 8 | P0.5 draft is 404 on guarded routes | A non-owner without the `:any` code gets 404 for a draft on every guarded route. | `cmd/api/main.go` `ownerExtractor` over `OwnerByStory` / `OwnerByChapter` (`query/story.sql` `GetStoryOwner`, `GetStoryOwnerByChapter`) ignores status → 403. | **backend:** both owner queries return `status`; draft → `ErrOwnerNotFound` unless owner or `:any`. **test:** TC-STY-069. | SPEC-14 §11 row 5 pattern (F119) |
 | 9 | P0.4 / §7 envelopes | Lists answer `{items, next_cursor?}`; the reader payload answers `{items}`. | `handler.go` `writeStoryList` → `{"stories": …}`; `Chapters` → `{"chapters": …}`; `shared/openapi.yaml` `StoryList` `required: [stories]`, `listStoryChapters` `required: [chapters]`. No frontend reader exists. | **backend:** both keys → `items`. **openapi:** both schemas. **test:** TC-STY-042, TC-STY-046. | Decision 2026-09-30 (Envelopes); specs README unowned-list note |
 | 10 | P0.4 `limit` | Above 50 → clamped to 50. | `service.go` `list`: `if limit <= 0 \|\| limit > maxLimit { limit = defaultLimit }`. | **backend:** `server.Limit(r, 30, 50)`. **openapi:** describe the clamp. **test:** TC-STY-044. | Decision 2026-10-01 (limit) |
 | 11 | §7 problem types | Every `story/*` slug is in `problems.ts`. | `grep -n 'story/' frontend/src/lib/problems.ts` finds nothing; `writeStoryErr` emits five. | **frontend:** add them. **test:** TC-STY-110. | Errors convention (D-7) |
 | 12 | §7 shape failures | Malformed JSON or a non-uuid id in a body → 422 `story/validation`. | `handler.go` `decode` → `server.DecodeLimit`'s 400 `about:blank`; `CreateStory`/`UpdateStory` and `decodeOrder` answer `server.BadRequest` (400 `about:blank`). | **backend:** map to `ErrValidation`. **openapi:** drop the 400s. **test:** TC-STY-006. | README Pagination/Errors convention |
-| 13 | P0.2 `null` clears | `PATCH {description: null}` clears it, as `StoryPatch` documents. | `query/story.sql` `UpdateStory` `COALESCE(sqlc.narg('description'), description)`; `handler.go` decodes `description` as `*string`. | **backend:** three-state decode + `set_description` flag; `make sqlc`. **test:** TC-STY-005. | Found while writing SPEC-16, 2026-10-01 (openapi vs handler) |
-| 14 | P0.4 `chapter_count` | Present on every Story, `0` included; `required` in OpenAPI. | `handler.go` `storyJSON` sets it only `if st.ChapterCount > 0`; create, PATCH, publish and unpublish responses never carry it; `Story.chapter_count` is optional in `shared/openapi.yaml`. | **backend:** always emit it (Get/SetStatus/Update return it via the same subquery, or the handler counts). **openapi:** `required`. **test:** TC-STY-043. | Found while writing SPEC-16, 2026-10-01 |
+| 13 | P0.2 `null` clears | `PATCH {description: null}` clears it, as `StoryPatch` documents. | `query/story.sql` `UpdateStory` `COALESCE(sqlc.narg('description'), description)`; `handler.go` decodes `description` as `*string`. | **backend:** three-state decode + `set_description` flag; `make sqlc`. **test:** TC-STY-005. | Found while writing SPEC-17, 2026-10-01 (openapi vs handler) |
+| 14 | P0.4 `chapter_count` | Present on every Story, `0` included; `required` in OpenAPI. | `handler.go` `storyJSON` sets it only `if st.ChapterCount > 0`; create, PATCH, publish and unpublish responses never carry it; `Story.chapter_count` is optional in `shared/openapi.yaml`. | **backend:** always emit it (Get/SetStatus/Update return it via the same subquery, or the handler counts). **openapi:** `required`. **test:** TC-STY-043. | Found while writing SPEC-17, 2026-10-01 |
 | 15 | P0.5 single error writer | `story/not-publishable` goes through `server.ProblemWith`. | `handler.go` `writeStoryErr` sets headers and encodes the map by hand (comic uses `server.ProblemWith`). | **backend:** `server.ProblemWith(w, 422, "story/not-publishable", …, map[string]any{"chapters": np.Chapters})`. **test:** the existing CC-1 writer tests cover the helper; add an HTTP assertion (TC-STY-061). | `/CLAUDE.md` Known drift (single error writer since 2026-08-27) |
-| 16 | P0.3 / §6 hygiene | Every UPDATE sets `updated_at`; chapter title length in the schema; owner cursor and cover indexes; `0023`'s down removes only what it added. | `query/story.sql` `UpdateStoryChapterOrder` sets only `sort_order`; `0023` has no chapter-title CHECK and only `stories_owner_idx`; `0023_story_core.down.sql` deletes `permissions WHERE code LIKE 'stories:%'`, including the 0003-seeded codes and grants. | **query:** `updated_at = now()` in the reorder. **migration:** `000N_story_checks` (§6). The down file is applied history; record it. **test:** TC-STY-111 (up/down). | Found while writing SPEC-16, 2026-10-01 |
+| 16 | P0.3 / §6 hygiene | Every UPDATE sets `updated_at`; chapter title length in the schema; owner cursor and cover indexes; `0023`'s down removes only what it added. | `query/story.sql` `UpdateStoryChapterOrder` sets only `sort_order`; `0023` has no chapter-title CHECK and only `stories_owner_idx`; `0023_story_core.down.sql` deletes `permissions WHERE code LIKE 'stories:%'`, including the 0003-seeded codes and grants. | **query:** `updated_at = now()` in the reorder. **migration:** `000N_story_checks` (§6). The down file is applied history; record it. **test:** TC-STY-111 (up/down). | Found while writing SPEC-17, 2026-10-01 |
 | 17 | §7 OpenAPI annotations | `x-required-permission` on every operation; id parameters named for stories and chapters. | No story operation is annotated; every `/stories/{id}*` and `/story-chapters/{id}` path reuses `#/components/parameters/AssetID`. | **openapi:** annotate the thirteen operations; `StoryID` / `StoryChapterID` parameters. | AuthZ convention (OpenAPI encoding) |
 | 18 | P1.1 frontend | `/library/novel` list, reader and manager. | `templates/v1/views/library/novel/NovelDetailView.tsx` is a 26-line placeholder; `app/(app)/library/page.tsx` links `/library/novel`, which has no `page.tsx` (404); no `lib/story.ts`. | **frontend:** P1.1. **test:** TC-STY-090…094. | [backlog.md](../backlog.md) P2 line 28 |
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
-| 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-01 §11 row 9). | Decision 2026-10-01b (D4) |
+| 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
 
 **Already matching on HEAD.**
 - `0023_story_core`: both tables, the story CHECKs, the `DEFERRABLE` chapter
@@ -537,7 +537,7 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 
 - Everything in §3: authors, bookmarks, ratings, inline chapter media, narration,
   server-side Markdown rendering, cross-tenant publishing, FTS.
-- The comic vertical's own copies of rows 1–3 and 7–8 (SPEC-02 owns them).
+- The comic vertical's own copies of rows 1–3 and 7–8 (SPEC-14 owns them).
 - The account-level `assets:write:own` grant needed to upload a cover
-  (SPEC-01 §11 row 9).
-- Movie (SPEC-15) and music (SPEC-14).
+  (SPEC-04 §11 row 9).
+- Movie (SPEC-16) and music (SPEC-15).

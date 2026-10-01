@@ -89,7 +89,7 @@ move that into a spec.
   tuning) → `operations/`.
 - A **test plan, a per-spec test-case document, or a dated test run** —
   what we *intend* to prove → `testing/`. A dated manual run that exercises
-  one spec is a section of that spec instead (SPEC-12 § Manual run). What
+  one spec is a section of that spec instead (SPEC-08 § Manual run). What
   *is* proven, by which `_test.go` function, is the traceability matrix in
   `reference/`.
 - A **registry or pointer** you look up rather than read → `reference/`.

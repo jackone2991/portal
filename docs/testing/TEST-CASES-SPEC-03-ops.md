@@ -1,8 +1,8 @@
-# Test Cases — SPEC-09 Platform Ops
+# Test Cases — SPEC-03 Platform Ops
 
 **Status:** current · **Last verified:** 2026-09-30
 
-**Spec:** [SPEC-09](../product/specs/SPEC-09-platform-ops.md) · **Module:** `ops`
+**Spec:** [SPEC-03](../product/specs/SPEC-03-platform-ops.md) · **Module:** `ops`
 **Prefix:** `TC-OPS-` · **Plan:** [TEST-PLAN.md](TEST-PLAN.md) · **Risk:** R2 (irreplaceable data loss)
 
 ### Endpoints / tasks under test

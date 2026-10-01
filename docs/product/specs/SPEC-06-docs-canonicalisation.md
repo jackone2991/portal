@@ -1,6 +1,6 @@
-# SPEC-11 — Docs Canonicalisation: retire 79 stale assertions and gate the corpus in CI
+# SPEC-06 — Docs Canonicalisation: retire 79 stale assertions and gate the corpus in CI
 
-**Status:** executed 2026-09-11 on branch `docs/architecture-cleanup` (rev 1 drafted the same day as "SPEC-10"; renumbered on filing because SPEC-10 is the ledger expansion) · **Last verified:** 2026-09-11
+**Status:** executed 2026-09-11 on branch `docs/architecture-cleanup` (rev 1 drafted the same day as "SPEC-13"; renumbered on filing because SPEC-13 is the ledger expansion) · **Last verified:** 2026-09-11
 **Module:** none — the documentation corpus, plus one CI job and four check scripts
 **Depends on:** nothing hard. Branched from the `bank` feature branch at `66709d1` (see Implementation Decisions)
 **Upstream:** design session 2026-09-11 (37 settled decisions) and a `/grill-with-docs` pass on `docs/README.md` the same day (12 more)
@@ -19,7 +19,7 @@ The plan is kept as written; this section is its fact layer. Commits `b54654e` �
 | `checklist.md` "never existed" | It did; deleted in `efb8a70`. Cited so. |
 | One script, three assertions, one job | Four scripts (`check-links.sh`, `check-doc-headers.sh`, `check-retired-names.sh`, `check-matrix-evidence.py`) as four steps of one blocking `link-check` job. The header check the plan deferred ("needs a forty-document backfill first") was done: 41 files backfilled, `Last verified: never` made a legal value. |
 | Retired-name check allow-lists the audit directory, ADR-11 and the working note | Also skips the Decision / Options / Trade-offs layers of every ADR (verbatim history may name what it knew) and accepts a retirement cue on the same line (`deleted in`, `then …`, `renamed`, `§`-citation). First run caught a third agent-instruction file, `.continue/rules/CONTINUE.md`, still calling `MILESTONE_CHECKS.md` "live status". |
-| Matrix: 47 rows | 46 P0 rows + P1 rows re-graded: 21 ✅ · 18 ⚠ · 7 ✖; two rows added (SPEC-10 phase 1, CC-10 tenant/RLS) and CC-11. |
+| Matrix: 47 rows | 46 P0 rows + P1 rows re-graded: 21 ✅ · 18 ⚠ · 7 ✖; two rows added (SPEC-13 phase 1, CC-10 tenant/RLS) and CC-11. |
 | Backlog: one line per finding heading | Done, plus a Closed list so the audit can be ticked off. Three audit claims did not survive re-check (login lockout exists since 2026-07-05; music is not half-built; the media worker has its tenant scope) and are recorded as such. |
 | Module contract gains the codegen step | Done, plus depguard block, Asynq-server choice, events-registry step (§8) and the RLS-from-birth rule (§6). |
 | Working note migrates into the backlog and shrinks to a pointer | The note is the operator's file (`Note`, untracked by this work); the backlog carries everything it needed to. |

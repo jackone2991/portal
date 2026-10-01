@@ -84,13 +84,13 @@ transcode failure is design-intent only, rate-limiter built but not mounted on
 
 ### NEXT (committed, specified — ADR-08 order)
 
-1. **[SPEC-01](../product/specs/SPEC-01-media-image-pipeline.md)** — image asset
+1. **[SPEC-04](../product/specs/SPEC-04-media-image-pipeline.md)** — image asset
    kind (`media:process_image`, WebP variants, EXIF strip), real video posters,
    `DELETE /assets` + purge janitor, media library page, `media:asset_ready` emit.
-2. **[SPEC-02](../product/specs/SPEC-02-comic-vertical.md)** — comic vertical
+2. **[SPEC-14](../product/specs/SPEC-14-comic-vertical.md)** — comic vertical
    end-to-end; the reference implementation of the *media → domain vertical*
    pattern that movie/music/story will copy.
-3. **[SPEC-03](../product/specs/SPEC-03-finance-ledger.md)** — finance ledger in
+3. **[SPEC-12](../product/specs/SPEC-12-finance-ledger.md)** — finance ledger in
    module `bank` (ledger scope per ADR-08: manual multi-account bookkeeping;
    derived balances; paired-leg transfers; import-ready schema). **Not** gated on
    MFA — it holds no bank credentials; TOTP gates *real bank integration* only.
@@ -129,8 +129,8 @@ Inventory: [reference/events.md](../reference/events.md).
 **Frontend.** RSC-first shells, client islands (D-33); TanStack owns server state,
 Zustand UI state (D-32); versioned template layer `src/templates/v{N}` (v1 =
 Olympus light). Budgets (LCP < 2.5 s, initial JS < 200 KB) in
-[frontend.md](frontend.md) §8 bind all new pages, including SPEC-02's reader and
-SPEC-03's `(bank)` group.
+[frontend.md](frontend.md) §8 bind all new pages, including SPEC-14's reader and
+SPEC-12's `(bank)` group.
 
 **Error contract.** RFC 7807 `Problem` on every non-2xx; `type` URIs double as
 i18n keys (D-7).
@@ -147,14 +147,14 @@ i18n keys (D-7).
   `/auth/register` and no `/auth/callback` (reconciled per
   [ADR-10](../adr/10-openapi-contract-direction.md)), and ci.yml adds a codegen
   drift gate. Residual risk: handlers are still **hand-written**, so one can
-  diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-02
+  diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-14
   documents `PATCH {status}`); the codegen-vs-handwritten decision (backlog §9)
   is still open.
 - **Public-ish HLS + finance data on one box.** Acceptable at n=1; both flip with
   the first real second user (playback ACL; revisit admin wildcard reach into
-  `bank:*` — flagged in SPEC-03 and ADR-08).
+  `bank:*` — flagged in SPEC-12 and ADR-08).
 - **Single-VPS blast radius.** Backups/retention are P3 backlog; the ledger raises
-  the stakes — schedule Postgres dumps before SPEC-03 dogfooding ends.
+  the stakes — schedule Postgres dumps before SPEC-12 dogfooding ends.
 
 ## 6. How to change this architecture
 

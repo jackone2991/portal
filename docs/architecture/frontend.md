@@ -82,7 +82,7 @@ app/(app)/page.tsx ──────────┼─→ activeTemplate() ─�
 app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
 ```
 
-- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-07 P0.4 video/audio player with resume — audio plays from `/original`; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
+- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-10 P0.4 video/audio player with resume — audio plays from `/original`; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
 - **`templates/registry.ts`** — the single switch point: maps version id → manifest, picks the active one from `NEXT_PUBLIC_TEMPLATE_VERSION`, throws on an unknown id.
 - **`templates/v1/index.ts`** — the v1 manifest binding the Olympus components to the contract.
 
@@ -959,7 +959,7 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 ### Phase 6 — Notifications
 
 - `<NotificationsBellDropdown />`.
-- **SSE client** subscribed to `/api/v1/me/notifications/stream`; each event invalidates the notifications query and the unread count, which TanStack then refetches (invalidate-and-refetch — no direct cache mutation; SPEC-04 P1.2).
+- **SSE client** subscribed to `/api/v1/me/notifications/stream`; each event invalidates the notifications query and the unread count, which TanStack then refetches (invalidate-and-refetch — no direct cache mutation; SPEC-05 P1.2).
 - Web Push subscription via Service Worker; ask for permission only after user opts in via settings.
 
 ### Phase 7 — Social baseline
