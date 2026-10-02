@@ -3,8 +3,8 @@
 **Status:** current · **Last verified:** never
 
 > **Status (updated 2026-07-06):** Deferred (post-v1) spec for the policy-bundle / user-group / file-gated-permission layer.
-> Per [ADR-02](../../adr/02-rbac-model-reconciliation.md) the role-hierarchy RBAC in code is canonical for v1 — this layer stacks on top of roles later, and the "spec wins, adjust code" clause below is **suspended for v1**.
-> Auth is now local password (Argon2id) per [ADR-06](../../adr/06-local-auth-model.md) — Authentik/OIDC removed; every OIDC/Authentik mention below is historical.
+> Per [ADR-02](../../product/specs/SPEC-01-account-identity-admin.md#adr-02) the role-hierarchy RBAC in code is canonical for v1 — this layer stacks on top of roles later, and the "spec wins, adjust code" clause below is **suspended for v1**.
+> Auth is now local password (Argon2id) per [ADR-06](../../product/specs/SPEC-01-account-identity-admin.md#adr-06) — Authentik/OIDC removed; every OIDC/Authentik mention below is historical.
 > Build-status tags in §3.5/§3.8 were refreshed 2026-07-06; the living status tracker is `MILESTONE_CHECKS.md` (deleted in `f11cf3f`).
 
 > Deferred (post-v1) feature spec for the policy-bundle access-control layer of the Portal ecosystem + multimedia platform.
@@ -30,7 +30,7 @@ A self-hosted media platform with a **fine-grained, hierarchical access-control 
 
 1. **Media domains** — Movies, Music, Stories. Upload → transcode → stream pipeline.
 2. **Organizational access control** — User Groups, Users, User Roles, Policies, file-gated Permissions.
-3. **Operational integrity** — full audit trail, instant revocation, first-party password auth ([ADR-06](../../adr/06-local-auth-model.md); optional social login later), no shared secrets in code.
+3. **Operational integrity** — full audit trail, instant revocation, first-party password auth ([ADR-06](../../product/specs/SPEC-01-account-identity-admin.md#adr-06); optional social login later), no shared secrets in code.
 
 The mocks show ArchiveTech as a **policy-driven, group-scoped** system, not a flat-role one. The data model below reflects that.
 
@@ -234,7 +234,7 @@ CREATE UNIQUE INDEX user_permission_files_active_idx
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Local password login + register (Argon2id, brute-force rate-limit/lockout) | [BUILT] | [ADR-06](../../adr/06-local-auth-model.md) (2026-07-05); OIDC/Authentik removed — no callback/state/nonce. [password.go](../../../backend/internal/modules/account/auth/password.go) |
+| Local password login + register (Argon2id, brute-force rate-limit/lockout) | [BUILT] | [ADR-06](../../product/specs/SPEC-01-account-identity-admin.md#adr-06) (2026-07-05); OIDC/Authentik removed — no callback/state/nonce. [password.go](../../../backend/internal/modules/account/auth/password.go) |
 | Access token (HS256, rotating `kid`, 5 min) | [BUILT] | [jwt.go](../../../backend/internal/modules/account/auth/jwt.go) |
 | Refresh token rotation + reuse detection | [BUILT] | [refresh.go](../../../backend/internal/modules/account/auth/refresh.go) |
 | Logout / logout-all | [BUILT] | [auth.go handler](../../../backend/internal/modules/account/handler/auth.go) |
@@ -364,7 +364,7 @@ Ordered by least-blocking and most-leverage:
 
 ### Phase 0 — Wire what's built  *(no new features)*
 
-> **Update (2026-07-06):** Phase 0 complete — see `MILESTONE_CHECKS.md` (deleted in `f11cf3f`). Exit criterion changed by [ADR-06](../../adr/06-local-auth-model.md): end-to-end **local password login**, not OIDC/Authentik (removed). Repository layout is per-module (`internal/modules/*/repository/`).
+> **Update (2026-07-06):** Phase 0 complete — see `MILESTONE_CHECKS.md` (deleted in `f11cf3f`). Exit criterion changed by [ADR-06](../../product/specs/SPEC-01-account-identity-admin.md#adr-06): end-to-end **local password login**, not OIDC/Authentik (removed). Repository layout is per-module (`internal/modules/*/repository/`).
 
 - `make sqlc` generates `internal/repository/`.
 - Adapters for `AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`.
@@ -415,7 +415,7 @@ State these explicitly so future PRs don't drift:
 - **Deny rules.** Not implemented yet; the matcher is grant-only today. The precedence contract is already **deny-wins** (§2.3), so when a real compliance need appears, model explicit deny as a `policy_permissions.effect` enum — the resolution order won't change.
 - **Time-bounded grants beyond `expires_at`.** No business-hours / geo / device fences.
 - **Federated multi-tenant.** All groups live in one DB. Splitting tenants per DB is a Phase-N exercise.
-- **Self-service password reset.** Still deferred — but Portal now owns credentials per [ADR-06](../../adr/06-local-auth-model.md); reset is admin/CLI-only until the notification module lands.
+- **Self-service password reset.** Still deferred — but Portal now owns credentials per [ADR-06](../../product/specs/SPEC-01-account-identity-admin.md#adr-06); reset is admin/CLI-only until the notification module lands.
 - **Mobile native app.** PWA via Next.js only.
 
 ---

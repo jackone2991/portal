@@ -6,7 +6,7 @@ Companion to [feature.md](../product/feature-inventory.md). Where `feature.md` d
 
 Read [§16 Frontend](../product/feature-inventory.md) of feature.md first for the high-level decisions ([D-32], [D-33], [D-34] — superseded by client-side SessionKeeper, see the §4 banner — and [D-7]); this doc expands them with concrete patterns and a build-out roadmap.
 
-> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (tracked at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code — `/CLAUDE.md` § Current status). Per [ADR-06](../adr/06-local-auth-model.md) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../adr/01-v1-scope-cut.md)).
+> **Status (2026-07-06).** The v1 demo loop is closed and committed: local password sign-in → authenticated home → mp4 upload (`/upload` Vidstack studio) → MinIO(dev)/R2(prod) → worker HLS transcode → playback → revocable logout (tracked at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code — `/CLAUDE.md` § Current status). Per [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) Authentik/OIDC is fully removed — every OIDC/callback/Authentik mention below is historical. §4's refresh-and-return design is superseded by client-side `SessionKeeper`. §2.1's route tree and §6/§10's phases are the long-horizon target, not v1 scope (see [architecture/01-v1-scope-cut.md](../product/specs/SPEC-03-platform-ops.md#adr-01)).
 
 ---
 
@@ -82,7 +82,7 @@ app/(app)/page.tsx ──────────┼─→ activeTemplate() ─�
 app/(app)/library/... ───────┘        (env: NEXT_PUBLIC_TEMPLATE_VERSION, default "v1")
 ```
 
-- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`). Every version implements this exact shape.
+- **`templates/types.ts`** — the `TemplateManifest` contract: layout `shells` (`public`, `app`) + page `views` (`home`, `login`, `register`, `libraryComic`, `libraryNovelDetail`, `libraryMedia`, `libraryMediaDetail`, …). `libraryMediaDetail` is a `ComponentType<{ id: string }>` (SPEC-10 P0.4 video/audio player with resume — audio plays from `/original`; v1 binds it to `views/library/media/MediaDetailView.tsx`). The list here is illustrative — `types.ts` also carries the comic detail/reader, music, bank, people, calendar, weather and admin views. Every version implements this exact shape.
 - **`templates/registry.ts`** — the single switch point: maps version id → manifest, picks the active one from `NEXT_PUBLIC_TEMPLATE_VERSION`, throws on an unknown id.
 - **`templates/v1/index.ts`** — the v1 manifest binding the Olympus components to the contract.
 
@@ -135,7 +135,7 @@ The full route tree in §2.1 (`/t/{tenant}/(app)/...`, marketing, admin, all ver
 Two reconciliations with later sections:
 
 - **Components vs. templates.** §7 describes a cross-version primitives/feature library under `src/components/` (Radix + Tailwind). That layer is for shared, version-agnostic building blocks; `src/templates/v{N}/` composes them (plus version-specific markup) into the shells and views a given design version ships. Primitives go in `components/`, version-specific composition goes in `templates/`.
-- **Register page.** Implemented and wired per [ADR-06](../adr/06-local-auth-model.md) local auth: `AuthForm` posts email + password (+ `remember`) to `POST /api/v1/auth/login`; `RegisterView` posts `POST /api/v1/auth/register` (201, no session, redirects to `/login`). §6.1's old "Authentik handles" entry is retired — there is ONLY local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
+- **Register page.** Implemented and wired per [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) local auth: `AuthForm` posts email + password (+ `remember`) to `POST /api/v1/auth/login`; `RegisterView` posts `POST /api/v1/auth/register` (201, no session, redirects to `/login`). §6.1's old "Authentik handles" entry is retired — there is ONLY local-password auth (see [CLAUDE.md](../../CLAUDE.md) "Account module").
 
 ---
 
@@ -439,7 +439,7 @@ const { data } = useMovies(filters);
 
 ## 4. Auth handoff ([D-34])
 
-> **Superseded (2026-07-05).** OIDC is gone ([ADR-06](../adr/06-local-auth-model.md)) and the refresh-and-return route below was replaced by client-side `SessionKeeper` (`templates/v1/partials/SessionKeeper.tsx` — 4-min interval + focus refresh, `localStorage` multi-tab throttle, hard redirect to `/login` on refresh failure). §4.2–4.4 are kept as design history; the server-only API client remains future work. §4.1 is current fact.
+> **Superseded (2026-07-05).** OIDC is gone ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06)) and the refresh-and-return route below was replaced by client-side `SessionKeeper` (`templates/v1/partials/SessionKeeper.tsx` — 4-min interval + focus refresh, `localStorage` multi-tab throttle, hard redirect to `/login` on refresh failure). §4.2–4.4 are kept as design history; the server-only API client remains future work. §4.1 is current fact.
 
 ### 4.1 Cookie scheme
 
@@ -581,7 +581,7 @@ export function handleProblem(problem: Problem): void {
 }
 ```
 
-The "Manage MFA" button in account-security settings opens Portal-native MFA enrollment (later phase — [ADR-06](../adr/06-local-auth-model.md) §"New responsibilities"). [D-28] still governs the step-up requirement, but its Authentik-dashboard deep-link is superseded — Authentik is fully removed.
+The "Manage MFA" button in account-security settings opens Portal-native MFA enrollment (later phase — [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) §"New responsibilities"). [D-28] still governs the step-up requirement, but its Authentik-dashboard deep-link is superseded — Authentik is fully removed.
 
 ---
 
@@ -626,9 +626,11 @@ Errors keyed by RFC 7807 `type` URI:
 
 When backend returns a Problem, frontend looks up `errors[problem.type]` for localised display. Falls back to `problem.title` if key missing.
 
+**Interim catalog: `src/lib/problems.ts`.** The next-intl tree above is the future target — `next-intl` is not a dependency yet. Today the live catalog is `frontend/src/lib/problems.ts` (`ProblemType` + `PROBLEM_MESSAGES`), keyed by the relative `<module>/<kebab-reason>` slug the backend emits (not a full URI); generic failures use `about:blank`. The specs README Errors convention makes adding each new type there part of definition of done.
+
 ### 5.3 Money formatting
 
-Backend never pre-formats. API returns `{ amount: "12345.67", currency: "USD" }`.
+Backend never pre-formats. **`bank` money is integer minor units** (D-41): amounts are JSON integers (`int64` minor units, VND exponent 0), and the shipped formatter is `formatVND` in `frontend/src/lib/bank.ts`; a general formatter divides by `10**exponent(currency)` before `Intl.NumberFormat`. D-14's decimal-string amounts (`{ amount: "12345.67", currency: "USD" }`, sketched below) remain the rule outside the v1 ledger.
 
 ```typescript
 // frontend/src/lib/format.ts
@@ -645,6 +647,27 @@ export function formatMoney(money: Money, locale: string): string {
 ### 5.4 Date / time formatting
 
 Backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timezone`.
+
+**Which zone** (specs README "Timezone" convention; D-17 updates 2026-09-30
+and 2026-10-02): the User's own `users.timezone`, read from `GET /auth/me` —
+never an instance-wide `APP_TIMEZONE`. The same zone drives every "today", day
+separator, month default and date-only → instant conversion on the client.
+`/auth/me` returns it as an IANA name, or `null` when the User has none yet
+(owner decision 2026-10-02 (A8): NULL means "not set"; there is no manual
+flag). **Write path:** after sign-in the app reads the device zone with
+`Intl.DateTimeFormat().resolvedOptions().timeZone`. When `/auth/me` says
+`timezone: null`, it saves the device zone at once with
+`PATCH /api/v1/auth/me {timezone}`, without asking, and uses the device zone
+until that save completes. When a zone is set, it is applied everywhere and the
+device never overwrites it; if the device zone differs, the app shows **one**
+prompt offering to switch (remembered per browser and device zone, so it does
+not nag) and saves only if the User confirms. The settings page offers an
+IANA picker that saves `{timezone}`. A name `time.LoadLocation` rejects is 422
+`account/invalid-timezone`, which the settings form shows inline through the
+`problems.ts` catalog. *(Code follow-up: `src/lib/time.ts` still takes its
+display zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE`; `/time` should keep
+only the server clock, and the zone comes from `/auth/me`, which does not
+carry it yet — SPEC-01 P0.13, §11 row 14.)*
 
 ```typescript
 // frontend/src/lib/format.ts
@@ -682,7 +705,7 @@ Mapping every template asset to a Next.js page. Status:
 |---|---|---|---|
 | `portal/resources/views/v1/views/home/home.blade.php` | `/t/{tenant}/(app)/page.tsx` | Phase 0 stub | A |
 | `portal/resources/views/v1/public/login.blade.php` | `/login` via `app/(public)/login/page.tsx` | Phase 0 — done | A |
-| `portal/resources/views/v1/public/register.blade.php` | `/register` via `app/(public)/register/page.tsx` ([ADR-06](../adr/06-local-auth-model.md) local auth) | Phase 0 — done | A |
+| `portal/resources/views/v1/public/register.blade.php` | `/register` via `app/(public)/register/page.tsx` ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) local auth) | Phase 0 — done | A |
 | `portal/resources/views/v1/views/library/...` | `/t/{tenant}/(app)/(stories)/library/page.tsx` | Phase 4 | A |
 | `portal/resources/views/v1/components/menu/sidebarLeft.blade.php` | Component `<LeftSidebar />` | Phase 0 | A |
 | `portal/resources/views/v1/components/menu/sidebarRight.blade.php` | Component `<RightSidebar />` | Phase 0 | A |
@@ -878,7 +901,7 @@ What to take, what to leave.
 
 - Avatars / placeholders from `template-main/social/img/` — usable as dev fixtures; replace with real CDN content in prod.
 - Logo: needs redesign — current `template-main/social/img/logo.png` is "Olympus" branded.
-- **Storage origin (decided):** media bytes live in **MinIO bound to the local folder `./data/minio` in dev**, and **Cloudflare R2 in prod**. Both speak S3, so the app reads `S3_*` for either — going live is an `.env` change, not a code change (see [architecture/04-storage-tier-budget.md](../adr/04-storage-tier-budget.md)). The frontend builds media URLs from the configured S3/R2 endpoint; image optimisation in prod via Cloudflare Image Resizing on R2.
+- **Storage origin (decided):** media bytes live in **MinIO bound to the local folder `./data/minio` in dev**, and **Cloudflare R2 in prod**. Both speak S3, so the app reads `S3_*` for either — going live is an `.env` change, not a code change (see [architecture/04-storage-tier-budget.md](../product/specs/SPEC-04-media-image-pipeline.md#adr-04)). The frontend builds media URLs from the configured S3/R2 endpoint; image optimisation in prod via Cloudflare Image Resizing on R2.
 
 ### 9.4 Don't auto-port
 
@@ -894,8 +917,8 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 - **Mutation client** (`api-client.ts`) — DONE (working fetch wrapper); **server-only API client** (`api-server.ts`, [D-34]) remains future work (see §4 banner).
 - **Silent session refresh** — DONE via `SessionKeeper` (supersedes the [D-34] refresh-and-return route).
 - **Generated TS types** from OpenAPI → `frontend/src/lib/types.gen.ts` — pending (file does not exist yet; needs `make openapi`).
-- **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](../adr/06-local-auth-model.md) replaced the original OIDC deliverable).
-- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending.
+- **Local login/register flow** — DONE: `(public)/login`, `(public)/register` → `POST /api/v1/auth/login`, `/auth/register` ([ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06) replaced the original OIDC deliverable).
+- **Auth context** — read `users.locale`, `users.timezone`, current tenant via RSC — pending; includes the device-zone sync and settings override in §5.4.
 - **`frontend/CLAUDE.md` conventions doc** ([D-32, D-33]) with anti-pattern examples — pending (does not exist yet).
 - **Error pages** (`error.tsx`, `not-found.tsx`, `global-error.tsx`) styled — pending.
 - **Component library kickoff** — partial: v1 template ships `Avatar`, `Icon`, `TopMenu`, sidebars; the cross-version `components/ui/` primitives (`<Button />`, `<Dialog />`, `<Toast />`) are pending.
@@ -922,13 +945,25 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 ### Phase 4 — Music + Stories + Comics
 
 - Repeat Phase 3 pattern per vertical.
-- `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`.
+- `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`. The player
+  plays every track — the caller's own or a published one shared with the
+  caller (a group co-member of the owner — Decision 2026-10-02b (B15) — or a
+  friend in the same or an actively linked tenant) — from
+  `/assets/{audio_asset_id}/original`, and reads and saves the caller's own
+  media progress row on that asset (no music-owned progress, no signed URL):
+  a published track's audio is `shared` with that audience
+  ([SPEC-15](../product/specs/SPEC-15-music-vertical.md) P0.10, SPEC-04 P0.8;
+  Decision 2026-10-02b (B2, B13, B14),
+  [ADR-12](../product/specs/SPEC-01-account-identity-admin.md#adr-12); resume
+  unbuilt). A track whose access ends mid-queue answers 404 and is skipped
+  like any unplayable track; the library lists treat a friend's item like any
+  published one (the API already filtered it).
 - Story / comic reader components.
 - `/api/v1/continue` aggregator → unified "Continue" rail on home dashboard.
 
 ### Phase 5 — Bank
 
-- Money types: `<MoneyDisplay />`, `<MoneyInput />` (string-amount-aware).
+- Money types: `<MoneyDisplay />`, `<MoneyInput />` (minor-unit-aware, D-41).
 - Transaction list with infinite scroll + filter chips.
 - Net-worth chart, cash-flow Sankey.
 - Step-up auth UX wired into every destructive bank op (delete account, export).
@@ -937,11 +972,41 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 ### Phase 6 — Notifications
 
 - `<NotificationsBellDropdown />`.
-- **SSE client** subscribed to `/api/v1/events/stream`; pushes new notifications into TanStack cache (mutate cache directly, no refetch).
+- **SSE client** subscribed to `/api/v1/me/notifications/stream`; each event invalidates the notifications query and the unread count, which TanStack then refetches (invalidate-and-refetch — no direct cache mutation; SPEC-05 P1.2).
 - Web Push subscription via Service Worker; ask for permission only after user opts in via settings.
 
 ### Phase 7 — Social baseline
 
+- **Shipped slice (SPEC-18):** connections — header request menu,
+  `/people?circle=requests`, the right rail, "people you may know" from
+  `GET /people/suggestions`. After Decision 2026-10-02b (B14)
+  ([ADR-12](../product/specs/SPEC-01-account-identity-admin.md#adr-12);
+  unbuilt) that directory holds only accounts in the caller's tenant or an
+  actively linked one; an empty directory gets a hint pointing to the links
+  screen, not a bare empty state. `social/validation` on a request or accept
+  renders the catalogue message ("this account is not reachable").
+- **Tenant links screen** (SPEC-01 P0.17; unbuilt): a page under `(app)` —
+  e.g. `/tenant/links`, added to the D-34 `middleware.ts` matcher — for a
+  tenant's owner: the tenant's id to share with another household, its links
+  grouped as active / waiting for them / waiting for you, accept (add the
+  incoming tenant) and remove, saved whole-set through `PUT
+  /tenants/{id}/links`; other members see it read-only. A Superadmin
+  (`tenants:links:write`, from `/auth/me`'s permission codes) also gets a
+  tenant picker over `GET /admin/tenants`. Server state in TanStack under a
+  `tenantKeys` factory; the four `tenant/*` slugs in `problems.ts`.
+- **Tenant groups screen** (SPEC-01 P0.18, Decision 2026-10-02b (B15);
+  unbuilt): next to the links screen — e.g. `/tenant/groups`, in the same
+  matcher — where the tenant's owner (or a `tenants:groups:write` holder)
+  creates, renames and deletes groups and picks each group's members from
+  the tenant's members, saved whole-set through `PUT
+  /tenants/{id}/groups/{gid}/members`; it says plainly that a group's members
+  are each other's family — they read each other's published music, movies
+  and stories. Other members see only their own groups, read-only, with a
+  "leave group" action (`DELETE …/members/me`). Same `tenantKeys` factory; the
+  three new slugs (`tenant/group-not-found`, `tenant/not-a-member`,
+  `tenant/group-name-taken`) in `problems.ts`. On an instance of personal
+  organisations the member picker offers only the owner, so the screen
+  explains that groups matter once a tenant has other members.
 - Newsfeed, profile, friends, communities, events, messaging.
 - `<PostComposer />` (text + image + video upload + poll + draft + schedule).
 - `<PostCard />` rendering all post-types.

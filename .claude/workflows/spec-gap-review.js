@@ -1,40 +1,80 @@
 export const meta = {
   name: 'spec-gap-review',
-  description: 'Multi-lens BA review of docs/product/specs — find gaps/errors, adversarially verify',
+  description: 'Multi-lens BA review of docs/product/specs (SPEC-NN + README) against each other and HEAD code; merge, adversarially verify, write a dated fix worklog to docs/product/analysis/',
+  whenToUse: 'Periodic audit of the spec corpus. Optional args: {root: repo root (default "." = the session cwd, which must be the repo root), date: "YYYY-MM-DD" (default: the scout runs `date +%F`), write: false to skip writing the worklog file (the markdown is still returned), runLabel: run id to cite in the worklog Source line}.',
   phases: [
-    { title: 'Review', detail: '10 per-file + 8 cross-cutting finders' },
-    { title: 'Merge', detail: 'dedup into canonical findings' },
-    { title: 'Verify', detail: 'adversarial refute + fix audit per file group' },
+    { title: 'Scout', detail: 'list SPEC files, HEAD sha, today' },
+    { title: 'Review', detail: '7 per-area finders + 5 cross-cutting lenses' },
+    { title: 'Merge', detail: 'dedup into canonical findings, then a completeness critic' },
+    { title: 'Verify', detail: 'adversarial refute + fix audit per area group' },
+    { title: 'Write', detail: 'worklog docs/product/analysis/spec-gap-fix-worklog-<date>.md' },
   ],
 }
 
-const R = '/Users/kirito/data/git/ops/repo/portal'
-const S = R + '/docs/product/specs'
-const B = R + '/docs/product/briefs'
+// ---------------------------------------------------------------------------
+// Design (2026-10-02 rewrite for the post-renumbering corpus, SPEC-01…18)
+//
+// Cost/coverage trade-off: one finder per spec (18) plus lenses would be ~25
+// finders, most of them reading the same conventions/code twice. Instead the
+// specs are grouped by area so each finder stays within ~1.3–2.9k spec lines
+// (SPEC-01 alone is ~2.9k, so it gets its own finder):
+//   identity 01 · shell+ops 02–03 · media+notify+docs 04–06 · journal/stream
+//   07–11 · money 12–13 · comic+music 14–15 · movie+story+social 16–18
+// => 7 area finders + 5 cross-cutting lenses = 12 parallel finders.
+// A spec number outside these ranges (a future SPEC-19…) lands in an extra
+// 'unassigned' finder, so new specs are never silently skipped.
+//
+// Per run: 1 scout + 12 finders + 1 merge + 1 critic + 2 verifiers per area
+// group (8 groups; a group above VERIFY_CHUNK findings is split) + 1 writer
+// ≈ 32–36 agents. The barrier after Review is justified (merge needs all
+// findings); verification runs per group concurrently.
+//
+// Paths: every path is relative to the repo root R. With the default R='.'
+// agents resolve paths from the session cwd, so run from the repo root, or
+// pass args.root. The script has no filesystem access, so the scout agent
+// discovers the SPEC list, the HEAD sha and today's date (Date is unavailable
+// in workflow scripts).
+// ---------------------------------------------------------------------------
+
+const A = args || {}
+const R = A.root || '.'
+const P = (p) => (R === '.' ? p : R.replace(/\/$/, '') + '/' + p)
+const S = P('docs/product/specs')
 
 const SRC = {
   readme: S + '/README.md',
-  modules: R + '/backend/MODULES.md',
-  events: R + '/docs/reference/events.md',
-  perm: R + '/backend/internal/modules/account/rbac/permission.go',
-  rbacMig: R + '/backend/db/migrations/0003_account_rbac.up.sql',
-  inventory: R + '/docs/product/feature-inventory.md',
-  feClaude: R + '/frontend/CLAUDE.md',
-  frontendDoc: R + '/docs/architecture/frontend.md',
+  backlog: P('docs/product/backlog.md'),
+  inventory: P('docs/product/feature-inventory.md'),
+  context: P('CONTEXT.md'),
+  style: P('docs/STYLE.md'),
+  events: P('docs/reference/events.md'),
+  matrix: P('docs/reference/TRACEABILITY-MATRIX.md'),
+  testing: P('docs/testing'),
+  security: P('docs/architecture/security.md'),
+  frontendDoc: P('docs/architecture/frontend.md'),
+  modules: P('backend/MODULES.md'),
+  perm: P('backend/internal/modules/account/rbac/permission.go'),
+  rbacMig: P('backend/db/migrations/0003_account_rbac.up.sql'),
+  migrations: P('backend/db/migrations'),
+  openapi: P('shared/openapi.yaml'),
+  apiMain: P('backend/cmd/api/main.go'),
+  workerMain: P('backend/cmd/worker/main.go'),
+  modulesDir: P('backend/internal/modules'),
+  feClaude: P('frontend/CLAUDE.md'),
+  feTemplates: P('frontend/src/templates'),
+  prevWorklogs: P('docs/product/analysis'),
 }
 
-const SPECS = [
-  { file: 'SPEC-01-media-image-pipeline.md', brief: B + '/01-media-image-pipeline.md' },
-  { file: 'SPEC-02-comic-vertical.md', brief: B + '/02-comic-vertical.md' },
-  { file: 'SPEC-03-finance-ledger.md', brief: B + '/03-finance-ledger.md' },
-  { file: 'SPEC-04-notification-module.md', brief: null },
-  { file: 'SPEC-05-journal.md', brief: B + '/05-journal-life-stream.md' },
-  { file: 'SPEC-06-life-stream-home.md', brief: B + '/06-life-stream-home.md' },
-  { file: 'SPEC-07-continue-rail.md', brief: B + '/07-continue-rail.md' },
-  { file: 'SPEC-08-people-registry.md', brief: B + '/08-people-registry.md' },
-  { file: 'SPEC-09-platform-ops.md', brief: B + '/09-platform-ops.md' },
-  { file: 'README.md', brief: B + '/README.md' },
+const AREAS = [
+  { key: 'identity', nums: [1], code: 'account, tenant (RLS) + the admin console frontend' },
+  { key: 'shell-ops', nums: [2, 3], code: 'layout, ops, cmd/worker server split, docker-compose/Makefile' },
+  { key: 'media-notify-docs', nums: [4, 5, 6], code: 'media, notify; SPEC-06 is historical docs-only (check its claims about the docs tree)' },
+  { key: 'journal-stream', nums: [7, 8, 9, 10, 11], code: 'journal (entries, attachments, stream_items, continue rail), people, home/widget frontend' },
+  { key: 'money', nums: [12, 13], code: 'bank' },
+  { key: 'comic-music', nums: [14, 15], code: 'comic, music, scraper/ (comic sync)' },
+  { key: 'movie-story-social', nums: [16, 17, 18], code: 'movie, story, social' },
 ]
+const VERIFY_CHUNK = 15
 
 const FIND_SCHEMA = {
   type: 'object',
@@ -44,15 +84,16 @@ const FIND_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          file: { type: 'string', description: 'spec filename under docs/product/specs/ where the fix applies (e.g. SPEC-06-life-stream-home.md), or MULTIPLE for cross-file defects' },
+          file: { type: 'string', description: 'filename under docs/product/specs/ where the fix applies (e.g. SPEC-09-life-stream-home.md, README.md), or MULTIPLE for cross-file defects' },
           section: { type: 'string' },
           severity: { type: 'string', enum: ['critical', 'major', 'minor'] },
+          kind: { type: 'string', enum: ['spec-defect', 'unrecorded-gap', 'stale-gap-row', 'doc-drift'], description: 'spec-defect: the spec text is wrong/contradictory/ambiguous; unrecorded-gap: code diverges from the spec and the §11 gap table does not record it; stale-gap-row: a §11 row no longer matches HEAD (already fixed, or wrong file/function); doc-drift: a non-spec doc (events.md, matrix, inventory, MODULES.md…) disagrees with the spec' },
           category: { type: 'string' },
           summary: { type: 'string' },
-          evidence: { type: 'string', description: 'quoted conflicting text with path:line cites' },
-          proposed_fix: { type: 'string', description: 'concrete replacement text or precise instruction' },
+          evidence: { type: 'string', description: 'quoted conflicting text with path:line cites (spec AND code where relevant)' },
+          proposed_fix: { type: 'string', description: 'concrete replacement text or precise instruction; for unrecorded-gap, the full new §11 row in that table\'s column format' },
         },
-        required: ['file', 'severity', 'summary', 'evidence', 'proposed_fix'],
+        required: ['file', 'severity', 'kind', 'summary', 'evidence', 'proposed_fix'],
       },
     },
   },
@@ -79,191 +120,206 @@ const VERDICTS_SCHEMA = {
   required: ['verdicts'],
 }
 
+const SCOUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    date: { type: 'string', description: 'YYYY-MM-DD' },
+    head: { type: 'string', description: 'short HEAD sha' },
+    branch: { type: 'string' },
+    specs: { type: 'array', items: { type: 'string' }, description: 'basenames matching SPEC-*.md' },
+  },
+  required: ['date', 'head', 'specs'],
+}
+
+let agentCount = 0
+const run = (prompt, opts) => { agentCount++; return agent(prompt, opts) }
+
+// ---- Phase 0: scout ---------------------------------------------------------
+phase('Scout')
+const scout = await run([
+  'Run these read-only shell commands from the repo root ' + (R === '.' ? '(your cwd)' : R) + ' and report the results. Do not edit anything.',
+  '1. `date +%F` → date' + (A.date ? ' (ignore: the caller fixed the date to ' + A.date + ')' : ''),
+  '2. `git rev-parse --short HEAD` → head; `git rev-parse --abbrev-ref HEAD` → branch',
+  '3. `ls ' + S + '` → specs = every basename matching SPEC-*.md (exclude README.md)',
+].join('\n'), { label: 'scout', phase: 'Scout', schema: SCOUT_SCHEMA, effort: 'low' })
+const DATE = A.date || (scout && scout.date) || 'YYYY-MM-DD'
+const HEAD = (scout && scout.head) || 'HEAD'
+const specFiles = ((scout && scout.specs) || []).filter((f) => /^SPEC-\d+.*\.md$/.test(f)).sort()
+if (!specFiles.length) throw new Error('scout found no SPEC-*.md under ' + S + ' — is args.root right?')
+const numOf = (f) => parseInt(f.slice(5), 10)
+const areas = AREAS.map((a) => ({ ...a, files: specFiles.filter((f) => a.nums.includes(numOf(f))) })).filter((a) => a.files.length)
+const assigned = new Set(areas.flatMap((a) => a.files))
+const unassigned = specFiles.filter((f) => !assigned.has(f))
+if (unassigned.length) {
+  areas.push({ key: 'unassigned', nums: unassigned.map(numOf), files: unassigned, code: 'whatever modules these specs own (see each header)' })
+  log('Specs outside the known area ranges get their own finder: ' + unassigned.join(', '))
+}
+log(specFiles.length + ' specs at ' + HEAD + ' (' + DATE + '), ' + areas.length + ' area finders')
+
 const RULES = [
-  'You are a senior business analyst at a large IT firm reviewing implementation-ready PRD specs for a Go modular-monolith + Next.js self-hosted platform.',
+  'You are a senior business analyst reviewing the implementation-ready PRD specs of a Go modular monolith + Next.js self-hosted "life OS" (Portal). Repo root: ' + (R === '.' ? 'your current working directory' : R) + '. Baseline: HEAD ' + HEAD + ', today ' + DATE + '.',
+  'Corpus facts (do not report these as defects):',
+  '- Specs are SPEC-01…SPEC-NN, numbered by build priority since the 2026-10-01 renumbering; ' + SRC.readme + ' § Renumbering maps old→new. Code comments and the older worklogs in ' + SRC.prevWorklogs + ' still cite OLD numbers and `docs/adr/NN-*.md` paths by design — but a spec or doc under docs/ citing an OLD number where it means the new one IS a defect.',
+  '- ADR-01…ADR-17 live inside the owning spec under `## Decision records` behind `<a id="adr-nn">` anchors; the index is ' + SRC.readme + ' § Decision records. There is no docs/adr/ folder and no briefs/. ADR narrative layers (Decision, Options, Trade-offs) are verbatim history; Context/Consequences/Action items are the fact layer and must be true (ADR-11).',
+  '- Each built spec ends with "Implementation gaps vs shipped code" (§11): one row per known spec↔code divergence. A divergence recorded there is KNOWN — do not re-report it. ' + SRC.readme + ' § Implementation gaps index counts and routes them; ' + SRC.backlog + ' ranks them.',
+  '- Specs use `000N_*` migration placeholders deliberately. "Decisions recorded …" and "Open owner decisions" in the README are owner rulings — do not re-litigate them unless internally contradictory or contradicted by a later ruling.',
   'Ground rules:',
-  '- READ-ONLY task: never edit or write any file.',
-  '- Evidence or it did not happen: every finding must quote or cite (path:line) the conflicting/incorrect text.',
-  '- Report substance only. DO NOT report: markdown lint/style, tone, length, heading style, table pipe spacing.',
-  '- DO NOT re-litigate items a spec already lists as a resolved decision or a non-blocking open question with an owner — unless the resolution is internally contradictory or factually wrong.',
-  "- Severity: critical = following the spec as written causes a wrong implementation, silent data loss, security hole, or an impossible requirement; major = an implementer would stall, guess, or diverge (missing decision, contradiction, wrong dependency/API/schema); minor = incorrect reference/link/number, stale naming, small omission.",
-  '- proposed_fix must be concrete and actionable (exact replacement text where feasible), consistent with the binding conventions in ' + SRC.readme + '.',
-  '- Today is 2026-07-10. SPEC-05..09 were drafted today from briefs 05..09; SPEC-01..04 predate them. Migrations 0001-0007 are consumed; specs use 000N placeholders deliberately (not a defect).',
+  '- READ-ONLY: never edit or write any file. Use Read/Grep/Glob and read-only git/shell (git log, git show, ls, grep).',
+  '- Code is the tie-breaker for facts about shipped behaviour: verify against HEAD, not against prose. Where code and spec disagree, decide which is the target (owner rulings and ADRs say what is intended) and phrase the fix accordingly: either correct the spec, or record the code follow-up as a §11 gap row.',
+  '- Evidence or it did not happen: quote and cite path:line for every claim (spec text and the code you checked).',
+  '- Substance only. Do NOT report markdown lint/style, tone, length, heading style, table spacing.',
+  "- Severity: critical = following the text causes a wrong implementation, silent data loss, a security hole, or an impossible requirement; major = an implementer would stall, guess, or diverge (missing decision, contradiction, wrong dependency/API/schema, an unrecorded divergence with user-visible effect); minor = wrong reference/link/number, stale naming, small omission.",
+  '- proposed_fix must be concrete (exact replacement text where feasible) and consistent with ' + SRC.readme + ' § Conventions binding on all specs.',
+  '- An empty findings array is a legitimate answer.',
   '',
 ].join('\n')
 
-const perSpecPrompt = (s) => RULES + [
-  'TARGET SPEC: ' + S + '/' + s.file,
-  s.brief ? 'UPSTREAM BRIEF (coverage source): ' + s.brief : 'No upstream brief — this spec came straight from a gap audit.',
-  'Also read for conventions/cross-refs: ' + SRC.readme + ', ' + SRC.events + ', and any file the spec links when needed to validate a specific claim.',
+const areaPrompt = (a) => RULES + [
+  'AREA FINDER: ' + a.key + '. TARGET SPECS: ' + a.files.map((f) => S + '/' + f).join(', '),
+  'Owning code to verify against: ' + a.code + ' — under ' + SRC.modulesDir + '/<module>/ (module.go route table + RegisterTasks, query/*.sql, handler/, service/), ' + SRC.migrations + ', ' + SRC.apiMain + ', ' + SRC.workerMain + ', and ' + P('frontend/src') + ' where the spec makes frontend claims.',
+  'Read as needed for cross-refs: ' + SRC.readme + ' (conventions, decisions, gaps index), ' + SRC.events + ', ' + SRC.inventory + ' (D-N ids), ' + SRC.context + ' (glossary terms), and any file a spec links when validating a specific claim.',
   '',
-  'Review the target spec for:',
-  '1) Internal contradictions: behavior prose vs acceptance criteria vs §6 data model vs §7 API table vs §9 timeline.',
-  '2) Brief coverage: every P0/P1/P2 requirement, user story, open question, and locked recommendation in the upstream brief must be either covered or explicitly dropped/deferred with rationale. List anything silently lost or silently changed.',
-  '3) Unimplementable or ambiguous requirements: anything an engineer could not build without guessing (missing field semantics, undefined behavior on edge cases the spec itself raises).',
-  '4) Wrong cross-references: § numbers, SPEC numbers, file paths/links, D-N ids, ADR ids, event names.',
-  '5) Acceptance-criteria quality: untestable ACs, P0 behavior without any AC, ACs contradicting each other or the data model.',
-  'Return all findings via StructuredOutput. An empty findings array is a legitimate answer if the spec is clean.',
+  'For each target spec check:',
+  '1) Internal contradictions: requirement prose vs ACs vs §6 data model vs §7 API table vs §9 phasing vs its own Decision records.',
+  '2) Unimplementable or ambiguous requirements an engineer could not build without guessing.',
+  '3) Cross-references: § numbers, SPEC numbers (post-renumbering), links/anchors (#adr-NN must exist in the target file), D-N ids, ADR ids, event names, glossary terms.',
+  '4) AC quality: untestable ACs, P0 behaviour without any AC, ACs contradicting each other or the data model.',
+  '5) §11 gap table vs HEAD: for EVERY row, open the named file/function and confirm the divergence still exists. Already fixed in code → stale-gap-row (fix: delete the row, regrade the matrix row, adjust the README gaps index count). Wrong file/function → stale-gap-row with the correct location.',
+  '6) Unrecorded divergences: for every requirement the spec presents as shipped (Status current, or text describing built behaviour), spot-check the code — routes and methods, permission gates, migrations/columns/constraints, task names and the Asynq server that registers them, Problem types. A divergence absent from §11 → unrecorded-gap, proposed_fix = the full new §11 row (Requirement · Spec requires · Shipped code today · Change needed · Source "spec-gap-review ' + DATE + '").',
+  'SPEC-06 is historical and has no §11: check only that its fact-layer claims about the docs tree are true today.',
 ].join('\n')
 
 const CROSS = [
   {
-    key: 'rbac',
-    prompt: RULES + [
-      'CROSS-CUTTING LENS: RBAC permission-code validity and coherence.',
-      'Read ' + SRC.perm + ' (the REAL grammar: Parse segment rules, scope tokens, wildcard + AllowsCode semantics), ' + SRC.rbacMig + ' (seeded roles/permissions house style), and every §7 permission column + §5 RBAC prose in all ten files under ' + S + '/.',
-      'Evaluate:',
-      "- EVERY drafted permission code against the real parser: segment count, allowed scope tokens, wildcard behavior. Explicitly test: 'comics:read:published' and 'comics:publish:own' (SPEC-02), 'media:asset:delete:own' / 'media:asset:read:own' / 'media:asset:update:own' (SPEC-01), the 'bank:account:read:own'-style 4-segment family (SPEC-03), 'media:progress:own' (SPEC-07), 'stream:read:own' (SPEC-06), 'journal:create/read:own/update:own/delete:own' (SPEC-05), 'people:*' codes (SPEC-08), 'ops:read', 'queues:read', 'takeout:create:own', 'takeout:read:own' (SPEC-09), and SPEC-04 §7's codes.",
-      '- Whether each spec states WHO gets each permission (role seeding) and whether the grant mechanics are specified (which migration seeds the grants) — flag specs that leave seeding unowned.',
-      '- Naming coherence across specs (resource-noun style: SPEC-04 uses kebab compound resources like notification-prefs). If drafts diverge, propose ONE coherent reconciliation scheme covering every invalid/ambiguous code, with exact corrected codes in proposed_fix.',
-    ].join('\n'),
-  },
-  {
     key: 'events',
     prompt: RULES + [
-      'CROSS-CUTTING LENS: event/payload/consumer consistency and event-driven failure modes.',
-      'Read ' + SRC.events + ', all ten files under ' + S + '/, and ' + B + '/06-life-stream-home.md.',
-      'Explicitly adjudicate these candidate issues (confirm with evidence or refute), then hunt for more of the same class:',
-      "(a) SPEC-06 stream_items UNIQUE(source_module, event_type, ref_id) vs recurring events: people:birthday_upcoming fires at days_until 3 AND 0 for the same person, and again every year. With ref_id = person_id, do the day-of event and every later year silently vanish on the unique key? What ref should be used (e.g. a notice id emitted in the payload)?",
-      "(b) Bank transfers emit one bank:transaction_created per leg (2 rows, SPEC-03 P0.3/P0.7). Does SPEC-06 render two stream items for one transfer, contradicting SPEC-03 P0.7's 'group one transfer into a single story item' intent? Should the stream key on transfer_id for is_transfer legs?",
-      "(c) SPEC-02 P1.7 zip import creates up to 300 image assets via mediaapi; each reaching ready fires media:asset_ready (SPEC-01 P1.2 'whenever any asset reaches ready'). Does SPEC-04's bell get 300 notifications and SPEC-06's stream 300 items from one chapter import? Is suppression specced anywhere? Propose a concrete cross-spec fix (e.g. an origin/batch marker in the payload + consumer policy).",
-      "(d) SPEC-06 P0.3 AC 'survives a refetch (projection row present)' vs the journal projection being an async Asynq consumer — a refetch can race projection lag. Given journal and stream_items are the SAME module, is the bus round-trip for journal rows even necessary, or should the projection row be written transactionally on entry create (event still emitted for future external consumers)? Judge which design the spec should mandate.",
-      '(e) Payload contracts: every field a consumer spec reads must exist in the emitter spec payload AND in events.md (check media:asset_ready fields SPEC-06 needs for cards, people:birthday_upcoming fields incl. any age/name needs, ops events).',
-      '(f) Registry closure: every event/task a spec emits or consumes exists in events.md with matching name/payload/consumers — and no registry row is orphaned.',
+      'CROSS-CUTTING LENS: events, payloads, consumers.',
+      'Read ' + SRC.events + ', every `Subscribe(`/`RegisterTasks`/`Register*Tasks` call in ' + SRC.apiMain + ' and ' + SRC.workerMain + ', the publish call sites (grep `Publish(` under ' + SRC.modulesDir + '), and the event/consumer text of every spec under ' + S + '/ plus README § Conventions (Events) and ADR-17 (README § Decision records).',
+      'Check: (a) registry closure — every event/task a spec emits or consumes exists in events.md with matching name, payload fields and consumers, and no registry row is orphaned; (b) every field a consumer reads exists in the emitter\'s payload (spec AND the Go payload struct); (c) the subscription table is per-binary and Publish of an unregistered name is a silent no-op — every event emitted from cmd/api must be subscribed in cmd/api; (d) each task runs on the Asynq server (heavy / image / light) its spec says; (e) ADR-17: account and layout emit too, notify fans admin changes to effective-`*` holders — is every spec/registry consistent with that ruling, and is any not-yet-built part recorded as a gap; (f) idempotency/dedup keys on projections (stream_items unique key, notify dedup) are coherent across emitter and consumer specs.',
     ].join('\n'),
   },
   {
     key: 'deps',
     prompt: RULES + [
-      'CROSS-CUTTING LENS: dependency graph, sequencing, status coherence.',
-      'Read ' + S + '/README.md, the header block (Status/Depends on/Downstream) and §9 timeline of all 9 SPEC files, and ' + B + '/README.md.',
-      'Check: dependency claims are mutually consistent and acyclic; the suggested implementation order respects every Depends-on; downstream-consumer lists are reciprocal (if X lists Y downstream, Y references X); ordinal/arithmetic claims are right (e.g. SPEC-05 claims journal would be "the third module to be wired end-to-end" — count what is wired today (account, media) plus what the build order wires first (notify per SPEC-04) and verify); the SPEC-09-P0-before-SPEC-03-data pressure is reflected consistently; §9 phase-effort sums match each stated total; statuses agree between briefs README, specs README, and spec headers.',
+      'CROSS-CUTTING LENS: README coherence, dependency graph, build state, indexes.',
+      'Read ' + SRC.readme + ' (Documents table, Renumbering, Build state and what remains, Implementation gaps index, Decisions recorded…, Open owner decisions, Decision records index) and the header block + §9 + §11 of every spec under ' + S + '/; ' + SRC.backlog + '.',
+      'Check: Depends-on/Downstream claims mutually consistent, acyclic, and reciprocal; build order respects them; statuses agree between the README Documents table and spec headers (Status vocabulary per ' + SRC.style + '); the gaps-index row counts and severity ranges match each spec\'s actual §11 rows; every backlog item that cites a gap points at a row that exists; the Decision records index lists ADR-01…17 with the correct Location, and every anchor exists exactly once in the named file; README decision rulings are reflected in the specs they govern (a ruling that a spec still contradicts is a finding against that spec); no doc under docs/ still links docs/adr/, briefs/, MILESTONE_CHECKS.md, or an old SPEC filename.',
     ].join('\n'),
   },
   {
-    key: 'reality',
+    key: 'conventions',
     prompt: RULES + [
-      'CROSS-CUTTING LENS: repo-reality — verify factual claims the specs make about this codebase. Use Read/Grep/Glob on the repo. Report a finding ONLY where a spec asserts something false, or presents as fact what the code already contradicts (a spec saying "verify before building" is fine unless the truth is knowable now and contradicts it — then report with the truth).',
-      'Claims to verify (cite code paths in evidence):',
-      '1. media_assets has a duration column usable for SPEC-07 progress_pct (check ' + R + '/backend/db/migrations/0007_media_assets.up.sql and the media module).',
-      "2. users carry a timezone column (SPEC-08 P0.3 'the stored user timezone (D-17)') — check migrations 0002/0006 and D-17 in " + SRC.inventory + '.',
-      '3. HomeView renders a ~685-line hard-coded newsfeed; Composer/post/comment kits are exported but imported by nothing (' + R + '/frontend/src/templates/v1/views/home/HomeView.tsx; grep Composer imports).',
-      '4. NotificationsMenu in NotifMenus.tsx renders a hard-coded NOTIFS fixture (SPEC-04 P0.5).',
-      '5. Components named BirthdayCard, FriendCard, PersonalInfoWidget, WidgetCard, ActivityFeed exist under ' + R + '/frontend/src/templates/v1/ (SPEC-06 P0.4 and SPEC-08 P0.5 treat them as dormant kits to "wire"/"reuse"; if any is absent, those specs must say build-new, not wire).',
-      "6. docker-compose: pgbouncer service exists (SPEC-09 P0.2's 'not through PgBouncer' note must make sense), mailpit absent today (SPEC-04 adds it).",
-      "7. Asynq queue names/weights in " + R + "/backend/cmd/worker/main.go ('transcode' 5, 'thumbnail' 3, 'default' 1) — are SPEC-01's shared low-concurrency heavy-queue plan and SPEC-04's 'default queue (weight 1)' statements consistent with what exists?",
-      '8. platform/storage uploader: does it accept io.Reader streaming (answers SPEC-09 §10 open question — if determinable, the spec should state the answer)?',
-      '9. Makefile: no existing target name collides with restore-drill; cited targets exist.',
-      '10. ' + SRC.inventory + ': D-17, D-20, D-25, D-29 actually say what the specs claim.',
-      '11. docs/product/analysis/gap-audit-2026-07.md does NOT exist on disk — SPEC-04 links it as Upstream. Find where its content went (backlog.md? git history?) and propose the correct retarget.',
-      '12. A /healthz endpoint exists in ' + R + '/backend/cmd/api (SPEC-09 P0.5 references it as the thing to leave untouched).',
-      '13. ' + SRC.frontendDoc + ' has §8 performance budgets (multiple specs cite frontend.md §8).',
-      "14. SPEC-08/09 cite 'the shared periodic runner (SPEC-01 P0.3 convention)' — read SPEC-01 P0.3 and confirm it actually establishes a periodic-task convention they can ride.",
-      '15. Vidstack is the actual player dependency (package.json / player component) for SPEC-07 beacon/resume claims.',
-    ].join('\n'),
-  },
-  {
-    key: 'sql',
-    prompt: RULES + [
-      'CROSS-CUTTING LENS: data-model/SQL correctness.',
-      'Read every §6 Data-model SQL block in all 9 SPEC files under ' + S + '/, plus ' + R + '/backend/db/migrations/0007_media_assets.up.sql and 0003_account_rbac.up.sql for house style.',
-      'Check: (a) Postgres-17 validity; (b) prose↔DDL mismatches (constraints the text promises but DDL lacks, or vice versa); (c) missing indexes for access paths the same spec\'s endpoints require (cursor keys, dedup lookups, janitor scans, unread predicates); (d) ON DELETE behaviors vs described semantics (cascades that contradict prose, SET NULL columns declared NOT NULL, etc.); (e) cross-spec collisions: duplicate table names, shared-sequence migration contention handled per convention, identity-anchor users(id) FK applied consistently where specs claim it; (f) uuid[] columns: integrity strategy stated; (g) CHECK constraints that reject legal states the prose allows or admit illegal ones (e.g. birthday month/day/year combos, transfer-leg CHECK in bank, status enums).',
-      'Report with exact corrected DDL in proposed_fix.',
+      'CROSS-CUTTING LENS: binding conventions — RBAC grammar, tenancy/RLS + the ADR-12 sharing exception, list contract, timezone, Problem types.',
+      'Read ' + SRC.perm + ' (the REAL grammar: segment rules, scope tokens, wildcard + AllowsCode), ' + SRC.rbacMig + ' and every later migration that inserts permissions/role_permissions (grep `INSERT INTO permissions`/`role_permissions` in ' + SRC.migrations + '), ' + SRC.security + ', ' + SRC.modules + ', ' + SRC.readme + ' § Conventions, ADR-07/ADR-12 in SPEC-01, ADR-15/16 in the README, and every §5 RBAC/permission prose, §6 DDL and §7 table across ' + S + '/.',
+      'Check: (a) every permission code a spec names parses under the real grammar and is seeded (which migration, which role) — or the spec says it is not yet seeded and §11 records it; `:own` codes are never the sole gate where ownership matters (RequirePermission checks no ownership); (b) every user/org-data table a spec defines or cites is tenant-scoped (tenant_id + ENABLE/FORCE RLS + tenant_isolation policy) unless the spec states why it is global, and the migrations at HEAD agree; (c) ADR-12 is the ONLY sanctioned cross-tenant read (published music/movies/stories to household+friends via one SECURITY DEFINER predicate) — flag any spec implying another cross-tenant read, or a vertical spec whose sharing text contradicts ADR-12; (d) every collection endpoint follows ADR-16 `{items[, next_cursor]}` with keyset cursors and a lenient clamped limit (admin users offset is the one exception) or §11 records the divergence; (e) day/month boundaries follow ADR-15; (f) Problem types are `<module>/<kebab-case>`, declared in the spec\'s Problem-types line, and written via internal/platform/server; (g) backend/MODULES.md agrees with the README conventions.',
     ].join('\n'),
   },
   {
     key: 'api',
     prompt: RULES + [
-      'CROSS-CUTTING LENS: API-contract completeness and Problem-type closure.',
-      'Read all §7 API-summary tables + §5 requirement bodies in all 9 SPEC files + ' + SRC.readme + ' conventions.',
-      'Check: every endpoint mentioned in prose appears in its §7 table and vice versa (methods and paths matching); every Problem type used anywhere in ACs/prose is declared in that spec\'s Problem-types line and follows <module>/<kebab-case>; pagination conventions coherent (cursor vs page — flag unexplained divergence between specs); a permission (or explicit "authenticated"/"public") is present for every row; response shapes are defined wherever ANOTHER spec consumes them (SPEC-06 widgets consume SPEC-03 /bank/dashboard, SPEC-07 /continue, SPEC-08 /people/upcoming-birthdays, SPEC-04 /me/notifications — do the producer specs define the fields the widgets need?); the x-required-permission extension note is consistently applied.',
+      'CROSS-CUTTING LENS: API contract — spec §7 tables vs ' + SRC.openapi + ' vs the shipped route tables.',
+      'Read every §7 API table + §5 endpoint prose under ' + S + '/, ' + SRC.openapi + ' (paths, methods, x-required-permission, response schemas, Problem responses), and each module\'s MountHTTP route table under ' + SRC.modulesDir + '/*/module.go (+ ' + SRC.apiMain + ' for routes mounted there).',
+      'Check: every endpoint in a spec §7 exists in openapi.yaml with the same method/path/permission, and vice versa for that module; endpoints a spec presents as shipped are actually routed with the stated method and gate (a mismatch not recorded in §11 is an unrecorded-gap); every endpoint mentioned in prose appears in its §7 table; response shapes are defined wherever ANOTHER spec or a frontend widget consumes them; openapi response schemas match what the handler actually writes for the endpoints you sample (ADR-10: codegen is enforced, handler behaviour is not).',
     ].join('\n'),
   },
   {
-    key: 'frontend',
+    key: 'tests',
     prompt: RULES + [
-      'CROSS-CUTTING LENS: frontend implementability and convention compliance.',
-      'Read the frontend requirements: SPEC-02 P0.3/P0.5, SPEC-04 P0.5, SPEC-05 P0.4, SPEC-06 P0.3/P0.4, SPEC-07 P0.2/P0.4, SPEC-08 P0.5, SPEC-03 §8 — plus ' + SRC.feClaude + ', ' + R + '/frontend/src/templates/README.md, and the actual tree under ' + R + '/frontend/src/templates/v1/.',
-      'Check: named components/routes exist, or the spec explicitly says to create them (never "wire"/"reuse" something absent); D-32 (TanStack owns server state, never Zustand), D-33 (RSC-first decision tree), D-34 (SessionKeeper is auth-only) are respected by each requirement as written; route claims fit the (app)/(public) route-group + version-switched templates/v{N} registry architecture (a new page needs a template-tree view + registry entry — do specs acknowledge that where they add routes like /people, /bank, /library/media?); client-island vs RSC labels are coherent; the SPEC-07 beacon (sendBeacon/keepalive on pagehide) actually works under the cookie model (portal_access HttpOnly SameSite=Strict Path=/ — do beacons carry auth? any CSRF/token-expiry pitfall worth a spec note?).',
-    ].join('\n'),
-  },
-  {
-    key: 'critic',
-    prompt: RULES + [
-      'CROSS-CUTTING LENS: completeness critic — what does the spec SET as a whole still fail to cover for its stated purpose (implementation-ready, gap-free)?',
-      'Read all ten files in ' + S + '/, ' + B + '/README.md, ' + SRC.events + ', and ' + R + '/MILESTONE_CHECKS.md if it exists.',
-      'Consider (report only actionable gaps with concrete fixes, not philosophy):',
-      '- RBAC permission seeding: multiple specs say "granted to the base user role in the seed" — does any spec own the mechanics (data migration pattern, which migration file)? Should the conventions section?',
-      '- i18n: conventions say Problem type URIs are also i18n keys (D-7) — do the new specs (05-09) carry any i18n obligation note, and is that consistent with 01-04?',
-      '- Security posture of new surfaces: SPEC-09 asynqmon at /admin/queues (session gating vs its own assets, CSRF), takeout download URL signing/TTL, ops status information disclosure.',
-      '- NFRs: stream page size/limits (SPEC-06), scan cost bounds (SPEC-08 at n=1000 people), backup duration/window and dump size growth (SPEC-09), beacon write amplification (SPEC-07).',
-      '- Header hygiene: SPEC-01 carries Status/Last-verified/rev history (§11); SPEC-02/03 lack Status headers and revision history — should the set be normalized? ',
-      '- Docs-to-update-in-same-PR obligations: SPEC-03 §7 knowingly diverges from D-14/D-7 money-wire rule and asks to reconcile frontend.md §5.3 — is that tracked anywhere actionable? Similar dangling obligations elsewhere?',
-      '- Definition-of-done consistency: events.md registration, openapi.yaml landing, MILESTONE_CHECKS.md updates — uniformly stated across specs?',
-      '- Anything a brief promised that NO spec picked up at all.',
+      'CROSS-CUTTING LENS: test and traceability coverage.',
+      'Read ' + SRC.matrix + ', ' + SRC.testing + '/TEST-PLAN.md and TEST-CASES-SPEC-*.md, the requirement IDs (P0.x/P1.x + ACs) of every spec under ' + S + '/, and the real tests (`find ' + P('backend') + ' -name "*_test.go"`, ' + P('frontend/src') + ' *.test.ts(x)).',
+      'Check: every P0 requirement of a built spec has a matrix row; matrix rows cite requirement IDs that exist under the CURRENT numbering; a row graded as tested names a test that exists and actually exercises it (open it); TEST-CASES files are named for the current spec numbers and their TC ids are referenced consistently by specs/§11 rows; specs whose test-cases file is missing are stated as such somewhere (README or the spec), not silently absent; manual-run results cited by a spec exist where it says.',
     ].join('\n'),
   },
 ]
 
-// ---- Phase 1: finders (barrier justified: dedup needs the full set) ----
+// ---- Phase 1: finders (barrier justified: merge needs the full set) --------
+phase('Review')
 const finderThunks = []
-for (const s of SPECS) {
-  finderThunks.push(() => agent(perSpecPrompt(s), { label: 'spec:' + s.file.replace('.md', ''), phase: 'Review', schema: FIND_SCHEMA, effort: 'high' }))
+for (const a of areas) {
+  finderThunks.push(() => run(areaPrompt(a), { label: 'area:' + a.key, phase: 'Review', schema: FIND_SCHEMA, effort: 'high' }))
 }
 for (const c of CROSS) {
-  finderThunks.push(() => agent(c.prompt, { label: 'x:' + c.key, phase: 'Review', schema: FIND_SCHEMA, effort: 'high' }))
+  finderThunks.push(() => run(c.prompt, { label: 'x:' + c.key, phase: 'Review', schema: FIND_SCHEMA, effort: 'high' }))
 }
-const raw = (await parallel(finderThunks)).filter(Boolean).flatMap((r) => r.findings || [])
-log('Review complete: ' + raw.length + ' raw findings')
+const finderResults = await parallel(finderThunks)
+const failed = finderResults.map((r, i) => (r ? null : (i < areas.length ? 'area:' + areas[i].key : 'x:' + CROSS[i - areas.length].key))).filter(Boolean)
+if (failed.length) log('WARNING: finders returned nothing (skipped or errored): ' + failed.join(', ') + ' — their coverage is missing from this run')
+const raw = finderResults.filter(Boolean).flatMap((r) => r.findings || [])
+log('Review complete: ' + raw.length + ' raw findings from ' + (finderThunks.length - failed.length) + ' finders')
 
-// ---- Phase 2: dedup/merge ----
-const dedupPrompt = RULES + [
-  'You are the dedup/merge editor for ' + raw.length + ' raw findings from 18 independent reviewers (JSON below).',
+// ---- Phase 2: merge + completeness critic ----------------------------------
+phase('Merge')
+const merged = raw.length ? await run(RULES + [
+  'You are the dedup/merge editor for ' + raw.length + ' raw findings from ' + finderThunks.length + ' independent reviewers (JSON below).',
   'Merge findings that describe the SAME underlying defect (even when filed under different files — set file to where the fix belongs, or MULTIPLE). Keep distinct defects separate — when unsure, keep separate.',
-  'For merged items keep: the sharpest evidence, the most complete proposed_fix, the max severity.',
-  'Drop only: pure style/lint complaints, and findings that merely restate a documented non-blocking open question without showing it is wrong.',
+  'For merged items keep the sharpest evidence, the most complete proposed_fix, the max severity, and the most specific kind.',
+  'Drop only pure style/lint complaints and findings that restate a §11 gap row, an owner ruling, or a documented open question without showing it is wrong.',
   'Do NOT invent new findings. Output every surviving finding, sorted critical → major → minor.',
   'RAW FINDINGS JSON:',
   JSON.stringify(raw),
-].join('\n')
-const merged = await agent(dedupPrompt, { label: 'dedup', phase: 'Merge', schema: FIND_SCHEMA, effort: 'high' })
-const canon = (merged && merged.findings) || []
+].join('\n'), { label: 'merge', phase: 'Merge', schema: FIND_SCHEMA, effort: 'high' }) : { findings: [] }
+const canon = ((merged && merged.findings) || []).slice()
 log('Merge complete: ' + canon.length + ' canonical findings')
 
-// ---- Phase 3: adversarial verify, grouped by file ----
-const byFile = {}
-for (const f of canon) {
-  const k = f.file || 'MULTIPLE'
-  if (!byFile[k]) byFile[k] = []
-  byFile[k].push(f)
+const critic = await run(RULES + [
+  'COMPLETENESS CRITIC. ' + finderThunks.length + ' reviewers covered: ' + areas.map((a) => a.key + ' (' + a.files.join(', ') + ')').join('; ') + '; lenses ' + CROSS.map((c) => c.key).join(', ') + (failed.length ? '. These finders FAILED and covered nothing: ' + failed.join(', ') : '') + '.',
+  'Their canonical findings (summaries) are below. Ask what is missing: a spec, section, owner ruling, ADR, §11 table, doc (' + [SRC.events, SRC.matrix, SRC.inventory, SRC.context, SRC.security, SRC.frontendDoc, SRC.modules, SRC.feClaude].join(', ') + ') or code area nobody examined; a class of defect found in one spec but not checked in its siblings; frontend claims (D-32 TanStack owns server state, D-33 RSC-first, D-34 SessionKeeper, the templates/v{N} registry in ' + SRC.feTemplates + '/README.md) nobody checked.',
+  'Then CLOSE those holes yourself: investigate and return only NEW, evidenced findings (same schema) that are not duplicates of the list. Empty is fine.',
+  'EXISTING FINDINGS:',
+  JSON.stringify(canon.map((f, i) => ({ i, file: f.file, section: f.section, summary: f.summary }))),
+].join('\n'), { label: 'critic', phase: 'Merge', schema: FIND_SCHEMA, effort: 'high' })
+const criticFindings = (critic && critic.findings) || []
+canon.push(...criticFindings)
+log('Critic added ' + criticFindings.length + ' findings → ' + canon.length + ' to verify')
+
+// ---- Phase 3: adversarial verify, grouped by area ---------------------------
+phase('Verify')
+const areaOfFile = (file) => {
+  const m = /^SPEC-(\d+)/.exec(file || '')
+  if (!m) return 'cross'
+  const a = areas.find((x) => x.nums.includes(parseInt(m[1], 10)))
+  return a ? a.key : 'cross'
 }
+const groups = {}
+for (const f of canon) {
+  const k = areaOfFile(f.file)
+  if (!groups[k]) groups[k] = []
+  groups[k].push(f)
+}
+const batches = []
+for (const k of Object.keys(groups)) {
+  const fs = groups[k]
+  for (let i = 0; i < fs.length; i += VERIFY_CHUNK) batches.push({ key: k + (fs.length > VERIFY_CHUNK ? '#' + (i / VERIFY_CHUNK + 1) : ''), group: k, items: fs.slice(i, i + VERIFY_CHUNK) })
+}
+log('Verifying ' + canon.length + ' findings in ' + batches.length + ' batches (≤' + VERIFY_CHUNK + ' each, refuter + fix audit per batch)')
 
-const refuterPrompt = (file, json) => RULES + [
-  'ADVERSARIAL VERIFICATION for findings on: ' + (file === 'MULTIPLE' ? 'multiple files under ' + S + '/' : S + '/' + file),
-  'Default stance: each finding is WRONG until you re-verify it against the actual files. Re-read the cited files yourself — never trust the quoted evidence.',
-  "For each indexed finding return verdict: 'confirmed' (evidence checks out, severity apt) | 'downgraded' (real but overstated or partially wrong — explain what part survives) | 'refuted' (not a real defect — quote the source text that disproves it).",
-  'Also refute findings that merely restate a documented, deliberate decision that has its rationale in place.',
-  "IMPORTANT — the spec files were REVISED on 2026-07-10 AFTER these findings were captured; many defects have since been fixed in place (look for '(2026-07-10)' / 'rev 3' annotations). If the current file no longer exhibits the defect, return 'refuted' with reasoning beginning 'FIXED:' — that counts as resolved, not as a false positive. Only 'confirmed'/'downgraded' verdicts represent defects still open in the CURRENT text.",
+const scopeOf = (g) => (g === 'cross' ? 'README.md / MULTIPLE files under ' + S + '/' : 'the ' + g + ' specs under ' + S + '/')
+
+const refuterPrompt = (g, json) => RULES + [
+  'ADVERSARIAL VERIFICATION for findings on ' + scopeOf(g) + '.',
+  'Default stance: each finding is WRONG until you re-verify it yourself against the CURRENT spec text and HEAD code. Re-read the cited files; never trust the quoted evidence.',
+  "Per indexed finding: 'confirmed' (evidence checks out, severity apt) | 'downgraded' (real but overstated or partly wrong — say what survives) | 'refuted' (not a defect — quote the text or code that disproves it).",
+  'Also refute: findings that restate a deliberate decision with its rationale in place, an owner ruling, or a divergence already recorded in that spec\'s §11 table; and any defect the current text no longer exhibits (reasoning begins "FIXED:").',
   'FINDINGS JSON:',
   json,
 ].join('\n')
 
-const fixAuditPrompt = (file, json) => RULES + [
-  'FIX AUDIT for findings on: ' + (file === 'MULTIPLE' ? 'multiple files' : S + '/' + file),
-  'Assume each defect below was real when captured. The spec files were REVISED on 2026-07-10 after capture: first check whether the current file already resolves the defect — if yes, judge the APPLIED fix (the current text) instead of the proposed one and return verdict for it; if the applied fix is sound, return \'refuted\' with reasoning beginning \'FIXED:\'. Otherwise judge the proposed_fix: would applying it fully resolve the defect without contradicting the binding conventions (' + SRC.readme + '), the other specs, or the code reality?',
-  "verdict: 'confirmed' (fix right as written) | 'downgraded' (fix incomplete/needs adjustment) | 'refuted' (fix wrong, or already correctly fixed in the current text — prefix 'FIXED:' for the latter). Whenever not confirmed, ALWAYS provide revised_fix with the corrected concrete fix (empty if FIXED).",
+const fixAuditPrompt = (g, json) => RULES + [
+  'FIX AUDIT for findings on ' + scopeOf(g) + '.',
+  'Assume each defect is real. Judge the proposed_fix: would applying it fully resolve the defect without contradicting the binding conventions (' + SRC.readme + '), the ADRs and owner rulings, the other specs, or HEAD code? For unrecorded-gap fixes, check the row follows that spec\'s §11 column format and names real files/functions; for stale-gap-row fixes, check the code really matches now and that the README gaps index and matrix follow-ups are included.',
+  "verdict: 'confirmed' (fix right as written) | 'downgraded' (fix incomplete/needs adjustment) | 'refuted' (fix wrong). Whenever not confirmed, ALWAYS give revised_fix with the corrected concrete fix.",
   'FINDINGS JSON:',
   json,
 ].join('\n')
 
-const verified = await parallel(Object.entries(byFile).map(([file, fs]) => async () => {
-  const json = JSON.stringify(fs.map((f, j) => ({ index: j, ...f })))
+const verified = await parallel(batches.map((b) => async () => {
+  const json = JSON.stringify(b.items.map((f, j) => ({ index: j, ...f })))
   const pair = await parallel([
-    () => agent(refuterPrompt(file, json), { label: 'refute:' + file.replace('.md', '').slice(0, 18), phase: 'Verify', schema: VERDICTS_SCHEMA, effort: 'high' }),
-    () => agent(fixAuditPrompt(file, json), { label: 'fixaudit:' + file.replace('.md', '').slice(0, 16), phase: 'Verify', schema: VERDICTS_SCHEMA, effort: 'medium' }),
+    () => run(refuterPrompt(b.group, json), { label: 'refute:' + b.key, phase: 'Verify', schema: VERDICTS_SCHEMA, effort: 'high' }),
+    () => run(fixAuditPrompt(b.group, json), { label: 'fixaudit:' + b.key, phase: 'Verify', schema: VERDICTS_SCHEMA, effort: 'medium' }),
   ])
   const ref = pair[0], fix = pair[1]
-  return fs.map((f, j) => ({
+  return b.items.map((f, j) => ({
     ...f,
     refuter: (ref && ref.verdicts && ref.verdicts.find((v) => v.index === j)) || null,
     fix_audit: (fix && fix.verdicts && fix.verdicts.find((v) => v.index === j)) || null,
@@ -271,12 +327,99 @@ const verified = await parallel(Object.entries(byFile).map(([file, fs]) => async
 }))
 
 const flat = verified.filter(Boolean).flat()
+const unverified = flat.filter((f) => !f.refuter)
+if (unverified.length) log('WARNING: ' + unverified.length + ' findings got no refuter verdict; they are listed as unverified, not confirmed')
 const confirmed = flat.filter((f) => f.refuter && f.refuter.verdict !== 'refuted')
-const refuted = flat.filter((f) => !f.refuter || f.refuter.verdict === 'refuted')
-log('Verify complete: ' + confirmed.length + ' confirmed, ' + refuted.length + ' refuted')
+const refuted = flat.filter((f) => f.refuter && f.refuter.verdict === 'refuted')
+log('Verify complete: ' + confirmed.length + ' confirmed, ' + refuted.length + ' refuted, ' + unverified.length + ' unverified')
+
+// ---- Phase 4: worklog (format of docs/product/analysis/spec-gap-fix-worklog-2026-09-30.md)
+phase('Write')
+const SEV = { critical: '🔴 CRITICAL', major: '🟠 MAJOR', minor: '🟡 MINOR' }
+const SEV_HEAD = { critical: '## 🔴 Critical', major: '## 🟠 Major', minor: '## 🟡 Minor' }
+const fileRank = (f) => (f === 'MULTIPLE' ? '0' : f === 'README.md' ? '1' : '2' + f)
+const sevOf = (f) => (f.refuter && f.refuter.verdict === 'downgraded' && f.severity === 'critical' ? 'major' : f.severity) || 'minor'
+const ordered = []
+for (const sev of ['critical', 'major', 'minor']) {
+  const of = confirmed.filter((f) => sevOf(f) === sev).sort((x, y) => fileRank(x.file || 'MULTIPLE').localeCompare(fileRank(y.file || 'MULTIPLE')))
+  ordered.push(...of.map((f) => ({ ...f, sev })))
+}
+const id = (i) => 'F' + String(i + 1).padStart(3, '0')
+const count = (sev) => ordered.filter((f) => f.sev === sev).length
+const fixText = (f) => {
+  const a = f.fix_audit
+  if (a && a.verdict !== 'confirmed' && a.revised_fix) return ['**Fix (revised by verify):** ', a.revised_fix]
+  if (f.refuter && f.refuter.verdict === 'downgraded' && f.refuter.revised_fix) return ['**Fix (revised by verify):** ', f.refuter.revised_fix]
+  return ['**Fix:** ', f.proposed_fix]
+}
+const lines = []
+lines.push('# Spec-gap fix worklog — ' + DATE, '')
+lines.push('**Status:** current · **Last verified:** ' + DATE + ' (generated from the run ' + DATE + '; ticks record fix progress)')
+lines.push('**Spec numbers:** this audit cites the current (post-2026-10-01) numbering — see [specs/README.md § Renumbering](../specs/README.md#renumbering-2026-10-01).', '')
+lines.push('**Source:** `spec-gap-review` workflow run' + (A.runLabel ? ' `' + A.runLabel + '`' : '') + ' (' + (agentCount + 1) + ' agents: scout, ' + finderThunks.length + ' finders, merge, completeness critic, adversarial refute + fix audit in ' + batches.length + ' batches, writer). ' + raw.length + ' raw + ' + criticFindings.length + ' from the critic → ' + canon.length + ' canonical → **' + ordered.length + ' confirmed** (' + count('critical') + ' critical · ' + count('major') + ' major · ' + count('minor') + ' minor), ' + refuted.length + ' refuted (listed at the end, not to be applied)' + (unverified.length ? ', ' + unverified.length + ' unverified (listed at the end)' : '') + '. Baseline: HEAD `' + HEAD + '`' + (scout && scout.branch ? ' on `' + scout.branch + '`' : '') + '.', '')
+lines.push('## How to resume (read this first if continuing after a token-out)', '')
+lines.push('- This file is the single source of truth for fix progress. Each finding has a stable ID `Fnnn` and a checkbox.')
+lines.push('- `- [ ]` = not started · `- [x]` = fixed · `- [~]` = partial/deferred (see the **Applied** note) · `- [c]` = the spec is now correct but the **shipped code** still diverges — record it as a row in that spec\'s "Implementation gaps vs shipped code" section and name it in the **Applied** note.')
+lines.push('- *Kind* says what the fix touches: `spec-defect` (spec text) · `unrecorded-gap` (add the given row to the spec\'s gaps section) · `stale-gap-row` (delete/correct a gaps row; regrade TRACEABILITY-MATRIX; adjust the README gaps index) · `doc-drift` (a doc outside specs/).')
+lines.push('- Every finding carries its own **Fix** text. Where verification revised the proposal, only the revised text is given — apply that, not the original.')
+lines.push('- **Line numbers in Evidence are as of `' + HEAD + '` (' + DATE + ')**; re-locate by quoted text if a file has moved.')
+lines.push('- **Code is the tie-breaker**: where a spec and shipped code disagree and the finding says the code is right, correct the spec; otherwise record the code follow-up as a gaps row — never change code inside this worklog.')
+lines.push('- **Work top-to-bottom**: 🔴 critical → 🟠 systemic (MULTIPLE / README) → 🟠 per-spec major → 🟡 minor. Fix **one spec file at a time**; tick boxes and fill **Applied** in the same edit.')
+lines.push('- After ticking, update the **Progress** counter just below.', '')
+lines.push('## Progress', '')
+lines.push('`[ updated ' + DATE + ' ]`  **Fixed in the specs: 0 / ' + ordered.length + '**  ·  critical 0/' + count('critical') + ' · major 0/' + count('major') + ' · minor 0/' + count('minor'), '', '---', '')
+let lastSev = null, lastFile = null
+ordered.forEach((f, i) => {
+  if (f.sev !== lastSev) { lines.push(SEV_HEAD[f.sev], ''); lastSev = f.sev; lastFile = null }
+  const file = f.file || 'MULTIPLE'
+  if (file !== lastFile) { lines.push('### ' + file, ''); lastFile = file }
+  const fx = fixText(f)
+  lines.push('#### - [ ] ' + id(i) + ' · ' + SEV[f.sev] + ' · `' + file + '` · ' + (f.section || '—'))
+  lines.push('*Category:* ' + (f.category || '—') + ' · *Kind:* ' + (f.kind || 'spec-defect') + '  ')
+  lines.push('**Problem:** ' + f.summary + '  ')
+  lines.push('**Evidence:** ' + f.evidence + '  ')
+  if (f.refuter && f.refuter.verdict === 'downgraded') lines.push('**Verify note:** ' + f.refuter.reasoning + '  ')
+  lines.push(fx[0] + fx[1] + '  ')
+  lines.push('**Applied:** —', '')
+})
+const followUps = ordered.map((f, i) => ({ f, i })).filter((x) => x.f.kind === 'unrecorded-gap' || x.f.kind === 'stale-gap-row')
+lines.push('## Code follow-ups (not done here)', '')
+lines.push('Findings whose fix is a gaps-table change, i.e. where HEAD code and the spec disagree. The spec text is the target; the gaps row is the ticket.', '')
+if (followUps.length) followUps.forEach((x) => lines.push('- **' + id(x.i) + '** (' + x.f.kind + ', `' + (x.f.file || 'MULTIPLE') + '`) — ' + x.f.summary))
+else lines.push('- none')
+lines.push('')
+if (unverified.length) {
+  lines.push('## Unverified (no refuter verdict — re-check before applying)', '')
+  unverified.forEach((f) => lines.push('- `' + (f.file || 'MULTIPLE') + '` — ' + f.summary))
+  lines.push('')
+}
+lines.push('## Refuted (do not apply)', '')
+if (refuted.length) refuted.forEach((f) => lines.push('- `' + (f.file || 'MULTIPLE') + '` — ' + f.summary + ' *(' + f.refuter.reasoning.replace(/\s+/g, ' ').slice(0, 300) + ')*'))
+else lines.push('- none')
+const markdown = lines.join('\n') + '\n'
+const worklogPath = P('docs/product/analysis/spec-gap-fix-worklog-' + DATE + '.md')
+
+let written = null
+if (A.write !== false && ordered.length) {
+  written = await run([
+    'Write a file. Target path: ' + worklogPath + '. If that file already exists, do NOT overwrite it: use the same name with a "-2" suffix before .md (then "-3", …).',
+    'Write the content between the markers below EXACTLY as given (verbatim, no edits, no reformatting, without the marker lines) using the Write tool. Do not touch any other file. Return only the path you wrote.',
+    '<<<BEGIN_CONTENT',
+    markdown,
+    'END_CONTENT>>>',
+  ].join('\n'), { label: 'write-worklog', phase: 'Write', effort: 'low' })
+  log('Worklog: ' + (written || 'writer returned nothing — use the returned markdown'))
+} else {
+  log(ordered.length ? 'write=false: worklog not written; markdown returned' : 'No confirmed findings; no worklog written')
+}
 
 return {
-  counts: { raw: raw.length, canonical: canon.length, confirmed: confirmed.length, refuted: refuted.length },
-  confirmed: confirmed,
-  refuted: refuted.map((f) => ({ file: f.file, severity: f.severity, summary: f.summary, why: (f.refuter && f.refuter.reasoning) || 'no verdict returned' })),
+  date: DATE,
+  head: HEAD,
+  agents: agentCount,
+  worklog: written,
+  counts: { raw: raw.length, critic: criticFindings.length, canonical: canon.length, confirmed: ordered.length, critical: count('critical'), major: count('major'), minor: count('minor'), refuted: refuted.length, unverified: unverified.length },
+  failed_finders: failed,
+  confirmed: ordered.map((f, i) => ({ id: id(i), file: f.file, severity: f.sev, kind: f.kind, summary: f.summary })),
+  markdown: markdown,
 }

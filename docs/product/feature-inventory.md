@@ -2,7 +2,7 @@
 
 **Status:** current · **Last verified:** never (as a whole — this file is ~1,400 lines and has only ever been corrected in places; treat any state claim in it as unverified and prefer `/CLAUDE.md` § Current status. Decision IDs `D-N` are stable regardless)
 
-> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout (there is no tracker file — `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; verify against the code). v1 scope is the hard cut in [ADR-01](../adr/01-v1-scope-cut.md): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](../adr/06-local-auth-model.md); anything OIDC/Authentik below is retired and carries a superseded note.
+> **Status (2026-07-06):** the v1 demo loop is **CLOSED** — local password sign-in → upload → transcode → HLS playback → revocable logout (there is no tracker file — `MILESTONE_CHECKS.md` was deleted in `f11cf3f`; verify against the code). v1 scope is the hard cut in [ADR-01](specs/SPEC-03-platform-ops.md#adr-01): §§8–13 below and roadmap Phases 5–12 are long-horizon, deferred. Auth is local-password per [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06); anything OIDC/Authentik below is retired and carries a superseded note.
 
 Derived from [CLAUDE.md](../../CLAUDE.md) (architecture + module split) and [template-main/social/](../../template-main/social/) (visual/UX reference for the social layer). Each feature is mapped to the backend module that should own it ([backend/MODULES.md](../../backend/MODULES.md) rules apply: cross-module access goes through `api/` only).
 
@@ -12,29 +12,29 @@ Status legend: **✅ shipped** = wired, mounted, tested end-to-end, **✓ scaffo
 
 ## 1. Identity, Auth & Access — module `account` ✅
 
-Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module".
+Source: [backend/internal/modules/account/](../../backend/internal/modules/account/), CLAUDE.md §"Account module". The as-built contract (registration with approval, login, refresh, RBAC, admin console) and its gaps are [SPEC-01](specs/SPEC-01-account-identity-admin.md).
 
-> **Auth direction updated — [ADR-06](../adr/06-local-auth-model.md) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
+> **Auth direction updated — [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06) (2026-07-05).** Login is **local password auth** (Portal owns credentials); the OIDC-via-Authentik items marked [D-26]/[D-28] below are **superseded** and retired. The token/refresh/RBAC/revocation/audit items are unchanged.
 
-- **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account and returns 201 **without a session** (the user then signs in at `/login`). No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
+- **Local password sign-in** — `POST /api/v1/auth/login {email, password, remember}` verifies `users.password_hash` (Argon2id, constant-time) and issues the tokens below; `POST /auth/register {email, password, display_name}` creates the account as `pending` and returns 201 **without a session**; the user can sign in once an approver approves it (migration `0031`; SPEC-01 P0.1). Target (owner decisions 2026-10-02 A1–A2): the 201 is identical for a new and an existing email, and the first Superadmin is pre-created from `BOOTSTRAP_SUPERADMIN_EMAIL` / `BOOTSTRAP_SUPERADMIN_PASSWORD` instead of being the first registrant. No IdP, no `/auth/callback`, no `state`/`nonce`. Brute-force rate-limit + lockout guard the endpoint. *(Replaces the former OIDC-via-Authentik flow.)*
 - **Dual-token session** — 5-min HS256 access JWT (rotating `kid`) + 256-bit refresh token (SHA-256 at rest; TTL via `REFRESH_TOKEN_TTL`, currently 24h). Login's `remember` flag selects a persistent 24h cookie vs a session cookie.
 - **Cookie + Bearer modes** — `portal_access` (Path=/) / `portal_refresh` (Path=/api/v1/auth) HttpOnly Secure cookies for browser, plus a `portal_session` marker cookie (Path=/) read by the Next.js middleware auth gate; `Authorization: Bearer` for API clients.
-- **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bumps `users.token_version`).
-- **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and emits `auth.refresh.reuse_detected`.
+- **Logout** — single-session `/auth/logout` + global `/auth/logout-all` (bumps `users.token_version`). As built, `/auth/logout` also bumps `token_version`; the target (owner decision 2026-10-02 A3, [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.6) revokes only that Session's refresh chain and bumps nothing.
+- **Refresh-token reuse detection** — presenting a rotated token revokes the whole chain and writes the audit action `account.refresh.reuse_detected` (rotation is not yet atomic under concurrent presentation — SPEC-01 §11 row 2).
 - **`/auth/me`** — returns the current user snapshot.
 - **RBAC engine** — `<resource>:<action>[:<scope>]` permission grammar, wildcards, fail-closed parser, role hierarchy (guest → user → creator → editor → moderator → admin → superadmin) with recursive-CTE effective-permission walk.
-- **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](../adr/06-local-auth-model.md); no IdP groups to sync.~~)*
+- **Role assignment** — roles are Portal-managed only (`user_roles`); effective permissions walk the role hierarchy. *(~~[D-26] OIDC group→role sync into `user_oidc_roles` — retired by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06); no IdP groups to sync.~~)*
 - **Step-up auth** — `account.RequireACR("acr:portal:recent_mfa")` middleware on sensitive routes; 403 + `step_up_required` triggers a re-auth. 5-min default window. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-27]
-- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](../adr/06-local-auth-model.md)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-28]
+- **MFA enforcement** — TOTP built in Portal (was Authentik-managed under [D-28], now superseded by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06)). At login, if a user holds any `bank:*` permission without an enrolled second factor, return `mfa_enrollment_required` pointing at Portal's own TOTP enrolment. *(planned — Portal-built per ADR-06 §New responsibilities; not yet implemented)* [D-28]
 - **Permission cache** — Redis-backed, namespaced by `token_version` so revocation = cache bust in one bump.
 - **Account-settings UI** (△ from template): `Account Settings`, `Change Password` (now first-class — Portal owns the password), `Personal Information`, `Education & Employment`, `Hobbies & Interests`, `Notifications` preferences.
 - **Audit log** — best-effort writes via `audit.Logger`; never blocks the request.
 
 ---
 
-## 2. Multi-tenancy — module `tenant` ○
+## 2. Multi-tenancy — module `tenant` ✓
 
-Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant/) (skeleton), `0010_rls_enable` migration in [backend/MODULES.md](../../backend/MODULES.md).
+Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant/) (migrations `0018_tenant_core`–`0020_platform_rls_enable`). What is built and what is deferred (steps 5–7, `cmd/sysjobs`) is [ADR-07](specs/SPEC-01-account-identity-admin.md#adr-07); implementation state is `/CLAUDE.md` § Current status.
 
 - **Organizations** — top-level tenant entity.
 - **Memberships** — user ↔ org assignments, scoped roles.
@@ -45,58 +45,59 @@ Source: [backend/internal/modules/tenant/](../../backend/internal/modules/tenant
 
 ## 3. Media Pipeline — module `media` ✅
 
-Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (has `worker/transcode.go`, `worker/thumbnail.go`, `query/assets.sql`).
+Source: [backend/internal/modules/media/](../../backend/internal/modules/media/) (`service.go`, `objectreader.go`, `worker/{transcode,process_image,thumbnail}.go`). The contract — image ingest, poster, delete, library, download, event fan-out — and its open gaps are [SPEC-04](specs/SPEC-04-media-image-pipeline.md); playback resume is [SPEC-10](specs/SPEC-10-continue-rail.md).
 
-- **Asset upload** — `POST /assets` returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` enqueues the transcode. *(No tenant prefixes in v1.)*
-- **Transcode worker** (Asynq queue `transcode`, priority 5) — FFmpeg VOD HLS (h264/aac; multi-rung ladder planned).
-- **Thumbnail worker** (queue `thumbnail`, priority 3) — *(stub — registered but not implemented; poster + sprite generation planned)*.
-- **Asset state machine** — `pending → processing → ready | failed` ✓; the `media:asset_ready` event is **not yet emitted** (no consumer module exists yet).
-- **Signed URLs** — `mediaapi.SignedURL(assetID, ttl)` for time-limited playback *(planned — v1 ships a public HLS proxy at `GET /assets/{id}/hls/*` instead)*.
-- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](../adr/04-storage-tier-budget.md). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target.
-- **HLS playback** — frontend uses Vidstack.
-
----
-
-## 4. Movies — module `movie` ○
-
-Source: [backend/internal/modules/movie/](../../backend/internal/modules/movie/) (skeleton); CLAUDE.md mentions `(movies)` route group in Next.js.
-
-- **Catalog CRUD** — title, synopsis, cast, genre, year, rating.
-- **Episodes / seasons** — for series.
-- **Asset binding** — depends on `mediaapi` for the playable HLS asset; subscribes to `media:asset_ready` to flip `status=ready`.
-- **Browse / search / filter** by genre, year, rating.
-- **Watch progress** — per-user resume timestamp.
-- **Continue watching** rail.
-- **Ratings & reviews** (△ likely overlaps with social comments).
+- **Asset upload** — `POST /assets` (kinds `video`, `audio`, `image`) returns a presigned PUT URL (`PUT /assets/{id}/source` is the API-proxied upload in dev) → MinIO (dev) / R2 (prod); `POST /assets/{id}/complete` routes by kind: video → transcode, image → image pipeline, audio → marked `ready` at once (no transcode; the music player streams the original). Other modules ingest server-side through `mediaapi.Ingest` (comic and music imports, cover extraction).
+- **Three worker pools** (`cmd/worker`, one Asynq server each — never collapse them into queue weights): **heavy** (`heavy` queue, concurrency 1 — `media:transcode`, FFmpeg VOD HLS h264/aac, single rung; a multi-rung ladder is not built), **image** (`image` queue, `IMAGE_CONCURRENCY`, default 3 — `media:process_image`, metadata-stripped WebP `thumb`/`medium` variants, SPEC-04 P0.1), **light** (`thumbnail`/`default` — `media:thumbnail`, the video `poster` variant, SPEC-04 P0.2; plus the hourly `media:purge_orphans` sweep run per tenant).
+- **Asset state machine** — `pending → processing → ready | failed`. **`media:asset_ready` is emitted** by the transcode and image workers and, for audio, by `/complete` itself; `notify` consumes it (`notify:on_asset_ready`). The life stream deliberately does not project it (`journal/stream.go`). **`media:asset_deleted`** is emitted on delete and consumed by comic, movie, music and story to reap references — those consumers currently run without a tenant scope (backlog #42).
+- **Visibility / ACL** — every asset is `private` by default; `PATCH /assets/{id} {visibility}` makes it `public`. Migration `0032_media_asset_acl` narrows reads inside a tenant to *public, or yours, or you administer the tenant*; the anonymous variant/HLS routes (`OptionalTenant`) therefore serve public rows only. Planned (Decision 2026-10-02b (B13) as revised by B14 — [ADR-12](specs/SPEC-01-account-identity-admin.md#adr-12); [SPEC-04](specs/SPEC-04-media-image-pipeline.md) P0.8): a third value, `shared` — readable by the owner's family (the Users who share a tenant group with the owner in the asset's tenant — Decision 2026-10-02b (B15), SPEC-01 P0.18) and the owner's accepted friends in the same or an actively linked tenant, decided in Postgres by `app_can_read_shared` — which music, movie and story set on the assets of a published item through `mediaapi.SetVisibility`, so that audience plays and watches it; an image's original stays owner-only and a tenant admin reads nothing extra.
+- **Delivery** — `GET /assets/{id}/hls/*` (HLS proxy), `GET /assets/{id}/variants/{variant}` (image/poster variants), `GET /assets/{id}/original` (a `http.ServeContent` route with Range support — the source every `<audio>`/`<video>` element plays from; seeking depends on it). `mediaapi.SignedURL(assetID, ttl)` is built (`Service.SignedOriginalURL`, a presigned GET on the original) and has no caller: the audience plays from `/original` under `shared` visibility instead (Decision 2026-10-02b (B13, B14)).
+- **Storage / CDN edge** — single S3 client (`aws-sdk-go-v2`); MinIO dev / R2 prod per [ADR-04](specs/SPEC-04-media-image-pipeline.md#adr-04). The two-tier MinIO-origin + R2-edge design with invalidation hooks is a long-horizon target. No tenant prefix in object keys; isolation is the database's (RLS on `assets`, `media_asset_variants`, `media_playback_progress`).
+- **HLS playback** — frontend uses Vidstack; progress is stored per asset (`media_playback_progress`, SPEC-10).
+- **Not built** — transcode quotas/backpressure and a dead-letter queue [D-13], sprite sheets, the multi-rung ladder.
 
 ---
 
-## 5. Music — module `music` ○
+## 4. Movies — module `movie` ✓
 
-Source: [backend/internal/modules/music/](../../backend/internal/modules/music/) (skeleton); template page `Music And Playlists.html`.
+Source: [backend/internal/modules/movie/](../../backend/internal/modules/movie/) (migration `0021_movie_core`). As-built spec, scope and gaps: [SPEC-16](specs/SPEC-16-movie-vertical.md) — backend built, no frontend (SPEC-16 P1.1).
 
-- **Tracks** — metadata, artist, album, duration, asset binding via `mediaapi`.
-- **Albums**, **artists**.
-- **Playlists** — user-curated, public/private, collaborative (△).
-- **Queue & playback state** — frontend-side, persisted per-user.
-- **"Now playing"** widget.
-
----
-
-## 6. Stories — module `story` ○
-
-Source: [backend/internal/modules/story/](../../backend/internal/modules/story/) (skeleton); CLAUDE.md mentions `(stories)` route group.
-
-- **Story** with **chapters** (ordered).
-- **Reader** (paginated or long-scroll).
-- **Reading progress** per-user.
-- **Bookmarks**, **drafts**, **publish workflow** (requires `creator` role+).
+- **Catalog CRUD** — title, description, release year, poster, video (SPEC-16 P0.2). Synopsis/cast/genre/rating are non-goals there (SPEC-16 §3).
+- **Episodes / seasons** — not built; SPEC-16 P2.
+- **Asset binding** — a movie references one `ready` video asset through `mediaapi`, checked when it is attached (SPEC-16 P0.2). The module does **not** subscribe to `media:asset_ready` and has no `processing` status; it consumes only `media:asset_deleted` (SPEC-16 P0.5, §3).
+- **Browse / search / filter** — published and own lists only; FTS deferred (SPEC-16 §3).
+- **Watch progress** — rides on the video asset's media progress (SPEC-10), not a movie table (SPEC-16 P0.6).
+- **Continue watching** rail — a movie appears as a media item; the `movie` leg is SPEC-16 P1.2.
+- **Ratings & reviews** (△ likely overlaps with social comments) — not built; SPEC-16 P2.
 
 ---
 
-## 7. Comics — module `comic` ○
+## 5. Music — module `music` ✅
 
-Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/) (skeleton).
+Source: [backend/internal/modules/music/](../../backend/internal/modules/music/) (migrations `0022_music_core`, `0038`, `0039`, `0041`); template page `Music And Playlists.html`. As-built spec, scope and gaps: [SPEC-15](specs/SPEC-15-music-vertical.md).
+
+- **Tracks** — title, artist, album, cover, audio asset via `mediaapi`; bulk import, enrichment and catalogue lookup (SPEC-15 P0.2–P0.8). No audio `duration` (SPEC-15 §3).
+- **Albums**, **artists** — not entities: `artist` and `album` are free-text columns on the track (SPEC-15 §3, out of scope).
+- **Playlists** — one owner's private selection of their own tracks (SPEC-15 P0.9). Public, shared or collaborative playlists are out of scope (SPEC-15 §3).
+- **Queue & playback state** — frontend-side, in memory; not persisted (SPEC-15 §3; resume is SPEC-15 §11 (b)).
+- **"Now playing"** — one app-wide player (SPEC-15 P0.10); the home rail's `music` widget is a layout row (SPEC-02).
+
+---
+
+## 6. Stories — module `story` ✓
+
+Source: [backend/internal/modules/story/](../../backend/internal/modules/story/) (migration `0023_story_core`). As-built spec, scope and gaps: [SPEC-17](specs/SPEC-17-story-vertical.md) — backend built, the reader is a placeholder (SPEC-17 P1.1).
+
+- **Story** with **chapters** (ordered, Markdown bodies) — SPEC-17 P0.2–P0.3.
+- **Reader** — not built; SPEC-17 P1.1.
+- **Reading progress** per-user — not built; SPEC-17 P1.2.
+- **Drafts** and **publish workflow** — built (SPEC-17 P0.5). **Bookmarks** — SPEC-17 P2.
+
+---
+
+## 7. Comics — module `comic` ✅
+
+Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/) (migration `0015_comic_core` onward). Spec, scope and gaps: [SPEC-14](specs/SPEC-14-comic-vertical.md); the bullets below are the original wish list, not the built state.
 
 - **Comic** with **chapters** and **pages** (image assets via `mediaapi`).
 - **Reader** — single-page, double-page, vertical-scroll modes.
@@ -105,9 +106,9 @@ Source: [backend/internal/modules/comic/](../../backend/internal/modules/comic/)
 
 ---
 
-## 8. Personal Finance / Bank — module `bank` △ (planned — not yet a module)
+## 8. Personal Finance / Bank — module `bank` ✓
 
-Tracks **every form of money a user has** in one place: accounts, transactions, debts (owed), loans (lent out), investments, savings, budgets. New module; no scaffold yet. Will follow the standard layout in [backend/MODULES.md](../../backend/MODULES.md) §3.
+Tracks **every form of money a user has** in one place: accounts, transactions, debts (owed), loans (lent out), investments, savings, budgets. The module exists; what is built is [SPEC-12](specs/SPEC-12-finance-ledger.md) (ledger) and [SPEC-13](specs/SPEC-13-ledger-expansion.md) (expansion, phase by phase). The subsections below are the original long-horizon wish list, not the built state.
 
 ### 8.1 Accounts
 - **Account types**: cash, checking, savings, credit card, loan account, investment account, retirement, crypto wallet, gift card, "other".
@@ -187,9 +188,9 @@ Bank tables land in their own migration block, e.g. `00NN_bank_init.up.sql` foll
 
 ---
 
-## 9. Social Layer △ (planned — not yet a module)
+## 9. Social Layer △ (first slice built as module `social`; the rest deferred)
 
-Source: [template-main/social/](../../template-main/social/) page inventory. Will likely become a `social/` module (or be split across `social`, `messaging`, `community`).
+Source: [template-main/social/](../../template-main/social/) page inventory. A `social` module exists (migration `0037_social_connections`) and holds only the first slice — mutual connections between accounts, [SPEC-18](specs/SPEC-18-social-connections.md). Everything else below stays deferred ([backlog.md § Deferred](backlog.md)); each further item needs its own spec (SPEC-18 §3).
 
 ### 9.1 Newsfeed
 - Reverse-chronological + algorithmic feed (`Newsfeed.html`, `Newsfeed - Masonry.html`).
@@ -203,9 +204,9 @@ Source: [template-main/social/](../../template-main/social/) page inventory. Wil
 - **Cover & avatar**, custom widgets (`Manage Widgets.html`).
 
 ### 9.3 Friend graph
-- **Friend requests** (`Your Account - Friends Requests.html`).
-- **Friend groups** (`Friend Groups.html`) — close friends, work, family, etc.
-- **Block / mute**.
+- **Friend requests** (`Your Account - Friends Requests.html`) — built as connections: request, accept, decline, withdraw, disconnect ([SPEC-18](specs/SPEC-18-social-connections.md) P0.2–P0.4).
+- **Friend groups** (`Friend Groups.html`) — close friends, work, family, etc. Not on the connection: grouping lives in the private people registry (`people_persons.circle`, SPEC-11; SPEC-18 §3).
+- **Block / mute** — not built (SPEC-18 §3, P2).
 
 ### 9.4 Communities / "Favourite Pages"
 - **Page Feed** (`Favorit Page Feed.html`), **About** (`Favorit Page - About.html`), **Events** (`Favorit Page - Events.html`), **Tabs** (`Favourite Page With Tabs.html`).
@@ -236,7 +237,7 @@ Source: [template-main/social/](../../template-main/social/) page inventory. Wil
 - Per-user engagement view (`Statistics.html`).
 
 ### 9.11 Widgets
-- **Weather widget** (`Weather Widget.html`), **sticky sidebars**, customisable per profile (`Sticky Sidebars.html`, `Manage Widgets.html`).
+- **Weather widget** (`Weather Widget.html`), **sticky sidebars**, customisable per profile (`Sticky Sidebars.html`, `Manage Widgets.html`). Built as instance-wide, not per-profile: the `layout` module places registry-backed widgets on the home rails and an admin edits them at `/admin/layout` ([SPEC-02](specs/SPEC-02-shell-layout.md) P0.5); per-tenant layouts and per-user hide/collapse are SPEC-02 P2.
 
 ### 9.12 Asymmetric follow graph (alongside friendship)
 
@@ -488,7 +489,7 @@ Owned across **`account`**, **`platform/audit/`**, and a new **`safety`** module
 ### 12.1 User data rights (GDPR / CCPA)
 
 - **Data export** — user requests a ZIP of all their data (posts, comments, bank, profile, messages). Asynq long-running task; emails download link when ready (link expires after 7 days). Lands in account module's settings UI.
-- **Account deletion** — soft-delete (mark `users.deleted_at`; content remains 30 days for recovery), then hard-delete after grace period.
+- **Account deletion** — *(corrected 2026-10-02, owner decision A6 — [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.10)* no soft-delete and no grace period: deleting a User is irreversible. Every module purges the User's rows and side effects (objects, cache keys) through its own `PurgeOwnerData`, media last, then the `users` row; a `deleted_users` identity snapshot is kept 90 days. Deleting frees the email; to refuse someone permanently, keep them Rejected.
 - **Account pause** — temporarily deactivate (cannot log in; profile invisible; doesn't trigger ban-related notifications).
 - **Right to rectification** — user can edit any of their own data; backed by the edit-history pattern (§9.26).
 - **Activity log** — see your own login history, recent actions, security events; sourced from `platform/audit/` [D-25].
@@ -597,7 +598,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 0 — Foundation wiring (immediate)
 
-> **Status (2026-07-06): DONE** — wiring landed (recorded at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f` — status now lives in `/CLAUDE.md` § Current status): migrations 0001–0007 applied (schema v7), `make sqlc` run, account + media repository adapters, `cmd/api/main.go` constructs and mounts both modules under `/api/v1`, healthz 200. The applied migration tree diverged slightly from the plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — see the D-18 update note). OIDC items below are retired per [ADR-06](../adr/06-local-auth-model.md); the audit package move, RFC 7807 `Problem` shape, and eager cross-module schemas remain open.
+> **Status (2026-07-06): DONE** — wiring landed (recorded at the time in `MILESTONE_CHECKS.md`, deleted in `f11cf3f` — status now lives in `/CLAUDE.md` § Current status): migrations 0001–0007 applied (schema v7), `make sqlc` run, account + media repository adapters, `cmd/api/main.go` constructs and mounts both modules under `/api/v1`, healthz 200. The applied migration tree diverged slightly from the plan (`0004_account_sessions`, `0005_platform_audit`, `0006_account_local_auth`, `0007_media_assets` — see the D-18 update note). OIDC items below are retired per [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06); the audit package move, RFC 7807 `Problem` shape, and eager cross-module schemas remain open.
 
 *Goal: turn the existing scaffolds into a running, end-to-end auth flow.*
 
@@ -605,11 +606,11 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Run `make sqlc`** for the `account` block; commit the generated `internal/modules/account/repository/*.sql.go` artefacts (these are gitignored — they're regenerated locally, not checked in).
 - **Write repository adapters** behind the interfaces account already consumes: `AuthSnapshotFetcher`, `RefreshStore`, `PermissionFetcher`, `EventStore`, `UserUpserter`.
 - **Split migration `0001`** — currently mixes `users` + `assets` (different modules) and has an orphan `users.role` text col that overlaps with the RBAC tables. Rewrite into `0001_platform_init` (extensions), `0002_account_users` (users only, +`locale`+`timezone`), `0003_account_rbac` (renumbered), `0005_media_assets`, etc. [D-18]
-- **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7]
+- **Add `users.locale` (BCP 47, default `'en-US'`) and `users.timezone` (IANA, default `'UTC'`)** as part of `0002_account_users`. [D-7] *(Update 2026-09-30: the default becomes `'Asia/Ho_Chi_Minh'` in a follow-up migration [D-17]. Update 2026-10-02: instead, the column becomes NULLable with no default — NULL means "not set" and readers fall back to `'Asia/Ho_Chi_Minh'` [D-17].)*
 - **Move `audit/` from account → `platform/audit/`** — audit is cross-cutting; account becomes a consumer. Rename event `auth.refresh.reuse_detected` → `account.refresh.reuse_detected` to fit the new `<module>.<resource>.<action>` taxonomy. [D-25]
 - **Define event-type taxonomy registry** in `backend/MODULES.md` §5.3 to prevent collisions. [D-25]
-- ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](../adr/06-local-auth-model.md) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
-- ~~**Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.~~ → retired by [ADR-06](../adr/06-local-auth-model.md) (no IdP in the login path; table dropped by migration `0006` — see D-26.r1).
+- ~~**Surface `amr`, `acr`, `auth_time` claims** into the auth context (`account/auth/context.go`) so step-up middleware [D-27] and MFA enforcement [D-28] can plug in later without rewriting the auth middleware.~~ → retired by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06) (no IdP-issued claims; Portal will issue `acr`/`amr` when it builds MFA — see D-27.r1).
+- ~~**Add `user_oidc_roles` table** to `0003_account_rbac` so the OIDC group → role sync [D-26] has somewhere to write on the first callback.~~ → retired by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06) (no IdP in the login path; table dropped by migration `0006` — see D-26.r1).
 - **Adopt RFC 7807 `Problem` shape** for every 4xx/5xx in `shared/openapi.yaml`; stable `type` URIs become the i18n keys. [D-7]
 - **Reserve the `notify:*` Asynq task prefix** in `backend/MODULES.md` §5.2 so future modules don't accidentally collide. [D-1]
 - **Extend OpenAPI spec** — add comics + tenant tags. **Eager cross-module schemas** must land before Phase 0 closes [D-29]: `Problem` (RFC 7807 with Portal extensions like `required_acr`/`enrollment_url`), `Money`, `PaginatedResult<T>`, `TenantContext` path param, `ContinuingItem`, standard 4xx/5xx response components.
@@ -618,11 +619,11 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 - **Frontend conventions doc** — `frontend/CLAUDE.md` documents the Zustand/TanStack/RHF state boundary [D-32] and the RSC-first rendering decision tree [D-33] with worked anti-pattern examples.
 - **Land CI workflows** — `.github/workflows/ci.yml` with lint + test + sqlc-drift + openapi-drift + migration-roundtrip + build + security jobs. Drift detection from day one. [D-9]
 
-**Exit:** a developer can `make up && make dev`, sign in via `POST /api/v1/auth/login` (local password, [ADR-06](../adr/06-local-auth-model.md)), hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift. *(Exit criterion met — 2026-07-06.)*
+**Exit:** a developer can `make up && make dev`, sign in via `POST /api/v1/auth/login` (local password, [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06)), hit `/auth/me`, and have `RequireAuth` + `RequirePermission` reject an unauthenticated call. CI fails any PR that lets generated code drift. *(Exit criterion met — 2026-07-06.)*
 
 ### Phase 1 — Tenancy + RLS
 
-> **Design: [ADR-07 — Multi-tenancy & RLS model](../adr/07-tenancy-rls-model.md)** (Proposed, deferred). The bullets below are the *deliverables*; ADR-07 is the *how* — per-request `SET LOCAL app.current_tenant` GUC under PgBouncer transaction pooling, `org`/`household`/`personal` tenants + synthetic `me`, `FORCE` RLS on a non-owner app role, and a `BYPASSRLS` `sysjobs` path. (ADR-07 standardises the GUC name to `app.current_tenant`; the `app.tenant_id` below is superseded.)
+> **Design: [ADR-07 — Multi-tenancy & RLS model](specs/SPEC-01-account-identity-admin.md#adr-07)** (Proposed, deferred). The bullets below are the *deliverables*; ADR-07 is the *how* — per-request `SET LOCAL app.current_tenant` GUC under PgBouncer transaction pooling, `org`/`household`/`personal` tenants + synthetic `me`, `FORCE` RLS on a non-owner app role, and a `BYPASSRLS` `sysjobs` path. (ADR-07 standardises the GUC name to `app.current_tenant`; the `app.tenant_id` below is superseded.)
 
 - `tenant.organizations` schema includes a **`kind` column (`'org' | 'household'`)** from day one so adding household support in Phase 5i doesn't require migrating a populated table. [D-24]
 - `tenant.memberships` schema + queries; role granularity differs per kind (orgs: full hierarchy; households: owner + member only, soft cap 6).
@@ -636,7 +637,7 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 
 ### Phase 2 — Media pipeline end-to-end
 
-> **Update (2026-07-06):** exit criterion met by the v1 slice (single-pipeline VOD HLS h264/aac → Vidstack playback). Still open: multi-rung ladder, quotas/backpressure, poster/sprite, `media:asset_ready` emission [D-13].
+> **As built:** the first exit sentence is met (single-rung VOD HLS h264/aac → Vidstack playback); the second is not — there are no quotas or backpressure, so a second user *can* queue behind the first (the heavy pool runs one job at a time). Since built: the poster (SPEC-04 P0.2), `media:asset_ready` emission, and `mediaapi.GetAsset` / `SignedURL` (§3). Still open: the multi-rung ladder, sprites, quotas/backpressure, the `transcode:dead` queue [D-13], and `TRANSCODE_ENCODER` (no such setting exists — the encoder is fixed to `libx264`).
 
 - Pick **video** first (it's the highest-fidelity test of the full pipeline).
 - Upload endpoint → `platform/storage` → MinIO origin → enqueue Asynq `transcode`.
@@ -650,6 +651,8 @@ Each phase has explicit **deliverables** and an **exit criterion**. Phases are s
 **Exit:** a 30-second mp4 round-trips: upload → transcode → HLS playable in the frontend with Vidstack. A second user can't starve the queue.
 
 ### Phase 3 — First domain vertical: Movies
+
+> **As built** ([SPEC-16](specs/SPEC-16-movie-vertical.md)): comic, not movie, became the first vertical (SPEC-14). The movie module has no `seasons`/`episodes` and no `ready` status — a video is attachable only once its asset is already `ready`, so the module never subscribes to `media:asset_ready` (SPEC-16 §3); progress is the media asset's (SPEC-16 P0.6); there is no frontend (SPEC-16 P1.1).
 
 - `movies`, `seasons`, `episodes` schema + queries.
 - Movie subscribes to `media:asset_ready` and flips `movies.status = ready`.
@@ -700,13 +703,13 @@ Standalone `notification` module — decision settled in [D-1]. Channel decision
 - `notification` module owns `notifications`, `notification_preferences`, `delivery_attempts`, `push_subscriptions`.
 - Asynq fan-out: every emitter publishes `notify:*` tasks; the module's worker dispatches per-channel.
 - **Channels:**
-  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/events/stream`. [D-3]
+  - **In-app feed** — DB row + live update via `platform/realtime/` SSE endpoint `GET /api/v1/me/notifications/stream`; the client invalidates and refetches on each event (SPEC-05 P1.2). [D-3]
   - **Email** — `platform/mail/` SMTP (`wneessen/go-mail`); templates under `backend/templates/email/<category>/`. [D-4]
   - **Web Push** — VAPID via `SherClockHolmes/webpush-go`; subscriptions in `notification.push_subscriptions`. No APNS/FCM in v1. [D-5]
 - User preferences per category × per channel.
 - Re-emit historical events into the new module on cutover (best-effort backfill from `audit_log`).
 
-**Exit:** at least one notification per emitting module (`bank:budget_threshold_crossed`, `media:asset_ready`, `auth.refresh.reuse_detected`, `loan_due`) is delivered end-to-end through each enabled channel.
+**Exit:** at least one notification per emitting module (`bank:budget_threshold_crossed`, `media:asset_ready`, `account.refresh.reuse_detected`, `loan_due`) is delivered end-to-end through each enabled channel.
 
 ### Phase 7 — Social layer (baseline)
 
@@ -715,7 +718,7 @@ Core social baseline. Advanced formats (stories/reels/live/audio/voting/articles
 1. **Newsfeed** — posts (text/image/link/poll), **rich reactions** (§9.19), comments, **quote-shares** (§9.15), nested threading.
 2. **Profile** — `social.profiles` (1:1 with `users`) for bio/education/employment/hobbies/cover/widgets. Identity-critical fields stay on `users` [D-19].
 3. **Asymmetric follow graph** (§9.12) — distinct from §9.3 friendship. Following / followers, "Following" feed.
-4. **Friend graph** — requests, groups, block/mute (§9.3).
+4. **Friend graph** — requests, groups, block/mute (§9.3). *Requests shipped out of sequence as the `social` module's first slice ([SPEC-18](specs/SPEC-18-social-connections.md), `0037`); groups live in the people registry and block/mute is SPEC-18 P2.*
 5. **Communities** — pages, memberships, page-scoped RBAC, **basic moderation** (§9.30 core: report, mod queue, remove/lock/pin/ban).
 6. **Events** — calendar, RSVP, reminders.
 7. **Messaging** — DM 1:1 + group via [D-3].
@@ -831,7 +834,7 @@ Decisions deferred. Each affects at least one upcoming phase; many should land b
 
 ### 16.D — Auth / RBAC ✓ all resolved
 
-26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **superseded by [ADR-06](../adr/06-local-auth-model.md) (2026-07-05)**: no IdP; roles are Portal-managed only (see D-26.r1).
+26. ~~**OIDC group → role sync.**~~ → **Resolved [D-26]** — hybrid two-axis grants; Authentik groups → global roles via `OIDC_GROUP_ROLE_MAP`; tenant-scoped grants are Portal-only; bootstrap via `BOOTSTRAP_ADMIN_OIDC_SUBJECTS`. — **superseded by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06) (2026-07-05)**: no IdP; roles are Portal-managed only (see D-26.r1).
 27. ~~**Step-up auth.**~~ → **Resolved [D-27]** — OIDC ACR-based; `RequireACR` middleware returns 403 + `step_up_required` Problem; explicit per-route opt-in; 5-min default window. — mechanism updated by ADR-06: Portal-issued `acr`/`amr` claims, no OIDC round trip (see D-27.r1).
 28. ~~**2FA / TOTP.**~~ → **Resolved [D-28]** — entirely Authentik-managed; Portal enforces "MFA required for bank-permission users" at login via the `amr` claim; settings deep-links to Authentik's MFA dashboard. — **superseded by ADR-06**: Portal-built TOTP; enforcement logic unchanged (see D-28.r1).
 
@@ -883,7 +886,7 @@ Self-hosted users push back on every extra service. Postgres FTS (`tsvector` + `
 Three real-time needs: notification stream (push-only), media events (push-only), chat (bi-directional with typing/presence). The first two are SSE-shaped; only chat genuinely needs WS.
 
 **Decision:** new `backend/internal/platform/realtime/` package exposing `Publish(ctx, channel, event)` / `Subscribe(ctx, channel) <-chan Event` over Dragonfly pub/sub. Endpoints:
-- `GET /api/v1/events/stream` (SSE, authed, channel = `user:<id>`) — Phase 6.
+- `GET /api/v1/me/notifications/stream` (SSE, authed, channel = `user:<id>`; client invalidates and refetches on each event per SPEC-05 P1.2) — Phase 6.
 - `GET /api/v1/chat/ws` (WebSocket via `coder/websocket`, formerly `nhooyr/websocket`) — Phase 7.
 
 No external service (Centrifugo, Soketi, etc.) unless scale demands.
@@ -935,7 +938,7 @@ Backend strings interpolated into UI alerts is a known late-stage tax. Avoid it 
 1. **Error contract** — every 4xx/5xx returns RFC 7807 `Problem` with a stable `type` URI (e.g. `https://portal/errors/auth.refresh.reuse`). Lands in [shared/openapi.yaml](../../shared/openapi.yaml) in Phase 0.
 2. **Money** — always `{ amount: "12345.67", currency: "USD" }` in API; never pre-formatted. Frontend uses `Intl.NumberFormat(user.locale, { style: 'currency', currency })`.
 3. **Dates** — backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timezone`.
-4. **User columns** — `users.locale TEXT NOT NULL DEFAULT 'en-US'` (BCP 47), `users.timezone TEXT NOT NULL DEFAULT 'UTC'` (IANA). Added during the migration `0001` audit (§16.C-18).
+4. **User columns** — `users.locale TEXT NOT NULL DEFAULT 'en-US'` (BCP 47), `users.timezone TEXT NOT NULL DEFAULT 'UTC'` (IANA). Added during the migration `0001` audit (§16.C-18). **Update (2026-09-30):** the `users.timezone` default becomes `'Asia/Ho_Chi_Minh'`, and the value comes from the user's location — see the D-17 update. **Update (2026-10-02):** the column becomes NULLable instead (NULL = not set; `'Asia/Ho_Chi_Minh'` is the readers' fallback) — see the D-17 2026-10-02 update.
 
 Frontend uses `next-intl`. Backend translation deferred until non-English content actually arrives — message catalogues stay on the frontend.
 
@@ -1171,6 +1174,12 @@ UTC storage is the easy half. The hard half is **"when does a day start?"** — 
 
 Cross-cutting; lands wherever date-bounded reports first ship (Phase 5g for bank snapshots).
 
+**Update (2026-09-30, owner decision):** the v1 timezone source is the **user's own zone, taken from the user's location** and stored per user in `users.timezone` (IANA). The default for an unknown zone changes from `'UTC'` to **`'Asia/Ho_Chi_Minh'`**. It replaces every v1 use of `APP_TIMEZONE`, "the instance default" or a UTC fallback for user-facing day/month boundaries — SPEC-12's month default, SPEC-07's composer, SPEC-09's day grouping, bank-date conversion and on-this-day, SPEC-11's birthday endpoint and scan, SPEC-13's due reminders. **Write path:** the frontend detects the device zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and saves it via `PATCH /api/v1/auth/me {timezone}` when it differs; settings offer a manual override (`timezone_manual`) that suspends the automatic save *(both revised on 2026-10-02 — see that update: the automatic save happens only while no zone is set, and there is no manual flag)*. **Readers:** the frontend via `GET /auth/me`, modules via `accountapi` (`UserSummary.Timezone`). **Sweeps** follow the hourly per-TZ pattern above: they run hourly and evaluate each user's local date in that user's zone, with dedup keys giving exactly-once — so SPEC-11's former "declared v1 deviation" (one `APP_TIMEZONE`, daily 06:00 UTC) is withdrawn. The rule is stated once in the [specs README](specs/README.md) "Timezone" convention. Code follow-up: owned by [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.13 (the account half — migration, `PATCH /auth/me`, `accountapi`, frontend save) and its §11 row 14; none of it is built yet.
+
+**Update (2026-10-01, owner decision; corrected 2026-10-02):** the validation slug is confirmed: a `timezone` that `time.LoadLocation` rejects is 422 `account/invalid-timezone`, registered in `frontend/src/lib/problems.ts`. The manual-override flag confirmed the same day (`users.timezone_manual`) was dropped by the 2026-10-02 decision below before anything was built, so it appears nowhere in the target.
+
+**Update (2026-10-02, owner decision A8):** `users.timezone` becomes **NULLable — NULL means "not set"**, with no column default; the existing `'UTC'` rows were never chosen by anyone and become NULL. After sign-in the frontend saves the device zone automatically when the stored zone is NULL; once a zone is set it is applied everywhere and the device never overwrites it — when the device zone differs the UI offers one prompt and saves only on confirmation. Settings offer an IANA picker. The account API is `PATCH /api/v1/auth/me {timezone}`, and `GET /auth/me` returns `timezone` or `null`. With no stored zone the UI uses the device zone, while backend sweeps and readers use `Asia/Ho_Chi_Minh` (`accountapi` maps NULL to it). Stated in the [specs README](specs/README.md) "Timezone" convention; the code follow-up is [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.13 / §11 row 14.
+
 ### D-18 — Migration `0001` audit: full split *(resolves §16.C-18)*
 
 No production data yet — splitting once costs less than living with mixed-concerns naming.
@@ -1191,7 +1200,7 @@ No production data yet — splitting once costs less than living with mixed-conc
 
 `assets.owner_id` FK to `users.id` still valid because users (`0002`) lands before assets (`0005`). Audit log table moves to `platform/audit/` in the same pass (see [D-25]). Lands in Phase 0.
 
-**Update (2026-07-06):** applied tree is `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](../adr/06-local-auth-model.md)) / `0007_media_assets` (schema v7). Tenant and RLS migrations land with Phase 1.
+**Update (2026-07-06):** applied tree is `0001_platform_init` / `0002_account_users` / `0003_account_rbac` / `0004_account_sessions` / `0005_platform_audit` / `0006_account_local_auth` ([ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06)) / `0007_media_assets` (schema v7). Tenant and RLS migrations land with Phase 1.
 
 ### D-19 — Profile vs Account split: identity on `users`, rich profile in `social.profiles` *(resolves §16.C-19)*
 
@@ -1238,6 +1247,12 @@ type ContinuingItem struct {
 
 `GET /api/v1/continue` aggregator in `cmd/api` fans out, merges, returns sorted by `updated_at DESC`. Lands in Phase 4.
 
+**Update (2026-09-30, SPEC-10 P0.3):** the item schema above is revised. `ContinuingItem{Kind, ID, Title, Position, Duration, Thumbnail, UpdatedAt}` becomes `ContinueItem{module, ref_id, title, poster_url, progress_pct, href, updated_at}` (the openapi `ContinueItem` schema) — the rail item carries a percentage and a link, not a raw position. The exact seek position comes from `GET /api/v1/assets/{id}/progress`. The shared Go type is still to live in a platform package. The fan-out decision itself is unchanged. See [SPEC-10](specs/SPEC-10-continue-rail.md).
+
+**Update (2026-09-30, owner decision):** audio is a playable kind alongside video. An audio asset opens the player page `/library/media/{id}` (the SPEC-10 media deep-link rule is unchanged: video/audio → player, image → `/library/media?open={id}`), plays from its stored original (`/api/v1/assets/{id}/original`, no HLS, no poster), resumes and saves progress like video, and may appear on the continue rail. `media/asset-not-playable` now covers only non-video, non-audio kinds. Code follow-up: HEAD's progress routes reject every non-video asset, the player feeds audio an empty HLS source, and `completeAudio` stores no `duration_ms`.
+
+**Per vertical, as specced:** comic owns `comic_reading_progress` (`0015`, SPEC-14). Movie deliberately keeps **no** `movie.watch_progress`: one movie is one video asset, so the asset-level progress of SPEC-10 already is movie-level progress, and a `movie` leg of `/continue` changes presentation only ([SPEC-16](specs/SPEC-16-movie-vertical.md) P0.6, P1.2). Story's `story_reading_progress` and its `/continue` leg are unbuilt ([SPEC-17](specs/SPEC-17-story-vertical.md) P1.2). Music keeps **no** `music.listen_progress` (Decision 2026-10-02b (B2)): like movie, a track resumes through the asset-level progress of its audio asset (SPEC-10) and joins `/continue` as a media item, so the `music.listen_progress` row sketched above is superseded ([SPEC-15](specs/SPEC-15-music-vertical.md) §11).
+
 ### D-21 — Ratings: per-domain tables; no shared module *(resolves §16.C-21)*
 
 Same shape as [D-20] but the case for centralisation is weaker — rating queries are dominated by "ratings for this content" (module-local). Cross-domain "top rated everywhere" surface is rare; deferred until UI demands it.
@@ -1255,6 +1270,8 @@ Three different beasts (closed genre enumerations, user-input free-text labels, 
 - **Bank categories:** hierarchical, bank-specific, stays in module.
 
 No centralised `tags` table. No `platform/tags/` package. Just a documented convention.
+
+**Exception for music (Decision 2026-10-02b (B3)):** music's catalogue lookup (`0039`) stores one free-text MusicBrainz tag in `genre text`, not a `genre TEXT[]` validated against a seed list. The owner ratified this as a deliberate exception: MusicBrainz folksonomy tags are open-ended, and mapping them onto a seed list would discard information for no gain at n=1. It applies to music only; a new vertical with a genre column follows the rule above ([SPEC-15](specs/SPEC-15-music-vertical.md) §11). No other vertical has a genre column.
 
 ### D-23 — Tenant identification: URL prefix `/t/{tenant}/...`; synthetic `me` tenant *(resolves §16.C-23)*
 
@@ -1288,6 +1305,10 @@ Reuse tenancy infrastructure (RLS predicate, memberships table, audit). Storage 
 
 Bank's "household sharing" (§8.11) creates a `kind='household'` tenant and assigns both users as `owner`. The `kind` column itself lands in Phase 1's `tenant.organizations` migration so Phase 5i doesn't need a schema migration on a populated table.
 
+**Update (2026-10-02, owner decision B14 — [ADR-12](specs/SPEC-01-account-identity-admin.md#adr-12)):** the household is the content audience's first half: a user's published music, movies and stories are read by the members of the tenant they live in (the household) and by the user's accepted friends whose tenant is **linked** to it — a per-tenant allow-list (`tenant_links`), active only when both tenants list each other, which also bounds who can find and ask whom ([SPEC-18](specs/SPEC-18-social-connections.md) P0.2). So the RLS predicate is no longer indifferent to everything outside the tenant: one read-only exception, `app_can_read_shared`, admits published content and `shared` assets across a link. Households themselves are still not creatable (ADR-07 action items 5–6); until they are, the household is the owner alone. Code follow-up: [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.17, §11 rows 32–33.
+
+**Update (2026-10-02, owner decision B15 — amending [ADR-12](specs/SPEC-01-account-identity-admin.md#adr-12)):** the audience's family half is not the whole tenant: a tenant can hold several **groups** (one household each), and a user's family is the users who share a group with them in the item's tenant. Groups are the tenant module's (`tenant_groups`, `tenant_group_members`), managed by the tenant's owner; they decide only who reads published content, never discovery or permissions. Code follow-up: [SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.18, §11 row 34.
+
 ### D-25 — Audit log: move to `platform/audit/`; standardised event taxonomy *(resolves §16.C-25)*
 
 Audit is cross-cutting; sitting inside account is a historical accident. Other modules (bank, tenant, media, social, notification) all need it; making them call into account violates "no cross-module dependencies on internals".
@@ -1320,6 +1341,9 @@ Examples:
 - `tenant.member.invited`, `tenant.organization.created`
 - `media.asset.failed`
 - `notification.delivery.failed`
+- `ops.backup.completed`, `ops.backup.failed` — system-written (`actor_kind='system'`, `target_kind='ops_backup_run'`, `target_id=<run id>`); registered 2026-09-30 for SPEC-03 P0.2 (already written by the shipped `ops` backup task)
+
+The canonical list of codes is the constants in `backend/internal/platform/audit/logger.go`. Account's actions and where it fails to write one (`account.session.disabled_attempt` is defined and never written) are [SPEC-01](specs/SPEC-01-account-identity-admin.md) §8 and §11 row 13; layout writes `layout.menu.saved` / `layout.widgets.saved` ([SPEC-02](specs/SPEC-02-shell-layout.md) P0.6).
 
 Audit remains best-effort, non-blocking (per CLAUDE.md). Lands in Phase 0 alongside the migration `0001` audit ([D-18]) — the audit-log table moves files at the same time as the rename.
 
@@ -1360,7 +1384,7 @@ BOOTSTRAP_ADMIN_GROUPS=
 
 Lands in Phase 0 (`user_oidc_roles` table) and the OIDC callback handler.
 
-**D-26.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is now admin/CLI provisioning.
+**D-26.r1 (2026-07-05)** — superseded by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06): no IdP in the login path; all roles are Portal-managed in `user_roles`; `user_oidc_roles` (dropped by migration `0006`), `OIDC_GROUP_ROLE_MAP` and `BOOTSTRAP_ADMIN_OIDC_SUBJECTS` are retired. Bootstrap admin is the first account registered on an empty database (auto-approved, given `superadmin`) or, on an existing database, the account named by `BOOTSTRAP_SUPERADMIN_EMAIL`, re-asserted on every API start ([SPEC-01](specs/SPEC-01-account-identity-admin.md) P0.1, P0.12). Roles are edited in the admin console under the no-escalation rule (SPEC-01 P0.11).
 
 ### D-27 — Step-up auth: OIDC ACR-based; sensitive ops annotated explicitly *(resolves §16.D-27)*
 
@@ -1411,7 +1435,7 @@ Frontend recognises the `type`, redirects to `/auth/login?step_up=mfa&return_to=
 
 Lands jointly with [D-28] as a Phase 5 prerequisite.
 
-**D-27.r1 (2026-07-05)** — mechanism updated by [ADR-06](../adr/06-local-auth-model.md): `acr`/`amr`/`auth_time` are Portal-issued claims; step-up re-auth happens against Portal's own login/MFA, not an IdP. The ACR levels and the gated-operation table stand.
+**D-27.r1 (2026-07-05)** — mechanism updated by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06): `acr`/`amr`/`auth_time` are Portal-issued claims; step-up re-auth happens against Portal's own login/MFA, not an IdP. The ACR levels and the gated-operation table stand.
 
 ### D-28 — 2FA: entirely Authentik-managed; Portal enforces MFA at login for bank-permission users *(resolves §16.D-28)*
 
@@ -1435,7 +1459,7 @@ Authentik already ships TOTP, WebAuthn, SMS, push, recovery codes, and a polishe
 
 Lands jointly with [D-27] as a Phase 5 prerequisite. Step-up to a single-factor session adds no security, so D-27 and D-28 are useless without each other.
 
-**D-28.r1 (2026-07-05)** — superseded by [ADR-06](../adr/06-local-auth-model.md): Portal builds and stores TOTP (later phase); login-time MFA enforcement for `bank:*` users is retained; Authentik stages/deep-links are retired.
+**D-28.r1 (2026-07-05)** — superseded by [ADR-06](specs/SPEC-01-account-identity-admin.md#adr-06): Portal builds and stores TOTP (later phase); login-time MFA enforcement for `bank:*` users is retained; Authentik stages/deep-links are retired.
 
 ### D-29 — OpenAPI: spec-first non-negotiable; monolith until ~2000 lines; eager cross-module schemas in Phase 0 *(resolves §16.E-29)*
 
@@ -1450,9 +1474,13 @@ The OpenAPI spec is the contract for both Go server stubs and TS client types. L
   - `Money` schema (`{ amount: string, currency: string }`) [D-7, D-14].
   - `PaginatedResult<T>` (cursor-based: `{ items: T[], next_cursor: string|null }`).
   - `TenantContext` path parameter contract [D-23].
-  - `ContinuingItem` schema for `/api/v1/continue` aggregator [D-20].
+  - `ContinueItem` schema for `/api/v1/continue` aggregator [D-20] (renamed from `ContinuingItem` by SPEC-10 P0.3).
   - Standard 4xx/5xx response component refs.
 - **Per-module endpoints** land with each module's `MountHTTP` (movie endpoints when movie ships, bank endpoints when bank ships). Aggregator endpoints + cross-module schemas land in Phase 0.
+
+**Update (2026-09-30, owner decision):** `PaginatedResult<T>`'s `{items, next_cursor}` is binding on **every** cursor-paginated list endpoint, and every non-paginated list answers `{items}`. Endpoints that shipped with a resource-named key — `{assets}`, `{comics}`, `{transactions}`, `{people}`, `{upcoming}`, `{accounts}`, `{categories}`, `{budgets}`, `{debts}`, `{pages}`, `{sources}` and the music, movie, social, story and admin-user lists (owned since 2026-10-01 by [SPEC-15](specs/SPEC-15-music-vertical.md) §12 row 15, [SPEC-16](specs/SPEC-16-movie-vertical.md) §11 row 8, [SPEC-18](specs/SPEC-18-social-connections.md) §11 row 4, [SPEC-17](specs/SPEC-17-story-vertical.md) §11 row 9 and [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 18) — are **retrofitted, not grandfathered**; they keep only their declared limits. Extra top-level fields that are not the list (notifications' `unread_count`, budgets' `month`) stay alongside `items`. Stated in the [specs README](specs/README.md) Pagination convention; each retrofit is a code follow-up (handler + `shared/openapi.yaml` + frontend readers).
+
+**Update (2026-10-01, owner decisions):** (1) `{items}` for non-paginated lists is confirmed: every collection response is `{items}` (plus `next_cursor` when paginated, plus non-list sibling fields such as `unread_count` or `month`), so a list can gain pagination or metadata later without breaking clients; a single resource or composite read (a dashboard, a report, a detail with embedded children) keeps its arrays as named fields. (2) `limit` is lenient and never an error: missing, non-integer or < 1 → the endpoint's declared default; above the endpoint's max → clamped to the max. `platform/server.Limit` already implements it; the media, comic, bank, notify, journal, people and stream services reset to the default above the max instead and carry one gap row each in their spec — as do music, movie and story (SPEC-15 §12 row 16, SPEC-16 §11 row 9, SPEC-17 §11 row 10) and `accountapi.ListDirectory` (SPEC-01 §11 row 19). Both are stated in the [specs README](specs/README.md) "Pagination" convention.
 
 ### D-31 — API versioning: URL versioning `/api/v{N}`; additive within major; RFC 9745 sunset for v2 *(resolves §16.E-31)*
 
@@ -1537,7 +1565,7 @@ Three sub-problems:
 
 Lands in Phase 0 (server-only API client + refresh-and-return route).
 
-**D-34.r1 (2026-07-06)** — refresh strategy superseded: `SessionKeeper` does client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker cookie; no refresh-and-return route exists. `portal_refresh`'s path is `/api/v1/auth` (not `/auth`). Cookie forwarding via `api-server.ts` and the same-site domain mandate are unchanged.
+**D-34.r1 (2026-07-06)** — refresh strategy superseded: `SessionKeeper` does client-side silent refresh (interval + focus, multi-tab throttled); Next.js middleware gates routes on the `portal_session` marker cookie; no refresh-and-return route exists. `portal_refresh`'s path is `/api/v1/auth` (not `/auth`). Cookie forwarding via `api-server.ts` and the same-site domain mandate are unchanged. The middleware gate works only for route groups listed in `frontend/src/middleware.ts` `config.matcher`; `/admin`, `/calendar` and `/weather` are missing ([SPEC-02](specs/SPEC-02-shell-layout.md) §11 row 10, [SPEC-01](specs/SPEC-01-account-identity-admin.md) §11 row 21, [backlog.md](backlog.md) #15). The multi-tab refresh claim is not atomic, so two tabs can still present one refresh token (SPEC-01 §11 row 2).
 
 ### D-35 — "For You" feed: hand-tuned three-layer pipeline; "Following" chronological is default; DSA-aligned transparency *(resolves §16.G-35)*
 
@@ -1768,16 +1796,16 @@ PAYOUT_HOLD_DAYS=7                    # delay after balance change to allow char
 
 Lands in Phase 11.
 
-### D-41 — Bank v1 ledger money model: integer minor units (`bigint`), a scoped divergence from D-14/D-15 *(SPEC-03 §7)*
+### D-41 — Bank v1 ledger money model: integer minor units (`bigint`), a scoped divergence from D-14/D-15 *(SPEC-12 §7)*
 
-SPEC-03's personal ledger (module `bank`, ledger scope) represents money as **integer minor units** end-to-end — `bigint` columns in storage and JSON-integer minor units on the wire — with the exponent map owned by the shared Money helper (VND exponent 0: 1 unit = 1 đồng, never floats anywhere). This **knowingly diverges** from two earlier money decisions, and the divergence is **scoped to the v1 personal ledger only**:
+SPEC-12's personal ledger (module `bank`, ledger scope) represents money as **integer minor units** end-to-end — `bigint` columns in storage and JSON-integer minor units on the wire — with the exponent map owned by the shared Money helper (VND exponent 0: 1 unit = 1 đồng, never floats anywhere). This **knowingly diverges** from two earlier money decisions, and the divergence is **scoped to the v1 personal ledger only**:
 
 - **vs [D-14] (wire + storage)** — D-14 resolves money as `numeric(20,8)` + `shopspring/decimal` + decimal *strings* on the wire ("never JSON numbers"). For an exponent-0 currency (VND) an integer is exact and avoids the string-parsing layer the Money helper exists to remove. D-14 still governs any **multi-currency** or fractional-unit money.
-- **vs [D-15] (bookkeeping model)** — D-15 resolves hybrid double-entry internals (`ledger_entries` + a per-transaction balance CHECK). SPEC-03 is deliberately **single-row** (+ paired debit/credit legs for transfers, sharing a `transfer_id`) — Money-Lover-class, not accounting-grade. D-15's double-entry returns with the **creator-economy** scope that actually needs it (payouts, [D-40]).
+- **vs [D-15] (bookkeeping model)** — D-15 resolves hybrid double-entry internals (`ledger_entries` + a per-transaction balance CHECK). SPEC-12 is deliberately **single-row** (+ paired debit/credit legs for transfers, sharing a `transfer_id`) — Money-Lover-class, not accounting-grade. D-15's double-entry returns with the **creator-economy** scope that actually needs it (payouts, [D-40]).
 
 **Scope guard:** D-41 governs only the v1 self-hosted personal ledger (single owner, per-account currency, no cross-currency totals). The moment money crosses currencies, accrues creator-economy balances, or needs audit-grade double-entry, [D-14]/[D-15] are the governing decisions — D-41 does not repeal them.
 
-Lands with SPEC-03 (Sprint 6).
+Lands with SPEC-12 (Sprint 6).
 
 ---
 
