@@ -84,7 +84,8 @@ documents) is not. A video plays from its HLS output
 (`/api/v1/assets/{id}/hls/index.m3u8`) and may have a `poster` variant. An
 audio asset has neither: it is marked `ready` at `/complete` with no transcode
 step and plays from its stored original, `GET /api/v1/assets/{id}/original`
-(SPEC-04 P0.5 — owner-authenticated, `inline`, Range-capable via
+(SPEC-04 P0.5 — owner-authenticated, widened for `tenant` assets by SPEC-04
+P0.8, `inline`, Range-capable via
 `http.ServeContent`, so seeking and resume work). Audio resumes, saves
 progress and completes exactly like video. Its `duration_ms` is probed from the
 original at `/complete` (the same ffprobe call the video poster step uses), so
@@ -96,7 +97,7 @@ asset is NULL-duration — it resumes but never reaches `/continue` or P1.5.)*
 ### P0.2 — Beacon
 
 `PUT /api/v1/assets/{id}/progress {position_ms}` — **authenticated
-(`RequireAuth`), owner-scoped by construction**: the row is keyed by the
+(`RequireAuth`), caller-scoped by construction**: the row is keyed by the
 caller's own user id, exactly like SPEC-14 P0.4's comic progress writes
 *(2026-07-10 — the drafted `media:progress:own` permission repeated the
 module-prefix-as-resource pattern and added a code with nothing extra to
@@ -104,12 +105,19 @@ protect; dropped for parity with the existing progress convention)*. Upsert,
 last-write-wins: `INSERT … ON CONFLICT (user_id, asset_id) DO UPDATE SET
 position_ms = EXCLUDED.position_ms, updated_at = now()` — the rail's
 `updated_at DESC` order depends on it (specs README updated_at convention). Server clamps `position_ms` into `[0, duration_ms]` (lower
-bound only when duration is NULL — P0.1). Asset-level failures follow this
-table, which applies to both the PUT and the GET:
+bound only when duration is NULL — P0.1). **Who may keep a row** *(Decision
+2026-10-02b (B13); unbuilt — §11 row 15)*: anyone SPEC-04 P0.8 lets play the
+asset — its owner, an admin of its tenant, or a member of its tenant while the
+asset is `tenant` (a published track's audio, a published movie's video).
+Each keeps their **own** row, `(user_id, asset_id)` with their own id; nobody
+reads or writes another user's row, and the owner's position is never shared.
+"Owned" in the table below means "playable to the caller" in that sense.
+Asset-level failures follow this table, which applies to both the PUT and the
+GET:
 
 | Asset state | Status | Problem type |
 |---|---|---|
-| Unknown id, malformed id, `deleting`, or owned by another user (asset visibility is owner-only at v1; no role or permission bypass) | 404 | `media/asset-not-found` |
+| Unknown id, malformed id, `deleting`, or another user's asset the caller may not play (SPEC-04 P0.8: not `tenant`, or the caller neither in its tenant nor its tenant's admin; no role or permission bypass) | 404 | `media/asset-not-found` |
 | Owned, kind neither `video` nor `audio` (an image or document) | 404 | `media/asset-not-playable` (404 keeps existence hidden beyond ownership) |
 | Owned video or audio in `uploading`, `processing` or `failed` (nothing playable yet) | 409 | `media/asset-not-ready` |
 
@@ -122,7 +130,7 @@ status; all three change to match this table. Both `PutProgress` and
 `ErrNotPlayable`), so audio answers 404 `media/asset-not-playable`; they
 accept `audio` too.)*
 
-`GET /api/v1/assets/{id}/progress` — same auth/owner-scoped construction as
+`GET /api/v1/assets/{id}/progress` — same auth/caller-scoped construction as
 the PUT above, returns `{position_ms, progress_pct (null when duration_ms IS
 NULL or ≤ 0), completed_at, updated_at}` for the caller's own row, failing per
 the table above. When the asset passes every check but the caller has no row
@@ -164,7 +172,13 @@ call `navigator.sendBeacon` first; both switch to the keepalive `PUT`.)*
   permission grants — there is no permission-based bypass), then 404
   `media/asset-not-found` (never 403) and no row.
 - Given another user's asset, when GET progress is called, then 404
-  `media/asset-not-found` (never 403).
+  `media/asset-not-found` (never 403) — unless SPEC-04 P0.8 lets the caller
+  play it.
+- Given member M and owner C of one tenant and C's `tenant` video (a
+  published movie), when M PUTs `position_ms` 600 000 and GETs it back, then
+  both answer 200, M's row holds 600 000, and C's GET still returns C's own
+  position; given the asset back to `private`, then M's PUT and GET answer 404
+  and M's row is kept. *(TC-CONT-103)*
 - Given an owned image asset, when PUT or GET progress is called, then 404
   `media/asset-not-playable`.
 - Given an owned `ready` audio asset, when PUT progress is called with
@@ -364,8 +378,8 @@ Queries in `query/media_progress.sql`; regenerate via `make sqlc`.
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| PUT | `/api/v1/assets/{id}/progress` | authenticated (`RequireAuth`; owner-scoped upsert — P0.2) | `{position_ms}`; fire-and-forget client |
-| GET | `/api/v1/assets/{id}/progress` | authenticated (`RequireAuth`; owner-scoped — P0.2) | `{position_ms, progress_pct (null if no duration), completed_at, updated_at}`; same status table as PUT (P0.2); 200 with `position_ms` 0 / `updated_at` null when no row exists |
+| PUT | `/api/v1/assets/{id}/progress` | authenticated (`RequireAuth`; caller-keyed upsert on an asset the caller may play — P0.2, SPEC-04 P0.8) | `{position_ms}`; fire-and-forget client |
+| GET | `/api/v1/assets/{id}/progress` | authenticated (`RequireAuth`; the caller's own row on an asset the caller may play — P0.2, SPEC-04 P0.8) | `{position_ms, progress_pct (null if no duration), completed_at, updated_at}`; same status table as PUT (P0.2); 200 with `position_ms` 0 / `updated_at` null when no row exists |
 | GET | `/api/v1/continue?limit=` | authenticated (`RequireAuth`) | cmd/api aggregator; module-agnostic items; `limit` default 10, max 50, invalid → default (P0.3) |
 
 Problem types: `media/asset-not-found`, `media/asset-not-ready` (both declared in SPEC-04 §7), `media/asset-not-playable` (new here; register it in `problems.ts` per the specs README Errors DoD — *code follow-up: missing from `problems.ts` on HEAD*).
@@ -409,7 +423,8 @@ code). The spec text above is the target; this section lists every place the
 shipped code still diverges from it, so an implementer needs nothing but this
 spec. Rows are ordered by severity: data loss first (a save or an event that is
 silently dropped), then wrong answers on the wire, then shape and wiring, then
-unbuilt P1. A row closes when the code matches the requirement it cites and the
+unbuilt P1; row 15 (added by Decision 2026-10-02b (B13)) is appended rather
+than renumbering rows other documents cite. A row closes when the code matches the requirement it cites and the
 SPEC-10 row of [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md)
 is regraded on a named test. File paths are relative to the repo root;
 "F-ids" refer to [spec-gap-fix-worklog-2026-09-30.md](../analysis/spec-gap-fix-worklog-2026-09-30.md).
@@ -430,6 +445,7 @@ is regraded on a named test. File paths are relative to the repo root;
 | 12 | P0.3 item shape | Shared Go type in a platform package (e.g. `platform/continueitem.Item`) returned by every `<module>api.Continue`; `poster_url` is null unless a `poster` variant exists (audio is always null). | The type is `mediaapi.ContinueItem` in `backend/internal/modules/media/api/api.go` with `PosterURL string` (never null); `GetContinueItems` builds `/api/v1/assets/{id}/variants/poster` for every row; `cmd/api/main.go` `handleContinue` falls back to `[]mediaapi.ContinueItem{}`. | **backend:** move the struct to `platform/continueitem` (`PosterURL *string`), have `mediaapi.Continue` return it; in SQL `LEFT JOIN media_asset_variants v ON v.asset_id = a.id AND v.variant = 'poster'` and emit the URL only when `v.asset_id IS NOT NULL`. **openapi:** `ContinueItem` already allows null; describe `limit` as clamped/defaulted (its schema's `minimum: 1`/`maximum: 50` reads as a 4xx). **test:** TC-CONT-043 (contract test on the item schema), TC-CONT-040 (audio item `poster_url` null). | F079 |
 | 13 | §7 problem types | `media/asset-not-playable` is registered in `frontend/src/lib/problems.ts`. | `problems.ts` declares `media/asset-not-found` and `media/asset-not-ready` but not `media/asset-not-playable`, although `media/handler.go` emits it. | **frontend:** add the slug to the `ProblemType` union and its message. **test:** TC-CONT-100. | F077, F031 |
 | 14 | P1.6 comic leg | `comicapi.Continue(ctx, userID, limit)` returns the P0.3 item and joins the `handleContinue` fan-out. | Not built: `handleContinue` calls `mediaMod.API().Continue` only. | **backend:** implement once SPEC-14 P0.4 is on `main`; merge, sort by `updated_at DESC`, truncate in `handleContinue`. **test:** new TEST-CASES row (none exists). | TRACEABILITY-MATRIX SPEC-10 P1.6 (✖) |
+| 15 | P0.2 who may keep a row (Decision 2026-10-02b (B13)) | A caller SPEC-04 P0.8 lets play the asset — owner, tenant admin, or a member of its tenant for a `tenant` asset — reads and writes their own `(user_id, asset_id)` row; anyone else gets 404 `media/asset-not-found`. | `backend/internal/modules/media/service.go` `PutProgress` and `GetProgress` both start with `owned(ctx, ownerID, assetID)`, which compares `asset.OwnerID` with the caller (the parameter named `ownerID` is the caller) and returns `ErrForbidden` → 403. The table already keys rows by the caller (`0013_media_playback_progress`, PK `(user_id, asset_id)`; `media_playback_progress` RLS is `tenant_isolation` only), and `GetContinueItems` joins `assets` under the caller's RLS — so the owner check is the only obstacle. | **backend:** the shared guard of row 6 asks SPEC-04 P0.8's playable-read rule (SPEC-04 §11 row 20) instead of `owned()`; every query keeps the caller's id as `user_id`. Land with or after row 6 and SPEC-04 §11 row 20. **test:** TC-CONT-103. | Decision 2026-10-02b (B13) |
 
 **Already matching on HEAD.**
 - `0013_media_playback_progress` matches §6 (PK `(user_id, asset_id)`,

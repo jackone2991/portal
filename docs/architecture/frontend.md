@@ -945,12 +945,13 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 ### Phase 4 — Music + Stories + Comics
 
 - Repeat Phase 3 pattern per vertical.
-- `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`. For the
-  caller's own tracks the player plays from `/original` and reads and saves
-  the audio asset's media progress (no music-owned progress); for another
-  tenant member's published track it plays from `GET /tracks/{id}/play-url`
-  (a short-lived signed URL) and saves nothing ([SPEC-15](../product/specs/SPEC-15-music-vertical.md)
-  P0.10; Decision 2026-10-02b (B2, B5); unbuilt).
+- `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`. The player
+  plays every track — the caller's own or another tenant member's published
+  one — from `/assets/{audio_asset_id}/original`, and reads and saves the
+  caller's own media progress row on that asset (no music-owned progress, no
+  signed URL): a published track's audio is `tenant`-visible to the members
+  ([SPEC-15](../product/specs/SPEC-15-music-vertical.md) P0.10, SPEC-04 P0.8;
+  Decision 2026-10-02b (B2, B13); resume unbuilt).
 - Story / comic reader components.
 - `/api/v1/continue` aggregator → unified "Continue" rail on home dashboard.
 

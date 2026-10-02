@@ -65,11 +65,14 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    which it makes load-bearing), row 28 (lockout per (email, IP) — A4, after
    row 4), row 27 (logout ends one Session — A3). Then the remaining Sec /
    AuthZ rows: SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01 rows 6–7,
-   SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8; then SPEC-15 row 29
-   (tenant members play a published track through `GET /tracks/{id}/play-url`
-   and a short-lived `mediaapi.SignedURL`, `/original` staying owner-only —
-   Decision 2026-10-02b (B5); latent while every User has a personal
-   organisation, hence last).
+   SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8; then tenant asset
+   visibility (members of a tenant play and watch its published music and
+   movies — Decision 2026-10-02b (B13), which replaced B5's signed-URL
+   mechanism): SPEC-04 rows 20–21 (`000N_media_tenant_visibility`, the read
+   rule, `mediaapi.SetVisibility`), then SPEC-15 row 29 (music), SPEC-16
+   row 19 (movie) and SPEC-17 row 22 (story cover), with SPEC-10 row 15
+   (members keep their own progress row; after SPEC-10 row 6). Latent while
+   every User has a personal organisation, hence last.
 2. **Data loss.** SPEC-10 rows 1–3, SPEC-07 row 1 together with the other
    publish-after-commit rows (SPEC-15 row 4, SPEC-16 row 3, SPEC-17 row 4,
    SPEC-18 row 1), SPEC-09 rows 1–2 together with SPEC-11 rows 1–4 (the
@@ -92,7 +95,7 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    (SPEC-04 row 16 before SPEC-10 rows 4, 5, 8), then SPEC-15 row 27 (the
    music player resumes and saves through the audio asset's media progress;
    tracks join `/continue` as media items — Decision 2026-10-02b (B2); needs
-   SPEC-10 rows 5 and 4).
+   SPEC-10 rows 5 and 4, and row 15 for members' own resume — B13).
 4. **Remaining integrity, contract and UX rows**, per spec, in each section's
    order; the `x-required-permission` retrofit with its drift check. Rows
    Decision 2026-10-02b added rank here: SPEC-17 row 21 together with SPEC-14

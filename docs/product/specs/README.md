@@ -373,28 +373,30 @@ the rows other documents cite, so a few ranges below are split. So are the
 seven SPEC-01 rows the 2026-10-02 decisions added (rows 25–31), and the six
 rows Decision 2026-10-02b added (SPEC-15 rows 27–29, SPEC-17 row 21, SPEC-18
 rows 13–14); that round also extended SPEC-01 row 29 and narrowed SPEC-02
-row 13 in place.
+row 13 in place. Its B13 (tenant asset visibility) appended five more (SPEC-04
+rows 20–21, SPEC-10 row 15, SPEC-16 row 19, SPEC-17 row 22) and rewrote
+SPEC-15 rows 27 and 29 in place.
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
 | [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 31 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 (10 superseded by 26) · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 · Sec 25–28 · Data 29 (extended, 2026-10-02b) · Sec 30 · Data 31 (appended, 2026-10-02) | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
 | [SPEC-02](SPEC-02-shell-layout.md) | [§11](SPEC-02-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13 (P1.2–P1.3; P1.1 dropped, 2026-10-02b) · P1 14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
 | [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
-| [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
+| [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 · AuthZ 20–21 (appended, 2026-10-02b B13) | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
 | [SPEC-05](SPEC-05-notification-module.md) | [§11](SPEC-05-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16, 22 · Hyg 17–20 · P1 21, 23 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
 | [SPEC-07](SPEC-07-journal.md) | [§11](SPEC-07-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 8 | Data 1 · UX 2–5 · Contract 6–8 | `journal:entry_created` published before the request transaction commits (1) |
 | [SPEC-08](SPEC-08-journal-attachments.md) | [section](SPEC-08-journal-attachments.md#implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 2 | AuthZ 1 · UX 2 (both owned by other specs) | no `user` grant of `assets:write:own` and no enforcement on upload (1) |
 | [SPEC-09](SPEC-09-life-stream-home.md) | [§11](SPEC-09-life-stream-home.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 16 | Data / stale 1–5 · Integ (order, render) 6–10 · UX (home, rail, `/weather` gate) 11–14 · Contract 15 · P1 16 | stream unique key lacks `user_id`, so a second user's playback is swallowed (1); deleted or edited birthdays leave stale cards (2) |
-| [SPEC-10](SPEC-10-continue-rail.md) | [§11](SPEC-10-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
+| [SPEC-10](SPEC-10-continue-rail.md) | [§11](SPEC-10-continue-rail.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data 1–3 · Integ 4–7 · Contract/UX 8–13 · P1 14 · AuthZ 15 (appended, 2026-10-02b B13) | the `pagehide` save is a `sendBeacon` POST → 405, silently lost (1); completion latched even when Publish fails, so the event is lost (2) |
 | [SPEC-11](SPEC-11-people-registry.md) | [§11](SPEC-11-people-registry.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data (lost / duplicate events) 1–4 · Integ (dates) 5–7 · Contract/UX 8–12, 14–15 · P1 13 | every PATCH carrying a birthday resets notices → duplicate stream items (1); no revoke / delete events (2) |
 | [SPEC-12](SPEC-12-finance-ledger.md) | [§12](SPEC-12-finance-ledger.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 17 | Sec 1 · Data 2–5 · Contract 6–12, 17 · UX 13–16 | derived-balance queries (accounts, dashboard) not filtered by the caller (1); archived accounts still accept writes (2) |
 | [SPEC-13](SPEC-13-ledger-expansion.md) | [§8](SPEC-13-ledger-expansion.md#8-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 5 | Data 1 · Scheduling 2 · Contract 3–5 | opening a debt is three writes with no enclosing transaction (1) |
 | [SPEC-14](SPEC-14-comic-vertical.md) | [§11](SPEC-14-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Sec 1–5 · Integ 6–9 · Contract/UX 10–17 · Data 18 · Integ 19 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
-| [SPEC-15](SPEC-15-music-vertical.md) | [§12](SPEC-15-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 29 | Data 1–2, 4 · Integ 3, 5–13 · Contract 14–17, 22–23 · UX 18–19, 24 · Hyg 20–21 · AuthZ 25 (appended) · P1 26 · Func 27 · Integ 28 · AuthZ 29 (appended, 2026-10-02b) | the `media:asset_deleted` consumer runs with no tenant scope, so a deleted audio asset leaves a published track pointing at nothing (1); a second zip upload re-imports every track (2) |
-| [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
-| [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
+| [SPEC-15](SPEC-15-music-vertical.md) | [§12](SPEC-15-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 29 | Data 1–2, 4 · Integ 3, 5–13 · Contract 14–17, 22–23 · UX 18–19, 24 · Hyg 20–21 · AuthZ 25 (appended) · P1 26 · Func 27 · Integ 28 · AuthZ 29 (appended, 2026-10-02b; 27 and 29 rewritten by B13) | the `media:asset_deleted` consumer runs with no tenant scope, so a deleted audio asset leaves a published track pointing at nothing (1); a second zip upload re-imports every track (2) |
+| [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 · AuthZ 19 (appended, 2026-10-02b B13) | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
+| [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 22 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) · AuthZ 22 (appended, B13) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
 | [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 · Func 13 · P1 14 (appended, 2026-10-02b) | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| **Total** | | **276** | | |
+| **Total** | | **281** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -486,6 +488,14 @@ names:
   per-module methods are listed in SPEC-01 row 29 rather than as rows in each
   module's spec; land them module by module, each with a test that its purge
   leaves no row, object or key behind.
+- **Tenant asset visibility** (Decision 2026-10-02b (B13)): SPEC-04 §11
+  row 20 (migration `000N_media_tenant_visibility` and the read rule) and
+  row 21 (`mediaapi.SetVisibility`) first; then SPEC-10 §11 row 15 (a member
+  keeps their own progress row; with or after SPEC-10 row 6); then the
+  content modules, each raising and lowering its own assets — SPEC-15 §12
+  row 29 (music; with row 27 for member resume), SPEC-16 §11 row 19 (movie),
+  SPEC-17 §11 row 22 (story cover). Latent while every User has a personal
+  organisation.
 - Smaller shared items: `origin='import'` (F038/F012) SPEC-04 row 10 · SPEC-14
   row 7 · SPEC-05 row 8 · SPEC-08 row 2 · SPEC-15 row 17; media deep link
   (F018) SPEC-04 row 15 · SPEC-05 row 9 · SPEC-09 row 7 · SPEC-10 row 9; Audio
@@ -699,14 +709,17 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
   no summary event ([events.md](../../reference/events.md)). Gap row:
   SPEC-15 §12 row 28; TC-MUS-127, 128.
 - **(B5) Tenant members play a published track, via SignedURL; `/original`
-  stays owner-only** — SPEC-15 P0.10: `GET /tracks/{id}/play-url` mints a
-  short-lived `mediaapi.SignedURL` for a readable track's validated audio
-  asset; SPEC-04 P0.5 documents the `SignedURL` contract (tenant-scoped,
-  `ready` only, never an image). Gap row: SPEC-15 §12 row 29; TC-MUS-129, 130.
+  stays owner-only** — *mechanism revised by B13 below*: members of the
+  owner's tenant play a published track (that part stands), but through the
+  asset's `tenant` visibility and `/original`, not a signed URL; there is no
+  `GET /tracks/{id}/play-url`. Gap row: SPEC-15 §12 row 29 (rewritten);
+  TC-MUS-129, 130 (reworded).
 - **(B6) "Published" never crosses the tenant fence** — SPEC-16 P0.3 and §10
-  (a status flag inside the owner's tenant; the video asset's ACL is not
-  widened), SPEC-15 §3 and P0.10 for music, SPEC-17 §3 for story. Shipped; no
-  gap row; TC-MOV-027.
+  (a status flag inside the owner's tenant), SPEC-15 §3 and P0.10 for music,
+  SPEC-17 §3 for story. Shipped; no gap row; TC-MOV-027. *Revised by B13
+  below*: still never across the fence, but inside it a published movie's
+  video and poster are widened to `tenant`, so members can watch it
+  (TC-MOV-027 reworded).
 - **(B7) Blank chapters of a published story are hidden** — SPEC-17 P0.4
   adopts SPEC-14 P0.2 (a): non-owners get no blank chapter in the detail, the
   reader payload or `chapter_count`; nothing auto-unpublishes. Gap row:
@@ -726,6 +739,29 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
 - **(B12) Layout saves stay last-write-wins** — SPEC-02 P1.1 dropped (no
   `version`, no 409 `layout/stale`). Gap row: SPEC-02 §11 row 13 narrowed to
   P1.2–P1.3.
+- **(B13) Tenant members play and watch published music and movies, through
+  a third asset visibility** — a later owner decision of the same day,
+  revising B5's mechanism and amending B6. SPEC-04 P0.8:
+  `assets.visibility` gains `tenant` (migration
+  `000N_media_tenant_visibility`, media-owned), readable by every member of
+  the owning tenant, writes unchanged; `GET /assets/{id}` and, for
+  `video`/`audio` only, `/original` admit the owner, a tenant admin, or a
+  member for a `tenant` asset — never across the tenant fence, and an image's
+  original (EXIF) never to a non-owner, who gets its variants; content modules
+  set it through the new `mediaapi.SetVisibility` (`tenant`/`private` only,
+  never touching `public`); `SignedURL` is left with no caller. SPEC-15 P0.2,
+  P0.3, P0.10: publishing a track raises its audio and cover to `tenant`;
+  unpublish, delete, clearing or replacing lower what no other published track
+  of the owner still uses (cross-module sharing and a `:publish:any` publisher
+  who is not a tenant admin are recorded known edges); members play from
+  `/original`. SPEC-16 P0.3, P0.4, P0.6: the same for a movie's video and
+  poster; members watch at `/library/media/{video_asset_id}`. SPEC-10 P0.2: a
+  member keeps their own progress row on an asset they may play. SPEC-17 P0.5
+  applies it to the story cover (a published story was already
+  tenant-readable). Gap rows: SPEC-04 §11 rows 20–21, SPEC-10 §11 row 15,
+  SPEC-15 §12 rows 27 and 29 (rewritten), SPEC-16 §11 row 19, SPEC-17 §11
+  row 22; TC-MEDIA-115…119, TC-CONT-103, TC-MUS-126, 129, 130 (reworded),
+  TC-MOV-027 (reworded), TC-MOV-112, 113, TC-STY-112.
 
 ## Open owner decisions
 
@@ -1277,4 +1313,7 @@ true and where it still is not.
   2026-10-02 (second round)") closed the last twelve open owner questions —
   SPEC-01 Q6 and the eleven left in SPEC-02 and SPEC-15–18 — appended six gap
   rows, extended SPEC-01 row 29 and narrowed SPEC-02 row 13 (gap total
-  270 → 276). No owner question is open.
+  270 → 276). A later decision that day, B13 (tenant asset visibility),
+  replaced B5's signed-URL mechanism and amended B6: SPEC-04 rev 7 gains P0.8,
+  five gap rows are appended and SPEC-15 rows 27 and 29 are rewritten (gap
+  total 276 → 281). No owner question is open.

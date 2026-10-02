@@ -1,7 +1,7 @@
 # SPEC-17 — Story Vertical (long-form text: stories and chapters)
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `story` · **Depends on:** SPEC-04 (image assets for covers, `media:asset_deleted`); pattern copied from SPEC-14 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
+**Module:** `story` · **Depends on:** SPEC-04 (image assets for covers, `media:asset_deleted`, P0.8 `tenant` visibility and `mediaapi.SetVisibility` for the cover — Decision 2026-10-02b (B13)); pattern copied from SPEC-14 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (tenancy), [ADR-08](README.md#adr-08), [SPEC-14](SPEC-14-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-05 (`notify:on_story_published` bell), SPEC-10 (a future `story` leg of `/continue`), SPEC-03 P1.7 (takeout)
 
@@ -258,6 +258,21 @@ allowed; SPEC-05's consumer dedups on the story id. `POST
 `DELETE /stories/{id}` is 204 (chapters cascade), then 404 `story/not-found`. A
 nil or failing publisher is logged and never fails a committed publish.
 
+**The cover follows the story** *(Decision 2026-10-02b (B13), applied to story
+because P0.4 already makes a published story readable by every member of the
+tenant; unbuilt — §11 row 22)*. The text is a story row and reaches members
+through RLS alone, but the cover is a media asset and, while `private`, its
+variants are hidden from everyone but the owner. So, exactly as for a movie's
+poster (SPEC-16 P0.4), publish raises `cover_asset_id` to SPEC-04 P0.8's
+`tenant` visibility through `mediaapi.SetVisibility` with the **story owner**
+as `ownerID`, in the same transaction; unpublish, `DELETE` (before the row
+goes) and a `PATCH` that clears it lower it to `private` unless another
+published story of the owner uses it; a `PATCH` that sets a new cover on a
+published story raises it and lowers the old one. Members get the cover's
+variants only, never its original (SPEC-04 P0.8). `SetVisibility` never
+touches a `public` asset; the `stories:publish:any` and cross-module edges are
+SPEC-16 P0.4's.
+
 **Permissions:**
 
 | Action | Permission |
@@ -299,6 +314,10 @@ to `user`, as for movies (SPEC-16 P1.3) and comics (`0025`).
   gone. *(TC-STY-068)*
 - Given creator D in C's tenant, when D adds a chapter to C's draft, then 404.
   *(TC-STY-069)*
+- Given C's draft story with a `private` cover, when it is published, then the
+  cover is `tenant` and member M of C's tenant gets its `thumb` variant (and
+  no bytes of its original); when it is unpublished, then the cover is
+  `private` and M's variant request is 404. *(TC-STY-112)*
 
 ### P0.6 — Cover lifecycle (`media:asset_deleted`)
 
@@ -490,7 +509,9 @@ adopts SPEC-14 P0.2 (a) for consistency with comic (B7 — P0.4). After publish,
 blank chapters are hidden from non-owner readers and excluded from
 `chapter_count`, instead of the publish-time-only check that shipped; the code
 change is §11 row 21. The cross-tenant rule decided with it (B6, SPEC-16 §10)
-applies here unchanged.
+applies here unchanged; B13, which made published music and movies playable by
+tenant members through SPEC-04 P0.8's `tenant` asset visibility, applies to the
+story cover (P0.5; §11 row 22).
 
 No open questions remain.
 
@@ -500,8 +521,9 @@ Baseline: `main` @ `99b5a0b` (the docs commits on top change no code). The spec
 text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
 integrity, authorization, contract, hygiene and unbuilt work; row 20 (P1, added
-by Decision 2026-10-01b) is appended after row 19, and row 21 (P0.4, added by
-Decision 2026-10-02b (B7)) after row 20. A row closes when
+by Decision 2026-10-01b) is appended after row 19, row 21 (P0.4, added by
+Decision 2026-10-02b (B7)) after row 20, and row 22 (P0.5, added by B13) after
+row 21. A row closes when
 the code matches the requirement it cites and the SPEC-17 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
@@ -529,6 +551,7 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
 | 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
 | 21 | P0.4 blank chapters after publish | On a published story, a non-owner gets no blank chapter (`btrim(body_md) = ''`) in the detail, `chapter_count` or the reader payload; `GET /stories` counts non-blank chapters only. | `handler.go` `GetStory` sets `chapter_count = len(chapters)` and lists every chapter from `service.go` `ListChapters` → `query/story.sql` `ListStoryChapters` (no body predicate); `service.go` `ChaptersVisible` gates on the story only and returns `ListStoryChapters` whole; `ListPublishedStories` counts `(SELECT count(*) FROM story_chapters ch WHERE ch.story_id = s.id)`. The owner is never distinguished from a reader after the draft gate in `Service.GetStory`. | **query:** a `ListReadableStoryChapters` with `AND btrim(body_md) <> ''`, and the same predicate in `ListPublishedStories`' `chapter_count` subquery (`ListOwnStories` unchanged); `make sqlc`. **backend:** `GetStory` and `ChaptersVisible` use the filtered query when the caller is not the owner and the story is published, and the detail's `chapter_count` comes from the list it returns. **openapi:** say so on `Story.chapter_count`, `getStory` and `listStoryChapters`. **test:** TC-STY-047, 048. | Decision 2026-10-02b (B7); SPEC-14 §11 row 9 pattern (F049) |
+| 22 | P0.5 the cover follows the story | Publish raises `cover_asset_id` to `tenant` through `mediaapi.SetVisibility` with the story owner; unpublish, delete, clearing and replacing the cover lower what no other published story of the owner still uses; in the same transaction. | `service.go` `Publish`, `Unpublish`, `DeleteStory` and `UpdateStory` write `stories` only; `types.go` `MediaAPI` has `GetAsset` alone. A published story's cover stays `private`, so `0032`'s `variant_select` hides its variants from every other member while `GET /stories` lists the story to them. Latent while each user has a personal organisation, and invisible until P1.1 renders covers. | **backend:** `MediaAPI` gains `SetVisibility`; a story query listing which cover ids another published story of the owner still uses; the four methods raise or lower per P0.5, passing the story's `owner_user_id`. **test:** TC-STY-112. Needs SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13) |
 
 **Already matching on HEAD.**
 - `0023_story_core`: both tables, the story CHECKs, the `DEFERRABLE` chapter
