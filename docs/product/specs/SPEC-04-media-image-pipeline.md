@@ -1,6 +1,6 @@
 # SPEC-04 — Media Image Pipeline + Asset Management
 
-**Status:** current, **rev 7** (P0.8 tenant visibility, Decision 2026-10-02b (B13)) · **Last verified:** 2026-10-01
+**Status:** current, **rev 8** (P0.8 shared visibility, Decision 2026-10-02b (B13) as revised by B14 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)) · **Last verified:** 2026-10-01
 **Module:** `media` (built + wired) · **Depends on:** nothing
 **Upstream:** brief 01 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/01-media-image-pipeline.md`) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
 **Downstream consumers:** SPEC-14, SPEC-12 P1 (receipts), SPEC-05 P0.4 (`media:asset_ready` → in-app notification), SPEC-07/SPEC-08 (entry photos), SPEC-09 (`media:asset_deleted`; playback via SPEC-10), SPEC-10, SPEC-11 P1.7 (avatars), SPEC-03 (P0.3 scheduler; P1.7 mediaapi ExportProvider), SPEC-01 P0.10 (user delete → P0.7 owner purge)
@@ -33,7 +33,7 @@ and several scattered backlog items (avatar upload, photos, receipts).
 
 ## 3. Non-goals
 
-- Multi-rendition HLS ladder, a playback ACL beyond P0.8's `tenant`
+- Multi-rendition HLS ladder, a playback ACL beyond P0.8's `shared`
   visibility (per-item or per-person sharing, signed playback URLs),
   presigned direct-to-bucket upload — tracked separately in the 2026-07
   backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`); this
@@ -157,7 +157,7 @@ janitor) stay on the weighted default server so heavy jobs never starve them.
 WebP content type and `Cache-Control: private, max-age=600` — no `immutable`
 and no year-long max-age, so a delete or un-share takes effect within minutes
 (an asset made public via its visibility flag may use `public, max-age=86400`;
-a `tenant` asset, P0.8, keeps `private`) *(rev 4)*. Same **public-ish** auth stance
+a `shared` asset, P0.8, keeps `private`) *(rev 4)*. Same **public-ish** auth stance
 as `/hls/*` — **unauthenticated**: variants carry no EXIF/GPS (all metadata is
 stripped, step 3 above), so they are safe to be semi-public, unlike the private
 original (P0.5). Returns 404 `media/asset-not-found` for a missing or
@@ -345,10 +345,11 @@ loads the row owner-scoped (`owner_id = caller`). There is **no
 `assets:read:own` (seeded to `user` by 0003) documents the capability only;
 `RequirePermission` alone checks no ownership and must never be the sole gate
 *(rev 4)*. **One widening, for playable kinds only** *(Decision 2026-10-02b
-(B13); P0.8)*: a `video` or `audio` asset is also served to a tenant admin of
-its tenant and, when its visibility is `tenant`, to every member of that
-tenant — never across the tenant fence, and never for an `image`, whose
-original stays owner-only whatever its visibility.
+(B13), audience revised by B14; P0.8)*: a `video` or `audio` asset whose
+visibility is `shared` is also served to its ADR-12 audience — the members of
+its tenant and the owner's friends in actively linked tenants — and never for
+an `image`, whose original stays owner-only whatever its visibility. A tenant
+admin gets nothing more than any member (B14 point 4).
 
 **Behavior.** Streams the source object (Range-capable, via
 `http.ServeContent`) with `Content-Disposition: inline;
@@ -370,8 +371,8 @@ semi-public, originals are private archive.
 - Given user B (any role, including `*` and editor's `assets:read:any`)
   requests user A's original, then 403 (or 404 `media/asset-not-found` when RLS
   hides the row), and no bytes are streamed *(rev 4)* — unless P0.8 admits B
-  (A's `video`/`audio` asset is `tenant` and B is in A's tenant, or B
-  administers that tenant).
+  (A's `video`/`audio` asset is `shared` and B is in its ADR-12 audience;
+  administering A's tenant admits nothing).
 - Given an asset in `processing`/`failed` whose source object still exists
   (worker-side failure: corrupt/animated/oversized-dimensions), the original is
   still downloadable. Given an asset rejected at `/complete` with its object
@@ -437,7 +438,7 @@ int, err error)` in `media/api`, called only by account's user delete:
    when tenant selection lands (`D-23`) the call iterates the owner's
    memberships. Every query also carries `owner_id = $1`: `asset_select`
    (`0032_media_asset_acl`) admits *public* assets of any owner, and after P0.8
-   `tenant` assets of other members.
+   `shared` assets of other owners whose audience includes the caller.
 2. **Tombstone.** One statement marks every asset of the owner `deleting`
    (`UPDATE assets SET status = 'deleting', updated_at = now() WHERE owner_id =
    $1 AND status <> 'deleting'`, new query `TombstoneOwnerAssets`), committed on
@@ -482,88 +483,116 @@ closure — the pattern `cmd/api` already uses for `AssetOwner`.
   / `asset_delete` policies (`0032`) admit no other row (RLS suite, as
   `portal_app`). *(TC-MEDIA-054)*
 
-### P0.8 — Tenant visibility *(rev 7; Decision 2026-10-02b (B13); unbuilt)*
+### P0.8 — Shared visibility *(rev 8; Decision 2026-10-02b (B13), audience revised by B14 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt)*
 
-**Why.** Members of a tenant listen to and watch the music and movies another
-member of the same tenant has published (SPEC-15 P0.10, SPEC-16 P0.6).
+**Why.** A published track, movie or story is read, heard and watched by its
+owner's household and friends (SPEC-15 P0.10, SPEC-16 P0.6, SPEC-17 P0.5).
 `0032_media_asset_acl` knows two visibilities and neither fits: `private`
-(owner or tenant admin) hides a published track's audio from every other
-member, and `public` (anyone, any tenant, anonymous included) carries it
-across the tenant fence, which "published" never crosses (Decision
-2026-10-02b (B6), as amended by B13). A third value does.
+(owner, or a scope carrying `app.tenant_admin`) hides a published track's
+audio from everyone else, and `public` (anyone, any tenant, anonymous
+included) is far wider than the audience ADR-12 sets. A third value carries
+exactly that audience. *(B13 specced it as `tenant`, readable by every member
+of the owning tenant and by a tenant admin; B14 renamed it and changed who
+reads it before anything was built.)*
 
-**Value.** `assets.visibility ∈ {private, tenant, public}`. `tenant` means
-readable by every member of the asset's owning tenant. Writes do not change:
-the `asset_update` / `asset_delete` policies still admit only the owner or a
-tenant admin, whatever the visibility.
+**Value.** `assets.visibility ∈ {private, shared, public}`. `shared` means
+readable by the **ADR-12 audience**: the owner; every member of the asset's
+tenant (the household); and every accepted connection of the owner who is a
+member of a tenant actively linked to the asset's tenant (a friend in a linked
+tenant). The test is the tenant module's `app_can_read_shared(owner_id,
+tenant_id)` (SPEC-01 P0.17), evaluated live, so an unfriend, an unlink or a
+member leaving takes effect at the next statement. Writes do not change: the
+`asset_update` / `asset_delete` policies still admit only the owner (or a
+trusted backend scope), whatever the visibility, and only inside the asset's
+own tenant.
 
-**Migration** `000N_media_tenant_visibility` (media-owned; take the next free
-number when it lands — several `000N` media migrations are pending, `ls
-backend/db/migrations | tail -2`):
+**A tenant admin reads nothing extra** *(B14 point 4, reversing B13)*. Request
+scopes no longer carry `app.tenant_admin` (SPEC-01 P0.17, §11 row 33): a
+tenant's owner sees another member's assets exactly as any member does — a
+`shared` one through the audience, a `private` one not at all. The flag stays
+in the policies for the worker's backend scopes, which process every
+member's media.
 
-- re-creates the `visibility` CHECK as `IN ('private', 'tenant', 'public')`;
-- replaces `asset_select` with `visibility = 'public' OR (tenant_id = <current
-  tenant> AND (owner_id = <current user> OR app.tenant_admin = 'on' OR
-  visibility = 'tenant'))`, reading every GUC the 0032 way (two-argument
-  `current_setting`, wrapped in `NULLIF`), so a request with no tenant scope —
-  an anonymous variant or HLS fetch — still sees `public` rows only;
+**Migration** `000N_media_shared_visibility` (media-owned; after
+`000N_tenant_links`, whose function it calls; take the next free number when
+it lands, `ls backend/db/migrations | tail -2`):
+
+- re-creates the `visibility` CHECK as `IN ('private', 'shared', 'public')`;
+- replaces `asset_select` with `visibility = 'public' OR (tenant_id =
+  <current tenant> AND (owner_id = <current user> OR app.tenant_admin = 'on'))
+  OR (visibility = 'shared' AND app_can_read_shared(owner_id, tenant_id))`,
+  reading every GUC the 0032 way (two-argument `current_setting`, wrapped in
+  `NULLIF`). The third clause has no tenant predicate: it is ADR-12's
+  deliberate cross-tenant read, and the function is its fence. A request with
+  no user scope — an anonymous variant or HLS fetch — makes the function
+  false, so it still sees `public` rows only;
 - replaces `variant_select` with the same predicate restated against the
   parent asset's columns (the 0032 header: change one, change the other);
 - leaves every insert, update and delete policy as it is;
-- down: sets `tenant` rows back to `private`, then restores 0032's CHECK and
+- down: sets `shared` rows back to `private`, then restores 0032's CHECK and
   two select policies.
 
-No backfill: every existing row keeps its value. A track or movie already
-published when the migration lands is raised by publishing it again (publish
-is idempotent, and SPEC-15's bulk status covers a whole library in one call);
-with one personal organisation per user there is no other member to miss it
-meanwhile.
+No backfill: every existing row keeps its value. An item already published
+when the migration lands is raised by publishing it again (publish is
+idempotent, and SPEC-15's bulk status covers a whole library in one call);
+until tenants are linked nobody but the owner is in the audience anyway.
 
 **Read rule.** Every media read applies one rule; writes keep theirs.
 
 | Route | Admits |
 |---|---|
-| `GET /assets/{id}` (metadata, `hls_url`) | the owner; a tenant admin of the asset's tenant; a member of that tenant when the asset is `tenant` |
-| `GET /assets/{id}/original` | `video` / `audio`: the same three. `image` and every other kind: the owner only (P0.5) — an original keeps its EXIF, GPS included (P0.1), so a `tenant` cover or poster reaches anyone else as its stripped variants only, as a `public` image already does |
-| `GET /assets/{id}/variants/{variant}`, `GET /assets/{id}/hls/*` | RLS alone (`OptionalTenant`, unchanged): a signed-in member now sees `tenant` rows, an anonymous caller still sees `public` ones. `Cache-Control` stays `private, max-age=600` (variants) and `private, max-age=30` (HLS) for a `tenant` asset — `Content.Public` remains `visibility = 'public'`, so a tenant asset never lands in a shared cache |
+| `GET /assets/{id}` (metadata, `hls_url`) | the owner; anyone in the ADR-12 audience when the asset is `shared` |
+| `GET /assets/{id}/original` | `video` / `audio`: the same two. `image` and every other kind: the owner only (P0.5) — an original keeps its EXIF, GPS included (P0.1), so a `shared` cover or poster reaches anyone else as its stripped variants only, as a `public` image already does |
+| `GET /assets/{id}/variants/{variant}`, `GET /assets/{id}/hls/*` | RLS alone (`OptionalTenant`, unchanged): a signed-in reader in the audience now sees `shared` rows, an anonymous caller still sees `public` ones. `Cache-Control` stays `private, max-age=600` (variants) and `private, max-age=30` (HLS) for a `shared` asset — `Content.Public` remains `visibility = 'public'`, so a shared asset never lands in a shared cache |
 | `GET` / `PUT /assets/{id}/progress` | SPEC-10 P0.2: anyone the `/original` row admits for a `video` / `audio` asset keeps their **own** progress row |
-| `PATCH`, `DELETE`, `/complete`, `/source` | unchanged: the owner (DELETE: or `assets:delete:any`) |
+| `PATCH`, `DELETE`, `/complete`, `/source` | unchanged: the owner (DELETE: or `assets:delete:any`), inside the asset's tenant |
 
-Every route runs in the caller's `RequireTenant` (or `OptionalTenant`) scope,
-so "member of the tenant" is "the tenant the request runs in", and nothing
-admits a caller from another tenant: `public` is the only cross-tenant value,
-and it is set only by the owner's `PATCH`. A caller the rule refuses gets what
-P0.5 gives a non-owner today.
+The service guard for the two non-RLS-only routes asks the same question as
+the policy — one query admitting `owner_id = caller OR (visibility = 'shared'
+AND app_can_read_shared(owner_id, tenant_id))`, plus `kind IN ('video',
+'audio')` for `/original` unless the caller owns it — so the handler and the
+database cannot disagree. No role or permission bypasses it (`*` and
+`assets:read:any` included). A caller the rule refuses gets what P0.5 gives a
+non-owner today: 404 `media/asset-not-found`.
 
-**Who sets `tenant`.** Content modules, through
+**Who sets `shared`.** Content modules, through
 `mediaapi.SetVisibility(ctx, ownerID, assetIDs, visibility) (changed int,
 err error)` (§7 Cross-module surface) when an item is published, unpublished,
-deleted or re-pointed (SPEC-15 P0.3, SPEC-16 P0.4). The owner's `PATCH
-/assets/{id}` keeps accepting `private` or `public` only and answers `tenant`
-with its 422: a library toggle that could set `tenant` by hand would leave
-nothing to lower it again. The library shows a `tenant` asset as shared with
-the tenant. A `PATCH` to `private` overrides it — members lose that file until
-the item is published again — and a `PATCH` to `public` widens it.
+deleted or re-pointed (SPEC-15 P0.3, SPEC-16 P0.4, SPEC-17 P0.5). The owner's
+`PATCH /assets/{id}` keeps accepting `private` or `public` only and answers
+`shared` with its 422: a library toggle that could set `shared` by hand would
+leave nothing to lower it again. The library shows a `shared` asset as shared
+with family and friends. A `PATCH` to `private` overrides it — the audience
+loses that file until the item is published again — and a `PATCH` to `public`
+widens it.
 
 **Acceptance criteria.**
-- Given A and B in one tenant and C in another, all as `portal_app`, then B
-  reads A's `tenant` asset and its variants, not A's `private` one; C and an
-  anonymous caller read neither; B can neither update nor delete A's `tenant`
-  asset. *(TC-MEDIA-115, RLS suite)*
-- Given A's ready `tenant` audio, then B's `GET …/original` answers 200 (a
-  `Range` request 206) and C's 404 `media/asset-not-found`; given A's `tenant`
-  video, then B's `GET /assets/{id}` carries `hls_url`; given A's `tenant`
-  image, then B gets its `thumb` and `medium` variants and no bytes of its
+- Given owner A and household member B in tenant T, friend F of A in a tenant
+  actively linked to T, friend G of A in an unlinked tenant, non-friend N in a
+  linked tenant and stranger S, all as `portal_app`, then A, B and F read A's
+  `shared` asset and its variants, not A's `private` one; G, N, S and an
+  anonymous caller read neither; nobody but A can update or delete it.
+  *(TC-MEDIA-115, RLS suite)*
+- Given A's ready `shared` audio, then F's `GET …/original` answers 200 (a
+  `Range` request 206) and G's 404 `media/asset-not-found`; given A's `shared`
+  video, then F's `GET /assets/{id}` carries `hls_url`; given A's `shared`
+  image, then F gets its `thumb` and `medium` variants and no bytes of its
   original. *(TC-MEDIA-116)*
-- Given a `tenant` asset, then its variant and HLS responses carry
+- Given a `shared` asset, then its variant and HLS responses carry
   `Cache-Control: private`, never `public`. *(TC-MEDIA-117)*
-- Given `SetVisibility(A, [a1, a2, a3], tenant)` where a1 is `private`, a2 is
+- Given `SetVisibility(A, [a1, a2, a3], shared)` where a1 is `private`, a2 is
   `public` and a3 belongs to B, then only a1 changes (`changed = 1`); `private`
   then lowers a1 alone; `public` as the target is an error and writes
   nothing; a rolled-back caller transaction leaves a1 `private`.
   *(TC-MEDIA-118)*
 - Given the migration applied and rolled back, then the CHECK and both select
-  policies match 0032 again and no row is `tenant`. *(TC-MEDIA-119)*
+  policies match 0032 again and no row is `shared`. *(TC-MEDIA-119)*
+- Given F reading A's `shared` video, when A and F disconnect, or either tenant
+  drops the link, then F's next `GET /assets/{id}`, HLS and variant requests
+  answer 404; reconnecting and relinking restores them. *(TC-MEDIA-120)*
+- Given B is the owner of tenant T and A a member, then B's request scope reads
+  none of A's `private` assets and A's `shared` ones only as the audience
+  does; B's `GET …/original` on A's private video is 404. *(TC-MEDIA-121)*
 
 ### P1 — nice to have
 
@@ -619,7 +648,7 @@ the item is published again — and a `PATCH` to `public` widens it.
 
 ## 6. Data model
 
-**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `assets` and `media_asset_variants` — `tenant_id` + `<t>_tenant_idx` + FORCE RLS, added by `0020_platform_rls_enable` (`0032_media_asset_acl` later widened their policies for the asset ACL and added `assets.visibility`; P0.8's `000N_media_tenant_visibility` adds its `tenant` value and widens both select policies). The DDL below predates ADR-07 and omits the columns.
+**Tenancy** (specs README convention, ADR-07). Tenant-scoped: `assets` and `media_asset_variants` — `tenant_id` + `<t>_tenant_idx` + FORCE RLS, added by `0020_platform_rls_enable` (`0032_media_asset_acl` later widened their policies for the asset ACL and added `assets.visibility`; P0.8's `000N_media_shared_visibility` adds its `shared` value and widens both select policies with ADR-12's cross-tenant read through `app_can_read_shared`). The DDL below predates ADR-07 and omits the columns.
 
 New table — migration `000N_media_variants` (take the next free number):
 
@@ -696,10 +725,10 @@ migration — code follow-up.)* Queries in
 | POST | `/api/v1/assets` | `assets:write:own` | modified: records `original_filename`, sets `title = original_filename` and `origin='upload'`; response unchanged |
 | POST | `/api/v1/assets/{id}/complete` | `assets:write:own` | modified: magic-byte sniff (stores the sniffed `mime_type` for images) + HEAD size re-check; new Problems `media/unsupported-format` (422), `media/file-too-large` |
 | DELETE | `/api/v1/assets/{id}` | owner, or `assets:delete:any` (RequireOwnerOrPermission) | 204 once `deleting` commits (purge failures fall to the janitor; already-`deleting` → 204); 404 `media/asset-not-found` only for a missing row |
-| GET | `/api/v1/assets/{id}` | authenticated; the P0.8 read rule (owner, tenant admin, or a member for a `tenant` asset) | metadata + `hls_url`; owner-only on `HEAD` (§11 row 20) |
-| GET | `/api/v1/assets/{id}/original` | authenticated; owner-scoped load, no `:any`/`*` bypass (`assets:read:own` documents the capability); for `video`/`audio` also a tenant admin, or a member for a `tenant` asset (P0.8) | rev 2; inline stream, Range-capable; never public, never cross-tenant, an image never to a non-owner |
-| GET | `/api/v1/assets/{id}/variants/{variant}` | public-ish / unauthenticated (same as `/hls/*`) | `variant ∈ thumb\|medium\|poster`; streamed w/ content type + `Cache-Control: private, max-age=600` (`public, max-age=86400` for a public asset; a `tenant` asset stays `private`); 404 `media/asset-not-found` |
-| PATCH | `/api/v1/assets/{id}` | owner, or `assets:write:any` (RequireOwnerOrPermission) | P1.1 `{title}`; shipped `{visibility}` is owner-only (P1.1) and accepts `private` or `public` only — `tenant` is set by content modules (P0.8) |
+| GET | `/api/v1/assets/{id}` | authenticated; the P0.8 read rule (the owner, or the ADR-12 audience for a `shared` asset) | metadata + `hls_url`; owner-only on `HEAD` (§11 row 20) |
+| GET | `/api/v1/assets/{id}/original` | authenticated; owner-scoped load, no `:any`/`*` bypass (`assets:read:own` documents the capability); for `video`/`audio` also the ADR-12 audience of a `shared` asset (P0.8) | rev 2; inline stream, Range-capable; never public, never to a tenant admin as such, an image never to a non-owner |
+| GET | `/api/v1/assets/{id}/variants/{variant}` | public-ish / unauthenticated (same as `/hls/*`) | `variant ∈ thumb\|medium\|poster`; streamed w/ content type + `Cache-Control: private, max-age=600` (`public, max-age=86400` for a public asset; a `shared` asset stays `private`); 404 `media/asset-not-found` |
+| PATCH | `/api/v1/assets/{id}` | owner, or `assets:write:any` (RequireOwnerOrPermission) | P1.1 `{title}`; shipped `{visibility}` is owner-only (P1.1) and accepts `private` or `public` only — `shared` is set by content modules (P0.8) |
 | GET | `/api/v1/assets` | `assets:read:own` | `?kind=&status=&cursor=&limit=`; see Pagination below |
 
 *(Rev 3: all codes are the 0003-seeded catalog entries — no new permission
@@ -724,7 +753,7 @@ migration is applied do upload-sessions and `/complete` enforce
 `Ingest` and `OpenOriginal`. P0.8 adds
 `mediaapi.SetVisibility(ctx, ownerID uuid.UUID, assetIDs []uuid.UUID,
 visibility string) (changed int, err error)`, the only way a content module
-moves an asset between `private` and `tenant`: `visibility` must be `tenant`
+moves an asset between `private` and `shared`: `visibility` must be `shared`
 or `private` (anything else, `public` included, is an error and writes
 nothing); one statement, a new `query/assets.sql` `SetAssetsVisibility
 :execrows` — `UPDATE assets SET visibility = $3, updated_at = now() WHERE id =
@@ -733,13 +762,14 @@ ANY($1) AND owner_id = $2 AND visibility NOT IN ('public', $3) AND status <>
 `public`, unpublishing never lowers it), skips ids that are already at the
 target or belong to someone else, and runs in the caller's transaction, so it
 commits or rolls back with the publish that called it. Under `asset_update`
-it changes only rows whose owner is the acting user or whose tenant the actor
-administers (the worker's owner scope qualifies). Media keeps no reference
+it changes only rows in the scope's own tenant whose owner is the acting user,
+or any row of that tenant in a trusted backend scope (the worker's owner
+scope qualifies) — after SPEC-01 P0.17 a request scope is never trusted. Media keeps no reference
 count: which assets a module may lower is that module's decision. An empty
 list is a no-op. `SignedURL(ctx, id, ttl)` (`service.go` `SignedOriginalURL`,
 a presigned GET on a `ready` original) stays built with no caller: Decision
 2026-10-02b (B13) replaced the music signed-URL path it was meant for, and
-members play from `/original` under P0.8. It does not check the kind, so a
+the audience plays from `/original` under P0.8 (B14). It does not check the kind, so a
 future caller must never pass an image — its original keeps GPS EXIF.
 
 Annotate per the README OpenAPI encoding (`security: []` for the variant row;
@@ -818,8 +848,9 @@ text above is the target; this section lists every place the shipped code still
 diverges from it, so an implementer needs nothing beyond this file. Rows are
 ordered by severity — data loss and integrity first, then authorization, then
 contract and polish; row 19 (data loss, added by Decision 2026-10-01b) and
-rows 20–21 (authorization, added by Decision 2026-10-02b (B13)) are appended
-rather than renumbering rows other documents cite. A row closes when
+rows 20–21 (authorization, added by Decision 2026-10-02b (B13) and rewritten
+in place by B14 — nothing of them was built) are appended rather than
+renumbering rows other documents cite. A row closes when
 the code matches the target and the
 SPEC-04 rows of [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md)
 are regraded. Paths are relative to `backend/internal/modules/media/` unless
@@ -846,8 +877,8 @@ stated otherwise.
 | 17 | §7 OpenAPI encoding | Variant row `security: []`; `x-required-permission: {owner_or: assets:delete:any}` on DELETE and `{owner_or: assets:write:any}` on PATCH `{title}`. | `shared/openapi.yaml` has no `x-required-permission` anywhere; `getAssetVariant` declares no `security`; the `completeAssetUpload` description still says images enqueue a thumbnail job. | **openapi:** add the annotations and fix the description. **test:** TC-MEDIA-112 drift check. | F025 (README OpenAPI encoding) |
 | 18 | §7 Pagination (`limit`, owner decision 2026-10-01) | `limit` is lenient: missing, non-integer or < 1 → 50; above 100 → **clamped to 100**; never a Problem. | `service.go` `Service.List`: `if limit <= 0 \|\| limit > maxListLimit { limit = defaultListLimit }` — `?limit=500` returns 50 (`handler.go` `List` already ignores a non-integer). | **backend:** clamp instead of resetting (`> 100 → 100`, `≤ 0 → 50`), e.g. through `platform/server.Limit(r, 50, 100)`. **openapi:** describe `limit` as defaulted and clamped, not a 4xx. **test:** TC-MEDIA-070. | Decision 2026-10-01 (limit) |
 | 19 | P0.7 owner purge (data loss) | `mediaapi.PurgeOwnerAssets(ctx, ownerID)` tombstones, purges objects and rows of every asset of one owner inside that owner's scope, within a time budget, emits no `media:asset_deleted`, and returns the rows left. | Not built. `api/api.go` has no such method and `query/assets.sql` has no owner-wide tombstone or listing. So `account/handler/admin_users.go` `DeleteUser` → `DeleteUser` (`account/query/admin.sql`) cascades every `assets` row away (`0007_media_assets` `owner_id … ON DELETE CASCADE`) and `PurgeOrphans` — which finds work only through `ListAssetsForPurge` rows — never sees them: the user's objects stay in MinIO/R2 forever. | **backend:** queries `TombstoneOwnerAssets` and `ListOwnerAssetsForPurge` (`make sqlc`); `Service.PurgeOwnerAssets` (scope per P0.7 step 1, `purgeObjects` outside any transaction, row deletes in short scopes, 20 s budget, no emit); expose it on `mediaapi.API` / `Impl`; `cmd/api` binds it into account's port (SPEC-01 §11 row 8, which owns the caller). **test:** TC-MEDIA-052…054. | Decision 2026-10-01b (D1); SPEC-01 §11 row 8 |
-| 20 | P0.8 tenant visibility — schema and read rule | `visibility` admits `tenant`; `asset_select` and `variant_select` admit a member of the asset's tenant for a `tenant` row; `GET /assets/{id}` and, for `video`/`audio`, `/original` admit the owner, a tenant admin, or a member for a `tenant` asset; an image original stays owner-only; a `tenant` asset is cached `private`; `PATCH` still accepts only `private`/`public`. | `0032_media_asset_acl` CHECKs `visibility IN ('private', 'public')`, and its `asset_select` / `variant_select` admit `public` or, inside the tenant, the owner or `app.tenant_admin = 'on'` — another member's private asset is invisible, so are its variants (a published track's cover or a movie's poster included). `service.go` `Get` and `OriginalContent` go through `owned()`, which compares `asset.OwnerID` with the caller and returns `ErrForbidden` (`handler.go` `writeMediaErr` / `writeMediaProblem` → 403 `not your asset`) even for a row RLS let through. `types.go` declares `VisibilityPrivate` / `VisibilityPublic` only; `handler.go` `Patch` validates against them; `ServeVariant` / `HLSObject` set `Content.Public` from `visibility == public` (already right for `tenant`). `shared/openapi.yaml` `AssetVisibility` is `enum: [private, public]`; `frontend/src/lib/media-assets.ts` `AssetVisibility` is `"private" \| "public"`. Latent while each user has a personal organisation: no other member exists. | **migration:** `000N_media_tenant_visibility` (P0.8). **backend:** `VisibilityTenant`; replace `owned()` on the two read paths with one guard — e.g. a query admitting `owner_id = caller OR (tenant_id = current tenant AND (visibility = 'tenant' OR app.tenant_admin = 'on'))`, plus `kind IN ('video', 'audio')` for `/original` unless the caller owns it; `Patch` keeps refusing `tenant`. **openapi:** `AssetVisibility` gains `tenant` (documented as response-only; the `patchAsset` body keeps `private`/`public`); the `/original` and `getAsset` descriptions state the rule. **frontend:** the `AssetVisibility` type and the library's visibility label. **test:** TC-MEDIA-115 (RLS suite), TC-MEDIA-116, TC-MEDIA-117, TC-MEDIA-119. Lands before SPEC-15 §12 row 29 and SPEC-16 §11 row 19. | Decision 2026-10-02b (B13) |
-| 21 | P0.8 / §7 `mediaapi.SetVisibility` | Content modules move their assets between `private` and `tenant` through `mediaapi.SetVisibility(ctx, ownerID, assetIDs, visibility) (changed int, err error)`; never to or from `public`; in the caller's transaction. | `api/api.go` `API` has no such method and `Impl` / `NewImpl` (wired in `module.go` `New`) no field for it. The only visibility write is `service.go` `SetVisibility` → `query/assets.sql` `SetAssetVisibility` — one asset, `private`/`public`, owner predicate — behind `PATCH /assets/{id}`. No content module can make an asset readable to another member. | **backend:** `query/assets.sql` `SetAssetsVisibility :execrows` (§7), `make sqlc`; `Service.SetAssetsVisibility` validating `tenant`/`private`; the method on `mediaapi.API` and `Impl` (nil-safe like `OpenOriginal`), wired in `module.go`; the music and movie `MediaAPI` ports gain it. **test:** TC-MEDIA-118. Callers: SPEC-15 §12 row 29, SPEC-16 §11 row 19. | Decision 2026-10-02b (B13) |
+| 20 | P0.8 shared visibility — schema and read rule; ADR-12 | `visibility` admits `shared`; `asset_select` and `variant_select` admit the ADR-12 audience of a `shared` row through `app_can_read_shared(owner_id, tenant_id)` (SPEC-01 P0.17); `GET /assets/{id}` and, for `video`/`audio`, `/original` admit the owner or that audience through one guard query, and a tenant admin nothing more; an image original stays owner-only; a `shared` asset is cached `private`; `PATCH` still accepts only `private`/`public`. | `0032_media_asset_acl` CHECKs `visibility IN ('private', 'public')`, and its `asset_select` / `variant_select` admit `public` or, inside the tenant, the owner or `app.tenant_admin = 'on'` — nobody outside the owner's tenant ever sees a non-public row, and inside it another member's private asset is invisible, so are its variants (a published track's cover or a movie's poster included). `service.go` `Get` and `OriginalContent` go through `owned()`, which compares `asset.OwnerID` with the caller and returns `ErrForbidden` (`handler.go` `writeMediaErr` / `writeMediaProblem` → 403 `not your asset`) even for a row RLS let through. `types.go` declares `VisibilityPrivate` / `VisibilityPublic` only; `handler.go` `Patch` validates against them; `ServeVariant` / `HLSObject` set `Content.Public` from `visibility == public` (already right for `shared`). `shared/openapi.yaml` `AssetVisibility` is `enum: [private, public]`; `frontend/src/lib/media-assets.ts` `AssetVisibility` is `"private" \| "public"`. No `app_can_read_shared` exists (SPEC-01 §11 row 32). | **migration:** `000N_media_shared_visibility` (P0.8), after `000N_tenant_links`. **backend:** `VisibilityShared`; replace `owned()` on the two read paths with one guard query — `owner_id = caller OR (visibility = 'shared' AND app_can_read_shared(owner_id, tenant_id))`, plus `kind IN ('video', 'audio')` for `/original` unless the caller owns it; `Patch` keeps refusing `shared`. Land with SPEC-01 §11 row 33 (request scopes without `app.tenant_admin`), or a tenant owner would still read members' private rows through RLS. **openapi:** `AssetVisibility` gains `shared` (documented as response-only; the `patchAsset` body keeps `private`/`public`); the `/original` and `getAsset` descriptions state the rule. **frontend:** the `AssetVisibility` type and the library's visibility label ("shared with family and friends"). **test:** TC-MEDIA-115 (RLS suite), TC-MEDIA-116, TC-MEDIA-117, TC-MEDIA-119, TC-MEDIA-120, TC-MEDIA-121. Needs SPEC-01 §11 row 32; lands before SPEC-15 §12 row 29, SPEC-16 §11 row 19 and SPEC-17 §11 row 22. | Decision 2026-10-02b (B13), audience revised by B14; ADR-12 |
+| 21 | P0.8 / §7 `mediaapi.SetVisibility` | Content modules move their assets between `private` and `shared` through `mediaapi.SetVisibility(ctx, ownerID, assetIDs, visibility) (changed int, err error)`; never to or from `public`; in the caller's transaction. | `api/api.go` `API` has no such method and `Impl` / `NewImpl` (wired in `module.go` `New`) no field for it. The only visibility write is `service.go` `SetVisibility` → `query/assets.sql` `SetAssetVisibility` — one asset, `private`/`public`, owner predicate — behind `PATCH /assets/{id}`. No content module can make an asset readable to anyone but its owner. | **backend:** `query/assets.sql` `SetAssetsVisibility :execrows` (§7), `make sqlc`; `Service.SetAssetsVisibility` validating `shared`/`private`; the method on `mediaapi.API` and `Impl` (nil-safe like `OpenOriginal`), wired in `module.go`; the music, movie and story `MediaAPI` ports gain it. **test:** TC-MEDIA-118. Callers: SPEC-15 §12 row 29, SPEC-16 §11 row 19, SPEC-17 §11 row 22. | Decision 2026-10-02b (B13), renamed by B14 |
 
 **Already matching (verified on HEAD — do not redo).**
 - Worker admission rule: `worker/process_image.go` `checkImageDims` (area ≤ 64 MP, side ≤ 30,000 px, animated refused) and `encodeWebP` (fit within max-width × 16,000 px, never upscaled, `-map_metadata -1`); the original is never re-encoded.
@@ -855,7 +886,7 @@ stated otherwise.
 - `/complete`: magic-byte sniff, HEIC hint, unknown format and > 50 MB each delete the object and mark the asset `failed` (`completeImage`).
 - `POST /assets` records `title` = `original_filename` = the upload filename and `origin='upload'` (`CreateUploadSession`).
 - Variants: `ServeVariant` 404s `deleting` assets; `Cache-Control: private, max-age=600` or `public, max-age=86400` (`handler.go` `cacheControl`).
-- `/original` streams through `http.ServeContent` with `Content-Disposition: inline` and is owner-scoped with no `:any`/`*` bypass (`OriginalContent` → `owned`); `uploading` → 409. (P0.8 widens it for playable `tenant` assets — row 20.)
+- `/original` streams through `http.ServeContent` with `Content-Disposition: inline` and is owner-scoped with no `:any`/`*` bypass (`OriginalContent` → `owned`); `uploading` → 409. (P0.8 widens it for playable `shared` assets — row 20.)
 - DELETE is gated by `RequireOwnerOrPermission(engine, "assets:delete:any", extractAssetOwner)` (`cmd/api/main.go`); a missing row is 404.
 - Janitor: hourly `media:purge_orphans` on the single `asynq.Scheduler`, 15-min grace, 24 h abandoned sweep, error log after 5 consecutive failures (`PurgeOrphans`, `recordPurge`).
 - Poster: separate `media:thumbnail` task, `min(10 %, 10 s)` seek, audio-only skipped, never fails the asset (`worker/thumbnail.go`).
@@ -868,7 +899,7 @@ stated otherwise.
 - New worker tests for the lost race (TC-MEDIA-050): process_image, transcode and thumbnail each with the asset deleted mid-run.
 - `service_test.go: TestCompleteUploadImageAccepted` should assert the stored sniffed `mime_type` and HEAD size (TC-MEDIA-004, TC-MEDIA-080).
 - New: `Ingest` with `origin='import'` (TC-MEDIA-102), PATCH `{title}` (TC-MEDIA-100), grant migration + `RequirePermission` on upload (TC-MEDIA-114 and a 403 case).
-- New for P0.8: an RLS test of the widened select policies as `portal_app` with two members and an outsider (TC-MEDIA-115, extending `backend/internal/platform/db/rls_media_test.go`); HTTP tests of `/original` and `GET /assets/{id}` for a member, an outsider and a `tenant` image (TC-MEDIA-116); the cache header (TC-MEDIA-117); `SetAssetsVisibility` (TC-MEDIA-118); the migration round trip (TC-MEDIA-119).
+- New for P0.8: an RLS test of the widened select policies as `portal_app` with the owner, a household member, a friend in a linked tenant, a friend in an unlinked tenant, a non-friend in a linked tenant and a stranger (TC-MEDIA-115, extending `backend/internal/platform/db/rls_media_test.go`; the function's own truth table is SPEC-01's TC-TEN-005); HTTP tests of `/original` and `GET /assets/{id}` for a reader in the audience, one outside it and a `shared` image (TC-MEDIA-116); the cache header (TC-MEDIA-117); `SetAssetsVisibility` (TC-MEDIA-118); the migration round trip (TC-MEDIA-119); live revocation on unfriend and unlink (TC-MEDIA-120); a tenant owner's request scope reads nothing extra (TC-MEDIA-121).
 
 ## Decision records
 
@@ -1086,3 +1117,4 @@ ea100d8:docs/adr/diagrams/system-landscape.md`). Open:
 | r5 | 2026-10-01 | Owner decision 2026-10-01b (D1): P0.7 `mediaapi.PurgeOwnerAssets` — the media half of deleting a user without orphaning objects (tombstone + synchronous purge before the cascade, budgeted, no `media:asset_deleted`); §7 cross-module surface; §11 row 19. |
 | r6 | 2026-10-01 | ADR-04 (storage tier & budget) folded in as `## Decision records` (anchor `#adr-04`); status line states R2-only for deployed environments and MinIO for local dev; fact layer re-verified (variant key prefix added, `/tmp` disk bound corrected for the separate image pool, completed action items compressed); §10 storage-key question marked resolved. |
 | r7 | 2026-10-02 | Owner decision 2026-10-02b (B13): P0.8 — a third asset visibility, `tenant` (migration `000N_media_tenant_visibility`), the read rule for metadata, `/original` (playable kinds only), variants, HLS and progress, and `mediaapi.SetVisibility` for content modules; `SignedURL` loses its planned music caller. §11 rows 20–21; TC-MEDIA-115…119. |
+| r8 | 2026-10-02 | Owner decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12): P0.8 rewritten before anything was built — the value is `shared` (migration `000N_media_shared_visibility`), its audience the owner's household plus the owner's friends in actively linked tenants, decided by the tenant module's `app_can_read_shared` inside the select policies (a deliberate read-only exception to ADR-07's fence); a tenant admin reads nothing extra (B13's tenant-admin read removed); P0.5, §6, §7 aligned; §11 rows 20–21 rewritten; TC-MEDIA-115…119 reworded, TC-MEDIA-120, 121 added. |

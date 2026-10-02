@@ -51,7 +51,10 @@ Until one vertical is real, every future vertical estimate is a guess.
   `app.current_tenant`), and `RequireTenant` resolves every caller to their own
   personal organisation, so today a published comic is readable by its owner
   only; "published" widens nothing until a shared tenant (ADR-07) exists.
-  Per-comic ACLs and cross-tenant visibility arrive with the privacy layer.
+  Per-comic ACLs and cross-tenant visibility arrive with the privacy layer;
+  ADR-12's shared read for published music, movies and stories (Decision
+  2026-10-02b (B14)) deliberately leaves comics out — pages and covers stay
+  private assets.
   (Brief 02's open question locked "all authenticated users"; RLS superseded
   it.)
 - Automatic page-spread detection (double-page art); RTL and manual double-page

@@ -946,12 +946,17 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 
 - Repeat Phase 3 pattern per vertical.
 - `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`. The player
-  plays every track — the caller's own or another tenant member's published
-  one — from `/assets/{audio_asset_id}/original`, and reads and saves the
-  caller's own media progress row on that asset (no music-owned progress, no
-  signed URL): a published track's audio is `tenant`-visible to the members
+  plays every track — the caller's own or a published one shared with the
+  caller (household, or a friend in an actively linked tenant) — from
+  `/assets/{audio_asset_id}/original`, and reads and saves the caller's own
+  media progress row on that asset (no music-owned progress, no signed URL):
+  a published track's audio is `shared` with that audience
   ([SPEC-15](../product/specs/SPEC-15-music-vertical.md) P0.10, SPEC-04 P0.8;
-  Decision 2026-10-02b (B2, B13); resume unbuilt).
+  Decision 2026-10-02b (B2, B13, B14),
+  [ADR-12](../product/specs/SPEC-01-account-identity-admin.md#adr-12); resume
+  unbuilt). A track whose access ends mid-queue answers 404 and is skipped
+  like any unplayable track; the library lists treat a friend's item like any
+  published one (the API already filtered it).
 - Story / comic reader components.
 - `/api/v1/continue` aggregator → unified "Continue" rail on home dashboard.
 
@@ -971,6 +976,23 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 
 ### Phase 7 — Social baseline
 
+- **Shipped slice (SPEC-18):** connections — header request menu,
+  `/people?circle=requests`, the right rail, "people you may know" from
+  `GET /people/suggestions`. After Decision 2026-10-02b (B14)
+  ([ADR-12](../product/specs/SPEC-01-account-identity-admin.md#adr-12);
+  unbuilt) that directory holds only accounts in the caller's tenant or an
+  actively linked one; an empty directory gets a hint pointing to the links
+  screen, not a bare empty state. `social/validation` on a request or accept
+  renders the catalogue message ("this account is not reachable").
+- **Tenant links screen** (SPEC-01 P0.17; unbuilt): a page under `(app)` —
+  e.g. `/tenant/links`, added to the D-34 `middleware.ts` matcher — for a
+  tenant's owner: the tenant's id to share with another household, its links
+  grouped as active / waiting for them / waiting for you, accept (add the
+  incoming tenant) and remove, saved whole-set through `PUT
+  /tenants/{id}/links`; other members see it read-only. A Superadmin
+  (`tenants:links:write`, from `/auth/me`'s permission codes) also gets a
+  tenant picker over `GET /admin/tenants`. Server state in TanStack under a
+  `tenantKeys` factory; the four `tenant/*` slugs in `problems.ts`.
 - Newsfeed, profile, friends, communities, events, messaging.
 - `<PostComposer />` (text + image + video upload + poll + draft + schedule).
 - `<PostCard />` rendering all post-types.

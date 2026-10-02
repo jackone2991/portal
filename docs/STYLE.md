@@ -44,7 +44,7 @@ Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE
 
 - Folders and files: `kebab-case.md`.
 - Decision records have IDs, not files: `ADR-NN`, two-digit, monotonic, never
-  reused (`00` is retired — see ADR-11). The next new record is **ADR-12**.
+  reused (`00` is retired — see ADR-11). The next new record is **ADR-13**.
 - Specs: `SPEC-NN-kebab-title.md`, numbered by build priority — platform and
   configuration first, then features in dependency order (renumbered on
   2026-10-01; the old→new table is [specs/README.md § Renumbering](product/specs/README.md#renumbering-2026-10-01)).
@@ -97,8 +97,8 @@ that into the spec body.
 spec's last numbered section (existing `§N` numbers never shift). Each record:
 
 ```
-<a id="adr-12"></a>
-### ADR-12 — Title
+<a id="adr-13"></a>
+### ADR-13 — Title
 **Decided:** YYYY-MM-DD · **Status:** accepted[, amended by ADR-NN][, executed][, superseded by ADR-NN]
 #### Context
 #### Decision
@@ -109,7 +109,7 @@ spec's last numbered section (existing `§N` numbers never shift). Each record:
 ```
 
 The anchor is fixed (`adr-` + the two-digit number) and never changes, so a
-link to `…#adr-12` survives the record moving to another spec. The shape
+link to `…#adr-13` survives the record moving to another spec. The shape
 `context → decision → options considered → trade-offs → consequences → action
 items` is binding; a record may add an *As built* section to its fact layer.
 

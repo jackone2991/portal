@@ -30,6 +30,7 @@ the naming *rules*, this file owns the *inventory*.
 | `story:published` | `{story_id, owner_user_id, title}` | story | live — **1 consumer** (*code follow-up: published before the request transaction commits — SPEC-17 §11 row 4*) | notify — `notify:on_story_published` (bell). Stream projection removed in `0040` |
 | `social:connection_requested` / `social:connection_accepted` | `{connection_id, requester_id, addressee_id, requester_name, addressee_name}` (`socialapi.ConnectionEvent`; notify builds the bell title from the names) | social | live (0037) — **1 consumer** each; both `Subscribe` calls in `cmd/api` only, the sole emitter (*code follow-up: published before the request transaction commits — SPEC-18 §11 row 1*) | notify — `notify:on_connection_requested` / `notify:on_connection_accepted` |
 | `social:connection_removed` | `{connection_id, actor_id, other_id, was: 'pending'\|'accepted'}` — one per successful DELETE (withdraw, decline, disconnect; `actor_id` and `was` tell them apart) | social | planned (SPEC-18 P1.1; Decision 2026-10-02b (B9); SPEC-18 §11 row 14) — emitted from `cmd/api` after commit; **emit-only** | **none in v1** (B9): no bell retraction, no notice to the other party; `cmd/api` subscribes nothing, so a publish enqueues nothing until a consumer is specced |
+| `tenant:link_changed` | `{tenant_id, peer_tenant_id, change: 'added'\|'removed', active, actor_id}` — one per changed pair of a `PUT /tenants/{id}/links`; `active` is the link's state after the change | tenant | planned ([SPEC-01](../product/specs/SPEC-01-account-identity-admin.md) P0.17; Decision 2026-10-02b (B14), [ADR-12](../product/specs/SPEC-01-account-identity-admin.md#adr-12); SPEC-01 §11 row 32) — emitted from `cmd/api` after commit; **emit-only** | **none in v1**: the peer tenant's owner sees a pending link only on the links screen; `cmd/api` subscribes nothing |
 | `bank:budget_exceeded` | `{user_id, category_id, month}` | bank | planned (SPEC-12 P1.12) | notify later |
 | `bank:import_completed` | `{import_batch_id, user_id, account_id, row_count}` | bank | planned (SPEC-13 phase 7) | none — emit-only; **not projected by the stream** |
 | `journal:entry_created` | `{entry_id, user_id, occurred_at}` | journal | planned (SPEC-07 P0.3) | — emit-only for future external consumers. The stream projection is maintained **transactionally in-module** (SPEC-09 P0.1), not via this event; no updated/deleted events for the same reason (SPEC-07 P0.3) |
@@ -53,6 +54,8 @@ the owner's decision of 2026-10-01 (specs README, "Decisions recorded 2026-10-01
 (second round)", D3) that neither is exempt from ADR-08's "≥ 1 event" rule
 (SPEC-01 §8, SPEC-02 §8; code follow-ups SPEC-01 §11 row 24, SPEC-02 §11
 row 14). Each is subscribed in `cmd/api`, the only binary that emits it.
+`tenant` emits nothing on `HEAD` either; `tenant:link_changed` is its first
+planned event (B14), emit-only like `social:connection_removed`.
 
 ## Tasks
 

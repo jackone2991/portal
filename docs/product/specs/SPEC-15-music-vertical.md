@@ -1,7 +1,7 @@
 # SPEC-15 — Music Vertical (tracks, bulk import, enrichment, catalogue lookup, playlists, player)
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `music` (`backend/internal/modules/music/`) · **Depends on:** SPEC-04 (asset ingest, `/assets/{id}/original`, image variants for covers, `media:asset_deleted`, P0.8 `tenant` visibility and `mediaapi.SetVisibility` — Decision 2026-10-02b (B13)); `platform/events` fan-out (SPEC-04 P0.6); SPEC-05 for the one consumer of its event; SPEC-10's media progress API for resume (Decision 2026-09-30, Audio; Decision 2026-10-02b (B2))
+**Module:** `music` (`backend/internal/modules/music/`) · **Depends on:** SPEC-04 (asset ingest, `/assets/{id}/original`, image variants for covers, `media:asset_deleted`, P0.8 `shared` visibility and `mediaapi.SetVisibility` — Decision 2026-10-02b (B13, B14)); SPEC-01 P0.17 (the tenant module's `app_can_read_shared`, which the `shared_read` policy calls — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)); `platform/events` fan-out (SPEC-04 P0.6); SPEC-05 for the one consumer of its event; SPEC-10's media progress API for resume (Decision 2026-09-30, Audio; Decision 2026-10-02b (B2))
 **Upstream:** as-built spec, written retroactively from shipped code — migrations `0022_music_core` (`f11cf3f`), `0038_music_imports` (`6bf7c0b`), `0039_music_metadata_lookup` (`eaa0c36`), `0041_music_playlists` (`c3f3d00`); `git log --oneline -- backend/internal/modules/music` lists the rest. No brief or earlier spec existed; the root [`CLAUDE.md`](../../../CLAUDE.md) "Bulk music import", "Cover art is a SECOND pass", "Catalogue lookup" and "`/assets/{id}/original` must stay a `ServeContent` route" bullets were the only written description and are restated here as requirements. · **Refs:** [ADR-04](SPEC-04-media-image-pipeline.md#adr-04) (same S3 client, MinIO dev / R2 prod), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (tenancy), [ADR-08](README.md#adr-08) (entertainment facet), [ADR-10](README.md#adr-10) (spec-first), feature-inventory `D-7` (Problem types), `D-20` (per-domain progress — superseded for music by Decision 2026-10-02b (B2)), `D-22` (genres — music is a recorded exception, Decision 2026-10-02b (B3)), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-05 (`notify:on_track_published`, the bell); the `layout` module (home-rail widget key `music`, menu item `/library/music`, `0036`); SPEC-10 `/continue` (tracks join as media items, Decision 2026-10-02b (B2); not today — §12 row 27); SPEC-03 P1.7 takeout (§6)
 
@@ -57,12 +57,15 @@ is the contract; §12 lists where the code still diverges from it.
   media's progress API, not a music table (P0.10, Decision 2026-10-02b (B2)) —
   but which tracks were queued, and in what order, is not.
 - **Live catalogue sync, scrobbling, lyrics, streaming from third parties.**
-- **A catalogue beyond the tenant.** "Published" does not cross the tenant
-  fence *(Decision 2026-10-02b (B6), amended by B13)*: a published track is
-  listed to and playable by members of the owner's tenant only (RLS, §6;
-  playback P0.10 through SPEC-04 P0.8's `tenant` asset visibility, Decision
-  2026-10-02b (B13)), never to another tenant. With personal organisations
-  (ADR-07) that tenant is the owner alone.
+- **A catalogue beyond family and friends.** "Published" reaches exactly
+  the ADR-12 audience *(Decision 2026-10-02b (B6), amended by B13 and B14 —
+  [ADR-12](SPEC-01-account-identity-admin.md#adr-12))*: a published track is
+  listed to and playable by the members of the owner's tenant and by the
+  owner's accepted friends in a tenant actively linked to it (RLS, §6;
+  playback P0.10 through SPEC-04 P0.8's `shared` asset visibility), never to
+  anyone else. With personal organisations (ADR-07) the tenant is the owner
+  alone, so in practice the audience is the owner's friends in linked
+  tenants.
 
 ## 4. User stories
 
@@ -131,7 +134,7 @@ three task payloads must carry the row's `tenant_id` instead.
 | Operation | Gate | Behaviour |
 |---|---|---|
 | `POST /tracks` | `music:write:own` | Body `{title, artist?, album?, description?, audio_asset_id?, cover_asset_id?}`. `title` is trimmed and must be 1–200 runes, else 422 `music/validation`. An audio id must name an asset that exists, is `kind=audio`, `status=ready` and is owned by the caller, else 422 `music/invalid-audio-asset`; a cover id the same with `kind=image`, else 422 `music/invalid-cover-asset` (`service.go` `validateAudioAsset` / `validateImageAsset`, through `mediaapi.GetAsset`). A malformed asset id, or a body field of the wrong JSON type, is 422 `music/validation` (§12 row 14). `""` for an id means none. 201 with the Track; `status = draft`. |
-| `GET /tracks/{id}` | `music:read` | A published track, or any track of the caller's; anything else — including a malformed id — is 404 `music/not-found` (never 403). |
+| `GET /tracks/{id}` | `music:read` | A published track the caller may read (RLS: the owner's tenant, or the owner's friend in an actively linked tenant — §6, ADR-12), or any track of the caller's; anything else — including a malformed id — is 404 `music/not-found` (never 403). |
 | `PATCH /tracks/{id}` | owner or `music:write:any` | Absent key = unchanged. `title`, when present, is re-validated (1–200 runes; cannot be cleared). `null` clears `artist`, `album`, `description`, `audio_asset_id`, `cover_asset_id`. A non-string value for a string field is 422 `music/validation`, never a silent clear. New asset ids are validated against the **track owner**, not the caller. Clearing `audio_asset_id` on a published track returns it to `draft` in the same UPDATE — the rule `NullAudioByAsset` already applies. 200 with the Track. |
 | `DELETE /tracks/{id}` | owner or `music:delete:any` | 204; a repeat is 404 (`DeleteTrack` is `:execrows`). The audio and cover **assets are not deleted** — they stay in the media library; playlist rows cascade. |
 
@@ -144,10 +147,11 @@ lookup_note|null, lookup_at|null}`. A track carries **no duration** — the play
 reads it from the `<audio>` element's metadata. The catalogue fields are
 system-written (P0.8) and never accepted on POST or PATCH.
 
-**Asset visibility follows the track** *(Decision 2026-10-02b (B13); unbuilt —
-§12 row 29)*. While a track is published, its audio asset and its cover are
-`tenant` (SPEC-04 P0.8), so every member of the owner's tenant can play the
-audio and see the cover; while it is a draft, or once it is deleted, they are
+**Asset visibility follows the track** *(Decision 2026-10-02b (B13), audience
+revised by B14; unbuilt — §12 row 29)*. While a track is published, its audio
+asset and its cover are `shared` (SPEC-04 P0.8), so the ADR-12 audience —
+the owner's household and the owner's friends in actively linked tenants —
+can play the audio and see the cover; while it is a draft, or once it is deleted, they are
 `private` again. Each write that changes this calls `mediaapi.SetVisibility`
 with the **track owner** as `ownerID`, in the same transaction as the track
 write:
@@ -162,16 +166,19 @@ write:
 
 An asset is lowered only when no other published track of the same owner still
 uses it as audio or cover (an owner-predicated query in music), so an album
-cover shared by twelve tracks stays `tenant` until the last of them is
+cover shared by twelve tracks stays `shared` until the last of them is
 unpublished. Music cannot see other modules' references: a cover that is also
 a published movie's poster is lowered by the track's unpublish, and publishing
 the movie again restores it — a known edge, accepted. `SetVisibility` never
 touches a `public` asset, and publishing never sets `public`. A
-`music:publish:any` holder who is neither the owner nor an admin of the tenant
-passes the route guard, but `asset_update` (`0032`) lets the visibility write
-change no row: the track is published and its files stay private to members —
-a known edge, latent while every user has a personal organisation, to be
-settled with shared tenants (`D-23`).
+`music:publish:any` holder who is not the owner passes the route guard, but
+`asset_update` (`0032`) lets the visibility write change no row (a request
+scope carries no tenant-admin flag, SPEC-01 P0.17): the track is published and
+its files stay private — a known edge, latent while every user has a personal
+organisation, to be settled with shared tenants (`D-23`). A track in another
+tenant — a linked friend's — is readable but never writable: every write
+policy is still `tenant_isolation`, so an owner-or-`:any` route on it changes
+nothing (ADR-12).
 
 *Acceptance criteria.*
 - Given another user's draft, then `GET /tracks/{id}` is 404 `music/not-found`,
@@ -203,10 +210,10 @@ settled with shared tenants (`D-23`).
   did. Only a publish by someone else puts "<title> is published" in the
   owner's bell. A bulk publish of 300 imported tracks therefore makes no noise
   at all; there is no summary event.
-- **Publishing shares the files with the tenant** *(Decision 2026-10-02b
-  (B13); unbuilt — §12 row 29)*: in the same transaction as the status change,
-  publish raises the track's audio and cover to `tenant` (P0.2 Asset
-  visibility); a rolled-back publish leaves them `private`.
+- **Publishing shares the files with family and friends** *(Decision
+  2026-10-02b (B13, B14); unbuilt — §12 row 29)*: in the same transaction as
+  the status change, publish raises the track's audio and cover to `shared`
+  (P0.2 Asset visibility); a rolled-back publish leaves them `private`.
 - `POST /tracks/{id}/unpublish` (owner or `music:publish:any`): sets `draft`
   and lowers the audio and cover to `private` unless another published track
   of the owner still uses them (P0.2); no event.
@@ -237,9 +244,9 @@ settled with shared tenants (`D-23`).
   the owner gets exactly one "<title> is published" entry and the publisher
   none *(TC-MUS-128)*.
 - Given a draft track with a `private` audio asset and a `private` cover, when
-  it is published, then both are `tenant`; given two published tracks sharing
+  it is published, then both are `shared`; given two published tracks sharing
   that cover, when one is unpublished, then its audio is `private` and the
-  cover stays `tenant` until the other is unpublished or deleted; given an
+  cover stays `shared` until the other is unpublished or deleted; given an
   audio asset the owner had made `public`, then publish and unpublish leave it
   `public`; given a publish whose transaction rolls back, then nothing changed
   visibility *(TC-MUS-129)*.
@@ -496,22 +503,24 @@ Deleting a track removes it from every playlist (FK cascade).
   `Content-Range`, and `Seek` costs nothing until the next `Read`. A copy loop
   makes the browser report `seekable = [0,0]` and silently refuse every seek.
   `Content-Disposition: inline`, `Cache-Control: private, no-store`. The route
-  admits the owner and, for a published track, every member of the owner's
-  tenant: the track's audio asset is `tenant` while the track is published
-  (P0.2), and SPEC-04 P0.8 admits a member to a playable `tenant` asset — never
-  a caller from another tenant. Its state and size rules are SPEC-04's (§11
+  admits the owner and, for a published track, the ADR-12 audience: the
+  track's audio asset is `shared` while the track is published (P0.2), and
+  SPEC-04 P0.8 admits the owner's household and the owner's friends in
+  actively linked tenants to a playable `shared` asset — nobody else. Its state and size rules are SPEC-04's (§11
   rows 4–6 there). The player uses it for **every** track, the caller's own or
-  a member's.
-- **Tenant members play published tracks from the same route** *(Decision
-  2026-10-02b (B13), replacing B5's mechanism; unbuilt — §12 row 29, on SPEC-04
-  §11 rows 20–21)*. There is no `GET /tracks/{id}/play-url` and music mints no
-  `mediaapi.SignedURL`: the asset's `tenant` visibility is what lets a member
-  play, so seeking works for them exactly as for the owner. The moment a track
-  is unpublished, its audio stops playing for members (404 from media).
+  someone else's published one.
+- **Family and friends play published tracks from the same route** *(Decision
+  2026-10-02b (B13), replacing B5's mechanism; audience revised by B14;
+  unbuilt — §12 row 29, on SPEC-04 §11 rows 20–21 and SPEC-01 §11 row 32)*.
+  There is no `GET /tracks/{id}/play-url` and music mints no
+  `mediaapi.SignedURL`: the asset's `shared` visibility is what lets a reader
+  play, so seeking works for them exactly as for the owner. The moment a
+  track is unpublished — or the reader stops being a friend, or the tenants
+  are unlinked — its audio stops playing for them (404 from media).
 - **Covers** use the variant route
   `/assets/{cover_asset_id}/variants/{thumb|medium}` (anonymous-capable,
-  filtered by RLS), which members of the tenant can read
-  while the cover is `tenant`; the cover's original is never served to them,
+  filtered by RLS), which the audience can read
+  while the cover is `shared`; the cover's original is never served to them,
   because it keeps its EXIF (SPEC-04 P0.8).
 - **Player.** `MusicPlayerProvider` owns exactly one `<audio>` for the whole app,
   mounted in `MasterBase` above the router, so playback survives navigation.
@@ -534,20 +543,22 @@ Deleting a track removes it from every playlist (FK cascade).
   "start over"; (2) saves with `PUT …/progress {position_ms}` every ~10 s while
   the position advances, on pause, on a track change and on `pagehide`, using
   SPEC-10 P0.2's transport rule (keepalive `PUT`, never `sendBeacon`),
-  fire-and-forget. A member keeps their **own** position on another member's
-  published track *(Decision 2026-10-02b (B13))*: progress rows are keyed by
+  fire-and-forget. A reader keeps their **own** position on someone else's
+  published track *(Decision 2026-10-02b (B13, B14))*: progress rows are keyed by
   `(user_id, asset_id)` (SPEC-10 P0.1), and SPEC-10 P0.2 admits anyone SPEC-04
-  P0.8 lets play the asset, so the member's row is theirs and the owner's row
-  is never read or written by anyone else. Once the track is unpublished the
-  member's row stays but the progress routes answer 404 for it until the track
-  is published again. **`/continue`.** Tracks
+  P0.8 lets play the asset, so the reader's row is theirs — written in the
+  reader's own tenant (SPEC-10 P0.2) — and the owner's row is never read or
+  written by anyone else. Once the reader loses access (unpublish, unfriend,
+  unlink) the row stays but the progress routes answer 404 for it until access
+  returns. **`/continue`.** Tracks
   appear there as ordinary `media` items — `module: media`, `ref_id` = the
   audio asset id, the asset's display title (not the track title), `href`
   `/library/media/{asset_id}` (SPEC-10 P0.3/P0.4), so opening one plays it in
   the media detail player, not the now-playing bar — once SPEC-10 §11 rows 4–5
-  give audio a duration and accept it on the progress routes. A member's item
-  for another member's track appears only while the asset is `tenant` (the
-  aggregator's join to `assets` runs under RLS). A play-through
+  give audio a duration and accept it on the progress routes. A reader's item
+  for someone else's track appears only while the asset is `shared` and the
+  reader is in its audience (the aggregator's join to `assets` runs under
+  RLS). A play-through
   past 95 % emits SPEC-10 P1.5's `media:playback_completed` like any audio
   asset; music emits no completion event of its own.
 
@@ -560,14 +571,21 @@ Deleting a track removes it from every playlist (FK cascade).
 - Given the owner stopped their own track at 2:10 and reopens it later, then
   playback starts at ~2:10, and the asset's progress row moved while it played
   *(TC-MUS-125)*.
-- Given a member plays another member's published track to 3:00, then the
-  member's own progress row holds ~3:00, the owner's row is unchanged, and the
-  member's next play starts at ~3:00 *(TC-MUS-126)*.
-- Given a published track of another member of the caller's tenant, then the
-  player plays it from `GET /assets/{audio_asset_id}/original` (200; `Range` →
-  206) and its cover variants load; given the same track unpublished, then
-  `/original` answers 404 to that member; given a caller from another tenant,
-  then neither the track nor its asset is ever readable *(TC-MUS-130)*.
+- Given a reader in the audience plays someone else's published track to
+  3:00, then the reader's own progress row holds ~3:00, the owner's row is
+  unchanged, and the reader's next play starts at ~3:00 *(TC-MUS-126)*.
+- Given a published track of a member of the caller's tenant, then the player
+  plays it from `GET /assets/{audio_asset_id}/original` (200; `Range` → 206)
+  and its cover variants load; given the same track unpublished, then
+  `/original` answers 404 to that member; given a caller from another tenant
+  who is not the owner's friend, or whose tenant is not actively linked, then
+  neither the track nor its asset is ever readable *(TC-MUS-130)*.
+- Given owner O and O's friend F in a tenant actively linked to O's, then O's
+  published track is in F's `GET /tracks` and `GET /tracks/{id}`, its audio
+  plays and its cover loads for F, O's drafts never appear, and F's `PATCH`,
+  `publish` or `DELETE` on it changes nothing whatever F's codes; when O and F
+  disconnect or either tenant drops the link, then the track leaves F's list
+  and its audio answers 404 at F's next request *(TC-MUS-131)*.
 
 ### P0.11 — Frontend library
 
@@ -650,6 +668,24 @@ current_setting(…)` fails during a migration, where the GUC is unset. Owner FK
 are the sanctioned `users(id) ON DELETE CASCADE` identity anchor; asset columns
 carry **no** cross-module FK — validated through `mediaapi`, reaped through
 `media:asset_deleted`.
+
+**Shared read** *(Decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12);
+unbuilt — §12 row 29)*. A music-owned migration `000N_music_shared_read`
+(after `000N_tenant_links`) adds one permissive policy to `music_tracks`:
+
+```sql
+CREATE POLICY shared_read ON music_tracks FOR SELECT
+    USING (status = 'published' AND app_can_read_shared(owner_user_id, tenant_id));
+```
+
+Policies are OR-ed, so a caller still sees every row of their own tenant
+through `tenant_isolation`, and now also the published tracks whose ADR-12
+audience includes them, in any tenant. Nothing else changes: INSERT, UPDATE
+and DELETE stay `tenant_isolation` only, so a track is written only from its
+own tenant; `music_imports`, `music_playlists` and `music_playlist_tracks` get
+no such policy (playlists are private, §3). `ListPublishedTracks` needs no
+change — its `status = 'published'` predicate now returns the wider set. The
+down migration drops the policy.
 
 | Table | Created by | Columns (beyond `id uuid PK DEFAULT uuid_generate_v4()`, `tenant_id`, `created_at`, `updated_at`) | Constraints and indexes |
 |---|---|---|---|
@@ -816,7 +852,10 @@ so citations hold.
   noise; the event is still emitted on every publish and there is no summary
   event (Decision 2026-10-02b (B4); P0.3, §12 row 28).
 - **(e) Who can play a published track** — decided 2026-10-02: members of the
-  owner's tenant (Decision 2026-10-02b (B5)), never another tenant (B6; §3).
+  owner's tenant (Decision 2026-10-02b (B5)), never another tenant (B6; §3) —
+  the audience widened later the same day by B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)):
+  the owner's household and the owner's friends in actively linked tenants,
+  with `shared` in place of B13's `tenant` below.
   The mechanism was revised the same day (Decision 2026-10-02b (B13)): not a
   signed URL from a music route, but SPEC-04 P0.8's `tenant` asset visibility —
   publishing raises the track's audio and cover to `tenant`, members play from
@@ -832,7 +871,8 @@ still diverges from it. Rows are ordered by severity: data loss or silently
 wrong data first, then integrity, authorisation, contract, UX, hygiene; row 25,
 found last, is appended (AuthZ) rather than renumbering the others, and so is
 row 26 (P1, added by Decision 2026-10-01b), and so are rows 27–29 (added by
-Decision 2026-10-02b (B2, B4, B5); rows 27 and 29 rewritten by B13). A row closes when the code matches the requirement it cites and its
+Decision 2026-10-02b (B2, B4, B5); rows 27 and 29 rewritten by B13 and again
+by B14). A row closes when the code matches the requirement it cites and its
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) row is regraded
 on a named test. Paths are relative to `backend/internal/modules/music/` unless
 they start with `backend/`, `frontend/` or `shared/`. Proposed test ids are
@@ -867,9 +907,9 @@ writing SPEC-15, 2026-10-01" unless it names another.
 | 24 | P1.1, P1.2 | Lookup results and per-track passes are visible; an import survives a reload. | No `.tsx` reads `lookup_status`, `lookup_note`, `release_year` or `genre`; `lib/music.ts` `enrichTrack` and `lookupTrack` have no caller; nothing calls `GET /tracks/imports` (`lib/music.ts` has no `listImports`). | **frontend:** as P1.1/P1.2 specify. **test:** TC-MUS-111…113. | — |
 | 25 | P0.2 / §7 owner-guarded routes (CC-3) | A track the caller may not see is 404 `music/not-found` on every route, byte-identical to a missing one; never 403. | `PATCH`, `DELETE`, `publish`, `unpublish`, `enrich` and `lookup` on `/tracks/{id}` sit behind `RequireOwnerOrPermission` (`backend/internal/modules/account/middleware/rbac.go`) with `cmd/api`'s `byTrack` extractor, which resolves **any** track in the tenant: another member's draft answers **403** `about:blank` (confirming it exists) and a missing or malformed id **404 `about:blank`**, not `music/not-found`. Latent while each user has a personal organisation (RLS hides other tenants' rows, so they read as missing). `http_test.go` mounts the module without the guards, so its 404 assertions do not see this. | **backend:** the `byTrack` extractor resolves only rows the caller may read (published or own) and maps the miss to `music/not-found` (a stranger's draft is then a miss; a published track a non-owner lacks the elevated code for stays 403, since its existence is public). **test:** TC-MUS-017 over the real guard. | SPEC-14 F119 pattern; CC-3 |
 | 26 | P1.4 `user` authoring grant | `user` holds `music:write:own` and `music:publish:own` (a music-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0022_music_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from every `music:write:own` route (`module.go` `m.perm("music:write:own")` on `/tracks`, `/tracks/mine`, `/tracks/bulk-status`, `/tracks/imports*`, `/playlists*` writes); `MusicIndexView.tsx`'s **Mine** tab already handles that 403. | **migration:** `000N_music_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-MUS-004. Lands with or after F009 (SPEC-04 §11 row 9); row 20 then requires `music:publish:own`. | Decision 2026-10-01b (D4) |
-| 27 | P0.10 resume through media progress; SPEC-10 `/continue` | The player resumes every track it plays — the caller's own or a member's published one — from, and saves to, the caller's own progress row on the audio asset (SPEC-10 P0.2/P0.4 gate and transport); tracks appear in `/continue` as `media` items. | `frontend/src/templates/v1/components/music/MusicPlayerProvider.tsx` sets `el.src = trackAudioURL(current.audio_asset_id)` and never reads or writes progress; `frontend/src/lib/music.ts` has no progress helper. On the media side `PutProgress` / `GetProgress` still reject every non-video kind (404 `media/asset-not-playable`), admit only the asset's owner (`owned()`), and `completeAudio` stores no `duration_ms`, so even a correct player would save nothing and no track could reach `/continue` (SPEC-10 §11 rows 4, 5 and 15). | **frontend:** in `MusicPlayerProvider`, for every track, `GET /assets/{audio_asset_id}/progress` before `play()` and seek under SPEC-10 P0.4's gate; a throttled keepalive `PUT …/progress` every ~10 s of advance, on `pause`, on track change and on `pagehide`, fire-and-forget (share one helper with `MediaDetailView.tsx`, which SPEC-10 moves to the same transport); a 404 on a member's track means "start at 0, save nothing". Lands after SPEC-10 §11 row 5 (audio accepted) for resume, row 4 (audio duration) for `/continue`, and row 15 (non-owner rows) for members. No backend change in music. **test:** TC-MUS-125, TC-MUS-126. | Decision 2026-10-02b (B2); B13 for members |
+| 27 | P0.10 resume through media progress; SPEC-10 `/continue` | The player resumes every track it plays — the caller's own or a published one the caller may read (ADR-12 audience) — from, and saves to, the caller's own progress row on the audio asset (SPEC-10 P0.2/P0.4 gate and transport); tracks appear in `/continue` as `media` items. | `frontend/src/templates/v1/components/music/MusicPlayerProvider.tsx` sets `el.src = trackAudioURL(current.audio_asset_id)` and never reads or writes progress; `frontend/src/lib/music.ts` has no progress helper. On the media side `PutProgress` / `GetProgress` still reject every non-video kind (404 `media/asset-not-playable`), admit only the asset's owner (`owned()`), and `completeAudio` stores no `duration_ms`, so even a correct player would save nothing and no track could reach `/continue` (SPEC-10 §11 rows 4, 5 and 15). | **frontend:** in `MusicPlayerProvider`, for every track, `GET /assets/{audio_asset_id}/progress` before `play()` and seek under SPEC-10 P0.4's gate; a throttled keepalive `PUT …/progress` every ~10 s of advance, on `pause`, on track change and on `pagehide`, fire-and-forget (share one helper with `MediaDetailView.tsx`, which SPEC-10 moves to the same transport); a 404 on someone else's track means "start at 0, save nothing". Lands after SPEC-10 §11 row 5 (audio accepted) for resume, row 4 (audio duration) for `/continue`, and row 15 (non-owner rows) for readers in the audience. No backend change in music. **test:** TC-MUS-125, TC-MUS-126. | Decision 2026-10-02b (B2); B13 and B14 for other readers |
 | 28 | P0.3 self-publish makes no bell entry | `music:track_published` carries `actor_user_id`; `notify:on_track_published` writes nothing when it equals `owner_user_id`. | `api/api.go` `TrackPublishedEvent` is `{track_id, owner_user_id, title}`; `service.go` `Publish(ctx, id)` is not told the caller (`handler.go` `Publish` never reads the caller id) and `emitPublished` builds the event from the track alone; `backend/internal/modules/notify/service.go` `OnWorkPublished` dispatches to `owner_user_id` unconditionally. Every publish, self or not — including each of 300 tracks through `/tracks/bulk-status` (`playlists.go` `BulkSetStatus` → `emitPublished`) — puts an entry in the owner's bell. | **backend (music):** `Publish(ctx, callerID, id)` and `BulkSetStatus` pass the caller to `emitPublished`; `TrackPublishedEvent` gains `ActorUserID` (`actor_user_id`). **backend (notify):** `OnWorkPublished` returns nil without dispatching when the payload's `actor_user_id` parses and equals `owner_user_id`; an absent actor keeps today's behaviour, so `movie:published` / `story:published`, which carry none, are unaffected (SPEC-05 §7). **test:** TC-MUS-127, TC-MUS-128. | Decision 2026-10-02b (B4) |
-| 29 | P0.2 asset visibility follows the track; P0.3; P0.10 members play published tracks | Publishing (single or bulk) raises the track's audio and cover to `tenant` through `mediaapi.SetVisibility` with the track owner; unpublish, delete, clearing the audio and replacing an asset lower what no other published track of the owner still uses; every write in the same transaction; the player plays every track from `/original`. | `service.go` `Publish`, `Unpublish`, `DeleteTrack`, `UpdateTrack`, `playlists.go` `BulkSetStatus`, `enrich.go` `EnrichTrack` and `lookup.go` `recordLookup` (`SetTrackLookupResult`) write `music_tracks` only; `types.go` `MediaAPI` has `GetAsset`, `Ingest` and `OpenOriginal`, no visibility method. Every audio and cover asset stays `private`, so `0032`'s `asset_select` / `variant_select` hide them from another member — 404 from `/original` and from the cover's variant route (a tenant admin, who can see the row, gets 403 `not your asset` from `backend/internal/modules/media/service.go` `owned()`) — while the **Library** tab and `MusicWidget` list every published track in the tenant — a member is shown tracks they cannot play, with blank covers. `MusicPlayerProvider.tsx` already plays every track from `trackAudioURL` (`/original`), which is the target. Latent while each user has a personal organisation. | **backend:** `MediaAPI` gains `SetVisibility`; a music query listing which of a set of asset ids are still used as audio or cover by another published track of the owner (owner-predicated, `status = 'published'`); `Publish`, `BulkSetStatus`, `Unpublish`, `DeleteTrack` (before the row goes), `UpdateTrack`, `EnrichTrack` and `recordLookup` raise or lower per P0.2, inside the request's or task's transaction, always passing the track's `owner_user_id`. **openapi:** none — no new route (B5's `GET /tracks/{id}/play-url` is not added). **frontend:** none for playback. **test:** TC-MUS-129, TC-MUS-130. Needs SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13), replacing B5's mechanism; B6 |
+| 29 | P0.2 asset visibility follows the track; P0.3; P0.10 family and friends play published tracks; §6 shared read | Publishing (single or bulk) raises the track's audio and cover to `shared` through `mediaapi.SetVisibility` with the track owner; unpublish, delete, clearing the audio and replacing an asset lower what no other published track of the owner still uses; every write in the same transaction; `music_tracks` gains the `shared_read` policy, so `GET /tracks` and `GET /tracks/{id}` return the published tracks of the caller's ADR-12 audience in any tenant; the player plays every track from `/original`. | `service.go` `Publish`, `Unpublish`, `DeleteTrack`, `UpdateTrack`, `playlists.go` `BulkSetStatus`, `enrich.go` `EnrichTrack` and `lookup.go` `recordLookup` (`SetTrackLookupResult`) write `music_tracks` only; `types.go` `MediaAPI` has `GetAsset`, `Ingest` and `OpenOriginal`, no visibility method. Every audio and cover asset stays `private`, so `0032`'s `asset_select` / `variant_select` hide them from everyone but the owner — 404 from `/original` and from the cover's variant route (a tenant admin, who can see the row, gets 403 `not your asset` from `backend/internal/modules/media/service.go` `owned()`) — while the **Library** tab and `MusicWidget` list every published track in the tenant: a member is shown tracks they cannot play, with blank covers. `music_tracks` has only `tenant_isolation` (`0022`), so a friend in another tenant sees none of them. `MusicPlayerProvider.tsx` already plays every track from `trackAudioURL` (`/original`), which is the target. Latent while each user has a personal organisation and no tenants are linked. | **migration:** `000N_music_shared_read` (§6), after `000N_tenant_links`. **backend:** `MediaAPI` gains `SetVisibility`; a music query listing which of a set of asset ids are still used as audio or cover by another published track of the owner (owner-predicated, `status = 'published'`); `Publish`, `BulkSetStatus`, `Unpublish`, `DeleteTrack` (before the row goes), `UpdateTrack`, `EnrichTrack` and `recordLookup` raise or lower per P0.2, inside the request's or task's transaction, always passing the track's `owner_user_id`; the `byTrack` extractor (row 25) keeps answering 404 for a row it cannot write. **openapi:** none — no new route (B5's `GET /tracks/{id}/play-url` is not added); the `listTracks` description says "published tracks you may read". **frontend:** none for playback. **test:** TC-MUS-129, TC-MUS-130, TC-MUS-131 (RLS suite for the policy). Needs SPEC-01 §11 row 32 and SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13), replacing B5's mechanism; B6; audience revised by B14 (ADR-12) |
 
 **Already matching on HEAD.**
 - Tenancy: all four tables carry `tenant_id`, the index and the FORCE RLS
@@ -895,8 +935,9 @@ writing SPEC-15, 2026-10-01" unless it names another.
   `skipped`; SQL COALESCE gap-fill in `SetTrackLookupResult`.
 - Tenant fence and genre: published lists (`ListPublishedTracks`) and
   `GET /tracks/{id}` rely on the RLS fence alone, so "published" is visible
-  inside the owner's tenant only (Decision 2026-10-02b (B6)); the lookup stores
-  one free-text `genre` (B3).
+  inside the owner's tenant only (Decision 2026-10-02b (B6)) — which is also
+  why ADR-12's wider audience needs only a policy, not a query change (§12
+  row 29); the lookup stores one free-text `genre` (B3).
 - Playlists: case-insensitive unique names via `ON CONFLICT DO NOTHING` (409, not
   500); owner predicates in every query; idempotent add with `{added,
   requested}`; foreign ids dropped; cascades.

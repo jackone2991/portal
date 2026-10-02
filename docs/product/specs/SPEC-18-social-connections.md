@@ -1,7 +1,7 @@
 # SPEC-18 — Social Connections (mutual links between accounts)
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `social` (`backend/internal/modules/social/`) · **Depends on:** `account` through `accountapi` (`GetUserNames` for display names; the directory behind discovery is `accountapi.ListDirectory`, reached by `people`); SPEC-04 P0.6 (`platform/events` fan-out); SPEC-05 (the two `notify:on_connection_*` consumers turn the events into bell entries); the per-user RLS GUC `app.current_user` set by `platform/db.BeginScope` (ADR-07 request scope)
+**Module:** `social` (`backend/internal/modules/social/`) · **Depends on:** `account` through `accountapi` (`GetUserNames` for display names; the directory behind discovery is `accountapi.ListDirectory`, reached by `people`); `tenant` through `tenantapi` (`ReachableUserIDs`, `CanReach` — who may find and ask whom, SPEC-01 P0.17, Decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt); SPEC-04 P0.6 (`platform/events` fan-out); SPEC-05 (the two `notify:on_connection_*` consumers turn the events into bell entries); the per-user RLS GUC `app.current_user` set by `platform/db.BeginScope` (ADR-07 request scope)
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`0037_social_connections`, `internal/modules/social`, `frontend/src/lib/social.ts`) and the decisions it implements — [ADR-08](README.md#adr-08) (life OS; "friend graph shipped a first slice as the `social` module"), [ADR-01](README.md#adr-01) (social deferred), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (RLS), feature-inventory §9.3 "Friend graph" (requests only) · **Refs:** `D-1` (notifications are a standalone module; emitters publish events), `D-7` (RFC 7807 + i18n keys), `D-19` (rich profile lives in a future `social.profiles`, not here), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [SPEC-11](SPEC-11-people-registry.md) (`people_persons.linked_user_id`, `GET /people/suggestions`)
 **Downstream consumers:** SPEC-05 notify (`notify:on_connection_requested`, `notify:on_connection_accepted`); `people` (`socialapi.API.CounterpartIDs` subtracts connected accounts from `GET /people/suggestions`); the frontend header menu, right rail and `/people?circle=requests` tab; SPEC-03 P1.7 takeout (future)
 
@@ -29,7 +29,8 @@ whom, which is why this slice came first and why it stops here.
 
 ## 2. Goals
 
-1. An account can ask another account on the same instance to connect, and the
+1. An account can ask another account it can reach — in the same tenant or an
+   actively linked one (Decision 2026-10-02b (B14)) — to connect, and the
    other account can accept or decline; either party can later disconnect.
 2. One relationship per pair of accounts, whichever side asked — "are we
    connected?" has exactly one answer.
@@ -58,16 +59,24 @@ whom, which is why this slice came first and why it stops here.
 - **No block / mute / report.** A decline holds the same requester off for 24
   hours (P0.9, Decision 2026-10-02b (B8)) and then lapses; nothing refuses an
   account for good. Block stays P2.
-- **No opt-out of being askable** (Decision 2026-10-02b (B10)). Every approved,
-  enabled account on the instance can be asked and is offered by
-  `GET /people/suggestions`; there is no "hide me" or "nobody may ask me"
-  setting. On a household instance the directory *is* the people you live
-  with.
+- **No opt-out of being askable** (Decision 2026-10-02b (B10), amended by
+  B14). Every approved, enabled account **the caller can reach** — one that
+  shares a tenant with the caller or belongs to a tenant actively linked to
+  one of the caller's (SPEC-01 P0.17) — can be asked and is offered by
+  `GET /people/suggestions`; there is no per-person "hide me" or "nobody may
+  ask me" setting. The only switch is the tenant's: an unlinked tenant is
+  unreachable as a whole (P0.2). On a household instance the directory *is*
+  the people you live with, plus the linked households.
 - **No friend groups / circles on the connection.** Grouping lives in the
   private registry (`people_persons.circle`, SPEC-11 `0035`); a connection
   carries no label.
-- **No connection-scoped permissions.** Being connected grants nothing: no
-  module reads `social` to authorize access to content today.
+- **No connection-scoped permissions — except one read.** Being connected
+  grants no permission code and no write. Since Decision 2026-10-02b (B14)
+  ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)) it grants exactly one
+  read: an accepted connection whose tenant is actively linked to the owner's
+  reads the owner's **published** music, movies and stories, decided in
+  Postgres by the tenant module's `app_can_read_shared`, which reads this
+  table (§6). Nothing in Go reads `social` to authorise anything.
 - **No user search.** Discovery is the people module's directory list
   (`GET /people/suggestions`, approved and enabled accounts only); `social`
   takes an account id and never lists accounts.
@@ -126,11 +135,15 @@ asks the account `user_id` to connect.
   not JSON is 400 `about:blank` (generic transport, `server.Decode`).
 - `user_id` must name an account that is **approved and not disabled** — the
   same population the directory offers (`ListUserDirectory`: `approval_status =
-  'approved' AND disabled_at IS NULL`) — every such account, with no opt-out
-  (Decision 2026-10-02b (B10)). Otherwise **422 `social/validation`**,
-  with one body for "no such account" and "account not eligible", so the
-  endpoint does not confirm which accounts exist. The check goes through
-  `accountapi`, never `users`. *(Code follow-up: `HEAD` checks nothing; an
+  'approved' AND disabled_at IS NULL`) — **and reachable from the caller**
+  *(Decision 2026-10-02b (B14), amending B10; unbuilt — §11 row 15)*: it shares
+  a tenant with the caller or belongs to a tenant actively linked to one of
+  the caller's (`tenantapi.CanReach`, SPEC-01 P0.17). Every such account is
+  askable, with no per-person opt-out (B10). Otherwise **422
+  `social/validation`**, with one body for "no such account", "account not
+  eligible" and "account not reachable", so the endpoint confirms neither
+  which accounts exist nor which tenants are linked. The checks go through
+  `accountapi` and `tenantapi`, never `users` or `tenant_links`. *(Code follow-up: `HEAD` checks nothing; an
   unknown id hits the `users(id)` FK → 500, and a pending, rejected or disabled
   account can be asked and is notified — §11 row 3.)*
 - **No row for the pair** → insert `pending` (`requester_id` = caller), respond
@@ -175,6 +188,13 @@ asks the account `user_id` to connect.
   afterwards and neither response is a 5xx (TC-SOC-006).
 - Given B declined A within 24 hours, when A POSTs `{user_id: B}`, then 429
   `social/request-cooldown` (P0.9; TC-SOC-071).
+- Given A and B in two personal tenants that are not actively linked (no row,
+  or one side only), when A POSTs `{user_id: B}`, then 422 `social/validation`
+  with the body an unknown id gets, nothing written, no event; once both sides
+  list each other, then 201 (TC-SOC-076).
+- Given A's tenant linked to B's and to nobody else, then A's
+  `GET /people/suggestions` lists B and the other reachable accounts and no
+  account of an unlinked tenant (TC-SOC-077).
 
 ### P0.3 — Accept
 
@@ -190,6 +210,18 @@ that is not a uuid, a missing id, a row the caller is not party to, the
 requester accepting their own request, and an already-accepted row (a
 double-click answers 404 rather than rewriting `responded_at`).
 
+**Accepting needs reach too** *(Decision 2026-10-02b (B14); unbuilt — §11
+row 15)*. A pending request whose two parties are no longer reachable from
+each other (their tenants were unlinked after it was sent) stays listed and
+can be declined or withdrawn (P0.4), but accepting it — here or through
+P0.2's reverse request — answers **422 `social/validation`** ("this account
+is not reachable") and changes nothing: the caller is a party, so there is no
+existence to hide, and an accept would make a new friendship across a fence
+the tenants closed. **An accepted connection is never removed by an unlink**:
+it stays in both lists and can be disconnected as usual, but grants no
+content read while the link is down (ADR-12), and comes back to life if the
+tenants link again.
+
 **Acceptance criteria.**
 - Given A asked B, when B accepts, then 200, `status = accepted`,
   `responded_at` set, one `social:connection_accepted` event (TC-SOC-010).
@@ -200,6 +232,10 @@ double-click answers 404 rather than rewriting `responded_at`).
   unchanged (TC-SOC-012).
 - Given a third account C, when C accepts, then 404 with the body a random id
   gets (TC-SOC-013).
+- Given A asked B while their tenants were linked, when the link drops and B
+  accepts, then 422 `social/validation` and the row stays pending; B can still
+  decline it; given an accepted A–B connection, when the link drops, then it
+  is still listed for both and still removable (TC-SOC-078).
 
 ### P0.4 — Remove (withdraw, decline, disconnect)
 
@@ -324,6 +360,10 @@ CI job `backend` sets both).
   (TC-SOC-052; `TestRLSCannotForgeARequestFromAnotherUser`).
 - Given no user scope, then the table reads empty (TC-SOC-053;
   `TestRLSConnectionsInvisibleWithoutAUserScope`).
+- Given `000N_social_acl_grant` applied, then `app_can_read_shared` (running as
+  `portal_acl`) sees an accepted A–B row from a scope belonging to neither, while
+  `portal_app` in that scope still reads no row of it; `portal_acl` has no
+  grant on `social_declines` (TC-SOC-079; Decision 2026-10-02b (B14), §6).
 
 ### P0.8 — Frontend
 
@@ -441,9 +481,9 @@ turns is one more thing to document.
 - **Pagination** of the accepted list once one account has hundreds of
   connections (keyset on `created_at, id`, default 30, max 50 per the README
   rule); until then the lists are bounded by the instance's account count.
-- **Connection-scoped sharing** (a household member sees selected ledger
-  categories) arrives with tenant `kind: household` (`D-24`), not through this
-  table.
+- **Connection-scoped sharing** beyond ADR-12's published-content read (a
+  household member sees selected ledger categories) arrives with tenant
+  `kind: household` (`D-24`), not through this table.
 
 ## 6. Data model — migration `0037_social_connections`
 
@@ -505,6 +545,20 @@ approved account can connect. Notes:
   `000N_social_request_cooldown` below, whose down runs before `0037`'s; a table
   in any other module must move the function's ownership to a platform
   migration first, or `0037`'s down breaks it.
+- **Read by the tenant module's shared-read function** *(Decision 2026-10-02b
+  (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt — §11
+  row 15)*. `app_can_read_shared` (SPEC-01 P0.17) runs as the `NOLOGIN
+  BYPASSRLS` role `portal_acl` and reads this table to ask "are these two
+  accounts accepted connections?". Social consents in its own migration,
+  `000N_social_acl_grant` — `GRANT SELECT ON social_connections TO
+  portal_acl;` (down: `REVOKE`), numbered right after `000N_tenant_links`,
+  which creates the role. That makes three things a **contract** this module
+  must keep or change only together with SPEC-01 P0.17: the columns
+  `requester_id` and `addressee_id`, the value `status = 'accepted'` meaning
+  "friends", and one row per pair. The function inlines its own read of
+  `app.current_user` instead of calling `app_current_user()`, so the note
+  above about `0037`'s down migration still holds. `social_declines` is not
+  granted and not read.
 - **Takeout** (README Takeout): connections are user-history data. Intended
   format: JSON array of the caller's rows rendered from their side — `{other_user_id,
   other_display_name, status, outgoing, created_at, responded_at}` — via
@@ -564,10 +618,10 @@ All routes are under `/api/v1`, behind `authTenant` (authenticated; 401
 
 | Method | Path | Permission | Request | Response | Errors |
 |---|---|---|---|---|---|
-| POST | `/connections` | `social:write:own` | `{user_id: uuid}` | 201 `Connection` (pending, or accepted when it answered the other side's request) | 400 `about:blank` (non-JSON body); 409 `social/connection-exists`; 422 `social/cannot-connect-to-self`; 422 `social/validation` (malformed, unknown or ineligible `user_id`); 429 `social/request-cooldown` + `Retry-After` (the target declined the caller < 24 h ago — P0.9) |
+| POST | `/connections` | `social:write:own` | `{user_id: uuid}` | 201 `Connection` (pending, or accepted when it answered the other side's request) | 400 `about:blank` (non-JSON body); 409 `social/connection-exists`; 422 `social/cannot-connect-to-self`; 422 `social/validation` (malformed, unknown, ineligible or unreachable `user_id` — B14); 429 `social/request-cooldown` + `Retry-After` (the target declined the caller < 24 h ago — P0.9) |
 | GET | `/connections?status=` | `social:read:own` | `status` ∈ `accepted` (default) \| `incoming` \| `outgoing` | 200 `{items: Connection[]}` — non-paginated, ordered `created_at DESC, id` | 422 `social/validation` (unknown `status`) |
 | GET | `/connections/summary` | `social:read:own` | — | 200 `{incoming: integer}` | — |
-| POST | `/connections/{id}/accept` | `social:write:own` | — | 200 `Connection` (accepted) | 404 `social/connection-not-found` |
+| POST | `/connections/{id}/accept` | `social:write:own` | — | 200 `Connection` (accepted) | 404 `social/connection-not-found`; 422 `social/validation` (the other party is no longer reachable — P0.3, B14) |
 | DELETE | `/connections/{id}` | `social:write:own` | — | 204 (a decline also starts P0.9's cooldown) | 404 `social/connection-not-found` |
 
 Every route also answers 403 `about:blank` when the caller lacks the permission
@@ -652,7 +706,11 @@ Q1–Q3 were decided on 2026-10-02 — Decision 2026-10-02b:
 - **Q3 (who may be asked) — B10.** No opt-out: every approved, enabled account
   on the instance is askable, and P0.2's directory population is the default for
   a household deployment. Now P0.2 and §3; shipped code adds no opt-out, so §11
-  gains no row (target eligibility itself is row 3).
+  gains no row (target eligibility itself is row 3). **Amended by B14** the
+  same day ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)): "on the
+  instance" becomes "reachable from the caller" — the same tenant or an
+  actively linked one; the opt-out is the tenant's link list, not a person's
+  setting (P0.2, P0.3, §3; §11 row 15).
 
 No open questions remain.
 
@@ -663,7 +721,7 @@ shared` is empty: the docs commits on top of it change no code). The spec text a
 section lists every place the shipped code diverges from it. Rows are ordered by
 severity: lost or phantom data first, then integrity, then authorization and
 contract, then UX and hygiene; rows 13–14 (added by Decision 2026-10-02b (B8,
-B9)) are appended after row 12. A row closes when the code matches the
+B9)) are appended after row 12, and row 15 (added by B14) after row 14. A row closes when the code matches the
 requirement it cites and a TRACEABILITY-MATRIX row for SPEC-18 is graded on a
 named test. The module lives in `backend/internal/modules/social/`.
 
@@ -683,6 +741,7 @@ named test. The module lives in `backend/internal/modules/social/`.
 | 12 | P0.8 badge source | The badge count is the incoming list (no extra request) — `GET /connections/summary` is the documented badge endpoint. | `frontend/src/lib/social.ts` `connectionSummary` has no caller (`grep -rn connectionSummary frontend/src`); `FriendRequestsMenu` counts `listConnections("incoming")` instead, polling the full list every 60 s. | **decide in the PR:** either switch the badge to `connectionSummary` (cheaper poll; the list loads on open) or delete `connectionSummary` and keep the endpoint for API clients. No behaviour bug. **test:** none. | Found while writing SPEC-18, 2026-10-01 |
 | 13 | P0.9 re-request cooldown; §6 `social_declines`; §7 429 | A decline (addressee deletes a pending row) upserts `social_declines (requester_id, addressee_id, declined_at)` in the same transaction; `POST /connections` within 24 h of a decline in that direction answers 429 `social/request-cooldown` with `Retry-After`, writes nothing and emits nothing; per direction; withdraw and disconnect start nothing. | Not built. No `social_declines` table or migration (latest is `0045_journal_location_in_columns`); `query/connections.sql` has no decline query; `service.go` `Remove` discards the row `repo.Delete` returns, and `Request` checks only self and the existing row before inserting; `handler.go` declares no `social/request-cooldown` and `writeSocialErr` has no 429 branch; `shared/openapi.yaml` `requestConnection` declares no 429; `frontend/src/lib/problems.ts` has no `social/` slug. The comments that say a declined request leaves the pair free to try again — `0037_social_connections.up.sql` (status comment) and `types.go` (statuses) — go stale. | **migration:** `000N_social_request_cooldown` (§6). **backend:** `RecordDecline` (upsert) and `GetDecline` queries + `make sqlc`; repository methods; `Remove` records a decline when the deleted row was pending and the caller its addressee; `Request` checks `GetDecline(me, target)` after the existing-row check and returns a new `ErrCooldown{Until}`; `writeSocialErr` maps it to 429 + `Retry-After`; `RequestCooldown` constant; reword the two comments. **openapi:** 429 on `requestConnection` with the `Retry-After` header. **frontend:** `social/request-cooldown` in `problems.ts` (with row 6). **test:** TC-SOC-071…073 (`social_test.go`, an injected clock), TC-SOC-074 (`platform/db/rls_social_test.go`). | Decision 2026-10-02b (B8) |
 | 14 | P1.1 `social:connection_removed` | Every successful DELETE publishes `social:connection_removed {connection_id, actor_id, other_id, was}` after commit; no subscriber in v1. | Not built: `api/api.go` declares only `EventConnectionRequested` and `EventConnectionAccepted`; `service.go` `Remove` calls `repo.Delete` and emits nothing; nothing in `backend/` names `connection_removed`. | **backend:** `EventConnectionRemoved` and a `RemovedEvent` struct in `socialapi`; `Remove` publishes after commit through the same mechanism as row 1 (land with or after it); no `Subscribe` call in `cmd/api`. **docs:** events.md row planned → live in the same PR, consumer "none (Decision 2026-10-02b (B9))". **test:** TC-SOC-075 (a recording `EventPublisher`, row 8's harness). | Decision 2026-10-02b (B9) |
+| 15 | P0.2 / P0.3 discovery, requests and accepts limited to reach; §6 the shared-read grant | The directory (`GET /people/suggestions`) offers only approved, enabled accounts the caller can reach — same tenant or an actively linked one; a request to any other account is the uniform 422 `social/validation`; accepting a pending row whose parties are no longer reachable is 422 and writes nothing; accepted connections survive an unlink; `000N_social_acl_grant` grants `portal_acl` `SELECT` on `social_connections`. | `backend/cmd/api/main.go` builds `people.Deps.Directory` straight over `accountMod.API().ListDirectory`, which returns every approved, enabled User but the caller — no tenant filter; `service.go` `Request` checks only self/nil (row 3) and `Accept` only the addressee and status; nothing in `backend/` reads tenant links (`tenant_links` does not exist — SPEC-01 §11 row 32); no grant to `portal_acl` (the role does not exist). | **migration:** `000N_social_acl_grant` (§6), right after `000N_tenant_links`. **backend:** a `Reach` dependency in `social.Deps` (a closure over `tenantapi.CanReach`, bound in `cmd/api`) checked in `Request` with row 3's eligibility (same uniform `ErrValidation`) and in `Accept` and the reverse-accept (`ErrValidation` → 422); `cmd/api`'s `people.Deps.Directory` closure intersects the roster with `tenantapi.ReachableUserIDs` — through a new `accountapi.ListDirectoryAmong(ctx, among, exclude, limit)` so `limit` still applies after the filter (SPEC-01 P0.14 gains it). **openapi:** the 422 on `acceptConnection`; the `requestConnection` 422 description. **frontend:** none required — the suggestions list just shrinks; the links screen is SPEC-01 P0.17's. **test:** TC-SOC-076…078 (`social_test.go` with a fake reach), TC-SOC-079 (the grant: `portal_acl` reads the table, `portal_app` still sees only its own rows — RLS suite). **Lands with or after SPEC-01 §11 row 32 and never before the links screen**: on an instance of personal organisations it empties the directory until owners link their tenants (ADR-12 Consequences). | Decision 2026-10-02b (B14), amending B10; ADR-12 |
 
 **Already matching on HEAD.**
 - `0037_social_connections` ships the table, the not-self CHECK, the
@@ -735,9 +794,10 @@ named test. The module lives in `backend/internal/modules/social/`.
 ## 12. Out of scope
 
 Posts, feed, reactions, comments, messaging, groups/communities, events/RSVP,
-follow graph, profiles (`D-19`), block/mute/report, an opt-out from being asked
-or suggested (Decision 2026-10-02b (B10)), mentions, user search,
-"friends in common", connection-based authorization, stream projection of
-connections, per-tenant or household social graphs, and federation with other
-Portal instances. Each needs its own spec and an ADR-01 envelope argument;
+follow graph, profiles (`D-19`), block/mute/report, a per-person opt-out from
+being asked or suggested (Decision 2026-10-02b (B10)), mentions, user search,
+"friends in common", connection-based authorization beyond ADR-12's
+published-content read, stream projection of connections, per-tenant or
+household social graphs (a tenant link scopes who may connect; the graph
+stays one table), and federation with other Portal instances. Each needs its own spec and an ADR-01 envelope argument;
 [backlog.md § Deferred](../backlog.md) holds them.

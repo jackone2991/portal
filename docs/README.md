@@ -70,7 +70,7 @@ alternatives, give it a record under its `## Decision records`; if a record
 starts specifying endpoints, move that into the spec body.
 
 - A **decision** with alternatives and consequences → a **decision record**
-  (`ADR-NN`, never reused; the next is ADR-12) under `## Decision records` in
+  (`ADR-NN`, never reused; the next is ADR-13) under `## Decision records` in
   the spec that owns its subject — or in
   [product/specs/README.md](product/specs/README.md) when it governs the whole
   corpus — and a row in the [index](product/specs/README.md#decision-records).
