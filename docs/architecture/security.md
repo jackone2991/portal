@@ -543,6 +543,7 @@ What we explicitly defend against, and how.
 | Refresh-token replay across devices | Each refresh token records issuing IP + UA. Reuse from a different fingerprint emits a higher-severity audit event (still revokes chain). |
 | Password DB dump | `password_hash` is Argon2id (64 MB, t=3, p=2) with per-user salt — memory-hard, no plaintext or reversible form stored. |
 | TOTP secret extraction at rest | Encrypted with separate `TOTP_KMS_KEY`; only decrypted in-memory at verify time. |
+| Media original reaching a non-owner | `/assets/{id}/original` is owner-only and stays so. The one sanctioned non-owner path is a short-lived presigned GET (`mediaapi.SignedURL`) on the **audio** asset of a published track, minted by music's `GET /tracks/{id}/play-url` for members of the owner's tenant only — never for an image, whose original keeps GPS EXIF ([SPEC-04](../product/specs/SPEC-04-media-image-pipeline.md) P0.5, [SPEC-15](../product/specs/SPEC-15-music-vertical.md) P0.10; Decision 2026-10-02b (B5); unbuilt). |
 | Audit log tampering | Append-only at app layer. Long-term retention to R2 archive bucket (immutable bucket policy). |
 | Permission cache poisoning | Redis cache key is `rbac:perms:<userID>:v<token_version>`; role/permission mutations bump `token_version` → forces re-fetch from DB. (No `org_id` in the key: RBAC is global, §3.1.) |
 | Insider with DB write access | `audit_log` replication to a write-once R2 bucket (separate credentials). Out-of-band log forwarding to SIEM. |
@@ -582,7 +583,7 @@ Every later domain migration (`0021_movie_core`, `0022_music_core`, `0023_story_
 |-------|---------|--------|
 | L1 | TOTP: `users.totp_*`, `totp_recovery_codes` | §2.4 |
 | L1 | per-user timezone: `users.timezone` NULLable (NULL = not set; readers fall back to `'Asia/Ho_Chi_Minh'`) | SPEC-01 P0.13 |
-| L1 | `users.password_must_change`; `email_change_requests`; `deleted_users` (90-day identity snapshot) | SPEC-01 P0.12, P0.10 |
+| L1 | `users.password_must_change`; `email_change_requests`; `deleted_users` (90-day identity snapshot; its email, name and roles sealed in `pii` with `AUDIT_PII_KEY` like `audit_log`, Superadmin-only — Decision 2026-10-02b (B1)) | SPEC-01 P0.12, P0.10 |
 | — | `audit_log.pii` — identifying data encrypted with `AUDIT_PII_KEY`, anonymised after 90 days | SPEC-01 P0.16 |
 | L3 | user groups + policy bundles (`user_groups`, `policies`, attachments) on top of roles ([ADR-02](../product/specs/SPEC-01-account-identity-admin.md#adr-02)) | §4, [deferred/access-policies.md](deferred/access-policies.md) |
 | L3 | file-gated permissions | §4.4 |

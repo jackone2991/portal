@@ -65,7 +65,11 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    which it makes load-bearing), row 28 (lockout per (email, IP) — A4, after
    row 4), row 27 (logout ends one Session — A3). Then the remaining Sec /
    AuthZ rows: SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01 rows 6–7,
-   SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8.
+   SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8; then SPEC-15 row 29
+   (tenant members play a published track through `GET /tracks/{id}/play-url`
+   and a short-lived `mediaapi.SignedURL`, `/original` staying owner-only —
+   Decision 2026-10-02b (B5); latent while every User has a personal
+   organisation, hence last).
 2. **Data loss.** SPEC-10 rows 1–3, SPEC-07 row 1 together with the other
    publish-after-commit rows (SPEC-15 row 4, SPEC-16 row 3, SPEC-17 row 4,
    SPEC-18 row 1), SPEC-09 rows 1–2 together with SPEC-11 rows 1–4 (the
@@ -79,16 +83,30 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    (A6)); SPEC-01 row 31 (audit identity data encrypted and anonymised after
    90 days — A7). Both are data-protection P0s: until they land, a deleted
    User leaves objects and keys behind and the audit log keeps IPs and emails
-   in clear forever.
+   in clear forever. Since Decision 2026-10-02b (B1) row 29 also seals the
+   `deleted_users` snapshot through row 31's `platform/audit` encryption
+   function (exported for that caller), so row 29 lands with or after row 31's
+   encryption half — or ships writing `pii` NULL.
 3. **Cross-cutting foundations.** Timezone (account change, then its readers),
    Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
-   (SPEC-04 row 16 before SPEC-10 rows 4, 5, 8).
+   (SPEC-04 row 16 before SPEC-10 rows 4, 5, 8), then SPEC-15 row 27 (the
+   music player resumes and saves through the audio asset's media progress;
+   tracks join `/continue` as media items — Decision 2026-10-02b (B2); needs
+   SPEC-10 rows 5 and 4).
 4. **Remaining integrity, contract and UX rows**, per spec, in each section's
-   order; the `x-required-permission` retrofit with its drift check.
+   order; the `x-required-permission` retrofit with its drift check. Rows
+   Decision 2026-10-02b added rank here: SPEC-17 row 21 together with SPEC-14
+   row 9 (blank chapters of a published work hidden from non-owners — one
+   pattern, B7), SPEC-15 row 28 (a self-publish makes no bell entry;
+   `actor_user_id` on `music:track_published` — B4), SPEC-18 row 13 (24-hour
+   re-request cooldown after a decline, `social_declines` — B8).
 5. **Unbuilt P1**: SPEC-04 row 14, SPEC-05 row 21, SPEC-09 row 16, SPEC-10
    row 14, SPEC-11 row 13, SPEC-03 row 11 (owner takeout, above), SPEC-16
    rows 16–17 and SPEC-17 rows 18–19 (committed: finish, not revert —
-   Decision 2026-10-01b (D2)), SPEC-02 row 13; SPEC-01 P1.4 (self-service
+   Decision 2026-10-01b (D2)), SPEC-02 row 13 (P1.2–P1.3 only; P1.1
+   optimistic concurrency dropped — Decision 2026-10-02b (B12)), SPEC-18
+   row 14 (`social:connection_removed`, emit-only, with or after SPEC-18 row 1
+   — B9); SPEC-01 P1.4 (self-service
    email change, on row 30's machinery — A9); the admin-change events
    (SPEC-05 row 23 first, then SPEC-01 row 24 and SPEC-02 row 14 — D3); the
    `user` authoring grants (SPEC-15 row 26, SPEC-16 row 18, SPEC-17 row 20,
