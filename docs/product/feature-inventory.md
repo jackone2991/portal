@@ -1251,7 +1251,7 @@ type ContinuingItem struct {
 
 **Update (2026-09-30, owner decision):** audio is a playable kind alongside video. An audio asset opens the player page `/library/media/{id}` (the SPEC-10 media deep-link rule is unchanged: video/audio → player, image → `/library/media?open={id}`), plays from its stored original (`/api/v1/assets/{id}/original`, no HLS, no poster), resumes and saves progress like video, and may appear on the continue rail. `media/asset-not-playable` now covers only non-video, non-audio kinds. Code follow-up: HEAD's progress routes reject every non-video asset, the player feeds audio an empty HLS source, and `completeAudio` stores no `duration_ms`.
 
-**Per vertical, as specced:** comic owns `comic_reading_progress` (`0015`, SPEC-14). Movie deliberately keeps **no** `movie.watch_progress`: one movie is one video asset, so the asset-level progress of SPEC-10 already is movie-level progress, and a `movie` leg of `/continue` changes presentation only ([SPEC-16](specs/SPEC-16-movie-vertical.md) P0.6, P1.2). Story's `story_reading_progress` and its `/continue` leg are unbuilt ([SPEC-17](specs/SPEC-17-story-vertical.md) P1.2). Music has no progress; whether tracks resume through media's asset progress or a `music.listen_progress` table is open ([SPEC-15](specs/SPEC-15-music-vertical.md) §11 (b)).
+**Per vertical, as specced:** comic owns `comic_reading_progress` (`0015`, SPEC-14). Movie deliberately keeps **no** `movie.watch_progress`: one movie is one video asset, so the asset-level progress of SPEC-10 already is movie-level progress, and a `movie` leg of `/continue` changes presentation only ([SPEC-16](specs/SPEC-16-movie-vertical.md) P0.6, P1.2). Story's `story_reading_progress` and its `/continue` leg are unbuilt ([SPEC-17](specs/SPEC-17-story-vertical.md) P1.2). Music keeps **no** `music.listen_progress` (Decision 2026-10-02b (B2)): like movie, a track resumes through the asset-level progress of its audio asset (SPEC-10) and joins `/continue` as a media item, so the `music.listen_progress` row sketched above is superseded ([SPEC-15](specs/SPEC-15-music-vertical.md) §11).
 
 ### D-21 — Ratings: per-domain tables; no shared module *(resolves §16.C-21)*
 
@@ -1271,7 +1271,7 @@ Three different beasts (closed genre enumerations, user-input free-text labels, 
 
 No centralised `tags` table. No `platform/tags/` package. Just a documented convention.
 
-**Divergence on record:** music's catalogue lookup (`0039`) stores one free-text MusicBrainz tag in `genre text`, not a `genre TEXT[]` validated against a seed list; ratifying that or mapping tags onto a seed list is open in [SPEC-15](specs/SPEC-15-music-vertical.md) §11 (c). No other vertical has a genre column.
+**Exception for music (Decision 2026-10-02b (B3)):** music's catalogue lookup (`0039`) stores one free-text MusicBrainz tag in `genre text`, not a `genre TEXT[]` validated against a seed list. The owner ratified this as a deliberate exception: MusicBrainz folksonomy tags are open-ended, and mapping them onto a seed list would discard information for no gain at n=1. It applies to music only; a new vertical with a genre column follows the rule above ([SPEC-15](specs/SPEC-15-music-vertical.md) §11). No other vertical has a genre column.
 
 ### D-23 — Tenant identification: URL prefix `/t/{tenant}/...`; synthetic `me` tenant *(resolves §16.C-23)*
 
