@@ -2,7 +2,7 @@
 
 **Status:** current, rev 4 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-02
 **Module:** `account` · **Depends on:** SPEC-05 (`notify:dispatch` carries the approval notification, the password-reset email and the account's other transactional mails — registration receipts, P0.1, and email-change links, P0.10; reset behaviour is SPEC-05 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-05 P1.5) · SPEC-04 P0.7 (`mediaapi.PurgeOwnerAssets`, media's purge in the user delete, P0.10) · every module that owns per-User data (`PurgeOwnerData`, P0.10) · `platform/audit` ([D-25]; identity retention, P0.16) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
-**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-02 (A8)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff). Rev 4 writes in the twelve owner decisions of 2026-10-02 (A1–A12, listed in the specs README "Decisions recorded 2026-10-02"); where they change shipped behaviour the text below is the target and §11 rows 25–31 carry the change
+**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-02 (A8)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff). Rev 4 writes in the twelve owner decisions of 2026-10-02 (A1–A12, listed in the specs README "Decisions recorded 2026-10-02") and Decision 2026-10-02b (B1: the `deleted_users` snapshot is encrypted like audit identity data, the former §10 Q6); where they change shipped behaviour the text below is the target and §11 rows 25–31 carry the change
 **Vocabulary:** [CONTEXT.md](../../../CONTEXT.md) — a person's identity is a **User** (never "account": that word is reserved for a ledger Account; the module and code names stay `account`), one signed-in browser is a **Session**, and **Approval**, **Rejected**, **Disabled**, **Superadmin** and **Approver** mean exactly what the glossary says
 **Tenancy:** the `tenant` module has no spec of its own; its decision record, [ADR-07](#adr-07) (multi-tenancy and RLS), lives in this file, and the mechanism as built is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation).
 **Refs:** [security.md](../../architecture/security.md) (design depth: token model, revocation channels, threat model — this spec owns the product requirements and the contract, not the design), [/CLAUDE.md](../../../CLAUDE.md) § Account module, [backend/MODULES.md](../../../backend/MODULES.md) §5.3 (audit taxonomy), the specs README [Timezone](README.md#conventions-binding-on-all-specs) convention and its **Per-user timezone** cross-cutting gap, which this spec now owns
@@ -83,8 +83,9 @@ diverges from the binding conventions.
   refresh token is replayed. *(P1.3 — decided, unbuilt)*
 - As the owner, I delete a User and everything they owned — rows, uploaded
   files, cache entries — is gone, irreversibly; only a short identity snapshot
-  survives for 90 days. *(P0.10 — Decisions 2026-10-01b (D1) and 2026-10-02
-  (A6); unbuilt)*
+  survives for 90 days, encrypted and readable only by Superadmins.
+  *(P0.10 — Decisions 2026-10-01b (D1), 2026-10-02 (A6) and 2026-10-02b (B1);
+  unbuilt)*
 - As a signed-in User, logging out of this browser leaves my other Sessions
   working; "log out everywhere" ends them all. *(P0.6 — Decision 2026-10-02
   (A3); unbuilt)*
@@ -633,8 +634,9 @@ After every guard above has passed:
    `LockUserForDelete`); the whole registry again — tenant included — with a
    context that does not carry this transaction (each module opens its own
    scope); only when **every** entry returns `0`: write the identity snapshot
-   to `deleted_users` (§6: user id, email, display name, role codes, the
-   acting admin, `now()`), then `DeleteUser` (the account's own
+   to `deleted_users` (§6: the user id, the acting admin and `now()` in clear;
+   email, display name and role codes sealed into `pii` with `AUDIT_PII_KEY`
+   — Decision 2026-10-02b (B1), P0.16's rule), then `DeleteUser` (the account's own
    `refresh_tokens`, `password_reset_tokens`, `email_change_requests` and
    `user_roles` go with it by cascade); commit.
 4. Any error, or rows left in any entry after either pass: **503
@@ -650,7 +652,12 @@ After every guard above has passed:
 soft-delete and no restore. What survives is the `deleted_users` snapshot,
 kept for **90 days** and then removed by the identity-retention sweep
 (P0.16) — enough to answer "who was this, and who deleted them" during an
-incident, nothing that would let the User be rebuilt.
+incident, nothing that would let the User be rebuilt. Its identifying
+columns fall under the same rule as audit identity data *(Decision
+2026-10-02b (B1))*: sealed with `AUDIT_PII_KEY` through the same
+`platform/audit` function, readable only by Superadmins, and — with the key
+unset — dropped, never stored in clear (the snapshot is then just the id, the
+acting admin and the time; the delete still completes).
 
 **Deleting frees the email.** The deleted person may register again and
 becomes a new Pending User with none of the old data. To refuse someone
@@ -711,9 +718,18 @@ generalised from media to every module):
 - Given one content module returning `remaining > 0`, then 503
   `account/delete-incomplete`, the User is Disabled and still exists, and a
   retry after that module drains answers 204. *(TC-ACC-147)*
-- Given a completed delete, then one `deleted_users` row holds the User's id,
-  email, display name, roles and the acting admin, and no `users` row exists;
-  after 90 days the sweep has removed the snapshot. *(TC-ACC-148)*
+- Given a completed delete with `AUDIT_PII_KEY` set, then one `deleted_users`
+  row holds the User's id and the acting admin in clear and a `pii` value that
+  decrypts to their email, display name and roles; no column of it holds the
+  email or the name in clear, and no `users` row exists; after 90 days the
+  sweep has removed the snapshot. *(TC-ACC-148)*
+- Given `AUDIT_PII_KEY` unset, when a User is deleted, then 204, the
+  `deleted_users` row has a NULL `pii`, and no column of it holds the email,
+  the name or the role codes. *(TC-ACC-161)*
+- Given a completed delete, then the snapshot's `pii` and the delete's own
+  `audit_log` row's `pii` decrypt with the same key through the same
+  `platform/audit` function — account carries no cipher of its own.
+  *(TC-ACC-162)*
 - Given a deleted User's email, when it is registered again, then a new Pending
   User is created with none of the old data. *(TC-ACC-149)*
 
@@ -970,6 +986,15 @@ the identifying data and owns the sweep that enforces it.
 - **Readable only by Superadmins.** Decrypting `pii` is allowed only to a
   User whose effective permissions contain `*`. No reader exists yet — the P2
   audit-log reader is where this applies.
+- **The `deleted_users` snapshot follows the same rule** *(Decision
+  2026-10-02b (B1); closes the former §10 Q6)*. Its identifying columns —
+  email, display name, role codes — live only in its own `pii` column, sealed
+  with `AUDIT_PII_KEY` by the same `platform/audit` function, decryptable
+  only by Superadmins, dropped when the key is unset (P0.10, §6). The user id,
+  the acting admin's id and the time stay in clear, as the acting admin's
+  `actor_id` does in `audit_log`: the snapshot's key and its "who deleted
+  them" half. One rule now covers every piece of identity data that outlives
+  its User.
 - **90 days, then anonymised.** The daily sweep `account:expire_identity_data`
   (light server, `default` queue, `@every 24h`, wired directly in `cmd/worker`
   like `account:purge_refresh_tokens`) does three things in batches: (1) for
@@ -1085,7 +1110,8 @@ already blanks them as an actor; this requirement covers everything else.
   grants (ADR-07 steps 5–7).
 - An audit-log reader. Reading rows is for `audit:read` holders; decrypting
   their identifying data (P0.16) is for Superadmins only — a User whose
-  effective permissions contain `*`.
+  effective permissions contain `*`. The same rule decrypts a `deleted_users`
+  snapshot (B1), if the reader ever shows one.
 
 ## 6. Data model
 
@@ -1163,24 +1189,27 @@ previous links. A closed row (confirmed or cancelled) still holds two
 addresses, so `account:expire_identity_data` (P0.16) deletes it 90 days after
 it closed.
 
-`000N_account_deleted_users` (P0.10, A6):
+`000N_account_deleted_users` (P0.10, A6; encrypted per Decision 2026-10-02b
+(B1)):
 
 ```sql
 CREATE TABLE deleted_users (
     user_id       uuid PRIMARY KEY,                  -- no FK: the users row is gone
-    email         text NOT NULL,
-    display_name  text NOT NULL,
-    roles         text[] NOT NULL,                   -- role codes held at deletion
+    pii           bytea,                             -- AES-256-GCM over {email, display_name, roles}; NULL without AUDIT_PII_KEY
     deleted_by    uuid,                              -- the acting admin; no FK, it may be deleted later
     deleted_at    timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX deleted_users_deleted_at_idx ON deleted_users (deleted_at);
 ```
 
-No unique index on `email`: a deleted email may register again (P0.10), and
-may be deleted again. Rows older than 90 days are removed by
-`account:expire_identity_data` (P0.16). There is no reader: the table is read
-with SQL by the operator during an incident.
+There is no plaintext `email`, `display_name` or `roles` column: the snapshot
+is sealed with `AUDIT_PII_KEY` by the same `platform/audit` function as
+`audit_log.pii` (P0.16), and a deleted email may register again and be
+deleted again without any uniqueness to trip over. Rows older than 90 days
+are removed by `account:expire_identity_data` (P0.16). No API reads the
+table; decrypting `pii` is for Superadmins only, the same rule as audit
+identity data — until the P2 reader exists, that is an operator with the key
+during an incident.
 
 `000N_platform_audit_pii` (P0.16, A7; owned by `platform/audit`, not this
 module): `ALTER TABLE audit_log ADD COLUMN pii bytea;` plus an index on
@@ -1320,19 +1349,11 @@ audit taxonomy lives in `platform/audit/logger.go` and
 
 ## 10. Open questions
 
-- **Q6 (owner, non-blocking) — encrypt the `deleted_users` snapshot?** A7
-  (P0.16) encrypts identity data in `audit_log` with `AUDIT_PII_KEY`; the
-  `deleted_users` snapshot written by a delete (P0.10, A6) holds the same kind
-  of data — email, display name, roles — in plaintext and only expires after
-  90 days. Options: (a) encrypt its identifying columns with the same key and
-  the same superadmin-only read rule; (b) keep it plaintext, since it is a
-  short-lived tombstone that no API reads. Recommended: (a), so one rule
-  covers every piece of identity data that outlives its User. Does not block
-  §11 row 29; whichever answer lands is applied to it.
+None open.
 
 Q1 (deleting a user orphans their media objects) was decided on
 2026-10-01 — Decision 2026-10-01b (D1), now P0.10's delete order and SPEC-04
-P0.7. Q2–Q5 were decided on 2026-10-02 and removed the same way; their
+P0.7. Q2–Q6 were decided on 2026-10-02 and removed the same way; their
 numbers are not reused:
 
 - Q2 (admin list paging) — decided 2026-10-02 (A5): offset paging stays, as a
@@ -1343,6 +1364,11 @@ numbers are not reused:
   bumps nothing (P0.6; §11 row 27).
 - Q5 (per-account lockout) — decided 2026-10-02 (A4): the per-email counter
   becomes per-(email, client IP) (P0.2; §11 row 28).
+- Q6 (encrypt the `deleted_users` snapshot) — decided 2026-10-02 (B1),
+  recorded as Decision 2026-10-02b: option (a) — its email, display name and
+  roles are sealed with `AUDIT_PII_KEY` and readable only by Superadmins,
+  like audit identity data, and still expire after 90 days (P0.10, P0.16,
+  §6; §11 row 29).
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -1358,7 +1384,8 @@ every module), **Sec** 30 (verified email change), **Data** 31 (audit identity
 retention) — all appended rather than renumbering rows other documents cite.
 Row 10 is superseded by row 26 and closes with it; rows 14 and 24 were
 rewritten in place for A8 and A11, since neither describes shipped
-behaviour. A row closes when the code
+behaviour; row 29 was extended in place for Decision 2026-10-02b (B1), the
+encrypted snapshot, for the same reason. A row closes when the code
 matches the requirement it cites and the SPEC-01 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded
 on a named test. File paths are relative to
@@ -1396,7 +1423,7 @@ on a named test. File paths are relative to
 | 26 | P0.12, P0.5, P0.1 pre-created Superadmin; password change | No first-registrant rule. `cmd/api` creates the `BOOTSTRAP_SUPERADMIN_EMAIL` User from `BOOTSTRAP_SUPERADMIN_PASSWORD` (Approved, enabled, `superadmin`, `password_must_change`) when it does not exist, never touches the password when it does, and warns "no superadmin configured" when the email is unset. While `password_must_change`, `RequireAuth` answers 403 `account/password-change-required` outside `/auth/me`, `/auth/logout`, `/auth/logout-all`, `/auth/password`. `POST /auth/password` changes the password, clears the flag, bumps `token_version` and keeps only the current Session. | `handler/auth.go` `Register` grants `superadmin` and calls `MarkApproved` when `CountUsers` = 1 (`founder`), and skips the Approver fan-out for that User. `backend/cmd/api/main.go` `bootstrapSuperadmin` only re-asserts an existing User; for an unknown email it logs "names no account yet; register it, then restart the api". `backend/internal/platform/config/config.go` has `BootstrapSuperadminEmail` only. `users` has no `password_must_change`; `middleware/auth.go` has no such check; `module.go` mounts no `/auth/password`. | **migration:** `000N_account_password_must_change` (§6). **backend:** delete the founder branch (this closes row 10); `bootstrapSuperadmin` creates the User (hash, approve, grant `superadmin`, set the flag, audit `account.user.created` with `actor_kind = 'system'`) when absent, refuses an empty or short password with a logged error, warns when the email is unset; `BOOTSTRAP_SUPERADMIN_PASSWORD` in `platform/config` and `.env.example`; `GetUserAuthSnapshot` returns the flag and `RequireAuth` checks it against a four-route allow-list; `POST /auth/password` (verify on the login throttle, one transaction, revoke every chain but the presented one with reason `password_change`, bump, re-mint) and the audit action `account.password.changed` in `platform/audit`. **openapi:** the operation, `CurrentUser.password_must_change`, the 403 on authenticated operations. **frontend:** the two slugs; a forced change-password screen while `/auth/me` reports the flag; `AuthForm` loses its "sign in now" branch. **docs:** `/CLAUDE.md` § Account module ("Bootstrapping an approver") in the same PR. **test:** TC-ACC-135…140. | Decision 2026-10-02 (A2) |
 | 27 | P0.6 logout ends one Session | `POST /auth/logout` requires the refresh token (cookie or body; none → 422 `account/validation` pointing to logout-all), revokes that token's chain if it is the caller's, does not bump `token_version`, clears cookies. | `handler/auth.go` `Logout`: `Refresh.Revoke` (`auth/refresh.go`) revokes the single presented token, a missing token is ignored, then `BumpUserTokenVersion` — every device's access token stops and the RBAC cache is re-keyed on each logout. | **backend:** require the token; `RevokeRefreshTokenChain` scoped to the caller's `user_id`; drop the bump; audit `scope: session`. **openapi:** the request body and the 422 on `/auth/logout`. **frontend:** none (`TopMenu.tsx` already sends the cookie). **test:** TC-ACC-141…143. | Decision 2026-10-02 (A3); former §10 Q4 |
 | 28 | P0.2 lockout per (email, client IP) | Two failure counters: the global per-IP one and one per (email, client IP); no per-email counter shared across addresses. | `handler/auth.go` `loginFailKeys` returns `login:fail:ip:<ip>` and `login:fail:email:<email>`; `loginThrottled` refuses when either reaches 5, so anyone can lock any known email out for 15 minutes. | **backend:** the second key becomes `login:fail:email_ip:<email>:<ip>` (the pending-path clear and `POST /auth/password` use the same pair). Meaningful only with row 4's trusted client IP. **test:** TC-ACC-144, TC-ACC-145. | Decision 2026-10-02 (A4); former §10 Q5 |
-| 29 | P0.10 delete purges every module, then the row | Every module owning per-User data exposes an idempotent `PurgeOwnerData(ctx, userID) (remaining int, err error)` that removes its rows and side effects; account runs the registry in order (content modules, media, then tenant in the locked final pass), writes a `deleted_users` snapshot, then deletes the row; any error or remainder → 503 `account/delete-incomplete`, User stays Disabled. Snapshot rows expire after 90 days. | No module exposes `PurgeOwnerData` (`grep -rn PurgeOwner backend` finds nothing); media's `PurgeOwnerAssets` is itself unbuilt (row 8). `handler/admin_users.go` `DeleteUser` hard-deletes and relies on the cascade, which removes rows but never objects or Redis keys. No `deleted_users` table exists. | **backend (each module):** `PurgeOwnerData` in `comic`, `music`, `movie`, `story`, `journal`, `bank`, `people`, `social`, `notify` and `tenant` `api/` packages (media's is row 8 / SPEC-04 §11 row 19), each opening its own tenant scope. **backend (account):** a registry port in `account.Deps`, bound in `cmd/api`; `DeleteUser` runs P0.10's passes over it; the snapshot insert in the final transaction. **migration:** `000N_account_deleted_users` (§6). **frontend:** the Delete confirmation says that deleting frees the email and suggests Reject instead. **docs:** [backup-restore.md](../../operations/backup-restore.md) warns that a restore resurrects deleted Users. **test:** TC-ACC-146…149. | Decision 2026-10-02 (A6), extending Decision 2026-10-01b (D1) |
+| 29 | P0.10 delete purges every module, then the row | Every module owning per-User data exposes an idempotent `PurgeOwnerData(ctx, userID) (remaining int, err error)` that removes its rows and side effects; account runs the registry in order (content modules, media, then tenant in the locked final pass), writes a `deleted_users` snapshot, then deletes the row; any error or remainder → 503 `account/delete-incomplete`, User stays Disabled. The snapshot keeps only the user id, the acting admin and the time in clear; email, display name and role codes are sealed into `pii` with `AUDIT_PII_KEY` (dropped when the key is unset), readable only by Superadmins (B1). Snapshot rows expire after 90 days. | No module exposes `PurgeOwnerData` (`grep -rn PurgeOwner backend` finds nothing); media's `PurgeOwnerAssets` is itself unbuilt (row 8). `handler/admin_users.go` `DeleteUser` hard-deletes and relies on the cascade, which removes rows but never objects or Redis keys. No `deleted_users` table exists. | **backend (each module):** `PurgeOwnerData` in `comic`, `music`, `movie`, `story`, `journal`, `bank`, `people`, `social`, `notify` and `tenant` `api/` packages (media's is row 8 / SPEC-04 §11 row 19), each opening its own tenant scope. **backend (account):** a registry port in `account.Deps`, bound in `cmd/api`; `DeleteUser` runs P0.10's passes over it; the snapshot insert in the final transaction, sealing `{email, display_name, roles}` through row 31's `platform/audit` encryption function (exported for this caller; no cipher in account) — so this row lands with or after row 31's encryption half, or ships writing `pii` NULL. **migration:** `000N_account_deleted_users` (§6: `pii bytea`, no plaintext identity columns). **frontend:** the Delete confirmation says that deleting frees the email and suggests Reject instead. **docs:** [backup-restore.md](../../operations/backup-restore.md) warns that a restore resurrects deleted Users. **test:** TC-ACC-146…149, TC-ACC-161…162. | Decision 2026-10-02 (A6), extending Decision 2026-10-01b (D1); Decision 2026-10-02b (B1), former §10 Q6 |
 | 30 | P0.10 email change requires verification; P1.4 | An email change keeps the old address active, stores one pending request, mails a 1-hour confirm link to the new address and a cancel link to the old one, re-checks uniqueness at confirm, rate-limits resend (which revokes old links), cancels on expiry; no SMTP → 503 `account/mail-unavailable`, nothing changed. | `handler/admin_users.go` `UpdateUser` writes the new email at once (`email_before`/`email_after` in the audit) — a typo or a hostile admin moves the login identifier to an address nobody verified. No `email_change_requests` table, no confirm/cancel routes, no notify types. | **migration:** `000N_account_email_change_requests` (§6). **backend:** `UpdateUser` diverts a changed email into a request (503 without `SMTP_HOST`); resend/cancel admin routes; public confirm/cancel routes; `accountapi.MintEmailChangeLinks` for notify's send-time render; audit actions `account.user.email_change_requested`, `account.user.email_changed`, `account.user.email_change_cancelled`. **notify:** `account.email_change_confirm` (to the address the mint returns) and `account.email_change_alert` (to the current address), email-only, not persisted. **openapi:** the four operations, `AdminUser.pending_email`, the 503. **frontend:** the pending address and resend/cancel in `/admin/users`; public confirm and cancel pages (outside the middleware matcher); the slugs. **test:** TC-ACC-155…160. | Decision 2026-10-02 (A9) |
 | 31 | P0.16 audit identity data lives 90 days | Every `audit_log` row keeps identifying data (target User id, email, display name, IP, user agent, identifying metadata) only encrypted in `pii` with `AUDIT_PII_KEY`, decryptable only by Superadmins; after 90 days `account:expire_identity_data` anonymises the row (keeping action, time and the acting admin's id) and deletes expired `deleted_users` and closed `email_change_requests` rows. | `backend/db/migrations/0005_platform_audit.up.sql` stores `ip` and `user_agent` in clear and `metadata` as plain `jsonb`; `backend/internal/platform/audit/logger.go` `Write` copies them as given (e.g. `account.user.updated` carries `email_before`/`email_after`); nothing ever rewrites or deletes an `audit_log` row; no `AUDIT_PII_KEY` exists. | **migration:** `000N_platform_audit_pii` (`pii bytea`; owned by `platform/audit`). **backend:** encryption in `audit.Logger.Write` (identifying fields → `pii`, plaintext columns NULL; drop when the key is unset, with a start-up warning); `AUDIT_PII_KEY` in `platform/config` and `.env.example`; an `audit` anonymise/encrypt-in-place function; the `account:expire_identity_data` periodic task in `cmd/worker` (light server, `@every 24h`). **docs:** events.md row live in the same PR. **test:** TC-ACC-150…153. | Decision 2026-10-02 (A7) |
 
@@ -1461,7 +1488,7 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
   creation from the env pair, the must-change gate and `POST /auth/password`
   — TC-ACC-135…140; single-Session logout — TC-ACC-141…143; the per-(email,
   IP) lockout — TC-ACC-144…145; the delete registry and `deleted_users` —
-  TC-ACC-146…149; audit identity retention — TC-ACC-150…153; the verified
+  TC-ACC-146…149, its encrypted snapshot — TC-ACC-161…162; audit identity retention — TC-ACC-150…153; the verified
   email change — TC-ACC-155…160; `SuperadminIDs` by permission — TC-ACC-127;
 - no HTTP-level test exists for the account handlers at all (the CC-1/CC-3
   pair over `httptest`, as the other modules have).
