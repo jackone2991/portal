@@ -28,7 +28,7 @@ spec headers. Per-requirement coverage lives in
 
 | Spec | Feature | Module | Depends on | Status |
 |------|---------|--------|------------|--------|
-| [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | [ADR-02](SPEC-01-account-identity-admin.md#adr-02), [ADR-06](SPEC-01-account-identity-admin.md#adr-06); SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone, P0.16 audit retention and the 2026-10-02 targets (§11 rows 25–31) unbuilt; also holds the `tenant` module's P0.17 (tenant links, [ADR-12](SPEC-01-account-identity-admin.md#adr-12); rows 32–33, unbuilt) |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | [ADR-02](SPEC-01-account-identity-admin.md#adr-02), [ADR-06](SPEC-01-account-identity-admin.md#adr-06); SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone, P0.16 audit retention and the 2026-10-02 targets (§11 rows 25–31) unbuilt; also holds the `tenant` module's P0.17 (tenant links, [ADR-12](SPEC-01-account-identity-admin.md#adr-12); rows 32–33, unbuilt) and P0.18 (tenant groups, B15; row 34, unbuilt) |
 | [SPEC-02](SPEC-02-shell-layout.md) | Shell layout — data-driven navigation menu + registry-backed dashboard widget placement (as-built, retroactive) | `layout` + frontend shell | account (`accountapi.HasPermission`, RBAC); SPEC-09 P0.4 consumes the rails | Built (`0036_layout_core`) |
 | [SPEC-03](SPEC-03-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-12 data accrues) | P0 built (`0012_ops_backup_runs`); P1.7 takeout unbuilt |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — | Built (`0008_media_image_pipeline`) |
@@ -135,11 +135,16 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   table is Decision 2026-10-02b (B8)), because a connection — and a decline —
   spans two personal tenants. **`tenant_links`** (planned, SPEC-01 P0.17) is
   cross-tenant the same way and fenced by its own policies (members of either
-  side read; the owning tenant's owner writes). **One planned exception to the
+  side read; the owning tenant's owner writes). **`tenant_groups`** and
+  **`tenant_group_members`** (planned, SPEC-01 P0.18, Decision 2026-10-02b
+  (B15)) are ordinary tenant-scoped tables under `tenant_isolation`; a member
+  row also needs the User's `organization_memberships` row in that tenant. **One planned exception to the
   fence, and only one** ([ADR-12](SPEC-01-account-identity-admin.md#adr-12),
   Decision 2026-10-02b (B14)): a `FOR SELECT` policy may admit a row of
   another tenant only through the tenant module's `SECURITY DEFINER` function
-  `app_can_read_shared(owner_id, tenant_id)`, and only for published content
+  `app_can_read_shared(owner_id, tenant_id)` — owner, group co-member in that
+  tenant (B15), or accepted friend in that or an actively linked tenant — and
+  only for published content
   (`movies`, `music_tracks`, `stories`, `story_chapters` with `status =
   'published'`) and the `shared` assets that render it; no write policy ever
   admits another tenant, and no other table gets such a policy without a new
@@ -388,11 +393,13 @@ row 13 in place. Its B13 (tenant asset visibility) appended five more (SPEC-04
 rows 20–21, SPEC-10 row 15, SPEC-16 row 19, SPEC-17 row 22) and rewrote
 SPEC-15 rows 27 and 29 in place. B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12),
 shared reads and tenant links) rewrote all seven of those in place — none was
-built — and appended three (SPEC-01 rows 32–33, SPEC-18 row 15).
+built — and appended three (SPEC-01 rows 32–33, SPEC-18 row 15). B15 (tenant
+groups decide who is family, amending ADR-12) appended one (SPEC-01 row 34)
+and extended SPEC-01 row 32 in place.
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
-| [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 33 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 (10 superseded by 26) · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 · Sec 25–28 · Data 29 (extended, 2026-10-02b) · Sec 30 · Data 31 (appended, 2026-10-02) · Sec 32 · AuthZ 33 (appended, 2026-10-02b B14 — the `tenant` module) | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 34 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 (10 superseded by 26) · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 · Sec 25–28 · Data 29 (extended, 2026-10-02b) · Sec 30 · Data 31 (appended, 2026-10-02) · Sec 32 · AuthZ 33 (appended, 2026-10-02b B14 — the `tenant` module) · Sec 34 (appended, B15 — tenant groups) | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
 | [SPEC-02](SPEC-02-shell-layout.md) | [§11](SPEC-02-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13 (P1.2–P1.3; P1.1 dropped, 2026-10-02b) · P1 14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
 | [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 · AuthZ 20–21 (appended, 2026-10-02b B13; rewritten by B14) | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
@@ -409,7 +416,7 @@ built — and appended three (SPEC-01 rows 32–33, SPEC-18 row 15).
 | [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 · AuthZ 19 (appended, 2026-10-02b B13; rewritten by B14) | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
 | [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 22 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) · AuthZ 22 (appended, B13; rewritten by B14) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
 | [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 · Func 13 · P1 14 (appended, 2026-10-02b) · AuthZ 15 (appended, B14) | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| **Total** | | **284** | | |
+| **Total** | | **285** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -502,9 +509,11 @@ names:
   module's spec; land them module by module, each with a test that its purge
   leaves no row, object or key behind.
 - **Shared reads and tenant links** (Decision 2026-10-02b (B13) as revised
-  by B14; [ADR-12](SPEC-01-account-identity-admin.md#adr-12)): SPEC-01 §11
-  row 32 first (`000N_tenant_links`, `portal_acl`, `app_tenants_linked` and
-  `app_can_read_shared`, the links API and screen, `tenantapi` reach), with
+  by B14 and amended by B15; [ADR-12](SPEC-01-account-identity-admin.md#adr-12)):
+  SPEC-01 §11 row 34 (`000N_tenant_groups`, the groups API and screen —
+  B15) migrating first, in one PR with row 32 (`000N_tenant_links`,
+  `portal_acl`, `app_tenants_linked` and `app_can_read_shared`, the links API
+  and screen, `tenantapi` reach), with
   SPEC-18 §11 row 15's `000N_social_acl_grant` in the same PR; then SPEC-04
   §11 row 20 (`000N_media_shared_visibility` and the read rule) together
   with SPEC-01 §11 row 33 (request scopes without the tenant-admin flag), and
@@ -825,7 +834,33 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
   29, SPEC-16 row 19, SPEC-17 row 22 (rewritten); TC-TEN-001…010,
   TC-MEDIA-120, 121, TC-CONT-104, TC-MUS-131, TC-MOV-114, TC-STY-113,
   TC-SOC-076…079, and the B13 TCs reworded. The drafting choices ADR-12 made
-  for the owner to confirm are listed in its Consequences.
+  for the owner to confirm are listed in its Consequences. *Amended by B15
+  below*: "family" is the owner's group co-members, not every member of the
+  tenant.
+- **(B15) Family is a group inside the tenant, not the whole tenant** — the
+  owner's amendment of B14, recorded in
+  [ADR-12](SPEC-01-account-identity-admin.md#adr-12) as an explicit
+  "Amended 2026-10-02 (B15)" paragraph after its narrative. A tenant can hold
+  several **groups** (one household each); a User's family, for reading
+  published music, movies and stories, is the Users who share a group with
+  them in the item's tenant. SPEC-01 P0.18 (the `tenant` module:
+  `000N_tenant_groups` — `tenant_groups`, `tenant_group_members` with a
+  foreign key to `organization_memberships`, tenant-scoped RLS — numbered
+  before `000N_tenant_links`; the permission `tenants:groups:write` granted
+  to no role; `GET`/`POST /tenants/{id}/groups`, `PATCH`/`DELETE
+  /tenants/{id}/groups/{gid}`, `PUT /tenants/{id}/groups/{gid}/members`,
+  `DELETE /tenants/{id}/groups/{gid}/members/me`; slugs
+  `tenant/group-not-found`, `tenant/not-a-member`, `tenant/group-name-taken`;
+  `tenant:group_changed` emit-only; no `tenantapi` addition);
+  `app_can_read_shared`'s family clause becomes "shares a group in the item's
+  tenant", its friend clause names the same tenant explicitly, and
+  `portal_acl` also reads `tenant_group_members` (SPEC-01 P0.17). Discovery
+  (SPEC-18) is unchanged — still by tenant and links. SPEC-04 P0.8, SPEC-10
+  P0.2, SPEC-15, SPEC-16 and SPEC-18 reworded where they defined the
+  household; SPEC-14 and SPEC-17 are aligned separately. Gap row: SPEC-01 §11
+  row 34 (new), row 32 extended; TC-TEN-011…017, TC-TEN-005 and TC-TEN-010
+  reworded. ADR-12 action item 7 records a precondition on tenant switching
+  (no gap row). The drafting choices are listed in ADR-12's Consequences.
 
 ## Open owner decisions
 
@@ -875,7 +910,7 @@ record that supersedes the old one. Numbers are never reused; `00` is retired
 | ADR-09 | Documentation architecture | accepted, amended by ADR-11, executed | Diátaxis-informed `docs/` tree; English canonical | [SPEC-06 § ADR-09](SPEC-06-docs-canonicalisation.md#adr-09) |
 | ADR-10 | OpenAPI contract direction | accepted | Spec-first, enforced: generate Go stubs + TS client; CI drift gate | [README.md § ADR-10](#adr-10) |
 | ADR-11 | Documentation canonicalisation | accepted, executed | One owner per fact; ADRs corrected in place by layer; nothing archived | [SPEC-06 § ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) |
-| ADR-12 | Sharing published content with household and friends; tenant links | accepted (Decision 2026-10-02b (B14)), not built | Published music, movies and stories are read by the owner's household and friends in mutually linked tenants, through one `SECURITY DEFINER` predicate in the SELECT policies — a read-only exception to ADR-07's fence | [SPEC-01 § ADR-12](SPEC-01-account-identity-admin.md#adr-12) |
+| ADR-12 | Sharing published content with household and friends; tenant links | accepted (Decision 2026-10-02b (B14)), amended by Decision 2026-10-02b (B15), not built | Published music, movies and stories are read by the owner's family — group co-members in the item's tenant (B15) — and friends in the same or mutually linked tenants, through one `SECURITY DEFINER` predicate in the SELECT policies — a read-only exception to ADR-07's fence | [SPEC-01 § ADR-12](SPEC-01-account-identity-admin.md#adr-12) |
 | ADR-13 | Deleting a User purges every module, then the row | accepted (Decisions 2026-10-01b (D1), 2026-10-02 (A6)), not built | Each module's `PurgeOwnerData` runs in a fixed order, then the row goes under a lock; 503 `account/delete-incomplete` otherwise; no grace period, a 90-day `deleted_users` snapshot, the email freed | [SPEC-01 § ADR-13](SPEC-01-account-identity-admin.md#adr-13) |
 | ADR-14 | Identity data that outlives its User | accepted (Decisions 2026-10-02 (A7), 2026-10-02b (B1)), not built | Audit and snapshot identity data sealed with `AUDIT_PII_KEY`, decryptable only by Superadmins, anonymised after 90 days | [SPEC-01 § ADR-14](SPEC-01-account-identity-admin.md#adr-14) |
 | ADR-15 | Per-user timezone | accepted (Decisions 2026-09-30, 2026-10-01 (f), 2026-10-02 (A8)), not built | Day and month boundaries in the User's own zone, NULL = not set, `Asia/Ho_Chi_Minh` fallback; sweeps evaluate each owner's local date | [README.md § ADR-15](#adr-15) |
@@ -1752,5 +1787,7 @@ Action items close.*
   [ADR-12](SPEC-01-account-identity-admin.md#adr-12) — the audience becomes
   household plus friends in mutually linked tenants, the value `shared`, and
   the `tenant` module gains links (SPEC-01 P0.17): the seven B13 rows are
-  rewritten in place and three appended (gap total 281 → 284). No owner
-  question is open.
+  rewritten in place and three appended (gap total 281 → 284). B15 then
+  narrowed the family half to the owner's tenant-group co-members (SPEC-01
+  P0.18, an amendment to ADR-12): one row appended (gap total 284 → 285). No
+  owner question is open.

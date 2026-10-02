@@ -1,10 +1,10 @@
 # SPEC-01 — Account: identity, approval gate, RBAC and the admin console
 
-**Status:** current, rev 5 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-02
+**Status:** current, rev 6 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-02
 **Module:** `account` · **Depends on:** SPEC-05 (`notify:dispatch` carries the approval notification, the password-reset email and the account's other transactional mails — registration receipts, P0.1, and email-change links, P0.10; reset behaviour is SPEC-05 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-05 P1.5) · SPEC-04 P0.7 (`mediaapi.PurgeOwnerAssets`, media's purge in the user delete, P0.10) · every module that owns per-User data (`PurgeOwnerData`, P0.10) · `platform/audit` ([D-25]; identity retention, P0.16) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
-**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-02 (A8)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff). Rev 4 writes in the twelve owner decisions of 2026-10-02 (A1–A12, listed in the specs README "Decisions recorded 2026-10-02") and Decision 2026-10-02b (B1: the `deleted_users` snapshot is encrypted like audit identity data, the former §10 Q6); where they change shipped behaviour the text below is the target and §11 rows 25–31 carry the change. Rev 5 adds P0.17 — tenant links and the shared-read rule — from Decision 2026-10-02b (B14), recorded as [ADR-12](#adr-12); §11 rows 32–33 carry it
+**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-02 (A8)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff). Rev 4 writes in the twelve owner decisions of 2026-10-02 (A1–A12, listed in the specs README "Decisions recorded 2026-10-02") and Decision 2026-10-02b (B1: the `deleted_users` snapshot is encrypted like audit identity data, the former §10 Q6); where they change shipped behaviour the text below is the target and §11 rows 25–31 carry the change. Rev 5 adds P0.17 — tenant links and the shared-read rule — from Decision 2026-10-02b (B14), recorded as [ADR-12](#adr-12); §11 rows 32–33 carry it. Rev 6 adds P0.18 — tenant groups, which decide who is family — from Decision 2026-10-02b (B15), which amends ADR-12; §11 row 34 carries it
 **Vocabulary:** [CONTEXT.md](../../../CONTEXT.md) — a person's identity is a **User** (never "account": that word is reserved for a ledger Account; the module and code names stay `account`), one signed-in browser is a **Session**, and **Approval**, **Rejected**, **Disabled**, **Superadmin** and **Approver** mean exactly what the glossary says
-**Tenancy:** the `tenant` module has no spec of its own; its decision records, [ADR-07](#adr-07) (multi-tenancy and RLS) and [ADR-12](#adr-12) (sharing published content with household and friends; tenant links), live in this file, its one requirement so far is P0.17, and the mechanism as built is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation).
+**Tenancy:** the `tenant` module has no spec of its own; its decision records, [ADR-07](#adr-07) (multi-tenancy and RLS) and [ADR-12](#adr-12) (sharing published content with household and friends; tenant links — amended by Decision 2026-10-02b (B15): family is the owner's group co-members), live in this file, its requirements so far are P0.17 (tenant links) and P0.18 (tenant groups), and the mechanism as built is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation).
 **Refs:** [security.md](../../architecture/security.md) (design depth: token model, revocation channels, threat model — this spec owns the product requirements and the contract, not the design), [/CLAUDE.md](../../../CLAUDE.md) § Account module, [backend/MODULES.md](../../../backend/MODULES.md) §5.3 (audit taxonomy), the specs README [Timezone](README.md#conventions-binding-on-all-specs) convention and its **Per-user timezone** cross-cutting gap, which this spec now owns
 **Downstream consumers:** every module's `RequirePermission` / `RequireOwnerOrPermission` (built by `cmd/api` from `account.Module.Engine()`); `tenant` (`RequireAuth` + the caller identity); `layout` (`accountapi.HasPermission`); `people` (`accountapi.ListDirectory`; SPEC-11 P0.3/P0.4 timezone); `social` (`accountapi.GetUserNames`); `notify` (recipient email, via the account repository in `cmd/worker`; the P1.3 `account:*` events and `SuperadminIDs`); the timezone readers SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1/P0.3/P1.5, SPEC-11 P0.3/P0.4, SPEC-13 §4a; the frontend's `lib/session.ts`, `lib/admin.ts`, `/login`, `/register` and `/admin/*`
 
@@ -50,7 +50,8 @@ diverges from the binding conventions.
 - **Tenant-scoped roles, `switch-tenant`, `/admin/organizations`** (ADR-07
   steps 5–7) — deferred at one user with one personal org. So are creating a
   household or an org, adding members and invitations: P0.17 links tenants
-  that exist, it creates none.
+  that exist, it creates none, and P0.18 groups a tenant's existing members,
+  it adds none.
 - **Rich profile** (bio, cover, education): [D-19] puts it in `social.profiles`,
   not on `users`.
 - **An audit-log reader UI.** Writing audit rows is in scope (P0.11); reading
@@ -1124,18 +1125,22 @@ rule lives in Postgres):
   and both rows exist;
 - `app_can_read_shared(owner_id uuid, item_tenant uuid) RETURNS boolean` — true
   when the acting user (`app.current_user`, read with the two-argument
-  `current_setting`, so an unset GUC is false) is the owner; or the owner is
-  still a member of `item_tenant` and the actor is too (the household); or the
-  owner is still a member of `item_tenant`, the actor and the owner hold an
-  **accepted** `social_connections` row, and the actor is a member of a
-  tenant that `app_tenants_linked` to `item_tenant` (a friend in a linked
-  tenant). Anything else, an anonymous scope included, is false.
+  `current_setting`, so an unset GUC is false) is the owner; or the actor and
+  the owner are both in one **group** of `item_tenant` (the family — P0.18,
+  Decision 2026-10-02b (B15), which replaced B14's "both are members of
+  `item_tenant`"); or the owner is still a member of `item_tenant`, the actor
+  and the owner hold an **accepted** `social_connections` row, and the actor
+  is a member of `item_tenant` itself or of a tenant that `app_tenants_linked`
+  to it (a friend in the same or a linked tenant — the same-tenant half is
+  spelled out since B15, because the family clause no longer covers every
+  member). Anything else, an anonymous scope included, is false.
 
 Both are `LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public,
 pg_temp`, owned by a new `NOLOGIN NOSUPERUSER BYPASSRLS` role **`portal_acl`**
 that the migration creates (the `0019` `DO` block shape) and grants `SELECT` on
-exactly three tables: `organization_memberships` and `tenant_links` (the
-tenant migration grants these) and `social_connections` (granted by social's
+exactly four tables: `organization_memberships`, `tenant_links` and
+`tenant_group_members` (P0.18's table; the tenant migration grants these) and
+`social_connections` (granted by social's
 own `000N_social_acl_grant`, SPEC-18 §6 — the owning module consents to the
 read). `EXECUTE` is revoked from `PUBLIC` and granted to `portal_app` and
 `portal_sys`. The functions inline the GUC read rather than calling `0037`'s
@@ -1176,11 +1181,14 @@ only through their links screen. Each change is also audited
   naming A and nothing else; a User in neither tenant reads none; only A's
   owner (or a trusted scope on A) inserts or deletes A's rows; no scope
   updates a row. *(TC-TEN-004)*
-- Given owner O of item tenant T, member H of T, friend F in a tenant linked
-  to T, friend G in a tenant not linked to T, non-friend N in a linked
-  tenant, stranger S and a scope with no user, then `app_can_read_shared(O,
-  T)` is true for O, H and F and false for G, N, S and the empty scope.
-  *(TC-TEN-005, RLS suite)*
+- Given owner O of item tenant T, H who shares a group of T with O, M a
+  member of T in no group with O, E a friend of O who is a member of T in no
+  group with O, friend F in a tenant linked to T, friend G in a tenant not
+  linked to T, non-friend N in a linked tenant, stranger S and a scope with
+  no user, then `app_can_read_shared(O, T)` is true for O, H, E and F and
+  false for M, G, N, S and the empty scope; a group O and H share in another
+  tenant U makes it true for H on `(O, U)` only. *(TC-TEN-005, RLS suite;
+  reworded by B15)*
 - Given F reads O's shared item, when either side's link row is deleted or the
   connection is removed, then F's next query no longer returns it; O's other
   readers are unaffected. *(TC-TEN-006)*
@@ -1194,7 +1202,158 @@ only through their links screen. Each change is also audited
   403. *(TC-TEN-009)*
 - Given `portal_app`, then `app_can_read_shared` and `app_tenants_linked` are
   executable, are owned by `portal_acl` with a pinned `search_path`, and
-  `PUBLIC` cannot execute them; `portal_acl` cannot log in. *(TC-TEN-010)*
+  `PUBLIC` cannot execute them; `portal_acl` cannot log in and holds `SELECT`
+  on exactly `organization_memberships`, `tenant_links`,
+  `tenant_group_members` and `social_connections`. *(TC-TEN-010)*
+
+### P0.18 — Tenant groups: who counts as family *(Decision 2026-10-02b (B15), amending [ADR-12](#adr-12); owned by the `tenant` module; unbuilt — §11 row 34)*
+
+**What a group is.** A **group** is a named set of members of one tenant,
+kept by the `tenant` module. A tenant may hold several groups — one per
+household living in it, say — and a member may be in more than one. A User's
+**family**, for ADR-12's audience, is every User who shares at least one
+group with them **in the tenant the item lives in**: not every member of that
+tenant, which is what B14 said and B15 narrowed. A member in no group with the
+owner is not family; the owner always reads their own items, and friends read
+through P0.17's friend clause whatever their groups. Groups grant nothing
+else — no permission code, no write, no discovery (below) — and they are not
+the RBAC "user groups" of
+[deferred/access-policies.md](../../architecture/deferred/access-policies.md)
+§3.1, which stay post-v1 (§3).
+
+**Only members of the tenant.** `tenant_group_members` carries the group's
+`tenant_id` and a composite foreign key to `organization_memberships (org_id,
+user_id) ON DELETE CASCADE`, so the database refuses a User who is not a
+member of the tenant, and a member who leaves it (or a User who is deleted)
+leaves its groups in the same statement. Nothing on `HEAD` adds a second
+member to a tenant (ADR-07 action items 5–6, deferred; §3), so a personal
+organisation's groups can hold only its owner: the family half of the
+audience stays latent, as it was under B14.
+
+**Who manages groups.** The tenant's **owner** (`organizations.owner_id`) or
+a holder of the new permission **`tenants:groups:write`** — seeded by
+`000N_tenant_groups` and granted to no role, so out of the box a Superadmin
+through `*` (the `tenants:links:write` pattern, P0.17) — creates, renames and
+deletes groups and sets their members. Any group member may **leave** a group
+themselves, so nobody is kept in an audience they want out of. Other members
+see only the groups they belong to; the owner and permission holders see
+every group of the tenant. RBAC stays global (P0.7): ownership is checked
+against `organizations`, not a role.
+
+**API** (tenant module `MountHTTP`, behind `RequireAuth` only; each route
+runs its checks and then opens `platform/db.Scope{OrgID: {id}, UserID:
+caller, Admin: false}`, as P0.17 does):
+
+- `GET /api/v1/tenants/{id}/groups` — a member of `{id}` or a
+  `tenants:groups:write` holder. 200 `{items: [TenantGroup]}`, `TenantGroup =
+  {id, name, members: [{user_id, display_name}], created_at}`, ordered by
+  `name`, non-paginated (at most 20 groups per tenant). A member who is
+  neither the owner nor a holder gets only the groups they are in. Display
+  names come through a `Deps.UserNames` port that `cmd/api` binds to
+  `accountapi.GetUserNames` (the social precedent), so the tenant module
+  imports no account package.
+- `POST /api/v1/tenants/{id}/groups` `{name}` — the owner or a holder. 201
+  `TenantGroup`, no members yet.
+- `PATCH /api/v1/tenants/{id}/groups/{gid}` `{name}` — the owner or a holder.
+  200 `TenantGroup`.
+- `DELETE /api/v1/tenants/{id}/groups/{gid}` — the owner or a holder. 204;
+  the member rows cascade.
+- `PUT /api/v1/tenants/{id}/groups/{gid}/members` `{user_ids: uuid[0..200]}`
+  — the owner or a holder. Replaces the group's whole member set in one
+  transaction (the P0.17 and SPEC-02 whole-set precedent): ids absent from
+  the body are deleted, new ones inserted, the rest kept with their
+  `added_at`. 200 `TenantGroup`.
+- `DELETE /api/v1/tenants/{id}/groups/{gid}/members/me` — a member of the
+  group, for themselves only. 204.
+
+Errors: a caller who is neither a member of `{id}` nor a holder, and a
+missing or malformed `{id}`, get **404 `tenant/not-found`** (as P0.17); a
+`{gid}` that is missing, malformed, belongs to another tenant or — for a
+caller who is neither the owner nor a holder — names a group they are not in,
+**404 `tenant/group-not-found`**; a member who is not the owner on any write
+but leaving, **403 `tenant/not-owner`**; a blank name or one longer than 120
+characters after trimming, a malformed or duplicate id, more than 200 ids, or
+a 21st group, **422 `tenant/validation`**; an id that is not a member of
+`{id}`, **422 `tenant/not-a-member`**; a name already used in the tenant
+(compared trimmed and case-insensitively), **409 `tenant/group-name-taken`**.
+Nothing is written on any non-2xx. Each slug goes into
+`frontend/src/lib/problems.ts` (README Errors).
+
+**Data and RLS** — migration `000N_tenant_groups` (tenant-owned; §6 holds the
+DDL), landing **before** `000N_tenant_links`, so `app_can_read_shared` is
+created with the group clause and B14's whole-tenant clause never ships. Both
+tables are tenant-scoped the ordinary way (the specs README Tenancy
+convention): `tenant_id` with the `app.current_tenant` DEFAULT, `ENABLE` +
+`FORCE`, one `tenant_isolation` policy. Who may write is the service's check
+above; RLS keeps every row inside its tenant. The only read past RLS is
+`app_can_read_shared`, through `portal_acl`'s `SELECT` on
+`tenant_group_members` (P0.17).
+
+**The family clause.** `app_can_read_shared(owner_id, item_tenant)` admits
+the actor as family when a `tenant_group_members` row for the actor and one
+for the owner share a `group_id` whose `tenant_id = item_tenant`. Membership
+of the tenant needs no second test — the foreign key above removes a leaver's
+rows. The friend clause keeps B14's meaning and now names the same tenant
+explicitly (P0.17).
+
+**Before any request runs in a shared tenant.** `tenant_isolation` on the
+content tables admits every row of the scope's tenant. On `HEAD` — and until
+a request can run in a tenant with other members (ADR-07 action items 5–6) —
+that is only ever the caller's own personal organisation, so it admits only
+the caller's rows. The change that lets a request run in a shared tenant must
+first narrow the read half of `tenant_isolation` on `movies`, `music_tracks`,
+`stories` and `story_chapters` to the owner's own rows, leaving `shared_read`
+as the only way to a co-member's published item; otherwise a member in no
+group with the owner would read it inside the tenant. Recorded as
+[ADR-12](#adr-12) action item 7; no gap row, because no code on `HEAD` or in
+any planned row can reach it.
+
+**Discovery does not change.** SPEC-18's directory and the targets of a
+connection request are decided by tenant membership and links
+(`tenantapi.ReachableUserIDs`, `CanReach`, P0.17), not by groups: a member of
+the same tenant outside every group the user is in is still reachable, can
+still be asked, and once an accepted friend reads through the friend clause.
+
+**Event.** Every group write that changes something publishes, after commit,
+one **`tenant:group_changed`** `{tenant_id, group_id, change:
+'created'|'renamed'|'deleted'|'members_changed'|'member_left', added:
+uuid[], removed: uuid[], actor_id}` — emit-only, like `tenant:link_changed`
+(ADR-08's rule, the D3 precedent; no consumer in v1). Each change is also
+audited (`tenant.group.created`, `tenant.group.renamed`,
+`tenant.group.deleted`, `tenant.group.members_changed`,
+`tenant.group.member_left`; best-effort, `platform/audit`).
+
+**`tenantapi`** gains nothing: content modules reach the family rule only
+through `app_can_read_shared` in SQL, and the user-delete purge (P0.10,
+§11 row 29) needs no group step, because group rows cascade from the
+membership.
+
+*Acceptance criteria.*
+- Given owner O of tenant T creates group G and PUTs `[O, H]`, then O's and
+  H's GET list G with both members, and member M (in no group) gets an empty
+  list; M's POST, PATCH, DELETE or members PUT is 403 `tenant/not-owner`; a
+  User in neither T nor holding the permission gets 404 `tenant/not-found`
+  on every route; a Superadmin's writes succeed. *(TC-TEN-011)*
+- Given a blank name, a 121-character name, a 21st group, a malformed or
+  duplicate id or 201 ids, then 422 `tenant/validation`; a User who is not a
+  member of T, 422 `tenant/not-a-member`; a second group named " g " beside
+  "G", 409 `tenant/group-name-taken`; a `{gid}` of tenant U on T's path, 404
+  `tenant/group-not-found`; in every case nothing changed. *(TC-TEN-012)*
+- Given the RLS suite as `portal_app`, then a scope on T reads T's groups and
+  member rows and none of U's; inserting a member row for a User with no
+  `organization_memberships` row in T fails; deleting that membership
+  deletes the User's member rows. *(TC-TEN-013, RLS suite)*
+- Given H reads O's `shared` item through G, when O removes H from G, or H
+  leaves G, or G is deleted, then H's next query no longer returns it — unless
+  H is also O's friend, when it still does. *(TC-TEN-014)*
+- Given H in G, then H's `DELETE …/groups/{G}/members/me` is 204 and H is no
+  longer listed; M's on G is 404 `tenant/group-not-found`. *(TC-TEN-015)*
+- Given a create, a rename, a members PUT adding one User and removing
+  another, and a leave, then one `tenant:group_changed` each after commit
+  with the right `change`, `added` and `removed`; a PUT that changes nothing,
+  or whose commit fails, publishes none. *(TC-TEN-016)*
+- Given M in tenant T in no group with O, then M is still in O's directory
+  and can still ask O to connect (SPEC-18 P0.2). *(TC-TEN-017)*
 
 ### P1 — nice to have
 
@@ -1384,6 +1543,62 @@ during an incident.
 module): `ALTER TABLE audit_log ADD COLUMN pii bytea;` plus an index on
 `occurred_at` for the sweep (`audit_log_occurred_idx` already exists).
 
+`000N_tenant_groups` (P0.18, Decision 2026-10-02b (B15), amending
+[ADR-12](#adr-12); owned by the **`tenant`** module, listed here because the
+tenant module has no spec; it lands **before** `000N_tenant_links`):
+
+```sql
+CREATE TABLE tenant_groups (
+    id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id   uuid NOT NULL DEFAULT current_setting('app.current_tenant')::uuid
+                    REFERENCES organizations(id) ON DELETE CASCADE,
+    name        text NOT NULL CHECK (char_length(btrim(name)) BETWEEN 1 AND 120),
+    created_by  uuid REFERENCES users(id) ON DELETE SET NULL,      -- attribution
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    updated_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (id, tenant_id)                                         -- target of the member FK
+);
+CREATE INDEX tenant_groups_tenant_idx ON tenant_groups (tenant_id);
+CREATE UNIQUE INDEX tenant_groups_name_idx ON tenant_groups (tenant_id, lower(btrim(name)));
+
+CREATE TABLE tenant_group_members (
+    group_id   uuid NOT NULL,
+    tenant_id  uuid NOT NULL DEFAULT current_setting('app.current_tenant')::uuid,
+    user_id    uuid NOT NULL,
+    added_by   uuid REFERENCES users(id) ON DELETE SET NULL,       -- attribution
+    added_at   timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY (group_id, tenant_id) REFERENCES tenant_groups (id, tenant_id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, user_id)
+        REFERENCES organization_memberships (org_id, user_id) ON DELETE CASCADE  -- members only
+);
+CREATE INDEX tenant_group_members_tenant_idx ON tenant_group_members (tenant_id);
+CREATE INDEX tenant_group_members_user_idx ON tenant_group_members (user_id, tenant_id);
+
+ALTER TABLE tenant_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenant_groups FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON tenant_groups
+    USING (tenant_id = current_setting('app.current_tenant')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+ALTER TABLE tenant_group_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenant_group_members FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON tenant_group_members
+    USING (tenant_id = current_setting('app.current_tenant')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+
+INSERT INTO permissions (code, description) VALUES
+    ('tenants:groups:write', 'Manage any tenant''s groups (granted to no role; * reaches it)')
+ON CONFLICT (code) DO NOTHING;
+```
+
+The `user_id` foreign key goes to `organization_memberships`, a tenant table
+— not to `users` directly — so "a group member is a member of the tenant" is
+a database fact, and the membership's own `users` cascade reaches it. Neither
+table holds personal data beyond attribution and a label; takeout does not
+export them (operator state about a tenant, not a User's content). The down
+migration drops both tables and the permission row, and must run after
+`000N_tenant_links`'s down, which the numeric order guarantees.
+
 `000N_tenant_links` (P0.17, Decision 2026-10-02b (B14), [ADR-12](#adr-12);
 owned by the **`tenant`** module, not this one — listed here because the
 tenant module has no spec):
@@ -1403,7 +1618,8 @@ ALTER TABLE tenant_links FORCE ROW LEVEL SECURITY;
 -- link_select, link_insert, link_delete per P0.17's table; no UPDATE policy
 
 -- portal_acl: NOLOGIN NOSUPERUSER BYPASSRLS (DO block, as 0019 creates roles);
--- GRANT SELECT ON organization_memberships, tenant_links TO portal_acl;
+-- GRANT SELECT ON organization_memberships, tenant_links, tenant_group_members TO portal_acl;
+--   (tenant_group_members: P0.18's family clause, B15)
 -- app_tenants_linked(a, b) and app_can_read_shared(owner_id, item_tenant):
 --   LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp,
 --   OWNER TO portal_acl, REVOKE EXECUTE FROM PUBLIC, GRANT EXECUTE TO portal_app, portal_sys
@@ -1473,6 +1689,12 @@ policy; this table copies it.
 | GET | `/tenants/{id}/links` | a member of `{id}`, or `tenants:links:write` (tenant module, P0.17, unbuilt) | — | 200 `{items: TenantLink[]}` | 404 `tenant/not-found` |
 | PUT | `/tenants/{id}/links` | the owner of `{id}`, or `tenants:links:write` (P0.17, unbuilt) | `{peer_tenant_ids: uuid[0..50]}` | 200 `{items: TenantLink[]}` | 403 `tenant/not-owner`, 404 `tenant/not-found`, 422 `tenant/validation` \| `tenant/unknown-peer` |
 | GET | `/admin/tenants` | `tenants:links:write` (tenant module, P0.17, unbuilt) | — | 200 `{items: [{id, kind, name, owner_id, member_count}]}` | — |
+| GET | `/tenants/{id}/groups` | a member of `{id}` (sees the groups they are in), or the owner / `tenants:groups:write` (sees all) (tenant module, P0.18, unbuilt) | — | 200 `{items: TenantGroup[]}` | 404 `tenant/not-found` |
+| POST | `/tenants/{id}/groups` | the owner of `{id}`, or `tenants:groups:write` (P0.18, unbuilt) | `{name}` | 201 `TenantGroup` | 403 `tenant/not-owner`, 404 `tenant/not-found`, 409 `tenant/group-name-taken`, 422 `tenant/validation` |
+| PATCH | `/tenants/{id}/groups/{gid}` | as POST (P0.18, unbuilt) | `{name}` | 200 `TenantGroup` | as POST, plus 404 `tenant/group-not-found` |
+| DELETE | `/tenants/{id}/groups/{gid}` | as POST (P0.18, unbuilt) | — | 204 | 403 `tenant/not-owner`, 404 `tenant/not-found` \| `tenant/group-not-found` |
+| PUT | `/tenants/{id}/groups/{gid}/members` | as POST (P0.18, unbuilt) | `{user_ids: uuid[0..200]}` | 200 `TenantGroup` | 403 `tenant/not-owner`, 404 `tenant/not-found` \| `tenant/group-not-found`, 422 `tenant/validation` \| `tenant/not-a-member` |
+| DELETE | `/tenants/{id}/groups/{gid}/members/me` | a member of the group, for themselves (P0.18, unbuilt) | — | 204 | 404 `tenant/not-found` \| `tenant/group-not-found` |
 
 Every `/admin/*` route answers 403 about:blank when the permission is missing
 (`RequirePermission`), and every authenticated route answers 403
@@ -1502,10 +1724,13 @@ it keeps `offset`, `total` and `counts` (Decision 2026-10-02 (A5), P0.8).
 `account/invalid-email-change-token`. `account/rate-limited` is SPEC-05
 P0.3's slug (reset throttle), reused here for the email-change resend.
 `platform/rate-limited` belongs to `platform/middleware`. *(Code follow-up:
-§11 rows 16–17, 25–31.)* The three tenant routes above belong to the `tenant`
+§11 rows 16–17, 25–31.)* The nine tenant routes above belong to the `tenant`
 module and use its own slugs — `tenant/not-found`, `tenant/not-owner`,
-`tenant/validation`, `tenant/unknown-peer` (P0.17; §11 row 32); `TenantLink`
-is `{peer_tenant_id, peer_name, peer_kind, state, since}`.
+`tenant/validation`, `tenant/unknown-peer` (P0.17; §11 row 32), and
+`tenant/group-not-found`, `tenant/not-a-member`, `tenant/group-name-taken`
+(P0.18, Decision 2026-10-02b (B15); §11 row 34); `TenantLink` is
+`{peer_tenant_id, peer_name, peer_kind, state, since}`, `TenantGroup` is `{id,
+name, members: [{user_id, display_name}], created_at}`.
 
 ## 8. Events
 
@@ -1596,7 +1821,9 @@ every module), **Sec** 30 (verified email change), **Data** 31 (audit identity
 retention) — all appended rather than renumbering rows other documents cite; and
 the two rows Decision 2026-10-02b (B14) added for the `tenant` module —
 **Sec** 32 (tenant links and the shared-read functions) and **AuthZ** 33
-(request scopes stop carrying the tenant-admin flag), appended the same way.
+(request scopes stop carrying the tenant-admin flag), appended the same way;
+and the row Decision 2026-10-02b (B15) added — **Sec** 34 (tenant groups,
+the family half of the audience), appended the same way.
 Row 10 is superseded by row 26 and closes with it; rows 14 and 24 were
 rewritten in place for A8 and A11, since neither describes shipped
 behaviour; row 29 was extended in place for Decision 2026-10-02b (B1), the
@@ -1641,8 +1868,9 @@ on a named test. File paths are relative to
 | 29 | P0.10 delete purges every module, then the row | Every module owning per-User data exposes an idempotent `PurgeOwnerData(ctx, userID) (remaining int, err error)` that removes its rows and side effects; account runs the registry in order (content modules, media, then tenant in the locked final pass), writes a `deleted_users` snapshot, then deletes the row; any error or remainder → 503 `account/delete-incomplete`, User stays Disabled. The snapshot keeps only the user id, the acting admin and the time in clear; email, display name and role codes are sealed into `pii` with `AUDIT_PII_KEY` (dropped when the key is unset), readable only by Superadmins (B1). Snapshot rows expire after 90 days. | No module exposes `PurgeOwnerData` (`grep -rn PurgeOwner backend` finds nothing); media's `PurgeOwnerAssets` is itself unbuilt (row 8). `handler/admin_users.go` `DeleteUser` hard-deletes and relies on the cascade, which removes rows but never objects or Redis keys. No `deleted_users` table exists. | **backend (each module):** `PurgeOwnerData` in `comic`, `music`, `movie`, `story`, `journal`, `bank`, `people`, `social`, `notify` and `tenant` `api/` packages (media's is row 8 / SPEC-04 §11 row 19), each opening its own tenant scope. **backend (account):** a registry port in `account.Deps`, bound in `cmd/api`; `DeleteUser` runs P0.10's passes over it; the snapshot insert in the final transaction, sealing `{email, display_name, roles}` through row 31's `platform/audit` encryption function (exported for this caller; no cipher in account) — so this row lands with or after row 31's encryption half, or ships writing `pii` NULL. **migration:** `000N_account_deleted_users` (§6: `pii bytea`, no plaintext identity columns). **frontend:** the Delete confirmation says that deleting frees the email and suggests Reject instead. **docs:** [backup-restore.md](../../operations/backup-restore.md) warns that a restore resurrects deleted Users. **test:** TC-ACC-146…149, TC-ACC-161…162. | Decision 2026-10-02 (A6), extending Decision 2026-10-01b (D1); Decision 2026-10-02b (B1), former §10 Q6 |
 | 30 | P0.10 email change requires verification; P1.4 | An email change keeps the old address active, stores one pending request, mails a 1-hour confirm link to the new address and a cancel link to the old one, re-checks uniqueness at confirm, rate-limits resend (which revokes old links), cancels on expiry; no SMTP → 503 `account/mail-unavailable`, nothing changed. | `handler/admin_users.go` `UpdateUser` writes the new email at once (`email_before`/`email_after` in the audit) — a typo or a hostile admin moves the login identifier to an address nobody verified. No `email_change_requests` table, no confirm/cancel routes, no notify types. | **migration:** `000N_account_email_change_requests` (§6). **backend:** `UpdateUser` diverts a changed email into a request (503 without `SMTP_HOST`); resend/cancel admin routes; public confirm/cancel routes; `accountapi.MintEmailChangeLinks` for notify's send-time render; audit actions `account.user.email_change_requested`, `account.user.email_changed`, `account.user.email_change_cancelled`. **notify:** `account.email_change_confirm` (to the address the mint returns) and `account.email_change_alert` (to the current address), email-only, not persisted. **openapi:** the four operations, `AdminUser.pending_email`, the 503. **frontend:** the pending address and resend/cancel in `/admin/users`; public confirm and cancel pages (outside the middleware matcher); the slugs. **test:** TC-ACC-155…160. | Decision 2026-10-02 (A9) |
 | 31 | P0.16 audit identity data lives 90 days | Every `audit_log` row keeps identifying data (target User id, email, display name, IP, user agent, identifying metadata) only encrypted in `pii` with `AUDIT_PII_KEY`, decryptable only by Superadmins; after 90 days `account:expire_identity_data` anonymises the row (keeping action, time and the acting admin's id) and deletes expired `deleted_users` and closed `email_change_requests` rows. | `backend/db/migrations/0005_platform_audit.up.sql` stores `ip` and `user_agent` in clear and `metadata` as plain `jsonb`; `backend/internal/platform/audit/logger.go` `Write` copies them as given (e.g. `account.user.updated` carries `email_before`/`email_after`); nothing ever rewrites or deletes an `audit_log` row; no `AUDIT_PII_KEY` exists. | **migration:** `000N_platform_audit_pii` (`pii bytea`; owned by `platform/audit`). **backend:** encryption in `audit.Logger.Write` (identifying fields → `pii`, plaintext columns NULL; drop when the key is unset, with a start-up warning); `AUDIT_PII_KEY` in `platform/config` and `.env.example`; an `audit` anonymise/encrypt-in-place function; the `account:expire_identity_data` periodic task in `cmd/worker` (light server, `@every 24h`). **docs:** events.md row live in the same PR. **test:** TC-ACC-150…153. | Decision 2026-10-02 (A7) |
-| 32 | P0.17 tenant links; the shared-read functions | `tenant_links` with its three policies; `app_tenants_linked` and `app_can_read_shared` owned by `portal_acl`, `EXECUTE` for `portal_app`/`portal_sys` only; `tenants:links:write` seeded to no role; `GET`/`PUT /tenants/{id}/links` and `GET /admin/tenants` with P0.17's authorisation and slugs; `tenant:link_changed` after commit, emit-only; `tenantapi.ReachableUserIDs` and `tenantapi.CanReach` for SPEC-18 P0.2. | Not built. `backend/db/migrations` has no `tenant_links` (latest `0045_journal_location_in_columns`); `backend/internal/modules/tenant/module.go` `MountHTTP` mounts only `GET /me/organizations`; `api/api.go` `API` has `GetOrganization`, `IsMember`, `PersonalOrg`, `GetOrCreatePersonalOrg` and nothing about links or reach; `query/tenant.sql` reads `organizations` and `organization_memberships` only; `RegisterTasks` is empty and the module publishes no event; `Deps` has no permission check. No role `portal_acl` exists (`0019` creates `portal_app` and `portal_sys`). | **migration:** `000N_tenant_links` (§6), then social's `000N_social_acl_grant` in the same PR (SPEC-18 §11 row 15). **backend:** `query/links.sql` (list both directions, replace the outgoing set, `ReachableUserIDs` as one query over memberships and `app_tenants_linked`); `make sqlc`; a links service that opens the P0.17 scope; the three routes; `Deps.HasPermission` and `Deps.Events`; `tenantapi.ReachableUserIDs(ctx, userID)` and `CanReach(ctx, a, b)`; the event and its audit actions; `cmd/api` wiring (no `Subscribe` — emit-only). **openapi:** the three operations, `TenantLink`, the four slugs. **frontend:** the links screen and the slugs in `problems.ts` ([frontend.md](../../architecture/frontend.md) Phase 7). **docs:** [events.md](../../reference/events.md) row planned → live. **test:** TC-TEN-001…007, TC-TEN-009, TC-TEN-010 (TC-TEN-004…006 in `backend/internal/platform/db`, a new `rls_tenant_links_test.go`). Lands before every other ADR-12 row: SPEC-04 §11 rows 20–21, SPEC-10 §11 row 15, SPEC-15 §12 row 29, SPEC-16 §11 row 19, SPEC-17 §11 row 22, SPEC-18 §11 row 15. | Decision 2026-10-02b (B14); [ADR-12](#adr-12) |
+| 32 | P0.17 tenant links; the shared-read functions | `tenant_links` with its three policies; `app_tenants_linked` and `app_can_read_shared` owned by `portal_acl`, `EXECUTE` for `portal_app`/`portal_sys` only, with P0.18's family clause (shared group in the item's tenant) and the friend clause naming the same tenant explicitly (B15, row 34); `tenants:links:write` seeded to no role; `GET`/`PUT /tenants/{id}/links` and `GET /admin/tenants` with P0.17's authorisation and slugs; `tenant:link_changed` after commit, emit-only; `tenantapi.ReachableUserIDs` and `tenantapi.CanReach` for SPEC-18 P0.2. | Not built. `backend/db/migrations` has no `tenant_links` (latest `0045_journal_location_in_columns`); `backend/internal/modules/tenant/module.go` `MountHTTP` mounts only `GET /me/organizations`; `api/api.go` `API` has `GetOrganization`, `IsMember`, `PersonalOrg`, `GetOrCreatePersonalOrg` and nothing about links or reach; `query/tenant.sql` reads `organizations` and `organization_memberships` only; `RegisterTasks` is empty and the module publishes no event; `Deps` has no permission check. No role `portal_acl` exists (`0019` creates `portal_app` and `portal_sys`). | **migration:** `000N_tenant_links` (§6), then social's `000N_social_acl_grant` in the same PR (SPEC-18 §11 row 15). **backend:** `query/links.sql` (list both directions, replace the outgoing set, `ReachableUserIDs` as one query over memberships and `app_tenants_linked`); `make sqlc`; a links service that opens the P0.17 scope; the three routes; `Deps.HasPermission` and `Deps.Events`; `tenantapi.ReachableUserIDs(ctx, userID)` and `CanReach(ctx, a, b)`; the event and its audit actions; `cmd/api` wiring (no `Subscribe` — emit-only). **openapi:** the three operations, `TenantLink`, the four slugs. **frontend:** the links screen and the slugs in `problems.ts` ([frontend.md](../../architecture/frontend.md) Phase 7). **docs:** [events.md](../../reference/events.md) row planned → live. **test:** TC-TEN-001…007, TC-TEN-009, TC-TEN-010 (TC-TEN-004…006 in `backend/internal/platform/db`, a new `rls_tenant_links_test.go`). Lands in one PR with row 34, whose migration comes first; both land before every other ADR-12 row: SPEC-04 §11 rows 20–21, SPEC-10 §11 row 15, SPEC-15 §12 row 29, SPEC-16 §11 row 19, SPEC-17 §11 row 22, SPEC-18 §11 row 15. | Decision 2026-10-02b (B14); [ADR-12](#adr-12) |
 | 33 | P0.17 request scopes carry no tenant-admin read | `RequireTenant` and `OptionalTenant` open `Scope{OrgID, UserID, Admin: false}` for every signed-in caller; only backend scopes (`BeginTenantScope`) and P0.17's Superadmin link write set the flag. | `backend/internal/modules/tenant/middleware/require_tenant.go` `scoped` opens `platformdb.Scope{OrgID: org.ID, UserID: uid, Admin: org.OwnerID == uid}`, and its comment calls that what "lets the owner administer members' media (0032)". Unobservable on `HEAD` (the caller always owns the personal organisation the request runs in), live the day a shared tenant exists. | **backend:** `Admin: false` and the comment reworded (B14 point 4); `require_tenant_test.go` asserts the scope. **docs:** [security.md](../../architecture/security.md) §3.4's GUC table and request path. **test:** TC-TEN-008. Lands with SPEC-04 §11 row 20, whose media read rule no longer admits a tenant admin. | Decision 2026-10-02b (B14) point 4, reversing B13's tenant-admin read |
+| 34 | P0.18 tenant groups; the family clause | `tenant_groups` and `tenant_group_members` (tenant-scoped, `tenant_isolation`; a member row needs an `organization_memberships` row and cascades with it); `tenants:groups:write` seeded to no role; the six group routes with P0.18's authorisation and slugs; `app_can_read_shared` admits family only through a shared group in the item's tenant, and `portal_acl` reads `tenant_group_members`; `tenant:group_changed` after commit, emit-only. | Not built. `backend/db/migrations` has no `tenant_groups` (latest `0045_journal_location_in_columns`); `backend/internal/modules/tenant/module.go` `MountHTTP` mounts only `GET /me/organizations`; `Deps` holds `DB`, `Store`, `RequireAuth` and `CurrentUser` — no name lookup, permission check or publisher; `query/tenant.sql` reads `organizations` and `organization_memberships` only. | **migration:** `000N_tenant_groups` (§6), numbered **before** `000N_tenant_links`, so the function is created with the group clause and B14's whole-tenant clause never ships. **backend:** `query/groups.sql` (list per caller, create, rename, delete, replace the member set, leave); `make sqlc`; a groups service that opens the P0.18 scope; the six routes; `Deps.UserNames` bound to `accountapi.GetUserNames` in `cmd/api`, beside row 32's `Deps.HasPermission` and `Deps.Events`; the event and its audit actions. **openapi:** the six operations, `TenantGroup`, the three new slugs. **frontend:** the groups screen beside the links screen and the slugs in `problems.ts` ([frontend.md](../../architecture/frontend.md) Phase 7). **docs:** [events.md](../../reference/events.md) row planned → live. **test:** TC-TEN-011…017, with TC-TEN-005 and TC-TEN-010 as reworded (TC-TEN-013 and TC-TEN-014 in `backend/internal/platform/db`, a new `rls_tenant_groups_test.go`). Lands in one PR with row 32, migrating first. | Decision 2026-10-02b (B15); [ADR-12](#adr-12) as amended |
 
 **Already matching on HEAD.**
 - Argon2id `m=65536,t=3,p=2` PHC hashing with constant-time verify; HS256-only
@@ -1708,7 +1936,8 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
   TC-ACC-146…149, its encrypted snapshot — TC-ACC-161…162; audit identity retention — TC-ACC-150…153; the verified
   email change — TC-ACC-155…160; `SuperadminIDs` by permission — TC-ACC-127;
   and for the `tenant` module's P0.17: the links API, its RLS and the
-  shared-read functions — TC-TEN-001…010;
+  shared-read functions — TC-TEN-001…010; its P0.18: the groups API, their
+  RLS, the family clause and the unchanged discovery — TC-TEN-011…017;
 - no HTTP-level test exists for the account handlers at all (the CC-1/CC-3
   pair over `httptest`, as the other modules have).
 
@@ -1718,8 +1947,8 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
 - MFA/TOTP, step-up, Login with Google, session devices UI beyond P1.1.
 - Policy bundles, user groups, file-gated permissions (ADR-02 later phase).
 - Tenant membership, organisation switching, per-tenant roles (ADR-07 steps
-  5–7) — owned by the `tenant` module, and deferred; its one requirement
-  here is P0.17 (tenant links).
+  5–7) — owned by the `tenant` module, and deferred; its requirements here
+  are P0.17 (tenant links) and P0.18 (tenant groups).
 - Rich profile fields ([D-19] → social).
 - The asynqmon queue console at `/admin/queues` (SPEC-03 P1.6) and the layout
   editor at `/admin/layout` (the `layout` module) — they share the `/admin`
@@ -2365,13 +2594,13 @@ BYPASSRLS role.
 <a id="adr-12"></a>
 ### ADR-12 — Sharing published content with household and friends; tenant links
 
-**Decided:** 2026-10-02 · **Status:** accepted (Decision 2026-10-02b (B14)); supersedes the audience of Decision 2026-10-02b (B13) and amends B6 and B10; not built
+**Decided:** 2026-10-02 · **Status:** accepted (Decision 2026-10-02b (B14)); supersedes the audience of Decision 2026-10-02b (B13) and amends B6 and B10; amended by Decision 2026-10-02b (B15) (family is the owner's group co-members, not the whole tenant; the amendment follows Trade-offs); not built
 
 Deciders: kirito. Relates to [ADR-07](#adr-07) (the tenant fence this record
 opens for one kind of read), [ADR-02](#adr-02) (RBAC stays global),
 [ADR-08](README.md#adr-08) (every module emits ≥ 1 bus event), [D-23] [D-24].
 The requirements it produces are P0.17 above (the `tenant` module's links and
-the shared-read functions), [SPEC-04](SPEC-04-media-image-pipeline.md) P0.8
+the shared-read functions) and, since B15, P0.18 (tenant groups), [SPEC-04](SPEC-04-media-image-pipeline.md) P0.8
 (media), [SPEC-15](SPEC-15-music-vertical.md) P0.2–P0.3 and P0.10,
 [SPEC-16](SPEC-16-movie-vertical.md) P0.3–P0.4 and P0.6,
 [SPEC-17](SPEC-17-story-vertical.md) P0.4–P0.5,
@@ -2416,7 +2645,9 @@ users find each other, ask to connect and, once friends, read each other's
 published content; (4) a tenant admin gets no special read of members'
 originals. The choice crosses five modules' row security (tenant, social,
 media, and the three content modules), reverses part of B13 and amends B6 and
-B10 — criteria (b) and (c) for a record.
+B10 — criteria (b) and (c) for a record. (Later the same day the owner
+narrowed "family" from every member of the tenant to the owner's group
+co-members — Decision 2026-10-02b (B15), the amendment after Trade-offs.)
 
 <!-- adr-narrative -->
 #### Decision
@@ -2526,16 +2757,45 @@ B10 — criteria (b) and (c) for a record.
   organisations, nobody until owners link their tenants.
 <!-- /adr-narrative -->
 
+**Amended 2026-10-02 (B15):** Decision points 1 and 3 above take the
+household to be every member of the item's tenant. The owner narrowed that
+the same day (Decision 2026-10-02b (B15)): **family** is the Users who share a
+**group** with the owner inside the item's tenant. A tenant may hold several
+groups — one household each — and a member in none of the owner's groups is
+not family. Groups belong to the `tenant` module (`tenant_groups`,
+`tenant_group_members`, members of the tenant only; SPEC-01 P0.18), managed by
+the tenant's owner or a `tenants:groups:write` holder, granted to no role.
+`app_can_read_shared`'s family clause becomes "the actor and the owner share
+a group of `item_tenant`"; its friend clause keeps point 1's meaning and names
+the same tenant explicitly, which the old household clause had covered; and
+`portal_acl` also reads `tenant_group_members`. Links (point 4), discovery
+(point 5 — still by tenant and links, never by group), live evaluation,
+resume, the absent tenant-admin read and the event stand. Where the
+narrative above says "household" or "members of the tenant" as an audience,
+read "the owner's group co-members in that tenant".
+
 #### Consequences
 
 *Nothing below is built; the facts are the target, true when the rows in
 Action items close.*
 
-- **On today's instance the household half is latent.** With personal
-  organisations only, a tenant's members are its owner, so the audience is
-  the owner's friends in linked personal tenants. The household half takes
-  effect when households can be created and joined (ADR-07 action items 5–6,
-  still deferred).
+- **On today's instance the family half is latent.** With personal
+  organisations only, a tenant's members are its owner, so no group can hold
+  anyone else and the audience is the owner's friends in linked personal
+  tenants. The family half takes effect when tenants can be joined (ADR-07
+  action items 5–6, still deferred) and their owners put members in groups
+  (SPEC-01 P0.18, B15).
+- **Family is narrower than the tenant** *(B15)*. A tenant member outside
+  every group the owner is in reads the owner's published items only as an
+  accepted friend. Groups do not touch discovery: that member is still
+  reachable and can still be asked to connect.
+- **Tenant switching inherits a precondition** *(B15)*. `tenant_isolation`
+  on the content tables admits every row of the scope's tenant; harmless
+  while every request runs in the caller's own personal organisation, it
+  would let a non-family member read a co-member's published item once a
+  request can run in a shared tenant. That change must first narrow the read
+  half of `tenant_isolation` on `movies`, `music_tracks`, `stories` and
+  `story_chapters` to the owner's own rows (action item 7).
 - **Discovery is empty until links exist.** Every pair of Users on `HEAD`
   sits in two different personal organisations; once SPEC-18 §11 row 15
   lands, `GET /people/suggestions` offers nobody and every new request is the
@@ -2548,9 +2808,9 @@ Action items close.*
   inside its owner's tenant alone (SPEC-14). Music playlists stay one owner's
   private selection (SPEC-15 §3).
 - **Lists change meaning.** `GET /tracks`, `GET /movies` and `GET /stories`
-  ("published") return every published item the caller may read — the
-  household's and linked friends' — because their queries filter on status
-  and RLS now admits more rows. Owner-or-`:any` routes on another tenant's
+  ("published") return every published item the caller may read — group
+  co-members' (B15) and friends' in the same or a linked tenant — because
+  their queries filter on status and RLS now admits more rows. Owner-or-`:any` routes on another tenant's
   item change nothing: the write policy is still `tenant_isolation`.
 - **B13's mechanism survives, renamed.** `mediaapi.SetVisibility`, the
   raise/lower rules of each content module and the members' resume are B13's
@@ -2561,9 +2821,10 @@ Action items close.*
   mutual (Decision 4); a tenant's owner and `tenants:links:write` holders
   configure them, other members only read them, at most 50 outgoing per
   tenant, saved whole-set; only a Superadmin lists tenants — owners exchange
-  tenant ids; the value is named `shared` (Decision 2); "household" and "the
-  friend's tenant" are read from memberships (any tenant the reader belongs
-  to), and an owner who left the item's tenant takes the audience with them;
+  tenant ids; the value is named `shared` (Decision 2); "the friend's tenant"
+  is read from memberships (any tenant the reader belongs to) and, since
+  B15, family from group membership in the item's tenant, and an owner who
+  left the item's tenant takes the audience with them;
   request scopes drop `app.tenant_admin` altogether, not only for media reads
   (Decision 8); the function runs as a dedicated `portal_acl` role and social
   grants it its table (Decision 3); an unlink keeps accepted connections but
@@ -2572,15 +2833,30 @@ Action items close.*
   reader's own tenant (Decision 7); `tenant:link_changed` has no consumer, so
   a peer's owner learns of a link request only on the links screen
   (Decision 9); comic and playlists stay out.
+- **B15's drafting choices for the owner to confirm**, chosen as
+  conservatively as B14's: a group belongs to one tenant and only that
+  tenant's members can be in it, enforced by a foreign key to
+  `organization_memberships` that also removes a leaver's rows; the tenant's
+  owner and `tenants:groups:write` holders manage groups, any member may
+  leave a group themselves, other members see only their own groups; at most
+  20 groups per tenant, 200 members per save, names unique per tenant;
+  groups decide only the family half — never discovery, permissions or
+  writes; same-tenant friends keep reading through the friend clause; no
+  group is created automatically; `tenant:group_changed` has no consumer;
+  `portal_acl` gains `SELECT` on `tenant_group_members` only (the clause
+  never needs `tenant_groups`).
 - **Gap rows.** SPEC-01 §11 rows 32–33 (new), SPEC-04 §11 rows 20–21,
   SPEC-10 §11 row 15, SPEC-15 §12 rows 27 and 29, SPEC-16 §11 row 19 and
-  SPEC-17 §11 row 22 (rewritten), SPEC-18 §11 row 15 (new); the specs
-  README gaps index counts them.
+  SPEC-17 §11 row 22 (rewritten), SPEC-18 §11 row 15 (new); B15 appends
+  SPEC-01 §11 row 34; the specs README gaps index counts them.
 
 #### Action items
 
-1. [ ] `000N_tenant_links`, `portal_acl`, the two functions, the links API,
-   `tenantapi` reach, `tenant:link_changed` — SPEC-01 §11 row 32.
+1. [ ] `000N_tenant_groups` and the groups API, `tenant:group_changed` —
+   SPEC-01 §11 row 34 (B15), migrating first and shipping in the same PR as
+   `000N_tenant_links`, `portal_acl`, the two functions (with the group
+   family clause), the links API, `tenantapi` reach, `tenant:link_changed` —
+   SPEC-01 §11 row 32.
 2. [ ] `000N_social_acl_grant` and discovery limited to reach — SPEC-18 §11
    row 15 (with the links screen, see Consequences).
 3. [ ] `000N_media_shared_visibility`, the media read rule and
@@ -2592,6 +2868,11 @@ Action items close.*
    row 19), `000N_story_shared_read` (SPEC-17 §11 row 22).
 6. [ ] The RLS suite's truth table for `app_can_read_shared` (TC-TEN-005,
    TC-MEDIA-115) runs in CI's `backend` job before any content row ships.
+7. [ ] *(B15; gated on tenant switching, ADR-07 action items 5–6 — no gap
+   row until then)* Before a request can run in a tenant with other members,
+   narrow the read half of `tenant_isolation` on `movies`, `music_tracks`,
+   `stories` and `story_chapters` to the owner's own rows, so `shared_read`
+   is the only way to a co-member's item (SPEC-01 P0.18).
 
 <a id="adr-13"></a>
 ### ADR-13 — Deleting a User purges every module, then the row

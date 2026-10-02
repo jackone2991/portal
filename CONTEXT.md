@@ -72,3 +72,20 @@ One uploaded media object owned by one user — an image, video or audio file �
 processing status and derived variants, managed by the media module. Other modules refer
 to Assets by id and never own them.
 _Avoid_: file, upload, photo (as a synonym for the object)
+
+### Tenancy
+
+**Group**:
+A named set of members of one tenant, kept by the tenant module and managed by the
+tenant's owner. A tenant can hold several Groups — one household each, say — and a member
+can be in more than one. A Group grants no permission and does not decide who can find
+whom; it only decides who is Family.
+_Avoid_: household (for the Group itself), circle, team, user group (the deferred RBAC
+concept)
+
+**Family**:
+For one item, the Users who share at least one Group with its owner in the tenant the item
+lives in. Family read the owner's published music, movies and stories; another member of
+the same tenant who shares no Group with the owner is not Family.
+_Avoid_: household (as the audience), tenant members, friends (friends are accepted
+connections, a separate audience)

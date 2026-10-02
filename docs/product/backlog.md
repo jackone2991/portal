@@ -65,11 +65,14 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    which it makes load-bearing), row 28 (lockout per (email, IP) — A4, after
    row 4), row 27 (logout ends one Session — A3). Then the **shared-read
    work of [ADR-12](specs/SPEC-01-account-identity-admin.md#adr-12)**
-   (Decision 2026-10-02b (B14), revising B13): it opens a deliberate,
-   read-only door in ADR-07's tenant fence, so it ranks with the security
-   rows and lands as one ordered sequence, each step with its RLS-suite test
-   in CI — SPEC-01 row 32 (`000N_tenant_links`, `portal_acl`,
-   `app_can_read_shared`, the links API and screen) with SPEC-18 row 15's
+   (Decision 2026-10-02b (B14), revising B13; amended by B15): it opens a
+   deliberate, read-only door in ADR-07's tenant fence, so it ranks with the
+   security rows and lands as one ordered sequence, each step with its
+   RLS-suite test in CI — SPEC-01 row 34 (`000N_tenant_groups`, the groups
+   API and screen — B15: family is the owner's group co-members, so the
+   groups must exist before the function that reads them) migrating first,
+   in one PR with row 32 (`000N_tenant_links`, `portal_acl`,
+   `app_can_read_shared`, the links API and screen) and SPEC-18 row 15's
    `000N_social_acl_grant`; SPEC-04 row 20 (`000N_media_shared_visibility`,
    the read rule) together with SPEC-01 row 33 (request scopes without the
    tenant-admin flag) and SPEC-04 row 21 (`mediaapi.SetVisibility`); then

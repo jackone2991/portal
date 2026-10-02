@@ -28,9 +28,10 @@ does not (§11).
 
 1. The owner turns a ready video asset into a titled, dated, postered movie and
    publishes it.
-2. A published movie is readable by its ADR-12 audience — every authenticated
-   member of the owner's tenant and the owner's friends in actively linked
-   tenants; a draft is invisible to everyone but its owner (404, never 403).
+2. A published movie is readable by its ADR-12 audience — the Users who
+   share a group with the owner in the movie's tenant (SPEC-01 P0.18,
+   Decision 2026-10-02b (B15)) and the owner's friends in that tenant or an
+   actively linked one; a draft is invisible to everyone but its owner (404, never 403).
 3. Deleting the underlying video or poster never leaves a movie pointing at a
    missing asset, and never leaves a published movie with nothing to play.
 4. Playback and resume are the media pipeline's, unchanged: the movie module
@@ -47,9 +48,9 @@ does not (§11).
   (P0.2); the module never waits on `media:asset_ready`, unlike the README's
   original plan.
 - **Visibility beyond family and friends.** "Published" means visible and
-  watchable by the ADR-12 audience — the owner's household and the owner's
-  friends in actively linked tenants (P0.3) — and never more: Decision
-  2026-10-02b (B6), amended by B13 and B14, §10.
+  watchable by the ADR-12 audience — the owner's group co-members and the
+  owner's friends in the same or an actively linked tenant (P0.3) — and never
+  more: Decision 2026-10-02b (B6), amended by B13, B14 and B15, §10.
 - **Search** — Postgres FTS (`D-2`) is deferred while the corpus is n=1
   ([backlog.md](../backlog.md) P2 line 29).
 
@@ -152,9 +153,10 @@ the 422 — §11 row 5.)*
   = all authenticated users" (SPEC-14 §3) does not hold here, by decision:
   `published` was a status flag inside the owner's tenant, never a sharing
   mechanism across it (Decision 2026-10-02b (B6), §10). **Inside** the tenant
-  a published movie is watchable by every member, and **across** it by the
+  a published movie is watchable by the owner's group co-members (B15 — not
+  by every member) and the owner's friends there, and **across** it by the
   owner's accepted friends whose tenant is actively linked to the movie's
-  *(Decision 2026-10-02b (B13), amending B6, audience revised by B14 —
+  *(Decision 2026-10-02b (B13), amending B6, audience revised by B14 and B15 —
   [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt — §11 row 19)*:
   a `shared_read` policy on `movies` (§6) admits those readers to the row,
   and publishing raises the video and the poster to SPEC-04 P0.8's `shared`
@@ -329,8 +331,9 @@ title, not the movie's (SPEC-10 P0.3).
 **Family and friends watch a published movie** *(Decision 2026-10-02b (B13),
 audience revised by B14; unbuilt — §11 row 19, on SPEC-01 §11 row 32, SPEC-04
 §11 rows 20–21 and SPEC-10 §11 row 15)*. While the movie is published its video
-is `shared`, so a reader in its ADR-12 audience — a member of the owner's
-tenant, or the owner's friend in an actively linked tenant — opens the same
+is `shared`, so a reader in its ADR-12 audience — a User who shares a group
+with the owner in the movie's tenant (B15), or the owner's friend in the same
+or an actively linked tenant — opens the same
 page: `GET /assets/{video_asset_id}` answers them with `hls_url`, the HLS
 and `poster` routes serve them under RLS, and they resume from their **own**
 progress row — SPEC-10's rows are keyed by `(user_id, asset_id)`, and SPEC-10
@@ -351,8 +354,9 @@ leg of `/continue` (P1.2) changes the *presentation*, not the storage.
   inherited). *(TC-MOV-070)*
 - Given a movie deleted, then the video asset and its progress row survive
   (assets have their own lifecycle). *(TC-MOV-071)*
-- Given C's published movie and a reader R in its audience — member M of C's
-  tenant, or C's friend F in an actively linked tenant — then R's
+- Given C's published movie and a reader R in its audience — M who shares a
+  group with C in C's tenant (B15), or C's friend F in an actively linked
+  tenant — then R's
   `GET /assets/{video_asset_id}` carries `hls_url`, the manifest, segments and
   `poster` variant load, and after watching to 20:00 R resumes at ~20:00 while
   C's own position is unchanged; given the movie unpublished, or F unfriended
@@ -445,7 +449,10 @@ USING (status = 'published' AND app_can_read_shared(owner_user_id,
 tenant_id))`. It is permissive, so it widens reads only; INSERT, UPDATE and
 DELETE stay `tenant_isolation`, and a movie is written only from its own
 tenant. `ListPublishedMovies` is unchanged — its status predicate now returns
-the wider set. The down migration drops the policy.
+the wider set. (Before a request can run in a shared tenant,
+`tenant_isolation`'s read half narrows to the owner's rows, so a member in no
+group with the owner does not read the movie in-tenant — SPEC-01 P0.18,
+B15.) The down migration drops the policy.
 
 **Takeout** (specs README): movies are user-authored, so `movie/api` implements
 `opsapi.ExportProvider` when SPEC-03 P1.7 lands — one JSON array of Movie
@@ -528,7 +535,9 @@ and members resume from their own progress row (P0.3, P0.4, P0.6; §11 row 19).
 B14 then revised the audience ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)):
 the value is `shared`, and the owner's friends in actively linked tenants
 watch too, through a `shared_read` policy on `movies`; a tenant admin reads
-nothing extra. The same rule holds for music (SPEC-15) and story (SPEC-17).
+nothing extra. B15 narrowed the in-tenant half the same day: not every
+member, only the owner's group co-members (SPEC-01 P0.18). The same rule
+holds for music (SPEC-15) and story (SPEC-17).
 
 No open questions remain.
 

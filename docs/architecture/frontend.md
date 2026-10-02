@@ -947,7 +947,8 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
 - Repeat Phase 3 pattern per vertical.
 - `<MusicPlayer />` (persistent bottom bar), `<PlaylistEditor />`. The player
   plays every track — the caller's own or a published one shared with the
-  caller (household, or a friend in an actively linked tenant) — from
+  caller (a group co-member of the owner — Decision 2026-10-02b (B15) — or a
+  friend in the same or an actively linked tenant) — from
   `/assets/{audio_asset_id}/original`, and reads and saves the caller's own
   media progress row on that asset (no music-owned progress, no signed URL):
   a published track's audio is `shared` with that audience
@@ -993,6 +994,19 @@ Do not write a script that converts Blade → React. Manual re-architect ensures
   (`tenants:links:write`, from `/auth/me`'s permission codes) also gets a
   tenant picker over `GET /admin/tenants`. Server state in TanStack under a
   `tenantKeys` factory; the four `tenant/*` slugs in `problems.ts`.
+- **Tenant groups screen** (SPEC-01 P0.18, Decision 2026-10-02b (B15);
+  unbuilt): next to the links screen — e.g. `/tenant/groups`, in the same
+  matcher — where the tenant's owner (or a `tenants:groups:write` holder)
+  creates, renames and deletes groups and picks each group's members from
+  the tenant's members, saved whole-set through `PUT
+  /tenants/{id}/groups/{gid}/members`; it says plainly that a group's members
+  are each other's family — they read each other's published music, movies
+  and stories. Other members see only their own groups, read-only, with a
+  "leave group" action (`DELETE …/members/me`). Same `tenantKeys` factory; the
+  three new slugs (`tenant/group-not-found`, `tenant/not-a-member`,
+  `tenant/group-name-taken`) in `problems.ts`. On an instance of personal
+  organisations the member picker offers only the owner, so the screen
+  explains that groups matter once a tenant has other members.
 - Newsfeed, profile, friends, communities, events, messaging.
 - `<PostComposer />` (text + image + video upload + poll + draft + schedule).
 - `<PostCard />` rendering all post-types.

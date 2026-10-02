@@ -1,6 +1,6 @@
 # SPEC-04 — Media Image Pipeline + Asset Management
 
-**Status:** current, **rev 8** (P0.8 shared visibility, Decision 2026-10-02b (B13) as revised by B14 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)) · **Last verified:** 2026-10-01
+**Status:** current, **rev 9** (P0.8 shared visibility, Decision 2026-10-02b (B13) as revised by B14 and B15 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)) · **Last verified:** 2026-10-01
 **Module:** `media` (built + wired) · **Depends on:** nothing
 **Upstream:** brief 01 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/01-media-image-pipeline.md`) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
 **Downstream consumers:** SPEC-14, SPEC-12 P1 (receipts), SPEC-05 P0.4 (`media:asset_ready` → in-app notification), SPEC-07/SPEC-08 (entry photos), SPEC-09 (`media:asset_deleted`; playback via SPEC-10), SPEC-10, SPEC-11 P1.7 (avatars), SPEC-03 (P0.3 scheduler; P1.7 mediaapi ExportProvider), SPEC-01 P0.10 (user delete → P0.7 owner purge)
@@ -346,8 +346,9 @@ loads the row owner-scoped (`owner_id = caller`). There is **no
 `RequirePermission` alone checks no ownership and must never be the sole gate
 *(rev 4)*. **One widening, for playable kinds only** *(Decision 2026-10-02b
 (B13), audience revised by B14; P0.8)*: a `video` or `audio` asset whose
-visibility is `shared` is also served to its ADR-12 audience — the members of
-its tenant and the owner's friends in actively linked tenants — and never for
+visibility is `shared` is also served to its ADR-12 audience — the owner's
+group co-members in its tenant (Decision 2026-10-02b (B15)) and the owner's
+friends in the same or an actively linked tenant — and never for
 an `image`, whose original stays owner-only whatever its visibility. A tenant
 admin gets nothing more than any member (B14 point 4).
 
@@ -486,7 +487,7 @@ closure — the pattern `cmd/api` already uses for `AssetOwner`.
 ### P0.8 — Shared visibility *(rev 8; Decision 2026-10-02b (B13), audience revised by B14 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt)*
 
 **Why.** A published track, movie or story is read, heard and watched by its
-owner's household and friends (SPEC-15 P0.10, SPEC-16 P0.6, SPEC-17 P0.5).
+owner's family and friends (SPEC-15 P0.10, SPEC-16 P0.6, SPEC-17 P0.5).
 `0032_media_asset_acl` knows two visibilities and neither fits: `private`
 (owner, or a scope carrying `app.tenant_admin`) hides a published track's
 audio from everyone else, and `public` (anyone, any tenant, anonymous
@@ -496,12 +497,14 @@ of the owning tenant and by a tenant admin; B14 renamed it and changed who
 reads it before anything was built.)*
 
 **Value.** `assets.visibility ∈ {private, shared, public}`. `shared` means
-readable by the **ADR-12 audience**: the owner; every member of the asset's
-tenant (the household); and every accepted connection of the owner who is a
-member of a tenant actively linked to the asset's tenant (a friend in a linked
-tenant). The test is the tenant module's `app_can_read_shared(owner_id,
-tenant_id)` (SPEC-01 P0.17), evaluated live, so an unfriend, an unlink or a
-member leaving takes effect at the next statement. Writes do not change: the
+readable by the **ADR-12 audience**: the owner; every User who shares a
+**group** with the owner in the asset's tenant (the family — SPEC-01 P0.18,
+Decision 2026-10-02b (B15), which narrowed B14's "every member of the
+tenant"); and every accepted connection of the owner who is a member of the
+asset's tenant or of a tenant actively linked to it (a friend). The test is
+the tenant module's `app_can_read_shared(owner_id, tenant_id)` (SPEC-01
+P0.17), evaluated live, so an unfriend, an unlink, a group change or a member
+leaving takes effect at the next statement. Writes do not change: the
 `asset_update` / `asset_delete` policies still admit only the owner (or a
 trusted backend scope), whatever the visibility, and only inside the asset's
 own tenant.
@@ -567,11 +570,11 @@ loses that file until the item is published again — and a `PATCH` to `public`
 widens it.
 
 **Acceptance criteria.**
-- Given owner A and household member B in tenant T, friend F of A in a tenant
-  actively linked to T, friend G of A in an unlinked tenant, non-friend N in a
-  linked tenant and stranger S, all as `portal_app`, then A, B and F read A's
-  `shared` asset and its variants, not A's `private` one; G, N, S and an
-  anonymous caller read neither; nobody but A can update or delete it.
+- Given owner A and B who shares a group with A in tenant T, member M of T in
+  no group with A, friend F of A in a tenant actively linked to T, friend G of
+  A in an unlinked tenant, non-friend N in a linked tenant and stranger S, all
+  as `portal_app`, then A, B and F read A's `shared` asset and its variants,
+  not A's `private` one; M, G, N, S and an anonymous caller read neither; nobody but A can update or delete it.
   *(TC-MEDIA-115, RLS suite)*
 - Given A's ready `shared` audio, then F's `GET …/original` answers 200 (a
   `Range` request 206) and G's 404 `media/asset-not-found`; given A's `shared`
@@ -899,7 +902,7 @@ stated otherwise.
 - New worker tests for the lost race (TC-MEDIA-050): process_image, transcode and thumbnail each with the asset deleted mid-run.
 - `service_test.go: TestCompleteUploadImageAccepted` should assert the stored sniffed `mime_type` and HEAD size (TC-MEDIA-004, TC-MEDIA-080).
 - New: `Ingest` with `origin='import'` (TC-MEDIA-102), PATCH `{title}` (TC-MEDIA-100), grant migration + `RequirePermission` on upload (TC-MEDIA-114 and a 403 case).
-- New for P0.8: an RLS test of the widened select policies as `portal_app` with the owner, a household member, a friend in a linked tenant, a friend in an unlinked tenant, a non-friend in a linked tenant and a stranger (TC-MEDIA-115, extending `backend/internal/platform/db/rls_media_test.go`; the function's own truth table is SPEC-01's TC-TEN-005); HTTP tests of `/original` and `GET /assets/{id}` for a reader in the audience, one outside it and a `shared` image (TC-MEDIA-116); the cache header (TC-MEDIA-117); `SetAssetsVisibility` (TC-MEDIA-118); the migration round trip (TC-MEDIA-119); live revocation on unfriend and unlink (TC-MEDIA-120); a tenant owner's request scope reads nothing extra (TC-MEDIA-121).
+- New for P0.8: an RLS test of the widened select policies as `portal_app` with the owner, a group co-member, a tenant member in no group with the owner (B15), a friend in a linked tenant, a friend in an unlinked tenant, a non-friend in a linked tenant and a stranger (TC-MEDIA-115, extending `backend/internal/platform/db/rls_media_test.go`; the function's own truth table is SPEC-01's TC-TEN-005); HTTP tests of `/original` and `GET /assets/{id}` for a reader in the audience, one outside it and a `shared` image (TC-MEDIA-116); the cache header (TC-MEDIA-117); `SetAssetsVisibility` (TC-MEDIA-118); the migration round trip (TC-MEDIA-119); live revocation on unfriend and unlink (TC-MEDIA-120); a tenant owner's request scope reads nothing extra (TC-MEDIA-121).
 
 ## Decision records
 
@@ -1118,3 +1121,4 @@ ea100d8:docs/adr/diagrams/system-landscape.md`). Open:
 | r6 | 2026-10-01 | ADR-04 (storage tier & budget) folded in as `## Decision records` (anchor `#adr-04`); status line states R2-only for deployed environments and MinIO for local dev; fact layer re-verified (variant key prefix added, `/tmp` disk bound corrected for the separate image pool, completed action items compressed); §10 storage-key question marked resolved. |
 | r7 | 2026-10-02 | Owner decision 2026-10-02b (B13): P0.8 — a third asset visibility, `tenant` (migration `000N_media_tenant_visibility`), the read rule for metadata, `/original` (playable kinds only), variants, HLS and progress, and `mediaapi.SetVisibility` for content modules; `SignedURL` loses its planned music caller. §11 rows 20–21; TC-MEDIA-115…119. |
 | r8 | 2026-10-02 | Owner decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12): P0.8 rewritten before anything was built — the value is `shared` (migration `000N_media_shared_visibility`), its audience the owner's household plus the owner's friends in actively linked tenants, decided by the tenant module's `app_can_read_shared` inside the select policies (a deliberate read-only exception to ADR-07's fence); a tenant admin reads nothing extra (B13's tenant-admin read removed); P0.5, §6, §7 aligned; §11 rows 20–21 rewritten; TC-MEDIA-115…119 reworded, TC-MEDIA-120, 121 added. |
+| r9 | 2026-10-02 | Owner decision 2026-10-02b (B15), amending [ADR-12](SPEC-01-account-identity-admin.md#adr-12): the family half of P0.8's audience is the owner's group co-members in the asset's tenant (SPEC-01 P0.18), not every member of it; same-tenant friends still read as friends; P0.5's widening and TC-MEDIA-115 reworded. No gap row changes: §11 row 20 calls `app_can_read_shared`, whose clause changed in SPEC-01 §11 rows 32 and 34. |

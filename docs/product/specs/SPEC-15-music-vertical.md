@@ -58,14 +58,15 @@ is the contract; §12 lists where the code still diverges from it.
   but which tracks were queued, and in what order, is not.
 - **Live catalogue sync, scrobbling, lyrics, streaming from third parties.**
 - **A catalogue beyond family and friends.** "Published" reaches exactly
-  the ADR-12 audience *(Decision 2026-10-02b (B6), amended by B13 and B14 —
-  [ADR-12](SPEC-01-account-identity-admin.md#adr-12))*: a published track is
-  listed to and playable by the members of the owner's tenant and by the
-  owner's accepted friends in a tenant actively linked to it (RLS, §6;
+  the ADR-12 audience *(Decision 2026-10-02b (B6), amended by B13, B14 and
+  B15 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12))*: a published
+  track is listed to and playable by the Users who share a group with the
+  owner in the track's tenant (SPEC-01 P0.18) and by the owner's accepted
+  friends in that tenant or one actively linked to it (RLS, §6;
   playback P0.10 through SPEC-04 P0.8's `shared` asset visibility), never to
   anyone else. With personal organisations (ADR-07) the tenant is the owner
-  alone, so in practice the audience is the owner's friends in linked
-  tenants.
+  alone and no group can hold anyone else, so in practice the audience is the
+  owner's friends in linked tenants.
 
 ## 4. User stories
 
@@ -150,8 +151,8 @@ system-written (P0.8) and never accepted on POST or PATCH.
 **Asset visibility follows the track** *(Decision 2026-10-02b (B13), audience
 revised by B14; unbuilt — §12 row 29)*. While a track is published, its audio
 asset and its cover are `shared` (SPEC-04 P0.8), so the ADR-12 audience —
-the owner's household and the owner's friends in actively linked tenants —
-can play the audio and see the cover; while it is a draft, or once it is deleted, they are
+the owner's group co-members (B15) and the owner's friends in the same or an
+actively linked tenant — can play the audio and see the cover; while it is a draft, or once it is deleted, they are
 `private` again. Each write that changes this calls `mediaapi.SetVisibility`
 with the **track owner** as `ownerID`, in the same transaction as the track
 write:
@@ -505,8 +506,8 @@ Deleting a track removes it from every playlist (FK cascade).
   `Content-Disposition: inline`, `Cache-Control: private, no-store`. The route
   admits the owner and, for a published track, the ADR-12 audience: the
   track's audio asset is `shared` while the track is published (P0.2), and
-  SPEC-04 P0.8 admits the owner's household and the owner's friends in
-  actively linked tenants to a playable `shared` asset — nobody else. Its state and size rules are SPEC-04's (§11
+  SPEC-04 P0.8 admits the owner's group co-members (B15) and the owner's
+  friends in the same or an actively linked tenant to a playable `shared` asset — nobody else. Its state and size rules are SPEC-04's (§11
   rows 4–6 there). The player uses it for **every** track, the caller's own or
   someone else's published one.
 - **Family and friends play published tracks from the same route** *(Decision
@@ -535,7 +536,7 @@ Deleting a track removes it from every playlist (FK cascade).
   §12 row 27)*. A track's listening position is the progress row of its **audio
   asset** in SPEC-10's media progress API; music owns no progress table, and
   the `music.listen_progress` D-20 sketched is not built. For every track it
-  plays — the caller's own, or a member's published one — the player (1)
+  plays — the caller's own, or a published one in the caller's audience — the player (1)
   before playing, fetches `GET
   /api/v1/assets/{audio_asset_id}/progress` and starts at `position_ms` under
   SPEC-10 P0.4's resume gate (≥ 30 s and completion ratio below 95, the percent
@@ -574,10 +575,12 @@ Deleting a track removes it from every playlist (FK cascade).
 - Given a reader in the audience plays someone else's published track to
   3:00, then the reader's own progress row holds ~3:00, the owner's row is
   unchanged, and the reader's next play starts at ~3:00 *(TC-MUS-126)*.
-- Given a published track of a member of the caller's tenant, then the player
+- Given a published track of an owner who shares a group with the caller in its tenant, then the player
   plays it from `GET /assets/{audio_asset_id}/original` (200; `Range` → 206)
   and its cover variants load; given the same track unpublished, then
-  `/original` answers 404 to that member; given a caller from another tenant
+  `/original` answers 404 to that member; given a member of the same tenant in
+  no group with the owner and not the owner's friend, then neither is readable
+  (B15); given a caller from another tenant
   who is not the owner's friend, or whose tenant is not actively linked, then
   neither the track nor its asset is ever readable *(TC-MUS-130)*.
 - Given owner O and O's friend F in a tenant actively linked to O's, then O's
@@ -680,7 +683,10 @@ CREATE POLICY shared_read ON music_tracks FOR SELECT
 
 Policies are OR-ed, so a caller still sees every row of their own tenant
 through `tenant_isolation`, and now also the published tracks whose ADR-12
-audience includes them, in any tenant. Nothing else changes: INSERT, UPDATE
+audience includes them, in any tenant. (Every request runs in the caller's
+own personal organisation, so "their own tenant" is their own rows; before a
+request can run in a shared tenant, that read half narrows to the owner's
+rows — SPEC-01 P0.18, Decision 2026-10-02b (B15).) Nothing else changes: INSERT, UPDATE
 and DELETE stay `tenant_isolation` only, so a track is written only from its
 own tenant; `music_imports`, `music_playlists` and `music_playlist_tracks` get
 no such policy (playlists are private, §3). `ListPublishedTracks` needs no
@@ -855,7 +861,9 @@ so citations hold.
   owner's tenant (Decision 2026-10-02b (B5)), never another tenant (B6; §3) —
   the audience widened later the same day by B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)):
   the owner's household and the owner's friends in actively linked tenants,
-  with `shared` in place of B13's `tenant` below.
+  with `shared` in place of B13's `tenant` below; and narrowed by B15 the
+  same day: "household" is the owner's group co-members in the tenant
+  (SPEC-01 P0.18), not every member of it.
   The mechanism was revised the same day (Decision 2026-10-02b (B13)): not a
   signed URL from a music route, but SPEC-04 P0.8's `tenant` asset visibility —
   publishing raises the track's audio and cover to `tenant`, members play from

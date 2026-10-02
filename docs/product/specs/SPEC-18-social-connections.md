@@ -66,15 +66,21 @@ whom, which is why this slice came first and why it stops here.
   `GET /people/suggestions`; there is no per-person "hide me" or "nobody may
   ask me" setting. The only switch is the tenant's: an unlinked tenant is
   unreachable as a whole (P0.2). On a household instance the directory *is*
-  the people you live with, plus the linked households.
+  the people you live with, plus the linked households. Tenant **groups**
+  (SPEC-01 P0.18, Decision 2026-10-02b (B15)) do not change this: they decide
+  who is *family* for reading published content, never who is reachable, so
+  a member of the same tenant outside the caller's groups is still offered
+  and askable.
 - **No friend groups / circles on the connection.** Grouping lives in the
   private registry (`people_persons.circle`, SPEC-11 `0035`); a connection
   carries no label.
 - **No connection-scoped permissions — except one read.** Being connected
   grants no permission code and no write. Since Decision 2026-10-02b (B14)
   ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)) it grants exactly one
-  read: an accepted connection whose tenant is actively linked to the owner's
-  reads the owner's **published** music, movies and stories, decided in
+  read: an accepted connection who is a member of the owner's tenant or of
+  one actively linked to it reads the owner's **published** music, movies and
+  stories (since B15 the same-tenant case matters: a tenant member outside the
+  owner's groups reads only as a friend), decided in
   Postgres by the tenant module's `app_can_read_shared`, which reads this
   table (§6). Nothing in Go reads `social` to authorise anything.
 - **No user search.** Discovery is the people module's directory list

@@ -106,11 +106,12 @@ last-write-wins: `INSERT … ON CONFLICT (user_id, asset_id) DO UPDATE SET
 position_ms = EXCLUDED.position_ms, updated_at = now()` — the rail's
 `updated_at DESC` order depends on it (specs README updated_at convention). Server clamps `position_ms` into `[0, duration_ms]` (lower
 bound only when duration is NULL — P0.1). **Who may keep a row** *(Decision
-2026-10-02b (B13), audience revised by B14 —
+2026-10-02b (B13), audience revised by B14 and B15 —
 [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt — §11 row 15)*:
 anyone SPEC-04 P0.8 lets play the asset — its owner, or, while the asset is
-`shared` (a published track's audio, a published movie's video), a member of
-its tenant or the owner's friend in an actively linked tenant. A tenant admin
+`shared` (a published track's audio, a published movie's video), a User who
+shares a group with the owner in its tenant (SPEC-01 P0.18, B15) or the
+owner's friend in the same or an actively linked tenant. A tenant admin
 as such is not admitted. Each keeps their **own** row, `(user_id, asset_id)`
 with their own id; nobody reads or writes another user's row, and the owner's
 position is never shared. **The row lives in the reader's own tenant**: it is
@@ -188,7 +189,7 @@ call `navigator.sendBeacon` first; both switch to the keepalive `PUT`.)*
 - Given another user's asset, when GET progress is called, then 404
   `media/asset-not-found` (never 403) — unless SPEC-04 P0.8 lets the caller
   play it.
-- Given member M and owner C of one tenant and C's `shared` video (a
+- Given owner C and M who shares a group with C in C's tenant, and C's `shared` video (a
   published movie), when M PUTs `position_ms` 600 000 and GETs it back, then
   both answer 200, M's row holds 600 000, and C's GET still returns C's own
   position; given the asset back to `private`, then M's PUT and GET answer 404
@@ -465,7 +466,7 @@ is regraded on a named test. File paths are relative to the repo root;
 | 12 | P0.3 item shape | Shared Go type in a platform package (e.g. `platform/continueitem.Item`) returned by every `<module>api.Continue`; `poster_url` is null unless a `poster` variant exists (audio is always null). | The type is `mediaapi.ContinueItem` in `backend/internal/modules/media/api/api.go` with `PosterURL string` (never null); `GetContinueItems` builds `/api/v1/assets/{id}/variants/poster` for every row; `cmd/api/main.go` `handleContinue` falls back to `[]mediaapi.ContinueItem{}`. | **backend:** move the struct to `platform/continueitem` (`PosterURL *string`), have `mediaapi.Continue` return it; in SQL `LEFT JOIN media_asset_variants v ON v.asset_id = a.id AND v.variant = 'poster'` and emit the URL only when `v.asset_id IS NOT NULL`. **openapi:** `ContinueItem` already allows null; describe `limit` as clamped/defaulted (its schema's `minimum: 1`/`maximum: 50` reads as a 4xx). **test:** TC-CONT-043 (contract test on the item schema), TC-CONT-040 (audio item `poster_url` null). | F079 |
 | 13 | §7 problem types | `media/asset-not-playable` is registered in `frontend/src/lib/problems.ts`. | `problems.ts` declares `media/asset-not-found` and `media/asset-not-ready` but not `media/asset-not-playable`, although `media/handler.go` emits it. | **frontend:** add the slug to the `ProblemType` union and its message. **test:** TC-CONT-100. | F077, F031 |
 | 14 | P1.6 comic leg | `comicapi.Continue(ctx, userID, limit)` returns the P0.3 item and joins the `handleContinue` fan-out. | Not built: `handleContinue` calls `mediaMod.API().Continue` only. | **backend:** implement once SPEC-14 P0.4 is on `main`; merge, sort by `updated_at DESC`, truncate in `handleContinue`. **test:** new TEST-CASES row (none exists). | TRACEABILITY-MATRIX SPEC-10 P1.6 (✖) |
-| 15 | P0.2 who may keep a row (Decision 2026-10-02b (B13), audience revised by B14) | A caller SPEC-04 P0.8 lets play the asset — the owner, or the ADR-12 audience of a `shared` asset (a member of its tenant, or the owner's friend in an actively linked tenant) — reads and writes their own `(user_id, asset_id)` row, in their own tenant; a tenant admin as such is not admitted; anyone else gets 404 `media/asset-not-found`. | `backend/internal/modules/media/service.go` `PutProgress` and `GetProgress` both start with `owned(ctx, ownerID, assetID)`, which compares `asset.OwnerID` with the caller (the parameter named `ownerID` is the caller) and returns `ErrForbidden` → 403. The table already keys rows by the caller (`0013_media_playback_progress`, PK `(user_id, asset_id)`; `media_playback_progress` RLS is `tenant_isolation` only, and the request writes in the caller's personal organisation), and `GetContinueItems` joins `assets` under the caller's RLS — so the owner check is the only obstacle once SPEC-04 P0.8's policies admit the asset row. | **backend:** the shared guard of row 6 asks SPEC-04 P0.8's playable-read rule (SPEC-04 §11 row 20 — `app_can_read_shared`) instead of `owned()`; every query keeps the caller's id as `user_id` and the request's own tenant. Land with or after row 6 and SPEC-04 §11 row 20. **test:** TC-CONT-103, TC-CONT-104. | Decision 2026-10-02b (B13), B14; ADR-12 |
+| 15 | P0.2 who may keep a row (Decision 2026-10-02b (B13), audience revised by B14 and B15) | A caller SPEC-04 P0.8 lets play the asset — the owner, or the ADR-12 audience of a `shared` asset (a group co-member of the owner in its tenant — B15 — or the owner's friend in the same or an actively linked tenant) — reads and writes their own `(user_id, asset_id)` row, in their own tenant; a tenant admin as such is not admitted; anyone else gets 404 `media/asset-not-found`. | `backend/internal/modules/media/service.go` `PutProgress` and `GetProgress` both start with `owned(ctx, ownerID, assetID)`, which compares `asset.OwnerID` with the caller (the parameter named `ownerID` is the caller) and returns `ErrForbidden` → 403. The table already keys rows by the caller (`0013_media_playback_progress`, PK `(user_id, asset_id)`; `media_playback_progress` RLS is `tenant_isolation` only, and the request writes in the caller's personal organisation), and `GetContinueItems` joins `assets` under the caller's RLS — so the owner check is the only obstacle once SPEC-04 P0.8's policies admit the asset row. | **backend:** the shared guard of row 6 asks SPEC-04 P0.8's playable-read rule (SPEC-04 §11 row 20 — `app_can_read_shared`) instead of `owned()`; every query keeps the caller's id as `user_id` and the request's own tenant. Land with or after row 6 and SPEC-04 §11 row 20. **test:** TC-CONT-103, TC-CONT-104. | Decision 2026-10-02b (B13), B14; ADR-12 |
 
 **Already matching on HEAD.**
 - `0013_media_playback_progress` matches §6 (PK `(user_id, asset_id)`,
