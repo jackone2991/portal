@@ -1,6 +1,6 @@
 # SPEC-18 — Social Connections (mutual links between accounts)
 
-**Status:** current, rev 1 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
+**Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `social` (`backend/internal/modules/social/`) · **Depends on:** `account` through `accountapi` (`GetUserNames` for display names; the directory behind discovery is `accountapi.ListDirectory`, reached by `people`); SPEC-04 P0.6 (`platform/events` fan-out); SPEC-05 (the two `notify:on_connection_*` consumers turn the events into bell entries); the per-user RLS GUC `app.current_user` set by `platform/db.BeginScope` (ADR-07 request scope)
 **Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`0037_social_connections`, `internal/modules/social`, `frontend/src/lib/social.ts`) and the decisions it implements — [ADR-08](README.md#adr-08) (life OS; "friend graph shipped a first slice as the `social` module"), [ADR-01](README.md#adr-01) (social deferred), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (RLS), feature-inventory §9.3 "Friend graph" (requests only) · **Refs:** `D-1` (notifications are a standalone module; emitters publish events), `D-7` (RFC 7807 + i18n keys), `D-19` (rich profile lives in a future `social.profiles`, not here), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [SPEC-11](SPEC-11-people-registry.md) (`people_persons.linked_user_id`, `GET /people/suggestions`)
 **Downstream consumers:** SPEC-05 notify (`notify:on_connection_requested`, `notify:on_connection_accepted`); `people` (`socialapi.API.CounterpartIDs` subtracts connected accounts from `GET /people/suggestions`); the frontend header menu, right rail and `/people?circle=requests` tab; SPEC-03 P1.7 takeout (future)
@@ -55,8 +55,14 @@ whom, which is why this slice came first and why it stops here.
   first slice as the `social` module (`0037`)"). It is a re-entry of *one*
   deferred item under ADR-08, not a reopening of the social roadmap; the next
   social item needs its own spec and its own envelope argument.
-- **No block / mute / report.** A declined request is deleted, so the same
-  account can ask again (§10 Q1).
+- **No block / mute / report.** A decline holds the same requester off for 24
+  hours (P0.9, Decision 2026-10-02b (B8)) and then lapses; nothing refuses an
+  account for good. Block stays P2.
+- **No opt-out of being askable** (Decision 2026-10-02b (B10)). Every approved,
+  enabled account on the instance can be asked and is offered by
+  `GET /people/suggestions`; there is no "hide me" or "nobody may ask me"
+  setting. On a household instance the directory *is* the people you live
+  with.
 - **No friend groups / circles on the connection.** Grouping lives in the
   private registry (`people_persons.circle`, SPEC-11 `0035`); a connection
   carries no label.
@@ -80,10 +86,15 @@ whom, which is why this slice came first and why it stops here.
   count) or `/people?circle=requests`, and press **Chấp nhận**; the asker gets
   "Mai accepted your connection request".
 - As the person asked, I press **Từ chối**; the request disappears for both of
-  us and nothing records that I refused.
+  us, and Lan cannot ask me again until the same time tomorrow — Portal keeps
+  that much of the refusal and no more (P0.9).
 - As the asker, I press **Thu hồi** on a request nobody has answered.
 - Edge: two people press **Kết bạn** on each other at the same time — the second
   press accepts the first request instead of failing.
+- Edge: Lan, declined an hour ago, presses **Kết bạn** again — she is told she
+  can ask again later (429 `social/request-cooldown`) and I get no new bell
+  entry. If I press **Kết bạn** on Lan in that hour, it works: the cooldown
+  binds only the direction that was refused.
 - Edge: a third account guessing a connection id learns nothing — the answer is
   the same 404 as a random id.
 
@@ -115,7 +126,8 @@ asks the account `user_id` to connect.
   not JSON is 400 `about:blank` (generic transport, `server.Decode`).
 - `user_id` must name an account that is **approved and not disabled** — the
   same population the directory offers (`ListUserDirectory`: `approval_status =
-  'approved' AND disabled_at IS NULL`). Otherwise **422 `social/validation`**,
+  'approved' AND disabled_at IS NULL`) — every such account, with no opt-out
+  (Decision 2026-10-02b (B10)). Otherwise **422 `social/validation`**,
   with one body for "no such account" and "account not eligible", so the
   endpoint does not confirm which accounts exist. The check goes through
   `accountapi`, never `users`. *(Code follow-up: `HEAD` checks nothing; an
@@ -130,6 +142,11 @@ asks the account `user_id` to connect.
     `social:connection_accepted` — never a second row;
   - otherwise (already connected, or the caller already asked) → **409
     `social/connection-exists`**, one body for both cases.
+- **No row, but the target declined the caller within the last 24 hours** →
+  **429 `social/request-cooldown`** (P0.9), nothing written, no event. The
+  order of checks is self → eligibility → existing row → cooldown → insert, so
+  an ineligible target is still the uniform 422 and a pending request *from*
+  the target is still accepted (agreeing is not re-asking).
 - **Concurrent requests** for one pair (A→B and B→A, or a double submit) must
   still answer 409 or the reverse-accept above, never 500. The insert must not
   raise inside the request's tenant transaction: run it `ON CONFLICT DO NOTHING`
@@ -156,6 +173,8 @@ asks the account `user_id` to connect.
   three, and nothing written (TC-SOC-005).
 - Given two concurrent first requests for one pair, then exactly one row exists
   afterwards and neither response is a 5xx (TC-SOC-006).
+- Given B declined A within 24 hours, when A POSTs `{user_id: B}`, then 429
+  `social/request-cooldown` (P0.9; TC-SOC-071).
 
 ### P0.3 — Accept
 
@@ -191,16 +210,21 @@ the row means the same thing in each: this link no longer exists. **204** on
 success. A row the caller is not party to, a missing id, a malformed id and a
 second DELETE all answer **404 `social/connection-not-found`**, byte-identical.
 
-A declined request is **deleted, not stored**: there is no `declined` status, so
-nobody's refusal becomes a permanent record and the pair may try again later
-(§10 Q1 covers the resulting re-request loop). Removal emits no event on `HEAD`
-(§8, §10 Q2).
+The row is **deleted in all three cases**: there is no `declined` status, so no
+connection row records a refusal. A **decline** — the addressee deleting a
+pending row — additionally writes a 24-hour cooldown record for that direction
+in the same transaction (P0.9, Decision 2026-10-02b (B8)); a withdraw (the
+requester deleting a pending row) and a disconnect (either party deleting an
+accepted row) write none. Removal emits `social:connection_removed` after commit
+(P1.1, emit-only — Decision 2026-10-02b (B9)); `HEAD` emits nothing (§8).
 
 **Acceptance criteria.**
 - Given a pending row, when the requester deletes it, then 204 and the
   addressee's incoming list no longer shows it (TC-SOC-020).
-- Given a pending row, when the addressee deletes it, then 204; the same pair
-  can then send a new request, which gets a new `id` (TC-SOC-021).
+- Given a pending row, when the addressee deletes it, then 204; the addressee
+  can then ask the requester at once, and the requester can ask again after
+  24 hours — each new request gets a new `id` (TC-SOC-021; the cooldown itself
+  is P0.9).
 - Given an accepted row, when either party deletes it, then 204 and it leaves
   both accepted lists (TC-SOC-022).
 - Given a third account, when it deletes the row, then 404 and the row survives
@@ -340,16 +364,69 @@ serves every surface):
 - Given an accepted connection, then a disconnect action exists and removes it
   for both parties (TC-SOC-063).
 
+### P0.9 — Re-request cooldown after a decline
+
+*(Decision 2026-10-02b (B8); promoted from P1.2; unbuilt — §11 row 13.)*
+After the addressee **declines** a request (P0.4: the addressee deletes a
+pending row), the same requester cannot ask the same addressee again for **24
+hours**. The period is a constant (`RequestCooldown = 24 * time.Hour` in
+`service.go`), not configuration: the owner chose one day, and a knob nobody
+turns is one more thing to document.
+
+- **How the decline is remembered.** The connection row is still deleted
+  (P0.4); the service, seeing that the row it just deleted was pending and the
+  caller its addressee, upserts `social_declines (requester_id, addressee_id,
+  declined_at = now())` in the same transaction (§6). A repeat decline after the
+  window refreshes `declined_at` rather than adding a row, so the table holds at
+  most one row per ordered pair and needs no janitor; an expired row is inert.
+- **Per direction.** The record binds `requester_id → addressee_id` only. The
+  decliner may ask the declined account at any time, and if the decliner has a
+  pending request to the declined account, the declined account's POST still
+  accepts it (P0.2's reverse-accept runs before the cooldown check).
+- **Only a decline starts it.** A withdraw (the requester deleting their own
+  pending row) and a disconnect write nothing. A later connection between the
+  pair does not clear an earlier record; it lapses on its own.
+- **What the API answers.** `POST /connections` for a target that declined the
+  caller less than 24 hours ago → **429 `social/request-cooldown`** with a
+  `Retry-After` header (whole seconds until `declined_at + 24 h`, rounded up),
+  detail "you cannot ask this account again yet"; nothing is written and no
+  event fires, so the addressee gets no new bell entry. The check runs after
+  eligibility (P0.2), so a target that is no longer eligible answers the
+  uniform 422 rather than revealing a decline.
+- **What it reveals.** Within the window, the 429 tells the requester that
+  their request was declined rather than withdrawn — the price of the owner's
+  choice, and little more than the request's vanishing from "You asked"
+  already told them. After 24 hours the record answers nothing.
+
+**Acceptance criteria.**
+- Given B declined A's request, when A POSTs `{user_id: B}` within 24 hours,
+  then 429 `social/request-cooldown` with `Retry-After` > 0, no row, no event
+  (TC-SOC-071).
+- Given B declined A's request, when B POSTs `{user_id: A}`, then 201 pending;
+  and given that pending B→A row, when A POSTs `{user_id: B}`, then 201 with the
+  row accepted (TC-SOC-072).
+- Given A withdrew its own request, or either party disconnected, when A POSTs
+  again, then 201 — no cooldown; and given B declined A more than 24 hours ago,
+  when A POSTs, then 201 (TC-SOC-073; a service test with an injected clock).
+- Given a decline record for A→B, then C sees no row of `social_declines`, A and
+  B each see it, and only B (the addressee) can insert or refresh it
+  (TC-SOC-074; RLS suite).
+
 ### P1 — nice to have
 
-- **P1.1 `social:connection_removed`** `{connection_id, actor_id, other_id,
-  was: 'pending'|'accepted'}` after commit on DELETE, so a future consumer (the
-  other party's bell for a withdrawn request, a cache) can react. Emit-only until
-  a consumer is specced. Gated on §10 Q2.
-- **P1.2 Re-request cooldown** — after a decline, the same requester cannot ask
-  the same addressee again for a configurable period (default 7 days); 429
-  `social/request-cooldown`. Needs a small `social_declines` table (pair, until).
-  Gated on §10 Q1.
+- **P1.1 `social:connection_removed`** *(Decision 2026-10-02b (B9): emit-only;
+  unbuilt — §11 row 14)* `{connection_id, actor_id, other_id, was:
+  'pending'|'accepted'}`, published after commit on every successful DELETE
+  (withdraw, decline, disconnect — `actor_id` and `was` tell them apart). **No
+  consumer in v1:** the addressee's bell entry for a withdrawn request is not
+  retracted, and the other party is not told about a disconnect or a decline.
+  The event exists so a later consumer (bell retraction, a cache) needs no
+  emitter change; a consumer needs its own spec line first. *AC:* one event per
+  successful DELETE with the caller as `actor_id`, none on a 404, none when the
+  commit fails; `cmd/api` subscribes nothing to it (TC-SOC-075).
+- **P1.2** *Promoted to P0.9 by Decision 2026-10-02b (B8) (24 hours, not the
+  7-day configurable period sketched here); the number is kept so citations
+  hold.*
 - **P1.3 `GET /connections/status?user_id=`** — the caller's relationship with
   one account (`none | asked | asking | connected` + connection id), for a future
   person/profile page that should not fetch three lists.
@@ -416,21 +493,64 @@ approved account can connect. Notes:
 
 - **No `updated_at`.** The only mutation is pending → accepted, recorded in
   `responded_at`; the README `updated_at` rule has nothing to apply to.
-- **No `declined` status** (P0.4). The CHECK admits two values.
+- **No `declined` status** (P0.4). The CHECK admits two values; a decline is
+  remembered in `social_declines` below, not on the connection.
 - **Account deletion** cascades both FKs, so deleting an account silently
   removes its connections; no social event fires (on `HEAD` the account module
   emits none, and SPEC-01 P1.3's planned `account:user_deleted` has notify as
   its only consumer).
 - **`app_current_user()`** is created here and dropped by the down migration.
-  No later migration uses it (`grep -ln app_current_user backend/db/migrations/`);
-  a future table that does must move the function's ownership to a platform
+  No later migration uses it on `HEAD` (`grep -ln app_current_user
+  backend/db/migrations/`). Its one planned user is social's own
+  `000N_social_request_cooldown` below, whose down runs before `0037`'s; a table
+  in any other module must move the function's ownership to a platform
   migration first, or `0037`'s down breaks it.
 - **Takeout** (README Takeout): connections are user-history data. Intended
   format: JSON array of the caller's rows rendered from their side — `{other_user_id,
   other_display_name, status, outgoing, created_at, responded_at}` — via
   `socialapi` implementing `opsapi.ExportProvider` when SPEC-03 P1.7 lands.
+  Decline records are not exported: a cooldown is a throttle that means
+  nothing after 24 hours, not history.
 
-Queries: `internal/modules/social/query/connections.sql` (DML only); they return
+**Cooldown record — migration `000N_social_request_cooldown`** *(Decision
+2026-10-02b (B8); unbuilt — §11 row 13; `ls backend/db/migrations | tail -2` for
+the number)*. Global and per-user, like `social_connections`, and for the same
+reason:
+
+```sql
+CREATE TABLE social_declines (
+    requester_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  -- who was declined
+    addressee_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  -- who declined
+    declined_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (requester_id, addressee_id),        -- per direction, one row
+    CONSTRAINT social_declines_not_self CHECK (requester_id <> addressee_id)
+);
+
+ALTER TABLE social_declines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE social_declines FORCE ROW LEVEL SECURITY;
+CREATE POLICY decline_select ON social_declines FOR SELECT
+    USING (app_current_user() IN (requester_id, addressee_id));
+CREATE POLICY decline_insert ON social_declines FOR INSERT
+    WITH CHECK (addressee_id = app_current_user());
+CREATE POLICY decline_update ON social_declines FOR UPDATE
+    USING (addressee_id = app_current_user()) WITH CHECK (addressee_id = app_current_user());
+```
+
+- The primary key is ordered, not `least/greatest`: the cooldown is per
+  direction (P0.9), unlike the connection's pair index.
+- Only the decliner writes (INSERT, and UPDATE for the `ON CONFLICT DO UPDATE
+  SET declined_at = now()` refresh). The requester must be able to read the row,
+  because P0.2's cooldown check runs in the requester's scope. There is no
+  DELETE policy: rows leave only by the FK cascade when either account is
+  deleted, and an expired row is simply ignored (`declined_at > now() -
+  interval '24 hours'` is the check).
+- No `updated_at`: `declined_at` is the only mutable column and is the
+  timestamp.
+- The down migration drops the table and its policies; it runs before `0037`'s
+  down, which the numeric order guarantees.
+
+Queries: `internal/modules/social/query/connections.sql` (DML only; P0.9 adds
+`RecordDecline` — the upsert — and `GetDecline` for one ordered pair); they return
 ids, never names, and their predicates express intent while the policies
 enforce isolation.
 
@@ -444,11 +564,11 @@ All routes are under `/api/v1`, behind `authTenant` (authenticated; 401
 
 | Method | Path | Permission | Request | Response | Errors |
 |---|---|---|---|---|---|
-| POST | `/connections` | `social:write:own` | `{user_id: uuid}` | 201 `Connection` (pending, or accepted when it answered the other side's request) | 400 `about:blank` (non-JSON body); 409 `social/connection-exists`; 422 `social/cannot-connect-to-self`; 422 `social/validation` (malformed, unknown or ineligible `user_id`) |
+| POST | `/connections` | `social:write:own` | `{user_id: uuid}` | 201 `Connection` (pending, or accepted when it answered the other side's request) | 400 `about:blank` (non-JSON body); 409 `social/connection-exists`; 422 `social/cannot-connect-to-self`; 422 `social/validation` (malformed, unknown or ineligible `user_id`); 429 `social/request-cooldown` + `Retry-After` (the target declined the caller < 24 h ago — P0.9) |
 | GET | `/connections?status=` | `social:read:own` | `status` ∈ `accepted` (default) \| `incoming` \| `outgoing` | 200 `{items: Connection[]}` — non-paginated, ordered `created_at DESC, id` | 422 `social/validation` (unknown `status`) |
 | GET | `/connections/summary` | `social:read:own` | — | 200 `{incoming: integer}` | — |
 | POST | `/connections/{id}/accept` | `social:write:own` | — | 200 `Connection` (accepted) | 404 `social/connection-not-found` |
-| DELETE | `/connections/{id}` | `social:write:own` | — | 204 | 404 `social/connection-not-found` |
+| DELETE | `/connections/{id}` | `social:write:own` | — | 204 (a decline also starts P0.9's cooldown) | 404 `social/connection-not-found` |
 
 Every route also answers 403 `about:blank` when the caller lacks the permission
 (below `user` only, since `0037` grants both codes to `user`).
@@ -471,8 +591,9 @@ for lists no spec owns" names social `{connections}` — this spec now owns it,
 
 **Problem types**: `social/connection-not-found` (404), `social/connection-exists`
 (409), `social/cannot-connect-to-self` (422), `social/validation` (422,
-body/param shape and ineligible targets; declared by this spec), and P1.2's
-`social/request-cooldown` (429). Each is registered in
+body/param shape and ineligible targets; declared by this spec), and P0.9's
+`social/request-cooldown` (429, with `Retry-After`; Decision 2026-10-02b (B8)).
+Each is registered in
 `frontend/src/lib/problems.ts` per the README Errors convention. A malformed
 path `id` answers `social/connection-not-found`, not `social/validation`: a
 string that is not a uuid names no connection, and the same body as a stranger's
@@ -484,10 +605,14 @@ id is the point of P0.3/P0.4.
 |---|---|---|---|
 | `social:connection_requested` | `{connection_id, requester_id, addressee_id, requester_name, addressee_name}` | live (`0037`), emitted by `cmd/api` | notify — `notify:on_connection_requested` (bell entry for the addressee, `dedup_key = connection_id:requested`) |
 | `social:connection_accepted` | same | live (`0037`), emitted by `cmd/api` | notify — `notify:on_connection_accepted` (bell entry for the requester, `dedup_key = connection_id:accepted`) |
-| `social:connection_removed` | `{connection_id, actor_id, other_id, was}` | planned (P1.1; §10 Q2) | none specced |
+| `social:connection_removed` | `{connection_id, actor_id, other_id, was}` | planned (P1.1, emit-only — Decision 2026-10-02b (B9); §11 row 14), emitted by `cmd/api` after commit | **none in v1** (B9): no bell retraction, no notice to the other party; `cmd/api` subscribes nothing |
 
 Wiring: `grep -n 'socialapi.Event' backend/cmd/*/main.go` — both `Subscribe`
 calls are in `cmd/api/main.go` only, correctly (only the API binary emits).
+`social:connection_removed` will have no `Subscribe` edge in v1, so a publish
+enqueues nothing until a consumer is specced; its events.md row records it as
+planned and consumer-less. The cooldown (P0.9) emits no event of its own: a
+refused POST writes nothing.
 The module satisfies ADR-08's "≥ 1 bus event from day one".
 
 **Drift with [events.md](../../reference/events.md):** its `social:connection_*`
@@ -515,19 +640,21 @@ otherwise match the code.
 
 ## 10. Open questions
 
-- **Q1 (owner, non-blocking) — Re-request after decline.** A decline deletes the
-  row, so the requester can immediately ask again and the addressee gets a new
-  bell entry each time (new `connection_id`, new dedup key). Accept this at
-  household scale, or build P1.2's cooldown (and later block, §5 P2)?
-- **Q2 (owner, non-blocking) — Should removal be an event?** Today a withdrawn
-  request leaves the addressee's bell entry pointing at a request that no longer
-  exists, and a disconnect is silent to the other party. P1.1 adds
-  `social:connection_removed` emit-only; does any consumer (retract the bell
-  entry, tell the other party) belong in v1?
-- **Q3 (owner, non-blocking) — Who may be asked.** P0.2 restricts targets to
-  approved, enabled accounts (the directory population). Should accounts be able
-  to opt out of being discoverable/askable, or is "everyone on my instance" the
-  right default for a household deployment?
+Q1–Q3 were decided on 2026-10-02 — Decision 2026-10-02b:
+
+- **Q1 (re-request after decline) — B8.** Build the cooldown: after a decline
+  the same requester cannot ask the same addressee for 24 hours, per direction,
+  remembered in `social_declines`; 429 `social/request-cooldown`. Now P0.9 (was
+  P1.2), §6 and §7; §11 row 13. Block stays P2.
+- **Q2 (removal as an event) — B9.** Emit-only: P1.1 adds
+  `social:connection_removed` with no consumer in v1 — no bell retraction, no
+  message to the other party. Now P1.1 and §8; §11 row 14.
+- **Q3 (who may be asked) — B10.** No opt-out: every approved, enabled account
+  on the instance is askable, and P0.2's directory population is the default for
+  a household deployment. Now P0.2 and §3; shipped code adds no opt-out, so §11
+  gains no row (target eligibility itself is row 3).
+
+No open questions remain.
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -535,7 +662,8 @@ The baseline is `main` @ `99b5a0b` (`git log 99b5a0b..HEAD -- backend frontend
 shared` is empty: the docs commits on top of it change no code). The spec text above is the target; this
 section lists every place the shipped code diverges from it. Rows are ordered by
 severity: lost or phantom data first, then integrity, then authorization and
-contract, then UX and hygiene. A row closes when the code matches the
+contract, then UX and hygiene; rows 13–14 (added by Decision 2026-10-02b (B8,
+B9)) are appended after row 12. A row closes when the code matches the
 requirement it cites and a TRACEABILITY-MATRIX row for SPEC-18 is graded on a
 named test. The module lives in `backend/internal/modules/social/`.
 
@@ -546,13 +674,15 @@ named test. The module lives in `backend/internal/modules/social/`.
 | 3 | P0.2 target eligibility | `user_id` must name an approved, non-disabled account, checked through `accountapi`; otherwise 422 `social/validation`, one body for unknown and ineligible. | `service.go` `Request` checks only self/nil. An unknown uuid reaches the `REFERENCES users(id)` FK → SQLSTATE `23503` → `writeSocialErr` default → **500** (and an aborted transaction). A pending, rejected or disabled account can be asked: the row is created and `notify:on_connection_requested` writes a bell entry for an account that cannot sign in. | **backend:** add an eligibility lookup to `Deps` (a closure over a new `accountapi` method, e.g. `IsDirectoryMember(ctx, id) (bool, error)`, mirroring `ListUserDirectory`'s filter) and return `ErrValidation` before the insert; map it to 422 `social/validation`. **openapi:** add the 422 description. **test:** TC-SOC-005 (unknown, pending, rejected, disabled → identical 422). | Found while writing SPEC-18, 2026-10-01 |
 | 4 | §7 list envelope | `GET /connections` returns `{items: Connection[]}`; handler, OpenAPI and readers change in one PR. | `handler.go` `List` writes `{"connections": items}`; `shared/openapi.yaml` `listConnections` requires `[connections]`; `frontend/src/lib/social.ts` `listConnections` reads `r.connections`. | **backend:** rename the key. **openapi:** `required: [items]`, property `items`. **frontend:** `listConnections` reads `r.items` (its three callers use the function, not the key). **test:** TC-SOC-035 over HTTP. | Decision 2026-09-30 (Envelopes); specs README "Code follow-up for lists no spec owns" (social `{connections}`) |
 | 5 | P0.2, P0.5 validation status | Malformed `user_id` and unknown `status` are 422 `social/validation`. | `handler.go` `Request`: `uuid.Parse` failure → `server.BadRequest("invalid user_id")` (400 `about:blank`); `List`: unknown `status` → `server.BadRequest` (400 `about:blank`). | **backend:** `server.Problem(w, 422, "social/validation", …)` in both; keep `server.Decode`'s 400 for non-JSON bodies. **openapi:** add 422 `social/validation` to `requestConnection` and `listConnections` (neither declares a 400 today either). **test:** TC-SOC-005, TC-SOC-033. | Specs README Pagination/Errors convention (`<module>/validation` is 422) |
-| 6 | §7 problem types | Every `social/*` slug the API emits is registered in `problems.ts`. | `frontend/src/lib/problems.ts` has no `social/` entry; `social/connection-not-found`, `social/connection-exists` and `social/cannot-connect-to-self` are emitted by `handler.go` (`probNotFound`, `probExists`, `probSelf`), and `social/validation` arrives with rows 3/5. `PeopleIndexView.tsx` renders them through `problemDisplayMessage`, which falls back to the server `detail`. | **frontend:** add the four slugs to `ProblemType` and `PROBLEM_MESSAGES` (and `social/request-cooldown` with P1.2). **test:** TC-SOC-062. | Specs README Errors convention (DoD) |
+| 6 | §7 problem types | Every `social/*` slug the API emits is registered in `problems.ts`. | `frontend/src/lib/problems.ts` has no `social/` entry; `social/connection-not-found`, `social/connection-exists` and `social/cannot-connect-to-self` are emitted by `handler.go` (`probNotFound`, `probExists`, `probSelf`), and `social/validation` arrives with rows 3/5. `PeopleIndexView.tsx` renders them through `problemDisplayMessage`, which falls back to the server `detail`. | **frontend:** add the four slugs to `ProblemType` and `PROBLEM_MESSAGES` (and `social/request-cooldown` with P0.9 — row 13). **test:** TC-SOC-062. | Specs README Errors convention (DoD) |
 | 7 | P0.8 disconnect | An accepted connection can be removed from the UI. | `templates/v1/views/people/PeopleIndexView.tsx` calls `removeConnection` only from `RequestLists` (pending rows); `templates/v1/components/menu/SidebarRight.tsx` reads accepted connections but has no remove action; `NotifMenus.tsx` declines pending rows only. `DELETE /connections/{id}` on an accepted row works over the API but nothing in the UI sends it. | **frontend:** a "Huỷ kết bạn" action (with confirm) on the rail entry for `state = connected`, calling `removeConnection(c.id)` and invalidating `["connections"]`/`["people"]`. **test:** TC-SOC-063. | Found while writing SPEC-18, 2026-10-01 |
 | 8 | P0.2–P0.6 HTTP and event tests | Status codes, slugs and event emission are asserted over the real router. | `http_test.go` covers only the third-party DELETE and DELETE-twice; `social_test.go` covers the service rules. Nothing asserts POST 201/409/422, accept 200/404, list/summary shapes, a 403 without the permission, or that `Request`/`Accept` publish the right event with the right ids (the fake service is built without `Events`). | **test:** extend `http_test.go` (TC-SOC-001…005, 010…013, 030…035) and add a recording `EventPublisher` to `social_test.go` (TC-SOC-040…042). | Found while writing SPEC-18, 2026-10-01 |
 | 9 | §8 events.md payload | events.md lists the shipped payload. | [events.md](../../reference/events.md) rows `social:connection_requested / _accepted` and `notify:on_connection_*` give `{connection_id, requester_id, addressee_id}`; `api/api.go` `ConnectionEvent` also carries `requester_name`, `addressee_name`, which `notify/service.go` `connectionNotice` uses for the title. | **docs:** add the two name fields to both rows (docs-only; owned by events.md). | Found while writing SPEC-18, 2026-10-01 |
 | 10 | §7 OpenAPI 403 | Each operation documents 403 (missing permission). | `shared/openapi.yaml` declares 401 on all five social operations and 403 on none, although every route is behind `RequirePermission`. `x-required-permission` is absent too (cross-cutting README gap). | **openapi:** add `"403": { $ref: "#/components/responses/Forbidden" }` and `x-required-permission` to each (the annotation with the README cross-cutting retrofit). **test:** TC-SOC-070 (403 for a role without `social:*`). | Specs README AuthZ convention (OpenAPI encoding) |
 | 11 | §7 list `responded_at` | List items carry `responded_at` when set (the `Connection` schema property). | `handler.go` `List` builds items from `Party`, which has no `RespondedAt`, so list items never carry `responded_at`; only the write responses (`connectionJSON`) do. | **backend:** add `RespondedAt` to `Party` and emit it in `List`. **test:** TC-SOC-030 asserts it on an accepted row. | Found while writing SPEC-18, 2026-10-01 |
 | 12 | P0.8 badge source | The badge count is the incoming list (no extra request) — `GET /connections/summary` is the documented badge endpoint. | `frontend/src/lib/social.ts` `connectionSummary` has no caller (`grep -rn connectionSummary frontend/src`); `FriendRequestsMenu` counts `listConnections("incoming")` instead, polling the full list every 60 s. | **decide in the PR:** either switch the badge to `connectionSummary` (cheaper poll; the list loads on open) or delete `connectionSummary` and keep the endpoint for API clients. No behaviour bug. **test:** none. | Found while writing SPEC-18, 2026-10-01 |
+| 13 | P0.9 re-request cooldown; §6 `social_declines`; §7 429 | A decline (addressee deletes a pending row) upserts `social_declines (requester_id, addressee_id, declined_at)` in the same transaction; `POST /connections` within 24 h of a decline in that direction answers 429 `social/request-cooldown` with `Retry-After`, writes nothing and emits nothing; per direction; withdraw and disconnect start nothing. | Not built. No `social_declines` table or migration (latest is `0045_journal_location_in_columns`); `query/connections.sql` has no decline query; `service.go` `Remove` discards the row `repo.Delete` returns, and `Request` checks only self and the existing row before inserting; `handler.go` declares no `social/request-cooldown` and `writeSocialErr` has no 429 branch; `shared/openapi.yaml` `requestConnection` declares no 429; `frontend/src/lib/problems.ts` has no `social/` slug. The comments that say a declined request leaves the pair free to try again — `0037_social_connections.up.sql` (status comment) and `types.go` (statuses) — go stale. | **migration:** `000N_social_request_cooldown` (§6). **backend:** `RecordDecline` (upsert) and `GetDecline` queries + `make sqlc`; repository methods; `Remove` records a decline when the deleted row was pending and the caller its addressee; `Request` checks `GetDecline(me, target)` after the existing-row check and returns a new `ErrCooldown{Until}`; `writeSocialErr` maps it to 429 + `Retry-After`; `RequestCooldown` constant; reword the two comments. **openapi:** 429 on `requestConnection` with the `Retry-After` header. **frontend:** `social/request-cooldown` in `problems.ts` (with row 6). **test:** TC-SOC-071…073 (`social_test.go`, an injected clock), TC-SOC-074 (`platform/db/rls_social_test.go`). | Decision 2026-10-02b (B8) |
+| 14 | P1.1 `social:connection_removed` | Every successful DELETE publishes `social:connection_removed {connection_id, actor_id, other_id, was}` after commit; no subscriber in v1. | Not built: `api/api.go` declares only `EventConnectionRequested` and `EventConnectionAccepted`; `service.go` `Remove` calls `repo.Delete` and emits nothing; nothing in `backend/` names `connection_removed`. | **backend:** `EventConnectionRemoved` and a `RemovedEvent` struct in `socialapi`; `Remove` publishes after commit through the same mechanism as row 1 (land with or after it); no `Subscribe` call in `cmd/api`. **docs:** events.md row planned → live in the same PR, consumer "none (Decision 2026-10-02b (B9))". **test:** TC-SOC-075 (a recording `EventPublisher`, row 8's harness). | Decision 2026-10-02b (B9) |
 
 **Already matching on HEAD.**
 - `0037_social_connections` ships the table, the not-self CHECK, the
@@ -599,11 +729,14 @@ named test. The module lives in `backend/internal/modules/social/`.
 - No test for the concurrent-request path or the FK/eligibility path
   (TC-SOC-005/006 — rows 2, 3).
 - No frontend test (TC-SOC-060…063).
+- Nothing to test yet for the cooldown or the removal event (TC-SOC-071…075 —
+  rows 13, 14).
 
 ## 12. Out of scope
 
 Posts, feed, reactions, comments, messaging, groups/communities, events/RSVP,
-follow graph, profiles (`D-19`), block/mute/report, mentions, user search,
+follow graph, profiles (`D-19`), block/mute/report, an opt-out from being asked
+or suggested (Decision 2026-10-02b (B10)), mentions, user search,
 "friends in common", connection-based authorization, stream projection of
 connections, per-tenant or household social graphs, and federation with other
 Portal instances. Each needs its own spec and an ADR-01 envelope argument;
