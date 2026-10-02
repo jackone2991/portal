@@ -1320,7 +1320,17 @@ audit taxonomy lives in `platform/audit/logger.go` and
 
 ## 10. Open questions
 
-None open. Q1 (deleting a user orphans their media objects) was decided on
+- **Q6 (owner, non-blocking) — encrypt the `deleted_users` snapshot?** A7
+  (P0.16) encrypts identity data in `audit_log` with `AUDIT_PII_KEY`; the
+  `deleted_users` snapshot written by a delete (P0.10, A6) holds the same kind
+  of data — email, display name, roles — in plaintext and only expires after
+  90 days. Options: (a) encrypt its identifying columns with the same key and
+  the same superadmin-only read rule; (b) keep it plaintext, since it is a
+  short-lived tombstone that no API reads. Recommended: (a), so one rule
+  covers every piece of identity data that outlives its User. Does not block
+  §11 row 29; whichever answer lands is applied to it.
+
+Q1 (deleting a user orphans their media objects) was decided on
 2026-10-01 — Decision 2026-10-01b (D1), now P0.10's delete order and SPEC-04
 P0.7. Q2–Q5 were decided on 2026-10-02 and removed the same way; their
 numbers are not reused:

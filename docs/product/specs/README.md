@@ -664,7 +664,8 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
 The 2026-09-30 round and both 2026-10-01 rounds are closed (above), and the
 2026-10-02 round closed the account module's four. Of the 22 questions the
 as-built specs (SPEC-01, 02 and 15–18) raised, seven were decided in the
-second round and four on 2026-10-02; the **11** below remain, and none of them
+second round and four on 2026-10-02; the **11** below remain, plus one the
+2026-10-02 round itself raised (SPEC-01 Q6) — **12** in all — and none of them
 blocks a gap row or a P1. Each is stated, with its options, in the spec's "Open questions" section;
 this list only routes. When one is decided, move it to a "Decisions recorded"
 list like the ones above and correct the spec text.
@@ -678,6 +679,8 @@ list like the ones above and correct the spec text.
 - Social — re-request after decline (SPEC-18 Q1); removal as an event (Q2);
   opting out of being askable (Q3).
 - Layout — per-tenant shells (SPEC-02 Q2); concurrent editors (Q3).
+- Account — encrypt the `deleted_users` snapshot like audit identity data, or
+  leave it a plaintext 90-day tombstone (SPEC-01 Q6; recommended: encrypt).
 
 ## Decision records
 
