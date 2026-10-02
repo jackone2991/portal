@@ -39,8 +39,10 @@ changed nothing visible — the seed reproduces the hardcoded shell row for row.
 
 ## 3. Non-goals
 
-- **No per-user or per-tenant personalisation.** One layout per instance; a user
-  cannot hide a widget for themselves (P2).
+- **No per-user or per-tenant personalisation.** One instance-wide layout
+  applies to every user, and only `system:settings:write` holders configure
+  it; a household gets no shell of its own (Decision 2026-10-02b (B11)), and a
+  user cannot hide a widget for themselves (P2).
 - **No widget catalogue in the database.** A widget is a React component; the
   table stores where it goes and whether it shows, never what it is. There is
   no "add widget" button and no API that creates or deletes a widget row (P0.5).
@@ -320,11 +322,12 @@ visible; `SidebarLeft`'s `FALLBACK` equals the 12 ungated rows.
 
 ### P1 — nice to have
 
-- **P1.1 Optimistic concurrency.** Both saves carry the `version` (max
-  `updated_at`, or a counter) the editor loaded; a mismatch is **409
-  `layout/stale`** and the editor reloads. Today two admins (or two tabs) save
-  last-write-wins, and the later whole-set save silently deletes rows the other
-  added. Gated on §10 Q3.
+- **P1.1 Optimistic concurrency — dropped** *(Decision 2026-10-02b (B12); not
+  built; the number is kept so citations hold)*. Both saves stay
+  **last-write-wins**: there is no `version` field and no 409 `layout/stale`.
+  On a one-operator instance two concurrent editors means two tabs, and a later
+  whole-set save replacing an earlier one — including deleting rows the earlier
+  one added — is the accepted outcome.
 - **P1.2 Audit diff.** Audit metadata records the keys added, removed and
   reordered, not only the count.
 - **P1.3 Icon picker.** The editor offers the sprite's icon names instead of a
@@ -354,9 +357,11 @@ visible; `SidebarLeft`'s `FALLBACK` equals the 12 ungated rows.
 
 ### P2 — future considerations (design for, don't build)
 
-- **Per-tenant layouts** when tenant `kind: household` ships (`D-24`): a
-  nullable `tenant_id` with instance rows as `tenant_id IS NULL` defaults (the
-  `bank_categories` shared-seed precedent), resolved most-specific-first.
+- ~~**Per-tenant layouts** when tenant `kind: household` ships (`D-24`).~~
+  *Not planned — Decision 2026-10-02b (B11):* a household does not get its own
+  menu or widget placement; the one instance-wide layout serves every user, and
+  no `tenant_id` is added to either table (§6). Reopening this needs a new
+  decision.
 - **Per-user hide/collapse** of widgets, as a user preference layered on top of
   the instance placement (not a copy of it).
 - **A read API in `layout/api`** (the package P1.4 creates for its event) once
@@ -369,8 +374,10 @@ there is one shell per instance, the rows are configuration rather than
 user-authored data, every signed-in user may read them (P0.2 filters per
 permission in the service), and writes are gated by `system:settings:write`.
 Fencing them per tenant would give each personal tenant its own empty menu.
-The specs README Tenancy bullet lists the exempt global tables and should name
-these two (docs follow-up). `portal_app` reaches them through `0019`'s
+Decision 2026-10-02b (B11) keeps them global when households arrive: no
+`tenant_id`, now or as a nullable column for later. The specs README Tenancy
+bullet lists the exempt global tables and should name these two (docs
+follow-up). `portal_app` reaches them through `0019`'s
 `ALTER DEFAULT PRIVILEGES`. **Takeout:** excluded — no user-authored or
 user-history data.
 
@@ -449,9 +456,10 @@ bodies are not collection responses and keep their shipped keys.
 the widget set by the registry).
 
 **Problem types:** `layout/validation` (422) and `layout/unknown-widget` (422),
-both registered in `frontend/src/lib/problems.ts`; P1.1 adds `layout/stale`
-(409). The handler builds them with `server.ProblemType("layout",
-"validation" | "unknown_widget")`, which normalises `_` to `-`.
+both registered in `frontend/src/lib/problems.ts`. There is no
+`layout/stale`: P1.1 was dropped (Decision 2026-10-02b (B12)). The handler
+builds them with `server.ProblemType("layout", "validation" |
+"unknown_widget")`, which normalises `_` to `-`.
 
 ## 8. Events
 
@@ -479,15 +487,17 @@ not project this one.
 
 ## 10. Open questions
 
-Q1 (the ADR-08 event rule) was decided on 2026-10-01 — Decision 2026-10-01b
-(D3), now P1.4 and §8; the remaining questions keep their numbers so citations
-hold.
+No question is open. Q1 (the ADR-08 event rule) was decided on 2026-10-01 —
+Decision 2026-10-01b (D3), now P1.4 and §8. Q2 and Q3 were decided on
+2026-10-02 and removed the same way; their numbers are not reused:
 
-- **Q2 (owner, non-blocking) — Per-tenant shells.** When households arrive, does
-  a household get its own menu (P2), or does the instance layout stay global?
-  Decides whether `tenant_id` lands now as nullable (cheap) or later.
-- **Q3 (owner, non-blocking) — Concurrent editors.** Is P1.1's `layout/stale`
-  worth building for a one-operator instance, or is last-write-wins accepted?
+- Q2 (per-tenant shells) — decided 2026-10-02, Decision 2026-10-02b (B11):
+  no per-tenant or per-household shell; one instance-wide layout applies to
+  every user and only `system:settings:write` holders configure it; no
+  `tenant_id` lands now (§3, §6, P2).
+- Q3 (concurrent editors) — decided 2026-10-02, Decision 2026-10-02b (B12):
+  last-write-wins is accepted for a one-operator instance; P1.1's
+  `layout/stale` is dropped (P1.1, §7, §11 row 13).
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -496,7 +506,8 @@ shared` is empty: the docs commits on top of it change no code). The spec text
 above is the target; this section lists every place the shipped code diverges
 from it. Rows are ordered by severity: security first, then integrity (wrong
 rows shown or lost), then UX, contract, tests and hygiene, then unbuilt P1;
-row 14 (P1, added by Decision 2026-10-01b) is appended after row 13. A
+row 14 (P1, added by Decision 2026-10-01b) is appended after row 13, and
+row 13 lost its P1.1 part to Decision 2026-10-02b (B12). A
 row closes when the code matches the requirement it cites and a
 TRACEABILITY-MATRIX row for SPEC-02 is graded on a named test. The module lives
 in `backend/internal/modules/layout/`.
@@ -515,7 +526,7 @@ in `backend/internal/modules/layout/`.
 | 10 | P0.7 route gate | `/admin/:path*` is in `config.matcher`. | `frontend/src/middleware.ts` `config.matcher` = `["/", "/login", "/register", "/upload", "/library/:path*", "/bank/:path*", "/people/:path*"]`; `app/(app)/admin/layout/page.tsx` (and `/admin/users`, `/admin/roles`) render without the D-34 edge gate — the API still refuses, so this is a UX gap (a signed-out visitor gets the editor's error state, not `/login`). | **frontend:** add `'/admin/:path*'` together with the other F032 routes (`/weather`, `/calendar`). **test:** TC-LAY-045. | F032; backlog item 15 (extends it to `/admin`) |
 | 11 | P0.2–P0.5 HTTP and adapter tests | Status codes over the real router; the transactional save against a database. | `service_test.go` tests the service with a fake repository only. Nothing asserts 401 on `/layout`, 403 on `/admin/*`, the response shape, that `DeleteMenuItemsExcept` spares `is_system` rows, or that a failing upsert rolls back the whole save. | **test:** `http_test.go` over `MountHTTP` with `servertest` (TC-LAY-005, 011, 023, 030); an integration test on the RLS harness for the adapter (TC-LAY-027, 028). | Found while writing SPEC-02, 2026-10-01 |
 | 12 | Hygiene — stale statements in code and contract | Comments and descriptions match the code: migration `0036`; one `is_system` row; a `layout/api` package only once P1.4 adds it. | `backend/.golangci.yml` (layout block) and `backend/sqlc.yaml` (layout block) say "(0035)"; `HomeView.tsx` `WidgetRail` doc says "migration 0035"; `types.go` package doc says "Other modules import only layout/api" (there is none, `module.go` says so); `shared/openapi.yaml` `LayoutMenuItem.is_system` and `lib/layout.ts` `MenuItem.is_system` say "Seeded rows … never deleted/deletable", but only `admin-layout` is system; the seeded label and `FALLBACK` read "Commic". | **backend:** fix the four comments. **openapi:** "The editor's own link (`admin-layout`); renameable, reorderable, hideable, never deleted." **frontend:** same for the TS doc; "Comic" in `FALLBACK`. **migration:** none (the label is data; the operator renames it, or a `000N_layout_*` UPDATE). | Found while writing SPEC-02, 2026-10-01 |
-| 13 | P1.1–P1.3 | Optimistic concurrency (`layout/stale`), audit diff, icon picker. | Not built: both saves are last-write-wins; audit metadata is a count; `icon` is free text. | **backend · openapi · frontend · test:** as P1.1–P1.3. | This spec (P1) |
+| 13 | P1.2–P1.3 (P1.1 no longer in scope) | Audit diff, icon picker. *P1.1 optimistic concurrency (`layout/stale`) is no longer in scope — Decision 2026-10-02b (B12); last-write-wins is the requirement, so it is not a gap.* | Not built: audit metadata is a count; `icon` is free text. (Both saves are last-write-wins, which now matches the spec.) | **backend · openapi · frontend · test:** as P1.2–P1.3. | This spec (P1); P1.1 retired by Decision 2026-10-02b (B12) |
 | 14 | P1.4 `layout:changed` | Each successful save publishes `layout:changed {event_id, occurred_at, part, actor_id, actor_name, count}` after commit; `layout/api` holds the name and payload; `cmd/api` subscribes `notify:on_layout_changed`. | Not built: `module.go` `Deps` has no publisher and says there is no `api/` package; `handler.go` `SaveMenu` / `SaveWidgets` write the audit row only; `backend/cmd/api/main.go` subscribes no `layout:*` name. | **backend:** `layout/api` (constant + `ChangedEvent`); `Deps.Events`; publish beside the audit write in both handlers; the `Subscribe` edge in `cmd/api` (the consumer is SPEC-05 §11 row 23); a depguard allowance for `layout/api` if the isolation block needs one. **docs:** events.md row planned → live in the same PR. **test:** TC-LAY-050…052. | Decision 2026-10-01b (D3) |
 
 **Already matching on HEAD.**
@@ -556,8 +567,10 @@ in `backend/internal/modules/layout/`.
 
 ## 12. Out of scope
 
-Per-user or per-tenant layouts (P2), nested or external menu links, a widget
-catalogue in the database, widget-level settings, page building, a public (signed-out)
-shell, stream projection of `layout:changed`, and theming (the template version
-switch, `NEXT_PUBLIC_TEMPLATE_VERSION`, is a build-time choice owned by
+Per-user layouts (P2), per-tenant or per-household layouts (not planned —
+Decision 2026-10-02b (B11)), optimistic concurrency on the saves (dropped —
+B12), nested or external menu links, a widget catalogue in the database,
+widget-level settings, page building, a public (signed-out) shell, stream
+projection of `layout:changed`, and theming (the template version switch,
+`NEXT_PUBLIC_TEMPLATE_VERSION`, is a build-time choice owned by
 `frontend/src/templates/README.md`, not data).
