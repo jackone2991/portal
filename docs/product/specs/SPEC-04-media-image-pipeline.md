@@ -628,7 +628,16 @@ migration is applied do upload-sessions and `/complete` enforce
 **Cross-module surface** (no HTTP route): P0.7 adds
 `mediaapi.PurgeOwnerAssets(ctx, ownerID) (remaining int, err error)` to
 `media/api`, beside `GetAsset`, `AssetStatuses`, `SignedURL`, `Continue`,
-`Ingest` and `OpenOriginal`.
+`Ingest` and `OpenOriginal`. `SignedURL(ctx, id, ttl)` (`service.go`
+`SignedOriginalURL`) is the one sanctioned way an original's bytes reach a
+non-owner: a presigned GET on the source object, minted inside the caller's
+tenant transaction (tenant-scoped, not owner-scoped), for a `ready` asset only
+(`deleting` → not found, any other state → not ready), a non-positive TTL
+falling back to the upload TTL. Its first caller is music, which signs only the
+`audio` asset of a published track for a member of the owner's tenant (SPEC-15
+P0.10, Decision 2026-10-02b (B5); unbuilt — SPEC-15 §12 row 29); P0.5's
+`/original` itself stays owner-only. The method does not check the kind, so a
+caller must never pass an image — its original keeps GPS EXIF.
 
 Annotate per the README OpenAPI encoding (`security: []` for the variant row;
 `x-required-permission: {owner_or: assets:delete:any}` for DELETE,

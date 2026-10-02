@@ -201,7 +201,7 @@ The item matches `shared/openapi.yaml` `components.schemas.ContinueItem`:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `module` | string ∈ {`media`, `movie`, `music`, `story`, `comic`} | `media` today; the comic leg (P1.6) uses `comic` |
+| `module` | string ∈ {`media`, `movie`, `music`, `story`, `comic`} | `media` today — music tracks included, as items of their audio asset (SPEC-15 P0.10, Decision 2026-10-02b (B2)), so `music` is never emitted; the comic leg (P1.6) uses `comic` |
 | `ref_id` | uuid | the asset id for `media`; the comic id for `comic` |
 | `title` | string, non-null | the display title (P0.1); the comic leg uses the comic title |
 | `poster_url` | string \| null | `/api/v1/assets/{ref_id}/variants/poster` only when a `poster` variant exists, else null; the comic leg uses its cover's `thumb` variant |
