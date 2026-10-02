@@ -2,7 +2,7 @@
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `social` (`backend/internal/modules/social/`) · **Depends on:** `account` through `accountapi` (`GetUserNames` for display names; the directory behind discovery is `accountapi.ListDirectory`, reached by `people`); `tenant` through `tenantapi` (`ReachableUserIDs`, `CanReach` — who may find and ask whom, SPEC-01 P0.17, Decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt); SPEC-04 P0.6 (`platform/events` fan-out); SPEC-05 (the two `notify:on_connection_*` consumers turn the events into bell entries); the per-user RLS GUC `app.current_user` set by `platform/db.BeginScope` (ADR-07 request scope)
-**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`0037_social_connections`, `internal/modules/social`, `frontend/src/lib/social.ts`) and the decisions it implements — [ADR-08](README.md#adr-08) (life OS; "friend graph shipped a first slice as the `social` module"), [ADR-01](README.md#adr-01) (social deferred), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (RLS), feature-inventory §9.3 "Friend graph" (requests only) · **Refs:** `D-1` (notifications are a standalone module; emitters publish events), `D-7` (RFC 7807 + i18n keys), `D-19` (rich profile lives in a future `social.profiles`, not here), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [SPEC-11](SPEC-11-people-registry.md) (`people_persons.linked_user_id`, `GET /people/suggestions`)
+**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`0037_social_connections`, `internal/modules/social`, `frontend/src/lib/social.ts`) and the decisions it implements — [ADR-08](SPEC-09-life-stream-home.md#adr-08) (life OS; "friend graph shipped a first slice as the `social` module"), [ADR-01](SPEC-03-platform-ops.md#adr-01) (social deferred), [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (RLS), feature-inventory §9.3 "Friend graph" (requests only) · **Refs:** `D-1` (notifications are a standalone module; emitters publish events), `D-7` (RFC 7807 + i18n keys), `D-19` (rich profile lives in a future `social.profiles`, not here), `D-29` (envelopes), `D-32`/`D-33`/`D-34` (frontend), [SPEC-11](SPEC-11-people-registry.md) (`people_persons.linked_user_id`, `GET /people/suggestions`)
 **Downstream consumers:** SPEC-05 notify (`notify:on_connection_requested`, `notify:on_connection_accepted`); `people` (`socialapi.API.CounterpartIDs` subtracts connected accounts from `GET /people/suggestions`); the frontend header menu, right rail and `/people?circle=requests` tab; SPEC-03 P1.7 takeout (future)
 
 ---
@@ -12,7 +12,7 @@
 Portal has had a Facebook-shaped shell since the Olympus port — a friend-request
 menu in the header, a "friends" right rail, "Kết bạn" buttons — with nothing
 behind it: the header menu held four invented people and a badge that counted
-them. [ADR-08](README.md#adr-08) demoted the friend graph ("dead
+them. [ADR-08](SPEC-09-life-stream-home.md#adr-08) demoted the friend graph ("dead
 weight at n=1") and [SPEC-11](SPEC-11-people-registry.md) deliberately made people
 *data*, not accounts. But a household instance does have more than one account
 (registration with approval, migration `0031`), and two people on the same

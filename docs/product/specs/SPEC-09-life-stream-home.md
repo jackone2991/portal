@@ -2,7 +2,7 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `journal` (extends SPEC-07; owns `stream_items` per its §6 decision) + frontend home · **Depends on:** SPEC-07 (hard — first content + module home); system events attach as their producers land (SPEC-04 P0.3, SPEC-12 P0.7, SPEC-10 P1.5, SPEC-11 P0.4); the widget rail additionally consumes SPEC-05's GET /me/notifications — **every widget and consumer degrades to an empty state**, none is a blocker
-**Upstream:** brief 06, which merged three candidates from the 2026-07-10 research pass — stream projection, "Today" dashboard, Home-Assistant-pattern home (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/06-life-stream-home.md`) · **Refs:** [ADR-08](README.md#adr-08), [events.md](../../reference/events.md), frontend.md
+**Upstream:** brief 06, which merged three candidates from the 2026-07-10 research pass — stream projection, "Today" dashboard, Home-Assistant-pattern home (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/06-life-stream-home.md`) · **Refs:** [ADR-08](#adr-08), [events.md](../../reference/events.md), frontend.md
 **Downstream consumers:** this spec's own P2 daily digest (reads this projection; delivered via SPEC-05 channels), future on-this-day widgets
 
 ---
@@ -559,3 +559,155 @@ point here. Paths are relative to `backend/` or `frontend/src/`; `stream.go` is
 - Behaviour that already holds but has no test: TC-STREAM-016 (migration backfill), TC-STREAM-030 (merged cursor traversal over the router), TC-STREAM-031 (owner isolation on `/stream`), TC-STREAM-035 (unmapped type → generic card).
 - New with the rows above: TC-STREAM-005, 006, 015, 017, 018, 036, 037, 051, 053, 070…072, 090, 091, 112.
 - The weather widget (accepted 2026-10-01) has no test: TC-STREAM-073…075 (configured location, denied/failed fetch, success render) and TC-STREAM-076 (row 14's matcher).
+
+## Decision records
+
+The architecture decision this spec stands on. It lived in the specs README
+until 2026-10-02, when every record moved into the spec that owns its subject;
+the `ADR-NN` id stays the stable citation and the anchor below is fixed. The
+record keeps the binding shape — Context → Decision → Options considered →
+Trade-offs → Consequences → Action items. The Decision, Options and Trade-offs
+are the narrative layer, kept verbatim (ADR-11 rule 2 —
+[SPEC-06](SPEC-06-docs-canonicalisation.md#adr-11)); Context, Consequences and
+Action items are the fact layer, corrected in place and true as of this file's
+`Last verified`. Where the spec above already states a fact, the record points
+to it instead of repeating it.
+
+<a id="adr-08"></a>
+### ADR-08 — Life-OS Positioning + Finance Ledger Scope
+
+**Decided:** 2026-07-07 · **Status:** accepted; executed from 2026-07-12 (`6160f8e` media image pipeline, `66c036f` ledger); the status field was flipped only on 2026-09-11
+
+Amends [ADR-01](SPEC-03-platform-ops.md#adr-01) · relates to D-27/D-28 (step-up/MFA) and
+[ADR-06](SPEC-01-account-identity-admin.md#adr-06) · yardstick:
+[vision.md](../vision.md), which keeps the product-yardstick role and is not
+restated here.
+
+#### Context
+
+*As found on 2026-07-07. This is the decision the whole spec line
+descends from; everything below the Decision holds as written.*
+
+Portal's post-v1 gap analyses (`product/backlog.md` as it then was,
+`product/analysis/facebook-comparison.md`, since deleted) measured the product against Facebook.
+That yardstick made sense while porting the Olympus UI, but it embeds an
+assumption Portal does not satisfy: Facebook's features derive value from network
+effects, while Portal is self-hosted, single-VPS, and starts from **one user**.
+Following the parity-driven backlog order (friends → messenger → people search)
+would spend the scarce solo-dev budget on features that are near-worthless at n=1.
+
+The owner's stated intent (2026-07-07): Portal should be tools supporting the
+user's daily life and work — "like a human individual with their surrounding
+facets: money, time, learning, social…". Several previously "orphan" spec items
+(bank §8, calendar/birthdays, library verticals) are coherent under this framing
+and incoherent under Facebook parity.
+
+Two existing architectural assets make an integrated life platform more than a
+bundle of clones: the **event bus** (hard rule: modules couple only via Asynq
+`<module>:<event>`) and **one identity + RBAC** across all domains.
+
+The immediate scope tension: the owner wanted **money** first, but ADR-01 deferred
+"bank" wholesale, and D-27/D-28 gated bank behind MFA/step-up.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **Portal is a self-hosted life OS**: one digital identity with facets — money,
+   time, learning, social, entertainment. Facebook parity is retired as the
+   backlog-ordering principle; `facebook-comparison.md` is reclassified as a
+   historical analysis.
+2. The existing newsfeed surface is re-purposed (long-term) as the user's **life
+   stream**, fed by domain events. Every new domain module must emit at least one
+   bus event from its first release.
+3. **"Bank" is split.** A **finance ledger** (manual multi-account bookkeeping:
+   accounts, transactions, categories, budgets, transfers — `product/specs/SPEC-12`)
+   enters v1 scope. **Real bank integration** (credentials, API sync, money
+   movement) remains deferred exactly as ADR-01 had it.
+4. **MFA/TOTP gating is re-anchored**: D-27/D-28's "MFA before bank" applies to
+   *credential-holding / money-moving* features, not to the manual ledger, which
+   stores no bank credentials. TOTP becomes the named unlock task for real bank
+   integration.
+5. First build order under the new positioning: media image pipeline → comic
+   vertical → finance ledger (`product/specs/`), with the notification module
+   immediately after as the life-stream backbone.
+
+#### Options considered
+
+- **A. Continue the parity-driven order** (notifications → posts → friends →
+  search). Rejected: optimizes believability of a Facebook clone, not value to the
+  actual single user; friend graph and messenger are dead weight at n=1.
+- **B. Life OS with finance ledger in scope** *(chosen)*: aligns effort with the
+  owner's daily use; reuses the event bus as the differentiator; keeps risky bank
+  features deferred.
+- **C. Entertainment verticals only, defer all finance**: safest read of ADR-01,
+  but leaves the owner's top-priority facet (money) unbuilt on a doctrinal
+  technicality; the ledger's actual risk profile (no credentials) doesn't warrant it.
+- **D. Full §8 bank module including debts/loans/investments now**: rejected;
+  violates the v1 envelope and front-loads models (amortization, holdings) with no
+  dogfooding behind them.
+
+#### Trade-offs
+
+- The Olympus social shell stays partially decorative for longer (friends panel,
+  chat bar). Accepted: the shell is kept, only priorities move.
+- Two positioning documents coexist during transition (old comparison, new vision);
+  mitigated by reclassifying the comparison as historical.
+- The ledger without statement import means manual entry only; accepted explicitly
+  (owner's bank exports PDF → import needs OCR; schema is import-ready from
+  migration #1 so the deferral costs nothing structurally).
+- Finance data becomes the most sensitive data in the system while auth is
+  password-only (no MFA). Accepted for a self-hosted single-user deployment;
+  consequence noted below.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+What followed (checked 2026-10-01):
+
+- **The build order ran as decided and kept going:** SPEC-04 (media image
+  pipeline) → SPEC-14 (comic) → SPEC-12 (ledger) landed 2026-07-12, followed by
+  SPEC-05 (notify), SPEC-07 and SPEC-09 (journal + life stream), SPEC-10
+  (continue rail), SPEC-11 (people/birthdays), SPEC-03 (ops) and SPEC-13
+  (ledger expansion: debts first) — the order and migrations are under
+  [Build state and what remains](README.md#build-state-and-what-remains). The `bank`
+  module is the finance ledger; real bank integration (credentials, API sync,
+  money movement) is still deferred, exactly as item 3 said.
+- **The life stream exists, and is narrower than first built:** `journal`
+  projects bank transactions (`bank:transaction_created` / `_updated` /
+  `_deleted`), upcoming birthdays (`people:birthday_upcoming`) and finished
+  playback (`media:playback_completed`), and cleans up on `media:asset_deleted`
+  (`grep -n 'journalapi.TaskStream' backend/cmd/*/main.go`). Uploads
+  (`media:asset_ready`, since `0033`) and comic publishing (since `0034`) are
+  no longer projected; they reach the bell through notify instead (SPEC-09).
+  Every event lives in [`reference/events.md`](../../reference/events.md);
+  `notify:*` stayed reserved for the notification module, which shipped. The
+  "every new module emits" rule is the **Events** convention of the
+  [specs README](README.md#conventions-binding-on-all-specs).
+- **Backlog re-rank:** happened in the July backlog. That file was
+  archived-in-place on 2026-08-25 and replaced under
+  [ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) by a live one,
+  [backlog.md](../backlog.md). Of the demoted items, email password-reset came
+  back and shipped (`0010`, SPEC-05); friend graph shipped a first slice as the
+  `social` module (`0037`, SPEC-18); messaging and people search did not.
+- **The admin wildcard does not reach another user's finance data by design:**
+  `*` passes the bank route gate, but every bank query filters
+  `user_id = caller` (SPEC-12 P0.8 — "no cross-user read or write at any level,
+  including `*`"). The shipped exception is a code defect, not a grant: the
+  derived-balance queries are not filtered by the caller (SPEC-12 §12 row 1).
+- **MFA/TOTP is still the named unlock for real bank integration** and is not
+  built ([ADR-06](SPEC-01-account-identity-admin.md#adr-06)). The ledger —
+  including debts and interest accrual (SPEC-13) — runs under password-only
+  auth, as the trade-off accepted.
+- "Posts" changed meaning as predicted: the journal entry is the first real
+  post type.
+- ADR-01 remains in force for what it still defers: marketplace, creator
+  economy, observability, LiveKit/mediamtx ([backlog.md § Deferred](../backlog.md)).
+  Multi-tenancy/RLS is no longer on that list — ADR-07 executed.
+
+#### Action items
+
+- [x] Accept this record (executed from 2026-07-12; status field corrected 2026-09-11).
+- [x] Backlog ordering note points at the specs — carried by today's [backlog.md](../backlog.md); `product/briefs/` was folded into the specs and deleted.
+- [x] Historical label on `product/analysis/facebook-comparison.md`; the file was later deleted (`git show ea100d8:docs/product/analysis/facebook-comparison.md`).
+- [x] Build order SPEC-04 → SPEC-14 → SPEC-12, notification module next — all four shipped.
+- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-13's items are all manual-entry.

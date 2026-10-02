@@ -1,6 +1,6 @@
 # Portal — Vision
 
-**Status:** current ([ADR-08](specs/README.md#adr-08), accepted) · **Last verified:** 2026-10-01
+**Status:** current ([ADR-08](specs/SPEC-09-life-stream-home.md#adr-08), accepted) · **Last verified:** 2026-10-01
 
 ## One sentence
 
@@ -48,7 +48,7 @@ exactly this, when real second users appear.
 ## Operating constraints (inherited from ADR-01)
 
 1 developer · 2-week build bursts · ≤ $100/month · a single VPS
-([ADR-01](specs/README.md#adr-01)). Every scope
+([ADR-01](specs/SPEC-03-platform-ops.md#adr-01)). Every scope
 decision answers to this envelope. Deferred-with-conditions list:
 [backlog.md § Deferred](backlog.md).
 

@@ -79,11 +79,13 @@ Documents describing implementation state must defer to [`/CLAUDE.md`](../CLAUDE
 
 There is no `adr/` folder (folded into the specs on 2026-10-01 —
 [ADR-09](product/specs/SPEC-06-docs-canonicalisation.md#adr-09) § Consequences).
-A decision record lives **inside the spec that owns its subject**, or in
-[product/specs/README.md](product/specs/README.md) when it governs the corpus
-as a whole (scope, positioning, the API contract). The index of every record —
-ID → file — is [specs/README.md § Decision records](product/specs/README.md#decision-records);
-a new record gets a row there.
+A decision record always lives **inside the spec that owns its subject** —
+never in [product/specs/README.md](product/specs/README.md), which holds only
+the index of every record (ID → file) in
+[§ Decision records](product/specs/README.md#decision-records); a new record
+gets a row there. A record that governs the corpus as a whole goes to the spec
+closest to its subject (since 2026-10-02 the scope cut, the API contract and
+the list contract sit in SPEC-03, the life-OS positioning in SPEC-09).
 
 **When to write one.** A choice that (a) is expensive to reverse, (b) crosses
 module boundaries, or (c) contradicts a previous record or the v1 scope cut.

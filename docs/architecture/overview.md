@@ -9,11 +9,11 @@ tiers and keeps them separate on purpose:
 
 - **SHIPPED** — running today, verifiable on the stack.
 - **NEXT** — committed and specified ([product/specs/](../product/specs/README.md), ADR-08 order).
-- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../product/specs/README.md#adr-01), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
+- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../product/specs/SPEC-03-platform-ops.md#adr-01), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
 
 ## 1. What Portal is, architecturally
 
-A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../product/specs/README.md#adr-08)):
+A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../product/specs/SPEC-09-life-stream-home.md#adr-08)):
 one identity, many life facets (money, time, learning, social, entertainment),
 one VPS. The architecture that serves this is:
 
@@ -145,7 +145,7 @@ i18n keys (D-7).
   discipline.
 - **OpenAPI drift.** The auth-path drift is fixed — the spec now carries
   `/auth/register` and no `/auth/callback` (reconciled per
-  [ADR-10](../product/specs/README.md#adr-10)), and ci.yml adds a codegen
+  [ADR-10](../product/specs/SPEC-03-platform-ops.md#adr-10)), and ci.yml adds a codegen
   drift gate. Residual risk: handlers are still **hand-written**, so one can
   diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-14
   documents `PATCH {status}`); the codegen-vs-handwritten decision (backlog §9)

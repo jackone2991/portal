@@ -8,7 +8,7 @@ Cross-module coupling happens **only** through this bus (hard rule). Naming:
 - **Task** — a work item one module enqueues for its own worker (implementation
   detail, listed for grep-ability).
 - **Event** — a fact announced to whoever cares (the integration surface, and the
-  raw material of the life stream per [ADR-08](../product/specs/README.md#adr-08)).
+  raw material of the life stream per [ADR-08](../product/specs/SPEC-09-life-stream-home.md#adr-08)).
 
 Adding a name here is part of a spec/PR's definition of done; MODULES.md §5 owns
 the naming *rules*, this file owns the *inventory*.

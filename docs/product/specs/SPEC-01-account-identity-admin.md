@@ -878,7 +878,7 @@ usable whether or not the flag is set):
 - Given 5 wrong `current_password` attempts from one IP, then the 6th is 429.
   *(TC-ACC-140)*
 
-### P0.13 — Per-user timezone *(decided 2026-09-30; revised by Decision 2026-10-02 (A8); [ADR-15](README.md#adr-15); unbuilt)*
+### P0.13 — Per-user timezone *(decided 2026-09-30; revised by Decision 2026-10-02 (A8); [ADR-15](#adr-15); unbuilt)*
 
 The specs README **Timezone** convention is binding and is not restated in
 full; the account half is:
@@ -1365,7 +1365,7 @@ membership.
   `account.security_alert` to the user; the notify side is SPEC-05 P1.4.
   *AC:* a detected reuse produces one bell row and one email.
 - **P1.3 Admin-change events** *(Decision 2026-10-01b (D3);
-  [ADR-17](README.md#adr-17); unbuilt — §11 row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
+  [ADR-17](SPEC-05-notification-module.md#adr-17); unbuilt — §11 row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
   bus event": it announces every admin-relevant change on the bus, and notify
   turns each into a bell entry for the Superadmins (SPEC-05 P1.5). The events
   are published through `platform/events` **after the write commits** — the
@@ -1959,7 +1959,10 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
 The architecture decisions this spec stands on, folded in from the retired
 `docs/adr/` folder on 2026-10-01; ADR-12 was written here directly on
 2026-10-02, and ADR-13 (deleting a User) and ADR-14 (identity data that
-outlives its User) promote owner decisions this spec already stated. The `ADR-NN` ids stay the stable citation;
+outlives its User) promote owner decisions this spec already stated. ADR-15
+(per-user timezone — `users.timezone` is account-owned, P0.13) was held in the
+specs README until 2026-10-02, when every record moved into a spec; it moved
+verbatim. The `ADR-NN` ids stay the stable citation;
 the anchors below are fixed. Each record keeps the binding shape — Context →
 Decision → Options considered → Trade-offs → Consequences → Action items. The
 Decision, Options and Trade-offs are the narrative layer, kept verbatim (it
@@ -2070,7 +2073,7 @@ For v1 itself, none of the policy/group machinery exists. The 2-week sprint ship
 | Team familiarity | Mixed |
 
 **Pros:** Avoids the future "we said we'd add policies" debt.
-**Cons:** Crowds v1 with non-demo features. Policy admin UI isn't demoable in the 7-step happy path. Pure scope creep against [ADR-01](README.md#adr-01).
+**Cons:** Crowds v1 with non-demo features. Policy admin UI isn't demoable in the 7-step happy path. Pure scope creep against [ADR-01](SPEC-03-platform-ops.md#adr-01).
 
 #### Trade-off analysis
 
@@ -2368,7 +2371,7 @@ SPEC-05), which made the interim admin/CLI reset unnecessary.
 
 **Decided:** 2026-07-07 · **Status:** accepted, executed 2026-08-25 (plan steps 1–4, 8, 10); steps 5–7 deferred by scope
 
-Deciders: kirito. Relates to [ADR-01](README.md#adr-01) (v1 cut), [ADR-02](#adr-02)
+Deciders: kirito. Relates to [ADR-01](SPEC-03-platform-ops.md#adr-01) (v1 cut), [ADR-02](#adr-02)
 (RBAC), [ADR-03](SPEC-03-platform-ops.md#adr-03) (single VPS),
 [feature-inventory.md](../feature-inventory.md) §2 + §18 Phase 1, [D-23] [D-24]
 [D-25]; runbook [operations/rls-cutover.md](../../operations/rls-cutover.md).
@@ -2598,7 +2601,7 @@ BYPASSRLS role.
 
 Deciders: kirito. Relates to [ADR-07](#adr-07) (the tenant fence this record
 opens for one kind of read), [ADR-02](#adr-02) (RBAC stays global),
-[ADR-08](README.md#adr-08) (every module emits ≥ 1 bus event), [D-23] [D-24].
+[ADR-08](SPEC-09-life-stream-home.md#adr-08) (every module emits ≥ 1 bus event), [D-23] [D-24].
 The requirements it produces are P0.17 above (the `tenant` module's links and
 the shared-read functions) and, since B15, P0.18 (tenant groups), [SPEC-04](SPEC-04-media-image-pipeline.md) P0.8
 (media), [SPEC-15](SPEC-15-music-vertical.md) P0.2–P0.3 and P0.10,
@@ -3163,3 +3166,123 @@ Action items close.*
    `AUDIT_PII_KEY` and `account:expire_identity_data` — SPEC-01 §11 row 31.
 2. [ ] The snapshot sealed by the same function — SPEC-01 §11 row 29
    (extended by B1; lands with or after row 31).
+
+<a id="adr-15"></a>
+### ADR-15 — Per-user timezone; periodic sweeps evaluate each owner's local date
+
+**Decided:** 2026-09-30, revised 2026-10-01 and 2026-10-02 · **Status:** accepted (Decision 2026-09-30 (Timezone); Decision 2026-10-01 (f), superseded as to `timezone_manual` by Decision 2026-10-02 (A8)); not built
+
+Deciders: kirito. Settles the source [D-17] left open (UTC storage, user-TZ
+day boundaries, an hourly per-TZ scheduler) · relates to [D-7] (the
+`users.timezone` column). The rule is the **Timezone** convention of the [specs README](README.md#conventions-binding-on-all-specs),
+which is its one statement; the account half is
+[SPEC-01](SPEC-01-account-identity-admin.md) P0.13, and the readers are
+SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4
+and SPEC-13 §4a. This record holds the decision and points there for the
+contract.
+
+#### Context
+
+*The state this was decided against, 2026-09-30 (`main` @ `99b5a0b`). Spec
+numbers are today's.*
+
+- **A per-user column nobody writes.** `0002_account_users` declares
+  `users.timezone TEXT NOT NULL DEFAULT 'UTC'`, and no endpoint writes it;
+  `accountapi.UserSummary` is `{ID, Email, DisplayName}`.
+- **One instance zone in practice.** `APP_TIMEZONE` (`platform/config`) is
+  the zone `cmd/api` serves on `GET /api/v1/time`, and the frontend's
+  `lib/time.ts` takes its display zone from there. The people birthday scan
+  runs daily at 06:00 UTC with one zone for every owner (SPEC-11 §11 rows
+  5–6).
+- **The specs disagreed** (the 2026-09-30 worklog, "Open decisions left by
+  the post-fix review"): SPEC-12's dashboard and budget month cited
+  `users.timezone` (D-17); SPEC-09 P1.5 and SPEC-11 P0.3 used `APP_TIMEZONE`
+  for v1 because the column had no write path; SPEC-07 P0.4 claimed to match
+  the stream's zone.
+
+Every module with a day or month boundary depends on the answer — criterion
+(b) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **The User's own zone.** Every user-facing day or month boundary is
+   computed in the User's own IANA zone, `users.timezone`. There is no
+   instance-wide fallback: `APP_TIMEZONE`, "the instance default" and UTC are
+   not v1 sources for user-facing boundaries.
+2. **Taken from the device** (2026-09-30), and since A8: the column is
+   NULLable and NULL means "not set"; after sign-in the frontend saves the
+   device zone while the stored one is NULL; a set zone is never overwritten
+   by the device — a differing device zone gets one prompt, saved only on
+   confirmation; settings offer an IANA picker.
+3. **`Asia/Ho_Chi_Minh` when unknown** — the column default on 2026-09-30;
+   since A8, the backend readers' fallback while the column is NULL or does
+   not parse (the frontend uses the device zone).
+4. **One write path, validated** (confirmed by Decision 2026-10-01 (f)):
+   `PATCH /api/v1/auth/me {timezone}`; an empty or unknown IANA name is 422
+   `account/invalid-timezone` and nothing is written.
+5. **No manual flag.** Decision 2026-10-01 (f) confirmed a
+   `timezone_manual` flag; A8 dropped it everywhere — no column, no field, no
+   request flag. Decision 2 does its job.
+6. **Read through `accountapi`.** Modules never query `users`;
+   `UserSummary.Timezone` always returns a usable zone.
+7. **Sweeps evaluate each owner's local date.** A periodic task never uses
+   one "today" for everyone: it runs often enough (hourly) and evaluates each
+   owner's local date in that owner's zone, relying on its dedup keys for
+   exactly-once; SQL converts at the query layer (`AT TIME ZONE $tz`), never
+   through the session zone.
+
+#### Options considered
+
+From the 2026-09-30 worklog, as written ("choose one v1 source and state it
+once in the README"):
+
+- **The instance zone, `APP_TIMEZONE`, for v1** — what SPEC-09 P1.5 and
+  SPEC-11 P0.3 then said. Not chosen.
+- **Each User's `users.timezone`** (D-17, what SPEC-12 cited), taken from the
+  User's location, default `Asia/Ho_Chi_Minh`. *Chosen.*
+
+The manual override, as Decision 2026-10-01 (f) confirmed it: a
+`users.timezone_manual boolean NOT NULL DEFAULT false`; while true, the
+device-detected zone never overwrites the stored one; the settings picker
+saves `{timezone, timezone_manual: true}` and "use my location" saves the
+device zone with the flag false; `GET /auth/me` returns both. A8 replaced it
+with NULL-as-unset and a device that never overwrites (Decision 2). A8 was
+decided in the owner's review of SPEC-01 and left no written options list
+beyond that before-and-after.
+
+#### Trade-offs
+
+- **Sweeps get more frequent.** A daily job at one instance midnight becomes
+  an hourly job that resolves each owner's zone and leans on its dedup keys —
+  more runs, each cheap at household scale.
+- **"Today" belongs to the reader.** The same row can fall on different days
+  for two Users in different zones.
+- **The fallback is a place, not UTC.** It is right for the owner's household
+  and wrong for a User elsewhere until their first sign-in saves a zone.
+- **A traveller keeps home time.** Because the device never overwrites a set
+  zone, a User abroad sees their home zone until they accept the prompt.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contract** is the **Timezone** convention of the
+  [specs README](README.md#conventions-binding-on-all-specs) and SPEC-01 P0.13
+  (TC-ACC-100…104); the D-17 updates in
+  [feature-inventory.md](../feature-inventory.md) record the history.
+- **`GET /api/v1/time` keeps only the server clock**; `lib/time.ts` takes the
+  zone from `GET /auth/me`.
+- **The readers change with it** — the "Per-user timezone" cross-cutting gap
+  in the [specs README](README.md#implementation-gaps-index-2026-10-01) lists every row; the success metric is SPEC-01 §9's (no reader still
+  resolves a day boundary from `APP_TIMEZONE`).
+
+#### Action items
+
+1. [ ] The account half — migration, `PATCH /auth/me`, the `/auth/me` field,
+   `accountapi` single and batch lookups, the frontend save, prompt and
+   picker — SPEC-01 §11 row 14, first.
+2. [ ] The readers: SPEC-12 §12 rows 8, 16 · SPEC-07 §11 row 2 · SPEC-09 §11
+   rows 3, 9, 16 · SPEC-11 §11 rows 5–6 · SPEC-13 §8 row 2.

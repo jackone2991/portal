@@ -18,7 +18,7 @@ exports PDF → import means OCR; see [backlog.md § Deferred](../backlog.md)).
 Scope insight that unblocks this now: a self-hosted **manual** ledger holds no bank
 credentials, so the "MFA before bank" gate (D-27/D-28) does not apply. TOTP becomes
 the named unlock for *real bank integration* later. ADR-01 deferred "bank"
-wholesale — **[ADR-08](README.md#adr-08) landed 2026-07 and amends
+wholesale — **[ADR-08](SPEC-09-life-stream-home.md#adr-08) landed 2026-07 and amends
 that deferral, making this scope legitimate.** *(2026-07-10 note: ADR-08 landed
 without ratifying this spec's money-representation divergence — see §7 for the
 replacement vehicle.)*

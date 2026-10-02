@@ -39,7 +39,7 @@ companion `TEST-CASES-SPEC-*.md` files, and tracks coverage in
 
 - Deferred modules/features: bank real-institution integration, social graph,
   marketplace, creator economy, ML safety, LiveKit/mediamtx, the 5-service
-  observability stack (per [ADR-01](../product/specs/README.md#adr-01)).
+  observability stack (per [ADR-01](../product/specs/SPEC-03-platform-ops.md#adr-01)).
 - Multi-tenant / household RLS, cross-user data sharing.
 - Load/stress at scale beyond the n=1 single-VPS envelope (perf budgets in §8 are
   single-user targets, not concurrency benchmarks).

@@ -110,9 +110,13 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    B14).
 4. **Remaining integrity, contract and UX rows**, per spec, in each section's
    order; the `x-required-permission` retrofit with its drift check. Rows
-   Decision 2026-10-02b added rank here: SPEC-17 row 21 together with SPEC-14
-   row 9 (blank chapters of a published work hidden from non-owners — one
-   pattern, B7), SPEC-15 row 28 (a self-publish makes no bell entry;
+   Decision 2026-10-02b added rank here: SPEC-17 row 23 (one
+   `story_body_is_blank` function defines a blank body for the publish check,
+   the reader filter and `chapter_count` — B16; run SPEC-17 §6's read-only
+   verification script against the real database first and record its counts
+   in the PR), then SPEC-17 row 21, which calls that function, together with
+   SPEC-14 row 9 (blank chapters of a published work hidden from non-owners —
+   one pattern, B7), SPEC-15 row 28 (a self-publish makes no bell entry;
    `actor_user_id` on `music:track_published` — B4), SPEC-18 row 13 (24-hour
    re-request cooldown after a decline, `social_declines` — B8).
 5. **Unbuilt P1**: SPEC-04 row 14, SPEC-05 row 21, SPEC-09 row 16, SPEC-10

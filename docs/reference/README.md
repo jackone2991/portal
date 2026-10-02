@@ -8,7 +8,7 @@ them — a copy is a lie waiting to happen.
 | What you need | Canonical source |
 |---|---|
 | Module layout, boundaries, task/event naming rules | [`/backend/MODULES.md`](../../backend/MODULES.md) |
-| API contract | [`/shared/openapi.yaml`](../../shared/openapi.yaml) — CI regenerates and diffs the codegen ([ADR-10](../product/specs/README.md#adr-10)); what the gate does not prove (handler conformance) is [backlog](../product/backlog.md) P1 |
+| API contract | [`/shared/openapi.yaml`](../../shared/openapi.yaml) — CI regenerates and diffs the codegen ([ADR-10](../product/specs/SPEC-03-platform-ops.md#adr-10)); what the gate does not prove (handler conformance) is [backlog](../product/backlog.md) P1 |
 | Implementation status | [`/CLAUDE.md`](../../CLAUDE.md) § Current status — the one written owner (ADR-11). Verify against the code: a module is live iff it is constructed *and* `MountHTTP`'d in `backend/cmd/api/main.go`. Open work: [product/backlog.md](../product/backlog.md). Newest audit: [spec-gap-fix-worklog-2026-09-30.md](../product/analysis/spec-gap-fix-worklog-2026-09-30.md). |
 | Session / repo conventions | [`/CLAUDE.md`](../../CLAUDE.md) |
 | Asynq events & tasks registry | [events.md](events.md) *(lives here — it spans modules, so no module owns it)* |

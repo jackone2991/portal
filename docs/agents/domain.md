@@ -22,8 +22,9 @@ This is a single-context repo. What exists today, and what does not:
 │                        (Entry, Attachment, Location, Asset) were resolved; grows one
 │                        resolved term at a time, never in bulk. docs/README.md § "Genre
 │                        rules" is the separate glossary of the *documentation* domain.
-├── docs/product/specs/  SPEC-01…18 + README; decision records ADR-01…11 live inside them
-│                        (§ Decision records, anchors #adr-NN); corrected in place (ADR-11)
+├── docs/product/specs/  SPEC-01…18 + README; decision records ADR-01…17 live inside the specs
+│                        (§ Decision records, anchors #adr-NN; README holds only the index);
+│                        corrected in place (ADR-11)
 ├── docs/product/feature-inventory.md   product decisions D-1…D-41 — cite the IDs
 └── backend/ frontend/ scraper/
 ```

@@ -2,14 +2,14 @@
 
 **Status:** current, rev 1 · **Drafted:** 2026-07-10 · **Last verified:** 2026-10-01
 **Module:** `people` · **Depends on:** rides (or, if first, introduces) SPEC-04 P0.3 (shared periodic scheduler) and P0.6 (`platform/events` fan-out); P1.7 avatars need SPEC-04; birthday *delivery* compounds with SPEC-05/SPEC-09 — emission is day-one regardless
-**Upstream:** brief 08 — contacts as *data*, not user accounts; the social facet at n=1 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/08-people-registry.md`) · **Refs:** [ADR-08](README.md#adr-08), feature-inventory `D-17` (user timezone), the Facebook comparison (deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
+**Upstream:** brief 08 — contacts as *data*, not user accounts; the social facet at n=1 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/08-people-registry.md`) · **Refs:** [ADR-08](SPEC-09-life-stream-home.md#adr-08), feature-inventory `D-17` (user timezone), the Facebook comparison (deleted — `git show ea100d8:docs/product/analysis/facebook-comparison.md`) row "Events / birthdays" (the former backlog §3 P2 item, re-scoped here), Monica-CRM pattern
 **Downstream consumers:** SPEC-09 (stream + `BirthdayCard` widget), SPEC-03 P1.7 (takeout); SPEC-05 is a *future* consumer (needs a `notify:on_*` task + type row first)
 
 ---
 
 ## 1. Problem statement
 
-The life-OS pivot's flagship life-stream example ([ADR-08](README.md#adr-08)) — "mom's birthday in 3 days" — is
+The life-OS pivot's flagship life-stream example ([ADR-08](SPEC-09-life-stream-home.md#adr-08)) — "mom's birthday in 3 days" — is
 impossible today: nothing stores who "mom" is or when her birthday falls. The
 cataloged "Events/birthdays" backlog item assumes multi-user social events/RSVP,
 which is parked behind real second users. Monica-CRM proves the loophole: **my

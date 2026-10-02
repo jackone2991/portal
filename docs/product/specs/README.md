@@ -39,7 +39,7 @@ spec headers. Per-requirement coverage lives in
 | [SPEC-09](SPEC-09-life-stream-home.md) | Life-stream home — projection + dashboard | `journal` + home | SPEC-07; producers attach as they land | Built (`0017_journal_stream_items`) |
 | [SPEC-10](SPEC-10-continue-rail.md) | Playback resume + continue rail (D-20) | `media` | SPEC-04 P0.6 (P1.5 event); comic leg after SPEC-14 | Built (`0013_media_playback_progress`) |
 | [SPEC-11](SPEC-11-people-registry.md) | People registry — contacts + birthdays | `people` | SPEC-04 P0.3 (scheduler) + P0.6 (fan-out); avatars need SPEC-04 | Built (`0016_people_persons`, `0035`) |
-| [SPEC-12](SPEC-12-finance-ledger.md) | Finance ledger (Money-Lover-class) | `bank` | [ADR-08](#adr-08); SPEC-03 P0 live before the first real ledger entry; SPEC-04 (P1 receipts only) | Built (`0014_bank_core`, `0042`) |
+| [SPEC-12](SPEC-12-finance-ledger.md) | Finance ledger (Money-Lover-class) | `bank` | [ADR-08](SPEC-09-life-stream-home.md#adr-08); SPEC-03 P0 live before the first real ledger entry; SPEC-04 (P1 receipts only) | Built (`0014_bank_core`, `0042`) |
 | [SPEC-13](SPEC-13-ledger-expansion.md) | Ledger expansion — debts, goals, recurring, cards, net worth, automation, splits, sharing | `bank` (extends) | SPEC-12; SPEC-05 for reminders; SPEC-04 (receipts only, via SPEC-12 P1.10) | Phase 1 (debts, `0043_bank_debts`) built; later phases open |
 | [SPEC-14](SPEC-14-comic-vertical.md) | Comic vertical, end-to-end | `comic` | SPEC-04 | Built (`0015_comic_core`; reader + import + sync `0024`–`0030`) |
 | [SPEC-15](SPEC-15-music-vertical.md) | Music vertical — tracks, zip/multi-file import, enrich + MusicBrainz lookup, playlists, player (as-built, retroactive) | `music` | SPEC-04 (ingest, `/original`, covers, `media:asset_deleted`); SPEC-05 (bell consumer) | Built (`0022_music_core`; `0038`, `0039`, `0041`) |
@@ -48,8 +48,8 @@ spec headers. Per-requirement coverage lives in
 | [SPEC-18](SPEC-18-social-connections.md) | Social connections — request / accept / decline / disconnect; the social layer's first slice (as-built, retroactive) | `social` | account (`accountapi`); SPEC-05 (bell consumers); SPEC-11 (`/people/suggestions`) | Built (`0037_social_connections`) |
 
 The positioning decision (life-OS pivot) and the parking lot are **not** specs;
-they live in [ADR-08](#adr-08) below (with [vision.md](../vision.md), the
-product yardstick) and [backlog.md § Deferred](../backlog.md).
+they live in [ADR-08](SPEC-09-life-stream-home.md#adr-08) (a record in SPEC-09, the life stream it
+was proved on; with [vision.md](../vision.md), the product yardstick) and [backlog.md § Deferred](../backlog.md).
 
 ## Renumbering (2026-10-01)
 
@@ -154,8 +154,8 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   bullet governs.
 - **Events**: every task/event name lands in
   [../../reference/events.md](../../reference/events.md) as part of definition of
-  done; every new domain module emits ≥ 1 bus event from day one ([ADR-08](#adr-08)).
-  There is no exemption *(owner decision 2026-10-01b (D3); [ADR-17](#adr-17))*: `account` and
+  done; every new domain module emits ≥ 1 bus event from day one ([ADR-08](SPEC-09-life-stream-home.md#adr-08)).
+  There is no exemption *(owner decision 2026-10-01b (D3); [ADR-17](SPEC-05-notification-module.md#adr-17))*: `account` and
   `layout`, the two shipped modules that emit none on `HEAD`, emit — seven
   `account:*` admin-change events and `layout:changed`, which notify delivers
   to superadmins (SPEC-01 §8 and P1.3, SPEC-02 §8 and P1.4, SPEC-05 P1.5;
@@ -178,7 +178,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   `errors.json` in `frontend.md` §5.2 is the future target). Generic transport
   failures use `about:blank` and need no key. A backend-emitted type absent from
   `problems.ts` is a DoD failure.
-- **Pagination** ([ADR-16](#adr-16)): list endpoints use an opaque base64 keyset
+- **Pagination** ([ADR-16](SPEC-03-platform-ops.md#adr-16)): list endpoints use an opaque base64 keyset
   `?cursor=&limit=`. Each spec §7 states the default and max limit; a new
   endpoint that states none uses default 30, max 50 (existing endpoints keep
   their declared defaults and maxima). *(Owner decision 2026-10-01:)* **`limit`
@@ -220,7 +220,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   household scale. It wears the `{items}` envelope like every other list, and
   it is not a precedent: a new list endpoint is keyset-paged.
 - **Timezone** *(owner decision 2026-09-30, revised 2026-10-02 (A8); D-17;
-  [ADR-15](#adr-15))*:
+  [ADR-15](SPEC-01-account-identity-admin.md#adr-15))*:
   every user-facing day or month boundary — "today", "this month", a default
   month, a date-only value turned into an instant, day grouping, on-this-day,
   birthday and due-date countdowns — is computed in **the User's own
@@ -297,7 +297,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   review item.
 - **API contract**: declare every endpoint in `shared/openapi.yaml` first, run
   `make openapi`, and commit the regenerated `api.gen.go` + `types.gen.ts` in the
-  same PR ([ADR-10](#adr-10), accepted 2026-07-11; the CI `openapi` job
+  same PR ([ADR-10](SPEC-03-platform-ops.md#adr-10), accepted 2026-07-11; the CI `openapi` job
   diffs them; `backend/MODULES.md` §8). The gate proves the committed codegen
   matches the spec, not that handlers do: handler conformance stays a review
   item until handlers implement `ServerInterface`. This bullet is the one
@@ -328,7 +328,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
 
 ## Build state and what remains
 
-[ADR-10](#adr-10)'s spec-first CI gate is in force; the `ServerInterface`
+[ADR-10](SPEC-03-platform-ops.md#adr-10)'s spec-first CI gate is in force; the `ServerInterface`
 retrofit is per-module-as-touched (ADR-10 action items) and gates nothing.
 
 **As built.** Every spec that existed then (today's SPEC-03, 04, 05, 07, 09, 10, 11, 12 and 14) landed on 2026-07-12, in
@@ -395,7 +395,8 @@ SPEC-15 rows 27 and 29 in place. B14 ([ADR-12](SPEC-01-account-identity-admin.md
 shared reads and tenant links) rewrote all seven of those in place — none was
 built — and appended three (SPEC-01 rows 32–33, SPEC-18 row 15). B15 (tenant
 groups decide who is family, amending ADR-12) appended one (SPEC-01 row 34)
-and extended SPEC-01 row 32 in place.
+and extended SPEC-01 row 32 in place. B16 (what a blank chapter body is)
+appended one (SPEC-17 row 23).
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
@@ -414,9 +415,9 @@ and extended SPEC-01 row 32 in place.
 | [SPEC-14](SPEC-14-comic-vertical.md) | [§11](SPEC-14-comic-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Sec 1–5 · Integ 6–9 · Contract/UX 10–17 · Data 18 · Integ 19 | `/api/v1/internal/*` public at the edge, secret compared with `!=` (1–3); publish never checks `comics:publish:own`, drafts leak as 403 (4–5) |
 | [SPEC-15](SPEC-15-music-vertical.md) | [§12](SPEC-15-music-vertical.md#12-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 29 | Data 1–2, 4 · Integ 3, 5–13 · Contract 14–17, 22–23 · UX 18–19, 24 · Hyg 20–21 · AuthZ 25 (appended) · P1 26 · Func 27 · Integ 28 · AuthZ 29 (appended, 2026-10-02b; 27 and 29 rewritten by B13, then B14) | the `media:asset_deleted` consumer runs with no tenant scope, so a deleted audio asset leaves a published track pointing at nothing (1); a second zip upload re-imports every track (2) |
 | [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 · AuthZ 19 (appended, 2026-10-02b B13; rewritten by B14) | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
-| [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 22 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) · AuthZ 22 (appended, B13; rewritten by B14) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
+| [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) · AuthZ 22 (appended, B13; rewritten by B14) · Integ 23 (appended, B16) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
 | [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 · Func 13 · P1 14 (appended, 2026-10-02b) · AuthZ 15 (appended, B14) | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| **Total** | | **285** | | |
+| **Total** | | **286** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -537,7 +538,8 @@ names:
   403 on guarded writes (F119) SPEC-14 row 5 · SPEC-15 row 25 · SPEC-16 row 7
   · SPEC-17 row 8; chapter `sort_order` on create → 500 at COMMIT SPEC-14
   row 19 · SPEC-17 row 2; blank chapters of a published work hidden from
-  non-owners (SPEC-14 P0.2 (a)) SPEC-14 row 9 · SPEC-17 row 21; D-34 matcher
+  non-owners (SPEC-14 P0.2 (a)) SPEC-14 row 9 · SPEC-17 row 21 (on SPEC-17
+  row 23's `story_body_is_blank`); D-34 matcher
   (F032) SPEC-09 row 14 (`/weather`) ·
   SPEC-01 row 21 and SPEC-02 row 10 (both `/admin` — one change closes both);
   `/calendar` is unowned.
@@ -560,7 +562,7 @@ here; this list does not restate it. The gap rows cite them as
   retrofitted, not grandfathered. Detail: the **Pagination** convention above;
   each spec §7; the D-29 update in
   [feature-inventory.md](../feature-inventory.md); the Envelopes rows indexed
-  above. → [ADR-16](#adr-16)
+  above. → [ADR-16](SPEC-03-platform-ops.md#adr-16)
 - **Timezone** — per user, from the device location, default
   `Asia/Ho_Chi_Minh`, with a `timezone_manual` override; sweeps evaluate each
   owner's local date. (Revised by Decision 2026-10-02 (A8): the stored zone
@@ -568,7 +570,7 @@ here; this list does not restate it. The gap rows cite them as
   column default, and the manual override is gone.) Detail: the **Timezone** convention above; the D-17
   update in [feature-inventory.md](../feature-inventory.md); SPEC-12 P0.6,
   SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4, SPEC-13 §4a.
-  → [ADR-15](#adr-15)
+  → [ADR-15](SPEC-01-account-identity-admin.md#adr-15)
 - **Audio opens the player** — audio is a playable kind: player page, plays
   from `/original`, saves progress, joins `/continue`. Detail: SPEC-10 P0.1,
   P0.2, P0.4; SPEC-04 §11 row 16; the D-20 update in
@@ -598,19 +600,19 @@ open. The detail lives in the places named here; the gap rows cite them as
 - **(e) `limit` is lenient and clamps** — the **Pagination** convention above;
   every §7 that declares a limit; one gap row per service that resets instead
   (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
-  [feature-inventory.md](../feature-inventory.md). → [ADR-16](#adr-16)
+  [feature-inventory.md](../feature-inventory.md). → [ADR-16](SPEC-03-platform-ops.md#adr-16)
 - **(f) `timezone_manual` and `account/invalid-timezone` are confirmed** —
   *superseded by Decision 2026-10-02 (A8)* as to `timezone_manual`, which is
   dropped everywhere (no column, no field, no request flag); the
   `account/invalid-timezone` slug stands. Kept here as the record of what was
   decided on 2026-10-01. The current rule is the **Timezone** convention above;
   the code follow-up is SPEC-01 P0.13 (§11 row 14), the first item of the
-  **Per-user timezone** cross-cutting gap. → [ADR-15](#adr-15)
+  **Per-user timezone** cross-cutting gap. → [ADR-15](SPEC-01-account-identity-admin.md#adr-15)
 - **(g) `{items}` for non-paginated lists is confirmed** — the **Pagination**
   convention above (with the rationale and what counts as a collection); the
   D-29 update in [feature-inventory.md](../feature-inventory.md). Every spec §7
   complies; the shipped divergences are the Envelopes rows indexed above.
-  → [ADR-16](#adr-16)
+  → [ADR-16](SPEC-03-platform-ops.md#adr-16)
 
 ## Decisions recorded 2026-10-01 (second round)
 
@@ -632,14 +634,14 @@ lives in the places named here; the gap rows cite them as "Decision
   [backlog.md](../backlog.md) P2 line 28 records the decision. No new gap row:
   the frontends are SPEC-16 §11 row 16 and SPEC-17 §11 row 18.
 - **(D3) `account` and `layout` emit bus events; notify tells the
-  superadmins** — no exemption from [ADR-08](#adr-08)'s rule (the **Events** convention
+  superadmins** — no exemption from [ADR-08](SPEC-09-life-stream-home.md#adr-08)'s rule (the **Events** convention
   above). SPEC-01 P1.3 and §8 (seven `account:*` events, `accountapi.AdminEvent`,
   `SuperadminIDs`), SPEC-02 P1.4 and §8 (one `layout:changed {part}`), SPEC-05
   P1.5 (eight `notify:on_*` consumers, recipients = superadmins minus the actor,
   registration deduplicated against the approver dispatch, email forced only
   for refresh-token reuse); [events.md](../../reference/events.md) planned rows.
   Gap rows: SPEC-01 §11 row 24, SPEC-02 §11 row 14, SPEC-05 §11 row 23;
-  TC-ACC-120…126, TC-LAY-050…052, TC-NOTIFY-140…145. → [ADR-17](#adr-17)
+  TC-ACC-120…126, TC-LAY-050…052, TC-NOTIFY-140…145. → [ADR-17](SPEC-05-notification-module.md#adr-17)
 - **(D4) `user` may author music, movies and stories** — SPEC-15 P1.4,
   SPEC-16 P1.3, SPEC-17 P1.3 (each a module-owned `000N_<module>_user_write_grant`
   granting `:write:own` and `:publish:own` to `user`, the
@@ -653,10 +655,10 @@ The owner settled twelve points about the account module in a review of
 SPEC-01, among them its four open questions (Q2–Q5). No decision record was
 written at the time: each is stated in SPEC-01's requirement text, which is the
 detail; this list only routes. The significant ones were later promoted to
-records — A5 to [ADR-16](#adr-16), A6 to
+records — A5 to [ADR-16](SPEC-03-platform-ops.md#adr-16), A6 to
 [ADR-13](SPEC-01-account-identity-admin.md#adr-13), A7 to
-[ADR-14](SPEC-01-account-identity-admin.md#adr-14), A8 to [ADR-15](#adr-15),
-A11 to [ADR-17](#adr-17) — marked "→" below. The vocabulary — User, Session, Approval, Rejected,
+[ADR-14](SPEC-01-account-identity-admin.md#adr-14), A8 to [ADR-15](SPEC-01-account-identity-admin.md#adr-15),
+A11 to [ADR-17](SPEC-05-notification-module.md#adr-17) — marked "→" below. The vocabulary — User, Session, Approval, Rejected,
 Disabled, Superadmin, Approver — is [CONTEXT.md](../../../CONTEXT.md)'s. Gap
 rows cite them as "Decision 2026-10-02 (A*n*)".
 
@@ -685,7 +687,7 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
   SPEC-01 Q5; depends on §11 row 4. Gap row: §11 row 28; TC-ACC-144, 145.
 - **(A5) Admin list paging stays offset** — the **Pagination** convention
   above (its one named exception) and SPEC-01 P0.8. Closes SPEC-01 Q2. No gap
-  row (shipped behaviour). → [ADR-16](#adr-16)
+  row (shipped behaviour). → [ADR-16](SPEC-03-platform-ops.md#adr-16)
 - **(A6) Deleting a User purges every module, then the row** — SPEC-01 P0.10:
   an idempotent `PurgeOwnerData` per module, a registry run content → media →
   tenant, no grace period, a `deleted_users` snapshot kept 90 days, the email
@@ -702,7 +704,7 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
 - **(A8) Timezone: NULL means "not set", no manual flag** — the **Timezone**
   convention above, SPEC-01 P0.13; supersedes Decision 2026-10-01 (f) as to
   `timezone_manual`. Gap row: §11 row 14, rewritten in place (unbuilt);
-  TC-ACC-100…104. → [ADR-15](#adr-15)
+  TC-ACC-100…104. → [ADR-15](SPEC-01-account-identity-admin.md#adr-15)
 - **(A9) Email change requires verification** — SPEC-01 P0.10 (admin edit,
   P0) and P1.4 (self-service): pending change in `email_change_requests`,
   1-hour confirm link to the new address, cancel link to the old, uniqueness
@@ -713,7 +715,7 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
   to Pending; a Rejected User cannot register again. Shipped; no gap row.
 - **(A11) Superadmin by permission** — SPEC-01 P1.3 `SuperadminIDs` = Users
   whose effective permissions contain `*`; SPEC-05 P1.5 follows. Gap row: §11
-  row 24, rewritten in place (unbuilt); TC-ACC-127. → [ADR-17](#adr-17)
+  row 24, rewritten in place (unbuilt); TC-ACC-127. → [ADR-17](SPEC-05-notification-module.md#adr-17)
 - **(A12) "A second person on the instance"** — SPEC-01 §4: a second Approved
   User has their own, unshared data; shared household data is not designed.
 
@@ -857,10 +859,25 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
   `portal_acl` also reads `tenant_group_members` (SPEC-01 P0.17). Discovery
   (SPEC-18) is unchanged — still by tenant and links. SPEC-04 P0.8, SPEC-10
   P0.2, SPEC-15, SPEC-16 and SPEC-18 reworded where they defined the
-  household; SPEC-14 and SPEC-17 are aligned separately. Gap row: SPEC-01 §11
+  household; SPEC-17 was aligned in a follow-up (P0.4, P0.5, §6, §11 row 22)
+  and SPEC-14 keeps comics out (§3). Gap row: SPEC-01 §11
   row 34 (new), row 32 extended; TC-TEN-011…017, TC-TEN-005 and TC-TEN-010
   reworded. ADR-12 action item 7 records a precondition on tenant switching
   (no gap row). The drafting choices are listed in ADR-12's Consequences.
+- **(B16) A blank chapter body is defined from the stored data** — SPEC-17
+  P0.3 and §6. Nothing normalises `body_md` on the way in, so a body is blank
+  when it holds only Unicode `White_Space` characters plus U+200B–U+200D,
+  U+2060 and U+FEFF, written as explicit code points (never a locale- or
+  regex-class-dependent test); markup is content, so `&nbsp;`, `<br>`, a
+  lone `#` or `---` is not blank. One `IMMUTABLE` SQL function,
+  `story_body_is_blank(text)` from the story-owned `000N_story_blank_body`,
+  is the only place the set is written: the publish check, the non-owner
+  reader filter (B7, row 21) and `chapter_count` all call it, and the Go
+  helper and any P1.1 TypeScript copy use the same code points. A read-only
+  verification script in SPEC-17 §6 (old `btrim` vs new classification, with
+  the raw bytes) runs against the real database first, and its counts go in
+  the PR. Gap row: SPEC-17 §11 row 23 (new; row 21 lands with or after it);
+  TC-STY-114…117.
 
 ## Open owner decisions
 
@@ -875,880 +892,56 @@ like the ones above and correct the spec text.
 ## Decision records
 
 Architecture decisions are recorded as `ADR-NN`. They were standalone files
-under `docs/adr/` until the 2026-10-01 fold; each record now lives in the spec
-that owns its subject, behind a fixed `<a id="adr-nn"></a>` anchor, and the
-`ADR-NN` IDs that code comments and documents cite are unchanged. This section
-indexes all seventeen and holds the six that belong to no single spec: the v1
-scope cut, the life-OS positioning, the API contract direction, the per-user
-timezone, the list API contract and the event rule's reaffirmation.
+under `docs/adr/` until the 2026-10-01 fold; the `ADR-NN` IDs that code
+comments and documents cite are unchanged, and each record keeps a fixed
+`<a id="adr-nn"></a>` anchor. This section indexes all seventeen; each lives
+in the spec that owns its subject, under that spec's `## Decision records`.
+(Until 2026-10-02 this README also held six — ADR-01, 08, 10, 15, 16 and 17;
+they moved verbatim to SPEC-03, SPEC-09, SPEC-01 and SPEC-05, anchors
+unchanged.)
 
 Each record keeps the binding shape — Context → Decision → Options considered →
 Trade-offs → Consequences → Action items ([STYLE.md](../../STYLE.md)). Decision,
 Options considered and Trade-offs are the narrative layer, kept verbatim (ADR-11
 rule 2, [SPEC-06](SPEC-06-docs-canonicalisation.md#adr-11)): they record what
 was known at the time and may name things since retired. Context, Consequences
-and Action items are the fact layer, corrected in place and true as of this
-file's `Last verified`. Where a convention above already states a fact, the
-record points to it instead of repeating it. A reversed decision gets a new
-record that supersedes the old one. Numbers are never reused; `00` is retired
+and Action items are the fact layer, corrected in place and true as of the
+hosting spec's `Last verified`. Where a convention of this README already
+states a fact, the record points to it instead of repeating it. A reversed
+decision gets a new record that supersedes the old one. Numbers are never reused; `00` is retired
 (that file was a review, deleted after `ea100d8` —
 `git show ea100d8:docs/product/analysis/architecture-review-2026-05-24.md`).
 
 **The framing constraint every record inherits:** **1 dev · 2-week bursts ·
-≤ $100/mo · single VPS** ([ADR-01](#adr-01)).
+≤ $100/mo · single VPS** ([ADR-01](SPEC-03-platform-ops.md#adr-01)).
 
 | ADR | Title | Status | One line | Location |
 |---|---|---|---|---|
-| ADR-01 | v1 scope cut | accepted, amended by ADR-08, executed | What v1 is — and everything it is not | [README.md § ADR-01](#adr-01) |
+| ADR-01 | v1 scope cut | accepted, amended by ADR-08, executed | What v1 is — and everything it is not | [SPEC-03 § ADR-01](SPEC-03-platform-ops.md#adr-01) |
 | ADR-02 | RBAC model reconciliation | accepted, amended by ADR-06 | Role hierarchy is canonical for v1; policy bundles layer on top later | [SPEC-01 § ADR-02](SPEC-01-account-identity-admin.md#adr-02) |
 | ADR-03 | Single-VPS topology | accepted | One VPS, compose profiles as the envelope; observability/live profiles stay off | [SPEC-03 § ADR-03](SPEC-03-platform-ops.md#adr-03) |
 | ADR-04 | Storage tier & budget | accepted | R2 for prod, MinIO kept for local dev (presigned uploads need an S3 origin) | [SPEC-04 § ADR-04](SPEC-04-media-image-pipeline.md#adr-04) |
 | ADR-05 | Phase 0 wiring order | accepted, executed | The critical path to a running demo — closed; kept for the shape of the work | [SPEC-03 § ADR-05](SPEC-03-platform-ops.md#adr-05) |
 | ADR-06 | Local auth model | accepted, executed | Passwords in Portal (Argon2id + JWT); Authentik/OIDC removed | [SPEC-01 § ADR-06](SPEC-01-account-identity-admin.md#adr-06) |
 | ADR-07 | Multi-tenancy / RLS model | accepted, executed | Tenant column + RLS policies; enforced only when the app connects as `portal_app` | [SPEC-01 § ADR-07](SPEC-01-account-identity-admin.md#adr-07) |
-| ADR-08 | Life-OS pivot + finance ledger scope | accepted, executed | Portal is a life OS; ledger in scope; "real bank" stays deferred | [README.md § ADR-08](#adr-08) |
+| ADR-08 | Life-OS pivot + finance ledger scope | accepted, executed | Portal is a life OS; ledger in scope; "real bank" stays deferred | [SPEC-09 § ADR-08](SPEC-09-life-stream-home.md#adr-08) |
 | ADR-09 | Documentation architecture | accepted, amended by ADR-11, executed | Diátaxis-informed `docs/` tree; English canonical | [SPEC-06 § ADR-09](SPEC-06-docs-canonicalisation.md#adr-09) |
-| ADR-10 | OpenAPI contract direction | accepted | Spec-first, enforced: generate Go stubs + TS client; CI drift gate | [README.md § ADR-10](#adr-10) |
+| ADR-10 | OpenAPI contract direction | accepted | Spec-first, enforced: generate Go stubs + TS client; CI drift gate | [SPEC-03 § ADR-10](SPEC-03-platform-ops.md#adr-10) |
 | ADR-11 | Documentation canonicalisation | accepted, executed | One owner per fact; ADRs corrected in place by layer; nothing archived | [SPEC-06 § ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) |
 | ADR-12 | Sharing published content with household and friends; tenant links | accepted (Decision 2026-10-02b (B14)), amended by Decision 2026-10-02b (B15), not built | Published music, movies and stories are read by the owner's family — group co-members in the item's tenant (B15) — and friends in the same or mutually linked tenants, through one `SECURITY DEFINER` predicate in the SELECT policies — a read-only exception to ADR-07's fence | [SPEC-01 § ADR-12](SPEC-01-account-identity-admin.md#adr-12) |
 | ADR-13 | Deleting a User purges every module, then the row | accepted (Decisions 2026-10-01b (D1), 2026-10-02 (A6)), not built | Each module's `PurgeOwnerData` runs in a fixed order, then the row goes under a lock; 503 `account/delete-incomplete` otherwise; no grace period, a 90-day `deleted_users` snapshot, the email freed | [SPEC-01 § ADR-13](SPEC-01-account-identity-admin.md#adr-13) |
 | ADR-14 | Identity data that outlives its User | accepted (Decisions 2026-10-02 (A7), 2026-10-02b (B1)), not built | Audit and snapshot identity data sealed with `AUDIT_PII_KEY`, decryptable only by Superadmins, anonymised after 90 days | [SPEC-01 § ADR-14](SPEC-01-account-identity-admin.md#adr-14) |
-| ADR-15 | Per-user timezone | accepted (Decisions 2026-09-30, 2026-10-01 (f), 2026-10-02 (A8)), not built | Day and month boundaries in the User's own zone, NULL = not set, `Asia/Ho_Chi_Minh` fallback; sweeps evaluate each owner's local date | [README.md § ADR-15](#adr-15) |
-| ADR-16 | List API contract | accepted (Decisions 2026-09-30, 2026-10-01 (e), (g), 2026-10-02 (A5)), partly built | Every collection is `{items[, next_cursor]}`, keyset cursors, a lenient clamped `limit`; admin users keep offset as the one exception | [README.md § ADR-16](#adr-16) |
-| ADR-17 | Every module emits bus events; notify tells the Superadmins | accepted (Decisions 2026-10-01b (D3), 2026-10-02 (A11)), not built | No exemption from ADR-08's rule: `account` and `layout` emit, and the Superadmins (effective `*`) get each admin change in the bell | [README.md § ADR-17](#adr-17) |
+| ADR-15 | Per-user timezone | accepted (Decisions 2026-09-30, 2026-10-01 (f), 2026-10-02 (A8)), not built | Day and month boundaries in the User's own zone, NULL = not set, `Asia/Ho_Chi_Minh` fallback; sweeps evaluate each owner's local date | [SPEC-01 § ADR-15](SPEC-01-account-identity-admin.md#adr-15) |
+| ADR-16 | List API contract | accepted (Decisions 2026-09-30, 2026-10-01 (e), (g), 2026-10-02 (A5)), partly built | Every collection is `{items[, next_cursor]}`, keyset cursors, a lenient clamped `limit`; admin users keep offset as the one exception | [SPEC-03 § ADR-16](SPEC-03-platform-ops.md#adr-16) |
+| ADR-17 | Every module emits bus events; notify tells the Superadmins | accepted (Decisions 2026-10-01b (D3), 2026-10-02 (A11)), not built | No exemption from ADR-08's rule: `account` and `layout` emit, and the Superadmins (effective `*`) get each admin change in the bell | [SPEC-05 § ADR-17](SPEC-05-notification-module.md#adr-17) |
 
 **When to write one.** A choice that (a) is expensive to reverse, (b) crosses
 module boundaries, or (c) contradicts a previous record or the scope cut gets a
-record, filed under `## Decision records` in the spec that owns its subject (or
-here, if no spec does), with the next unused number. Day-to-day feature
+record, always filed inside a spec — under `## Decision records` in the one
+that owns its subject — with the next unused number; this README holds only
+the index above. Day-to-day feature
 decisions belong in [feature-inventory.md](../feature-inventory.md) as `D-N`
 entries; specs cite both kinds by ID.
-
-<a id="adr-01"></a>
-### ADR-01 — v1 scope cut: what fits in 2 weeks / 1 dev / $100/mo / 1 VPS
-
-**Decided:** 2026-05-24 · **Status:** accepted; amended by [ADR-08](#adr-08) (scope since widened); executed (the demo loop shipped 2026-07-06)
-
-Deciders: kirito.
-
-#### Context
-
-*As found on 2026-05-24. The cut this record made was executed and closed: the
-demo loop shipped on 2026-07-06 and is the regression baseline. What has been
-built since is not tracked here — [`/CLAUDE.md`](../../../CLAUDE.md) § Current
-status owns that.*
-
-[`feature-inventory.md`](../feature-inventory.md) (then `feature.md`) described 12 phases and 40 settled decisions covering identity, multi-tenancy, media, four content verticals, personal finance, notifications, social, search, marketing site, advanced social (reels/live/audio rooms), creator economy, marketplace, and ML safety. The decisions are individually sound; collectively they describe a platform that would take a small team a year or more to ship.
-
-The stated constraint envelope was:
-
-- 1 developer
-- 2 weeks to v1
-- ≤ $100/month infrastructure budget
-- single VPS
-
-A version of Portal that tried to honour every Phase 0 deliverable in 2 weeks would run out of time around Phase 0 step 8 (out of 14) and ship nothing. A version that picked one coherent slice, shipped it, and treated the rest as a backlog could produce a *running* artefact at the end of the sprint.
-
-This record made the cut explicit so it was a decision, not a drift.
-
-<!-- adr-narrative -->
-#### Decision
-
-**v1 ships Phase 0 (foundation wiring) plus a vertical slice of Phase 2 (one video upload happy path) and nothing else.** Everything in Phases 1, 3–12 was deferred by this cut. The phase ordering in `feature.md` was unchanged; the scope of what counted as "v1" was the only thing this ADR moved.
-
-Concretely, v1 = the smallest demo that proves the architecture works end-to-end. As built (two steps differ from the 2026-05-24 text: sign-in was to be Authentik/OIDC and the upload was to go straight to R2):
-
-1. A user signs in with a local password ([ADR-06](SPEC-01-account-identity-admin.md#adr-06): `POST /api/v1/auth/login`; Authentik/OIDC never shipped).
-2. They land on the Next.js home page authenticated.
-3. They upload an mp4 via the UI.
-4. The upload is persisted to MinIO in dev and R2 in deployed environments ([ADR-04](SPEC-04-media-image-pipeline.md#adr-04)).
-5. The worker picks up the transcode task, produces an HLS ladder, and updates `assets.status = ready`.
-6. The user plays the video back in the browser using Vidstack.
-7. They sign out; the session is revocable via the existing two-channel mechanism.
-
-That was the entire v1 demo loop. At the time of the cut: no tenants, no movies/music/stories/comics CRUD, no bank, no social, no notifications, no mediamtx, no LiveKit, no observability stack, no file-gated permissions, no policy bundles, no marketplace. Of those, tenants, the four verticals, bank, notifications and a first social slice have since shipped under ADR-08; the rest remain out.
-
-#### Options considered
-
-##### Option A — Honour Phase 0 in full, defer everything else
-
-| Dimension | Assessment |
-| --- | --- |
-| Complexity | High — 14 deliverables in Phase 0 alone |
-| Cost | $30–60/mo |
-| Scalability | N/A (foundation only) |
-| Team familiarity | Solo dev knows this stack |
-
-**Pros:** Phase 0 is the "spec-correct" sprint; every piece set up here pays dividends in every later phase.
-**Cons:** 14 deliverables in 2 weeks for 1 dev is ~2 hours each including testing — unrealistic when several (CI workflows, frontend conventions doc, migration audit, RFC 7807 retrofit, observability stack) are multi-hour items. The most likely outcome is "Phase 0 partially done, no running demo."
-
-##### Option B — Phase 0 minimum + Phase 2 vertical slice  *(chosen)*
-
-| Dimension | Assessment |
-| --- | --- |
-| Complexity | Medium — cut Phase 0 from 14 items to ~8 |
-| Cost | $30–60/mo |
-| Scalability | Single-user demo; multi-tenant deferred |
-| Team familiarity | Solo dev knows this stack |
-
-**Pros:** Produces a running demo end-of-sprint. Forces the wiring gap to close on Day 3. Surfaces the integration bugs (cookie flags, CORS, oapi-codegen handler shape, sqlc adapter signatures) that are the actual risk.
-**Cons:** Skips the migration audit ([D-18]), the observability stack ([D-8]), the frontend conventions doc ([D-32]/[D-33]), CI workflows ([D-9]), the OpenAPI cross-module schema retrofit ([D-29]). All of these have to land later; some will hurt to retrofit.
-
-##### Option C — Skip Phase 0, hand-write a thin auth layer + media demo
-
-| Dimension | Assessment |
-| --- | --- |
-| Complexity | Low for v1 |
-| Cost | $30/mo |
-| Scalability | Throwaway — would need full rewrite |
-| Team familiarity | Solo dev knows this stack |
-
-**Pros:** Fastest path to a running demo.
-**Cons:** Throws away the existing account module (which is already written), the OpenAPI spec, the module boundary discipline, and the modular monolith layout. Builds technical debt the rest of the year is paying off. Only correct if v1 is a *throwaway prototype*; if it's the seed of the real product, this is wrong.
-
-#### Trade-offs
-
-Option A's failure mode is "no demo at end of sprint, lots of half-finished plumbing." Option C's failure mode is "demo works, can't extend it." Option B's failure mode is "demo works, missing some Phase 0 niceties that need a Phase 0.5 sprint." Of the three, Option B's failure mode is the cheapest to recover from: the missing pieces (CI workflows, frontend conventions doc, observability profile) can each be added in a half-day sprint without touching application code.
-
-The cut to ~8 Phase 0 deliverables is:
-
-| Phase 0 deliverable (from feature.md) | v1? | Reason |
-| --- | --- | --- |
-| Wire `cmd/api/main.go` | **Yes** | The actual blocker. |
-| `make sqlc` for account block + commit decision | **Yes** | Required before adapters compile. |
-| Repository adapters for account interfaces | **Yes** | Required to construct the module. |
-| Migration `0001` audit (split into 0001/0002/0003/0005) | **Yes** | Cheap to do *now* before data exists; impossible later. [D-18] |
-| `users.locale` + `users.timezone` columns | **Yes** | One-line addition during the audit; needed by frontend on day one. |
-| Move `audit/` → `platform/audit/` + rename event | **Yes** | Cheap during the migration audit; expensive after audit_log has rows. [D-25] |
-| Surface `amr`/`acr`/`auth_time` claims into context | **Yes** | One file change; lets [D-27]/[D-28] land later without rewriting middleware. |
-| `user_oidc_roles` table | **Yes** | Lands in `0003_account_rbac`; OIDC group sync writes to it on first login. [D-26] |
-| RFC 7807 `Problem` adoption in OpenAPI | **Partial** | Add the schema; retrofit handlers as they're written, not in a sweep. |
-| Reserve `notify:*` Asynq prefix | **Yes** | Documentation-only; one line in MODULES.md §5.2. |
-| OpenAPI cross-module schemas (Money, PaginatedResult, TenantContext, ContinuingItem) | **No** | Money/Continue/TenantContext aren't needed until bank/Phase 4/tenant ships. Add when first needed. |
-| URL versioning + RFC 9745 doc | **No** | `/api/v1/` is already in place; the doc is paperwork that can land in week 3. |
-| Frontend server-only API client + refresh-and-return route | **Yes** | Without this, RSC pages can't authenticate against the API. [D-34] |
-| Frontend conventions doc (Zustand/TanStack/RHF boundary) | **No** | Solo dev; a doc for an audience of one is paperwork. Add when a second contributor appears. [D-32]/[D-33] |
-| CI workflows (lint + test + drift + roundtrip + build + security) | **Partial** | Ship the drift check (`sqlc-drift`, `openapi-drift`) only. Skip multi-arch builds, security scan, integration matrix until week 3. [D-9] |
-
-For Phase 2 the v1 cut is: one queue priority, libx264 only, no hardware encoder paths, no per-user/per-tenant quotas, no backpressure, no dead-letter queue UI (failed transcodes get logged loudly and the operator fishes them out by hand). The single happy-path flow proves the architecture; the polish lands in Phase 2.5.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-**What became easier:**
-
-- The 2-week sprint had a single, demonstrable success criterion: the 7 steps above. It ran, and it still runs — it is the regression baseline every later change is checked against.
-- The wiring gap (the actual blocker) closed first because everything else depended on it.
-- Solo-dev cognitive load dropped — only the modules touched by the demo loop needed to be understood deeply in week 1.
-
-**What became harder, and how it resolved:**
-
-- The migration audit was done under v1 rather than punted; it cost a day and was worth it.
-- The frontend conventions doc was skipped for v1 and later written as [`frontend/CLAUDE.md`](../../../frontend/CLAUDE.md) ([D-32]/[D-33]/[D-34]).
-- The observability stack was skipped and is still absent ([ADR-03](SPEC-03-platform-ops.md#adr-03)).
-- The `/t/{tenant}/...` URL prefix was never adopted. Tenancy landed ([ADR-07](SPEC-01-account-identity-admin.md#adr-07)) with routes staying under plain `/api/v1`; the tenant is resolved by middleware (`RequireTenant` in `cmd/api/main.go`), not by the path.
-- The [D-34] refresh-and-return route was replaced by the `portal_session` middleware gate plus `SessionKeeper` client-side silent refresh.
-
-**What we said we'd revisit:**
-
-- A Phase 0.5 sprint for the skipped items never ran as such; CI landed in Phase 6 (the `backend`, `lint`, `openapi`, `frontend` and `link-check` jobs in `.github/workflows/ci.yml` — there is no `sqlc-drift` job and never was, sqlc output is not committed), the conventions doc landed with the frontend work, observability has not.
-- Phase 1 (tenancy + RLS) landed per ADR-07; the `me` synthetic tenant was not carried forward — personal organisations are real rows.
-- The RBAC schism was resolved by [ADR-02](SPEC-01-account-identity-admin.md#adr-02) before tenancy, as intended.
-
-#### Action items
-
-1. [x] Pin this record (`Accepted`) before writing any code for the 2-week sprint (2026-07-06 status flip; v1 was built under this cut).
-2. [x] Acceptance criterion tracked and met — the loop shipped 2026-07-06. (It was tracked in `MILESTONE_CHECKS.md`, deleted in `f11cf3f`; status now lives in code, see `/CLAUDE.md`.)
-3. [ ] A `v1-out-of-scope` label in the issue tracker — GitHub Issues on `jackone2991/portal` exist now, but no such label does; the deferred list lives in [backlog.md § Deferred](../backlog.md) (and `/CLAUDE.md` § "Still deferred").
-4. [x] Scope comment at the top of `backend/cmd/api/main.go`. It still cites the file this record was folded from (`docs/adr/01-v1-scope-cut.md`, retired by the 2026-10-01 fold); it is corrected to `docs/product/specs/README.md#adr-01` when that file is next touched.
-5. [ ] Sprint-end retrospective — never written. The nearest thing was the 2026-07-11 spec-gap worklog (deleted — `git show ea100d8:docs/product/analysis/spec-gap-fix-worklog-2026-07-11.md`).
-
-<a id="adr-08"></a>
-### ADR-08 — Life-OS Positioning + Finance Ledger Scope
-
-**Decided:** 2026-07-07 · **Status:** accepted; executed from 2026-07-12 (`6160f8e` media image pipeline, `66c036f` ledger); the status field was flipped only on 2026-09-11
-
-Amends [ADR-01](#adr-01) · relates to D-27/D-28 (step-up/MFA) and
-[ADR-06](SPEC-01-account-identity-admin.md#adr-06) · yardstick:
-[vision.md](../vision.md), which keeps the product-yardstick role and is not
-restated here.
-
-#### Context
-
-*As found on 2026-07-07. This is the decision the whole spec line
-descends from; everything below the Decision holds as written.*
-
-Portal's post-v1 gap analyses (`product/backlog.md` as it then was,
-`product/analysis/facebook-comparison.md`, since deleted) measured the product against Facebook.
-That yardstick made sense while porting the Olympus UI, but it embeds an
-assumption Portal does not satisfy: Facebook's features derive value from network
-effects, while Portal is self-hosted, single-VPS, and starts from **one user**.
-Following the parity-driven backlog order (friends → messenger → people search)
-would spend the scarce solo-dev budget on features that are near-worthless at n=1.
-
-The owner's stated intent (2026-07-07): Portal should be tools supporting the
-user's daily life and work — "like a human individual with their surrounding
-facets: money, time, learning, social…". Several previously "orphan" spec items
-(bank §8, calendar/birthdays, library verticals) are coherent under this framing
-and incoherent under Facebook parity.
-
-Two existing architectural assets make an integrated life platform more than a
-bundle of clones: the **event bus** (hard rule: modules couple only via Asynq
-`<module>:<event>`) and **one identity + RBAC** across all domains.
-
-The immediate scope tension: the owner wanted **money** first, but ADR-01 deferred
-"bank" wholesale, and D-27/D-28 gated bank behind MFA/step-up.
-
-<!-- adr-narrative -->
-#### Decision
-
-1. **Portal is a self-hosted life OS**: one digital identity with facets — money,
-   time, learning, social, entertainment. Facebook parity is retired as the
-   backlog-ordering principle; `facebook-comparison.md` is reclassified as a
-   historical analysis.
-2. The existing newsfeed surface is re-purposed (long-term) as the user's **life
-   stream**, fed by domain events. Every new domain module must emit at least one
-   bus event from its first release.
-3. **"Bank" is split.** A **finance ledger** (manual multi-account bookkeeping:
-   accounts, transactions, categories, budgets, transfers — `product/specs/SPEC-12`)
-   enters v1 scope. **Real bank integration** (credentials, API sync, money
-   movement) remains deferred exactly as ADR-01 had it.
-4. **MFA/TOTP gating is re-anchored**: D-27/D-28's "MFA before bank" applies to
-   *credential-holding / money-moving* features, not to the manual ledger, which
-   stores no bank credentials. TOTP becomes the named unlock task for real bank
-   integration.
-5. First build order under the new positioning: media image pipeline → comic
-   vertical → finance ledger (`product/specs/`), with the notification module
-   immediately after as the life-stream backbone.
-
-#### Options considered
-
-- **A. Continue the parity-driven order** (notifications → posts → friends →
-  search). Rejected: optimizes believability of a Facebook clone, not value to the
-  actual single user; friend graph and messenger are dead weight at n=1.
-- **B. Life OS with finance ledger in scope** *(chosen)*: aligns effort with the
-  owner's daily use; reuses the event bus as the differentiator; keeps risky bank
-  features deferred.
-- **C. Entertainment verticals only, defer all finance**: safest read of ADR-01,
-  but leaves the owner's top-priority facet (money) unbuilt on a doctrinal
-  technicality; the ledger's actual risk profile (no credentials) doesn't warrant it.
-- **D. Full §8 bank module including debts/loans/investments now**: rejected;
-  violates the v1 envelope and front-loads models (amortization, holdings) with no
-  dogfooding behind them.
-
-#### Trade-offs
-
-- The Olympus social shell stays partially decorative for longer (friends panel,
-  chat bar). Accepted: the shell is kept, only priorities move.
-- Two positioning documents coexist during transition (old comparison, new vision);
-  mitigated by reclassifying the comparison as historical.
-- The ledger without statement import means manual entry only; accepted explicitly
-  (owner's bank exports PDF → import needs OCR; schema is import-ready from
-  migration #1 so the deferral costs nothing structurally).
-- Finance data becomes the most sensitive data in the system while auth is
-  password-only (no MFA). Accepted for a self-hosted single-user deployment;
-  consequence noted below.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-What followed (checked 2026-10-01):
-
-- **The build order ran as decided and kept going:** SPEC-04 (media image
-  pipeline) → SPEC-14 (comic) → SPEC-12 (ledger) landed 2026-07-12, followed by
-  SPEC-05 (notify), SPEC-07 and SPEC-09 (journal + life stream), SPEC-10
-  (continue rail), SPEC-11 (people/birthdays), SPEC-03 (ops) and SPEC-13
-  (ledger expansion: debts first) — the order and migrations are under
-  [Build state and what remains](#build-state-and-what-remains). The `bank`
-  module is the finance ledger; real bank integration (credentials, API sync,
-  money movement) is still deferred, exactly as item 3 said.
-- **The life stream exists, and is narrower than first built:** `journal`
-  projects bank transactions (`bank:transaction_created` / `_updated` /
-  `_deleted`), upcoming birthdays (`people:birthday_upcoming`) and finished
-  playback (`media:playback_completed`), and cleans up on `media:asset_deleted`
-  (`grep -n 'journalapi.TaskStream' backend/cmd/*/main.go`). Uploads
-  (`media:asset_ready`, since `0033`) and comic publishing (since `0034`) are
-  no longer projected; they reach the bell through notify instead (SPEC-09).
-  Every event lives in [`reference/events.md`](../../reference/events.md);
-  `notify:*` stayed reserved for the notification module, which shipped. The
-  "every new module emits" rule is the **Events** convention above.
-- **Backlog re-rank:** happened in the July backlog. That file was
-  archived-in-place on 2026-08-25 and replaced under
-  [ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) by a live one,
-  [backlog.md](../backlog.md). Of the demoted items, email password-reset came
-  back and shipped (`0010`, SPEC-05); friend graph shipped a first slice as the
-  `social` module (`0037`, SPEC-18); messaging and people search did not.
-- **The admin wildcard does not reach another user's finance data by design:**
-  `*` passes the bank route gate, but every bank query filters
-  `user_id = caller` (SPEC-12 P0.8 — "no cross-user read or write at any level,
-  including `*`"). The shipped exception is a code defect, not a grant: the
-  derived-balance queries are not filtered by the caller (SPEC-12 §12 row 1).
-- **MFA/TOTP is still the named unlock for real bank integration** and is not
-  built ([ADR-06](SPEC-01-account-identity-admin.md#adr-06)). The ledger —
-  including debts and interest accrual (SPEC-13) — runs under password-only
-  auth, as the trade-off accepted.
-- "Posts" changed meaning as predicted: the journal entry is the first real
-  post type.
-- ADR-01 remains in force for what it still defers: marketplace, creator
-  economy, observability, LiveKit/mediamtx ([backlog.md § Deferred](../backlog.md)).
-  Multi-tenancy/RLS is no longer on that list — ADR-07 executed.
-
-#### Action items
-
-- [x] Accept this record (executed from 2026-07-12; status field corrected 2026-09-11).
-- [x] Backlog ordering note points at the specs — carried by today's [backlog.md](../backlog.md); `product/briefs/` was folded into the specs and deleted.
-- [x] Historical label on `product/analysis/facebook-comparison.md`; the file was later deleted (`git show ea100d8:docs/product/analysis/facebook-comparison.md`).
-- [x] Build order SPEC-04 → SPEC-14 → SPEC-12, notification module next — all four shipped.
-- [ ] Revisit TOTP as a named prerequisite when any credential-holding bank feature is proposed. None has been; SPEC-13's items are all manual-entry.
-
-<a id="adr-10"></a>
-### ADR-10 — OpenAPI Contract Direction (spec-first, enforced)
-
-**Decided:** 2026-07-11 (drafted 2026-07-08, from the 2026-07-08 gap audit) · **Status:** accepted
-
-Relates to backlog §9 as it stood in 2026-07 (that file was replaced on
-2026-09-11; `git log --follow -- docs/product/backlog.md`) · the **API
-contract** convention above, which is the one statement of the rule ·
-[ADR-09](SPEC-06-docs-canonicalisation.md#adr-09)'s canonical-source rule ·
-[`backend/MODULES.md`](../../../backend/MODULES.md) § 8 (states the rule since
-2026-09-11).
-
-#### Context
-
-*The state this decision was made against, as the 2026-07-08 audit found it.
-Where it stands now is under Consequences and Action items.*
-
-`shared/openapi.yaml` (OpenAPI 3.1, then ~730 lines, 12 paths) declared itself
-the source of truth — its `info` block said *"Server stubs (Go) and the
-TypeScript client are both generated from it,"* and CLAUDE.md repeated the rule.
-On disk that claim was aspirational, not real:
-
-- **No generated code existed.** `backend/internal/handler/api.gen.go` and
-  `frontend/src/lib/types.gen.ts` were `.gitignore`d and had never been
-  generated or committed — `internal/handler/` did not exist. `make openapi`
-  was fully wired (oapi-codegen `chi-server` + `openapi-typescript`, config in
-  `backend/oapi-codegen.yaml`) but had never been run in anger.
-- **All 12 handlers were hand-written plain-chi** (6 account, 6 media) with zero
-  `ServerInterface` — `grep -rn ServerInterface backend/` returned nothing. The
-  hand-written `frontend/src/lib/api-client.ts` carried a TODO to switch to the
-  generated types.
-- **The contract already lied.** Handlers emitted the legacy `{code, message}`
-  error body via a local `writeErr`, but the spec mandated RFC 7807 `Problem`.
-  The auth-path drift (`/auth/register`, retired `/auth/callback`) had been fixed
-  by hand; the error-shape drift persisted.
-- **CI did not gate drift — of anything.** The `openapi` job only asserted the
-  YAML parsed and had `openapi`/`info`/`paths` keys (a ~10-line Python check): no
-  lint, no codegen, no spec-vs-handler comparison. (The audit also credited the
-  `backend` job with an sqlc drift gate to mirror. It had none: sqlc output is
-  `.gitignore`d and regenerated on every build, so there was nothing to diff.
-  The *pattern* — regenerate, then `git diff --exit-code` — was still the right
-  one; it just had no precedent in this repo.)
-
-The forcing function: **SPEC-04/14/12 (and SPEC-05) were about to add ~30
-endpoints** across media/comic/bank/notify onto a contract nothing
-machine-checked. Each spec's Definition of Done said *"fix the drift in the same
-or an earlier PR"* — but there was no mechanism to enforce that, so it would
-rot. Two facts made timing decisive: the generated side was **greenfield**
-(nothing committed to reconcile or delete), and the handler count was at its
-**all-time low** (12, two wired modules). This was the cheapest the decision
-would ever be; every week of deferral raised the price.
-
-The underlying decision (backlog §9) had never actually been made: *adopt
-oapi-codegen/openapi-typescript, or drop the spec as source of truth.* It is
-expensive to reverse and touches every module — hence an ADR.
-
-<!-- adr-narrative -->
-#### Decision
-
-**Keep `shared/openapi.yaml` as the single source of truth and make that real and
-enforced (spec→code).** Concretely:
-
-1. **Go: adopt oapi-codegen `chi-server` + `models`.** Handlers implement the
-   generated `ServerInterface`; **bodies stay hand-written** — cookie/throttle/
-   audit logic in the account handlers is unchanged, only signatures and
-   request/response types come from generation. Routes register via the generated
-   mux instead of ad-hoc `r.Post(...)`.
-2. **TS: adopt `openapi-typescript`.** `api-client.ts` consumes `types.gen.ts`;
-   the frontend gets end-to-end typed API access.
-3. **Commit the generated artifacts** (remove `api.gen.go` + `types.gen.ts` from
-   `.gitignore`). CI drift becomes the sqlc pattern: `make openapi` then
-   `git diff --exit-code`. Committing means PRs show the contract surface changing —
-   that diff *is* the contract review.
-4. **Pin the toolchain.** Add oapi-codegen via a `tools.go` / `go.mod` tool
-   directive (it is currently unpinned — no `tools.go`, absent from `go.mod`, so
-   the drift gate would be non-reproducible without this).
-5. **Replace the CI parse-check** with (a) a real lint (`redocly lint` or
-   `vacuum`) and (b) the regenerate-and-diff drift gate for **both** Go and TS.
-6. **Resolve the RFC 7807 drift as part of the cutover** — a module-wide
-   `writeErr` → `Problem` helper, so the error contract stops lying.
-
-Scope: do the cutover **now** on the two wired modules (account, media), before
-SPEC-04. Thereafter each spec adds its paths spec-first, and an endpoint missing
-from the spec fails CI — the specs' DoD becomes mechanical, not aspirational.
-
-#### Options considered
-
-- **A. Spec→code, enforced** *(chosen)*: makes the declared intent real, reuses
-  the working sqlc drift-gate pattern, gives the frontend typed access for free,
-  and closes the door on ~30 endpoints of future drift at the point of minimum cost.
-- **B. Code→spec (swaggo annotations; generate the spec from handlers).** Rejected:
-  inverts the source of truth the project has declared three times; imposes a
-  per-handler annotation burden forever; swaggo's OpenAPI 3.1 support lags; the
-  annotations drift from behavior just as easily as a hand-kept spec.
-- **C. Drop the spec as source of truth (code-first, hand-written TS client).**
-  Rejected: abandons a principle stated in the spec, CLAUDE.md, and MODULES.md;
-  discards a ~730-line asset; lets frontend types drift silently into runtime bugs.
-  Saves work now; the frontend repays it with interest. Cheapest today, most
-  expensive across the four verticals.
-- **D. Spec-first-lite: generate only the TS client, keep Go hand-written, add a
-  custom route-set diff in CI.** Rejected: the path-presence check is bespoke
-  tooling that catches *missing endpoints* but not *schema drift* (request/response
-  body shape) — and body-shape is exactly where ledger/finance correctness bugs
-  hide. oapi-codegen gives full-shape conformance for less long-run maintenance.
-
-#### Trade-offs
-
-- **Rewriting 12 handlers to the generated interface + fixing the error shape is
-  real work now (~1 dev-day).** Accepted: one-time, at the all-time-low handler
-  count, and it forecloses drift across the four incoming specs.
-- **oapi-codegen `chi-server`'s interface is somewhat rigid.** The complex auth
-  handlers keep hand-written bodies but must match generated signatures. Mitigated:
-  chi-server generates routing + types, not logic — the throttle/cookie/audit code
-  is untouched.
-- **Committing generated code adds diff noise on contract changes.** Accepted —
-  that noise is the point; it surfaces contract changes in review.
-- **One more pinned tool in the build.** Accepted: mirrors sqlc; reproducibility
-  is the whole reason for the gate.
-- **The spec still covers only ~2 of ~7 modules.** Accepted: the specs backfill
-  their own paths as they land; enforcement from now prevents the gap widening.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-What followed, checked against the tree on 2026-10-01. The working rule itself
-is the **API contract** convention above; this list records how it came to be
-true and where it still is not.
-
-- **The drift gate runs, and is required.** `api.gen.go` and `types.gen.ts`
-  (`wc -l backend/internal/handler/api.gen.go frontend/src/lib/types.gen.ts`)
-  have been committed since `6160f8e` (2026-07-12); `.gitignore` excludes sqlc
-  output only; the `openapi` job runs `make openapi` then
-  `git diff --exit-code`. From `edadf28` (2026-07-08) to `a30b887` (2026-09-11)
-  the job never reached that step — `frontend/pnpm-lock.yaml` had been deleted
-  while `setup-node` still cached on it — so for two months the gate was true on
-  paper only. `a30b887` committed the lockfile; since then the job runs to its
-  diff and is green on `main` (`gh run list --workflow ci.yml --branch main`),
-  and branch protection on `main` requires it ("OpenAPI contract (parse +
-  codegen drift gate)" — `gh api repos/jackone2991/portal/branches/main/protection`).
-- **Spec-first held for every module that came after.** The spec is
-  `wc -l shared/openapi.yaml` lines (5,187 at last check) and
-  `python3 -c "import yaml;print(len(yaml.safe_load(open('shared/openapi.yaml'))['paths']))"`
-  paths (111), tagged for every wired module — account/admin, media, movies,
-  music, stories, comic, bank, journal, notifications, layout, ops, people,
-  social, tenant, platform. The "~2 of ~7 modules" gap closed.
-- **The error contract stopped lying — but by a different route.**
-  `internal/platform/server.Problem` became the single RFC 7807 writer on
-  2026-08-25; the four surviving `writeErr`/`writeError` shims (account, media,
-  notify, tenant) delegate to it, and `schemas/Error` is deprecated with no
-  referent (the **Errors** convention above). This landed without the
-  `ServerInterface` cutover it was scoped under.
-- **No handler implements the generated `ServerInterface`.** `api.gen.go` is
-  its only referent in the tree (`grep -rln ServerInterface backend`). Every
-  handler is still hand-written plain-chi, so the gate proves the generated
-  code matches the spec, **not** that handler behaviour does (the **API
-  contract** convention above).
-- **The frontend is not typed end-to-end.** `types.gen.ts` is committed, but
-  `grep -rln 'from "./types.gen"' frontend/src` finds one importer
-  (`lib/comic-sync.ts`); `api-client.ts` still opens with "Once `make openapi`
-  runs …" and the other `lib/*.ts` modules hand-declare their types. The typed
-  client the decision promised is available and unused.
-- **backlog §9 closed** (the either/or is resolved). The specs' DoD is
-  enforceable for *path presence and schema shape*; handler conformance stays
-  a review question.
-- The spec's own `info`-block claim ("stubs and client are generated from it")
-  is true. CLAUDE.md's "don't hand-edit generated files" protects real files.
-- **`backend/MODULES.md` §8 gained its step on 2026-09-11** — two months after
-  this record said it would; until then a new module that followed the
-  checklist failed the `openapi` job. ADR-09's canonical-source rule holds: the
-  contract stays at `shared/openapi.yaml`; `docs/reference/` points at it.
-
-#### Action items
-
-- [x] Accepted 2026-07-11; generated files un-ignored and committed (`6160f8e`); CI regenerate-and-diff for Go + TS (`openapi` job, `6160f8e`; reachable since `a30b887`); `Problem` error helper (`internal/platform/server`, 2026-08-25); every spec since SPEC-04 added its paths spec-first; `backend/MODULES.md` §8 and CLAUDE.md state the rule (2026-09-11).
-- [ ] Pin oapi-codegen for **local** runs. CI pins `oapi-codegen@v2.7.2`
-      (`.github/workflows/ci.yml`) and `openapi-typescript ^7.4.0`
-      (`frontend/package.json`), but `backend/go.mod` has no `tool` directive
-      and there is no `tools.go`, so `make openapi` on a developer machine uses
-      whatever version is on `PATH` — and a version skew produces a diff the
-      gate rejects.
-- [ ] Refactor handlers onto the generated `ServerInterface` — **none done**,
-      account and media included. Retrofit per module as each is touched. (The
-      "cutover PR before SPEC-04" as scoped never landed; only the gate did.)
-- [ ] Replace the parse-check with a real lint (`redocly lint` / `vacuum`) —
-      the job still only checks that the YAML parses.
-- [ ] Make the frontend consume `types.gen.ts` beyond `comic-sync.ts`, or
-      strike the "typed client" claim from the spec's `info` block.
-
-<a id="adr-15"></a>
-### ADR-15 — Per-user timezone; periodic sweeps evaluate each owner's local date
-
-**Decided:** 2026-09-30, revised 2026-10-01 and 2026-10-02 · **Status:** accepted (Decision 2026-09-30 (Timezone); Decision 2026-10-01 (f), superseded as to `timezone_manual` by Decision 2026-10-02 (A8)); not built
-
-Deciders: kirito. Settles the source [D-17] left open (UTC storage, user-TZ
-day boundaries, an hourly per-TZ scheduler) · relates to [D-7] (the
-`users.timezone` column). The rule is the **Timezone** convention above,
-which is its one statement; the account half is
-[SPEC-01](SPEC-01-account-identity-admin.md) P0.13, and the readers are
-SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4
-and SPEC-13 §4a. This record holds the decision and points there for the
-contract.
-
-#### Context
-
-*The state this was decided against, 2026-09-30 (`main` @ `99b5a0b`). Spec
-numbers are today's.*
-
-- **A per-user column nobody writes.** `0002_account_users` declares
-  `users.timezone TEXT NOT NULL DEFAULT 'UTC'`, and no endpoint writes it;
-  `accountapi.UserSummary` is `{ID, Email, DisplayName}`.
-- **One instance zone in practice.** `APP_TIMEZONE` (`platform/config`) is
-  the zone `cmd/api` serves on `GET /api/v1/time`, and the frontend's
-  `lib/time.ts` takes its display zone from there. The people birthday scan
-  runs daily at 06:00 UTC with one zone for every owner (SPEC-11 §11 rows
-  5–6).
-- **The specs disagreed** (the 2026-09-30 worklog, "Open decisions left by
-  the post-fix review"): SPEC-12's dashboard and budget month cited
-  `users.timezone` (D-17); SPEC-09 P1.5 and SPEC-11 P0.3 used `APP_TIMEZONE`
-  for v1 because the column had no write path; SPEC-07 P0.4 claimed to match
-  the stream's zone.
-
-Every module with a day or month boundary depends on the answer — criterion
-(b) for a record.
-
-<!-- adr-narrative -->
-#### Decision
-
-1. **The User's own zone.** Every user-facing day or month boundary is
-   computed in the User's own IANA zone, `users.timezone`. There is no
-   instance-wide fallback: `APP_TIMEZONE`, "the instance default" and UTC are
-   not v1 sources for user-facing boundaries.
-2. **Taken from the device** (2026-09-30), and since A8: the column is
-   NULLable and NULL means "not set"; after sign-in the frontend saves the
-   device zone while the stored one is NULL; a set zone is never overwritten
-   by the device — a differing device zone gets one prompt, saved only on
-   confirmation; settings offer an IANA picker.
-3. **`Asia/Ho_Chi_Minh` when unknown** — the column default on 2026-09-30;
-   since A8, the backend readers' fallback while the column is NULL or does
-   not parse (the frontend uses the device zone).
-4. **One write path, validated** (confirmed by Decision 2026-10-01 (f)):
-   `PATCH /api/v1/auth/me {timezone}`; an empty or unknown IANA name is 422
-   `account/invalid-timezone` and nothing is written.
-5. **No manual flag.** Decision 2026-10-01 (f) confirmed a
-   `timezone_manual` flag; A8 dropped it everywhere — no column, no field, no
-   request flag. Decision 2 does its job.
-6. **Read through `accountapi`.** Modules never query `users`;
-   `UserSummary.Timezone` always returns a usable zone.
-7. **Sweeps evaluate each owner's local date.** A periodic task never uses
-   one "today" for everyone: it runs often enough (hourly) and evaluates each
-   owner's local date in that owner's zone, relying on its dedup keys for
-   exactly-once; SQL converts at the query layer (`AT TIME ZONE $tz`), never
-   through the session zone.
-
-#### Options considered
-
-From the 2026-09-30 worklog, as written ("choose one v1 source and state it
-once in the README"):
-
-- **The instance zone, `APP_TIMEZONE`, for v1** — what SPEC-09 P1.5 and
-  SPEC-11 P0.3 then said. Not chosen.
-- **Each User's `users.timezone`** (D-17, what SPEC-12 cited), taken from the
-  User's location, default `Asia/Ho_Chi_Minh`. *Chosen.*
-
-The manual override, as Decision 2026-10-01 (f) confirmed it: a
-`users.timezone_manual boolean NOT NULL DEFAULT false`; while true, the
-device-detected zone never overwrites the stored one; the settings picker
-saves `{timezone, timezone_manual: true}` and "use my location" saves the
-device zone with the flag false; `GET /auth/me` returns both. A8 replaced it
-with NULL-as-unset and a device that never overwrites (Decision 2). A8 was
-decided in the owner's review of SPEC-01 and left no written options list
-beyond that before-and-after.
-
-#### Trade-offs
-
-- **Sweeps get more frequent.** A daily job at one instance midnight becomes
-  an hourly job that resolves each owner's zone and leans on its dedup keys —
-  more runs, each cheap at household scale.
-- **"Today" belongs to the reader.** The same row can fall on different days
-  for two Users in different zones.
-- **The fallback is a place, not UTC.** It is right for the owner's household
-  and wrong for a User elsewhere until their first sign-in saves a zone.
-- **A traveller keeps home time.** Because the device never overwrites a set
-  zone, a User abroad sees their home zone until they accept the prompt.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-*Nothing below is built; the facts are the target, true when the rows in
-Action items close.*
-
-- **The contract** is the **Timezone** convention above and SPEC-01 P0.13
-  (TC-ACC-100…104); the D-17 updates in
-  [feature-inventory.md](../feature-inventory.md) record the history.
-- **`GET /api/v1/time` keeps only the server clock**; `lib/time.ts` takes the
-  zone from `GET /auth/me`.
-- **The readers change with it** — the "Per-user timezone" cross-cutting gap
-  above lists every row; the success metric is SPEC-01 §9's (no reader still
-  resolves a day boundary from `APP_TIMEZONE`).
-
-#### Action items
-
-1. [ ] The account half — migration, `PATCH /auth/me`, the `/auth/me` field,
-   `accountapi` single and batch lookups, the frontend save, prompt and
-   picker — SPEC-01 §11 row 14, first.
-2. [ ] The readers: SPEC-12 §12 rows 8, 16 · SPEC-07 §11 row 2 · SPEC-09 §11
-   rows 3, 9, 16 · SPEC-11 §11 rows 5–6 · SPEC-13 §8 row 2.
-
-<a id="adr-16"></a>
-### ADR-16 — List API contract: `{items[, next_cursor]}`, keyset cursors, a lenient `limit`
-
-**Decided:** 2026-09-30, extended 2026-10-01 and 2026-10-02 · **Status:** accepted (Decision 2026-09-30 (Envelopes); Decision 2026-10-01 (e) and (g); Decision 2026-10-02 (A5)); partly built — `platform/server.Limit` already clamps, the retrofits are not done
-
-Deciders: kirito. Relates to [ADR-10](#adr-10) (the contract this shapes) and
-[D-29] (`PaginatedResult<T>`, whose 2026-09-30 and 2026-10-01 updates in
-[feature-inventory.md](../feature-inventory.md) record the same decisions).
-The rule is the **Pagination** convention above, which is its one statement;
-the admin exception is [SPEC-01](SPEC-01-account-identity-admin.md) P0.8, and
-every spec §7 applies it. This record holds the decision and points there for
-the contract.
-
-#### Context
-
-*The state this was decided against, 2026-09-30 to 2026-10-02 (`main` @
-`99b5a0b`). Spec numbers are today's.*
-
-- **The envelope existed only on paper.** D-29 specified
-  `PaginatedResult<T>` as `{items, next_cursor}`, but the shipped lists answer
-  resource-named keys — `{assets}`, `{comics}`, `{transactions}`,
-  `{people}`, `{upcoming}`, `{accounts}`, the music, movie, story, social and
-  admin-user lists among them.
-- **The specs disagreed on envelopes** (the 2026-09-30 worklog): the
-  Pagination convention grandfathered existing endpoints' limits, not their
-  envelopes; SPEC-11 kept `{people}` / `{upcoming}` as a deliberate
-  exception; SPEC-04, SPEC-14 and SPEC-12 called `{assets}`, `{comics}` and
-  `{transactions}` a pending retrofit. Whether a non-paginated list
-  (`/bank/accounts`, chapter pages, `/bank/debts`,
-  `/people/upcoming-birthdays`) wore the envelope at all was unstated.
-- **The specs disagreed three ways on `limit`** (the 2026-10-01 verification):
-  clamp to the max (SPEC-09, SPEC-10, TC-NOTIFY-009); fall back to the
-  default (SPEC-04, SPEC-07, SPEC-11); silent (SPEC-14, SPEC-12, SPEC-05). On
-  `HEAD` every list service fell back to the default on both sides; only
-  `/continue` clamped.
-- **One list pages by offset.** `GET /admin/users` answers `limit` +
-  `offset` with a `total` and per-status `counts`.
-
-A response shape changed later breaks every client, and the rule binds every
-module — criteria (a) and (b) for a record.
-
-<!-- adr-narrative -->
-#### Decision
-
-1. **Every collection response is `{items}`.** A cursor-paginated list
-   answers `{items, next_cursor}`, `next_cursor` absent or null on the last
-   page; a non-paginated list answers `{items}` too (2026-10-01 (g)), so a
-   list that later gains pagination or metadata changes no client. Top-level
-   fields that are not the list may sit beside `items`; a resource-named list
-   key may not. A single resource or a composite read keeps its arrays as
-   named fields.
-2. **Retrofitted, not grandfathered.** Endpoints that shipped before the rule
-   move to `{items}`; only their declared limits are kept.
-3. **Keyset cursors.** Lists page by an opaque base64 keyset
-   `?cursor=&limit=` whose ordering key ends in `id`; a malformed cursor is
-   400 `<module>/invalid-cursor`. A new endpoint that states no limits uses
-   default 30, max 50.
-4. **`limit` is lenient and never an error** (2026-10-01 (e)): missing,
-   non-integer or < 1 gives the endpoint's default; above its max clamps to
-   the max. No Problem type is ever emitted for `limit`.
-5. **One named exception** (A5): the admin-only `GET /admin/users` keeps
-   `limit` + `offset` with `total` and per-status `counts`. It wears the
-   `{items}` envelope, and it is not a precedent: a new list is keyset-paged.
-
-#### Options considered
-
-Envelopes, from the 2026-09-30 worklog ("pick one policy in the README and
-align the four specs"):
-
-- **Grandfather shipped envelopes**, keeping SPEC-11's exception. Not chosen.
-- **Retrofit every list to `{items}`.** *Chosen.*
-
-Non-paginated lists (2026-10-01 (g)): the question asked the owner to confirm
-the reading that `{items}` applies to them too; the alternative it implied —
-the envelope for paginated lists only — was not taken.
-
-Out-of-range `limit` (2026-10-01 (e)), as written:
-
-- **Lenient and clamping** — the proposed rule: what a client asking for 500
-  means, matching SPEC-09, SPEC-10 and TC-NOTIFY-009, at one line in each of
-  seven services plus their tests. *Chosen.*
-- **Fall back to the default everywhere** — the zero-code alternative, which
-  would have flipped SPEC-09, SPEC-10, TC-NOTIFY-009 and the `/continue`
-  handler instead.
-
-Admin paging, the former SPEC-01 §10 Q2: **keep offset** for this one
-operator list (*chosen*), or **move to a cursor and drop `total`**.
-
-#### Trade-offs
-
-- **Every shipped list is a retrofit.** Each one moves its handler,
-  `shared/openapi.yaml` and its frontend readers in one PR; the payoff is
-  that no list ever changes shape again.
-- **A wrapper on lists that never page.** `{items}` costs one level of
-  nesting where a bare array would do.
-- **Leniency hides a client mistake.** A client asking for 500 silently gets
-  the max; the stricter answer would have been a 4xx for a request whose
-  meaning is clear.
-- **Keyset gives no totals.** No page numbers and no "how many"; the one list
-  that needs them, an approval queue at household scale, is the named
-  exception.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-*Partly built: `platform/server.Limit(r, def, max)` implements Decision 4;
-the rest is the target, true when the rows in Action items close.*
-
-- **The contract** is the **Pagination** convention above; every spec §7
-  states its shape, default and max, `<module>/invalid-cursor` and
-  `<module>/validation`; SPEC-01 P0.8 states the exception.
-- **The shipped divergences** are the "Envelopes retrofit to `{items}`" and
-  "`limit` clamps instead of resetting" cross-cutting gaps above, plus the
-  one list no spec owns (people `{suggestions}`), which retrofits the same
-  way.
-
-#### Action items
-
-1. [ ] Envelopes: SPEC-04 §11 row 12 · SPEC-14 §11 row 12 · SPEC-12 §12
-   row 9 · SPEC-11 §11 rows 9, 11 · SPEC-13 §8 row 3 · SPEC-01 §11 row 18 ·
-   SPEC-15 §12 row 15 · SPEC-16 §11 row 8 · SPEC-17 §11 row 9 · SPEC-18 §11
-   row 4; and people `{suggestions}`.
-2. [ ] `limit` clamps: SPEC-04 §11 row 18 · SPEC-14 §11 row 17 · SPEC-12 §12
-   row 17 · SPEC-05 §11 row 22 · SPEC-07 §11 row 8 · SPEC-09 §11 row 8 ·
-   SPEC-11 §11 row 15 · SPEC-01 §11 row 19 · SPEC-15 §12 row 16 · SPEC-16
-   §11 row 9 · SPEC-17 §11 row 10; and people `{suggestions}`.
-
-<a id="adr-17"></a>
-### ADR-17 — Every module emits bus events, account and layout included; notify tells the Superadmins
-
-**Decided:** 2026-10-01, refined 2026-10-02 · **Status:** accepted (Decision 2026-10-01b (D3); the Superadmin set by Decision 2026-10-02 (A11)); reaffirms [ADR-08](#adr-08) Decision 2; not built
-
-Deciders: kirito. Relates to [ADR-08](#adr-08) (the "≥ 1 bus event" rule
-this refuses to exempt anyone from) and the **Events** convention above,
-which states the rule. The requirements it produces are
-[SPEC-01](SPEC-01-account-identity-admin.md) P1.3 and §8 (seven `account:*`
-events, `accountapi.AdminEvent`, `SuperadminIDs`),
-[SPEC-02](SPEC-02-shell-layout.md) P1.4 and §8 (`layout:changed`) and
-[SPEC-05](SPEC-05-notification-module.md) P1.5 (the eight consumers); this
-record holds the decision and does not repeat their contracts.
-
-#### Context
-
-*The state this was decided against, 2026-10-01 and 2026-10-02 (`main` @
-`99b5a0b`). Spec numbers are today's.*
-
-- **The rule and two exceptions to it.** ADR-08 Decision 2 makes every new
-  domain module emit at least one bus event from its first release, and the
-  Events convention repeats it; `account` and `layout`, both shipped, emit
-  none. Account's admin handlers write audit rows only and `account.Deps`
-  has no publisher (`cmd/api` builds `mediaEvents` after `account.New`);
-  layout's saves publish nothing.
-- **Admin changes reach nobody.** Approvals, disables, deletes, role edits
-  and refresh-token reuse land in `audit_log` and nowhere else; the only
-  admin notice is P0.1's Approver dispatch on registration.
-- **The as-built specs asked** whether to exempt them (the former SPEC-02
-  §10 Q1, with SPEC-01 §8 pointing to it).
-- **The Superadmin set as first specced** (SPEC-01 P1.3, 2026-10-01): the
-  enabled, approved Users holding the `superadmin` role, directly or through
-  a custom role parented under it.
-
-Exempting two modules would contradict a previous record, and the answer
-crosses account, layout and notify — criteria (b) and (c) for a record.
-
-<!-- adr-narrative -->
-#### Decision
-
-1. **No exemption.** `account` and `layout` emit bus events, like every
-   other module.
-2. **Account announces admin changes.** Seven events after commit —
-   `account:user_registered` (a new Pending User only),
-   `account:user_approval_decided`, `account:user_access_changed`,
-   `account:user_deleted`, `account:user_roles_changed`,
-   `account:role_changed`, `account:refresh_reuse_detected` — with one
-   payload struct, `accountapi.AdminEvent`. A failed write publishes nothing;
-   a publish error is logged and never fails the request.
-3. **Layout announces saves.** One `layout:changed {part}` per successful
-   save, with the same after-commit rule.
-4. **Each event has a consumer.** Notify turns each into a bell entry for
-   the Superadmins except the actor (eight `notify:on_*` tasks); a
-   registration is deduplicated against the Approver dispatch; email is
-   forced only for refresh-token reuse.
-5. **Superadmin by permission** (A11): `SuperadminIDs` is the enabled,
-   Approved Users whose effective permissions contain `*` — not a role
-   name, so a custom role granted `*` counts and a renamed role changes
-   nothing.
-6. **Admin notices, not life-stream moments.** The stream does not project
-   them.
-
-#### Options considered
-
-The former SPEC-02 §10 Q1, as written (2026-10-01):
-
-- **Record an exemption** for `layout` (and `account`) in ADR-08's
-  Consequences or the Events convention.
-- **Add a `layout:changed` event with no consumer**, to satisfy the letter of
-  the rule.
-
-The owner took neither as written: the events exist *and* have a consumer —
-the Superadmin notices — so they carry value beyond the letter of the rule.
-
-The Superadmin set (A11): **by role** — holders of `superadmin`, directly or
-through a child role, as SPEC-01 P1.3 first specced it — or **by
-permission**, effective `*` (*chosen*). A11 was decided in the owner's review
-of SPEC-01 and left no written options list beyond that before-and-after.
-
-#### Trade-offs
-
-- **More moving parts for a household.** Eight consumer tasks and seven
-  notify types exist so that a handful of Superadmins hear about admin
-  changes; the default channel is in-app only, so the cost is bell entries,
-  not mail.
-- **Wiring order matters.** A `Publish` whose consumer edge is not
-  registered is a silent no-op, so the consumers land with or before the
-  first emitter, and `cmd/api` builds its publisher before `account.New`.
-- **By permission costs a walk.** `SuperadminIDs` runs the recursive role
-  walk of `GetEffectivePermissions` (at most 50 Users) instead of matching
-  one role code — the price of a definition that survives renamed and custom
-  roles.
-<!-- /adr-narrative -->
-
-#### Consequences
-
-*Nothing below is built; the facts are the target, true when the rows in
-Action items close.*
-
-- **The contracts** are SPEC-01 P1.3 and §8, SPEC-02 P1.4 and §8, and SPEC-05
-  P1.5 with its task list; [events.md](../../reference/events.md) carries
-  every name as a planned row; the Events convention above states that there
-  is no exemption.
-- **The rule keeps holding for new modules.** The `tenant` module's first
-  behaviour emits `tenant:link_changed` ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)
-  Decision 9).
-- **Tests:** TC-ACC-120…127, TC-LAY-050…052, TC-NOTIFY-140…145.
-
-#### Action items
-
-1. [ ] The eight notify consumers and the Superadmin port — SPEC-05 §11
-   row 23, with or before the first emitter.
-2. [ ] The `account:*` events and `SuperadminIDs` — SPEC-01 §11 row 24.
-3. [ ] `layout:changed` — SPEC-02 §11 row 14.
 
 ## Review history
 
@@ -1789,5 +982,9 @@ Action items close.*
   the `tenant` module gains links (SPEC-01 P0.17): the seven B13 rows are
   rewritten in place and three appended (gap total 281 → 284). B15 then
   narrowed the family half to the owner's tenant-group co-members (SPEC-01
-  P0.18, an amendment to ADR-12): one row appended (gap total 284 → 285). No
-  owner question is open.
+  P0.18, an amendment to ADR-12): one row appended (gap total 284 → 285). B16
+  defined a blank story chapter body from the stored data (SPEC-17 P0.3): one
+  row appended (gap total 285 → 286). The six decision records this README
+  still held (ADR-01, 08, 10, 15, 16, 17) moved verbatim into SPEC-03, SPEC-09,
+  SPEC-01 and SPEC-05, so every record now lives in a spec and this README
+  keeps only the index. No owner question is open.

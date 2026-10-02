@@ -2,7 +2,7 @@
 
 **Status:** current, rev 2 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
 **Module:** `story` · **Depends on:** SPEC-04 (image assets for covers, `media:asset_deleted`, P0.8 `shared` visibility and `mediaapi.SetVisibility` for the cover — Decision 2026-10-02b (B13, B14)); SPEC-01 P0.17 (`app_can_read_shared`, called by the `shared_read` policies — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)); pattern copied from SPEC-14 (parent + ordered children, `DEFERRABLE` reorder, publish validation)
-**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (tenancy), [ADR-08](README.md#adr-08), [SPEC-14](SPEC-14-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
+**Upstream:** as-built spec, written retroactively on 2026-10-01 from the shipped code (`backend/internal/modules/story/`, migration `0023_story_core`) and the decisions it rests on — there was never a brief. It also takes ownership of the story list envelopes the specs README Pagination convention listed as unowned (`{chapters}`, and `{stories}`) · **Refs:** [ADR-07](SPEC-01-account-identity-admin.md#adr-07) (tenancy), [ADR-08](SPEC-09-life-stream-home.md#adr-08), [SPEC-14](SPEC-14-comic-vertical.md) (the reference vertical), feature-inventory §6, `D-7` (RFC 7807), `D-20` (per-domain progress), `D-29` (spec-first OpenAPI, `{items}`), `D-32`/`D-33` (frontend), [backlog.md](../backlog.md) P2 lines 28–29
 **Downstream consumers:** SPEC-05 (`notify:on_story_published` bell), SPEC-10 (a future `story` leg of `/continue`), SPEC-03 P1.7 (takeout)
 
 ---
@@ -28,8 +28,9 @@ placeholder — so today the module is a working API without a reader.
 1. The owner creates a story, writes chapters in Markdown, orders them, and
    publishes it once every chapter has a body.
 2. A published story and its chapters are readable by its ADR-12 audience —
-   every authenticated member of the owner's tenant and the owner's friends in
-   actively linked tenants; a draft — detail, chapter list or reader payload — is
+   the Users who share a group with the owner in the story's tenant (SPEC-01
+   P0.18, Decision 2026-10-02b (B15)) and the owner's friends in that tenant
+   or an actively linked one; a draft — detail, chapter list or reader payload — is
    invisible to everyone but its owner (404, never 403).
 3. Chapter order is explicit and survives inserts, deletes and reorders without
    renumbering storms or unique-constraint failures.
@@ -46,7 +47,7 @@ placeholder — so today the module is a working API without a reader.
   raw Markdown; sanitising and rendering is the reader's job (P1.1).
 - **Visibility beyond family and friends** — "published" reaches the ADR-12
   audience and nobody else, as for movies (Decision 2026-10-02b (B6), amended
-  by B14; SPEC-16 §10).
+  by B14 and B15; SPEC-16 §10).
 - **Search** — FTS (`D-2`) waits for a corpus ([backlog.md](../backlog.md) P2
   line 29).
 
@@ -245,12 +246,14 @@ emit no event and never change the story's status.
 - **Tenancy fences visibility first**: `stories` and `story_chapters` are
   tenant-scoped under FORCE RLS (§6), so "published" meant visible within the
   owner's tenant and never beyond it (Decision 2026-10-02b (B6); SPEC-16 P0.3).
-  *Since B14* ([ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt —
-  §11 row 22) a `shared_read` policy on both tables (§6) also admits the
-  owner's accepted friends whose tenant is actively linked to the story's:
-  they get the detail, the chapter list and the reader payload of a published
-  story exactly as a member does (B7's blank-chapter rule included), and
-  `GET /stories` lists it to them. Writes stay inside the owner's tenant.
+  *Since B14, narrowed by B15* ([ADR-12](SPEC-01-account-identity-admin.md#adr-12); unbuilt —
+  §11 row 22) a `shared_read` policy on both tables (§6) admits the ADR-12
+  audience — the Users who share a group with the owner in the story's tenant
+  (SPEC-01 P0.18) and the owner's accepted friends in that tenant or one
+  actively linked to it, not every member of the tenant: they get the detail,
+  the chapter list and the reader payload of a published story (B7's
+  blank-chapter rule included), and `GET /stories` lists it to them. Writes
+  stay inside the owner's tenant.
 - **Blank chapters on a published story** (Decision 2026-10-02b (B7), SPEC-14
   P0.2 (a) for consistency with comic). The P0.5 invariant is enforced at
   publish only; afterwards a chapter may be emptied, or a blank one added. A
@@ -320,10 +323,11 @@ allowed; SPEC-05's consumer dedups on the story id. `POST
 nil or failing publisher is logged and never fails a committed publish.
 
 **The cover follows the story** *(Decision 2026-10-02b (B13), applied to story
-because P0.4 already makes a published story readable by every member of the
-tenant; audience revised by B14; unbuilt — §11 row 22)*. The text is a story
-row and reaches its audience through RLS alone (`tenant_isolation` for members,
-`shared_read` for friends in linked tenants), but the cover is a media asset and, while `private`, its
+because P0.4 already makes a published story readable by its audience;
+audience revised by B14 and B15; unbuilt — §11 row 22)*. The text is a story
+row and reaches its audience — the owner's group co-members (B15) and the
+owner's friends in the same or an actively linked tenant — through RLS alone
+(the `shared_read` policies, §6), but the cover is a media asset and, while `private`, its
 variants are hidden from everyone but the owner. So, exactly as for a movie's
 poster (SPEC-16 P0.4), publish raises `cover_asset_id` to SPEC-04 P0.8's
 `shared` visibility through `mediaapi.SetVisibility` with the **story owner**
@@ -385,9 +389,9 @@ to `user`, as for movies (SPEC-16 P1.3) and comics (`0025`).
 - Given creator D in C's tenant, when D adds a chapter to C's draft, then 404.
   *(TC-STY-069)*
 - Given C's draft story with a `private` cover, when it is published, then the
-  cover is `shared` and member M of C's tenant gets its `thumb` variant (and
-  no bytes of its original); when it is unpublished, then the cover is
-  `private` and M's variant request is 404. *(TC-STY-112)*
+  cover is `shared` and M, who shares a group with C in C's tenant (B15), gets
+  its `thumb` variant (and no bytes of its original); when it is unpublished,
+  then the cover is `private` and M's variant request is 404. *(TC-STY-112)*
 - Given C's published story and C's friend F in an actively linked tenant,
   then F reads the detail, the chapter list and the reader payload (blank
   chapters hidden, as for any non-owner) and sees it in `GET /stories`; F's
@@ -595,8 +599,13 @@ CREATE POLICY shared_read ON story_chapters FOR SELECT
 The chapter rule is restated against the parent's columns rather than
 relying on the parent's own policy (the `0032` lesson). INSERT, UPDATE and
 DELETE stay `tenant_isolation`. `ListPublishedStories` (and its
-`chapter_count` subquery) is unchanged. The down migration drops both
-policies.
+`chapter_count` subquery) is unchanged. Policies are OR-ed, so a caller still
+sees every row of their own tenant through `tenant_isolation`. (Every request
+runs in the caller's own personal organisation, so "their own tenant" is their
+own rows; before a request can run in a shared tenant, that read half narrows
+to the owner's rows, so a member in no group with the owner does not read the
+story in-tenant — SPEC-01 P0.18, Decision 2026-10-02b (B15).) The down
+migration drops both policies.
 
 **Takeout** (specs README): user-authored, so `story/api` implements
 `opsapi.ExportProvider` when SPEC-03 P1.7 lands — one JSON document per story
@@ -678,9 +687,11 @@ blank chapters are hidden from non-owner readers and excluded from
 change is §11 row 21. The cross-tenant rule decided with it (B6, SPEC-16 §10)
 applies here; B13, which made published music and movies playable by tenant
 members through SPEC-04 P0.8's asset visibility, applies to the story cover
-(P0.5; §11 row 22); and B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12))
+(P0.5; §11 row 22); B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12))
 widens the audience of a published story to the owner's friends in actively
-linked tenants, with the value renamed `shared` (P0.4, P0.5, §6; §11 row 22).
+linked tenants, with the value renamed `shared` (P0.4, P0.5, §6; §11 row 22);
+and B15 narrows its in-tenant half the same day: not every member, only the
+owner's group co-members (SPEC-01 P0.18).
 B16 then fixed what "blank" means: the stored body holds only whitespace or
 zero-width characters, by one SQL function every predicate calls; markup is
 content (P0.3, §6; §11 row 23).
@@ -724,7 +735,7 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
 | 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
 | 21 | P0.4 blank chapters after publish | On a published story, a non-owner gets no blank chapter (`story_body_is_blank(body_md)`, P0.3 — B16) in the detail, `chapter_count` or the reader payload; `GET /stories` counts non-blank chapters only. | `handler.go` `GetStory` sets `chapter_count = len(chapters)` and lists every chapter from `service.go` `ListChapters` → `query/story.sql` `ListStoryChapters` (no body predicate); `service.go` `ChaptersVisible` gates on the story only and returns `ListStoryChapters` whole; `ListPublishedStories` counts `(SELECT count(*) FROM story_chapters ch WHERE ch.story_id = s.id)`. The owner is never distinguished from a reader after the draft gate in `Service.GetStory`. | **query:** a `ListReadableStoryChapters` with `AND NOT story_body_is_blank(body_md)`, and the same call in `ListPublishedStories`' `chapter_count` subquery (`ListOwnStories` unchanged); `make sqlc`; lands with or after row 23, which creates the function. **backend:** `GetStory` and `ChaptersVisible` use the filtered query when the caller is not the owner and the story is published, and the detail's `chapter_count` comes from the list it returns. **openapi:** say so on `Story.chapter_count`, `getStory` and `listStoryChapters`. **test:** TC-STY-047, 048, 115. | Decision 2026-10-02b (B7); SPEC-14 §11 row 9 pattern (F049) |
-| 22 | P0.4 / P0.5 shared read; the cover follows the story; §6 | `stories` and `story_chapters` gain the `shared_read` policies, so the owner's friends in actively linked tenants read a published story as a member does; publish raises `cover_asset_id` to `shared` through `mediaapi.SetVisibility` with the story owner; unpublish, delete, clearing and replacing the cover lower what no other published story of the owner still uses; in the same transaction. | `0023_story_core` gives both tables `tenant_isolation` only, so no reader outside the owner's tenant sees the story. `service.go` `Publish`, `Unpublish`, `DeleteStory` and `UpdateStory` write `stories` only; `types.go` `MediaAPI` has `GetAsset` alone. A published story's cover stays `private`, so `0032`'s `variant_select` hides its variants from every other member while `GET /stories` lists the story to them. Latent while each user has a personal organisation and no tenants are linked, and invisible until P1.1 renders covers. | **migration:** `000N_story_shared_read` (§6), after `000N_tenant_links`. **backend:** `MediaAPI` gains `SetVisibility`; a story query listing which cover ids another published story of the owner still uses; the four methods raise or lower per P0.5, passing the story's `owner_user_id`; `ChaptersVisible` and `GetStory` keep treating a friend as a non-owner (row 21's filter). **openapi:** the `listStories` description says "published stories you may read". **test:** TC-STY-112, TC-STY-113. Needs SPEC-01 §11 row 32 and SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13); audience revised by B14 (ADR-12) |
+| 22 | P0.4 / P0.5 shared read; the cover follows the story; §6 | `stories` and `story_chapters` gain the `shared_read` policies, so the ADR-12 audience — the owner's group co-members in the story's tenant (B15, SPEC-01 P0.18) and the owner's friends in the same or an actively linked tenant — reads a published story; publish raises `cover_asset_id` to `shared` through `mediaapi.SetVisibility` with the story owner; unpublish, delete, clearing and replacing the cover lower what no other published story of the owner still uses; in the same transaction. | `0023_story_core` gives both tables `tenant_isolation` only, so no reader outside the owner's tenant sees the story. `service.go` `Publish`, `Unpublish`, `DeleteStory` and `UpdateStory` write `stories` only; `types.go` `MediaAPI` has `GetAsset` alone. A published story's cover stays `private`, so `0032`'s `variant_select` hides its variants from every other member while `GET /stories` lists the story to them. Latent while each user has a personal organisation and no tenants are linked, and invisible until P1.1 renders covers. | **migration:** `000N_story_shared_read` (§6), after `000N_tenant_links`. **backend:** `MediaAPI` gains `SetVisibility`; a story query listing which cover ids another published story of the owner still uses; the four methods raise or lower per P0.5, passing the story's `owner_user_id`; `ChaptersVisible` and `GetStory` keep treating a friend as a non-owner (row 21's filter). **openapi:** the `listStories` description says "published stories you may read". **test:** TC-STY-112, TC-STY-113. Needs SPEC-01 §11 rows 32 and 34 and SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13); audience revised by B14 and B15 (ADR-12) |
 | 23 | P0.3 / P0.5 blank body; §6 | A chapter is blank when its stored body holds only the P0.3 set (Unicode `White_Space` plus U+200B–U+200D, U+2060, U+FEFF); markup is content. One `IMMUTABLE` function, `story_body_is_blank`, is the only place the set is written; the publish check, row 21's reader filter and the public `chapter_count` call it; a Go helper and any P1.1 TypeScript mirror use the same code points. | `query/story.sql` `EmptyChapters` filters `char_length(btrim(body_md)) = 0`; one-argument `btrim` strips U+0020 only, so a body of `"\n"`, `"\r\n"`, a tab, U+00A0, U+200B, U+FEFF or U+3000 is not blank and the story publishes. `service.go` `CreateChapter` / `UpdateChapter` store the body verbatim (length check only), so such bodies are reachable from any API client. `story_test.go` `fakeRepo.EmptyChapters` tests `c.BodyMd == ""`, a third definition. | **migration:** `000N_story_blank_body` (§6; `ls backend/db/migrations \| tail -2` for the number). **query:** `EmptyChapters` → `WHERE story_id = $1 AND story_body_is_blank(body_md)`; `make sqlc`. **backend:** an `isBlankBody` helper in `types.go` over the same code points, used by the fake. **ops:** run the §6 verification script against the real database first and record its counts in the PR. **test:** TC-STY-114, 116, 117. | Decision 2026-10-02b (B16) |
 
 **Already matching on HEAD.**

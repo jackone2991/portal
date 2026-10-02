@@ -36,7 +36,7 @@ frontend, Docker Compose behind Traefik.
 | [`/backend/MODULES.md`](../backend/MODULES.md) | Backend module contract; the new-module checklist |
 | `backend/internal/modules/<name>/README.md` | What that module owns, talks to, emits and subscribes. **Not status** — open work is in [product/backlog.md](product/backlog.md) |
 | [`/frontend/CLAUDE.md`](../frontend/CLAUDE.md) · [`/frontend/src/templates/README.md`](../frontend/src/templates/README.md) | Frontend conventions; the version-switched template tree |
-| [`/shared/openapi.yaml`](../shared/openapi.yaml) | The API contract ([ADR-10](product/specs/README.md#adr-10)) |
+| [`/shared/openapi.yaml`](../shared/openapi.yaml) | The API contract ([ADR-10](product/specs/SPEC-03-platform-ops.md#adr-10)) |
 | [`/scraper/README.md`](../scraper/README.md) | The comic scraper service |
 | [`/.design-sync/NOTES.md`](../.design-sync/NOTES.md) | Design-sync harness facts and capture techniques |
 | [`/.continue/rules/CONTINUE.md`](../.continue/rules/CONTINUE.md) | Orientation for the Continue IDE agent — a pointer to the files above, owns nothing |
@@ -52,8 +52,8 @@ frontend, Docker Compose behind Traefik.
 1. [product/vision.md](product/vision.md) — what Portal is (life OS) and the v1
    envelope (1 dev · single VPS · ≤$100/mo).
 2. The decision records ([index](product/specs/README.md#decision-records)) →
-   skim [ADR-01](product/specs/README.md#adr-01) (scope cut) and
-   [ADR-08](product/specs/README.md#adr-08) (life-OS pivot) in the specs index,
+   skim [ADR-01](product/specs/SPEC-03-platform-ops.md#adr-01) (scope cut) in SPEC-03,
+   [ADR-08](product/specs/SPEC-09-life-stream-home.md#adr-08) (life-OS pivot) in SPEC-09,
    [ADR-06](product/specs/SPEC-01-account-identity-admin.md#adr-06) (local auth)
    in SPEC-01, and [ADR-11](product/specs/SPEC-06-docs-canonicalisation.md#adr-11) (how these
    documents are kept true) in SPEC-06.
@@ -71,9 +71,9 @@ starts specifying endpoints, move that into the spec body.
 
 - A **decision** with alternatives and consequences → a **decision record**
   (`ADR-NN`, never reused; the next is ADR-18) under `## Decision records` in
-  the spec that owns its subject — or in
-  [product/specs/README.md](product/specs/README.md) when it governs the whole
-  corpus — and a row in the [index](product/specs/README.md#decision-records).
+  the spec that owns its subject — always a spec, never
+  [product/specs/README.md](product/specs/README.md), which keeps only the
+  [index](product/specs/README.md#decision-records), where it gets a row.
   There is no `adr/` folder: it was folded into the specs on 2026-10-01
   ([ADR-09](product/specs/SPEC-06-docs-canonicalisation.md#adr-09) § Consequences). Corrected in
   place by layer ([ADR-11](product/specs/SPEC-06-docs-canonicalisation.md#adr-11)); shape, anchor

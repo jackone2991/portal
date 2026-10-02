@@ -360,3 +360,131 @@ The baseline is `main` @ `99b5a0b` (the docs commits on top changed no code). Th
 | r3 | 2026-07-11 | Spec-gap review fixes: `dedup_key` + unique index for idempotent dispatch under at-least-once delivery (F021); permission action verbs reconciled to `write` across §5/§7 (F022); P0.4/SPEC-04 P1.2 dependency decided as ungated, mirrored in §9 phase 4 (F023); GET `?status=` default documented + AC added (F053); `notify:on_asset_ready` consumer task named in P0.4 and §7's owned-task list (F054); P0.4 AC reworded to separate store latency from bell visibility (F055); P1.4 security-alert channel-forcing clarified (F056); header Drafted date + Downstream/Consumes split (F033/F034); malformed-permission-code note corrected to the panic-at-start/fail-closed behavior (F035); §1/header upstream citation resolved to backlog §5 (F052). |
 | r4 | 2026-10-01 | Added §11 implementation gaps (self-contained follow-up list); Revision history renumbered to §12. |
 | r5 | 2026-10-01 | Owner decision 2026-10-01b (D3): P1.5 admin notices — eight `notify:on_*` consumers of the `account:*` and `layout:changed` events, fanned out to superadmins except the actor, registration deduplicated against the approver dispatch; §7 task list; §11 row 23. |
+
+## Decision records
+
+The architecture decision this spec stands on. It lived in the specs README
+until 2026-10-02, when every record moved into the spec that owns its subject;
+the `ADR-NN` id stays the stable citation and the anchor below is fixed. The
+record keeps the binding shape — Context → Decision → Options considered →
+Trade-offs → Consequences → Action items. The Decision, Options and Trade-offs
+are the narrative layer, kept verbatim (ADR-11 rule 2 —
+[SPEC-06](SPEC-06-docs-canonicalisation.md#adr-11)); Context, Consequences and
+Action items are the fact layer, corrected in place and true as of this file's
+`Last verified`. Where the spec above already states a fact, the record points
+to it instead of repeating it.
+
+<a id="adr-17"></a>
+### ADR-17 — Every module emits bus events, account and layout included; notify tells the Superadmins
+
+**Decided:** 2026-10-01, refined 2026-10-02 · **Status:** accepted (Decision 2026-10-01b (D3); the Superadmin set by Decision 2026-10-02 (A11)); reaffirms [ADR-08](SPEC-09-life-stream-home.md#adr-08) Decision 2; not built
+
+Deciders: kirito. Relates to [ADR-08](SPEC-09-life-stream-home.md#adr-08) (the "≥ 1 bus event" rule
+this refuses to exempt anyone from) and the **Events** convention of the
+[specs README](README.md#conventions-binding-on-all-specs), which states the rule. The requirements it produces are
+[SPEC-01](SPEC-01-account-identity-admin.md) P1.3 and §8 (seven `account:*`
+events, `accountapi.AdminEvent`, `SuperadminIDs`),
+[SPEC-02](SPEC-02-shell-layout.md) P1.4 and §8 (`layout:changed`) and
+[SPEC-05](SPEC-05-notification-module.md) P1.5 (the eight consumers); this
+record holds the decision and does not repeat their contracts.
+
+#### Context
+
+*The state this was decided against, 2026-10-01 and 2026-10-02 (`main` @
+`99b5a0b`). Spec numbers are today's.*
+
+- **The rule and two exceptions to it.** ADR-08 Decision 2 makes every new
+  domain module emit at least one bus event from its first release, and the
+  Events convention repeats it; `account` and `layout`, both shipped, emit
+  none. Account's admin handlers write audit rows only and `account.Deps`
+  has no publisher (`cmd/api` builds `mediaEvents` after `account.New`);
+  layout's saves publish nothing.
+- **Admin changes reach nobody.** Approvals, disables, deletes, role edits
+  and refresh-token reuse land in `audit_log` and nowhere else; the only
+  admin notice is P0.1's Approver dispatch on registration.
+- **The as-built specs asked** whether to exempt them (the former SPEC-02
+  §10 Q1, with SPEC-01 §8 pointing to it).
+- **The Superadmin set as first specced** (SPEC-01 P1.3, 2026-10-01): the
+  enabled, approved Users holding the `superadmin` role, directly or through
+  a custom role parented under it.
+
+Exempting two modules would contradict a previous record, and the answer
+crosses account, layout and notify — criteria (b) and (c) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **No exemption.** `account` and `layout` emit bus events, like every
+   other module.
+2. **Account announces admin changes.** Seven events after commit —
+   `account:user_registered` (a new Pending User only),
+   `account:user_approval_decided`, `account:user_access_changed`,
+   `account:user_deleted`, `account:user_roles_changed`,
+   `account:role_changed`, `account:refresh_reuse_detected` — with one
+   payload struct, `accountapi.AdminEvent`. A failed write publishes nothing;
+   a publish error is logged and never fails the request.
+3. **Layout announces saves.** One `layout:changed {part}` per successful
+   save, with the same after-commit rule.
+4. **Each event has a consumer.** Notify turns each into a bell entry for
+   the Superadmins except the actor (eight `notify:on_*` tasks); a
+   registration is deduplicated against the Approver dispatch; email is
+   forced only for refresh-token reuse.
+5. **Superadmin by permission** (A11): `SuperadminIDs` is the enabled,
+   Approved Users whose effective permissions contain `*` — not a role
+   name, so a custom role granted `*` counts and a renamed role changes
+   nothing.
+6. **Admin notices, not life-stream moments.** The stream does not project
+   them.
+
+#### Options considered
+
+The former SPEC-02 §10 Q1, as written (2026-10-01):
+
+- **Record an exemption** for `layout` (and `account`) in ADR-08's
+  Consequences or the Events convention.
+- **Add a `layout:changed` event with no consumer**, to satisfy the letter of
+  the rule.
+
+The owner took neither as written: the events exist *and* have a consumer —
+the Superadmin notices — so they carry value beyond the letter of the rule.
+
+The Superadmin set (A11): **by role** — holders of `superadmin`, directly or
+through a child role, as SPEC-01 P1.3 first specced it — or **by
+permission**, effective `*` (*chosen*). A11 was decided in the owner's review
+of SPEC-01 and left no written options list beyond that before-and-after.
+
+#### Trade-offs
+
+- **More moving parts for a household.** Eight consumer tasks and seven
+  notify types exist so that a handful of Superadmins hear about admin
+  changes; the default channel is in-app only, so the cost is bell entries,
+  not mail.
+- **Wiring order matters.** A `Publish` whose consumer edge is not
+  registered is a silent no-op, so the consumers land with or before the
+  first emitter, and `cmd/api` builds its publisher before `account.New`.
+- **By permission costs a walk.** `SuperadminIDs` runs the recursive role
+  walk of `GetEffectivePermissions` (at most 50 Users) instead of matching
+  one role code — the price of a definition that survives renamed and custom
+  roles.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contracts** are SPEC-01 P1.3 and §8, SPEC-02 P1.4 and §8, and SPEC-05
+  P1.5 with its task list; [events.md](../../reference/events.md) carries
+  every name as a planned row; the Events convention of the [specs README](README.md#conventions-binding-on-all-specs) states that there
+  is no exemption.
+- **The rule keeps holding for new modules.** The `tenant` module's first
+  behaviour emits `tenant:link_changed` ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)
+  Decision 9).
+- **Tests:** TC-ACC-120…127, TC-LAY-050…052, TC-NOTIFY-140…145.
+
+#### Action items
+
+1. [ ] The eight notify consumers and the Superadmin port — SPEC-05 §11
+   row 23, with or before the first emitter.
+2. [ ] The `account:*` events and `SuperadminIDs` — SPEC-01 §11 row 24.
+3. [ ] `layout:changed` — SPEC-02 §11 row 14.
