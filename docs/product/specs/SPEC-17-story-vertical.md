@@ -43,7 +43,8 @@ placeholder — so today the module is a working API without a reader.
   narration assets" is likewise unbuilt.
 - **Rendering policy for Markdown on the server.** The API stores and returns
   raw Markdown; sanitising and rendering is the reader's job (P1.1).
-- **Visibility beyond the tenant** — as for movies (SPEC-16 §10).
+- **Visibility beyond the tenant** — "published" never crosses the tenant
+  fence, as for movies (Decision 2026-10-02b (B6), SPEC-16 §10).
 - **Search** — FTS (`D-2`) waits for a corpus ([backlog.md](../backlog.md) P2
   line 29).
 
@@ -120,7 +121,8 @@ A chapter is `{title, body_md, sort_order}` belonging to one story.
   (`maxBodyLen`); violations → 422 `story/validation`. Request bodies on every
   story route may be up to 4 MiB (`storyBodyLimit`, four times the platform
   default — a chapter is prose). An empty body is allowed on a draft; it is what
-  blocks publish (P0.5).
+  blocks publish (P0.5). After publish a blank chapter is hidden from
+  non-owners instead (P0.4).
 - **Create** `POST /stories/{id}/chapters` (201, the Chapter). `sort_order` is
   optional: absent → the server appends after the story's current maximum
   (`MAX(sort_order) + 10`, or 10 for the first chapter); present → it must not
@@ -191,11 +193,27 @@ emit no event and never change the story's status.
   row 10.)* A malformed cursor is 400 `story/invalid-cursor`.
 - **Tenancy fences visibility first**: `stories` and `story_chapters` are
   tenant-scoped under FORCE RLS (§6), so "published" means visible within the
-  owner's tenant — the owner alone with personal orgs (SPEC-16 P0.3, §10).
-- `chapter_count` counts every chapter, empty ones included. Once published,
-  chapters may be emptied or deleted; readers then see what remains (the
-  invariant is checked at publish only — SPEC-14 P0.2 (c); §10 asks whether to
-  adopt SPEC-14 P0.2 (a)).
+  owner's tenant — the owner alone with personal orgs — and never beyond it
+  (Decision 2026-10-02b (B6); SPEC-16 P0.3).
+- **Blank chapters on a published story** (Decision 2026-10-02b (B7), SPEC-14
+  P0.2 (a) for consistency with comic). The P0.5 invariant is enforced at
+  publish only; afterwards a chapter may be emptied, or a blank one added. A
+  chapter is **blank** by the publish predicate: `btrim(body_md) = ''`
+  (`EmptyChapters`). On a published story, for every caller but the owner:
+  (a) a blank chapter is omitted from the detail's `chapters`, from
+  `chapter_count` and from the reader payload — so the reader's table of
+  contents and previous/next skip it — until it has a non-blank body. There is
+  no per-chapter read route, so the reader payload is the whole fence (comic's
+  per-chapter 404 has no counterpart). `GET /stories` counts non-blank chapters
+  only, whoever asks (the list is not per caller);
+  (b) adding, filling or emptying chapters of a published story emits nothing
+  (§8): `story:published` fires only on a publish action;
+  (c) emptying or deleting chapters never auto-unpublishes; a published story
+  left with no non-blank chapter shows no chapters and `chapter_count: 0`.
+  The owner sees every chapter, blank ones included, in the detail, the reader
+  payload, `GET /stories/mine` and every mutation response. A holder of
+  `stories:write:any` is not the owner and reads what any reader reads. *(Code
+  follow-up: HEAD returns and counts every chapter to everyone — §11 row 21.)*
 
 **Acceptance criteria.**
 - Given C's draft with one chapter, when stranger S in C's tenant GETs the
@@ -212,6 +230,16 @@ emit no event and never change the story's status.
   `story/invalid-cursor`. *(TC-STY-044, 045)*
 - Given 75 published stories, then pages of 30/30/15 under `items`, no
   `stories` key, the last page without `next_cursor`. *(TC-STY-046)*
+- Given C's published story with chapters "1" (text) and "2" (body emptied to
+  `"   "` after publish), when reader R in C's tenant GETs the detail, the
+  reader payload and `GET /stories`, then each shows only chapter 1 and
+  `chapter_count: 1`; C sees both chapters and `chapter_count: 2` in the
+  detail, the reader payload and `GET /stories/mine`. Once C writes a body
+  into chapter 2, R sees it, and no `story:published` is emitted.
+  *(TC-STY-047)*
+- Given C's published story whose every chapter is then emptied or deleted,
+  then it stays `published`, and R gets 200 with `chapters: []`,
+  `chapter_count: 0` and an empty reader payload. *(TC-STY-048)*
 
 ### P0.5 — Publish, unpublish, delete and RBAC
 
@@ -397,15 +425,15 @@ id → 404 `about:blank`.
 
 | Method | Path | Permission | Request | 2xx response | Errors |
 |---|---|---|---|---|---|
-| GET | `/stories?cursor=&limit=` | `stories:read` | — | 200 `{items: Story[], next_cursor?}` | 400 `story/invalid-cursor` |
+| GET | `/stories?cursor=&limit=` | `stories:read` | — | 200 `{items: Story[], next_cursor?}` (`chapter_count` excludes blank chapters, P0.4) | 400 `story/invalid-cursor` |
 | GET | `/stories/mine?cursor=&limit=` | `stories:write:own` (held by `user` after P1.3) | — | 200 `{items: Story[], next_cursor?}` | 400 `story/invalid-cursor`, 403 |
 | POST | `/stories` | `stories:write:own` (held by `user` after P1.3) | `StoryCreate {title, description?, cover_asset_id?}` | 201 `Story` | 422 `story/validation`, `story/invalid-cover-asset` |
-| GET | `/stories/{id}` | `stories:read` (draft: owner only) | — | 200 `StoryDetail` | 404 `story/not-found` |
+| GET | `/stories/{id}` | `stories:read` (draft: owner only; blank chapters owner only, P0.4) | — | 200 `StoryDetail` | 404 `story/not-found` |
 | PATCH | `/stories/{id}` | owner, or `stories:write:any` | `StoryPatch` (absent = unchanged, `null` clears) | 200 `Story` | 404, 422 as POST |
 | DELETE | `/stories/{id}` | owner, or `stories:delete:any` | — | 204 | 404 `story/not-found` |
 | POST | `/stories/{id}/publish` | `stories:publish:own` (held by `user` after P1.3), then owner or `stories:publish:any` | — | 200 `Story` | 422 `story/not-publishable` (+ `chapters`), 404 |
 | POST | `/stories/{id}/unpublish` | `stories:publish:own` (held by `user` after P1.3), then owner or `stories:publish:any` | — | 200 `Story` | 404 |
-| GET | `/stories/{id}/chapters` | `stories:read` (draft: owner only) | — | 200 `{items: StoryChapter[]}` | 404 `story/not-found` |
+| GET | `/stories/{id}/chapters` | `stories:read` (draft: owner only; blank chapters owner only, P0.4) | — | 200 `{items: StoryChapter[]}` | 404 `story/not-found` |
 | POST | `/stories/{id}/chapters` | owner, or `stories:write:any` | `StoryChapterCreate {title, body_md?, sort_order?}` | 201 `StoryChapter` | 422 `story/validation`, 404 |
 | PUT | `/stories/{id}/chapters:order` | owner, or `stories:write:any` | `ReorderRequest {order: [uuid]}` — the complete set | 204 | 422 `story/validation`, 404 |
 | PATCH | `/story-chapters/{id}` | owner, or `stories:write:any` (by chapter) | `StoryChapterPatch {title?, body_md?}` | 200 `StoryChapter` | 422 `story/validation`, 404 `story/not-found` |
@@ -457,11 +485,14 @@ link lands on a placeholder page until P1.1.
 
 Two questions were decided on 2026-10-01 (Decision 2026-10-01b): story is
 finished, not reverted (D2 — P1.1 is committed scope), and `user` may write
-(D4 — P1.3).
+(D4 — P1.3). One more was decided on 2026-10-02 (Decision 2026-10-02b): story
+adopts SPEC-14 P0.2 (a) for consistency with comic (B7 — P0.4). After publish,
+blank chapters are hidden from non-owner readers and excluded from
+`chapter_count`, instead of the publish-time-only check that shipped; the code
+change is §11 row 21. The cross-tenant rule decided with it (B6, SPEC-16 §10)
+applies here unchanged.
 
-- **(product, non-blocking)** Published invariant after publish: keep the
-  publish-time-only check (as shipped), or adopt SPEC-14 P0.2 (a) and hide
-  blank chapters from non-owner readers and from `chapter_count`?
+No open questions remain.
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -469,7 +500,8 @@ Baseline: `main` @ `99b5a0b` (the docs commits on top change no code). The spec
 text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
 integrity, authorization, contract, hygiene and unbuilt work; row 20 (P1, added
-by Decision 2026-10-01b) is appended after row 19. A row closes when
+by Decision 2026-10-01b) is appended after row 19, and row 21 (P0.4, added by
+Decision 2026-10-02b (B7)) after row 20. A row closes when
 the code matches the requirement it cites and the SPEC-17 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
@@ -496,6 +528,7 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 | 18 | P1.1 frontend | `/library/novel` list, reader and manager. | `templates/v1/views/library/novel/NovelDetailView.tsx` is a 26-line placeholder; `app/(app)/library/page.tsx` links `/library/novel`, which has no `page.tsx` (404); no `lib/story.ts`. | **frontend:** P1.1. **test:** TC-STY-090…094. | [backlog.md](../backlog.md) P2 line 28 |
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
 | 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
+| 21 | P0.4 blank chapters after publish | On a published story, a non-owner gets no blank chapter (`btrim(body_md) = ''`) in the detail, `chapter_count` or the reader payload; `GET /stories` counts non-blank chapters only. | `handler.go` `GetStory` sets `chapter_count = len(chapters)` and lists every chapter from `service.go` `ListChapters` → `query/story.sql` `ListStoryChapters` (no body predicate); `service.go` `ChaptersVisible` gates on the story only and returns `ListStoryChapters` whole; `ListPublishedStories` counts `(SELECT count(*) FROM story_chapters ch WHERE ch.story_id = s.id)`. The owner is never distinguished from a reader after the draft gate in `Service.GetStory`. | **query:** a `ListReadableStoryChapters` with `AND btrim(body_md) <> ''`, and the same predicate in `ListPublishedStories`' `chapter_count` subquery (`ListOwnStories` unchanged); `make sqlc`. **backend:** `GetStory` and `ChaptersVisible` use the filtered query when the caller is not the owner and the story is published, and the detail's `chapter_count` comes from the list it returns. **openapi:** say so on `Story.chapter_count`, `getStory` and `listStoryChapters`. **test:** TC-STY-047, 048. | Decision 2026-10-02b (B7); SPEC-14 §11 row 9 pattern (F049) |
 
 **Already matching on HEAD.**
 - `0023_story_core`: both tables, the story CHECKs, the `DEFERRABLE` chapter
@@ -528,6 +561,9 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 - No test covers the lists, `limit`, envelopes or `chapter_count: 0`
   (TC-STY-041…046), `UpdateStory` (TC-STY-004, 005) or the after-commit emit
   (TC-STY-063).
+- Nothing distinguishes owner from reader on a published story's chapters
+  (TC-STY-047, 048); `TestChaptersVisibleFollowsTheStoryGate` covers the draft
+  gate only.
 - The consumer is proven on a fake only (`TestAssetDeletedClearsTheCover`);
   nothing proves it under RLS (TC-STY-082).
 - RBAC rows (TC-STY-065…069) need a router built with a real engine; the HTTP

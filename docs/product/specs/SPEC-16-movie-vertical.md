@@ -46,7 +46,7 @@ does not (§11).
   (P0.2); the module never waits on `media:asset_ready`, unlike the README's
   original plan.
 - **Visibility beyond the tenant.** "Published" means visible to the owner's
-  tenant (P0.3). Cross-tenant publishing is an owner question (§10).
+  tenant (P0.3) and never more — Decision 2026-10-02b (B6), §10.
 - **Search** — Postgres FTS (`D-2`) is deferred while the corpus is n=1
   ([backlog.md](../backlog.md) P2 line 29).
 
@@ -146,7 +146,11 @@ the 422 — §11 row 5.)*
   (§6), and every request runs inside the caller's personal-org scope
   (`RequireTenant`). "Published" therefore means *visible to the members of the
   owner's tenant*; with personal orgs that is the owner alone. Comic's "published
-  = all authenticated users" (SPEC-14 §3) does not hold here as shipped (§10).
+  = all authenticated users" (SPEC-14 §3) does not hold here, by decision:
+  `published` is a status flag inside the owner's tenant, never a sharing
+  mechanism across it (Decision 2026-10-02b (B6), §10). Publishing touches no
+  asset either: the video's and poster's ACL (`0032_media_asset_acl` — owner,
+  tenant admin, or a `public` asset) is not widened to follow the movie.
 - **`GET /movies`** lists published movies; **`GET /movies/mine`** lists the
   caller's own, drafts included. Both are keyset-paginated on
   (`updated_at DESC`, `id DESC`); the opaque cursor encodes both keys
@@ -169,6 +173,9 @@ the 422 — §11 row 5.)*
 - Given `?limit=500`, then 50 items; given `?limit=abc`, then 30.
   *(TC-MOV-024)*
 - Given `?cursor=garbage`, then 400 `movie/invalid-cursor`. *(TC-MOV-025)*
+- Given C's published movie, when a caller in another tenant GETs it or lists
+  `GET /movies`, then 404 `movie/not-found` and absent; publishing left the
+  video asset's `visibility` unchanged. *(TC-MOV-027, RLS suite)*
 - Given any list response, then the array is under `items` and no `movies` key
   exists. *(TC-MOV-026)*
 
@@ -435,12 +442,13 @@ request commits (§11 row 3).
 
 Two questions were decided on 2026-10-01 (Decision 2026-10-01b): movie is
 finished, not reverted (D2 — P1.1 is committed scope), and `user` may author
-(D4 — P1.3).
+(D4 — P1.3). One more was decided on 2026-10-02 (Decision 2026-10-02b):
+"published" never crosses the tenant fence (B6 — P0.3). It stays a status flag
+visible only inside the owner's tenant: RLS limits it, and the video asset's
+ACL (`0032_media_asset_acl`) is not widened. The same rule holds for music
+(SPEC-15). Shipped code already behaves this way, so §11 gains no row.
 
-- **(product, non-blocking)** Should "published" ever cross the tenant fence?
-  Today RLS limits it to the owner's tenant, and the video asset's own ACL
-  (`0032_media_asset_acl`) would also have to admit the reader. Until a second
-  real user exists, `published` is a status flag, not a sharing mechanism.
+No open questions remain.
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
