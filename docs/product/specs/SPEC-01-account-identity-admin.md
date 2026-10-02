@@ -1,8 +1,9 @@
 # SPEC-01 — Account: identity, approval gate, RBAC and the admin console
 
-**Status:** current, rev 3 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-01
-**Module:** `account` · **Depends on:** SPEC-05 (`notify:dispatch` carries the approval notification and the password-reset email; reset behaviour is SPEC-05 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-05 P1.5) · SPEC-04 P0.7 (`mediaapi.PurgeOwnerAssets`, called by the user delete, P0.10) · `platform/audit` ([D-25]) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
-**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-01 (f)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff)
+**Status:** current, rev 4 · **Drafted:** 2026-10-01 · **Last verified:** 2026-10-02
+**Module:** `account` · **Depends on:** SPEC-05 (`notify:dispatch` carries the approval notification, the password-reset email and the account's other transactional mails — registration receipts, P0.1, and email-change links, P0.10; reset behaviour is SPEC-05 P0.3; the `notify:on_*` consumers of P1.3's events are SPEC-05 P1.5) · SPEC-04 P0.7 (`mediaapi.PurgeOwnerAssets`, media's purge in the user delete, P0.10) · every module that owns per-User data (`PurgeOwnerData`, P0.10) · `platform/audit` ([D-25]; identity retention, P0.16) · `platform/events` (P1.3) · `platform/server` (Problem writer, `Limit`)
+**Upstream:** none — an **as-built spec written retroactively** from the code on `main` @ `99b5a0b` (the docs commits on top of it change no code). The decisions it records were taken earlier and are cited, not re-decided; the three architecture decisions are kept in full under [Decision records](#decision-records): [ADR-02](#adr-02) (role hierarchy is canonical for v1), [ADR-06](#adr-06) (local password auth; Portal owns credentials), [ADR-07](#adr-07) (account tables are global, not tenant-scoped), migration `0031_account_user_approval` (registration requires approval), feature-inventory `D-17` (per-user timezone, owner decisions 2026-09-30 and 2026-10-02 (A8)), `D-25` (audit taxonomy), `D-26.r1` (Portal-managed roles only), `D-34.r1` (SessionKeeper auth handoff). Rev 4 writes in the twelve owner decisions of 2026-10-02 (A1–A12, listed in the specs README "Decisions recorded 2026-10-02"); where they change shipped behaviour the text below is the target and §11 rows 25–31 carry the change
+**Vocabulary:** [CONTEXT.md](../../../CONTEXT.md) — a person's identity is a **User** (never "account": that word is reserved for a ledger Account; the module and code names stay `account`), one signed-in browser is a **Session**, and **Approval**, **Rejected**, **Disabled**, **Superadmin** and **Approver** mean exactly what the glossary says
 **Tenancy:** the `tenant` module has no spec of its own; its decision record, [ADR-07](#adr-07) (multi-tenancy and RLS), lives in this file, and the mechanism as built is [security.md §3](../../architecture/security.md#3-tenant-layer-data-segregation).
 **Refs:** [security.md](../../architecture/security.md) (design depth: token model, revocation channels, threat model — this spec owns the product requirements and the contract, not the design), [/CLAUDE.md](../../../CLAUDE.md) § Account module, [backend/MODULES.md](../../../backend/MODULES.md) §5.3 (audit taxonomy), the specs README [Timezone](README.md#conventions-binding-on-all-specs) convention and its **Per-user timezone** cross-cutting gap, which this spec now owns
 **Downstream consumers:** every module's `RequirePermission` / `RequireOwnerOrPermission` (built by `cmd/api` from `account.Module.Engine()`); `tenant` (`RequireAuth` + the caller identity); `layout` (`accountapi.HasPermission`); `people` (`accountapi.ListDirectory`; SPEC-11 P0.3/P0.4 timezone); `social` (`accountapi.GetUserNames`); `notify` (recipient email, via the account repository in `cmd/worker`; the P1.3 `account:*` events and `SuperadminIDs`); the timezone readers SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1/P0.3/P1.5, SPEC-11 P0.3/P0.4, SPEC-13 §4a; the frontend's `lib/session.ts`, `lib/admin.ts`, `/login`, `/register` and `/admin/*`
@@ -29,8 +30,8 @@ diverges from the binding conventions.
    invariants (no escalation, no self-edit, cache re-key on every change) —
    stated as testable requirements.
 3. The account half of the per-user timezone decision (`users.timezone`,
-   `timezone_manual`, `PATCH /auth/me`, `accountapi`) owned by a spec, so the
-   readers in SPEC-12/07/09/11/13 have a dependency they can point at.
+   `PATCH /auth/me`, `accountapi`) owned by a spec, so the readers in
+   SPEC-12/07/09/11/13 have a dependency they can point at.
 4. Every place the shipped module diverges from the specs README conventions
    listed in §11, with the change that closes it.
 
@@ -55,29 +56,48 @@ diverges from the binding conventions.
 
 ## 4. User stories
 
-- As the person installing Portal, I register first and can sign in at once as
-  superadmin; nobody else can, until I let them in. *(first-run bootstrap)*
-- As a household member, I register, am told I am waiting for approval, and can
-  sign in the moment the owner approves me.
+- As the person installing Portal, I put my email and a first password in
+  `BOOTSTRAP_SUPERADMIN_EMAIL` / `BOOTSTRAP_SUPERADMIN_PASSWORD` before the
+  first start; the API creates my User as an approved Superadmin, and on my
+  first sign-in I must choose a new password before anything else works.
+  Nobody who registers through the form is ever let in without an Approver.
+  *(first-run bootstrap, P0.12 — Decision 2026-10-02 (A2); unbuilt)*
+- As a second person on the instance, I register, am told — on screen and by
+  email — that I am waiting for approval, and can sign in the moment an
+  Approver approves me. My data is my own: a second Approved User shares
+  nothing with the first (shared household data is not designed).
+  *(Decision 2026-10-02 (A1, A12))*
+- As someone who already has a User and forgot it, registering again tells me
+  nothing on screen that a stranger could not also see, and my inbox explains
+  what state my User is in. *(P0.1 — Decision 2026-10-02 (A1); unbuilt)*
 - As the owner, I get a bell entry and an email when someone registers, and
   approve or reject them from `/admin/users` with an optional note the person
   sees on their next login attempt.
-- As the owner, I revoke an approval or disable an account and that person's
-  open browser stops working on its next request, not five minutes later.
-- As an admin who is not a superadmin, I can manage ordinary users and roles but
-  cannot hand myself — or anyone — a permission I do not hold, and cannot take
-  over or lock out an account that outranks me.
-- As a superadmin, I get a bell entry when another admin approves, disables,
-  deletes or re-roles an account or changes a role, and an email when a stolen
+- As the owner, I revoke an approval or disable a User and that person's open
+  browser stops working on its next request, not five minutes later.
+- As an admin who is not a Superadmin, I can manage ordinary Users and roles
+  but cannot hand myself — or anyone — a permission I do not hold, and cannot
+  take over or lock out a User that outranks me.
+- As a Superadmin, I get a bell entry when another admin approves, disables,
+  deletes or re-roles a User or changes a role, and an email when a stolen
   refresh token is replayed. *(P1.3 — decided, unbuilt)*
-- As the owner, I delete an account and its uploaded files are gone from
-  storage too, not just its rows. *(P0.10 — decided, unbuilt)*
-- As any signed-in user, my day boundaries ("today", "this month", birthday
-  countdowns) follow the timezone of where I am, unless I pinned one in
-  settings. *(P0.13 — decided, unbuilt)*
-- Edge: an operator upgrading an install that predates `0031` names the
-  superadmin in `BOOTSTRAP_SUPERADMIN_EMAIL` and it is (re-)asserted on every
-  start.
+- As the owner, I delete a User and everything they owned — rows, uploaded
+  files, cache entries — is gone, irreversibly; only a short identity snapshot
+  survives for 90 days. *(P0.10 — Decisions 2026-10-01b (D1) and 2026-10-02
+  (A6); unbuilt)*
+- As a signed-in User, logging out of this browser leaves my other Sessions
+  working; "log out everywhere" ends them all. *(P0.6 — Decision 2026-10-02
+  (A3); unbuilt)*
+- As any signed-in User, my day boundaries ("today", "this month", birthday
+  countdowns) follow the timezone saved on my User — set from my device the
+  first time I sign in, and changed only when I confirm it.
+  *(P0.13 — Decision 2026-10-02 (A8); unbuilt)*
+- As an admin correcting someone's email, the change waits until the new
+  address proves it can receive mail, and the old address can cancel it.
+  *(P0.10 — Decision 2026-10-02 (A9); unbuilt)*
+- Edge: an operator upgrading an install that predates `0031` names an
+  existing User in `BOOTSTRAP_SUPERADMIN_EMAIL` and it is (re-)asserted as an
+  approved, enabled Superadmin on every start; its password is never touched.
 
 ## 5. Requirements
 
@@ -91,41 +111,70 @@ Body `{email, password, display_name?}` (64 KiB cap, `handler/auth.go`
 `decodeJSON`). The email is trimmed and lower-cased; it is valid when it has a
 non-leading `@`, a `.` after it and ≤ 320 characters (`validEmail`) — else 422
 `account/invalid-email`. The password is ≥ 8 bytes (`minPasswordLen`) — else 422
-`account/password-policy`. An unparseable body is 400 about:blank. The password
-is hashed with Argon2id (P0.3). A taken email is 409 `account/email-taken`
-(unique violation `23505` mapped in `repository/adapter.go` `CreateLocalUser`).
-`display_name` defaults to the email's local part.
-
-On success: the row is created `pending` (the `0031` column default), the `user`
-role is seeded best-effort (a failure is recorded in the audit metadata as
-`role_seed_error`, never fails the request), `account.user.registered` is
-audited, and the response is **201 with no session**:
-`{status: "registered", email, approval_status}`.
+`account/password-policy`. An unparseable body is 400 about:blank. These shape
+checks run before anything else and are the only answers that differ from the
+success response. `display_name` defaults to the email's local part.
 
 *(Code follow-up: `HEAD` answers the email and password checks with 400
 `account/invalid-email` and 400 `account/weak-password` — a second slug for the
 rule P0.10 calls `account/password-policy` — §11 row 17.)*
 
-**First-run bootstrap.** When the insert leaves exactly one row in `users`
-(`CountUsers` = 1), the account is also granted `superadmin` and approved by
-itself (`MarkApproved`), and the response carries `approval_status: "approved"`.
-The window is one account wide. The two concurrent first registrations of an
-empty install must not both miss it *(code follow-up: `HEAD` counts after
-insert, outside a transaction — §11 row 10)*.
+**One answer for every valid request** *(Decision 2026-10-02 (A1); closes the
+former §10 Q3; unbuilt — §11 row 25)*. A well-formed registration always
+answers **201 `{status: "registered"}`** and issues no Session — no
+`approval_status`, no echo of the email, and never 409 `account/email-taken`
+(that slug survives only on admin create and edit, P0.10). The password is
+hashed with Argon2id (P0.3) **on both paths**, before the email is looked up,
+so the response time does not reveal which path ran; every other difference
+between the paths (the insert, the audit row, the notification enqueues) is
+best-effort work whose cost must stay well under the hash's, and the handler
+must not branch on it before answering.
 
-**Approver fan-out** (`handler/auth.go` `notifyApprovers`). For every
-registration except the founder's, the API resolves the accounts whose
-*effective* permissions satisfy `users:approve`: SQL
-(`ListPermissionHoldersByResource`) walks the role hierarchy for enabled,
-approved accounts and prefilters to codes whose resource segment is `users` or
-`*`; `rbac.Set.AllowsCode` then applies the real grammar (a superadmin's set is
-the literal `*`). It enqueues one `notify:dispatch` per approver (not the
-registrant) through `notifyapi`: type `account.registration_pending`, channels
-`in_app` + `email`, `data {user_id, email, display_name, href}` (`href` =
-`APPROVAL_QUEUE_URL`), `dedup_key = "registration:<user_id>"`. At most **50**
-approvers (`maxApproverFanout`; truncation is logged). No approver is a logged
-warning. Every failure is logged and swallowed — registration never fails on
-notification. RBAC is not tenant-scoped, so the fan-out is global.
+- **New email.** The User is created **Pending** (the `0031` column default),
+  the `user` role is seeded best-effort (a failure is recorded in the audit
+  metadata as `role_seed_error`, never fails the request), and
+  `account.user.registered` is audited. Two notifications follow, both
+  best-effort: the registrant gets one email, type
+  `account.registration_received` ("registered, awaiting approval"), and every
+  Approver gets the fan-out below. There is no first-registrant exception:
+  every registration is Pending, and the instance's first Superadmin comes from
+  P0.12 (Decision 2026-10-02 (A2)).
+- **Existing email** (any Approval state). Nothing is written —
+  no row, no role, no audit entry — and no Approver is notified. The existing
+  User gets **one** email, type `account.registration_repeat`, whose text
+  depends on their state: **Pending** → "your registration is waiting for
+  approval"; **Approved** → "you already have a User here — sign in, or reset
+  your password"; **Rejected** → a generic message that offers no way to
+  reapply (a Rejected User cannot register again; only an admin moves them back
+  to Pending or Approved — P0.9). At most one such email per address per 24 h
+  (Redis `SET NX EX 86400` on `register:notice:<sha256(email)>`; without Redis
+  the email is skipped, never sent unthrottled), so the form cannot be used to
+  flood someone's inbox. A Disabled User gets no email (notify resolves a
+  Disabled User to no address — SPEC-05 P0.3); the answer is the same 201.
+
+Both registrant emails go through notify's email channel (SPEC-05 P0.3):
+`notify:dispatch` with `channels: ["email"]`, not persisted in-app, the
+recipient named by `user_id` and resolved at send time. Because they are
+addressed to a User who is not (yet, or ever) Approved, the worker's recipient
+resolution for these two types reads the row whatever its Approval state —
+P0.14's approved-only rule governs `accountapi.GetUserByID`, not this resolver
+(§11 row 12). With no SMTP configured (`SMTP_HOST` empty, `platform/config`)
+the worker's log-sink sender swallows them and registration still succeeds:
+these emails are a courtesy, never a gate.
+
+**Approver fan-out** (`handler/auth.go` `notifyApprovers`; new-email path only).
+The API resolves the Users whose *effective* permissions satisfy
+`users:approve` — the Approvers: SQL (`ListPermissionHoldersByResource`) walks
+the role hierarchy for enabled, approved Users and prefilters to codes whose
+resource segment is `users` or `*`; `rbac.Set.AllowsCode` then applies the real
+grammar (a Superadmin's set is the literal `*`). It enqueues one
+`notify:dispatch` per Approver (not the registrant) through `notifyapi`: type
+`account.registration_pending`, channels `in_app` + `email`, `data {user_id,
+email, display_name, href}` (`href` = `APPROVAL_QUEUE_URL`), `dedup_key =
+"registration:<user_id>"`. At most **50** Approvers (`maxApproverFanout`;
+truncation is logged). No Approver is a logged warning. Every failure is logged
+and swallowed — registration never fails on notification. RBAC is not
+tenant-scoped, so the fan-out is global.
 
 **Abuse control.** Registration is throttled per client IP *(code follow-up:
 `HEAD` applies no limiter to `/auth/register` or `/auth/refresh` — the
@@ -134,14 +183,31 @@ Traefik `rate-limit@file` middleware is attached to no router — so each
 anonymous POST can create a pending row and up to 50 email dispatches; §11
 row 3)*.
 
+*(Code follow-up for the whole of A1 — `HEAD` answers 409 on a taken email,
+returns `{status, email, approval_status}`, sends the registrant nothing, and
+the frontend's `AuthForm.tsx` reads `approval_status` to choose its message —
+§11 row 25; the first-registrant rule `HEAD` still runs is §11 row 26.)*
+
 **Acceptance criteria.**
-- Given an empty `users` table, when A registers, then 201 `approval_status:
-  approved`, A holds `superadmin`, and A can log in.
-- Given a non-empty table, when B registers, then 201 `approval_status:
-  pending`, B holds only `user`, and every approver gets one bell row and one
-  email; a redelivered dispatch adds no second bell row.
+- Given any `users` table, empty or not, when A registers a new email, then 201
+  `{status: "registered"}` with no other field, A is Pending and holds only
+  `user`, A gets one `account.registration_received` email, and every Approver
+  gets one bell row and one email; a redelivered dispatch adds no second bell
+  row. *(TC-ACC-130)*
+- Given an existing Approved User B, when someone registers B's email (in any
+  case), then 201 `{status: "registered"}`, no row or audit entry is written,
+  no Approver is notified, and B gets one `account.registration_repeat` email
+  in its Approved wording; a second attempt within 24 h sends nothing more.
+  *(TC-ACC-131, TC-ACC-132)*
+- Given a Pending and a Rejected User, when their emails are registered again,
+  then each gets the email for its own state, and the Rejected one offers no
+  way to reapply. *(TC-ACC-133)*
+- Given the new-email and existing-email paths timed over many runs, then their
+  response-time distributions overlap (both run one Argon2id hash).
+  *(TC-ACC-134)*
+- Given no SMTP configured, then registration still answers 201 and the User is
+  created. *(TC-ACC-130)*
 - Given a password of 7 bytes, then 422 `account/password-policy` and no row.
-- Given an existing email in any case, then 409 `account/email-taken`.
 - Given 50 rapid registrations from one IP, then later ones answer 429
   `platform/rate-limited` (P0.1 abuse control).
 
@@ -150,12 +216,22 @@ row 3)*.
 Body `{email, password, remember?}`. Missing email or password, or an
 unparseable body: 400 about:blank. Order of checks (`handler/auth.go` `Login`):
 
-1. **Throttle.** If the failure counter for the client IP **or** for the email
-   has reached 5 (`loginMaxFailures`) within its 15-minute window
-   (`loginFailWindow`, Redis keys `login:fail:ip:<ip>` / `login:fail:email:<email>`),
-   answer 429 `account/too-many-attempts` with `Retry-After` *(code follow-up:
-   no `Retry-After` on `HEAD` — §11 row 17)*. A nil Redis client disables the
-   throttle.
+1. **Throttle** *(Decision 2026-10-02 (A4); closes the former §10 Q5)*. Two
+   counters, each capped at 5 failures (`loginMaxFailures`) within a 15-minute
+   window (`loginFailWindow`): the **global per-IP** counter
+   (`login:fail:ip:<ip>`, every email from that address) and a **per-(email,
+   client IP)** counter (`login:fail:email_ip:<email>:<ip>`). When either has
+   reached the cap, answer 429 `account/too-many-attempts` with `Retry-After`
+   *(code follow-up: no `Retry-After` on `HEAD` — §11 row 17)*. There is no
+   per-email counter shared across addresses, so a stranger guessing from
+   another IP can no longer lock a User out of login; the price is that a
+   guesser with many addresses gets 5 tries per address, which the per-IP cap
+   and Argon2id's cost bound. This depends on a trustworthy client IP (§11
+   row 4): while any peer can choose its `X-Forwarded-For`, both keys are
+   attacker-chosen. A nil Redis client disables the throttle. *(Code
+   follow-up: `HEAD` keys the second counter on the email alone,
+   `login:fail:email:<email>` in `loginFailKeys`, so anyone can lock any known
+   email out for 15 minutes — §11 row 28.)*
 2. **Credentials.** Unknown email, empty hash, malformed hash or wrong password
    all answer the same 401 `account/invalid-credentials` and increment both
    counters. The response time must not depend on whether the email exists
@@ -166,9 +242,9 @@ unparseable body: 400 about:blank. Order of checks (`handler/auth.go` `Login`):
    `platform/audit` but nothing writes it — §11 row 13)*.
 4. **Approval gate.** `pending` → 403 `account/account-pending`; `rejected` →
    403 `account/account-rejected` whose `detail` ends with the reviewer's note
-   when there is one. Checked after the password, so an unapproved account
+   when there is one. Checked after the password, so an unapproved User
    cannot be used to probe emails. Both counters are cleared first (honest
-   retries while waiting must not lock the account out) and
+   retries while waiting must not lock the User out) and
    `account.session.pending_attempt` is audited.
 5. **Success:** counters cleared; session issued (P0.3); `account.session.login`
    audited; 200 `{access_token, expires_in, token_type: "Bearer", user: {id,
@@ -179,11 +255,16 @@ The client IP is the leftmost `X-Forwarded-For` entry, else the peer address
 trusted proxy *(code follow-up — §11 row 4)*.
 
 **Acceptance criteria.**
-- Given 5 wrong passwords for one email, then the 6th attempt — even with the
-  right password — is 429 until the window lapses.
-- Given a pending account with the right password, then 403
+- Given 5 wrong passwords for one email from one IP, then the 6th attempt from
+  that IP — even with the right password — is 429 until the window lapses.
+  *(TC-ACC-144)*
+- Given that lockout, when the User signs in with the right password from
+  another IP, then 200; given 5 failures from one IP spread over five
+  different emails, then that IP's next attempt on any email is 429.
+  *(TC-ACC-145)*
+- Given a Pending User with the right password, then 403
   `account/account-pending` and no cookie is set; with a wrong password, 401.
-- Given a rejected account with note "dup", then 403 `account/account-rejected`
+- Given a Rejected User with note "dup", then 403 `account/account-rejected`
   and `detail` contains "dup".
 - Given valid credentials and `remember: false`, then `portal_refresh` and
   `portal_session` carry no `Max-Age` (session cookies).
@@ -256,25 +337,60 @@ who they are, and a 401 would send them to a login that cannot help); stored
 about:blank. `OptionalAuth` attaches the identity when the same checks pass and
 otherwise lets the request through anonymous.
 
+**Password change required** *(Decision 2026-10-02 (A2); unbuilt — §11
+row 26)*. The snapshot also carries `users.password_must_change` (§6). While it
+is true, every authenticated route answers **403
+`account/password-change-required`** except `GET /auth/me`, `POST
+/auth/logout`, `POST /auth/logout-all` and `POST /auth/password` (P0.12) — the
+four a User needs to see why, leave, or comply. `/auth/refresh` is public and
+unaffected, so the Session survives while the User chooses a password. The
+check sits in `RequireAuth` beside the approval check, so it cannot be
+forgotten by a route; the four exempt routes are named in one allow-list there.
+
 The account surface itself (`/auth/*`, `/admin/*`) runs under plain
 `RequireAuth`, never `RequireTenant`: it touches only global tables (§6).
 
 ### P0.6 — Logout, logout-all, me (authenticated)
 
-- `POST /auth/logout` → 204. Revokes the presented refresh token (reason
-  `logout`), bumps the caller's `token_version` — which stops every access token
-  of that user on every device until each one refreshes (see §10 Q4) — audits
-  `account.session.logout`, clears cookies. The frontend refreshes first so an
+- `POST /auth/logout` → 204 — **ends one Session** *(Decision 2026-10-02 (A3);
+  closes the former §10 Q4; unbuilt — §11 row 27)*. It requires the refresh
+  token, from the `portal_refresh` cookie or a JSON body `{refresh_token}`;
+  without one it answers **422 `account/validation`** whose `detail` says to
+  use `POST /auth/logout-all` to end every Session. With one, it revokes that
+  token's whole chain (reason `logout`, `RevokeRefreshTokenChain`) when the
+  token belongs to the caller — an unknown, expired, already-revoked or
+  foreign token revokes nothing and still answers 204 — audits
+  `account.session.logout` (`scope: session`) and clears the cookies. It does
+  **not** bump `token_version`: the User's other Sessions keep working and the
+  RBAC cache is not re-keyed. The browser that logged out loses its cookies;
+  an access token copied out of it before logout stays valid until it
+  expires, at most `ACCESS_TOKEN_TTL` (5 minutes by default) — the accepted
+  cost of not ending every other Session. The frontend refreshes first so an
   expired access token does not 401 the logout (`TopMenu.tsx` `logout`).
-- `POST /auth/logout-all` → 204. Revokes every refresh token of the user
-  (reason `logout_all`), bumps `token_version`, audits with `scope:
+  *(Code follow-up: `HEAD` revokes only the presented token, ignores a missing
+  one, and bumps `token_version`, so logging out of one browser stops every
+  device's access token until it refreshes — §11 row 27.)*
+- `POST /auth/logout-all` → 204 — ends **every** Session. Revokes every
+  refresh token of the User (reason `logout_all`), bumps `token_version` (every
+  access token everywhere stops on its next request), audits with `scope:
   all_sessions`, clears cookies.
 - `GET /auth/me` → 200 `{id, email, display_name, roles, permissions}` —
   `roles` from the token, `permissions` the caller's **effective** codes from
   the engine (wildcards literal; best-effort: `[]` if the cache/DB read fails).
-  P0.13 adds `timezone` and `timezone_manual`. *(Code follow-up: the OpenAPI
-  `CurrentUser` schema declares camelCase `displayName` and `avatarUrl`, which
-  the handler never sends — §11 row 15.)*
+  P0.13 adds `timezone` (`string | null`) and P0.12 adds
+  `password_must_change` (boolean); both are read from the `users` row, since
+  the token carries neither. *(Code follow-up: the OpenAPI `CurrentUser`
+  schema declares camelCase `displayName` and `avatarUrl`, which the handler
+  never sends — §11 row 15.)*
+
+**Acceptance criteria (logout).**
+- Given Sessions S1 and S2 of one User, when S1 logs out, then S1's refresh
+  chain is revoked and its cookies cleared, S2's next request and next refresh
+  both succeed, and `token_version` is unchanged. *(TC-ACC-141)*
+- Given a logout with no refresh token, then 422 `account/validation` naming
+  logout-all, and nothing is revoked. *(TC-ACC-142)*
+- Given logout-all from S1, then S2's next request is 401 and its next refresh
+  is 401. *(TC-ACC-143)*
 
 ### P0.7 — RBAC engine
 
@@ -327,29 +443,50 @@ excludes expired grants). A malformed or unknown `{id}` is 404
 
 *(Code follow-up: `HEAD` answers `{users, …}` (Envelopes), 400
 `account/validation` for the status filter, 404 about:blank for a missing user,
-and does not escape `%`/`_` in `q` — §11 rows 17, 18, 23. Offset paging with a
-`total` is kept pending §10 Q2.)*
+and does not escape `%`/`_` in `q` — §11 rows 17, 18, 23.)*
+
+**Offset paging is a named exception** *(Decision 2026-10-02 (A5); closes the
+former §10 Q2)*. The README Pagination convention keyset-pages lists; this
+admin-only operator grid keeps `limit` + `offset` with a `total` and the
+per-status `counts`, because an approval queue is read as "how many are
+waiting, and page 3 of them", not as an endless feed, and it holds at most a
+household's worth of rows. The exception is recorded in the convention itself
+and covers this endpoint only; it is not a template for new lists.
 
 ### P0.9 — Approval decisions
 
 `POST /admin/users/{id}/approve | reject | revoke-approval`, `users:approve`.
 Optional body `{note}` (trimmed, ≤ 500 bytes, else 422 `account/validation`).
+
+What each decision means *(Decision 2026-10-02 (A10); the glossary terms of
+[CONTEXT.md](../../../CONTEXT.md))*. Approval is the one-time admission
+decision: **approve** admits a Pending (or Rejected) User; **reject** refuses
+admission — a Rejected User cannot register again with the same email (P0.1),
+and only an admin moves them back to Pending (`revoke-approval`) or to
+Approved (`approve`); **revoke approval** sends an Approved User back to
+Pending for a fresh review and is meant to be rare. A temporary, reversible
+suspension of an Approved User is not an Approval decision at all — it is
+**Disable** (P0.10), and a Disabled User is still Approved. All of this is
+shipped; A10 fixes the words, not the behaviour.
+
 Guards, in order:
 
 1. **No self-target:** acting on yourself → 403 `account/self-target`.
-2. **No acting on an account that outranks you** (same rule as P0.10's
-   escalation guard) → 403 `account/escalation` *(code follow-up: `decide` has
-   no target-authority check — §11 row 6)*.
-3. **Last approver:** `reject` and `revoke-approval` refuse when the target is
-   the only enabled, approved account whose effective set satisfies
+2. **No acting on a User who outranks you** (same rule as P0.10's escalation
+   guard) → 403 `account/escalation` *(code follow-up: `decide` has no
+   target-authority check — §11 row 6)*.
+3. **Last Approver:** `reject` and `revoke-approval` refuse when the target is
+   the only enabled, Approved User whose effective set satisfies
    `users:approve` → 409 `account/last-approver`.
 
 Effect (`SetUserApproval`): `approval_status`, `approval_note`,
 `approved_at` (`now()`, or NULL for `pending`), `approved_by` (the actor, NULL
-for `pending`), and an unconditional `token_version` bump — a rejected or
-revoked user's live session dies on its next request. Audited as
+for `pending`), and an unconditional `token_version` bump — a Rejected or
+revoked User's live Session dies on its next request. Audited as
 `account.user.approved | rejected | approval_revoked`. 200 `AdminUser`. A
-rejected row is kept so the email cannot re-register.
+Rejected row is kept so the email cannot re-register; to refuse someone
+permanently, keep them Rejected rather than deleting them (P0.10 — a delete
+frees the email).
 
 ### P0.10 — User create, edit, disable, delete
 
@@ -359,96 +496,226 @@ rejected row is kept so the email cannot re-register.
   required). **The approval state comes from the creator's authority, never the
   body**: `approved` (with `approved_by` = actor) iff the actor's effective set
   allows `users:approve`, else `pending`. Roles are not settable; `user` is
-  seeded best-effort. 409 `account/email-taken`. Audit `account.user.created`.
+  seeded best-effort. 409 `account/email-taken` (admin create and edit are the
+  only places that slug survives — P0.1). Audit `account.user.created`.
   201 `AdminUser`.
 - **Edit** `PATCH /admin/users/{id}` (`users:write:any`) `{email?,
   display_name?, password?}` — omitted or empty fields keep their value. The
   password is validated before anything is written. Editing **yourself** is
-  allowed; editing another account whose roles carry any permission you lack,
+  allowed; editing another User whose roles carry any permission you lack,
   or the `superadmin` role without your holding `*`, is 403
   `account/escalation`. A new password also bumps `token_version` and revokes
-  every refresh token (reason `admin_password_change`). 409 on a taken email.
-  Audit `account.user.updated` (`email_before`, `email_after`,
-  `password_changed`).
+  every refresh token (reason `admin_password_change`). Audit
+  `account.user.updated` (`email_before`, `email_after`, `password_changed`).
+  A **changed email is not written** — it starts a verified email change
+  (below), and the response's `AdminUser` carries the request as
+  `pending_email` (`string | null`).
 - **Disable / enable** `POST /admin/users/{id}/disable | enable`
   (`users:write:any`): self → 403 `account/self-target`; the target-authority
   check of Edit → 403 `account/escalation` *(code follow-up: missing on `HEAD`,
-  so an `admin` can switch off a superadmin — §11 row 6)*; disabling the last
-  approver → 409 `account/last-approver`. Disable stamps `disabled_at` and bumps
-  `token_version` (`DisableUser`); enable clears it. Audit
-  `account.user.disabled | enabled`. 200 `AdminUser`.
+  so an `admin` can switch off a Superadmin — §11 row 6)*; disabling the last
+  Approver → 409 `account/last-approver`. Disable is the temporary, reversible
+  suspension of an Approved User (Decision 2026-10-02 (A10)): it stamps
+  `disabled_at` and bumps `token_version` (`DisableUser`); enable clears it.
+  Audit `account.user.disabled | enabled`. 200 `AdminUser`.
 - **Delete** `DELETE /admin/users/{id}` (`users:delete:any`) `{confirm_email}`:
   self → 403 `account/self-target`; `confirm_email` must equal the target's
   email case-insensitively, else 422 `account/confirmation-mismatch` (server-side,
   so a replayed request cannot reach the delete) *(code follow-up: `HEAD`
-  answers 400 — §11 row 17)*; escalation → 403; last approver → 409. A hard
-  delete: FKs that own content cascade (`ON DELETE CASCADE`), the audit,
-  `granted_by`, `approved_by` and `people_persons.linked_user_id` references
-  are `SET NULL`. Audit `account.user.deleted`. 204; a second delete is 404.
+  answers 400 — §11 row 17)*; escalation → 403; last Approver → 409. Audit
+  `account.user.deleted`. 204; a second delete is 404. What runs after the
+  guards is the purge order below; the database cascade (`ON DELETE CASCADE`
+  on every ownership FK; `SET NULL` on the audit, `granted_by`, `approved_by`
+  and `people_persons.linked_user_id` references) is only the safety net
+  under it.
 
-**Delete removes the account's stored files first** *(Decision 2026-10-01b
-(D1); unbuilt — §11 row 8)*. After every guard above has passed:
+**Email change requires verification** *(Decision 2026-10-02 (A9); unbuilt —
+§11 row 30)*. The email is the login identifier, so it changes only once the
+new address has proved it can receive mail, and the old address can stop it.
+An Edit carrying a different email (another User's, or your own through this
+route):
+
+1. Re-validates the address (422 `account/invalid-email`) and refuses one
+   already held by another User (409 `account/email-taken`).
+2. Refuses with **503 `account/mail-unavailable`** when no SMTP transport is
+   configured (`SMTP_HOST` empty, `platform/config`): without mail the change
+   could never complete, so nothing at all is written — not the other fields
+   of the same PATCH either.
+3. Otherwise keeps the **old email active** and stores one pending change in
+   `email_change_requests` (§6) — at most one open request per User; a new one
+   replaces the old — then sends two `notify:dispatch` emails (`channels:
+   ["email"]`, not persisted in-app): `account.email_change_confirm` to the
+   **new** address, with a one-time confirm link valid **1 hour**, and
+   `account.email_change_alert` to the **old** address, saying a change was
+   requested and carrying a one-time "this wasn't me" cancel link. Both links
+   and the new address are minted at send time from the request id
+   (`accountapi.MintEmailChangeLinks`), never carried in a task payload — the
+   rule SPEC-05 §11 row 1 sets for the reset token. Audit
+   `account.user.email_change_requested`.
+4. **Resend** `POST /admin/users/{id}/email-change/resend` (`users:write:any`,
+   same guards as Edit) re-sends both emails with fresh links, which
+   **revokes the previous links**; at most once a minute and 5 times per
+   request, else 429 `account/rate-limited` with `Retry-After`. **Cancel**
+   `DELETE /admin/users/{id}/email-change` (`users:write:any`) → 204.
+5. **Confirm** `POST /auth/email-change/confirm {token}` (public): an unknown,
+   used, cancelled or **expired** token → 422
+   `account/invalid-email-change-token`, and an expired one also cancels its
+   pending change. A valid token re-checks uniqueness: if another User took
+   the address meanwhile, the change is cancelled and the answer is 409
+   `account/email-taken`. Otherwise `users.email` becomes the new address, the
+   request is marked confirmed, `token_version` is bumped (the access token
+   carries the email claim; every Session picks up the new one on its next
+   refresh, and refresh tokens survive), audit `account.user.email_changed`
+   (`email_before`, `email_after`) → 204.
+6. **Cancel by the old address** `POST /auth/email-change/cancel {token}`
+   (public) → 204 whether or not the token matched anything (no oracle); a
+   match cancels the pending change and audits
+   `account.user.email_change_cancelled`.
+
+A User's own self-service change from settings is P1.4 — the same flow.
+
+*Acceptance criteria (email change).*
+- Given an admin changing B's email to `n@x`, then B's login email is still
+  the old one, `n@x` gets one confirm email and the old address one alert, and
+  `AdminUser.pending_email` is `n@x`. *(TC-ACC-155)*
+- Given the confirm link used within the hour, then B signs in with `n@x` only;
+  used again, then 422 `account/invalid-email-change-token`; after 1 hour,
+  then 422 and the pending change is gone. *(TC-ACC-156)*
+- Given another User registering `n@x` before B confirms, then the confirm
+  answers 409 `account/email-taken` and the pending change is cancelled.
+  *(TC-ACC-157)*
+- Given a resend, then the first link is dead and the new one works; a sixth
+  resend is 429. Given the old address's cancel link, then the confirm link is
+  dead. *(TC-ACC-158)*
+- Given no SMTP configured, then 503 `account/mail-unavailable` and the row —
+  display name included — is unchanged. *(TC-ACC-159)*
+
+**Deleting a User purges everything they own, module by module, then the
+row** *(Decisions 2026-10-01b (D1) and 2026-10-02 (A6); unbuilt — §11 rows 8
+and 29)*. Each module that owns per-User data implements one idempotent
+method behind its `api/` package,
+
+```go
+PurgeOwnerData(ctx context.Context, userID uuid.UUID) (remaining int, err error)
+```
+
+which deletes that module's rows for the User **and its non-database side
+effects** — stored objects, cache keys, staged uploads — and returns how many
+of its rows are still left (a budgeted purge may need several calls). The
+database cascade stays only as the safety net under it: it would delete rows,
+but never an object in storage or a Redis key. Account calls a **registry** of
+these, in order, wired by `cmd/api`:
+
+1. **Content modules**, in a fixed order: `comic`, `music`, `movie`, `story`,
+   `journal`, `bank`, `people`, `social`, `notify`. (Checked against
+   `ls -d backend/internal/modules/*/`: `layout` owns only the instance-wide
+   shell and `ops` only system rows — neither holds per-User data; `account`
+   deletes its own rows in the final transaction; `tenant` is item 3.)
+2. **`media` last among them** — its implementation is SPEC-04 P0.7's
+   `mediaapi.PurgeOwnerAssets`, because every content module refers to Assets
+   and lets go of them first.
+3. **`tenant`** — the User's personal organisation and memberships, only in the
+   locked final pass and only once everything above reported zero: every
+   tenant-scoped row references `organizations(id)` with no `ON DELETE`
+   action, and the media janitor reaches a half-purged User only through
+   `forEachTenant`, which needs that organisation to exist.
+
+After every guard above has passed:
 
 1. **Disable** the target (`DisableUser`: stamps `disabled_at`, bumps
    `token_version`), so no new authenticated request of theirs — an upload, a
    zip import — can start. This step is part of the delete; it is not audited
    or announced on its own.
-2. **Bulk pass.** `mediaapi.PurgeOwnerAssets(ctx, id)` (SPEC-04 P0.7)
-   tombstones every asset the target owns, deletes their objects and rows, and
-   returns how many rows are left. It is budgeted, so a large library may need
-   more than one call.
+2. **Bulk pass.** Every registry entry in order (content modules, then media),
+   each on its own connection and tenant scope.
 3. **Locked final pass and delete**, in one account transaction:
    `SELECT 1 FROM users WHERE id = $1 FOR UPDATE` (new query
-   `LockUserForDelete`); `PurgeOwnerAssets` again, with a context that does not
-   carry this transaction (media opens its own scope); only when it returns
-   `0`, `DeleteUser`; commit.
-4. Any error, or rows left after either pass: **503
+   `LockUserForDelete`); the whole registry again — tenant included — with a
+   context that does not carry this transaction (each module opens its own
+   scope); only when **every** entry returns `0`: write the identity snapshot
+   to `deleted_users` (§6: user id, email, display name, role codes, the
+   acting admin, `now()`), then `DeleteUser` (the account's own
+   `refresh_tokens`, `password_reset_tokens`, `email_change_requests` and
+   `user_roles` go with it by cascade); commit.
+4. Any error, or rows left in any entry after either pass: **503
    `account/delete-incomplete`** with `Retry-After: 900` and no further
-   change. The user row stays (disabled); the tombstones stay; the hourly
-   `media:purge_orphans` finishes them, because the rows — and the user's
-   personal organisation that `forEachTenant` iterates — still exist. A
-   retried DELETE (the UI may retry at once: each pass purges every `deleting`
-   row of the owner, grace or not) continues where the last stopped and
-   completes once nothing is left. The account stays disabled until an admin
-   enables it.
+   change. The User row stays (Disabled); whatever is half-purged stays
+   purgeable — media's tombstones are finished by the hourly
+   `media:purge_orphans`, because the rows and the personal organisation still
+   exist, and every other module's purge is idempotent. A retried DELETE (the
+   UI may retry at once) continues where the last stopped and completes once
+   nothing is left. The User stays Disabled until an admin enables it.
 
-Why this order is the one that works:
+**No grace period.** A completed delete is irreversible: there is no
+soft-delete and no restore. What survives is the `deleted_users` snapshot,
+kept for **90 days** and then removed by the identity-retention sweep
+(P0.16) — enough to answer "who was this, and who deleted them" during an
+incident, nothing that would let the User be rebuilt.
 
-- The only record of an object is its `assets` row (`purgeObjects` derives the
-  prefixes from it; the janitor reads only `deleting` rows), and `assets.owner_id`
-  cascades from `users` (`0007`). Only tombstoning and then deleting the user
-  (the decision's first sketch) would lose the rows in the cascade before the
-  janitor's 15-minute grace has passed, so the objects would still leak. The
-  user row is therefore deleted only after media reports **zero** rows: the
-  cascade never removes an asset row whose objects may still exist.
-- **The race with a new upload.** An `assets` INSERT checks its FK by taking
-  `FOR KEY SHARE` on the referenced `users` row, which step 3's `FOR UPDATE`
-  conflicts with. An insert committed before the lock is seen by the final
-  pass and purged; one arriving after it waits, then fails its FK check when
-  the delete commits, writing no row (and, through `mediaapi.Ingest`, no
-  object — the row precedes the bytes). Disabling first limits that window to
-  worker tasks already running for the target (a zip import, a comic sync).
-- **No deadlock.** The final pass runs on media's own connection; it updates
-  `assets.status` and deletes `assets` and variant rows, none of which touches
-  the FK column or locks `users`.
-- **No event fan-out against a vanished tenant.** The owner purge publishes no
-  `media:asset_deleted` (SPEC-04 P0.7 step 5): every row that references these
-  assets is the target's own and goes in the same cascade.
+**Deleting frees the email.** The deleted person may register again and
+becomes a new Pending User with none of the old data. To refuse someone
+permanently, keep them **Rejected** instead (P0.9); the admin UI says so in
+the confirmation next to Delete ("Deleting frees this email — to keep this
+person out, reject them instead"). **Restoring a backup** taken before the
+delete brings the User and their data back; that is an operations exception,
+not a feature ([backup-restore.md](../../operations/backup-restore.md) § 4).
+
+Why this order is the one that works (Decision 2026-10-01b (D1)'s reasoning,
+generalised from media to every module):
+
+- **Rows are the only record of side effects.** Media's objects are found only
+  through their `assets` rows (`purgeObjects` derives the prefixes from them;
+  the janitor reads only `deleting` rows), and `assets.owner_id` cascades from
+  `users` (`0007`); the same holds for any module whose rows point at objects
+  or keys. Deleting the User first would lose those rows in the cascade and
+  leak whatever they pointed at. The `users` row is therefore deleted only
+  after every module reports **zero** rows: the cascade never removes a row
+  whose side effects may still exist.
+- **The race with a new write.** A per-User INSERT into a table with an FK to
+  `users(id)` (the identity-anchor FK of the README Module boundaries
+  convention) checks it by taking `FOR KEY SHARE` on the `users` row, which
+  step 3's `FOR UPDATE` conflicts with. An insert committed before the lock is
+  seen by the final pass and purged; one arriving after it waits, then fails
+  its FK check when the delete commits, writing no row (and, through
+  `mediaapi.Ingest`, no object — the row precedes the bytes). A row that
+  reaches the User only through `tenant_id` is caught the other way: the
+  organisation delete fails on its `NO ACTION` FK, so the delete answers 503
+  and the retry purges it — the worst case is a retry, never an orphan.
+  Disabling first limits the window to worker tasks already running for the
+  target (a zip import, a comic sync).
+- **No deadlock.** Each final-pass purge runs on its module's own connection
+  and deletes or updates only that module's rows, none of which updates the FK
+  column or locks `users`.
+- **No event fan-out against a vanished tenant.** Owner purges publish no
+  delete events (SPEC-04 P0.7 step 5 for media): every row that references
+  the purged data is the target's own and goes in the same pass.
 - Not covered: a browser `PUT` to an already-issued presigned URL that lands
   after its asset row was purged leaves an object nothing references — the
   same exposure `DELETE /assets/{id}` has for an `uploading` asset (SPEC-04
   P0.3), not something this order can close.
 
 *Acceptance criteria (delete).*
-- Given a user with uploaded video, image and audio assets, when they are
+- Given a User with uploaded video, image and audio assets, when they are
   deleted, then 204, no object remains under any of their prefixes, and no
   `assets` row of theirs remains. *(TC-ACC-064)*
 - Given storage failing during the purge, then 503 `account/delete-incomplete`,
-  the user still exists and is disabled, and after the next janitor run a
+  the User still exists and is Disabled, and after the next janitor run a
   retried DELETE answers 204 with no object left. *(TC-ACC-065)*
 - Given an `assets` INSERT for the target blocked behind step 3's lock, then
   after the delete commits that INSERT fails and no row or object of it
   remains. *(TC-ACC-066)*
+- Given a User with rows in every content module, when they are deleted, then
+  every registry entry was called in order (content, media, tenant), no row of
+  theirs remains in any module, and no Redis key of theirs remains.
+  *(TC-ACC-146)*
+- Given one content module returning `remaining > 0`, then 503
+  `account/delete-incomplete`, the User is Disabled and still exists, and a
+  retry after that module drains answers 204. *(TC-ACC-147)*
+- Given a completed delete, then one `deleted_users` row holds the User's id,
+  email, display name, roles and the acting admin, and no `users` row exists;
+  after 90 days the sweep has removed the snapshot. *(TC-ACC-148)*
+- Given a deleted User's email, when it is registered again, then a new Pending
+  User is created with none of the old data. *(TC-ACC-149)*
 
 ### P0.11 — Roles, role assignment and the permission matrix
 
@@ -501,63 +768,167 @@ Why this order is the one that works:
 - Given a permission revoked from `creator`, then every `editor` holder's next
   request re-resolves (their `token_version` moved).
 
-### P0.12 — Superadmin bootstrap for existing installs
+### P0.12 — Superadmin bootstrap
 
-`BOOTSTRAP_SUPERADMIN_EMAIL` (empty = off). On every `cmd/api` start
-(`bootstrapSuperadmin`), the named account is made to hold `superadmin`, be
-`approved` and be **enabled**, writing only what is missing (so a correct
-install bumps nothing and keeps its permission cache). An unknown email is a
-logged warning. A role grant bumps `token_version`. *(Code follow-up: `HEAD`
-never clears `disabled_at` despite its own doc comment — §11 row 7.)*
+There is **no first-registrant rule**: every registration is Pending (P0.1),
+and the instance's first Superadmin is created by the operator before the
+first start *(Decision 2026-10-02 (A2); replaces the former founder rule of
+P0.1; unbuilt — §11 row 26)*. On every `cmd/api` start (`bootstrapSuperadmin`)
+the API reads two variables:
 
-### P0.13 — Per-user timezone *(decided 2026-09-30 and 2026-10-01 (f); unbuilt)*
+- `BOOTSTRAP_SUPERADMIN_EMAIL` (empty = off) — the Superadmin's email,
+  trimmed and lower-cased.
+- `BOOTSTRAP_SUPERADMIN_PASSWORD` *(new)* — that User's first password, read
+  **only** when the User has to be created. It lives in the environment
+  (`.env`), never in a migration or a seed file, and the operator may remove
+  it once the User exists; it must satisfy the password policy (≥ 8 bytes).
+
+Then:
+
+1. **No User has that email** → create one: Approved (`approved_by` NULL —
+   nobody approved it but the operator), enabled, holding `superadmin`,
+   `display_name` = the email's local part, password = the variable's value
+   (Argon2id, P0.3) and **`password_must_change = true`**. Audited as
+   `account.user.created` with `actor_kind = 'system'`. A unique violation
+   (another process created it first) is treated as "exists". If the password
+   variable is empty or fails the policy, nothing is created and the API logs
+   an error naming the variable — and still starts.
+2. **The User exists** → the shipped re-assert: the User is made to hold
+   `superadmin`, be `approved` and be **enabled**, writing only what is missing
+   (so a correct install bumps nothing and keeps its permission cache); a role
+   grant bumps `token_version`. The password is **never** touched on this path,
+   whatever the variable says. *(Code follow-up: `HEAD` never clears
+   `disabled_at` despite its own doc comment — §11 row 7.)*
+3. **`BOOTSTRAP_SUPERADMIN_EMAIL` unset** → the API starts and logs a warning,
+   "no superadmin configured", on every start. On a fresh install that means
+   nobody can approve anybody until the operator sets the variables and
+   restarts: registrations wait as Pending, and nothing deadlocks permanently.
+
+**First sign-in must change the password.** A User with
+`password_must_change` signs in normally (P0.2) and gets a Session, but every
+authenticated route except `GET /auth/me`, `POST /auth/logout`,
+`POST /auth/logout-all` and `POST /auth/password` answers 403
+`account/password-change-required` (P0.5); `/auth/me` returns
+`password_must_change: true`, and the frontend routes the User to a
+change-password form before anything else. The flag exists so that a password
+that sat in an `.env` file is never the one a Superadmin keeps.
+
+**Self-service password change** — `POST /api/v1/auth/password
+{current_password, new_password}` (authenticated; the caller's own User only;
+usable whether or not the flag is set):
+
+- `current_password` is verified with Argon2id (P0.3). A wrong one is 422
+  `account/wrong-current-password` and counts as a failure on the caller's
+  per-(email, client IP) login counter (P0.2); at the cap the answer is 429
+  `account/too-many-attempts` — a stolen access token cannot be used to guess
+  the password at leisure.
+- `new_password` must satisfy the policy (422 `account/password-policy`) and
+  differ from the current one (the same 422, with a `detail` saying so).
+- On success, in one transaction: the new hash and `password_updated_at`,
+  `password_must_change = false`, a `token_version` bump, and every refresh
+  token of the User revoked (reason `password_change`) **except the current
+  Session's chain** — the chain of the refresh token the request presents
+  (`portal_refresh` is sent, since its Path is `/api/v1/auth`; an API client
+  may put `refresh_token` in the body). The bump stops every other device's
+  access token at once; the current Session survives because the response
+  mints it a fresh access token at the new `token_version` and re-sets the
+  cookies (200 `{access_token, expires_in, token_type}`). A request that
+  presents no refresh token keeps no Session but its own new access token:
+  every chain is revoked. Audited as `account.password.changed`.
+
+*Acceptance criteria (bootstrap).*
+- Given an empty database and both variables set, when the API starts, then
+  one Approved, enabled User with that email holds `superadmin` and has
+  `password_must_change = true`; a second start writes nothing.
+  *(TC-ACC-135)*
+- Given the User exists with another password, when the API starts with a
+  different `BOOTSTRAP_SUPERADMIN_PASSWORD`, then the stored hash is unchanged.
+  *(TC-ACC-136)*
+- Given neither variable, then the API starts and logs "no superadmin
+  configured"; given only the email on an empty database, then nothing is
+  created and an error names the password variable. *(TC-ACC-137)*
+- Given an empty `users` table, when someone registers, then they are Pending
+  and hold no `superadmin`. *(TC-ACC-130)*
+- Given a User with `password_must_change`, then `GET /auth/me` answers 200
+  with the flag, `GET /admin/users` answers 403
+  `account/password-change-required`, and after `POST /auth/password` with
+  the right current password both answer normally. *(TC-ACC-138)*
+- Given Sessions S1 and S2, when S1 changes the password, then S1 keeps
+  working with the returned access token and its refresh cookie, and S2's next
+  request and refresh are 401. *(TC-ACC-139)*
+- Given 5 wrong `current_password` attempts from one IP, then the 6th is 429.
+  *(TC-ACC-140)*
+
+### P0.13 — Per-user timezone *(decided 2026-09-30; revised by Decision 2026-10-02 (A8); unbuilt)*
 
 The specs README **Timezone** convention is binding and is not restated in
 full; the account half is:
 
-- `users.timezone` (IANA name) defaults to **`Asia/Ho_Chi_Minh`**;
-  `users.timezone_manual boolean NOT NULL DEFAULT false`.
-- `PATCH /api/v1/auth/me {timezone, timezone_manual?}` — authenticated, the
-  caller's own row only. `timezone` is required and validated with
-  `time.LoadLocation`; empty or unknown → 422 `account/invalid-timezone`, nothing
-  written. An omitted `timezone_manual` leaves the flag unchanged. 200 = the
+- `users.timezone` (IANA name) is **NULLable: NULL means "not set"**. Nothing
+  has ever written the column, so every existing `'UTC'` row was never chosen
+  by anyone and becomes NULL; the column has no default. There is no manual
+  flag — Decision 2026-10-02 (A8) dropped `timezone_manual`, which superseded
+  Decision 2026-10-01 (f).
+- `PATCH /api/v1/auth/me {timezone}` — authenticated, the caller's own row
+  only. `timezone` is required and validated with `time.LoadLocation`; empty
+  or unknown → 422 `account/invalid-timezone`, nothing written. 200 = the
   updated `/auth/me` body.
-- `GET /auth/me` returns `timezone` and `timezone_manual`.
-- `accountapi.UserSummary.Timezone`, plus a batch lookup by user ids for sweeps;
-  an unparseable stored name falls back to `Asia/Ho_Chi_Minh` with a logged
-  warning. Modules never query `users` themselves.
-- Frontend: after sign-in, when `timezone_manual` is false and the device zone
-  (`Intl.DateTimeFormat().resolvedOptions().timeZone`) differs, save
-  `{timezone}`; settings offer an IANA picker (`timezone_manual: true`) and "use
-  my location" (`timezone_manual: false`); `lib/time.ts` takes the display zone
-  from `/auth/me`, and `GET /api/v1/time` keeps only the server clock.
+- `GET /auth/me` returns `timezone` as the stored name, or `null` when not set.
+- `accountapi.UserSummary.Timezone` (plus a batch lookup by user ids for
+  sweeps) always returns a usable IANA name: the stored one, or
+  **`Asia/Ho_Chi_Minh`** when the column is NULL or the stored name does not
+  parse (the latter also logs a warning). Backend sweeps and readers therefore
+  never see NULL. Modules never query `users` themselves.
+- **Frontend.** After sign-in: when `/auth/me` says `timezone: null`, the app
+  saves the device zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`)
+  with `PATCH /auth/me {timezone}` automatically, without asking. When a zone
+  is set, it is applied everywhere and the device **never overwrites** it;
+  when the device zone differs from it, the UI offers to switch — one prompt
+  per differing device zone, remembered per browser — and saves only if the
+  User confirms. Settings offer an IANA picker that saves `{timezone}`. Until a
+  zone is stored (before the first save completes), the UI uses the device
+  zone. `lib/time.ts` takes the display zone from `/auth/me`, and
+  `GET /api/v1/time` keeps only the server clock.
 
-*(Code follow-up: none of it exists — `0002_account_users` defaults `'UTC'`,
-there is no `PATCH /auth/me`, `UserSummary` is `{ID, Email, DisplayName}`, and
-`cmd/api` `handleServerTime` serves `APP_TIMEZONE`; §11 row 14.)*
+*(Code follow-up: none of it exists — `0002_account_users` declares `timezone
+TEXT NOT NULL DEFAULT 'UTC'`, there is no `PATCH /auth/me`, `UserSummary` is
+`{ID, Email, DisplayName}`, and `cmd/api` `handleServerTime` serves
+`APP_TIMEZONE`; §11 row 14.)*
 
 **Acceptance criteria.**
-- Given a fresh migration, then every existing `'UTC'` row reads
-  `Asia/Ho_Chi_Minh` and `timezone_manual` is false.
+- Given a fresh migration, then every existing `'UTC'` row reads NULL, a new
+  User's `timezone` is NULL, and no `timezone_manual` column exists.
+  *(TC-ACC-100)*
 - Given `PATCH /auth/me {timezone: "Mars/Olympus"}`, then 422
-  `account/invalid-timezone` and the row is unchanged.
-- Given `timezone_manual: true`, then the post-sign-in device save does not run.
-- Given two users in different zones, then `accountapi` returns each user's own
-  zone in one batch call.
+  `account/invalid-timezone` and the row is unchanged. *(TC-ACC-101)*
+- Given a User with `timezone: null` signing in on a device in `Europe/Paris`,
+  then the app saves `Europe/Paris` without a prompt; given a stored
+  `Asia/Ho_Chi_Minh` and a device in `Europe/Paris`, then the app shows one
+  prompt and writes nothing unless the User confirms. *(TC-ACC-102)*
+- Given a User whose `timezone` is NULL, then `accountapi` returns
+  `Asia/Ho_Chi_Minh` for them. *(TC-ACC-103)*
+- Given two Users in different zones, then `accountapi` returns each User's
+  own zone in one batch call. *(TC-ACC-104)*
 
 ### P0.14 — Cross-module API (`account/api`)
 
 The only package other modules import (`api/api.go`):
 `GetUserByID(ctx, id) (*UserSummary, error)` — `(nil, nil)` when absent,
 disabled **or not approved** *(code follow-up: `HEAD` hides only disabled
-accounts — §11 row 12)*; `HasPermission(ctx, code) bool` — resolves the
+Users — §11 row 12)*; `HasPermission(ctx, code) bool` — resolves the
 principal from the request context, fail-closed on every error;
-`ListDirectory(ctx, exclude, limit)` — approved, enabled accounts other than
+`ListDirectory(ctx, exclude, limit)` — approved, enabled Users other than
 the caller, ordered `display_name, id`, `limit` default 50, max 200, clamped
 *(code follow-up: `HEAD` resets an out-of-range limit to 50 — §11 row 19)*;
 `GetUserNames(ctx, ids) (map[uuid]string, error)`; P0.13's timezone reads;
-and P1.3's `SuperadminIDs(ctx) ([]uuid.UUID, error)`.
+P0.10's `MintEmailChangeLinks(ctx, requestID)` (for notify's send-time
+render); and P1.3's `SuperadminIDs(ctx) ([]uuid.UUID, error)`.
 Not permission-gated at this layer: the caller decides who may see the result.
+
+The other direction — what account **calls** — is P0.10's purge registry:
+every module that owns per-User data exposes `PurgeOwnerData` from its own
+`api/` package, and `cmd/api` hands account the ordered list, as it already
+binds other cross-module ports.
 
 ### P0.15 — Maintenance tasks
 
@@ -567,8 +938,69 @@ directly because the worker does not construct the module) that hard-deletes
 refresh tokens expired more than 30 days. The account-owned
 `password_reset_tokens` table gets the same treatment (expired > 7 days,
 `PurgeExpiredPasswordResetTokens`) *(code follow-up: the query and adapter
-exist, nothing schedules them — §11 row 20)*. Both rows are registered in
-[events.md](../../reference/events.md) *(neither is on `HEAD` — §11 row 20)*.
+exist, nothing schedules them — §11 row 20)*. `account:expire_identity_data`
+(P0.16) is the third. All three are registered in
+[events.md](../../reference/events.md) (the first live, the other two
+planned).
+
+### P0.16 — Identity data in the audit log lives 90 days *(Decision 2026-10-02 (A7); owned jointly with `platform/audit`; unbuilt — §11 row 31)*
+
+`audit_log` is owned by `platform/audit` (`0005_platform_audit`, [D-25]; the
+action taxonomy is [backend/MODULES.md](../../../backend/MODULES.md) §5.3), and
+this requirement binds **every** row in it, from every module — not only rows
+about deleted Users. Account owns the requirement because it writes most of
+the identifying data and owns the sweep that enforces it.
+
+- **What counts as identifying data:** the target User's id (`target_id` when
+  `target_kind = 'user'`), email and display name wherever they appear
+  (`metadata` keys such as `email_before`, `email_after`, `email`,
+  `display_name`), the client IP (`ip`), the user agent (`user_agent`), and any
+  other `metadata` key that names a person. `action`, `occurred_at`,
+  `actor_kind` and `target_kind` are not identifying.
+- **Stored encrypted.** Each new row keeps its identifying fields in one new
+  column, `pii bytea` — AES-256-GCM over a JSON object, encrypted in
+  `platform/audit` before the insert with a key from a new environment
+  variable, **`AUDIT_PII_KEY`** (32 bytes, base64; separate from the JWT keys,
+  like `TOTP_KMS_KEY` in [security.md §2.4](../../architecture/security.md)).
+  The plaintext columns (`ip`, `user_agent`, a user `target_id`) are written
+  NULL and `metadata` carries no identifying key. With `AUDIT_PII_KEY` unset
+  the identifying fields are **dropped, never stored in clear**, and the
+  binaries log a warning at start; the audit write stays best-effort as
+  before.
+- **Readable only by Superadmins.** Decrypting `pii` is allowed only to a
+  User whose effective permissions contain `*`. No reader exists yet — the P2
+  audit-log reader is where this applies.
+- **90 days, then anonymised.** The daily sweep `account:expire_identity_data`
+  (light server, `default` queue, `@every 24h`, wired directly in `cmd/worker`
+  like `account:purge_refresh_tokens`) does three things in batches: (1) for
+  every `audit_log` row older than 90 days, sets `pii`, `ip`, `user_agent` and
+  a user `target_id` to NULL and strips identifying `metadata` keys, keeping
+  `action`, `occurred_at` and the acting admin's `actor_id`; a row whose actor
+  is its own subject (login, logout, refresh, registration — the User acting
+  on themselves) loses `actor_id` too, since there it identifies the subject;
+  (2) encrypts in place any younger row that still holds plaintext identifying
+  fields (the rows written before this ships) — or, without a key, drops them;
+  (3) deletes `deleted_users` rows older than 90 days and
+  `email_change_requests` rows closed more than 90 days ago (P0.10). The `audit_log`
+  half calls a `platform/audit` function, so the rule lives beside the table
+  it rewrites.
+
+`audit_log.actor_id` keeps its `ON DELETE SET NULL`, so deleting a User
+already blanks them as an actor; this requirement covers everything else.
+
+*Acceptance criteria.*
+- Given `AUDIT_PII_KEY` set, when an admin edits a User's email, then the new
+  `audit_log` row has NULL `ip` and `user_agent`, no email in `metadata`, and a
+  `pii` value that decrypts to the IP, user agent and both emails.
+  *(TC-ACC-150)*
+- Given a row 91 days old, when the sweep runs, then `pii`, `ip`,
+  `user_agent` and the user `target_id` are NULL, `action` and `occurred_at`
+  are unchanged, and `actor_id` is kept for an admin action on another User
+  but cleared for a login. *(TC-ACC-151)*
+- Given a plaintext row 10 days old from before the change, when the sweep
+  runs, then its identifying fields move into `pii`. *(TC-ACC-152)*
+- Given `AUDIT_PII_KEY` unset, then new rows carry no identifying field in any
+  column and the start-up log warns. *(TC-ACC-153)*
 
 ### P1 — nice to have
 
@@ -582,7 +1014,7 @@ exist, nothing schedules them — §11 row 20)*. Both rows are registered in
 - **P1.3 Admin-change events** *(Decision 2026-10-01b (D3); unbuilt — §11
   row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
   bus event": it announces every admin-relevant change on the bus, and notify
-  turns each into a bell entry for the superadmins (SPEC-05 P1.5). The events
+  turns each into a bell entry for the Superadmins (SPEC-05 P1.5). The events
   are published through `platform/events` **after the write commits** — the
   account surface runs no request transaction (P0.5), so "after the store call
   returns" is after commit; a failed write publishes nothing, and a publish
@@ -594,7 +1026,7 @@ exist, nothing schedules them — §11 row 20)*. Both rows are registered in
 
   | Event | Emitted by (after commit) | Extra payload fields |
   |---|---|---|
-  | `account:user_registered` | `Register` (P0.1), after the founder bootstrap | `approval_status`; `actor_id` = the registrant |
+  | `account:user_registered` | `Register` (P0.1), only when a new Pending User was created — never for an existing email (Decision 2026-10-02 (A1)) | `approval_status` (always `pending` since A2 removed the founder rule); `actor_id` = the registrant |
   | `account:user_approval_decided` | `decide` (P0.9) | `decision`: `approved` \| `rejected` \| `approval_revoked`; `note` |
   | `account:user_access_changed` | `SetDisabled` (P0.10) | `access`: `disabled` \| `enabled` |
   | `account:user_deleted` | `DeleteUser` (P0.10), after the delete commits | — (the email and name ride in the common fields, since the row is gone when notify runs) |
@@ -608,21 +1040,41 @@ exist, nothing schedules them — §11 row 20)*. Both rows are registered in
   uses as `dedup_key`, since these changes have no row of their own that
   identifies one occurrence; `actor_name` comes from the caller's token
   (`auth.Identity.DisplayName`); the user fields are read before a delete.
-  The **superadmin set** is `accountapi.SuperadminIDs(ctx)`: enabled, approved
-  accounts holding a non-expired grant of the `superadmin` role, directly or
-  through a custom role parented under it (the recursive walk of
-  `GetEffectivePermissions`), at most 50; `cmd/worker`, which does not construct the
-  module, satisfies notify's port with the same query over the account
-  repository, as it does for `ResolveRecipient`. Registration keeps its
-  existing approver dispatch (P0.1); see SPEC-05 P1.5 for how the superadmin
-  fan-out avoids a duplicate.
-  *AC:* given an admin disabling a user, then exactly one
+  The **Superadmin set** is `accountapi.SuperadminIDs(ctx)` *(definition per
+  Decision 2026-10-02 (A11))*: the enabled, Approved Users whose **effective
+  permissions contain `*`** — defined by permission, not by role name, so a
+  custom role granted `*` counts and a renamed role changes nothing. The query
+  walks the role hierarchy exactly as `GetEffectivePermissions` does
+  (non-expired grants plus every ancestor) and keeps the Users whose set holds
+  the literal code `*`; at most 50. (The Approvers are the different set whose
+  effective permissions satisfy `users:approve`, P0.1; out of the box every
+  Superadmin is one.) `cmd/worker`, which does not construct the module,
+  satisfies notify's port with the same query over the account repository, as
+  it does for `ResolveRecipient`. Registration keeps its existing Approver
+  dispatch (P0.1); see SPEC-05 P1.5 for how the Superadmin fan-out avoids a
+  duplicate.
+  *AC:* given an admin disabling a User, then exactly one
   `account:user_access_changed` with `access: disabled`, the admin as
-  `actor_id` and the user's email and name is enqueued after the write; a
+  `actor_id` and the User's email and name is enqueued after the write; a
   failed write enqueues none *(TC-ACC-120)*; given each of the seven
   operations, then its event is published with the fields above
   *(TC-ACC-121…126)*; given a refused delete (P0.10 step 4), then no
-  `account:user_deleted` *(TC-ACC-123)*.
+  `account:user_deleted` *(TC-ACC-123)*; given a registration of an existing
+  email, then no `account:user_registered` *(TC-ACC-121)*; given a custom role
+  granted `*` and a User holding only it, then `SuperadminIDs` includes that
+  User, and a User holding `superadmin` while Disabled is excluded
+  *(TC-ACC-127)*.
+- **P1.4 Self-service email change** *(Decision 2026-10-02 (A9); unbuilt)* —
+  `POST /api/v1/auth/email-change {new_email, current_password}`
+  (authenticated, the caller's own User) runs P0.10's verified flow: the
+  current password is checked as in `POST /auth/password` (P0.12, counted on
+  the login throttle), then the same `email_change_requests` row, the same two
+  emails, the same public confirm and cancel routes, 503
+  `account/mail-unavailable` without SMTP; resend and cancel are
+  `POST /auth/email-change/resend` and `DELETE /auth/email-change`. The
+  settings page shows the pending address until it is confirmed. *AC:* a User
+  changing their own email keeps signing in with the old one until the link
+  is used *(TC-ACC-160)*.
 
 ### P2 — future considerations (design for, don't build)
 
@@ -631,21 +1083,22 @@ exist, nothing schedules them — §11 row 20)*. Both rows are registered in
   [backlog.md § Deferred](../backlog.md).
 - Policy bundles and user groups layered on roles (ADR-02); tenant-scoped role
   grants (ADR-07 steps 5–7).
-- An audit-log reader for `audit:read` holders.
+- An audit-log reader. Reading rows is for `audit:read` holders; decrypting
+  their identifying data (P0.16) is for Superadmins only — a User whose
+  effective permissions contain `*`.
 
 ## 6. Data model
 
 All account tables are **global** — no `tenant_id`, no RLS policy — per the
 specs README Tenancy convention and ADR-07: they are read before any tenant is
-resolved (`RequireAuth` runs ahead of `RequireTenant`). `refresh_tokens` and
-`password_reset_tokens` are global for the same reason; the README's list of
-exempt tables names only `users`, `roles`, `permissions`, `role_permissions`
-and `user_roles` and should add them. `audit_log` is owned by `platform/audit`
-(`0005_platform_audit`, [D-25]), not by this module.
+resolved (`RequireAuth` runs ahead of `RequireTenant`), and the README's list
+of exempt tables names every one of them, the two target tables below
+included. `audit_log` is owned by `platform/audit` (`0005_platform_audit`,
+[D-25]), not by this module; P0.16 adds one column to it (below).
 
 | Table | Created by | Columns (as shipped) | Constraints and indexes |
 |---|---|---|---|
-| `users` | `0002_account_users`; `0006_account_local_auth`; `0031_account_user_approval` | `id uuid PK`, `oidc_subject text` (legacy, nullable since `0006`), `email text`, `display_name text`, `avatar_url text`, `role text DEFAULT 'user'` (legacy label — authorisation is `user_roles`), `locale text DEFAULT 'en-US'`, `timezone text DEFAULT 'UTC'`, `token_version int DEFAULT 1`, `disabled_at timestamptz`, `created_at`, `updated_at`; `0006`: `password_hash text` (Argon2id PHC, nullable), `password_updated_at`; `0031`: `approval_status text NOT NULL DEFAULT 'pending'`, `approval_note text`, `approved_at`, `approved_by uuid → users ON DELETE SET NULL` | `email UNIQUE` (case-sensitive; every write path lower-cases first), `oidc_subject UNIQUE`, `users_approval_status_check` (`pending\|approved\|rejected`), partial `users_approval_pending_idx (created_at DESC, id DESC) WHERE approval_status <> 'approved'`. `0031` back-filled every existing row to `approved`. |
+| `users` | `0002_account_users`; `0006_account_local_auth`; `0031_account_user_approval` | `id uuid PK`, `oidc_subject text` (legacy, nullable since `0006`), `email text`, `display_name text`, `avatar_url text`, `role text DEFAULT 'user'` (legacy label — authorisation is `user_roles`), `locale text DEFAULT 'en-US'`, `timezone text NOT NULL DEFAULT 'UTC'`, `token_version int DEFAULT 1`, `disabled_at timestamptz`, `created_at`, `updated_at`; `0006`: `password_hash text` (Argon2id PHC, nullable), `password_updated_at`; `0031`: `approval_status text NOT NULL DEFAULT 'pending'`, `approval_note text`, `approved_at`, `approved_by uuid → users ON DELETE SET NULL` | `email UNIQUE` (case-sensitive; every write path lower-cases first), `oidc_subject UNIQUE`, `users_approval_status_check` (`pending\|approved\|rejected`), partial `users_approval_pending_idx (created_at DESC, id DESC) WHERE approval_status <> 'approved'`. `0031` back-filled every existing row to `approved`. |
 | `roles` | `0003_account_rbac` | `id`, `code text`, `name`, `description`, `parent_id → roles ON DELETE SET NULL`, `is_system bool`, timestamps | `code UNIQUE`; `roles_no_self_parent` CHECK (longer cycles are refused in the handler, P0.11); `roles_parent_idx`. Seven seeded rows, all `is_system`. |
 | `permissions` | `0003` (catalog), `0031` (`users:approve`); other modules seed their own codes | `id`, `code`, `description`, `created_at` | `code UNIQUE`; `permissions_code_format` CHECK (P0.7 grammar). |
 | `role_permissions` | `0003` | `role_id → roles CASCADE`, `permission_id → permissions CASCADE`, `granted_at`, `granted_by → users SET NULL` | PK `(role_id, permission_id)`. |
@@ -656,24 +1109,90 @@ and `user_roles` and should add them. `audit_log` is owned by `platform/audit`
 `0006` dropped `user_oidc_roles` (D-26.r1). `updated_at` is set explicitly by
 every UPDATE in `query/*.sql` (README updated_at convention).
 
-**Target migration `000N_account_user_timezone`** (P0.13; verify the next free
-number with `ls backend/db/migrations | tail -2`):
+**Target migrations** (none exists on `HEAD`; verify the next free numbers
+with `ls backend/db/migrations | tail -2` — several specs can claim numbers
+concurrently):
+
+`000N_account_user_timezone` (P0.13, Decision 2026-10-02 (A8)):
 
 ```sql
-ALTER TABLE users ALTER COLUMN timezone SET DEFAULT 'Asia/Ho_Chi_Minh';
--- nothing has ever written users.timezone, so every 'UTC' row is untouched
-UPDATE users SET timezone = 'Asia/Ho_Chi_Minh', updated_at = now() WHERE timezone = 'UTC';
-ALTER TABLE users ADD COLUMN timezone_manual boolean NOT NULL DEFAULT false;
+ALTER TABLE users ALTER COLUMN timezone DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN timezone DROP DEFAULT;
+-- nothing has ever written users.timezone, so every 'UTC' row was never chosen by anyone
+UPDATE users SET timezone = NULL, updated_at = now() WHERE timezone = 'UTC';
 ```
 
-The down migration drops `timezone_manual` and restores the `'UTC'` default
-(it does not rewrite rows back).
+The down migration sets NULL rows back to `'UTC'` and restores `NOT NULL
+DEFAULT 'UTC'`. There is no `timezone_manual` column.
 
-**Takeout** (README convention): the user's own `users` row exports as one JSON
-object `{email, display_name, avatar_url, locale, timezone, timezone_manual,
-created_at, roles}`. Excluded, with reason: `password_hash`,
-`refresh_tokens`, `password_reset_tokens` (credential material) and
-`token_version` / approval fields (operator state, not the user's data).
+`000N_account_password_must_change` (P0.12, A2):
+
+```sql
+ALTER TABLE users ADD COLUMN password_must_change boolean NOT NULL DEFAULT false;
+```
+
+`GetUserAuthSnapshot` returns it beside `disabled_at`, `approval_status` and
+`token_version` (P0.5).
+
+`000N_account_email_change_requests` (P0.10, A9):
+
+```sql
+CREATE TABLE email_change_requests (
+    id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id           uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    new_email         text NOT NULL,                 -- lower-cased
+    requested_by      uuid REFERENCES users(id) ON DELETE SET NULL,
+    confirm_hash      bytea UNIQUE,                  -- SHA-256 of the confirm token, minted at send time
+    cancel_hash       bytea UNIQUE,                  -- SHA-256 of the old address's cancel token
+    expires_at        timestamptz,                   -- send time + 1 hour
+    sends             int NOT NULL DEFAULT 0,        -- resend cap (5)
+    last_sent_at      timestamptz,                   -- resend spacing (1 minute)
+    confirmed_at      timestamptz,
+    cancelled_at      timestamptz,
+    cancel_reason     text,                          -- 'replaced' | 'expired' | 'taken' | 'admin' | 'owner'
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    updated_at        timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX email_change_requests_open_idx
+    ON email_change_requests (user_id) WHERE confirmed_at IS NULL AND cancelled_at IS NULL;
+```
+
+Tokens follow the reset-token construction (≥ 256-bit CSPRNG, SHA-256 at rest,
+single use); a resend overwrites both hashes, which is what revokes the
+previous links. A closed row (confirmed or cancelled) still holds two
+addresses, so `account:expire_identity_data` (P0.16) deletes it 90 days after
+it closed.
+
+`000N_account_deleted_users` (P0.10, A6):
+
+```sql
+CREATE TABLE deleted_users (
+    user_id       uuid PRIMARY KEY,                  -- no FK: the users row is gone
+    email         text NOT NULL,
+    display_name  text NOT NULL,
+    roles         text[] NOT NULL,                   -- role codes held at deletion
+    deleted_by    uuid,                              -- the acting admin; no FK, it may be deleted later
+    deleted_at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX deleted_users_deleted_at_idx ON deleted_users (deleted_at);
+```
+
+No unique index on `email`: a deleted email may register again (P0.10), and
+may be deleted again. Rows older than 90 days are removed by
+`account:expire_identity_data` (P0.16). There is no reader: the table is read
+with SQL by the operator during an incident.
+
+`000N_platform_audit_pii` (P0.16, A7; owned by `platform/audit`, not this
+module): `ALTER TABLE audit_log ADD COLUMN pii bytea;` plus an index on
+`occurred_at` for the sweep (`audit_log_occurred_idx` already exists).
+
+**Takeout** (README convention): the User's own `users` row exports as one JSON
+object `{email, display_name, avatar_url, locale, timezone, created_at,
+roles}`. Excluded, with reason: `password_hash`, `password_must_change`,
+`refresh_tokens`, `password_reset_tokens`, `email_change_requests`
+(credential material) and `token_version` / approval fields (operator state,
+not the User's data). `deleted_users` is operator state about a User who no
+longer exists, and is never exported.
 
 ## 7. API summary
 
@@ -685,18 +1204,25 @@ policy; this table copies it.
 
 | Method | Path | Permission | Request | Response | Errors (beyond 401 about:blank on authenticated routes) |
 |---|---|---|---|---|---|
-| POST | `/auth/register` | public | `{email, password, display_name?}` | 201 `{status, email, approval_status}` | 400 about:blank (body), 422 `account/invalid-email`, 422 `account/password-policy`, 409 `account/email-taken`, 429 `platform/rate-limited` |
+| POST | `/auth/register` | public | `{email, password, display_name?}` | 201 `{status: "registered"}` — the same for a new and an existing email (P0.1) | 400 about:blank (body), 422 `account/invalid-email`, 422 `account/password-policy`, 429 `platform/rate-limited` |
 | POST | `/auth/login` | public | `{email, password, remember?}` | 200 `{access_token, expires_in, token_type, user}` + cookies | 400 about:blank, 401 `account/invalid-credentials`, 403 `account/account-disabled` \| `account/account-pending` \| `account/account-rejected`, 429 `account/too-many-attempts` |
 | POST | `/auth/refresh` | public | cookie or `{refresh_token}` | 200 `{access_token, expires_in, token_type}` + cookies | 401 about:blank (missing, invalid, expired, reused, user unavailable) |
-| POST | `/auth/logout` | authenticated | — | 204 | — |
+| POST | `/auth/logout` | authenticated | refresh token: cookie or `{refresh_token}` | 204 | 422 `account/validation` (no refresh token — use logout-all; P0.6) |
 | POST | `/auth/logout-all` | authenticated | — | 204 | — |
-| GET | `/auth/me` | authenticated | — | 200 `{id, email, display_name, roles, permissions, timezone, timezone_manual}` | — |
-| PATCH | `/auth/me` | authenticated | `{timezone, timezone_manual?}` | 200 `/auth/me` body | 422 `account/invalid-timezone`, 422 `account/validation` (P0.13, unbuilt) |
+| GET | `/auth/me` | authenticated | — | 200 `{id, email, display_name, roles, permissions, timezone: string\|null, password_must_change}` | — |
+| PATCH | `/auth/me` | authenticated | `{timezone}` | 200 `/auth/me` body | 422 `account/invalid-timezone`, 422 `account/validation` (P0.13, unbuilt) |
+| POST | `/auth/password` | authenticated (allowed while `password_must_change`) | `{current_password, new_password}` | 200 `{access_token, expires_in, token_type}` + cookies | 422 `account/wrong-current-password` \| `account/password-policy`, 429 `account/too-many-attempts` (P0.12, unbuilt) |
+| POST | `/auth/email-change/confirm` | public | `{token}` | 204 | 422 `account/invalid-email-change-token`, 409 `account/email-taken` (P0.10, unbuilt) |
+| POST | `/auth/email-change/cancel` | public | `{token}` | 204 (always) | 400 about:blank (body) (P0.10, unbuilt) |
+| POST | `/auth/email-change` | authenticated | `{new_email, current_password}` | 202 `{pending_email}` | 422 `account/invalid-email` \| `account/wrong-current-password`, 409 `account/email-taken`, 429, 503 `account/mail-unavailable` (P1.4, unbuilt) |
+| POST, DELETE | `/auth/email-change/resend`, `/auth/email-change` | authenticated | — | 202 / 204 | 404 (no open request), 429 `account/rate-limited` (P1.4, unbuilt) |
 | POST | `/auth/forgot-password`, `/auth/reset-password` | public | — | — | owned by SPEC-05 P0.3 |
 | GET | `/admin/users?status=&q=&limit=&offset=` | `users:read:any` | — | 200 `{items: AdminUser[], total, limit, offset, counts}` | 422 `account/validation` |
 | GET | `/admin/users/{id}` | `users:read:any` | — | 200 `AdminUser` | 404 `account/user-not-found` |
 | POST | `/admin/users` | `users:write:any` | `{email, password, display_name?}` | 201 `AdminUser` | 422 `account/invalid-email`, 422 `account/password-policy`, 409 `account/email-taken` |
-| PATCH | `/admin/users/{id}` | `users:write:any` | `{email?, display_name?, password?}` | 200 `AdminUser` | 422 (as create), 403 `account/escalation`, 404 `account/user-not-found`, 409 `account/email-taken` |
+| PATCH | `/admin/users/{id}` | `users:write:any` | `{email?, display_name?, password?}` | 200 `AdminUser` (a changed email appears as `pending_email`, P0.10) | 422 (as create), 403 `account/escalation`, 404 `account/user-not-found`, 409 `account/email-taken`, 503 `account/mail-unavailable` (email change without SMTP) |
+| POST | `/admin/users/{id}/email-change/resend` | `users:write:any` | — | 200 `AdminUser` | 403 `account/escalation`, 404 (no open request), 429 `account/rate-limited` (P0.10, unbuilt) |
+| DELETE | `/admin/users/{id}/email-change` | `users:write:any` | — | 204 | 403 `account/escalation`, 404 (P0.10, unbuilt) |
 | DELETE | `/admin/users/{id}` | `users:delete:any` | `{confirm_email}` | 204 | 422 `account/confirmation-mismatch`, 403 `account/self-target` \| `account/escalation`, 404, 409 `account/last-approver`, 503 `account/delete-incomplete` (P0.10 step 4, `Retry-After`) |
 | POST | `/admin/users/{id}/approve` | `users:approve` | `{note?}` | 200 `AdminUser` | 422 `account/validation`, 403 `account/self-target` \| `account/escalation`, 404 |
 | POST | `/admin/users/{id}/reject` | `users:approve` | `{note?}` | 200 `AdminUser` | as approve, plus 409 `account/last-approver` |
@@ -712,12 +1238,15 @@ policy; this table copies it.
 
 Every `/admin/*` route answers 403 about:blank when the permission is missing
 (`RequirePermission`), and every authenticated route answers 403
-`account/account-not-approved` for an unapproved caller (P0.5).
+`account/account-not-approved` for an unapproved caller and — outside the four
+exempt routes — 403 `account/password-change-required` while the caller must
+change their password (P0.5).
 
 **Pagination.** `GET /admin/users` is the module's only list endpoint: `limit`
 default 25, max 100, lenient and clamped; `offset` ≥ 0; ordered `(created_at
 DESC, id DESC)`. Its envelope is `{items, …}` per the README Pagination
-convention; whether it moves from offset to a keyset cursor is §10 Q2.
+convention, and it is that convention's one named exception to keyset paging:
+it keeps `offset`, `total` and `counts` (Decision 2026-10-02 (A5), P0.8).
 
 **Problem types** introduced by this spec (each registered in
 `frontend/src/lib/problems.ts`, README Errors): `account/invalid-email`,
@@ -729,8 +1258,13 @@ convention; whether it moves from offset to a keyset cursor is §10 Q2.
 `account/confirmation-mismatch`, `account/unknown-role`,
 `account/unknown-permission`, `account/role-not-found`, `account/role-exists`,
 `account/role-protected`, `account/role-cycle`, `account/role-in-use`,
-`account/invalid-timezone`, `account/delete-incomplete`. `platform/rate-limited` belongs to
-`platform/middleware`. *(Code follow-up: §11 rows 16–17.)*
+`account/invalid-timezone`, `account/delete-incomplete`, and — from the
+2026-10-02 decisions — `account/password-change-required`,
+`account/wrong-current-password`, `account/mail-unavailable`,
+`account/invalid-email-change-token`. `account/rate-limited` is SPEC-05
+P0.3's slug (reset throttle), reused here for the email-change resend.
+`platform/rate-limited` belongs to `platform/middleware`. *(Code follow-up:
+§11 rows 16–17, 25–31.)*
 
 ## 8. Events
 
@@ -742,7 +1276,7 @@ server's `default` queue.
 
 | Event | Consumer task | Notify type |
 |---|---|---|
-| `account:user_registered` | `notify:on_user_registered` | `account.registration_pending` (shared with P0.1's approver dispatch, so a recipient who already has it gets no second row) |
+| `account:user_registered` | `notify:on_user_registered` | `account.registration_pending` (shared with P0.1's Approver dispatch, so a recipient who already has it gets no second row); emitted only for a new Pending User (A1) |
 | `account:user_approval_decided` | `notify:on_user_approval_decided` | `account.approval_decided` |
 | `account:user_access_changed` | `notify:on_user_access_changed` | `account.user_access_changed` |
 | `account:user_deleted` | `notify:on_user_deleted` | `account.user_deleted` |
@@ -757,9 +1291,10 @@ them.
 
 | Name | Kind | Status | Note |
 |---|---|---|---|
-| `notify:dispatch` | task, owned by notify | live | account enqueues it through `notifyapi.Enqueue` for `account.registration_pending` (P0.1) and `account.password_reset` (SPEC-05 P0.3). Already in events.md as a notify row. |
-| `account:purge_refresh_tokens` | periodic task | live (`cmd/worker`, `@every 24h`, `default`) | **missing from events.md** — drift (§11 row 20). |
-| `account:purge_reset_tokens` | periodic task | planned (P0.15) | name proposed here; lands with its `scheduler.Register` and events.md row. |
+| `notify:dispatch` | task, owned by notify | live | account enqueues it through `notifyapi.Enqueue` for `account.registration_pending` (P0.1) and `account.password_reset` (SPEC-05 P0.3); planned, the transactional email-only types `account.registration_received` and `account.registration_repeat` (P0.1, A1) and `account.email_change_confirm` / `account.email_change_alert` (P0.10, A9). New notify **types**, not new tasks — already in events.md as a notify row. |
+| `account:purge_refresh_tokens` | periodic task | live (`cmd/worker`, `@every 24h`, `default`) | in events.md. |
+| `account:purge_reset_tokens` | periodic task | planned (P0.15) | in events.md as planned; lands with its `scheduler.Register` (§11 row 20). |
+| `account:expire_identity_data` | periodic task | planned (P0.16, A7) | anonymises `audit_log` identity data and deletes `deleted_users` and closed `email_change_requests` rows after 90 days; in events.md as planned (§11 row 31). |
 
 **Consumed:** nothing. Audit rows (`account.*`, P0.1–P0.12) are not bus
 events — P1.3's events are published beside them, not instead of them; the
@@ -768,7 +1303,7 @@ audit taxonomy lives in `platform/audit/logger.go` and
 
 ## 9. Success metrics (n=1 honest)
 
-- Zero sessions held by a non-`approved` or disabled account after the
+- Zero Sessions held by a non-`approved` or Disabled User after the
   decision: auditable by joining `audit_log` `account.user.rejected |
   approval_revoked | disabled` rows to later `account.refresh.rotated` rows for
   the same actor (expected: none).
@@ -779,30 +1314,25 @@ audit taxonomy lives in `platform/audit/logger.go` and
   registration (dispatch is best-effort; the metric is whether it is observed).
 - After P0.13 lands: no reader in SPEC-12/07/09/11/13 still resolves a day
   boundary from `APP_TIMEZONE` (grep `AppTimezone` in `backend/`).
+- After P0.16 lands: no `audit_log` row older than 90 days holds an IP, a user
+  agent or an email in clear or in `pii`
+  (`SELECT count(*) FROM audit_log WHERE occurred_at < now() - interval '90 days' AND (pii IS NOT NULL OR ip IS NOT NULL)` is 0).
 
 ## 10. Open questions
 
-Q1 (deleting a user orphans their media objects) was decided on 2026-10-01 —
-Decision 2026-10-01b (D1), now P0.10's delete order and SPEC-04 P0.7; the
-remaining questions keep their numbers so citations hold.
+None open. Q1 (deleting a user orphans their media objects) was decided on
+2026-10-01 — Decision 2026-10-01b (D1), now P0.10's delete order and SPEC-04
+P0.7. Q2–Q5 were decided on 2026-10-02 and removed the same way; their
+numbers are not reused:
 
-- **Q2 (product, non-blocking) — admin list paging.** The README Pagination
-  convention says lists are keyset-paged; the admin grid pages by `offset` with
-  a `total` and per-status `counts`. Keep offset for this one operator list, or
-  move to a cursor and drop `total`?
-- **Q3 (product, non-blocking) — registration enumeration.** `POST
-  /auth/register` answers 409 `account/email-taken`, which reveals whether an
-  address has an account, while `forgot-password` goes to lengths not to. On a
-  household instance this may be acceptable; if not, register must answer 201
-  uniformly and §11 row 5 becomes meaningful.
-- **Q4 (product, non-blocking) — logout scope.** `/auth/logout` bumps
-  `token_version`, so every device's access token stops until it refreshes
-  (silent, via `SessionKeeper`), and the RBAC cache is re-keyed. Intended, or
-  should single-device logout only revoke its own refresh token?
-- **Q5 (product, non-blocking) — per-account lockout.** Five wrong passwords
-  lock any known email out of login for 15 minutes, which anyone can trigger.
-  Accept for v1, or key the account counter on (email, IP) and keep only the
-  per-IP cap global?
+- Q2 (admin list paging) — decided 2026-10-02 (A5): offset paging stays, as a
+  named exception to the README Pagination convention (P0.8).
+- Q3 (registration enumeration) — decided 2026-10-02 (A1): register answers
+  201 uniformly (P0.1; §11 rows 5 and 25).
+- Q4 (logout scope) — decided 2026-10-02 (A3): logout ends one Session and
+  bumps nothing (P0.6; §11 row 27).
+- Q5 (per-account lockout) — decided 2026-10-02 (A4): the per-email counter
+  becomes per-(email, client IP) (P0.2; §11 row 28).
 
 ## 11. Implementation gaps vs shipped code (as of 2026-10-01)
 
@@ -811,8 +1341,14 @@ code). The spec text above is the target; this section lists every place the
 shipped code diverges from it. Rows are ordered by severity: **Sec** 1–5,
 **AuthZ** 6–7, **Data** 8, **Integ** 9–13, **Func** (timezone) 14,
 **Contract** 15–20, **UX** 21–22, **Hyg** 23, then **P1** 24 (added by
-Decision 2026-10-01b and appended rather than renumbering rows other documents
-cite). A row closes when the code
+Decision 2026-10-01b), then the rows the owner decisions of 2026-10-02 turned
+into targets — **Sec** 25–28 (uniform registration, pre-created Superadmin,
+single-Session logout, per-(email, IP) lockout), **Data** 29 (delete purges
+every module), **Sec** 30 (verified email change), **Data** 31 (audit identity
+retention) — all appended rather than renumbering rows other documents cite.
+Row 10 is superseded by row 26 and closes with it; rows 14 and 24 were
+rewritten in place for A8 and A11, since neither describes shipped
+behaviour. A row closes when the code
 matches the requirement it cites and the SPEC-01 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded
 on a named test. File paths are relative to
@@ -826,26 +1362,33 @@ on a named test. File paths are relative to
 | 2 | P0.4 refresh — one successor per token | Rotation is atomic: one presented token yields at most one successor; a concurrent second presentation is reuse. | `auth/refresh.go` `Rotate`: `GetByHash` → check `RevokedAt` → `issue` → `MarkReplaced`; `query/auth.sql` `MarkRefreshTokenReplaced` updates `WHERE id = $1` unconditionally. Two concurrent requests both pass the check and both get tokens — a forked chain and no theft detection. The benign variant: `SessionKeeper.tsx`'s localStorage claim is not atomic across tabs, so two tabs can still present one token back to back, and the second burns the chain (spurious logout). | **backend/query:** claim first — `UPDATE refresh_tokens SET revoked_at = now(), revoke_reason = 'rotated' WHERE id = $1 AND revoked_at IS NULL RETURNING id`; no row → reuse path; then issue the successor and set `replaced_by_id`, in one transaction. **frontend (optional):** a `navigator.locks` / BroadcastChannel single-flight in `SessionKeeper`. **test:** TC-ACC-031 (concurrent rotation), TC-ACC-032 (reuse burns chain). | Found while writing SPEC-01, 2026-10-01 |
 | 3 | P0.1 abuse control | `/auth/register` (and `/auth/refresh`) throttled per client IP; over the limit → 429 `platform/rate-limited`. | `backend/internal/platform/middleware/ratelimit.go` `IPRateLimiter` is referenced by no binary (`grep -rn "ratelimit\." backend --include=*.go` finds no caller); `traefik/dynamic.yml` defines `rate-limit` but no router in `docker-compose.yml` attaches it. Every anonymous `POST /auth/register` creates a pending row and enqueues up to 50 `notify:dispatch` with an email channel (`notifyApprovers`). | **backend:** mount `IPRateLimiter` (e.g. 5/s burst 10, the preset in its doc comment) on `/auth/register` and `/auth/refresh` in `cmd/api`, keyed on the trusted client IP (row 4); optionally a per-IP daily cap on registrations in Redis. **test:** TC-ACC-012, TC-ACC-013. | Found while writing SPEC-01, 2026-10-01 |
 | 4 | P0.2 client IP | The login throttle and audit IP use the client address as seen by the trusted proxy only. | `handler/util.go` `clientIP` takes the leftmost `X-Forwarded-For` from any peer, and `cmd/api` adds `chimw.RealIP` (which also trusts `True-Client-IP`/`X-Real-IP`). Behind Traefik's default forwarded-header handling the value is the real peer; on any path that reaches the API directly (`make dev` on `:8080`, the direct-IP shape `cookieDomainFor` supports) a client can rotate it and bypass the per-IP counter (the per-email counter still holds). | **backend:** honour forwarded headers only from a configured trusted-proxy CIDR (`TRUSTED_PROXIES`), else use `RemoteAddr`; drop `chimw.RealIP` or configure it the same way. **test:** TC-ACC-006. | Found while writing SPEC-01, 2026-10-01 |
-| 5 | P0.2 uniform timing | An unknown email costs the same as a wrong password. | `handler/auth.go` `Login` returns 401 on `ErrUserNotFound` before `auth.VerifyPassword`, so unknown emails skip the ~64 MiB Argon2id and answer measurably faster. Moot while §10 Q3 keeps register's 409. | **backend:** on `ErrUserNotFound` (and on an empty hash) verify against a fixed dummy PHC hash before answering. **test:** TC-ACC-007 (both paths call the verifier once). | Found while writing SPEC-01, 2026-10-01; §10 Q3 |
+| 5 | P0.2 uniform timing | An unknown email costs the same as a wrong password. | `handler/auth.go` `Login` returns 401 on `ErrUserNotFound` before `auth.VerifyPassword`, so unknown emails skip the ~64 MiB Argon2id and answer measurably faster. Load-bearing since Decision 2026-10-02 (A1): once register answers uniformly (row 25), this is the remaining email-enumeration oracle. | **backend:** on `ErrUserNotFound` (and on an empty hash) verify against a fixed dummy PHC hash before answering. **test:** TC-ACC-007 (both paths call the verifier once). | Found while writing SPEC-01, 2026-10-01; Decision 2026-10-02 (A1) |
 | 6 | P0.9, P0.10 target authority on approve / reject / revoke / disable / enable | The `targetAuthorityDenial` rule of Edit and Delete also gates the approval decisions and disable/enable → 403 `account/escalation`. | `handler/admin.go` `decide` and `SetDisabled` check self-target and last-approver only. A `users:write:any` holder (the seeded `admin`) can disable any superadmin who is not the last approver, killing their session (`DisableUser` bumps `token_version`); `/CLAUDE.md` describes only Edit/Delete as takeover-guarded. | **backend:** call `targetAuthorityDenial` in `decide` and `SetDisabled` (skip for `id == actor`, already refused). **openapi:** 403 `account/escalation` on the five operations. **test:** TC-ACC-055, TC-ACC-056. | Found while writing SPEC-01, 2026-10-01 |
-| 7 | P0.12 bootstrap re-enables | The named account ends up approved, **enabled** and holding `superadmin`. | `backend/cmd/api/main.go` `bootstrapSuperadmin` grants the role and approves, but never reads or clears `disabled_at`, although its doc comment promises "approved, enabled and holding `superadmin`". A disabled bootstrap account stays locked out. | **backend:** if `user.Disabled`, call `EnableUser` (and bump `token_version` once). **test:** TC-ACC-020 (fake adapter: disabled + unapproved + no role → all three fixed, one bump; already-correct → zero writes). | Found while writing SPEC-01, 2026-10-01 |
+| 7 | P0.12 bootstrap re-enables | The named User ends up approved, **enabled** and holding `superadmin`. | `backend/cmd/api/main.go` `bootstrapSuperadmin` grants the role and approves, but never reads or clears `disabled_at`, although its doc comment promises "approved, enabled and holding `superadmin`". A disabled bootstrap account stays locked out. | **backend:** if `user.Disabled`, call `EnableUser` (and bump `token_version` once). **test:** TC-ACC-020 (fake adapter: disabled + unapproved + no role → all three fixed, one bump; already-correct → zero writes). | Found while writing SPEC-01, 2026-10-01 |
 | 8 | P0.10 delete — no orphaned objects | Deleting a user leaves no unreachable stored object: disable, purge the owner's assets (`mediaapi.PurgeOwnerAssets`), then — under `FOR UPDATE` on the user row — a final pass that must report 0 rows before `DeleteUser`; otherwise 503 `account/delete-incomplete` and the user is kept. | `handler/admin_users.go` `DeleteUser` → `query/admin.sql` `DeleteUser` hard-deletes straight after the guards; `assets.owner_id` is `ON DELETE CASCADE` (`0007_media_assets`), so asset rows vanish without a `deleting` tombstone and `media/service.go` `PurgeOrphans` (which reads only `ListAssetsForPurge` rows) never visits them; the objects stay in MinIO/R2 forever. | **backend (media):** SPEC-04 §11 row 19 (`PurgeOwnerAssets`). **backend (account):** a one-method media port in `account.Deps`, bound by `cmd/api` through a closure over `mediaMod`; `DeleteUser` runs P0.10 steps 1–4; new query `LockUserForDelete` (`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`) and a transaction for step 3 (the adapter receives `RunInTx` as other modules' do); 503 `account/delete-incomplete` with `Retry-After`. **openapi:** the 503 on `adminDeleteUser`. **frontend:** the slug in `problems.ts`; `/admin/users` offers a retry. **test:** TC-ACC-064…066. | Found while writing SPEC-01, 2026-10-01; Decision 2026-10-01b (D1) |
 | 9 | P0.11 role PATCH semantics | PATCH keeps omitted fields. | `handler/admin.go` `decodeRoleBody` sets `Name = Code` when `name` is empty — on PATCH `code` is normally absent, so `Name` becomes `""`; `query/rbac.sql` `UpdateRole` then writes `name`, `description` and `parent_id` from the body, clearing an omitted description or parent. `shared/openapi.yaml` `RoleInput` declares `name` required, which hides it; no UI calls `updateRole` today (`frontend/src/lib/admin.ts` exports it unused). | **backend:** read the target row and merge (absent JSON key ⇒ keep; explicit `""` for `parent_code` ⇒ root role); keep `name` non-empty. **openapi:** a separate `RolePatch` schema with all-optional fields. **test:** TC-ACC-073. | Found while writing SPEC-01, 2026-10-01 |
-| 10 | P0.1 first-run bootstrap race | Exactly one founder, even when the first two registrations race. | `handler/auth.go` `Register`: `CreateLocalUser`, then `CountUsers` outside any transaction — two concurrent first registrations can both count 2, so nobody is approved and nobody can approve (recoverable only with `BOOTSTRAP_SUPERADMIN_EMAIL`). | **backend:** decide the founder inside one transaction under `pg_advisory_xact_lock` (or `INSERT … SELECT … WHERE NOT EXISTS (SELECT 1 FROM users)` returning a founder flag). **test:** TC-ACC-016. | Found while writing SPEC-01, 2026-10-01 |
+| 10 | P0.1 first-run bootstrap race — **superseded by row 26** | *Superseded by Decision 2026-10-02 (A2).* There is no first-registrant rule any more, so there is no race left to close; the row is kept so its number holds. | `handler/auth.go` `Register`: `CreateLocalUser`, then `CountUsers` outside any transaction — two concurrent first registrations can both count 2, so nobody is approved and nobody can approve. | **None of its own:** row 26 deletes the `CountUsers` branch this row would have fixed; it closes with row 26 (TC-ACC-016 is retired in favour of TC-ACC-130). | Found while writing SPEC-01, 2026-10-01; superseded by Decision 2026-10-02 (A2) |
 | 11 | P0.11 expired grants | Re-assigning a role whose grant expired grants it afresh; `user_count` counts live grants. | `query/admin.sql` `ReplaceUserRoles` inserts `ON CONFLICT (user_id, role_id) DO NOTHING`, so an expired row is kept and the role stays invisible; `ListRolesAdmin`'s `user_count` subquery ignores `expires_at`, so `DeleteRole` refuses a role only expired grants reference. Latent: nothing sets `expires_at` today. | **query:** `ON CONFLICT … DO UPDATE SET expires_at = NULL, granted_by = EXCLUDED.granted_by, granted_at = now()`; filter `user_count` by `expires_at IS NULL OR expires_at > now()`. **test:** TC-ACC-058. | Found while writing SPEC-01, 2026-10-01 |
-| 12 | P0.14 `accountapi` visibility | `GetUserByID` hides disabled **and** non-approved accounts; `GetUserNames` resolves names for any id (display only). | `repository/adapter.go` `GetUserSummaryByID` filters `disabled_at` only, so a pending or rejected account resolves — including as an email recipient through `cmd/worker` `recipientResolver`. | **backend:** add `approval_status = 'approved'` to the check (or a dedicated query). **test:** TC-ACC-090. | Found while writing SPEC-01, 2026-10-01 |
+| 12 | P0.14 `accountapi` visibility | `GetUserByID` hides disabled **and** non-approved accounts; `GetUserNames` resolves names for any id (display only). | `repository/adapter.go` `GetUserSummaryByID` filters `disabled_at` only, so a pending or rejected account resolves — including as an email recipient through `cmd/worker` `recipientResolver`. | **backend:** a dedicated query behind `GetUserByID` that adds `approval_status = 'approved'`. The worker's `recipientResolver` must **not** inherit the filter for the account's transactional email types — `account.registration_received`, `account.registration_repeat` (P0.1) and `account.email_change_alert` (P0.10) are addressed to Users who are Pending, Rejected or about to change address — so it either keeps its own query or takes the type into account. **test:** TC-ACC-090. | Found while writing SPEC-01, 2026-10-01 |
 | 13 | P0.2 disabled-attempt audit | A correct-password login on a disabled account writes `account.session.disabled_attempt`. | `backend/internal/platform/audit/logger.go` defines `ActionAuthDisabledAttempt`; `handler/auth.go` `Login` returns 403 without auditing. | **backend:** write the event before the 403. **test:** TC-ACC-004. | Found while writing SPEC-01, 2026-10-01 |
-| 14 | P0.13 per-user timezone | Migration (`Asia/Ho_Chi_Minh` default, `'UTC'` rows rewritten, `timezone_manual`); `PATCH /auth/me` with 422 `account/invalid-timezone`; `/auth/me` returns both fields; `accountapi` single + batch lookups; frontend device save, picker, `lib/time.ts` from `/auth/me`. | `backend/db/migrations/0002_account_users.up.sql` `timezone DEFAULT 'UTC'`, no `timezone_manual`; `module.go` mounts no `PATCH /auth/me`; `handler/auth.go` `Me` returns no zone; `api/api.go` `UserSummary` is `{ID, Email, DisplayName}`; `backend/cmd/api/main.go` `handleServerTime` serves `APP_TIMEZONE`; `frontend/src/lib/problems.ts` lacks the slug. | **migration:** `000N_account_user_timezone` (§6). **backend:** `PATCH /auth/me` handler + `UpdateUserTimezone` query (`updated_at = now()`); `Me` reads the row (the token carries no zone); `UserSummary.Timezone` + `GetUserTimezones(ctx, ids)`. **openapi:** both operations, `CurrentUser.timezone`, `timezone_manual`, the 422. **frontend:** slug, post-sign-in save (skipped while manual), settings picker, `lib/time.ts`. Then its readers (README Per-user timezone list). **test:** TC-ACC-100…104. | Decision 2026-09-30 (Timezone); Decision 2026-10-01 (f); the specs README Per-user timezone cross-cutting gap, item 1 |
-| 15 | P0.6 `/auth/me` contract | The OpenAPI response matches the handler: `{id, email, display_name, roles, permissions}` (+ P0.13 fields). | `shared/openapi.yaml` `CurrentUser` is `allOf: [User, …]`, and `User` requires camelCase `displayName` (plus `avatarUrl`); `handler/auth.go` `Me` sends `display_name` and no avatar. `frontend/src/lib/session.ts` declares its own `Session` type, so nothing fails — the generated `types.gen.ts` type is simply wrong. | **openapi:** give `CurrentUser` its own snake_case properties (`display_name`, `roles`, `permissions`, then `timezone`, `timezone_manual`); keep `User` only if something else uses it. **frontend:** `session.ts` may then import the generated type. **test:** TC-ACC-040 (handler body keys). | Found while writing SPEC-01, 2026-10-01 |
-| 16 | §7 Problem types registered | Every slug the module emits is in `ProblemType` and `PROBLEM_MESSAGES`. | `frontend/src/lib/problems.ts` registers 17 account slugs (`grep -c '"account/' frontend/src/lib/problems.ts` counts each twice: type and message) but not `account/invalid-credentials`, `account/too-many-attempts`, `account/weak-password`, `account/validation` or `account/role-not-found`, all emitted by `handler/auth.go` / `handler/admin.go`; nor the targets `account/user-not-found` and `account/invalid-timezone`. (`account/invalid-reset-token` and `account/rate-limited` are SPEC-05 §11 row 14.) | **frontend:** add `invalid-credentials`, `too-many-attempts`, `validation`, `role-not-found`, `user-not-found`, `invalid-timezone`; `weak-password` needs no entry once row 17 renames it to `password-policy`. **test:** TC-ACC-110 (a grep test listing every `problem(`/`writeError(` code against `problems.ts`). | README Errors convention; found while writing SPEC-01, 2026-10-01 |
+| 14 | P0.13 per-user timezone | Migration (`users.timezone` NULLable with no default, `'UTC'` rows set to NULL; no `timezone_manual`); `PATCH /auth/me {timezone}` with 422 `account/invalid-timezone`; `/auth/me` returns `timezone` as a name or `null`; `accountapi` single + batch lookups returning the stored zone, else `Asia/Ho_Chi_Minh`; frontend saves the device zone automatically while the stored one is NULL, otherwise offers one confirm prompt when the device differs, a settings picker, and `lib/time.ts` from `/auth/me`. | `backend/db/migrations/0002_account_users.up.sql` `timezone TEXT NOT NULL DEFAULT 'UTC'`; `module.go` mounts no `PATCH /auth/me`; `handler/auth.go` `Me` returns no zone; `api/api.go` `UserSummary` is `{ID, Email, DisplayName}`; `backend/cmd/api/main.go` `handleServerTime` serves `APP_TIMEZONE`; `frontend/src/lib/problems.ts` lacks the slug. | **migration:** `000N_account_user_timezone` (§6). **backend:** `PATCH /auth/me` handler + `UpdateUserTimezone` query (`updated_at = now()`); `Me` reads the row (the token carries no zone); `UserSummary.Timezone` + `GetUserTimezones(ctx, ids)`, both mapping NULL and unparseable names to `Asia/Ho_Chi_Minh`. **openapi:** both operations, `CurrentUser.timezone` (nullable), the 422. **frontend:** slug; the post-sign-in save when `timezone` is null; the one-time switch prompt when the device zone differs from a set zone (dismissal remembered per browser and zone); settings picker; `lib/time.ts`. Then its readers (README Per-user timezone list). **test:** TC-ACC-100…104. | Decision 2026-09-30 (Timezone); Decision 2026-10-02 (A8), superseding Decision 2026-10-01 (f); the specs README Per-user timezone cross-cutting gap, item 1 |
+| 15 | P0.6 `/auth/me` contract | The OpenAPI response matches the handler: `{id, email, display_name, roles, permissions}` (+ the P0.13 and P0.12 fields). | `shared/openapi.yaml` `CurrentUser` is `allOf: [User, …]`, and `User` requires camelCase `displayName` (plus `avatarUrl`); `handler/auth.go` `Me` sends `display_name` and no avatar. `frontend/src/lib/session.ts` declares its own `Session` type, so nothing fails — the generated `types.gen.ts` type is simply wrong. | **openapi:** give `CurrentUser` its own snake_case properties (`display_name`, `roles`, `permissions`, then `timezone` (nullable) and `password_must_change`); keep `User` only if something else uses it. **frontend:** `session.ts` may then import the generated type. **test:** TC-ACC-040 (handler body keys). | Found while writing SPEC-01, 2026-10-01 |
+| 16 | §7 Problem types registered | Every slug the module emits is in `ProblemType` and `PROBLEM_MESSAGES`. | `frontend/src/lib/problems.ts` registers 17 account slugs (`grep -c '"account/' frontend/src/lib/problems.ts` counts each twice: type and message) but not `account/invalid-credentials`, `account/too-many-attempts`, `account/weak-password`, `account/validation` or `account/role-not-found`, all emitted by `handler/auth.go` / `handler/admin.go`; nor the targets `account/user-not-found`, `account/invalid-timezone`, and — from the 2026-10-02 decisions — `account/password-change-required`, `account/wrong-current-password`, `account/mail-unavailable`, `account/invalid-email-change-token`. (`account/invalid-reset-token` and `account/rate-limited` are SPEC-05 §11 row 14.) | **frontend:** add `invalid-credentials`, `too-many-attempts`, `validation`, `role-not-found`, `user-not-found`, `invalid-timezone` (and the four 2026-10-02 slugs with rows 26, 30); `weak-password` needs no entry once row 17 renames it to `password-policy`. **test:** TC-ACC-110 (a grep test listing every `problem(`/`writeError(` code against `problems.ts`). | README Errors convention; found while writing SPEC-01, 2026-10-01 |
 | 17 | §7 statuses and slugs | Body/param-shape failures are 422 (`account/validation` or a named type); one slug per rule (`account/password-policy`); a missing user is 404 `account/user-not-found`; 429 carries `Retry-After`. | `handler/auth.go` `Register` answers 400 `account/invalid-email` and 400 `account/weak-password`; `handler/admin.go` `badRequest`/`problem(…StatusBadRequest…)` answer 400 for `validation`, `unknown-role`, `unknown-permission`, `role-cycle`, and `admin_users.go` 400 for `invalid-email`, `password-policy`, `confirmation-mismatch`; `pathUUID` and `notFoundOrInternal` map a missing user to `server.ProblemType("account","not_found")` = 404 about:blank; `Login`'s 429 sets no `Retry-After`. | **backend:** switch those to 422; `weak_password` → `password-policy`; `not_found` → `user-not-found` (keep `role-not-found`); `Retry-After` = the remaining TTL of the tripped counter. **openapi:** the 422s and slugs per §7. **frontend:** none (`problemDisplayMessage` keys on `type`, not status). **test:** TC-ACC-111. | README Pagination/Errors conventions; found while writing SPEC-01, 2026-10-01 |
 | 18 | P0.8 `{items}` envelope | `GET /admin/users` answers `{items, total, limit, offset, counts}`. | `handler/admin.go` `ListUsers` writes `users`; `shared/openapi.yaml` `AdminUserPage` requires `users`; `frontend/src/lib/admin.ts` `listUsers` reads `r.users`. | **backend · openapi · frontend:** rename to `items` in one PR (README Envelopes retrofit). **test:** TC-ACC-050. | Decision 2026-09-30 (Envelopes); Decision 2026-10-01 (g) |
 | 19 | P0.14 `ListDirectory` limit | Out-of-range `limit` clamps (≤ 0 → 50; > 200 → 200). | `api/api.go` `ListDirectory`: `if limit <= 0 \|\| limit > 200 { limit = 50 }` — resets. | **backend:** clamp. **test:** TC-ACC-091. | Decision 2026-10-01 (e) (limit) |
-| 20 | §7 OpenAPI encoding and responses; §8 events.md | Public ops `security: []`; others `security: [{bearerAuth: []}]` + `x-required-permission`; every status in §7 declared. events.md lists `account:purge_refresh_tokens` (and the planned reset-token purge, scheduled per P0.15). | `shared/openapi.yaml`: no top-level `security`; only `/auth/logout`, `/auth/logout-all`, `/auth/me` declare `bearerAuth`, so every `/admin/*` operation reads as public; no `x-required-permission`; `reject`, `revoke-approval`, `disable` lack 409 `account/last-approver`; `logout` lacks 401; `/admin/roles/{id}/permissions` and role PATCH/DELETE 404s are not typed. `docs/reference/events.md` has no account row; `backend/cmd/worker/main.go` schedules `account:purge_refresh_tokens` but nothing schedules `PurgeExpiredPasswordResetTokens`. | **openapi:** annotate all account operations per §7. **backend:** register the reset-token purge (light server, `@every 24h`). **docs:** two events.md task rows. **test:** TC-ACC-095, TC-ACC-112. | README AuthZ OpenAPI encoding; README Events DoD; found while writing SPEC-01, 2026-10-01 |
+| 20 | §7 OpenAPI encoding and responses; P0.15 reset-token purge | Public ops `security: []`; others `security: [{bearerAuth: []}]` + `x-required-permission`; every status in §7 declared. The reset-token purge is scheduled (P0.15). | `shared/openapi.yaml`: no top-level `security`; only `/auth/logout`, `/auth/logout-all`, `/auth/me` declare `bearerAuth`, so every `/admin/*` operation reads as public; no `x-required-permission`; `reject`, `revoke-approval`, `disable` lack 409 `account/last-approver`; `logout` lacks 401; `/admin/roles/{id}/permissions` and role PATCH/DELETE 404s are not typed. `backend/cmd/worker/main.go` schedules `account:purge_refresh_tokens` but nothing schedules `PurgeExpiredPasswordResetTokens`. | **openapi:** annotate all account operations per §7. **backend:** register the reset-token purge (light server, `@every 24h`); events.md already carries both task rows (the second as planned) and flips it to live in the same PR. **test:** TC-ACC-095, TC-ACC-112. | README AuthZ OpenAPI encoding; README Events DoD; found while writing SPEC-01, 2026-10-01 |
 | 21 | §7 `/admin` route gate | Every `(app)` route group is in `config.matcher` (D-34 edge gate). | `frontend/src/middleware.ts` matcher lists `/`, `/login`, `/register`, `/upload`, `/library/:path*`, `/bank/:path*`, `/people/:path*` — not `/admin/:path*` (also missing `/calendar`, `/weather`; backlog #15). A signed-out visitor gets the admin shell, which then 401s. | **frontend:** add `'/admin/:path*'` (or match the whole group). **test:** TC-ACC-080. | README Frontend convention; backlog #15 |
 | 22 | P0.7 client grammar | `frontend/src/lib/session.ts` `can()` decides exactly as `rbac.Permission.Matches`. | `can()` treats `res:*` like any 2-segment grant (satisfies bare/`:any`, never `:own`); the server's `Matches` lets an action wildcard satisfy every scope, `:own` included — a `movies:*` holder is hidden affordances the API would allow. | **frontend:** if `g[1] === "*"` return true after the resource match. **test:** TC-ACC-081 (vitest table mirroring `TestMatches`). | Found while writing SPEC-01, 2026-10-01 |
 | 23 | P0.8 `q` is literal | `q` matches as a literal substring. | `query/admin.sql` `ListUsersAdmin` / `CountUsersAdmin` concatenate `'%' \|\| q \|\| '%'` into `ILIKE` without escaping `%`, `_` or `\`. | **query:** escape in the handler (or `ILIKE … ESCAPE '\'` with an escaped argument). **test:** TC-ACC-051. | Found while writing SPEC-01, 2026-10-01 |
-| 24 | P1.3 admin-change events; P0.14 `SuperadminIDs` | Seven `account:*` events published after commit with the `accountapi.AdminEvent` payload; `accountapi.SuperadminIDs`; each event's consumer edge registered in `cmd/api`; events.md rows. | Not built. `api/api.go` declares no event constant, payload or `SuperadminIDs`; `account.Deps` has no publisher; the handlers (`Register`, `decide`, `SetDisabled`, `DeleteUser`, `SetUserRoles`, `CreateRole`, `UpdateRole`, `DeleteRole`, `SetRolePermissions`, `HandleRefresh`) write audit rows only; `backend/cmd/api/main.go` builds `mediaEvents` after `account.New` and subscribes no `account:*` name. | **backend:** constants + `AdminEvent` in `account/api`; `Deps.Events`; publish after each write per P1.3; a `ListSuperadminIDs` query (recursive role walk, enabled + approved, limit 50) behind `SuperadminIDs`, and the same query for `cmd/worker`'s notify port; in `cmd/api`, build the publisher before `account.New` and add the seven `Subscribe` edges (the notify tasks are SPEC-05 §11 row 23). **docs:** events.md rows (planned → live in the same PR). **test:** TC-ACC-120…126. | Decision 2026-10-01b (D3) |
+| 24 | P1.3 admin-change events; P0.14 `SuperadminIDs` | Seven `account:*` events published after commit with the `accountapi.AdminEvent` payload; `accountapi.SuperadminIDs` — the enabled, Approved Users whose effective permissions contain `*` (Decision 2026-10-02 (A11): by permission, not by role name); each event's consumer edge registered in `cmd/api`; events.md rows. | Not built. `api/api.go` declares no event constant, payload or `SuperadminIDs`; `account.Deps` has no publisher; the handlers (`Register`, `decide`, `SetDisabled`, `DeleteUser`, `SetUserRoles`, `CreateRole`, `UpdateRole`, `DeleteRole`, `SetRolePermissions`, `HandleRefresh`) write audit rows only; `backend/cmd/api/main.go` builds `mediaEvents` after `account.New` and subscribes no `account:*` name. | **backend:** constants + `AdminEvent` in `account/api`; `Deps.Events`; publish after each write per P1.3; a `ListSuperadminIDs` query (the `GetEffectivePermissions` recursive walk, keeping Users whose effective set holds the literal `*`; enabled + approved; limit 50) behind `SuperadminIDs`, and the same query for `cmd/worker`'s notify port; in `cmd/api`, build the publisher before `account.New` and add the seven `Subscribe` edges (the notify tasks are SPEC-05 §11 row 23). **docs:** events.md rows (planned → live in the same PR). **test:** TC-ACC-120…127. | Decision 2026-10-01b (D3); Decision 2026-10-02 (A11) |
+| 25 | P0.1 uniform registration | Every well-formed `POST /auth/register` answers 201 `{status: "registered"}`; Argon2id runs on both paths. New email → Pending User, registrant email `account.registration_received`, Approver fan-out. Existing email → nothing written, no Approver notified, one `account.registration_repeat` email by state (Pending / Approved / Rejected), at most one per address per 24 h. `account/email-taken` only on admin create/edit. Registration succeeds without SMTP. | `handler/auth.go` `Register` hashes, then `CreateLocalUser`; on `ErrEmailTaken` (unique violation `23505`, `repository/adapter.go`) it answers 409 `email_taken`; the 201 body is `{status, email, approval_status}`; the registrant is sent nothing. `frontend/src/templates/v1/views/auth/AuthForm.tsx` chooses its message from `approval_status` (`onRegistered(email, data?.approval_status !== "approved")`). | **backend:** after hashing, look the email up; existing → `SET NX EX 86400` on `register:notice:<sha256(email)>`, enqueue `account.registration_repeat` (`data.state`) when the key was set, answer 201; new → create as today (minus the founder branch, row 26), then `account.registration_received` to the registrant and the Approver fan-out; both answer `{status: "registered"}`. **notify:** register the two types (email-only, not persisted) in `notify/api` and the `notify/README.md` registry, with `renderEmail` templates; recipient resolution per row 12. **openapi:** the 201 schema becomes `{status}`; drop the 409. **frontend:** `AuthForm.tsx` shows one message ("check your email — an administrator will review your registration"). **test:** TC-ACC-130…134. | Decision 2026-10-02 (A1); former §10 Q3 |
+| 26 | P0.12, P0.5, P0.1 pre-created Superadmin; password change | No first-registrant rule. `cmd/api` creates the `BOOTSTRAP_SUPERADMIN_EMAIL` User from `BOOTSTRAP_SUPERADMIN_PASSWORD` (Approved, enabled, `superadmin`, `password_must_change`) when it does not exist, never touches the password when it does, and warns "no superadmin configured" when the email is unset. While `password_must_change`, `RequireAuth` answers 403 `account/password-change-required` outside `/auth/me`, `/auth/logout`, `/auth/logout-all`, `/auth/password`. `POST /auth/password` changes the password, clears the flag, bumps `token_version` and keeps only the current Session. | `handler/auth.go` `Register` grants `superadmin` and calls `MarkApproved` when `CountUsers` = 1 (`founder`), and skips the Approver fan-out for that User. `backend/cmd/api/main.go` `bootstrapSuperadmin` only re-asserts an existing User; for an unknown email it logs "names no account yet; register it, then restart the api". `backend/internal/platform/config/config.go` has `BootstrapSuperadminEmail` only. `users` has no `password_must_change`; `middleware/auth.go` has no such check; `module.go` mounts no `/auth/password`. | **migration:** `000N_account_password_must_change` (§6). **backend:** delete the founder branch (this closes row 10); `bootstrapSuperadmin` creates the User (hash, approve, grant `superadmin`, set the flag, audit `account.user.created` with `actor_kind = 'system'`) when absent, refuses an empty or short password with a logged error, warns when the email is unset; `BOOTSTRAP_SUPERADMIN_PASSWORD` in `platform/config` and `.env.example`; `GetUserAuthSnapshot` returns the flag and `RequireAuth` checks it against a four-route allow-list; `POST /auth/password` (verify on the login throttle, one transaction, revoke every chain but the presented one with reason `password_change`, bump, re-mint) and the audit action `account.password.changed` in `platform/audit`. **openapi:** the operation, `CurrentUser.password_must_change`, the 403 on authenticated operations. **frontend:** the two slugs; a forced change-password screen while `/auth/me` reports the flag; `AuthForm` loses its "sign in now" branch. **docs:** `/CLAUDE.md` § Account module ("Bootstrapping an approver") in the same PR. **test:** TC-ACC-135…140. | Decision 2026-10-02 (A2) |
+| 27 | P0.6 logout ends one Session | `POST /auth/logout` requires the refresh token (cookie or body; none → 422 `account/validation` pointing to logout-all), revokes that token's chain if it is the caller's, does not bump `token_version`, clears cookies. | `handler/auth.go` `Logout`: `Refresh.Revoke` (`auth/refresh.go`) revokes the single presented token, a missing token is ignored, then `BumpUserTokenVersion` — every device's access token stops and the RBAC cache is re-keyed on each logout. | **backend:** require the token; `RevokeRefreshTokenChain` scoped to the caller's `user_id`; drop the bump; audit `scope: session`. **openapi:** the request body and the 422 on `/auth/logout`. **frontend:** none (`TopMenu.tsx` already sends the cookie). **test:** TC-ACC-141…143. | Decision 2026-10-02 (A3); former §10 Q4 |
+| 28 | P0.2 lockout per (email, client IP) | Two failure counters: the global per-IP one and one per (email, client IP); no per-email counter shared across addresses. | `handler/auth.go` `loginFailKeys` returns `login:fail:ip:<ip>` and `login:fail:email:<email>`; `loginThrottled` refuses when either reaches 5, so anyone can lock any known email out for 15 minutes. | **backend:** the second key becomes `login:fail:email_ip:<email>:<ip>` (the pending-path clear and `POST /auth/password` use the same pair). Meaningful only with row 4's trusted client IP. **test:** TC-ACC-144, TC-ACC-145. | Decision 2026-10-02 (A4); former §10 Q5 |
+| 29 | P0.10 delete purges every module, then the row | Every module owning per-User data exposes an idempotent `PurgeOwnerData(ctx, userID) (remaining int, err error)` that removes its rows and side effects; account runs the registry in order (content modules, media, then tenant in the locked final pass), writes a `deleted_users` snapshot, then deletes the row; any error or remainder → 503 `account/delete-incomplete`, User stays Disabled. Snapshot rows expire after 90 days. | No module exposes `PurgeOwnerData` (`grep -rn PurgeOwner backend` finds nothing); media's `PurgeOwnerAssets` is itself unbuilt (row 8). `handler/admin_users.go` `DeleteUser` hard-deletes and relies on the cascade, which removes rows but never objects or Redis keys. No `deleted_users` table exists. | **backend (each module):** `PurgeOwnerData` in `comic`, `music`, `movie`, `story`, `journal`, `bank`, `people`, `social`, `notify` and `tenant` `api/` packages (media's is row 8 / SPEC-04 §11 row 19), each opening its own tenant scope. **backend (account):** a registry port in `account.Deps`, bound in `cmd/api`; `DeleteUser` runs P0.10's passes over it; the snapshot insert in the final transaction. **migration:** `000N_account_deleted_users` (§6). **frontend:** the Delete confirmation says that deleting frees the email and suggests Reject instead. **docs:** [backup-restore.md](../../operations/backup-restore.md) warns that a restore resurrects deleted Users. **test:** TC-ACC-146…149. | Decision 2026-10-02 (A6), extending Decision 2026-10-01b (D1) |
+| 30 | P0.10 email change requires verification; P1.4 | An email change keeps the old address active, stores one pending request, mails a 1-hour confirm link to the new address and a cancel link to the old one, re-checks uniqueness at confirm, rate-limits resend (which revokes old links), cancels on expiry; no SMTP → 503 `account/mail-unavailable`, nothing changed. | `handler/admin_users.go` `UpdateUser` writes the new email at once (`email_before`/`email_after` in the audit) — a typo or a hostile admin moves the login identifier to an address nobody verified. No `email_change_requests` table, no confirm/cancel routes, no notify types. | **migration:** `000N_account_email_change_requests` (§6). **backend:** `UpdateUser` diverts a changed email into a request (503 without `SMTP_HOST`); resend/cancel admin routes; public confirm/cancel routes; `accountapi.MintEmailChangeLinks` for notify's send-time render; audit actions `account.user.email_change_requested`, `account.user.email_changed`, `account.user.email_change_cancelled`. **notify:** `account.email_change_confirm` (to the address the mint returns) and `account.email_change_alert` (to the current address), email-only, not persisted. **openapi:** the four operations, `AdminUser.pending_email`, the 503. **frontend:** the pending address and resend/cancel in `/admin/users`; public confirm and cancel pages (outside the middleware matcher); the slugs. **test:** TC-ACC-155…160. | Decision 2026-10-02 (A9) |
+| 31 | P0.16 audit identity data lives 90 days | Every `audit_log` row keeps identifying data (target User id, email, display name, IP, user agent, identifying metadata) only encrypted in `pii` with `AUDIT_PII_KEY`, decryptable only by Superadmins; after 90 days `account:expire_identity_data` anonymises the row (keeping action, time and the acting admin's id) and deletes expired `deleted_users` and closed `email_change_requests` rows. | `backend/db/migrations/0005_platform_audit.up.sql` stores `ip` and `user_agent` in clear and `metadata` as plain `jsonb`; `backend/internal/platform/audit/logger.go` `Write` copies them as given (e.g. `account.user.updated` carries `email_before`/`email_after`); nothing ever rewrites or deletes an `audit_log` row; no `AUDIT_PII_KEY` exists. | **migration:** `000N_platform_audit_pii` (`pii bytea`; owned by `platform/audit`). **backend:** encryption in `audit.Logger.Write` (identifying fields → `pii`, plaintext columns NULL; drop when the key is unset, with a start-up warning); `AUDIT_PII_KEY` in `platform/config` and `.env.example`; an `audit` anonymise/encrypt-in-place function; the `account:expire_identity_data` periodic task in `cmd/worker` (light server, `@every 24h`). **docs:** events.md row live in the same PR. **test:** TC-ACC-150…153. | Decision 2026-10-02 (A7) |
 
 **Already matching on HEAD.**
 - Argon2id `m=65536,t=3,p=2` PHC hashing with constant-time verify; HS256-only
@@ -856,12 +1399,16 @@ on a named test. File paths are relative to
   cleared), every authenticated request (403 `account/account-not-approved`),
   and every refresh (401, cookies cleared); `SetUserApproval` bumps
   `token_version` unconditionally; rejected rows are kept.
-- First-run founder bootstrap and `BOOTSTRAP_SUPERADMIN_EMAIL` writing only
-  what is missing (apart from row 7); `0031` backfilled existing users to
-  `approved`; `users:approve` granted to no role.
+- The `BOOTSTRAP_SUPERADMIN_EMAIL` re-assert writing only what is missing
+  (apart from row 7); `0031` backfilled existing users to `approved`;
+  `users:approve` granted to no role. (The first-registrant founder rule `HEAD`
+  also runs is no longer the target — row 26.)
 - Approver fan-out: SQL prefilter + `rbac.Set.AllowsCode`, enabled and approved
   holders only, capped at 50, the registrant skipped, dedup key per
   registration, best-effort.
+- The Approval semantics of P0.9 as worded by Decision 2026-10-02 (A10):
+  approve, reject and revoke-approval behave as described, a Rejected email
+  cannot register again, and only an admin moves a Rejected User back.
 - Refresh reuse detection revokes the whole chain forward and backward and
   audits `account.refresh.reuse_detected` (apart from row 2's race).
 - RBAC grammar, matching and fail-closed parsing per P0.7; hierarchy walk is
@@ -886,8 +1433,9 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
 `rbac/permission_test.go`. Nothing tests:
 - `Login` (throttle, generic 401, disabled, pending/rejected, counter clearing)
   — TC-ACC-001…007;
-- `Register` (founder, pending, fan-out wiring, 409) — TC-ACC-010…016
-  (`approverIDs` alone is covered by the `TestApproverIDs*` tests);
+- `Register` (pending, fan-out wiring) — TC-ACC-010…015 (`approverIDs` alone
+  is covered by the `TestApproverIDs*` tests); the 2026-10-02 targets add
+  TC-ACC-130…134 (uniform answer, registrant emails, timing);
 - `RefreshManager.Rotate` and `HandleRefresh` (rotation, reuse burns the
   chain, approval re-check, `remember` preserved) — TC-ACC-030…034;
 - `RequireAuth` (token_version mismatch 401, unapproved 403, disabled 401) and
@@ -899,7 +1447,12 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
   database — TC-ACC-060…062;
 - `SetDisabled`, `decide`'s last-approver path, `CreateRole`, `UpdateRole`,
   `DeleteRole` — TC-ACC-055…057, TC-ACC-070…075;
-- `bootstrapSuperadmin` — TC-ACC-020;
+- `bootstrapSuperadmin` — TC-ACC-020, and for the 2026-10-02 targets:
+  creation from the env pair, the must-change gate and `POST /auth/password`
+  — TC-ACC-135…140; single-Session logout — TC-ACC-141…143; the per-(email,
+  IP) lockout — TC-ACC-144…145; the delete registry and `deleted_users` —
+  TC-ACC-146…149; audit identity retention — TC-ACC-150…153; the verified
+  email change — TC-ACC-155…160; `SuperadminIDs` by permission — TC-ACC-127;
 - no HTTP-level test exists for the account handlers at all (the CC-1/CC-3
   pair over `httptest`, as the other modules have).
 
@@ -1267,7 +1820,10 @@ learned since.
 - **Registration requires approval** (migration `0031`, not part of this
   decision): only `approved` may hold a session, the first account on an empty
   database is the founder, `BOOTSTRAP_SUPERADMIN_EMAIL` covers an existing
-  install (P0.1, P0.2, P0.5, P0.12).
+  install (P0.1, P0.2, P0.5, P0.12). That is the shipped state; Decision
+  2026-10-02 (A2) removes the founder rule in favour of a pre-created
+  Superadmin who must change the password on first sign-in — a target,
+  §11 row 26.
 - **`/auth/me` returns effective permission codes** so the frontend can hide
   what the API would refuse (P0.6; added when roles became editable).
 - One login screen, served by Portal, no cross-domain redirect. The dev stack
@@ -1279,7 +1835,8 @@ learned since.
 
 - Portal is a credential custodian. The brute-force guard on `/auth/login` is
   live (P0.2: 5 failures per 15 minutes per IP and per email, Redis-backed,
-  `handler/auth.go` `loginThrottled`). It is the **only** throttle —
+  `handler/auth.go` `loginThrottled`; the per-email key becomes per-(email,
+  IP) by Decision 2026-10-02 (A4), §11 row 28). It is the **only** throttle —
   `/auth/register` and `/auth/refresh` are unthrottled and the per-IP key
   trusts any `X-Forwarded-For` (§11 rows 3–4).
 - **MFA / step-up** ([D-27]/[D-28]) and **"Login with Google"** are still not

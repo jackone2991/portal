@@ -89,8 +89,9 @@ Portal is the identity provider. Credentials live in `users.password_hash` (Argo
 
 1. `POST /auth/login {email, password, remember}` — server looks up the user by email, verifies the password against `users.password_hash` (Argon2id, constant-time), then checks `disabled_at` and `approval_status`. `remember=true` → persistent refresh cookie (`Max-Age` = refresh TTL); `false` → session cookie.
 2. On success, server issues access + refresh tokens, sets cookies, returns `200`. An unknown email or a wrong password returns a generic `401` (no user-enumeration) and increments the brute-force counter; a throttled caller gets `429`. A correct password on a disabled, pending or rejected account returns `403` with its own Problem type (`account/account-disabled` | `account-pending` | `account-rejected`) — the caller has proved who they are, so naming the state leaks nothing.
-3. `POST /auth/register {email, password, display_name}` — creates the account (Argon2id hash) as **`pending`**, assigns the default `user` role, notifies every approver, and returns `201` **without** issuing a session. Only an `approved` account may hold a session (migration `0031`). The first account on an empty database is auto-approved and made `superadmin`; an existing install names one with `BOOTSTRAP_SUPERADMIN_EMAIL`.
-   Statuses, Problem types and the open gaps (unthrottled register, the first-run race, timing of the unknown-email path) are [SPEC-01](../product/specs/SPEC-01-account-identity-admin.md) P0.1–P0.2 and §11.
+3. `POST /auth/register {email, password, display_name}` — creates the User (Argon2id hash) as **`pending`**, assigns the default `user` role, notifies every Approver, and returns `201` **without** issuing a session. Only an `approved` User may hold a session (migration `0031`). As built, the first User on an empty database is auto-approved and made `superadmin`, and a taken email answers 409; an existing install names a Superadmin with `BOOTSTRAP_SUPERADMIN_EMAIL`.
+   **Target** (owner decisions 2026-10-02, SPEC-01 P0.1/P0.12, §11 rows 25–26): register answers the same `201 {status: "registered"}` for a new and an existing email (no enumeration; the existing User gets one rate-limited email instead), there is no first-registrant rule, and the first Superadmin is created at start from `BOOTSTRAP_SUPERADMIN_EMAIL` + `BOOTSTRAP_SUPERADMIN_PASSWORD` and must change that password on first sign-in (`users.password_must_change`; 403 `account/password-change-required` elsewhere until `POST /auth/password`). The login lockout's per-email counter becomes per-(email, client IP) (P0.2, §11 row 28).
+   Statuses, Problem types and the open gaps (unthrottled register, timing of the unknown-email path) are [SPEC-01](../product/specs/SPEC-01-account-identity-admin.md) P0.1–P0.2 and §11.
 4. There is **no** `/auth/callback`, `state`, or `nonce` — the browser never leaves the Portal domain.
 
 New security responsibilities Portal now owns (were Authentik's): password hashing, brute-force rate-limit + lockout on `/auth/login`, password policy, and password reset (emailed token once the notification module lands; admin/CLI until then). MFA/step-up (§2.4) and "Login with Google" are now built in Portal, not configured in an IdP.
@@ -487,7 +488,7 @@ Public routes (`/auth/login`, `/auth/register`, `/auth/refresh`, health) skip 7�
 POST   /auth/login                     verify email+password; mint tokens
 POST   /auth/register                  create account (Argon2id) as pending; returns 201, no session — user signs in via /auth/login once approved
 POST   /auth/refresh                   rotate refresh; mint access
-POST   /auth/logout                    revoke current refresh; bump token_version
+POST   /auth/logout                    revoke current refresh; bump token_version  [as built — target: revoke the presented chain only, no bump, 422 without a refresh token; SPEC-01 P0.6]
 POST   /auth/logout-all                revoke all refresh; bump token_version  [step-up]
 
 # 2FA (TOTP)  [PLANNED]
@@ -501,8 +502,11 @@ GET    /me/organizations               list orgs the user belongs to  [BUILT —
 POST   /auth/switch-tenant             switch active org; mints new tokens  [step-up if elevated]  [TARGET — §3.5]
 
 # Identity  [BUILT]
-GET    /auth/me                        current user + roles + org context (+ timezone, timezone_manual — PLANNED)
-PATCH  /auth/me                        {timezone, timezone_manual?}; 422 account/invalid-timezone  [PLANNED — specs README Timezone]
+GET    /auth/me                        current user + roles + org context (+ timezone|null, password_must_change — PLANNED)
+PATCH  /auth/me                        {timezone}; 422 account/invalid-timezone  [PLANNED — specs README Timezone]
+POST   /auth/password                  {current_password, new_password}; keeps only the current session  [PLANNED — SPEC-01 P0.12]
+POST   /auth/email-change/confirm      {token}; public; completes a verified email change  [PLANNED — SPEC-01 P0.10]
+POST   /auth/email-change/cancel       {token}; public; the old address cancels it  [PLANNED — SPEC-01 P0.10]
 
 # Sessions  [PLANNED]
 GET    /me/sessions                    list active refresh tokens (devices)
@@ -577,7 +581,9 @@ Every later domain migration (`0021_movie_core`, `0022_music_core`, `0023_story_
 | Layer | Content | Design |
 |-------|---------|--------|
 | L1 | TOTP: `users.totp_*`, `totp_recovery_codes` | §2.4 |
-| L1 | per-user timezone: default `'Asia/Ho_Chi_Minh'`, `timezone_manual` | SPEC-01 P0.13 |
+| L1 | per-user timezone: `users.timezone` NULLable (NULL = not set; readers fall back to `'Asia/Ho_Chi_Minh'`) | SPEC-01 P0.13 |
+| L1 | `users.password_must_change`; `email_change_requests`; `deleted_users` (90-day identity snapshot) | SPEC-01 P0.12, P0.10 |
+| — | `audit_log.pii` — identifying data encrypted with `AUDIT_PII_KEY`, anonymised after 90 days | SPEC-01 P0.16 |
 | L3 | user groups + policy bundles (`user_groups`, `policies`, attachments) on top of roles ([ADR-02](../product/specs/SPEC-01-account-identity-admin.md#adr-02)) | §4, [deferred/access-policies.md](deferred/access-policies.md) |
 | L3 | file-gated permissions | §4.4 |
 | L2 | membership-scoped RBAC, households/orgs, tenant switching | §3.5–3.6, ADR-07 deferred steps |

@@ -28,7 +28,7 @@ spec headers. Per-requirement coverage lives in
 
 | Spec | Feature | Module | Depends on | Status |
 |------|---------|--------|------------|--------|
-| [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | [ADR-02](SPEC-01-account-identity-admin.md#adr-02), [ADR-06](SPEC-01-account-identity-admin.md#adr-06); SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone unbuilt |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | [ADR-02](SPEC-01-account-identity-admin.md#adr-02), [ADR-06](SPEC-01-account-identity-admin.md#adr-06); SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone, P0.16 audit retention and the 2026-10-02 targets (§11 rows 25–31) unbuilt |
 | [SPEC-02](SPEC-02-shell-layout.md) | Shell layout — data-driven navigation menu + registry-backed dashboard widget placement (as-built, retroactive) | `layout` + frontend shell | account (`accountapi.HasPermission`, RBAC); SPEC-09 P0.4 consumes the rails | Built (`0036_layout_core`) |
 | [SPEC-03](SPEC-03-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-12 data accrues) | P0 built (`0012_ops_backup_runs`); P1.7 takeout unbuilt |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — | Built (`0008_media_image_pipeline`) |
@@ -123,8 +123,9 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   superuser/owner role via `BACKUP_DATABASE_URL` — as `portal_app` under FORCE
   RLS it would see no tenant's rows. Global tables are exempt: the account
   tables (`users`, `roles`, `permissions`, `role_permissions`, `user_roles`,
-  `refresh_tokens`, `password_reset_tokens` — read before any tenant is
-  resolved, SPEC-01 §6) and the shell tables `layout_menu_items` /
+  `refresh_tokens`, `password_reset_tokens`, and the planned
+  `email_change_requests` and `deleted_users` — read before any tenant is
+  resolved, or after the User's tenant is gone, SPEC-01 §6) and the shell tables `layout_menu_items` /
   `layout_widgets` (one instance-wide shell of configuration rows, readable by
   every signed-in user and filtered per permission in the service; fenced per
   tenant, each personal tenant would get an empty menu — SPEC-02 §6). So are
@@ -195,48 +196,51 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   ordering key
   ends in `id`. A malformed cursor is 400 `<module>/invalid-cursor`, and a
   body/param-shape failure without a named type is 422 `<module>/validation`.
-  Each §7 lists both for every list endpoint.
-- **Timezone** *(owner decision 2026-09-30; D-17)*: every user-facing day or
-  month boundary — "today", "this month", a default month, a date-only value
-  turned into an instant, day grouping, on-this-day, birthday and due-date
-  countdowns — is computed in **the user's own timezone**: `users.timezone`, an
-  IANA name taken from the user's location, stored per user. Unknown or
-  unparseable → `Asia/Ho_Chi_Minh` (the column default; an unparseable stored
-  name also logs a warning). There is no instance-wide fallback: `APP_TIMEZONE`,
-  "the instance default" and UTC are not v1 sources for user-facing
-  boundaries. **Manual flag** *(owner decision 2026-10-01)*:
-  `users.timezone_manual boolean NOT NULL DEFAULT false`. While it is true
-  the device-detected zone never overwrites the stored one. **Write path**:
-  `PATCH /api/v1/auth/me {timezone, timezone_manual?}` (authenticated; the
-  caller's own row only) — `timezone` is required, `timezone_manual` omitted
-  leaves the flag unchanged; the response is the updated `/auth/me` body. The
-  frontend detects the device zone
-  (`Intl.DateTimeFormat().resolvedOptions().timeZone`, i.e. the user's current
-  location) after sign-in and, when `timezone_manual` is false and the zone
-  differs from the stored value, saves `{timezone}`; settings offer a manual
-  override (an IANA picker, saved as `{timezone, timezone_manual: true}`) and
-  "use my location", which saves `{timezone: <device zone>, timezone_manual:
-  false}`. The API validates the name with `time.LoadLocation`; an empty or
+  Each §7 lists both for every list endpoint. **One named exception**
+  *(owner decision 2026-10-02 (A5))*: the admin-only `GET /admin/users`
+  (SPEC-01 P0.8) keeps `limit` + `offset` paging with `total` and per-status
+  `counts` — an operator approval queue read as "how many are waiting", at
+  household scale. It wears the `{items}` envelope like every other list, and
+  it is not a precedent: a new list endpoint is keyset-paged.
+- **Timezone** *(owner decision 2026-09-30, revised 2026-10-02 (A8); D-17)*:
+  every user-facing day or month boundary — "today", "this month", a default
+  month, a date-only value turned into an instant, day grouping, on-this-day,
+  birthday and due-date countdowns — is computed in **the User's own
+  timezone**: `users.timezone`, an IANA name stored per User. The column is
+  **NULLable — NULL means "not set"** — and has no default. While it is NULL,
+  or when a stored name does not parse (which also logs a warning), backend
+  readers use `Asia/Ho_Chi_Minh`; the frontend uses the device zone. There is
+  no instance-wide fallback: `APP_TIMEZONE`, "the instance default" and UTC are
+  not v1 sources for user-facing boundaries. **Write path**:
+  `PATCH /api/v1/auth/me {timezone}` (authenticated; the caller's own row
+  only) — `timezone` is required; the response is the updated `/auth/me`
+  body. After sign-in the frontend reads the device zone
+  (`Intl.DateTimeFormat().resolvedOptions().timeZone`): when the stored zone is
+  NULL it saves the device zone automatically; when a zone is set it is applied
+  everywhere and the device **never overwrites it** — if the device zone
+  differs, the UI offers one prompt to switch and saves only on confirmation.
+  Settings offer an IANA picker. *(There is no manual flag: Decision
+  2026-10-02 (A8) dropped `timezone_manual`, superseding Decision 2026-10-01
+  (f).)* The API validates the name with `time.LoadLocation`; an empty or
   unknown IANA name is 422 `account/invalid-timezone` and nothing is written.
   The slug is registered in `frontend/src/lib/problems.ts` (Errors
-  convention). `GET /auth/me` returns both `timezone` and `timezone_manual`.
-  **Readers**:
-  the frontend reads the zone from `GET /auth/me`; backend modules read it
-  through `accountapi` (`UserSummary.Timezone`), never by querying `users`.
-  **Sweeps**: a periodic task never uses one "today" for everyone — it runs
-  often enough (hourly, D-17's per-TZ pattern) and evaluates each user's local
-  date in that user's zone, relying on its dedup keys for exactly-once. SQL
-  converts at the query layer (`occurred_at AT TIME ZONE $tz`), never through
-  the session zone (UTC). *(Code follow-up — SPEC-01 P0.13, tracked as SPEC-01
-  §11 row 14 and as the first item of the **Per-user timezone** cross-cutting
-  gap below: `0002_account_users` ships `timezone DEFAULT 'UTC'` — a new
-  migration changes the default to `'Asia/Ho_Chi_Minh'`, rewrites the
-  untouched `'UTC'` rows and adds `timezone_manual boolean NOT NULL DEFAULT
-  false`; there is no `PATCH /auth/me` and no `account/invalid-timezone` in
-  `problems.ts`, `CurrentUser` and `accountapi.UserSummary` carry no
-  timezone, and the frontend's `lib/time.ts` takes its display zone from
-  `GET /api/v1/time`, i.e. `APP_TIMEZONE` — it switches to the user's zone and
-  `/time` keeps only the server clock.)*
+  convention). `GET /auth/me` returns `timezone` as the stored name or `null`.
+  **Readers**: the frontend reads the zone from `GET /auth/me`; backend modules
+  read it through `accountapi` (`UserSummary.Timezone`, which already maps NULL
+  to `Asia/Ho_Chi_Minh`), never by querying `users`. **Sweeps**: a periodic
+  task never uses one "today" for everyone — it runs often enough (hourly,
+  D-17's per-TZ pattern) and evaluates each User's local date in that User's
+  zone, relying on its dedup keys for exactly-once. SQL converts at the query
+  layer (`occurred_at AT TIME ZONE $tz`), never through the session zone
+  (UTC). *(Code follow-up — SPEC-01 P0.13, tracked as SPEC-01 §11 row 14 and
+  as the first item of the **Per-user timezone** cross-cutting gap below:
+  `0002_account_users` ships `timezone TEXT NOT NULL DEFAULT 'UTC'` — a new
+  migration drops the `NOT NULL` and the default and sets the never-chosen
+  `'UTC'` rows to NULL; there is no `PATCH /auth/me` and no
+  `account/invalid-timezone` in `problems.ts`, `CurrentUser` and
+  `accountapi.UserSummary` carry no timezone, and the frontend's `lib/time.ts`
+  takes its display zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE` — it
+  switches to the User's zone and `/time` keeps only the server clock.)*
 - **updated_at**: there is no trigger; every UPDATE and every
   `ON CONFLICT … DO UPDATE` in `query/*.sql` sets `updated_at = now()`
   explicitly.
@@ -362,11 +366,12 @@ later the same day while writing SPEC-01…18 (SPEC-14 rows 18–19, SPEC-15 row
 25), and rows added by the second round of decisions (SPEC-04 row 19, SPEC-05
 row 23, SPEC-01 row 24, SPEC-15 row 26, SPEC-16 row 18, SPEC-17 row 20,
 SPEC-02 row 14) are appended at the end of their table instead of renumbering
-the rows other documents cite, so a few ranges below are split.
+the rows other documents cite, so a few ranges below are split. So are the
+seven SPEC-01 rows the 2026-10-02 decisions added (rows 25–31).
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
-| [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 24 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
+| [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 31 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 (10 superseded by 26) · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 · Sec 25–28 · Data 29 · Sec 30 · Data 31 (appended, 2026-10-02) | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
 | [SPEC-02](SPEC-02-shell-layout.md) | [§11](SPEC-02-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13–14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
 | [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
@@ -383,7 +388,7 @@ the rows other documents cite, so a few ranges below are split.
 | [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
 | [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 20 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
 | [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 12 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| **Total** | | **263** | | |
+| **Total** | | **270** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -396,20 +401,19 @@ names:
   (people `{suggestions}`) the Pagination convention names. Each retrofit
   moves handler, `shared/openapi.yaml` and the frontend readers in one PR.
 - **Per-user timezone** (Timezone convention, Decisions 2026-09-30 and
-  2026-10-01 (f)): the account change comes first; it is SPEC-01 P0.13 and its
+  2026-10-02 (A8)): the account change comes first; it is SPEC-01 P0.13 and its
   gap row is SPEC-01 §11 row 14, summarised here:
-  1. **migration** (account-owned): `users.timezone` default
-     `'Asia/Ho_Chi_Minh'`, untouched `'UTC'` rows rewritten, and
-     `timezone_manual boolean NOT NULL DEFAULT false` added;
-  2. **backend** (`account`): `PATCH /api/v1/auth/me {timezone,
-     timezone_manual?}` validating with `time.LoadLocation` → 422
-     `account/invalid-timezone`; `GET /auth/me` / `CurrentUser` carry
-     `timezone` and `timezone_manual`; `accountapi.UserSummary.Timezone` (plus
-     a batch lookup for sweeps);
+  1. **migration** (account-owned): `users.timezone` loses its `NOT NULL` and
+     its default, and the never-chosen `'UTC'` rows become NULL ("not set");
+  2. **backend** (`account`): `PATCH /api/v1/auth/me {timezone}` validating
+     with `time.LoadLocation` → 422 `account/invalid-timezone`; `GET /auth/me`
+     / `CurrentUser` carry `timezone` (nullable); `accountapi.UserSummary.Timezone`
+     (plus a batch lookup for sweeps) maps NULL to `Asia/Ho_Chi_Minh`;
   3. **openapi**: both operations and the 422;
-  4. **frontend**: `account/invalid-timezone` in `problems.ts`; the post-sign-in
-     device-zone save (skipped while `timezone_manual`), the settings picker and
-     "use my location"; `lib/time.ts` takes the zone from `/auth/me`, and
+  4. **frontend**: `account/invalid-timezone` in `problems.ts`; the
+     post-sign-in save of the device zone while the stored one is NULL, the
+     one-time switch prompt when a set zone differs from the device, the
+     settings picker; `lib/time.ts` takes the zone from `/auth/me`, and
      `GET /api/v1/time` keeps only the server clock.
 
   Then its readers: SPEC-12 §12 rows 8, 16 · SPEC-07 §11 row 2 · SPEC-09 §11
@@ -465,9 +469,15 @@ names:
   (`layout:changed`) · SPEC-05 §11 row 23 (the eight `notify:on_*` consumers).
   Land the notify consumers with or before the first emitter; a `Publish`
   whose consumer edge is not registered is a silent no-op.
-- **Deleting a user purges their media first** (Decision 2026-10-01b (D1)):
-  SPEC-04 §11 row 19 (`mediaapi.PurgeOwnerAssets`) before SPEC-01 §11 row 8
-  (the delete order that calls it).
+- **Deleting a User purges every module, media last** (Decisions 2026-10-01b
+  (D1) and 2026-10-02 (A6)): SPEC-04 §11 row 19 (`mediaapi.PurgeOwnerAssets`,
+  media's `PurgeOwnerData`) before SPEC-01 §11 row 8 (the delete order that
+  calls it); then SPEC-01 §11 row 29 — one `PurgeOwnerData` in each of
+  `comic`, `music`, `movie`, `story`, `journal`, `bank`, `people`, `social`,
+  `notify` and `tenant`, the registry and the `deleted_users` snapshot. The
+  per-module methods are listed in SPEC-01 row 29 rather than as rows in each
+  module's spec; land them module by module, each with a test that its purge
+  leaves no row, object or key behind.
 - Smaller shared items: `origin='import'` (F038/F012) SPEC-04 row 10 · SPEC-14
   row 7 · SPEC-05 row 8 · SPEC-08 row 2 · SPEC-15 row 17; media deep link
   (F018) SPEC-04 row 15 · SPEC-05 row 9 · SPEC-09 row 7 · SPEC-10 row 9; Audio
@@ -504,7 +514,9 @@ here; this list does not restate it. The gap rows cite them as
   above.
 - **Timezone** — per user, from the device location, default
   `Asia/Ho_Chi_Minh`, with a `timezone_manual` override; sweeps evaluate each
-  owner's local date. Detail: the **Timezone** convention above; the D-17
+  owner's local date. (Revised by Decision 2026-10-02 (A8): the stored zone
+  may be NULL, `Asia/Ho_Chi_Minh` is the readers' fallback rather than a
+  column default, and the manual override is gone.) Detail: the **Timezone** convention above; the D-17
   update in [feature-inventory.md](../feature-inventory.md); SPEC-12 P0.6,
   SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4, SPEC-13 §4a.
 - **Audio opens the player** — audio is a playable kind: player page, plays
@@ -537,13 +549,13 @@ open. The detail lives in the places named here; the gap rows cite them as
   every §7 that declares a limit; one gap row per service that resets instead
   (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
   [feature-inventory.md](../feature-inventory.md).
-- **(f) `timezone_manual` and `account/invalid-timezone` are confirmed** — the
-  **Timezone** convention above; the D-17 update in
-  [feature-inventory.md](../feature-inventory.md);
-  [frontend.md](../../architecture/frontend.md) §5.4;
-  [security.md](../../architecture/security.md)'s route list. The code
-  follow-up is SPEC-01 P0.13 (§11 row 14), the first item of the **Per-user
-  timezone** cross-cutting gap below.
+- **(f) `timezone_manual` and `account/invalid-timezone` are confirmed** —
+  *superseded by Decision 2026-10-02 (A8)* as to `timezone_manual`, which is
+  dropped everywhere (no column, no field, no request flag); the
+  `account/invalid-timezone` slug stands. Kept here as the record of what was
+  decided on 2026-10-01. The current rule is the **Timezone** convention above;
+  the code follow-up is SPEC-01 P0.13 (§11 row 14), the first item of the
+  **Per-user timezone** cross-cutting gap.
 - **(g) `{items}` for non-paginated lists is confirmed** — the **Pagination**
   convention above (with the rationale and what counts as a collection); the
   D-29 update in [feature-inventory.md](../feature-inventory.md). Every spec §7
@@ -583,18 +595,80 @@ lives in the places named here; the gap rows cite them as "Decision
   with F009). Gap rows: SPEC-15 §12 row 26, SPEC-16 §11 row 18, SPEC-17 §11
   row 20; TC-MUS-004, TC-MOV-050, TC-STY-070.
 
+## Decisions recorded 2026-10-02
+
+The owner settled twelve points about the account module in a review of
+SPEC-01, among them its four open questions (Q2–Q5). No decision record was
+written: each is stated in SPEC-01's requirement text, which is the detail;
+this list only routes. The vocabulary — User, Session, Approval, Rejected,
+Disabled, Superadmin, Approver — is [CONTEXT.md](../../../CONTEXT.md)'s. Gap
+rows cite them as "Decision 2026-10-02 (A*n*)".
+
+- **(A1) Registration answers uniformly** — SPEC-01 P0.1: always 201
+  `{status: "registered"}`, never 409 `account/email-taken` (which survives
+  only on admin create/edit); a new email becomes a Pending User and gets a
+  "registered, awaiting approval" email; an existing email writes nothing,
+  notifies no Approver, and gets one rate-limited email by state; the password
+  is hashed on both paths; registration succeeds without SMTP. Closes SPEC-01
+  Q3. Gap row: SPEC-01 §11 row 25 (and row 5 becomes load-bearing);
+  TC-ACC-130…134.
+- **(A2) No first-registrant bootstrap; a pre-created Superadmin** — SPEC-01
+  P0.12 (replaces P0.1's founder rule): `cmd/api` creates the User named by
+  `BOOTSTRAP_SUPERADMIN_EMAIL` with the new `BOOTSTRAP_SUPERADMIN_PASSWORD`
+  (Approved, `superadmin`, enabled, `users.password_must_change`), re-asserts
+  without touching the password when it exists, warns when unset; until the
+  password is changed every authenticated route but four answers 403
+  `account/password-change-required`; new `POST /auth/password`. Gap row:
+  SPEC-01 §11 row 26 (row 10 superseded by it); TC-ACC-135…140.
+- **(A3) Logout ends one Session** — SPEC-01 P0.6: revokes only the presented
+  refresh-token chain, no `token_version` bump, 422 without a refresh token;
+  logout-all ends every Session. Closes SPEC-01 Q4. Gap row: §11 row 27;
+  TC-ACC-141…143.
+- **(A4) Login lockout per (email, client IP)** — SPEC-01 P0.2: the global
+  per-IP cap stays; the per-email counter becomes per-(email, IP). Closes
+  SPEC-01 Q5; depends on §11 row 4. Gap row: §11 row 28; TC-ACC-144, 145.
+- **(A5) Admin list paging stays offset** — the **Pagination** convention
+  above (its one named exception) and SPEC-01 P0.8. Closes SPEC-01 Q2. No gap
+  row (shipped behaviour).
+- **(A6) Deleting a User purges every module, then the row** — SPEC-01 P0.10:
+  an idempotent `PurgeOwnerData` per module, a registry run content → media →
+  tenant, no grace period, a `deleted_users` snapshot kept 90 days, the email
+  freed (keep someone Rejected to refuse them), a restore can resurrect a
+  deleted User ([backup-restore.md](../../operations/backup-restore.md)).
+  Extends Decision 2026-10-01b (D1). Gap row: §11 row 29; TC-ACC-146…149.
+- **(A7) Audit identity data lives 90 days** — SPEC-01 P0.16 (owned jointly
+  with `platform/audit`): every `audit_log` row's identifying data encrypted
+  with `AUDIT_PII_KEY`, readable only by Superadmins, anonymised after 90
+  days by `account:expire_identity_data` ([events.md](../../reference/events.md)).
+  Gap row: §11 row 31; TC-ACC-150…153.
+- **(A8) Timezone: NULL means "not set", no manual flag** — the **Timezone**
+  convention above, SPEC-01 P0.13; supersedes Decision 2026-10-01 (f) as to
+  `timezone_manual`. Gap row: §11 row 14, rewritten in place (unbuilt);
+  TC-ACC-100…104.
+- **(A9) Email change requires verification** — SPEC-01 P0.10 (admin edit,
+  P0) and P1.4 (self-service): pending change in `email_change_requests`,
+  1-hour confirm link to the new address, cancel link to the old, uniqueness
+  re-checked at confirm, 503 `account/mail-unavailable` without SMTP. Gap row:
+  §11 row 30; TC-ACC-155…160.
+- **(A10) Approval semantics** — SPEC-01 P0.9/P0.10 wording: Disable is a
+  temporary suspension of an Approved User; revoke-approval sends a User back
+  to Pending; a Rejected User cannot register again. Shipped; no gap row.
+- **(A11) Superadmin by permission** — SPEC-01 P1.3 `SuperadminIDs` = Users
+  whose effective permissions contain `*`; SPEC-05 P1.5 follows. Gap row: §11
+  row 24, rewritten in place (unbuilt); TC-ACC-127.
+- **(A12) "A second person on the instance"** — SPEC-01 §4: a second Approved
+  User has their own, unshared data; shared household data is not designed.
+
 ## Open owner decisions (2026-10-01)
 
-The 2026-09-30 round and both 2026-10-01 rounds are closed (above). Of the 22
-questions the as-built specs (SPEC-01, 02 and 15–18) raised, seven were decided in the
-second round; the **15** below remain, and none of them blocks a gap row or a
-P1. Each is stated, with its options, in the spec's "Open questions" section;
+The 2026-09-30 round and both 2026-10-01 rounds are closed (above), and the
+2026-10-02 round closed the account module's four. Of the 22 questions the
+as-built specs (SPEC-01, 02 and 15–18) raised, seven were decided in the
+second round and four on 2026-10-02; the **11** below remain, and none of them
+blocks a gap row or a P1. Each is stated, with its options, in the spec's "Open questions" section;
 this list only routes. When one is decided, move it to a "Decisions recorded"
 list like the ones above and correct the spec text.
 
-- Account — admin list paging stays offset (SPEC-01 Q2); register's 409
-  reveals emails (Q3); single-device logout bumps `token_version` (Q4); the
-  per-account lockout is triggerable by anyone (Q5).
 - Music — resume through media progress vs `music.listen_progress` (SPEC-15
   b); genre as free text vs D-22 (c); bulk publish floods the bell (d); who can
   play a published track (e).
@@ -1138,3 +1212,7 @@ true and where it still is not.
   decisions (D1–D4, "Decisions recorded 2026-10-01 (second round)") closed
   seven of the 22 questions those specs raised and added seven gap rows (gap
   total 256 → 263).
+- **2026-10-02** — a review of SPEC-01 produced twelve owner decisions about
+  the account module (A1–A12, "Decisions recorded 2026-10-02"), closing its
+  Q2–Q5; SPEC-01 rev 4 states them and appends seven gap rows (gap total
+  263 → 270).

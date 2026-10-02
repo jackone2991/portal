@@ -57,9 +57,15 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    delete commit), SPEC-12 §12 row 1 (caller filter on balance queries),
    SPEC-01 §11 rows 1–5 (role re-parent escalation, atomic refresh rotation,
    the unwired `IPRateLimiter`, trusted client IP, uniform login timing),
-   SPEC-02 §11 row 1 (`href` bypass). Then the remaining Sec / AuthZ rows:
-   SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01 rows 6–7, SPEC-15 row 25,
-   SPEC-16 rows 6–7, SPEC-17 rows 7–8.
+   SPEC-02 §11 row 1 (`href` bypass). Then the account rows the 2026-10-02
+   owner decisions made targets, in this order: SPEC-01 row 26 (no
+   first-registrant Superadmin; pre-created Superadmin who must change the
+   password — A2; it also closes row 10), row 30 (admin email change waits for
+   verification — A9), row 25 (uniform registration — A1, together with row 5,
+   which it makes load-bearing), row 28 (lockout per (email, IP) — A4, after
+   row 4), row 27 (logout ends one Session — A3). Then the remaining Sec /
+   AuthZ rows: SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01 rows 6–7,
+   SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8.
 2. **Data loss.** SPEC-10 rows 1–3, SPEC-07 row 1 together with the other
    publish-after-commit rows (SPEC-15 row 4, SPEC-16 row 3, SPEC-17 row 4,
    SPEC-18 row 1), SPEC-09 rows 1–2 together with SPEC-11 rows 1–4 (the
@@ -68,7 +74,12 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    the unscoped asset-deleted consumers (SPEC-14 row 18, SPEC-15 row 1,
    SPEC-16 row 1, SPEC-17 row 1), SPEC-15 row 2, SPEC-16 row 2, SPEC-04
    row 19 then SPEC-01 row 8 (deleting a user purges their media first —
-   Decision 2026-10-01b (D1)).
+   Decision 2026-10-01b (D1)) then SPEC-01 row 29 (every module's
+   `PurgeOwnerData` and the `deleted_users` snapshot — Decision 2026-10-02
+   (A6)); SPEC-01 row 31 (audit identity data encrypted and anonymised after
+   90 days — A7). Both are data-protection P0s: until they land, a deleted
+   User leaves objects and keys behind and the audit log keeps IPs and emails
+   in clear forever.
 3. **Cross-cutting foundations.** Timezone (account change, then its readers),
    Envelopes (per module, with OpenAPI and `problems.ts` in the same PR), Audio
    (SPEC-04 row 16 before SPEC-10 rows 4, 5, 8).
@@ -77,7 +88,8 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
 5. **Unbuilt P1**: SPEC-04 row 14, SPEC-05 row 21, SPEC-09 row 16, SPEC-10
    row 14, SPEC-11 row 13, SPEC-03 row 11 (owner takeout, above), SPEC-16
    rows 16–17 and SPEC-17 rows 18–19 (committed: finish, not revert —
-   Decision 2026-10-01b (D2)), SPEC-02 row 13; the admin-change events
+   Decision 2026-10-01b (D2)), SPEC-02 row 13; SPEC-01 P1.4 (self-service
+   email change, on row 30's machinery — A9); the admin-change events
    (SPEC-05 row 23 first, then SPEC-01 row 24 and SPEC-02 row 14 — D3); the
    `user` authoring grants (SPEC-15 row 26, SPEC-16 row 18, SPEC-17 row 20,
    with or after F009 — D4).

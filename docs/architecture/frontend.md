@@ -648,25 +648,26 @@ export function formatMoney(money: Money, locale: string): string {
 
 Backend returns ISO 8601 UTC. Frontend formats per `users.locale` + `users.timezone`.
 
-**Which zone** (specs README "Timezone" convention, D-17 update 2026-09-30):
-the user's own `users.timezone`, read from `GET /auth/me` — never the
-browser's zone and never an instance-wide `APP_TIMEZONE`; unknown →
-`Asia/Ho_Chi_Minh`. The same zone drives every "today", day separator, month
-default and date-only → instant conversion on the client. **Manual flag**
-(owner decision 2026-10-01): `users.timezone_manual boolean NOT NULL DEFAULT
-false`, returned by `GET /auth/me` beside `timezone`; while it is true the
-device-detected zone never overwrites the stored one. **Write path:** after
-sign-in the app reads the device zone with
-`Intl.DateTimeFormat().resolvedOptions().timeZone` (the user's location) and,
-when it differs from the stored value and `timezone_manual` is false, saves it
-with `PATCH /api/v1/auth/me {timezone}`; the settings page offers a manual
-override (IANA picker → `{timezone, timezone_manual: true}`) and a "use my
-location" reset (`{timezone: <device zone>, timezone_manual: false}`). An
-omitted `timezone_manual` leaves the flag unchanged. A name `time.LoadLocation`
-rejects is 422 `account/invalid-timezone`, which the settings form shows inline
-through the `problems.ts` catalog. *(Code follow-up: `src/lib/time.ts` still takes its display
-zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE`; `/time` should keep only the
-server clock, and the zone comes from `/auth/me`, which does not carry it yet.)*
+**Which zone** (specs README "Timezone" convention; D-17 updates 2026-09-30
+and 2026-10-02): the User's own `users.timezone`, read from `GET /auth/me` —
+never an instance-wide `APP_TIMEZONE`. The same zone drives every "today", day
+separator, month default and date-only → instant conversion on the client.
+`/auth/me` returns it as an IANA name, or `null` when the User has none yet
+(owner decision 2026-10-02 (A8): NULL means "not set"; there is no manual
+flag). **Write path:** after sign-in the app reads the device zone with
+`Intl.DateTimeFormat().resolvedOptions().timeZone`. When `/auth/me` says
+`timezone: null`, it saves the device zone at once with
+`PATCH /api/v1/auth/me {timezone}`, without asking, and uses the device zone
+until that save completes. When a zone is set, it is applied everywhere and the
+device never overwrites it; if the device zone differs, the app shows **one**
+prompt offering to switch (remembered per browser and device zone, so it does
+not nag) and saves only if the User confirms. The settings page offers an
+IANA picker that saves `{timezone}`. A name `time.LoadLocation` rejects is 422
+`account/invalid-timezone`, which the settings form shows inline through the
+`problems.ts` catalog. *(Code follow-up: `src/lib/time.ts` still takes its
+display zone from `GET /api/v1/time`, i.e. `APP_TIMEZONE`; `/time` should keep
+only the server clock, and the zone comes from `/auth/me`, which does not
+carry it yet — SPEC-01 P0.13, §11 row 14.)*
 
 ```typescript
 // frontend/src/lib/format.ts

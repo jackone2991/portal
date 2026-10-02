@@ -21,7 +21,7 @@
 
 ### Preconditions
 
-- Accounts `owner`,`userA`,`userB`,`guest`. Owner TZ is `users.timezone`, default `Asia/Ho_Chi_Minh` (specs README Timezone, D-17).
+- Accounts `owner`,`userA`,`userB`,`guest`. Owner TZ is `users.timezone`; when it is not set (NULL) readers use `Asia/Ho_Chi_Minh` (specs README Timezone, D-17; SPEC-01 P0.13).
 - Birthday wire shape: `birthday: { month:1-12, day:1-31, year?, calendar?:'solar'|'lunar', leap_month?:boolean /* lunar only */ } | null`.
 - Problem types: `people/person-not-found`, `people/invalid-birthday`, `people/invalid-cursor`, `people/validation`, `people/already-in-registry` (409, P0.2), `people/invalid-asset` (P1.7).
 - Event `people:birthday_upcoming {notice_id, person_id, user_id, display_name, days_until}` (T∈{3,0}).

@@ -193,6 +193,23 @@ The drill restores into a scratch DB. To restore **for real**:
 5. Restore `.env` (JWT keys, S3 creds) from your secret store, bring the stack up,
    and hit `/ops/status` + `/healthz`.
 
+> **Warning — a restore brings deleted Users back.** Deleting a User is meant
+> to be irreversible ([SPEC-01](../product/specs/SPEC-01-account-identity-admin.md)
+> P0.10, owner decision 2026-10-02 A6): their rows, files and cache keys are
+> purged and only a 90-day identity snapshot (`deleted_users`) survives. A dump
+> taken **before** the delete still holds the User and every row they owned, so
+> restoring it resurrects them — able to sign in again, with their data — while
+> the media objects that the delete removed from storage stay gone, leaving
+> their `assets` rows pointing at nothing. This is an operations exception,
+> not a recovery feature. The restore also replaces `deleted_users` itself, so
+> the record of later deletes must be saved **before** step 3: if the live
+> database is reachable, copy out the `deleted_users` rows with `deleted_at`
+> after the dump's timestamp (the fresh dump of step 3 holds them too). After
+> the restore, delete each of those Users again — through the admin console,
+> so every module purges. The same check applies
+> to identity data the 90-day audit sweep (SPEC-01 P0.16) had already
+> anonymised: the next sweep run anonymises it again.
+
 ---
 
 ## 5. Success metrics (n=1 honest)

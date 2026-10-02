@@ -8,6 +8,43 @@ are added as they are resolved, not in bulk.
 
 ## Language
 
+### Identity
+
+**User**:
+One person who can sign in to the instance: an email, a password, an Approval state and
+roles. Everything a person owns in Portal belongs to their User.
+_Avoid_: account (reserved for a ledger Account), member, profile
+
+**Session**:
+One signed-in device or browser of a User. Logging out ends that Session only; "log out
+everywhere" ends all of them.
+_Avoid_: login, token, device (as a synonym)
+
+**Approval**:
+The one-time admission decision on a User: Pending until decided, then Approved or
+Rejected. Only an Approved User can hold a Session.
+_Avoid_: verification, activation, enabled
+
+**Rejected**:
+The Approval state of a User who was refused admission. A Rejected User cannot register
+again with the same email; only an admin can move them back to Pending or to Approved.
+_Avoid_: banned, blocked, deleted
+
+**Disabled**:
+A temporary, reversible suspension of an Approved User: they cannot hold a Session until
+an admin enables them again. Not part of Approval — a Disabled User is still Approved.
+_Avoid_: suspended, revoked, rejected
+
+**Superadmin**:
+A User whose effective permissions include everything (`*`), whichever role grants it.
+Defined by permission, not by role name.
+_Avoid_: owner, root, admin (admin is only a role name)
+
+**Approver**:
+A User whose effective permissions allow deciding Approval (`users:approve`). Out of the
+box only Superadmins are Approvers.
+_Avoid_: moderator, reviewer
+
 ### Journal
 
 **Entry**:
