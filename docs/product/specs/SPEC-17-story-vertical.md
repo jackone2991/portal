@@ -123,9 +123,9 @@ A chapter is `{title, body_md, sort_order}` belonging to one story.
 - **Title**: trimmed, 1–200 runes; **body**: Markdown, at most 200,000 runes
   (`maxBodyLen`); violations → 422 `story/validation`. Request bodies on every
   story route may be up to 4 MiB (`storyBodyLimit`, four times the platform
-  default — a chapter is prose). An empty body is allowed on a draft; it is what
-  blocks publish (P0.5). After publish a blank chapter is hidden from
-  non-owners instead (P0.4).
+  default — a chapter is prose). An empty or blank body (defined below) is
+  allowed on a draft; it is what blocks publish (P0.5). After publish a blank
+  chapter is hidden from non-owners instead (P0.4).
 - **Create** `POST /stories/{id}/chapters` (201, the Chapter). `sort_order` is
   optional: absent → the server appends after the story's current maximum
   (`MAX(sort_order) + 10`, or 10 for the first chapter); present → it must not
@@ -151,6 +151,54 @@ A chapter is `{title, body_md, sort_order}` belonging to one story.
   OpenAPI calls a partial list "a truncation", which it is not; §11 row 3.)*
 - Every UPDATE sets `updated_at = now()`, the reorder included. *(Code
   follow-up: `UpdateStoryChapterOrder` does not — §11 row 16.)*
+
+**Blank body** *(Decision 2026-10-02b (B16))*. "Blank" is decided from the
+stored `body_md`, because nothing normalises it on the way in: the handler
+decodes `body_md` as a plain JSON string, `service.go` `CreateChapter` and
+`UpdateChapter` check only its length (`strings.TrimSpace` touches the title,
+never the body), and `query/story.sql` stores it verbatim. No editor exists
+yet (§11 row 18), so any API client's bytes arrive as sent — a body of
+`"\n"`, `"\r\n"`, a tab, a no-break space or a zero-width space is stored as
+exactly that. The only other source is the column `DEFAULT ''`, which no
+query uses (`CreateStoryChapter` always passes the body; an absent `body_md`
+decodes to `""`). A chapter is **blank** when its body contains no character
+outside this set, and the empty string is blank:
+
+- the Unicode `White_Space` characters — U+0009–U+000D (tab, line feed,
+  vertical tab, form feed, carriage return), U+0020, U+0085, U+00A0, U+1680,
+  U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000;
+- the invisible format characters a pasted or exported text carries — U+200B
+  (zero-width space), U+200C, U+200D, U+2060 (word joiner), U+FEFF (byte-order
+  mark).
+
+Markup is **not** blank: `&nbsp;`, `<br>`, a lone `#` or `---` is a visible
+character in the stored text and counts as content — deciding what Markdown
+renders to is the reader's job, not a storage predicate's. Anything outside
+the set (U+00AD soft hyphen, U+180E, U+FFFD) is content too.
+
+The set is written **once**, as an `IMMUTABLE` SQL function owned by the story
+module (§6, `000N_story_blank_body`), and every predicate calls it — the
+publish check (`EmptyChapters`, P0.5) and the non-owner filter behind the
+detail, the reader payload and `GET /stories`' `chapter_count` (P0.4) — so
+they cannot drift:
+
+```sql
+-- story_body_is_blank: true when body_md holds only whitespace or
+-- zero-width characters (Decision 2026-10-02b (B16)). Explicit code points,
+-- so the result does not depend on the database's locale or ctype.
+body_md !~ '[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200D\u2028\u2029\u202F\u205F\u2060\u3000\uFEFF]'
+```
+
+`U+2000–U+200D` covers the ten typographic spaces and the three zero-width
+characters in one range. One-argument `btrim` strips U+0020 only, and
+`[[:space:]]` / `\s` follow the database's ctype, so neither is used. A Go
+helper that answers the same question — the test fake's `EmptyChapters`
+today, any service-side check later — uses the same code points, not
+`unicode.IsSpace` (which lacks U+200B–U+200D, U+2060 and U+FEFF), and so does
+any TypeScript mirror in P1.1 (JavaScript `\s` and `trim()` lack U+0085 and
+U+200B–U+200D). *(Code follow-up: HEAD's `EmptyChapters` uses `btrim`, so a
+body of only line breaks, tabs or non-ASCII spaces passes the publish check —
+§11 row 23.)*
 
 Chapter mutations are guarded like the story they belong to (P0.5 table); they
 emit no event and never change the story's status.
@@ -206,8 +254,8 @@ emit no event and never change the story's status.
 - **Blank chapters on a published story** (Decision 2026-10-02b (B7), SPEC-14
   P0.2 (a) for consistency with comic). The P0.5 invariant is enforced at
   publish only; afterwards a chapter may be emptied, or a blank one added. A
-  chapter is **blank** by the publish predicate: `btrim(body_md) = ''`
-  (`EmptyChapters`). On a published story, for every caller but the owner:
+  chapter is **blank** by the P0.3 definition (Decision 2026-10-02b (B16)),
+  the same `story_body_is_blank(body_md)` the publish check calls. On a published story, for every caller but the owner:
   (a) a blank chapter is omitted from the detail's `chapters`, from
   `chapter_count` and from the reader payload — so the reader's table of
   contents and previous/next skip it — until it has a non-blank body. There is
@@ -248,11 +296,16 @@ emit no event and never change the story's status.
 - Given C's published story whose every chapter is then emptied or deleted,
   then it stays `published`, and R gets 200 with `chapters: []`,
   `chapter_count: 0` and an empty reader payload. *(TC-STY-048)*
+- Given C's published story with chapters "1" (text) and "2" whose body C
+  then sets to U+200B + `"\n"`, then R gets only chapter 1 and
+  `chapter_count: 1` in the detail, the reader payload and `GET /stories` —
+  the same chapter the publish check would name. *(TC-STY-115)*
 
 ### P0.5 — Publish, unpublish, delete and RBAC
 
-`POST /stories/{id}/publish` requires **≥ 1 chapter and no chapter whose body is
-blank after trimming whitespace** (`btrim(body_md) = ''`). Otherwise 422
+`POST /stories/{id}/publish` requires **≥ 1 chapter and no blank chapter** —
+blank by the P0.3 definition, `story_body_is_blank(body_md)` (Decision
+2026-10-02b (B16); *code follow-up: HEAD uses `btrim`, §11 row 23*). Otherwise 422
 `story/not-publishable` with an extension member `chapters: [{id, title}]`
 naming every blank chapter in reading order (empty when the story has no
 chapters), and the status is unchanged. The Problem is written through
@@ -311,6 +364,14 @@ to `user`, as for movies (SPEC-16 P1.3) and comics (`0025`).
   with `chapters: []`. *(TC-STY-060)*
 - Given chapters "1" (text) and "2" (`"   "`), then 422 naming only chapter 2.
   *(TC-STY-061)*
+- Given chapters "1" (`"a"`) and "2"…"8" whose bodies are `""`, `"\n\t"`,
+  `"\r\n"`, U+00A0, U+200B, U+FEFF and U+3000 + `"\n"`, then publish is 422
+  naming chapters 2–8 in reading order and not chapter 1. *(TC-STY-114)*
+- Given chapters whose bodies are `"&nbsp;"`, `"<br>"`, `"#"` and U+00A0 +
+  `"a"`, then none is blank and publish is 200. *(TC-STY-116)*
+- Given every code point of the P0.3 set and a sample outside it (U+00AD,
+  U+180E, U+FFFD, `"a"`), then `story_body_is_blank` in Postgres and the Go
+  helper agree on each, alone and repeated. *(TC-STY-117, RLS suite)*
 - Given every chapter non-blank, then 200 `published` and exactly one
   `story:published` after commit; a failing COMMIT emits none; a failing
   publisher still answers 200. *(TC-STY-062, 063, 064)*
@@ -439,7 +500,78 @@ and because it fires at COMMIT, a duplicate surfaces after the handler has
 answered — which `RequireTenant`'s buffered mutating path turns into a 500. That
 is why P0.3 checks duplicates in the service before the INSERT. List
 `chapter_count` is a correlated `count(*)` subquery in `ListPublishedStories` /
-`ListOwnStories`; `EmptyChapters` uses `char_length(btrim(body_md)) = 0`.
+`ListOwnStories`; `EmptyChapters` uses `char_length(btrim(body_md)) = 0`,
+which strips U+0020 only (§11 row 23).
+**Blank body** *(Decision 2026-10-02b (B16); unbuilt — §11 row 23)*: a
+story-owned `000N_story_blank_body` creates the one function every blank
+predicate calls (P0.3). No column, CHECK or index changes; the body is stored
+as before.
+
+```sql
+CREATE FUNCTION story_body_is_blank(body text) RETURNS boolean
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS $$
+  SELECT body !~ '[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200D\u2028\u2029\u202F\u205F\u2060\u3000\uFEFF]'
+$$;
+```
+
+The `\uXXXX` escapes are read by the regex engine, not the string parser
+(`standard_conforming_strings` is on), and need a `UTF8` database. The quoted
+`$$` body rather than a SQL-standard `RETURN` body keeps the migration simple
+for sqlc's parser. The down migration drops the function after the queries
+that call it are reverted.
+
+**Verification against stored data.** Before the change ships, the owner runs
+this read-only script against the real database, connected as `portal` (the
+`MIGRATE_DATABASE_URL` role: `portal_app` sees one tenant only under RLS). Part
+1 proves the server reads the escapes as intended; part 2 counts how the old
+and new predicates split the stored chapters; part 3 lists every chapter they
+disagree on, and every short non-blank body, with its first 40 characters as
+UTF-8 hex — so the owner sees the actual bytes and can confirm that markup-only
+bodies (`3c62723e` is `<br>`) are meant to stay content.
+
+```sql
+BEGIN READ ONLY;
+-- 1. self-test: expect t t t t t t f f f
+SELECT label, x !~ '[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200D\u2028\u2029\u202F\u205F\u2060\u3000\uFEFF]' AS blank
+FROM (VALUES ('empty', ''), ('newline+tab', E'\n\t'), ('nbsp', U&'\00A0'),
+             ('zwsp', U&'\200B'), ('bom', U&'\FEFF'), ('ideographic', U&'\3000'),
+             ('a', 'a'), ('nbsp entity', '&nbsp;'), ('br', '<br>')) AS t(label, x);
+-- 2. counts; must_be_zero is 0, because the new set contains U+0020
+WITH c AS (
+  SELECT ch.id, ch.story_id, s.status, ch.sort_order,
+         btrim(ch.body_md) = '' AS old_blank,
+         ch.body_md !~ '[^\u0009-\u000D \u0085   -‍    ⁠　﻿]' AS new_blank,
+         char_length(ch.body_md) AS runes,
+         encode(convert_to(left(ch.body_md, 40), 'UTF8'), 'hex') AS head_hex
+  FROM story_chapters ch JOIN stories s ON s.id = ch.story_id
+)
+SELECT count(*) FILTER (WHERE old_blank)                   AS blank_old,
+       count(*) FILTER (WHERE new_blank)                   AS blank_new,
+       count(*) FILTER (WHERE new_blank AND NOT old_blank) AS newly_blank,
+       count(*) FILTER (WHERE old_blank AND NOT new_blank) AS must_be_zero,
+       count(*) FILTER (WHERE new_blank AND status = 'published') AS hidden_after_change
+FROM c;
+-- 3. the rows behind the counts (same CTE)
+WITH c AS (
+  SELECT ch.id, ch.story_id, s.status, ch.sort_order,
+         btrim(ch.body_md) = '' AS old_blank,
+         ch.body_md !~ '[^\u0009-\u000D \u0085   -‍    ⁠　﻿]' AS new_blank,
+         char_length(ch.body_md) AS runes,
+         encode(convert_to(left(ch.body_md, 40), 'UTF8'), 'hex') AS head_hex
+  FROM story_chapters ch JOIN stories s ON s.id = ch.story_id
+)
+SELECT id, story_id, status, sort_order, old_blank, new_blank, runes, head_hex
+FROM c
+WHERE old_blank IS DISTINCT FROM new_blank OR (NOT new_blank AND runes <= 16)
+ORDER BY story_id, sort_order;
+ROLLBACK;
+```
+
+The transaction is `READ ONLY`, so the script cannot write even by mistake.
+A `newly_blank` chapter of a published story is one a reader sees
+today and will stop seeing once §11 rows 21 and 23 land; a published story
+with one was published past a check that should have refused it, and stays
+published (P0.4 (c)).
 **Target additions** in a new `000N_story_checks` (`ls backend/db/migrations |
 tail -2`): `CHECK (char_length(title) BETWEEN 1 AND 200)` on chapters
 (`NOT VALID` then `VALIDATE`), `stories_owner_cursor_idx (owner_user_id,
@@ -549,6 +681,9 @@ members through SPEC-04 P0.8's asset visibility, applies to the story cover
 (P0.5; §11 row 22); and B14 ([ADR-12](SPEC-01-account-identity-admin.md#adr-12))
 widens the audience of a published story to the owner's friends in actively
 linked tenants, with the value renamed `shared` (P0.4, P0.5, §6; §11 row 22).
+B16 then fixed what "blank" means: the stored body holds only whitespace or
+zero-width characters, by one SQL function every predicate calls; markup is
+content (P0.3, §6; §11 row 23).
 
 No open questions remain.
 
@@ -559,8 +694,9 @@ text above is the target; this section lists every place the shipped code still
 diverges from it. Rows are ordered by severity: lost or wrong data first, then
 integrity, authorization, contract, hygiene and unbuilt work; row 20 (P1, added
 by Decision 2026-10-01b) is appended after row 19, row 21 (P0.4, added by
-Decision 2026-10-02b (B7)) after row 20, and row 22 (P0.5, added by B13,
-rewritten in place by B14) after row 21. A row closes when
+Decision 2026-10-02b (B7)) after row 20, row 22 (P0.5, added by B13,
+rewritten in place by B14) after row 21, and row 23 (P0.3 / P0.5, added by
+B16) after row 22. A row closes when
 the code matches the requirement it cites and the SPEC-17 rows of
 [TRACEABILITY-MATRIX.md](../../reference/TRACEABILITY-MATRIX.md) are regraded.
 Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
@@ -587,8 +723,9 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 | 18 | P1.1 frontend | `/library/novel` list, reader and manager. | `templates/v1/views/library/novel/NovelDetailView.tsx` is a 26-line placeholder; `app/(app)/library/page.tsx` links `/library/novel`, which has no `page.tsx` (404); no `lib/story.ts`. | **frontend:** P1.1. **test:** TC-STY-090…094. | [backlog.md](../backlog.md) P2 line 28 |
 | 19 | P1.2 progress | Story-owned reading progress and a `/continue` leg. | No table, route or `storyapi.Continue`; `handleContinue` calls only media. | **migration · backend · openapi · frontend:** P1.2. **test:** TC-STY-095…097. | `D-20`; [backlog.md](../backlog.md) P2 line 29 |
 | 20 | P1.3 `user` authoring grant | `user` holds `stories:write:own` and `stories:publish:own` (a story-owned grant migration); `:any` and delete-any unchanged. | `backend/db/migrations/0023_story_core.up.sql` grants both codes to `creator` only and no later migration widens them, so a `user` gets 403 from `POST /stories` and `GET /stories/mine` (`module.go` `m.perm("stories:write:own")`). | **migration:** `000N_story_user_write_grant` (`ls backend/db/migrations \| tail -2` for the number). **test:** TC-STY-070. Lands with or after F009 (SPEC-04 §11 row 9). | Decision 2026-10-01b (D4) |
-| 21 | P0.4 blank chapters after publish | On a published story, a non-owner gets no blank chapter (`btrim(body_md) = ''`) in the detail, `chapter_count` or the reader payload; `GET /stories` counts non-blank chapters only. | `handler.go` `GetStory` sets `chapter_count = len(chapters)` and lists every chapter from `service.go` `ListChapters` → `query/story.sql` `ListStoryChapters` (no body predicate); `service.go` `ChaptersVisible` gates on the story only and returns `ListStoryChapters` whole; `ListPublishedStories` counts `(SELECT count(*) FROM story_chapters ch WHERE ch.story_id = s.id)`. The owner is never distinguished from a reader after the draft gate in `Service.GetStory`. | **query:** a `ListReadableStoryChapters` with `AND btrim(body_md) <> ''`, and the same predicate in `ListPublishedStories`' `chapter_count` subquery (`ListOwnStories` unchanged); `make sqlc`. **backend:** `GetStory` and `ChaptersVisible` use the filtered query when the caller is not the owner and the story is published, and the detail's `chapter_count` comes from the list it returns. **openapi:** say so on `Story.chapter_count`, `getStory` and `listStoryChapters`. **test:** TC-STY-047, 048. | Decision 2026-10-02b (B7); SPEC-14 §11 row 9 pattern (F049) |
+| 21 | P0.4 blank chapters after publish | On a published story, a non-owner gets no blank chapter (`story_body_is_blank(body_md)`, P0.3 — B16) in the detail, `chapter_count` or the reader payload; `GET /stories` counts non-blank chapters only. | `handler.go` `GetStory` sets `chapter_count = len(chapters)` and lists every chapter from `service.go` `ListChapters` → `query/story.sql` `ListStoryChapters` (no body predicate); `service.go` `ChaptersVisible` gates on the story only and returns `ListStoryChapters` whole; `ListPublishedStories` counts `(SELECT count(*) FROM story_chapters ch WHERE ch.story_id = s.id)`. The owner is never distinguished from a reader after the draft gate in `Service.GetStory`. | **query:** a `ListReadableStoryChapters` with `AND NOT story_body_is_blank(body_md)`, and the same call in `ListPublishedStories`' `chapter_count` subquery (`ListOwnStories` unchanged); `make sqlc`; lands with or after row 23, which creates the function. **backend:** `GetStory` and `ChaptersVisible` use the filtered query when the caller is not the owner and the story is published, and the detail's `chapter_count` comes from the list it returns. **openapi:** say so on `Story.chapter_count`, `getStory` and `listStoryChapters`. **test:** TC-STY-047, 048, 115. | Decision 2026-10-02b (B7); SPEC-14 §11 row 9 pattern (F049) |
 | 22 | P0.4 / P0.5 shared read; the cover follows the story; §6 | `stories` and `story_chapters` gain the `shared_read` policies, so the owner's friends in actively linked tenants read a published story as a member does; publish raises `cover_asset_id` to `shared` through `mediaapi.SetVisibility` with the story owner; unpublish, delete, clearing and replacing the cover lower what no other published story of the owner still uses; in the same transaction. | `0023_story_core` gives both tables `tenant_isolation` only, so no reader outside the owner's tenant sees the story. `service.go` `Publish`, `Unpublish`, `DeleteStory` and `UpdateStory` write `stories` only; `types.go` `MediaAPI` has `GetAsset` alone. A published story's cover stays `private`, so `0032`'s `variant_select` hides its variants from every other member while `GET /stories` lists the story to them. Latent while each user has a personal organisation and no tenants are linked, and invisible until P1.1 renders covers. | **migration:** `000N_story_shared_read` (§6), after `000N_tenant_links`. **backend:** `MediaAPI` gains `SetVisibility`; a story query listing which cover ids another published story of the owner still uses; the four methods raise or lower per P0.5, passing the story's `owner_user_id`; `ChaptersVisible` and `GetStory` keep treating a friend as a non-owner (row 21's filter). **openapi:** the `listStories` description says "published stories you may read". **test:** TC-STY-112, TC-STY-113. Needs SPEC-01 §11 row 32 and SPEC-04 §11 rows 20–21. | Decision 2026-10-02b (B13); audience revised by B14 (ADR-12) |
+| 23 | P0.3 / P0.5 blank body; §6 | A chapter is blank when its stored body holds only the P0.3 set (Unicode `White_Space` plus U+200B–U+200D, U+2060, U+FEFF); markup is content. One `IMMUTABLE` function, `story_body_is_blank`, is the only place the set is written; the publish check, row 21's reader filter and the public `chapter_count` call it; a Go helper and any P1.1 TypeScript mirror use the same code points. | `query/story.sql` `EmptyChapters` filters `char_length(btrim(body_md)) = 0`; one-argument `btrim` strips U+0020 only, so a body of `"\n"`, `"\r\n"`, a tab, U+00A0, U+200B, U+FEFF or U+3000 is not blank and the story publishes. `service.go` `CreateChapter` / `UpdateChapter` store the body verbatim (length check only), so such bodies are reachable from any API client. `story_test.go` `fakeRepo.EmptyChapters` tests `c.BodyMd == ""`, a third definition. | **migration:** `000N_story_blank_body` (§6; `ls backend/db/migrations \| tail -2` for the number). **query:** `EmptyChapters` → `WHERE story_id = $1 AND story_body_is_blank(body_md)`; `make sqlc`. **backend:** an `isBlankBody` helper in `types.go` over the same code points, used by the fake. **ops:** run the §6 verification script against the real database first and record its counts in the PR. **test:** TC-STY-114, 116, 117. | Decision 2026-10-02b (B16) |
 
 **Already matching on HEAD.**
 - `0023_story_core`: both tables, the story CHECKs, the `DEFERRABLE` chapter
@@ -609,7 +746,8 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 - Publish requires ≥ 1 chapter and no blank body, naming every blank chapter in
   reading order (`TestPublishRejectsAStoryWithNoChapters`,
   `TestPublishNamesTheEmptyChapters`), then emits `story:published`; a nil
-  publisher never fails it.
+  publisher never fails it. "Blank" there is `btrim`'s, narrower than P0.3's
+  (row 23).
 - Reorder renumbers from array position to 10, 20, 30… inside one transaction.
 - `media:asset_deleted` → `story:on_asset_deleted` is subscribed in both
   binaries and clears the cover idempotently without touching status.
@@ -624,6 +762,8 @@ Paths are relative to `backend/internal/modules/story/` unless stated otherwise.
 - Nothing distinguishes owner from reader on a published story's chapters
   (TC-STY-047, 048); `TestChaptersVisibleFollowsTheStoryGate` covers the draft
   gate only.
+- The blank predicate has no test against Postgres: `TestPublishNamesTheEmptyChapters`
+  runs on a fake that tests `== ""` (TC-STY-114, 116, 117).
 - The consumer is proven on a fake only (`TestAssetDeletedClearsTheCover`);
   nothing proves it under RLS (TC-STY-082).
 - RBAC rows (TC-STY-065…069) need a router built with a real engine; the HTTP
