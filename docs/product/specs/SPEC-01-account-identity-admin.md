@@ -594,8 +594,8 @@ A User's own self-service change from settings is P1.4 — the same flow.
   display name included — is unchanged. *(TC-ACC-159)*
 
 **Deleting a User purges everything they own, module by module, then the
-row** *(Decisions 2026-10-01b (D1) and 2026-10-02 (A6); unbuilt — §11 rows 8
-and 29)*. Each module that owns per-User data implements one idempotent
+row** *(Decisions 2026-10-01b (D1) and 2026-10-02 (A6), [ADR-13](#adr-13);
+unbuilt — §11 rows 8 and 29)*. Each module that owns per-User data implements one idempotent
 method behind its `api/` package,
 
 ```go
@@ -877,7 +877,7 @@ usable whether or not the flag is set):
 - Given 5 wrong `current_password` attempts from one IP, then the 6th is 429.
   *(TC-ACC-140)*
 
-### P0.13 — Per-user timezone *(decided 2026-09-30; revised by Decision 2026-10-02 (A8); unbuilt)*
+### P0.13 — Per-user timezone *(decided 2026-09-30; revised by Decision 2026-10-02 (A8); [ADR-15](README.md#adr-15); unbuilt)*
 
 The specs README **Timezone** convention is binding and is not restated in
 full; the account half is:
@@ -965,7 +965,7 @@ exist, nothing schedules them — §11 row 20)*. `account:expire_identity_data`
 [events.md](../../reference/events.md) (the first live, the other two
 planned).
 
-### P0.16 — Identity data in the audit log lives 90 days *(Decision 2026-10-02 (A7); owned jointly with `platform/audit`; unbuilt — §11 row 31)*
+### P0.16 — Identity data in the audit log lives 90 days *(Decision 2026-10-02 (A7); [ADR-14](#adr-14); owned jointly with `platform/audit`; unbuilt — §11 row 31)*
 
 `audit_log` is owned by `platform/audit` (`0005_platform_audit`, [D-25]; the
 action taxonomy is [backend/MODULES.md](../../../backend/MODULES.md) §5.3), and
@@ -1205,8 +1205,8 @@ only through their links screen. Each change is also audited
 - **P1.2 Security alert on refresh reuse** — the reuse path also dispatches
   `account.security_alert` to the user; the notify side is SPEC-05 P1.4.
   *AC:* a detected reuse produces one bell row and one email.
-- **P1.3 Admin-change events** *(Decision 2026-10-01b (D3); unbuilt — §11
-  row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
+- **P1.3 Admin-change events** *(Decision 2026-10-01b (D3);
+  [ADR-17](README.md#adr-17); unbuilt — §11 row 24)*. Account is not exempt from ADR-08's "every domain module emits ≥ 1
   bus event": it announces every admin-relevant change on the bus, and notify
   turns each into a bell entry for the Superadmins (SPEC-05 P1.5). The events
   are published through `platform/events` **after the write commits** — the
@@ -1729,7 +1729,8 @@ lists the module's suites: `auth/password_test.go`, `auth/reset_test.go`,
 
 The architecture decisions this spec stands on, folded in from the retired
 `docs/adr/` folder on 2026-10-01; ADR-12 was written here directly on
-2026-10-02. The `ADR-NN` ids stay the stable citation;
+2026-10-02, and ADR-13 (deleting a User) and ADR-14 (identity data that
+outlives its User) promote owner decisions this spec already stated. The `ADR-NN` ids stay the stable citation;
 the anchors below are fixed. Each record keeps the binding shape — Context →
 Decision → Options considered → Trade-offs → Consequences → Action items. The
 Decision, Options and Trade-offs are the narrative layer, kept verbatim (it
@@ -2591,3 +2592,293 @@ Action items close.*
    row 19), `000N_story_shared_read` (SPEC-17 §11 row 22).
 6. [ ] The RLS suite's truth table for `app_can_read_shared` (TC-TEN-005,
    TC-MEDIA-115) runs in CI's `backend` job before any content row ships.
+
+<a id="adr-13"></a>
+### ADR-13 — Deleting a User purges every module, then the row
+
+**Decided:** 2026-10-01, extended 2026-10-02 · **Status:** accepted (Decision 2026-10-01b (D1), extended by Decision 2026-10-02 (A6)); not built
+
+Deciders: kirito. Relates to [ADR-07](#adr-07) (every tenant-scoped row
+references its organisation, and the worker reaches a User's data only through
+it), [ADR-14](#adr-14) (the rule the `deleted_users` snapshot is sealed
+under). The requirements it produces are P0.10 above (the delete order, the
+registry, the snapshot, the email rule, and the reasoning "why this order is
+the one that works"), P0.14 (the registry is the direction of the
+cross-module API that account calls), P0.16 (the snapshot's expiry) and
+[SPEC-04](SPEC-04-media-image-pipeline.md) P0.7 (media's purge); this record
+holds the decision and does not repeat their contracts.
+
+#### Context
+
+*The state this was decided against, 2026-10-01 and 2026-10-02 (`main` @
+`99b5a0b`; the docs commits on top change no code).*
+
+- **Delete is a bare hard delete.** `DELETE /admin/users/{id}` runs its guards
+  (self-target, `confirm_email`, escalation, last Approver) and then
+  `DeleteUser` (`handler/admin_users.go` → `query/admin.sql`) at once. Every
+  ownership FK to `users` is `ON DELETE CASCADE`, so Postgres removes the
+  User's rows in every module in one statement.
+- **The cascade removes rows, never side effects.** `assets.owner_id`
+  cascades (`0007_media_assets`), so asset rows vanish without a `deleting`
+  tombstone, and `media:purge_orphans` finds work only through tombstoned
+  rows: every object of the User stays in MinIO/R2 for good (SPEC-04 §11
+  row 19). Any module whose rows point at objects, cache keys or staged
+  uploads leaks the same way.
+- **Order matters across the tenant fence.** Every tenant-scoped row
+  references `organizations(id)` with no `ON DELETE` action, and the media
+  janitor reaches a User's rows only through `forEachTenant`, which needs the
+  personal organisation to exist.
+- **Nothing of the identity outlives the row**, the email is free again the
+  moment the row is gone, and restoring an older backup brings the User back.
+
+D1 closed the former §10 Q1 for media alone; A6, from the owner's review of
+this spec on 2026-10-02, generalised it to every module and settled what
+survives a delete. The choice is irreversible for the User's data and
+crosses every module that owns per-User data — criteria (a) and (b) for a
+record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **Every module purges its own.** Each module that owns per-User data
+   implements one idempotent `PurgeOwnerData(ctx, userID) (remaining int, err
+   error)` behind its `api/` package: it deletes its rows **and their
+   non-database side effects** — stored objects, cache keys, staged uploads —
+   and returns how many of its rows are left. The database cascade stays only
+   as the safety net under it.
+2. **A registry in a fixed order.** Account runs the purges `cmd/api` hands
+   it: the content modules (`comic`, `music`, `movie`, `story`, `journal`,
+   `bank`, `people`, `social`, `notify`), then `media` — its purge is
+   `mediaapi.PurgeOwnerAssets` — because every content module lets go of its
+   Assets first, then `tenant` (the personal organisation and memberships),
+   only in the locked final pass and only once everything above reported
+   zero.
+3. **Disable, bulk pass, locked final pass, delete.** The target is Disabled
+   first, so no new request of theirs can start; the registry runs once; then,
+   in one account transaction holding `FOR UPDATE` on the user row, the
+   registry runs again, and only when every entry reports zero is the
+   snapshot written and the row deleted.
+4. **Incomplete is an answer, not a half-state.** Any error, or rows left
+   after either pass, answers 503 `account/delete-incomplete` with
+   `Retry-After`; the User stays Disabled, everything half-purged stays
+   purgeable, and a retried DELETE continues where the last stopped.
+5. **No grace period.** A completed delete is irreversible: no soft-delete
+   and no restore feature.
+6. **A `deleted_users` snapshot, kept 90 days** — the user id, the acting
+   admin and the time: enough to answer "who was this, and who deleted them"
+   during an incident, nothing that would let the User be rebuilt. Its
+   identifying columns fall under [ADR-14](#adr-14).
+7. **Deleting frees the email.** The person may register again and becomes a
+   new Pending User with none of the old data. To refuse someone for good,
+   keep them Rejected.
+8. **A restore can resurrect a deleted User.** Restoring a backup taken
+   before the delete brings the User and their data back; that is an
+   operations exception, not a feature.
+
+#### Options considered
+
+The former §10 Q1 ("deleting a user orphans their media objects"), as written
+when D1 decided it:
+
+- **(a) Tombstone first** — account calls a `mediaapi` "tombstone every asset
+  of user X" before the delete, so the janitor purges them. *Chosen, and
+  sharpened while writing it down:* tombstoning and then deleting the user
+  would lose the rows in the cascade before the janitor's 15-minute grace
+  had passed, so the objects would still leak; the decision became "purge
+  until zero rows remain, then delete" (Decision 3).
+- **(b) Disable-only**, with no hard delete. Not taken; Disable stays the
+  reversible step the admin UI offers before Delete.
+- **(c) Accept the leak** and document a manual sweep. Not taken.
+
+A6 extended the choice in a review conversation that left no written options
+list; the spec text records only its outcome. The alternatives that outcome
+names and rules out:
+
+- **Media-only purge** (D1 as written) — other modules' side effects would
+  still ride the cascade. Replaced by the registry (Decision 1).
+- **A grace period or soft-delete** — ruled out (Decision 5).
+- **Keeping a deleted User's email reserved** — ruled out (Decision 7);
+  Rejected is the state that refuses a person.
+
+Whether the snapshot's identifying columns are encrypted is
+[ADR-14](#adr-14)'s question, not this record's.
+
+#### Trade-offs
+
+- **A delete can fail and must be retried.** The admin sees a 503 rather
+  than a 204 whenever any module cannot finish in time; that is the price of
+  never deleting a row whose side effects may still exist.
+- **Every module carries a purge.** A new module that owns per-User data and
+  forgets its `PurgeOwnerData` is caught only by the cascade, which deletes
+  its rows and leaks whatever they pointed at.
+- **Irreversible means irreversible.** A mistaken delete can be undone only
+  by restoring a backup, which rolls back every other User too; the guards
+  (`confirm_email`, last Approver) and Disable offered first are the
+  mitigation.
+- **Forgetting is only as strong as backup retention.** Decision 8 means a
+  deleted User survives in every backup taken before the delete.
+- **A lock window.** The final pass holds `FOR UPDATE` on the user row while
+  every module purges; a per-User insert for the target waits and then
+  fails. The target is Disabled, so only already-running worker tasks meet
+  it.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contract is P0.10.** The delete order, the registry's order, the
+  503, the snapshot, the email rule and the race analysis live there with
+  their ACs; media's half is SPEC-04 P0.7; the snapshot's table is §6 and
+  its expiry is the P0.16 sweep.
+- **Who has no purge.** `layout` owns only the instance-wide shell and `ops`
+  only system rows, so neither implements `PurgeOwnerData`; account deletes
+  its own rows in the final transaction.
+- **One row carries the per-module work.** The `PurgeOwnerData` methods are
+  listed in SPEC-01 §11 row 29, not as rows in each module's spec — the
+  specs README's "Deleting a User purges every module, media last"
+  cross-cutting gap.
+- **A vanished owner is dropped, not retried.** A `media:asset_deleted`
+  consumer whose payload owner has no personal organisation any more drops
+  the task (the specs README's "Unscoped `media:asset_deleted` consumers"
+  gap).
+- **The restore exception is documented** in
+  [backup-restore.md](../../operations/backup-restore.md) § 4.
+- **Tests:** TC-ACC-064…066, TC-ACC-146, 147, 149 and TC-MEDIA-052…054; the
+  snapshot's encryption is ADR-14's (TC-ACC-148, 161, 162).
+
+#### Action items
+
+1. [ ] `mediaapi.PurgeOwnerAssets` — SPEC-04 §11 row 19, first.
+2. [ ] The delete order that calls it — SPEC-01 §11 row 8.
+3. [ ] `PurgeOwnerData` in `comic`, `music`, `movie`, `story`, `journal`,
+   `bank`, `people`, `social`, `notify` and `tenant`, the registry and the
+   `deleted_users` snapshot — SPEC-01 §11 row 29, with or after row 31
+   ([ADR-14](#adr-14)'s encryption function).
+
+<a id="adr-14"></a>
+### ADR-14 — Identity data that outlives its User: encrypted with `AUDIT_PII_KEY`, Superadmin-only, 90 days
+
+**Decided:** 2026-10-02 · **Status:** accepted (Decision 2026-10-02 (A7); extended to the `deleted_users` snapshot by Decision 2026-10-02b (B1)); not built
+
+Deciders: kirito. Relates to [ADR-13](#adr-13) (the snapshot a delete
+writes), [D-25] (the audit taxonomy),
+[security.md §2.4](../../architecture/security.md) (`TOTP_KMS_KEY`, the
+precedent for a key separate from the JWT keys). The requirements it produces are P0.16
+above (owned jointly with `platform/audit`), P0.10 and §6 (the snapshot's
+`pii` column), P0.15 (the sweep among the maintenance tasks) and the P2
+audit-log reader's read rule; this record holds the decision and does not
+repeat their contracts.
+
+#### Context
+
+*The state this was decided against, 2026-10-02 (`main` @ `99b5a0b`).*
+
+- **The audit log keeps identity in clear, for ever.** `audit_log`
+  (`0005_platform_audit`, owned by `platform/audit`, written best-effort by
+  every module) stores `ip` and `user_agent` in clear and `metadata` as plain
+  `jsonb` — an admin email edit carries `email_before` and `email_after`.
+  Nothing ever deletes or rewrites a row.
+- **A deleted User is only half gone from it.** `audit_log.actor_id` is
+  `ON DELETE SET NULL`, so a deleted User disappears as an actor, but stays
+  as a target id, as emails in `metadata` and as IP addresses.
+- **The snapshot A6 introduced held the same kind of data in plaintext.**
+  [ADR-13](#adr-13)'s `deleted_users` row was specced with email, display
+  name and roles in clear for its 90 days; that is the former §10 Q6, which
+  the first 2026-10-02 round itself opened.
+- **No reader exists.** No API reads `audit_log` or the snapshot; the
+  audit-log reader is P2.
+
+The rule binds every row any module writes to a platform-owned table —
+criterion (b) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **Every row, not only deleted Users'.** The rule binds every `audit_log`
+   row from every module. Identifying data is the target User's id, email
+   and display name wherever they appear, the client IP, the user agent, and
+   any other `metadata` key that names a person; `action`, `occurred_at`,
+   `actor_kind` and `target_kind` are not identifying.
+2. **Encrypted at write.** Identifying fields live only in one `pii` column,
+   AES-256-GCM over a JSON object, sealed in `platform/audit` with a key from
+   a new variable, `AUDIT_PII_KEY` (32 bytes, base64, separate from the JWT
+   keys); the plaintext columns are written NULL and `metadata` carries no
+   identifying key.
+3. **No key, no identity — never plaintext.** With `AUDIT_PII_KEY` unset the
+   identifying fields are dropped and the binaries warn at start; the audit
+   write stays best-effort.
+4. **Superadmins only.** Decrypting `pii` is allowed only to a User whose
+   effective permissions contain `*`.
+5. **90 days, then anonymised.** A daily sweep, `account:expire_identity_data`,
+   blanks the identifying data of every row older than 90 days — keeping the
+   action, the time and the acting admin's id, except where the actor is the
+   row's own subject — encrypts in place any younger row still in plaintext,
+   and deletes `deleted_users` and closed `email_change_requests` rows older
+   than 90 days.
+6. **The snapshot follows the same rule** (B1). The user id, the acting admin
+   and the time stay in clear; email, display name and role codes are sealed
+   into the snapshot's own `pii` by the same `platform/audit` function,
+   readable only by Superadmins, dropped when the key is unset. One rule
+   covers every piece of identity data that outlives its User.
+
+#### Options considered
+
+For the snapshot, the former §10 Q6 as written when B1 decided it:
+
+- **(a) Encrypt** its identifying columns with the same key and the same
+  Superadmin-only read rule — recommended in the question, so that one rule
+  covers every piece of identity data that outlives its User. *Chosen.*
+- **(b) Keep it plaintext**, since it is a short-lived tombstone that no API
+  reads. Rejected.
+
+A7 itself was decided in the owner's review of this spec on 2026-10-02 and
+left no written options list; the spec text records only its outcome. The
+alternatives it names and rules out:
+
+- **Anonymising only rows about deleted Users** — ruled out (Decision 1).
+- **Falling back to plaintext when no key is configured** — ruled out
+  (Decision 3).
+- **A cipher of account's own for the snapshot** — ruled out (Decision 6:
+  the same `platform/audit` function seals both).
+
+#### Trade-offs
+
+- **Forensics fade after 90 days.** An incident found later can be traced by
+  action and time, and by the acting admin, but no longer to an address, a
+  device or a person.
+- **A second secret to keep.** Losing `AUDIT_PII_KEY` makes every sealed
+  value unreadable; leaking it exposes at most 90 days of identity. An
+  instance that never sets it records less, never more.
+- **No SQL search by identity.** An IP or an email inside `pii` cannot be
+  filtered or indexed; a reader must decrypt.
+- **Self-actor rows lose their actor.** A login, logout, refresh or
+  registration identifies its subject through `actor_id`, so after 90 days
+  those rows keep only the action and the time.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contract is P0.16** (what counts as identifying, the column, the key,
+  the sweep and its ACs) with the snapshot's half in P0.10 and §6; P0.15
+  lists the sweep beside the two token purges; §8 lists it as a planned
+  task, as does [events.md](../../reference/events.md); §9 states the
+  success metric.
+- **The read rule waits for a reader.** P2's audit-log reader is where the
+  Superadmin-only decrypt applies; reading rows stays an `audit:read`
+  matter.
+- [security.md](../../architecture/security.md) lists `audit_log.pii` and
+  the snapshot among the planned controls.
+- **Tests:** TC-ACC-150…153 (audit rows), TC-ACC-148, 161, 162 (the
+  snapshot).
+
+#### Action items
+
+1. [ ] The `pii` column, the encryption function in `platform/audit`,
+   `AUDIT_PII_KEY` and `account:expire_identity_data` — SPEC-01 §11 row 31.
+2. [ ] The snapshot sealed by the same function — SPEC-01 §11 row 29
+   (extended by B1; lands with or after row 31).

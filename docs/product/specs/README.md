@@ -150,7 +150,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
 - **Events**: every task/event name lands in
   [../../reference/events.md](../../reference/events.md) as part of definition of
   done; every new domain module emits ≥ 1 bus event from day one ([ADR-08](#adr-08)).
-  There is no exemption *(owner decision 2026-10-01b (D3))*: `account` and
+  There is no exemption *(owner decision 2026-10-01b (D3); [ADR-17](#adr-17))*: `account` and
   `layout`, the two shipped modules that emit none on `HEAD`, emit — seven
   `account:*` admin-change events and `layout:changed`, which notify delivers
   to superadmins (SPEC-01 §8 and P1.3, SPEC-02 §8 and P1.4, SPEC-05 P1.5;
@@ -173,7 +173,7 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   `errors.json` in `frontend.md` §5.2 is the future target). Generic transport
   failures use `about:blank` and need no key. A backend-emitted type absent from
   `problems.ts` is a DoD failure.
-- **Pagination**: list endpoints use an opaque base64 keyset
+- **Pagination** ([ADR-16](#adr-16)): list endpoints use an opaque base64 keyset
   `?cursor=&limit=`. Each spec §7 states the default and max limit; a new
   endpoint that states none uses default 30, max 50 (existing endpoints keep
   their declared defaults and maxima). *(Owner decision 2026-10-01:)* **`limit`
@@ -214,7 +214,8 @@ Old → new, for reading code: 01→04 · 02→14 · 03→12 · 04→05 · 05→
   `counts` — an operator approval queue read as "how many are waiting", at
   household scale. It wears the `{items}` envelope like every other list, and
   it is not a precedent: a new list endpoint is keyset-paged.
-- **Timezone** *(owner decision 2026-09-30, revised 2026-10-02 (A8); D-17)*:
+- **Timezone** *(owner decision 2026-09-30, revised 2026-10-02 (A8); D-17;
+  [ADR-15](#adr-15))*:
   every user-facing day or month boundary — "today", "this month", a default
   month, a date-only value turned into an instant, day grouping, on-this-day,
   birthday and due-date countdowns — is computed in **the User's own
@@ -550,7 +551,7 @@ here; this list does not restate it. The gap rows cite them as
   retrofitted, not grandfathered. Detail: the **Pagination** convention above;
   each spec §7; the D-29 update in
   [feature-inventory.md](../feature-inventory.md); the Envelopes rows indexed
-  above.
+  above. → [ADR-16](#adr-16)
 - **Timezone** — per user, from the device location, default
   `Asia/Ho_Chi_Minh`, with a `timezone_manual` override; sweeps evaluate each
   owner's local date. (Revised by Decision 2026-10-02 (A8): the stored zone
@@ -558,6 +559,7 @@ here; this list does not restate it. The gap rows cite them as
   column default, and the manual override is gone.) Detail: the **Timezone** convention above; the D-17
   update in [feature-inventory.md](../feature-inventory.md); SPEC-12 P0.6,
   SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4, SPEC-13 §4a.
+  → [ADR-15](#adr-15)
 - **Audio opens the player** — audio is a playable kind: player page, plays
   from `/original`, saves progress, joins `/continue`. Detail: SPEC-10 P0.1,
   P0.2, P0.4; SPEC-04 §11 row 16; the D-20 update in
@@ -587,18 +589,19 @@ open. The detail lives in the places named here; the gap rows cite them as
 - **(e) `limit` is lenient and clamps** — the **Pagination** convention above;
   every §7 that declares a limit; one gap row per service that resets instead
   (the `limit` cross-cutting gap below); the `limit` TCs; the D-29 update in
-  [feature-inventory.md](../feature-inventory.md).
+  [feature-inventory.md](../feature-inventory.md). → [ADR-16](#adr-16)
 - **(f) `timezone_manual` and `account/invalid-timezone` are confirmed** —
   *superseded by Decision 2026-10-02 (A8)* as to `timezone_manual`, which is
   dropped everywhere (no column, no field, no request flag); the
   `account/invalid-timezone` slug stands. Kept here as the record of what was
   decided on 2026-10-01. The current rule is the **Timezone** convention above;
   the code follow-up is SPEC-01 P0.13 (§11 row 14), the first item of the
-  **Per-user timezone** cross-cutting gap.
+  **Per-user timezone** cross-cutting gap. → [ADR-15](#adr-15)
 - **(g) `{items}` for non-paginated lists is confirmed** — the **Pagination**
   convention above (with the rationale and what counts as a collection); the
   D-29 update in [feature-inventory.md](../feature-inventory.md). Every spec §7
   complies; the shipped divergences are the Envelopes rows indexed above.
+  → [ADR-16](#adr-16)
 
 ## Decisions recorded 2026-10-01 (second round)
 
@@ -614,6 +617,7 @@ lives in the places named here; the gap rows cite them as "Decision
   reasoning why tombstoning alone would not survive the cascade) and SPEC-04
   P0.7 (the media method). Gap rows: SPEC-01 §11 row 8 (rewritten),
   SPEC-04 §11 row 19 (new); TC-ACC-064…066, TC-MEDIA-052…054.
+  → [ADR-13](SPEC-01-account-identity-admin.md#adr-13)
 - **(D2) Movie and story are finished, not reverted** — SPEC-16 P1.1 and
   SPEC-17 P1.1 are committed scope (still unbuilt), to the music standard;
   [backlog.md](../backlog.md) P2 line 28 records the decision. No new gap row:
@@ -626,7 +630,7 @@ lives in the places named here; the gap rows cite them as "Decision
   registration deduplicated against the approver dispatch, email forced only
   for refresh-token reuse); [events.md](../../reference/events.md) planned rows.
   Gap rows: SPEC-01 §11 row 24, SPEC-02 §11 row 14, SPEC-05 §11 row 23;
-  TC-ACC-120…126, TC-LAY-050…052, TC-NOTIFY-140…145.
+  TC-ACC-120…126, TC-LAY-050…052, TC-NOTIFY-140…145. → [ADR-17](#adr-17)
 - **(D4) `user` may author music, movies and stories** — SPEC-15 P1.4,
   SPEC-16 P1.3, SPEC-17 P1.3 (each a module-owned `000N_<module>_user_write_grant`
   granting `:write:own` and `:publish:own` to `user`, the
@@ -638,8 +642,12 @@ lives in the places named here; the gap rows cite them as "Decision
 
 The owner settled twelve points about the account module in a review of
 SPEC-01, among them its four open questions (Q2–Q5). No decision record was
-written: each is stated in SPEC-01's requirement text, which is the detail;
-this list only routes. The vocabulary — User, Session, Approval, Rejected,
+written at the time: each is stated in SPEC-01's requirement text, which is the
+detail; this list only routes. The significant ones were later promoted to
+records — A5 to [ADR-16](#adr-16), A6 to
+[ADR-13](SPEC-01-account-identity-admin.md#adr-13), A7 to
+[ADR-14](SPEC-01-account-identity-admin.md#adr-14), A8 to [ADR-15](#adr-15),
+A11 to [ADR-17](#adr-17) — marked "→" below. The vocabulary — User, Session, Approval, Rejected,
 Disabled, Superadmin, Approver — is [CONTEXT.md](../../../CONTEXT.md)'s. Gap
 rows cite them as "Decision 2026-10-02 (A*n*)".
 
@@ -668,22 +676,24 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
   SPEC-01 Q5; depends on §11 row 4. Gap row: §11 row 28; TC-ACC-144, 145.
 - **(A5) Admin list paging stays offset** — the **Pagination** convention
   above (its one named exception) and SPEC-01 P0.8. Closes SPEC-01 Q2. No gap
-  row (shipped behaviour).
+  row (shipped behaviour). → [ADR-16](#adr-16)
 - **(A6) Deleting a User purges every module, then the row** — SPEC-01 P0.10:
   an idempotent `PurgeOwnerData` per module, a registry run content → media →
   tenant, no grace period, a `deleted_users` snapshot kept 90 days, the email
   freed (keep someone Rejected to refuse them), a restore can resurrect a
   deleted User ([backup-restore.md](../../operations/backup-restore.md)).
   Extends Decision 2026-10-01b (D1). Gap row: §11 row 29; TC-ACC-146…149.
+  → [ADR-13](SPEC-01-account-identity-admin.md#adr-13)
 - **(A7) Audit identity data lives 90 days** — SPEC-01 P0.16 (owned jointly
   with `platform/audit`): every `audit_log` row's identifying data encrypted
   with `AUDIT_PII_KEY`, readable only by Superadmins, anonymised after 90
   days by `account:expire_identity_data` ([events.md](../../reference/events.md)).
   Gap row: §11 row 31; TC-ACC-150…153.
+  → [ADR-14](SPEC-01-account-identity-admin.md#adr-14)
 - **(A8) Timezone: NULL means "not set", no manual flag** — the **Timezone**
   convention above, SPEC-01 P0.13; supersedes Decision 2026-10-01 (f) as to
   `timezone_manual`. Gap row: §11 row 14, rewritten in place (unbuilt);
-  TC-ACC-100…104.
+  TC-ACC-100…104. → [ADR-15](#adr-15)
 - **(A9) Email change requires verification** — SPEC-01 P0.10 (admin edit,
   P0) and P1.4 (self-service): pending change in `email_change_requests`,
   1-hour confirm link to the new address, cancel link to the old, uniqueness
@@ -694,7 +704,7 @@ rows cite them as "Decision 2026-10-02 (A*n*)".
   to Pending; a Rejected User cannot register again. Shipped; no gap row.
 - **(A11) Superadmin by permission** — SPEC-01 P1.3 `SuperadminIDs` = Users
   whose effective permissions contain `*`; SPEC-05 P1.5 follows. Gap row: §11
-  row 24, rewritten in place (unbuilt); TC-ACC-127.
+  row 24, rewritten in place (unbuilt); TC-ACC-127. → [ADR-17](#adr-17)
 - **(A12) "A second person on the instance"** — SPEC-01 §4: a second Approved
   User has their own, unshared data; shared household data is not designed.
 
@@ -712,6 +722,7 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
   Superadmins, dropped when the key is unset. Closes SPEC-01 Q6. Gap row:
   §11 row 29, extended in place (it now lands with or after row 31's
   encryption half); TC-ACC-161, 162, and TC-ACC-148 reworded.
+  → [ADR-14](SPEC-01-account-identity-admin.md#adr-14)
 - **(B2) Music resumes through media progress** — SPEC-15 P0.10: the player
   saves and reads the progress row of the track's audio asset (SPEC-10's API)
   for the caller's own tracks; tracks join `/continue` as `media` items; no
@@ -832,8 +843,9 @@ Architecture decisions are recorded as `ADR-NN`. They were standalone files
 under `docs/adr/` until the 2026-10-01 fold; each record now lives in the spec
 that owns its subject, behind a fixed `<a id="adr-nn"></a>` anchor, and the
 `ADR-NN` IDs that code comments and documents cite are unchanged. This section
-indexes all twelve and holds the three that belong to no single spec: the v1
-scope cut, the life-OS positioning and the API contract direction.
+indexes all seventeen and holds the six that belong to no single spec: the v1
+scope cut, the life-OS positioning, the API contract direction, the per-user
+timezone, the list API contract and the event rule's reaffirmation.
 
 Each record keeps the binding shape — Context → Decision → Options considered →
 Trade-offs → Consequences → Action items ([STYLE.md](../../STYLE.md)). Decision,
@@ -864,6 +876,11 @@ record that supersedes the old one. Numbers are never reused; `00` is retired
 | ADR-10 | OpenAPI contract direction | accepted | Spec-first, enforced: generate Go stubs + TS client; CI drift gate | [README.md § ADR-10](#adr-10) |
 | ADR-11 | Documentation canonicalisation | accepted, executed | One owner per fact; ADRs corrected in place by layer; nothing archived | [SPEC-06 § ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) |
 | ADR-12 | Sharing published content with household and friends; tenant links | accepted (Decision 2026-10-02b (B14)), not built | Published music, movies and stories are read by the owner's household and friends in mutually linked tenants, through one `SECURITY DEFINER` predicate in the SELECT policies — a read-only exception to ADR-07's fence | [SPEC-01 § ADR-12](SPEC-01-account-identity-admin.md#adr-12) |
+| ADR-13 | Deleting a User purges every module, then the row | accepted (Decisions 2026-10-01b (D1), 2026-10-02 (A6)), not built | Each module's `PurgeOwnerData` runs in a fixed order, then the row goes under a lock; 503 `account/delete-incomplete` otherwise; no grace period, a 90-day `deleted_users` snapshot, the email freed | [SPEC-01 § ADR-13](SPEC-01-account-identity-admin.md#adr-13) |
+| ADR-14 | Identity data that outlives its User | accepted (Decisions 2026-10-02 (A7), 2026-10-02b (B1)), not built | Audit and snapshot identity data sealed with `AUDIT_PII_KEY`, decryptable only by Superadmins, anonymised after 90 days | [SPEC-01 § ADR-14](SPEC-01-account-identity-admin.md#adr-14) |
+| ADR-15 | Per-user timezone | accepted (Decisions 2026-09-30, 2026-10-01 (f), 2026-10-02 (A8)), not built | Day and month boundaries in the User's own zone, NULL = not set, `Asia/Ho_Chi_Minh` fallback; sweeps evaluate each owner's local date | [README.md § ADR-15](#adr-15) |
+| ADR-16 | List API contract | accepted (Decisions 2026-09-30, 2026-10-01 (e), (g), 2026-10-02 (A5)), partly built | Every collection is `{items[, next_cursor]}`, keyset cursors, a lenient clamped `limit`; admin users keep offset as the one exception | [README.md § ADR-16](#adr-16) |
+| ADR-17 | Every module emits bus events; notify tells the Superadmins | accepted (Decisions 2026-10-01b (D3), 2026-10-02 (A11)), not built | No exemption from ADR-08's rule: `account` and `layout` emit, and the Superadmins (effective `*`) get each admin change in the bell | [README.md § ADR-17](#adr-17) |
 
 **When to write one.** A choice that (a) is expensive to reverse, (b) crosses
 module boundaries, or (c) contradicts a previous record or the scope cut gets a
@@ -1336,6 +1353,367 @@ true and where it still is not.
       the job still only checks that the YAML parses.
 - [ ] Make the frontend consume `types.gen.ts` beyond `comic-sync.ts`, or
       strike the "typed client" claim from the spec's `info` block.
+
+<a id="adr-15"></a>
+### ADR-15 — Per-user timezone; periodic sweeps evaluate each owner's local date
+
+**Decided:** 2026-09-30, revised 2026-10-01 and 2026-10-02 · **Status:** accepted (Decision 2026-09-30 (Timezone); Decision 2026-10-01 (f), superseded as to `timezone_manual` by Decision 2026-10-02 (A8)); not built
+
+Deciders: kirito. Settles the source [D-17] left open (UTC storage, user-TZ
+day boundaries, an hourly per-TZ scheduler) · relates to [D-7] (the
+`users.timezone` column). The rule is the **Timezone** convention above,
+which is its one statement; the account half is
+[SPEC-01](SPEC-01-account-identity-admin.md) P0.13, and the readers are
+SPEC-12 P0.6, SPEC-07 P0.4, SPEC-09 P0.1 / P0.3 / P1.5, SPEC-11 P0.3 / P0.4
+and SPEC-13 §4a. This record holds the decision and points there for the
+contract.
+
+#### Context
+
+*The state this was decided against, 2026-09-30 (`main` @ `99b5a0b`). Spec
+numbers are today's.*
+
+- **A per-user column nobody writes.** `0002_account_users` declares
+  `users.timezone TEXT NOT NULL DEFAULT 'UTC'`, and no endpoint writes it;
+  `accountapi.UserSummary` is `{ID, Email, DisplayName}`.
+- **One instance zone in practice.** `APP_TIMEZONE` (`platform/config`) is
+  the zone `cmd/api` serves on `GET /api/v1/time`, and the frontend's
+  `lib/time.ts` takes its display zone from there. The people birthday scan
+  runs daily at 06:00 UTC with one zone for every owner (SPEC-11 §11 rows
+  5–6).
+- **The specs disagreed** (the 2026-09-30 worklog, "Open decisions left by
+  the post-fix review"): SPEC-12's dashboard and budget month cited
+  `users.timezone` (D-17); SPEC-09 P1.5 and SPEC-11 P0.3 used `APP_TIMEZONE`
+  for v1 because the column had no write path; SPEC-07 P0.4 claimed to match
+  the stream's zone.
+
+Every module with a day or month boundary depends on the answer — criterion
+(b) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **The User's own zone.** Every user-facing day or month boundary is
+   computed in the User's own IANA zone, `users.timezone`. There is no
+   instance-wide fallback: `APP_TIMEZONE`, "the instance default" and UTC are
+   not v1 sources for user-facing boundaries.
+2. **Taken from the device** (2026-09-30), and since A8: the column is
+   NULLable and NULL means "not set"; after sign-in the frontend saves the
+   device zone while the stored one is NULL; a set zone is never overwritten
+   by the device — a differing device zone gets one prompt, saved only on
+   confirmation; settings offer an IANA picker.
+3. **`Asia/Ho_Chi_Minh` when unknown** — the column default on 2026-09-30;
+   since A8, the backend readers' fallback while the column is NULL or does
+   not parse (the frontend uses the device zone).
+4. **One write path, validated** (confirmed by Decision 2026-10-01 (f)):
+   `PATCH /api/v1/auth/me {timezone}`; an empty or unknown IANA name is 422
+   `account/invalid-timezone` and nothing is written.
+5. **No manual flag.** Decision 2026-10-01 (f) confirmed a
+   `timezone_manual` flag; A8 dropped it everywhere — no column, no field, no
+   request flag. Decision 2 does its job.
+6. **Read through `accountapi`.** Modules never query `users`;
+   `UserSummary.Timezone` always returns a usable zone.
+7. **Sweeps evaluate each owner's local date.** A periodic task never uses
+   one "today" for everyone: it runs often enough (hourly) and evaluates each
+   owner's local date in that owner's zone, relying on its dedup keys for
+   exactly-once; SQL converts at the query layer (`AT TIME ZONE $tz`), never
+   through the session zone.
+
+#### Options considered
+
+From the 2026-09-30 worklog, as written ("choose one v1 source and state it
+once in the README"):
+
+- **The instance zone, `APP_TIMEZONE`, for v1** — what SPEC-09 P1.5 and
+  SPEC-11 P0.3 then said. Not chosen.
+- **Each User's `users.timezone`** (D-17, what SPEC-12 cited), taken from the
+  User's location, default `Asia/Ho_Chi_Minh`. *Chosen.*
+
+The manual override, as Decision 2026-10-01 (f) confirmed it: a
+`users.timezone_manual boolean NOT NULL DEFAULT false`; while true, the
+device-detected zone never overwrites the stored one; the settings picker
+saves `{timezone, timezone_manual: true}` and "use my location" saves the
+device zone with the flag false; `GET /auth/me` returns both. A8 replaced it
+with NULL-as-unset and a device that never overwrites (Decision 2). A8 was
+decided in the owner's review of SPEC-01 and left no written options list
+beyond that before-and-after.
+
+#### Trade-offs
+
+- **Sweeps get more frequent.** A daily job at one instance midnight becomes
+  an hourly job that resolves each owner's zone and leans on its dedup keys —
+  more runs, each cheap at household scale.
+- **"Today" belongs to the reader.** The same row can fall on different days
+  for two Users in different zones.
+- **The fallback is a place, not UTC.** It is right for the owner's household
+  and wrong for a User elsewhere until their first sign-in saves a zone.
+- **A traveller keeps home time.** Because the device never overwrites a set
+  zone, a User abroad sees their home zone until they accept the prompt.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contract** is the **Timezone** convention above and SPEC-01 P0.13
+  (TC-ACC-100…104); the D-17 updates in
+  [feature-inventory.md](../feature-inventory.md) record the history.
+- **`GET /api/v1/time` keeps only the server clock**; `lib/time.ts` takes the
+  zone from `GET /auth/me`.
+- **The readers change with it** — the "Per-user timezone" cross-cutting gap
+  above lists every row; the success metric is SPEC-01 §9's (no reader still
+  resolves a day boundary from `APP_TIMEZONE`).
+
+#### Action items
+
+1. [ ] The account half — migration, `PATCH /auth/me`, the `/auth/me` field,
+   `accountapi` single and batch lookups, the frontend save, prompt and
+   picker — SPEC-01 §11 row 14, first.
+2. [ ] The readers: SPEC-12 §12 rows 8, 16 · SPEC-07 §11 row 2 · SPEC-09 §11
+   rows 3, 9, 16 · SPEC-11 §11 rows 5–6 · SPEC-13 §8 row 2.
+
+<a id="adr-16"></a>
+### ADR-16 — List API contract: `{items[, next_cursor]}`, keyset cursors, a lenient `limit`
+
+**Decided:** 2026-09-30, extended 2026-10-01 and 2026-10-02 · **Status:** accepted (Decision 2026-09-30 (Envelopes); Decision 2026-10-01 (e) and (g); Decision 2026-10-02 (A5)); partly built — `platform/server.Limit` already clamps, the retrofits are not done
+
+Deciders: kirito. Relates to [ADR-10](#adr-10) (the contract this shapes) and
+[D-29] (`PaginatedResult<T>`, whose 2026-09-30 and 2026-10-01 updates in
+[feature-inventory.md](../feature-inventory.md) record the same decisions).
+The rule is the **Pagination** convention above, which is its one statement;
+the admin exception is [SPEC-01](SPEC-01-account-identity-admin.md) P0.8, and
+every spec §7 applies it. This record holds the decision and points there for
+the contract.
+
+#### Context
+
+*The state this was decided against, 2026-09-30 to 2026-10-02 (`main` @
+`99b5a0b`). Spec numbers are today's.*
+
+- **The envelope existed only on paper.** D-29 specified
+  `PaginatedResult<T>` as `{items, next_cursor}`, but the shipped lists answer
+  resource-named keys — `{assets}`, `{comics}`, `{transactions}`,
+  `{people}`, `{upcoming}`, `{accounts}`, the music, movie, story, social and
+  admin-user lists among them.
+- **The specs disagreed on envelopes** (the 2026-09-30 worklog): the
+  Pagination convention grandfathered existing endpoints' limits, not their
+  envelopes; SPEC-11 kept `{people}` / `{upcoming}` as a deliberate
+  exception; SPEC-04, SPEC-14 and SPEC-12 called `{assets}`, `{comics}` and
+  `{transactions}` a pending retrofit. Whether a non-paginated list
+  (`/bank/accounts`, chapter pages, `/bank/debts`,
+  `/people/upcoming-birthdays`) wore the envelope at all was unstated.
+- **The specs disagreed three ways on `limit`** (the 2026-10-01 verification):
+  clamp to the max (SPEC-09, SPEC-10, TC-NOTIFY-009); fall back to the
+  default (SPEC-04, SPEC-07, SPEC-11); silent (SPEC-14, SPEC-12, SPEC-05). On
+  `HEAD` every list service fell back to the default on both sides; only
+  `/continue` clamped.
+- **One list pages by offset.** `GET /admin/users` answers `limit` +
+  `offset` with a `total` and per-status `counts`.
+
+A response shape changed later breaks every client, and the rule binds every
+module — criteria (a) and (b) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **Every collection response is `{items}`.** A cursor-paginated list
+   answers `{items, next_cursor}`, `next_cursor` absent or null on the last
+   page; a non-paginated list answers `{items}` too (2026-10-01 (g)), so a
+   list that later gains pagination or metadata changes no client. Top-level
+   fields that are not the list may sit beside `items`; a resource-named list
+   key may not. A single resource or a composite read keeps its arrays as
+   named fields.
+2. **Retrofitted, not grandfathered.** Endpoints that shipped before the rule
+   move to `{items}`; only their declared limits are kept.
+3. **Keyset cursors.** Lists page by an opaque base64 keyset
+   `?cursor=&limit=` whose ordering key ends in `id`; a malformed cursor is
+   400 `<module>/invalid-cursor`. A new endpoint that states no limits uses
+   default 30, max 50.
+4. **`limit` is lenient and never an error** (2026-10-01 (e)): missing,
+   non-integer or < 1 gives the endpoint's default; above its max clamps to
+   the max. No Problem type is ever emitted for `limit`.
+5. **One named exception** (A5): the admin-only `GET /admin/users` keeps
+   `limit` + `offset` with `total` and per-status `counts`. It wears the
+   `{items}` envelope, and it is not a precedent: a new list is keyset-paged.
+
+#### Options considered
+
+Envelopes, from the 2026-09-30 worklog ("pick one policy in the README and
+align the four specs"):
+
+- **Grandfather shipped envelopes**, keeping SPEC-11's exception. Not chosen.
+- **Retrofit every list to `{items}`.** *Chosen.*
+
+Non-paginated lists (2026-10-01 (g)): the question asked the owner to confirm
+the reading that `{items}` applies to them too; the alternative it implied —
+the envelope for paginated lists only — was not taken.
+
+Out-of-range `limit` (2026-10-01 (e)), as written:
+
+- **Lenient and clamping** — the proposed rule: what a client asking for 500
+  means, matching SPEC-09, SPEC-10 and TC-NOTIFY-009, at one line in each of
+  seven services plus their tests. *Chosen.*
+- **Fall back to the default everywhere** — the zero-code alternative, which
+  would have flipped SPEC-09, SPEC-10, TC-NOTIFY-009 and the `/continue`
+  handler instead.
+
+Admin paging, the former SPEC-01 §10 Q2: **keep offset** for this one
+operator list (*chosen*), or **move to a cursor and drop `total`**.
+
+#### Trade-offs
+
+- **Every shipped list is a retrofit.** Each one moves its handler,
+  `shared/openapi.yaml` and its frontend readers in one PR; the payoff is
+  that no list ever changes shape again.
+- **A wrapper on lists that never page.** `{items}` costs one level of
+  nesting where a bare array would do.
+- **Leniency hides a client mistake.** A client asking for 500 silently gets
+  the max; the stricter answer would have been a 4xx for a request whose
+  meaning is clear.
+- **Keyset gives no totals.** No page numbers and no "how many"; the one list
+  that needs them, an approval queue at household scale, is the named
+  exception.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Partly built: `platform/server.Limit(r, def, max)` implements Decision 4;
+the rest is the target, true when the rows in Action items close.*
+
+- **The contract** is the **Pagination** convention above; every spec §7
+  states its shape, default and max, `<module>/invalid-cursor` and
+  `<module>/validation`; SPEC-01 P0.8 states the exception.
+- **The shipped divergences** are the "Envelopes retrofit to `{items}`" and
+  "`limit` clamps instead of resetting" cross-cutting gaps above, plus the
+  one list no spec owns (people `{suggestions}`), which retrofits the same
+  way.
+
+#### Action items
+
+1. [ ] Envelopes: SPEC-04 §11 row 12 · SPEC-14 §11 row 12 · SPEC-12 §12
+   row 9 · SPEC-11 §11 rows 9, 11 · SPEC-13 §8 row 3 · SPEC-01 §11 row 18 ·
+   SPEC-15 §12 row 15 · SPEC-16 §11 row 8 · SPEC-17 §11 row 9 · SPEC-18 §11
+   row 4; and people `{suggestions}`.
+2. [ ] `limit` clamps: SPEC-04 §11 row 18 · SPEC-14 §11 row 17 · SPEC-12 §12
+   row 17 · SPEC-05 §11 row 22 · SPEC-07 §11 row 8 · SPEC-09 §11 row 8 ·
+   SPEC-11 §11 row 15 · SPEC-01 §11 row 19 · SPEC-15 §12 row 16 · SPEC-16
+   §11 row 9 · SPEC-17 §11 row 10; and people `{suggestions}`.
+
+<a id="adr-17"></a>
+### ADR-17 — Every module emits bus events, account and layout included; notify tells the Superadmins
+
+**Decided:** 2026-10-01, refined 2026-10-02 · **Status:** accepted (Decision 2026-10-01b (D3); the Superadmin set by Decision 2026-10-02 (A11)); reaffirms [ADR-08](#adr-08) Decision 2; not built
+
+Deciders: kirito. Relates to [ADR-08](#adr-08) (the "≥ 1 bus event" rule
+this refuses to exempt anyone from) and the **Events** convention above,
+which states the rule. The requirements it produces are
+[SPEC-01](SPEC-01-account-identity-admin.md) P1.3 and §8 (seven `account:*`
+events, `accountapi.AdminEvent`, `SuperadminIDs`),
+[SPEC-02](SPEC-02-shell-layout.md) P1.4 and §8 (`layout:changed`) and
+[SPEC-05](SPEC-05-notification-module.md) P1.5 (the eight consumers); this
+record holds the decision and does not repeat their contracts.
+
+#### Context
+
+*The state this was decided against, 2026-10-01 and 2026-10-02 (`main` @
+`99b5a0b`). Spec numbers are today's.*
+
+- **The rule and two exceptions to it.** ADR-08 Decision 2 makes every new
+  domain module emit at least one bus event from its first release, and the
+  Events convention repeats it; `account` and `layout`, both shipped, emit
+  none. Account's admin handlers write audit rows only and `account.Deps`
+  has no publisher (`cmd/api` builds `mediaEvents` after `account.New`);
+  layout's saves publish nothing.
+- **Admin changes reach nobody.** Approvals, disables, deletes, role edits
+  and refresh-token reuse land in `audit_log` and nowhere else; the only
+  admin notice is P0.1's Approver dispatch on registration.
+- **The as-built specs asked** whether to exempt them (the former SPEC-02
+  §10 Q1, with SPEC-01 §8 pointing to it).
+- **The Superadmin set as first specced** (SPEC-01 P1.3, 2026-10-01): the
+  enabled, approved Users holding the `superadmin` role, directly or through
+  a custom role parented under it.
+
+Exempting two modules would contradict a previous record, and the answer
+crosses account, layout and notify — criteria (b) and (c) for a record.
+
+<!-- adr-narrative -->
+#### Decision
+
+1. **No exemption.** `account` and `layout` emit bus events, like every
+   other module.
+2. **Account announces admin changes.** Seven events after commit —
+   `account:user_registered` (a new Pending User only),
+   `account:user_approval_decided`, `account:user_access_changed`,
+   `account:user_deleted`, `account:user_roles_changed`,
+   `account:role_changed`, `account:refresh_reuse_detected` — with one
+   payload struct, `accountapi.AdminEvent`. A failed write publishes nothing;
+   a publish error is logged and never fails the request.
+3. **Layout announces saves.** One `layout:changed {part}` per successful
+   save, with the same after-commit rule.
+4. **Each event has a consumer.** Notify turns each into a bell entry for
+   the Superadmins except the actor (eight `notify:on_*` tasks); a
+   registration is deduplicated against the Approver dispatch; email is
+   forced only for refresh-token reuse.
+5. **Superadmin by permission** (A11): `SuperadminIDs` is the enabled,
+   Approved Users whose effective permissions contain `*` — not a role
+   name, so a custom role granted `*` counts and a renamed role changes
+   nothing.
+6. **Admin notices, not life-stream moments.** The stream does not project
+   them.
+
+#### Options considered
+
+The former SPEC-02 §10 Q1, as written (2026-10-01):
+
+- **Record an exemption** for `layout` (and `account`) in ADR-08's
+  Consequences or the Events convention.
+- **Add a `layout:changed` event with no consumer**, to satisfy the letter of
+  the rule.
+
+The owner took neither as written: the events exist *and* have a consumer —
+the Superadmin notices — so they carry value beyond the letter of the rule.
+
+The Superadmin set (A11): **by role** — holders of `superadmin`, directly or
+through a child role, as SPEC-01 P1.3 first specced it — or **by
+permission**, effective `*` (*chosen*). A11 was decided in the owner's review
+of SPEC-01 and left no written options list beyond that before-and-after.
+
+#### Trade-offs
+
+- **More moving parts for a household.** Eight consumer tasks and seven
+  notify types exist so that a handful of Superadmins hear about admin
+  changes; the default channel is in-app only, so the cost is bell entries,
+  not mail.
+- **Wiring order matters.** A `Publish` whose consumer edge is not
+  registered is a silent no-op, so the consumers land with or before the
+  first emitter, and `cmd/api` builds its publisher before `account.New`.
+- **By permission costs a walk.** `SuperadminIDs` runs the recursive role
+  walk of `GetEffectivePermissions` (at most 50 Users) instead of matching
+  one role code — the price of a definition that survives renamed and custom
+  roles.
+<!-- /adr-narrative -->
+
+#### Consequences
+
+*Nothing below is built; the facts are the target, true when the rows in
+Action items close.*
+
+- **The contracts** are SPEC-01 P1.3 and §8, SPEC-02 P1.4 and §8, and SPEC-05
+  P1.5 with its task list; [events.md](../../reference/events.md) carries
+  every name as a planned row; the Events convention above states that there
+  is no exemption.
+- **The rule keeps holding for new modules.** The `tenant` module's first
+  behaviour emits `tenant:link_changed` ([ADR-12](SPEC-01-account-identity-admin.md#adr-12)
+  Decision 9).
+- **Tests:** TC-ACC-120…127, TC-LAY-050…052, TC-NOTIFY-140…145.
+
+#### Action items
+
+1. [ ] The eight notify consumers and the Superadmin port — SPEC-05 §11
+   row 23, with or before the first emitter.
+2. [ ] The `account:*` events and `SuperadminIDs` — SPEC-01 §11 row 24.
+3. [ ] `layout:changed` — SPEC-02 §11 row 14.
 
 ## Review history
 
