@@ -1,6 +1,6 @@
 # SPEC-04 — Media Image Pipeline + Asset Management
 
-**Status:** current, **rev 9** (P0.8 shared visibility, Decision 2026-10-02b (B13) as revised by B14 and B15 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12)) · **Last verified:** 2026-10-01
+**Status:** current, **rev 10** (P0.8 shared visibility, Decision 2026-10-02b (B13) as revised by B14 and B15 — [ADR-12](SPEC-01-account-identity-admin.md#adr-12); ADR-04 amended by Decision 2026-10-19 (C3) — no media backup) · **Last verified:** 2026-10-01
 **Module:** `media` (built + wired) · **Depends on:** nothing
 **Upstream:** brief 01 (folded into this spec, then deleted — `git show ea100d8:docs/product/briefs/01-media-image-pipeline.md`) · **Refs:** 2026-07 backlog §2 (archived; `git show 8d382d2^:docs/product/backlog.md`), feature-inventory.md §3
 **Downstream consumers:** SPEC-14, SPEC-12 P1 (receipts), SPEC-05 P0.4 (`media:asset_ready` → in-app notification), SPEC-07/SPEC-08 (entry photos), SPEC-09 (`media:asset_deleted`; playback via SPEC-10), SPEC-10, SPEC-11 P1.7 (avatars), SPEC-03 (P0.3 scheduler; P1.7 mediaapi ExportProvider), SPEC-01 P0.10 (user delete → P0.7 owner purge)
@@ -911,7 +911,9 @@ stated otherwise.
 
 **Decided:** 2026-05-24 · **Status:** accepted, refined 2026-06-06 — deployed
 environments use R2 only; **local development keeps MinIO** as its S3 origin.
-The title's "R2 only" holds for staging/prod, not for dev.
+The title's "R2 only" holds for staging/prod, not for dev. Amended 2026-10-19
+(Decision 2026-10-19 (C3)): no media backup — decision item 5's weekly
+cross-bucket copy is dropped; the amendment follows Trade-offs.
 
 Deciders: kirito. Affects: [docker-compose.yml](../../../docker-compose.yml),
 `backend/internal/platform/storage/`,
@@ -1043,6 +1045,23 @@ The risk of R2-only is **R2 outage = no playback**. Cloudflare R2 had a multi-ho
 The cost of NOT removing MinIO from v1 is concrete: ~$15/mo disk + 150 MB RAM + 2 hours of operator setup time + ongoing "is replication healthy" cognitive load. The cost of removing it is zero — the long-run architecture can come back when it earns its place.
 <!-- /adr-narrative -->
 
+**Amended 2026-10-19 (C3):** Decision item 5 above, and the first mitigation
+under Trade-offs, rest on a weekly export job copying the media bucket to a
+second bucket for disaster recovery. That copy was never built, and the owner
+dropped it in a review of [SPEC-03](SPEC-03-platform-ops.md) (Decision
+2026-10-19 (C3)): **media durability relies on the object store alone** — R2's
+in deployed environments, the bind-mounted MinIO's in development. There is no
+cross-bucket copy, no bucket versioning and no soft-delete: a versioned or
+soft-deleting bucket — or a second copy — would keep a deleted User's
+originals past [ADR-13](SPEC-01-account-identity-admin.md#adr-13)'s purge,
+which is meant to be irreversible. The owner accepted that an original's loss
+risk is the provider's durability, and that an operator's mistaken delete on
+the media bucket cannot be undone. The database, which holds every pointer into
+the bucket, is backed up ([SPEC-03](SPEC-03-platform-ops.md) P0.2,
+[ADR-18](SPEC-03-platform-ops.md#adr-18)); the bucket is not (SPEC-03 P0.3).
+Where the Trade-offs say an R2 failure leaves data "only temporarily
+unavailable", read: unavailable during an outage, and lost if R2 loses it.
+
 #### Consequences
 
 What is built:
@@ -1074,6 +1093,12 @@ What is built:
   the keys did not change. Isolation is by the `assets` row (RLS) and by presigned
   URLs, not by key prefix — a bucket listing shows every tenant's objects together.
 - R2 outage = playback outage in deployed environments. Accepted for v1; still true.
+- **No media copy exists, by decision** (amended 2026-10-19, C3): decision item
+  5's weekly cross-bucket export was never built and is dropped, and no bucket
+  versioning or soft-delete is configured or advised —
+  [backup-restore.md](../../operations/backup-restore.md) § 1 says so. The
+  database backups ([ADR-18](SPEC-03-platform-ops.md#adr-18)) go to a separate
+  `portal-backups` bucket, not to a copy of this one.
 - Data sovereignty story is "your bytes are on Cloudflare R2 in their default
   region". Not documented in any deployment guide, because there is no deployment
   guide ([ADR-03](SPEC-03-platform-ops.md#adr-03) action item 6).
@@ -1105,8 +1130,14 @@ ea100d8:docs/adr/diagrams/system-landscape.md`). Open:
    image jobs and the light server's poster jobs can hold temp dirs at the same time.
 7. [ ] `docs/operations/r2-setup.md` (bucket creation, CORS JSON, lifecycle rules,
    token scope) — not written. `docs/operations/` exists; the file does not.
+   Since 2026-10-19 it also holds the `portal-backups` bucket's lock rules and
+   its read-only restore token ([ADR-18](SPEC-03-platform-ops.md#adr-18);
+   backlog #30).
 9. [ ] Tenant-prefixed object keys (Decision item 4) — never implemented; see
    "revisit" above.
+
+Dropped: the weekly cross-bucket export of Decision item 5 — never built, and
+not to be built (2026-10-19, C3; see the amendment above).
 
 ## 12. Revision history
 
@@ -1122,3 +1153,4 @@ ea100d8:docs/adr/diagrams/system-landscape.md`). Open:
 | r7 | 2026-10-02 | Owner decision 2026-10-02b (B13): P0.8 — a third asset visibility, `tenant` (migration `000N_media_tenant_visibility`), the read rule for metadata, `/original` (playable kinds only), variants, HLS and progress, and `mediaapi.SetVisibility` for content modules; `SignedURL` loses its planned music caller. §11 rows 20–21; TC-MEDIA-115…119. |
 | r8 | 2026-10-02 | Owner decision 2026-10-02b (B14), [ADR-12](SPEC-01-account-identity-admin.md#adr-12): P0.8 rewritten before anything was built — the value is `shared` (migration `000N_media_shared_visibility`), its audience the owner's household plus the owner's friends in actively linked tenants, decided by the tenant module's `app_can_read_shared` inside the select policies (a deliberate read-only exception to ADR-07's fence); a tenant admin reads nothing extra (B13's tenant-admin read removed); P0.5, §6, §7 aligned; §11 rows 20–21 rewritten; TC-MEDIA-115…119 reworded, TC-MEDIA-120, 121 added. |
 | r9 | 2026-10-02 | Owner decision 2026-10-02b (B15), amending [ADR-12](SPEC-01-account-identity-admin.md#adr-12): the family half of P0.8's audience is the owner's group co-members in the asset's tenant (SPEC-01 P0.18), not every member of it; same-tenant friends still read as friends; P0.5's widening and TC-MEDIA-115 reworded. No gap row changes: §11 row 20 calls `app_can_read_shared`, whose clause changed in SPEC-01 §11 rows 32 and 34. |
+| r10 | 2026-10-19 | Owner decision 2026-10-19 (C3), from the review of [SPEC-03](SPEC-03-platform-ops.md): ADR-04 amended — no media backup; Decision item 5's weekly cross-bucket copy (never built) is dropped, and no versioning or soft-delete, which would outlive [ADR-13](SPEC-01-account-identity-admin.md#adr-13)'s purge; the amendment follows Trade-offs, the fact layer and the action items (7, and the dropped export) are aligned. No requirement or gap row changes. |

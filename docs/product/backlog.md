@@ -44,6 +44,43 @@ was checked, and code moves.
    the next migration that touches those tables — applied files are not
    edited. Low stakes now that `.env.example` and ADR-07 say the true thing.
 
+Raised on 2026-10-19 by the owner review of
+[SPEC-03](specs/SPEC-03-platform-ops.md) — line 45 is new; line 30 moved up
+from P2 (number kept). Both rank above the spec-gap order below.
+
+45. **Backups are deletable, readable and incomplete** — the work of
+    [ADR-18](specs/SPEC-03-platform-ops.md#adr-18) (Decisions 2026-10-19 (C2),
+    (C5), (C6)). Today every dump sits in the media bucket under the media key,
+    in plaintext, without roles, owners or grants, while every container —
+    the internet-facing `api` and `frontend` included — holds the superuser
+    DSN; and the drill cannot run. Ranked first because real data is already
+    accruing. Order, each a row in
+    [SPEC-03](specs/SPEC-03-platform-ops.md) §11: row 13 (per-service
+    variables in compose — cheap, and it takes the superuser DSN off the
+    public containers), row 12 (the locked `portal-backups` bucket, worker-only
+    key, per-run keys, pruning past the lock) with row 16 (a failed upload
+    deletes nothing), row 15 (cluster globals and an owner-preserving dump),
+    row 14 (age encryption and the `.env` copy — generate the key pair and
+    store the identity first, runbook § 2), then rows 2–3 (the drill) and
+    line 32 (one recorded pass). *Closes when:* those rows are closed and a
+    drill against a real nightly set is recorded.
+
+Then, before more real data accrues on the development machine:
+
+30. **The production deployment does not exist** — no production compose
+    overlay, no `docs/operations/deployment.md`, no `r2-setup.md` (ADR-03
+    item 6, ADR-04 item 7); the VPS sizing rationale and the R2 CORS JSON live
+    nowhere but the ADRs, and `docker-compose.yml`'s header names an overlay
+    file that was never written (SPEC-03 §11 row 17). Decision 2026-10-19 (C1)
+    re-affirmed production as the rented VPS with R2 and the Windows machine
+    as development, and asked for the overlay and the guide **before more
+    real data accrues** on the development machine — so this line moved up
+    from P2 on 2026-10-19 (number kept). The guide also creates the
+    production `portal-backups` bucket, its lock rules and the read-only
+    restore token (ADR-18 action item 6). *Closes when:* the overlay and both
+    guides exist, the compose header names the overlay, and a first deployment
+    has run from them.
+
 ## P0 — order for closing spec gaps
 
 Moved here from the specs README on 2026-10-01 so that one file ranks all
@@ -82,13 +119,15 @@ work. Rows are cited as *SPEC-NN row N* (that spec's gaps section); lines
    narrowing ships **no earlier than the links screen**: on an instance of
    personal organisations it empties the directory until owners link their
    tenants. Each step depends on the one before it. Then the remaining
-   Sec / AuthZ rows: SPEC-14 rows 4–5, SPEC-03 rows 2–4, F009, SPEC-01
-   rows 6–7, SPEC-15 row 25, SPEC-16 rows 6–7, SPEC-17 rows 7–8.
+   Sec / AuthZ rows: SPEC-14 rows 4–5, SPEC-03 row 4 (its rows 2–3 and
+   12–14 are line #45 above), F009, SPEC-01 rows 6–7, SPEC-15 row 25,
+   SPEC-16 rows 6–7, SPEC-17 rows 7–8.
 2. **Data loss.** SPEC-10 rows 1–3, SPEC-07 row 1 together with the other
    publish-after-commit rows (SPEC-15 row 4, SPEC-16 row 3, SPEC-17 row 4,
    SPEC-18 row 1), SPEC-09 rows 1–2 together with SPEC-11 rows 1–4 (the
    retraction events and their stream consumers), SPEC-04 rows 2–3, SPEC-05
-   rows 3–4, SPEC-03 rows 5–6, SPEC-13 row 1, SPEC-12 rows 2–5, SPEC-14 row 6,
+   rows 3–4, SPEC-03 rows 5–6 (rows 15–16 are line #45), SPEC-13 row 1,
+   SPEC-12 rows 2–5, SPEC-14 row 6,
    the unscoped asset-deleted consumers (SPEC-14 row 18, SPEC-15 row 1,
    SPEC-16 row 1, SPEC-17 row 1), SPEC-15 row 2, SPEC-16 row 2, SPEC-04
    row 19 then SPEC-01 row 8 (deleting a user purges their media first —
@@ -192,7 +231,8 @@ their spec. Severity order.
 6. **No handler implements the generated `ServerInterface`** (ADR-10 action
    item). Every handler is hand-written plain-chi; the `openapi` CI job proves
    codegen matches the spec, not that handlers do. *Closes when:* one module is
-   retrofitted and the pattern is documented in `backend/MODULES.md`.
+   retrofitted and the pattern is documented in `backend/MODULES.md`. Whether
+   to keep the adoption at all is SPEC-03 §10 Q-C14.
 7. **The frontend does not consume `types.gen.ts`** (ADR-10). One importer
    (`lib/comic-sync.ts`); every other `lib/*.ts` hand-declares its types and
    `api-client.ts` still says "once `make openapi` runs". *Closes when:* the
@@ -285,7 +325,8 @@ their spec. Severity order.
 26. SPEC-11 P1.6 **interactions log**, P1.7 **avatar reap** (`people` is not
     subscribed to `media:asset_deleted`).
 27. SPEC-03 P1.7 **owner takeout** (`ops_exports`, `/me/export`, `ops:takeout`);
-    P1.6 queue console.
+    P1.6 queue console. Scope, shape, the delete interplay and the console's
+    exposure are open owner questions (SPEC-03 §10 Q-C10…Q-C13).
 28. **Movie and story have no frontend.** Movie: no route, view or
     `lib/movie.ts` ([SPEC-16](specs/SPEC-16-movie-vertical.md) P1.1, §11
     row 16). Story: `NovelDetailView.tsx` is a placeholder and
@@ -305,14 +346,17 @@ their spec. Severity order.
     source is one presigned PUT), **audio transcode profile** (audio is served
     as-is). These were the genuine items in the module READMEs' "Open work"
     sections, removed 2026-09-11 (one owner for status).
-30. **`docs/operations/deployment.md` and `r2-setup.md`** do not exist (ADR-03
-    item 6, ADR-04 item 7). The VPS sizing rationale and the R2 CORS JSON live
-    nowhere but the ADRs.
+30. *(moved to P0 — security and correctness on 2026-10-19, Decision
+    2026-10-19 (C1); number kept.)*
 31. **Dragonfly `--maxmemory` cap** (ADR-03 item 1) and the worker `/tmp` cap
     (ADR-04 item 6) — both absent; the OOM guard is `heavyConcurrency = 1`.
+    Whether Dragonfly gets a volume at all is SPEC-03 §10 Q-C10.
 32. **Prove the restore drill against a real nightly dump and record the date**
-    (SPEC-03 P0.4; audit Tier D-16). The script exists; whether it has ever
-    passed is not in the tree.
+    (SPEC-03 P0.4; audit Tier D-16). The script exists, but no passing run is
+    in the tree, and since 2026-08-21 it cannot run: it needs the compose
+    Postgres container that moved to the host (SPEC-03 §11 row 3). It ranks
+    with line #45, whose last step it is; the runbook § 4 has an untested
+    stand-in for `HEAD`. Cadence and automation are SPEC-03 §10 Q-C8.
 33. **`frontend/src/templates/README.md` still describes OIDC auth** and
     `frontend/CLAUDE.md` names React Hook Form as the form-state owner
     (D-32) — RHF is not in `package.json`. D-33 "RSC-first" is inverted in

@@ -30,7 +30,7 @@ spec headers. Per-requirement coverage lives in
 |------|---------|--------|------------|--------|
 | [SPEC-01](SPEC-01-account-identity-admin.md) | Account — local auth, approval gate, RBAC, admin console, per-user timezone (as-built, retroactive) | `account` | [ADR-02](SPEC-01-account-identity-admin.md#adr-02), [ADR-06](SPEC-01-account-identity-admin.md#adr-06); SPEC-05 (`notify:dispatch`; reset is SPEC-05 P0.3) | Built (`0002`–`0004`, `0006`, `0010`, `0031`); P0.13 timezone, P0.16 audit retention and the 2026-10-02 targets (§11 rows 25–31) unbuilt; also holds the `tenant` module's P0.17 (tenant links, [ADR-12](SPEC-01-account-identity-admin.md#adr-12); rows 32–33, unbuilt) and P0.18 (tenant groups, B15; row 34, unbuilt) |
 | [SPEC-02](SPEC-02-shell-layout.md) | Shell layout — data-driven navigation menu + registry-backed dashboard widget placement (as-built, retroactive) | `layout` + frontend shell | account (`accountapi.HasPermission`, RBAC); SPEC-09 P0.4 consumes the rails | Built (`0036_layout_core`) |
-| [SPEC-03](SPEC-03-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-12 data accrues) | P0 built (`0012_ops_backup_runs`); P1.7 takeout unbuilt |
+| [SPEC-03](SPEC-03-platform-ops.md) | Platform ops — backup/restore, queue console, takeout | `ops` | — (land P0 before SPEC-12 data accrues) | P0 partly built (`0012_ops_backup_runs`); the P0.4 drill has never passed (it cannot run on the host-Postgres topology); P0.6 alert, P0.7 encryption and the rest of [ADR-18](SPEC-03-platform-ops.md#adr-18) unbuilt; P1.7 takeout unbuilt |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | Media image pipeline + asset management | `media` | — | Built (`0008_media_image_pipeline`) |
 | [SPEC-05](SPEC-05-notification-module.md) | Notification module (life-stream backbone) | `notify` | SPEC-04 P0.6 (fan-out); P1.2 not a gate | Built (`0009_notify_notifications`, `0010`) |
 | [SPEC-06](SPEC-06-docs-canonicalisation.md) | Docs canonicalisation — 79 stale ADR statements, 95 links, four CI docs checks | none (docs + CI) | [ADR-11](SPEC-06-docs-canonicalisation.md#adr-11) | Executed 2026-09-11 |
@@ -356,6 +356,12 @@ contrary to SPEC-09 §1; any event published before it was never projected
 
 **What remains open** (verify against the matrix before starting):
 
+- SPEC-03 P0 backups as [ADR-18](SPEC-03-platform-ops.md#adr-18) decides them
+  (Decisions 2026-10-19 (C2), (C5), (C6) — SPEC-03 §11 rows 2–3, 12–16) and a
+  first passing restore drill: the SPEC-12 gate was met in order but not in
+  substance. The production deployment itself (compose overlay,
+  `docs/operations/deployment.md`) is [backlog.md](../backlog.md) #30
+  (Decision 2026-10-19 (C1)).
 - SPEC-03 P1.7 owner takeout — unbuilt (no `ExportProvider` in code).
 - SPEC-13 phases after phase 1 (debts) — build on SPEC-12 + SPEC-05.
 - Every built spec still diverges from its shipped code in places: see the
@@ -396,13 +402,16 @@ shared reads and tenant links) rewrote all seven of those in place — none was
 built — and appended three (SPEC-01 rows 32–33, SPEC-18 row 15). B15 (tenant
 groups decide who is family, amending ADR-12) appended one (SPEC-01 row 34)
 and extended SPEC-01 row 32 in place. B16 (what a blank chapter body is)
-appended one (SPEC-17 row 23).
+appended one (SPEC-17 row 23). The 2026-10-19 review of SPEC-03 (Decisions
+2026-10-19 (C1), (C2), (C5), (C6) and mechanical items of the same review)
+appended seven (SPEC-03 rows 12–18) and rewrote SPEC-03 rows 1–3 and 11 in
+place.
 
 | Spec | Gap section | Rows | By severity (row numbers) | Most severe |
 |------|-------------|-----:|---------------------------|-------------|
 | [SPEC-01](SPEC-01-account-identity-admin.md) | [§11](SPEC-01-account-identity-admin.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 34 | Sec 1–5 · AuthZ 6–7 · Data 8 · Integ 9–13 (10 superseded by 26) · Func (timezone) 14 · Contract 15–20 · UX 21–22 · Hyg 23 · P1 24 · Sec 25–28 · Data 29 (extended, 2026-10-02b) · Sec 30 · Data 31 (appended, 2026-10-02) · Sec 32 · AuthZ 33 (appended, 2026-10-02b B14 — the `tenant` module) · Sec 34 (appended, B15 — tenant groups) | re-parenting a role under `superadmin` escalates every holder to `*` (1); refresh rotation is check-then-act, so two concurrent presentations fork the chain (2) |
 | [SPEC-02](SPEC-02-shell-layout.md) | [§11](SPEC-02-shell-layout.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 14 | Sec 1 · Integ 2–4 · UX 5 · Contract 6–8 · Test 9 · UX 10 · Test 11 · Hyg 12 · P1 13 (P1.2–P1.3; P1.1 dropped, 2026-10-02b) · P1 14 | `href` guard bypassed by `/\` and control characters — an open redirect in the menu shown to every user (1) |
-| [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 11 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 | queue console writable by any `queues:read` holder, no CSRF guard (1); the restore drill can only reach the dev MinIO (2) |
+| [SPEC-03](SPEC-03-platform-ops.md) | [§11](SPEC-03-platform-ops.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 18 | Sec 1–4 · Data 5–6 · Func 7–8 · Contract 9 · Hyg 10 · P1 11 · Sec 12–14 · Data 15–16 · Hyg 17–18 (appended, 2026-10-19; rows 1–3 and 11 rewritten) | queue console writable by any `queues:read` holder, no CSRF guard (1); backups sit in the media bucket under a key every container holds, unencrypted and without the roles a restore needs (12–15), and the drill cannot run (3) |
 | [SPEC-04](SPEC-04-media-image-pipeline.md) | [§11](SPEC-04-media-image-pipeline.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 21 | Data 1–3, 19 · Sec/Integ (`/original`) 4–6 · Integ 7–8 · AuthZ 9 · Contract/UX 10–13, 15–18 · P1 14 · AuthZ 20–21 (appended, 2026-10-02b B13; rewritten by B14) | DELETE's 500 rolls back the `deleting` tombstone after objects are purged (1); `/original` streams abandoned or purged uploads, sized from the client's claim (4–6) |
 | [SPEC-05](SPEC-05-notification-module.md) | [§11](SPEC-05-notification-module.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Sec 1–2 · Data 3–4 · Func/UX 5–12 · Contract 13–16, 22 · Hyg 17–20 · P1 21, 23 | plaintext reset token in the Asynq payload (1); reset token consumed check-then-act, the user's other tokens not revoked (2) |
 | [SPEC-07](SPEC-07-journal.md) | [§11](SPEC-07-journal.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 8 | Data 1 · UX 2–5 · Contract 6–8 | `journal:entry_created` published before the request transaction commits (1) |
@@ -417,7 +426,7 @@ appended one (SPEC-17 row 23).
 | [SPEC-16](SPEC-16-movie-vertical.md) | [§11](SPEC-16-movie-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 19 | Data 1–3 · Integ 4–5 · AuthZ 6–7 · Contract 8–13 · Hyg 14–15 · P1 16–18 · AuthZ 19 (appended, 2026-10-02b B13; rewritten by B14) | the `media:asset_deleted` consumer runs with no tenant scope (1); clearing the video leaves the movie published (2) |
 | [SPEC-17](SPEC-17-story-vertical.md) | [§11](SPEC-17-story-vertical.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 23 | Data 1 · Integ 2–6 · AuthZ 7–8 · Contract 9–15, 17 · Hyg 16 · P1 18–20 · Integ 21 (appended, 2026-10-02b) · AuthZ 22 (appended, B13; rewritten by B14) · Integ 23 (appended, B16) | the `media:asset_deleted` consumer runs with no tenant scope (1); a chapter created without `sort_order`, or with a duplicate, is a 500 at COMMIT (2) |
 | [SPEC-18](SPEC-18-social-connections.md) | [§11](SPEC-18-social-connections.md#11-implementation-gaps-vs-shipped-code-as-of-2026-10-01) | 15 | Data 1 · Integ 2–3 · Contract 4–6 · UX 7 · Test/docs 8–9 · Contract 10–11 · Hyg 12 · Func 13 · P1 14 (appended, 2026-10-02b) · AuthZ 15 (appended, B14) | events published before COMMIT leave a phantom bell entry (1); a concurrent duplicate request aborts the transaction → 500 (2) |
-| **Total** | | **286** | | |
+| **Total** | | **293** | | |
 
 **Cross-cutting gaps** — one change closes rows in several specs; land it as
 one change (or one PR per module in a fixed order) and close every row it
@@ -879,22 +888,96 @@ list only routes. Gap rows cite them as "Decision 2026-10-02b (B*n*)".
   the PR. Gap row: SPEC-17 §11 row 23 (new; row 21 lands with or after it);
   TC-STY-114…117.
 
+## Decisions recorded 2026-10-19
+
+An owner review of SPEC-03 produced a decision brief of fourteen points and
+twenty-three mechanical items. The owner has answered five points (1, 2, 3, 5
+and 6); point 4 needs clarification and points 7–14 are pending — all nine are
+open in SPEC-03 §10 as Q-C4 and Q-C7…Q-C14. The detail lives in the places
+named here; this list only routes. Gap rows cite them as "Decision 2026-10-19
+(C*n*)", *n* being the point number.
+
+- **(C1) Production is a rented VPS with R2; the Windows machine is
+  development** — [ADR-03](SPEC-03-platform-ops.md#adr-03) re-affirmed in a
+  note after its narrative; its fact layer states the development topology
+  (host Postgres 18 at `G:\data\postgres\18`, MinIO bind mount, Docker
+  Desktop) and marks production as the target; SPEC-03 Goals keep "off-VPS"
+  as a production property. The production compose overlay and
+  `docs/operations/deployment.md` are written before more real data accrues:
+  [backlog.md](../backlog.md) #30, raised to P0. Gap row: SPEC-03 §11 row 17
+  (the compose header names a production file that does not exist).
+- **(C2) Backups in a separate, locked bucket with worker-only keys** —
+  [ADR-18](SPEC-03-platform-ops.md#adr-18); SPEC-03 P0.2 and P0.4: the
+  `portal-backups` bucket (R2 in production, MinIO in dev), `BACKUP_S3_*` and
+  `BACKUP_DATABASE_URL` on the `worker` container only (per-service variables
+  in compose), object lock for N days (30 proposed, settled with Q-C4), pruning
+  only past the lock; the drill reads the same bucket with a read-only token
+  and no fallback. Gap rows: SPEC-03 §11 row 2 (rewritten), rows 12–13;
+  TC-OPS-009…011, TC-OPS-021a (reworded). → [ADR-18](SPEC-03-platform-ops.md#adr-18)
+- **(C3) Media is not backed up** — [ADR-04](SPEC-04-media-image-pipeline.md#adr-04)
+  amended (decision item 5's weekly cross-bucket copy, never built, dropped);
+  SPEC-03 §3 and P0.3: an original's loss risk is the provider's durability,
+  accepted; no versioning or soft-delete, which would keep a deleted User's
+  objects past [ADR-13](SPEC-01-account-identity-admin.md#adr-13)'s purge; the
+  runbook's versioning advice removed. No gap row (nothing was built);
+  TC-OPS-060 reworded.
+- **(C5) Backups are age-encrypted; `.env` is copied nightly** — ADR-18;
+  SPEC-03 P0.7, promoted from P2: the worker holds only the public recipient
+  (`BACKUP_AGE_RECIPIENT`), the identity lives offline (password manager and
+  paper), the drill decrypts with `AGE_IDENTITY_FILE`; an encrypted `.env`
+  copy under `backups/config/`; the manifest records the encryption and every
+  sha256 covers ciphertext; the runbook gains key custody and keeps old
+  `AUDIT_PII_KEY`s; losing the identity loses every backup (accepted). Gap
+  row: SPEC-03 §11 row 14; TC-OPS-070…072, TC-OPS-027.
+  → [ADR-18](SPEC-03-platform-ops.md#adr-18)
+- **(C6) A set carries the cluster globals and keeps owners** — ADR-18;
+  SPEC-03 P0.2 and P0.4: `pg_dumpall --globals-only` plus `pg_dump -Fc`
+  without `--no-owner --no-privileges` (which `HEAD` passes), globals restored
+  first; the drill restores both into a throwaway `postgres:18` and checks as
+  `portal_app` inside a tenant scope, because a live cluster's role names
+  would collide. Gap rows: SPEC-03 §11 row 3 (rewritten), row 15;
+  TC-OPS-012, TC-OPS-025, TC-OPS-026, and TC-OPS-020 reworded.
+  → [ADR-18](SPEC-03-platform-ops.md#adr-18)
+
+The review's mechanical items that depend on none of the open points were
+applied with these: a failed upload deletes the day's good dump (SPEC-03 §11
+row 16, M1); `cmd/opsenqueue` ignores `ASYNQ_REDIS_URL` (row 18, M18); the
+queue console's refusal is Portal's 403, not asynqmon's read-only 405, and the
+cookies are `SameSite=Strict` (P1.6, row 1, TC-OPS-082 and
+[security.md](../../architecture/security.md); M6, M7); `ops:purge_exports`
+iterates tenants (P1.7, row 11; M12); P0.2's acceptance criteria reworded
+around a `pg_dump` failure (M4); wording in SPEC-03 §1 and P0.1 (M9, M10);
+ADR-03's Dragonfly claim and its action item 4, ADR-01's items 3 and 5 closed
+(M15); [D-10](../feature-inventory.md) marked superseded (M14); the `ops`
+module README (M8); the Documents row above (M22); TEST-CASES-SPEC-03 (M23).
+M11, M13 and M19–M21 wait on Q-C9, Q-C11 and Q-C12.
+
 ## Open owner decisions
 
-None are open. Of the 22 questions the as-built specs (SPEC-01, 02 and 15–18)
-raised, seven were closed by Decision 2026-10-01b, four by Decision 2026-10-02
-and the remaining eleven — with SPEC-01 Q6, which the 2026-10-02 round opened —
-by Decision 2026-10-02b: twelve in all. When a spec raises a new owner
-question, state it with its options in that spec's "Open questions" section
-and route it here; when it is decided, move it to a "Decisions recorded" list
-like the ones above and correct the spec text.
+**Nine are open, all from the 2026-10-19 review of SPEC-03**, stated with
+their options in [SPEC-03 §10](SPEC-03-platform-ops.md#10-open-questions):
+Q-C4 (RPO, RTO, schedule and retention — it also sets ADR-18's lock length;
+needs clarification, with a partial owner reply), Q-C7 (what a restore
+undoes), Q-C8 (drill cadence and automation; an on-demand backup), Q-C9 (the
+failure alert's audience, channel and liveness), Q-C10 (queue console
+exposure; Dragonfly durability), Q-C11 (takeout scope and formats), Q-C12
+(takeout shape and limits), Q-C13 (takeout and user deletion) and Q-C14
+(ADR-10's `ServerInterface` adoption).
+
+Earlier rounds left none open. Of the 22 questions the as-built specs (SPEC-01,
+02 and 15–18) raised, seven were closed by Decision 2026-10-01b, four by
+Decision 2026-10-02 and the remaining eleven — with SPEC-01 Q6, which the
+2026-10-02 round opened — by Decision 2026-10-02b: twelve in all. When a spec
+raises a new owner question, state it with its options in that spec's "Open
+questions" section and route it here; when it is decided, move it to a
+"Decisions recorded" list like the ones above and correct the spec text.
 
 ## Decision records
 
 Architecture decisions are recorded as `ADR-NN`. They were standalone files
 under `docs/adr/` until the 2026-10-01 fold; the `ADR-NN` IDs that code
 comments and documents cite are unchanged, and each record keeps a fixed
-`<a id="adr-nn"></a>` anchor. This section indexes all seventeen; each lives
+`<a id="adr-nn"></a>` anchor. This section indexes all eighteen; each lives
 in the spec that owns its subject, under that spec's `## Decision records`.
 (Until 2026-10-02 this README also held six — ADR-01, 08, 10, 15, 16 and 17;
 they moved verbatim to SPEC-03, SPEC-09, SPEC-01 and SPEC-05, anchors
@@ -919,8 +1002,8 @@ decision gets a new record that supersedes the old one. Numbers are never reused
 |---|---|---|---|---|
 | ADR-01 | v1 scope cut | accepted, amended by ADR-08, executed | What v1 is — and everything it is not | [SPEC-03 § ADR-01](SPEC-03-platform-ops.md#adr-01) |
 | ADR-02 | RBAC model reconciliation | accepted, amended by ADR-06 | Role hierarchy is canonical for v1; policy bundles layer on top later | [SPEC-01 § ADR-02](SPEC-01-account-identity-admin.md#adr-02) |
-| ADR-03 | Single-VPS topology | accepted | One VPS, compose profiles as the envelope; observability/live profiles stay off | [SPEC-03 § ADR-03](SPEC-03-platform-ops.md#adr-03) |
-| ADR-04 | Storage tier & budget | accepted | R2 for prod, MinIO kept for local dev (presigned uploads need an S3 origin) | [SPEC-04 § ADR-04](SPEC-04-media-image-pipeline.md#adr-04) |
+| ADR-03 | Single-VPS topology | accepted, re-affirmed by Decision 2026-10-19 (C1) | One VPS, compose profiles as the envelope; observability/live profiles stay off; production is the rented VPS with R2, the Windows machine the stack runs on is development | [SPEC-03 § ADR-03](SPEC-03-platform-ops.md#adr-03) |
+| ADR-04 | Storage tier & budget | accepted, amended by Decision 2026-10-19 (C3) | R2 for prod, MinIO kept for local dev (presigned uploads need an S3 origin); no media backup — the weekly cross-bucket copy is dropped | [SPEC-04 § ADR-04](SPEC-04-media-image-pipeline.md#adr-04) |
 | ADR-05 | Phase 0 wiring order | accepted, executed | The critical path to a running demo — closed; kept for the shape of the work | [SPEC-03 § ADR-05](SPEC-03-platform-ops.md#adr-05) |
 | ADR-06 | Local auth model | accepted, executed | Passwords in Portal (Argon2id + JWT); Authentik/OIDC removed | [SPEC-01 § ADR-06](SPEC-01-account-identity-admin.md#adr-06) |
 | ADR-07 | Multi-tenancy / RLS model | accepted, executed | Tenant column + RLS policies; enforced only when the app connects as `portal_app` | [SPEC-01 § ADR-07](SPEC-01-account-identity-admin.md#adr-07) |
@@ -934,11 +1017,12 @@ decision gets a new record that supersedes the old one. Numbers are never reused
 | ADR-15 | Per-user timezone | accepted (Decisions 2026-09-30, 2026-10-01 (f), 2026-10-02 (A8)), not built | Day and month boundaries in the User's own zone, NULL = not set, `Asia/Ho_Chi_Minh` fallback; sweeps evaluate each owner's local date | [SPEC-01 § ADR-15](SPEC-01-account-identity-admin.md#adr-15) |
 | ADR-16 | List API contract | accepted (Decisions 2026-09-30, 2026-10-01 (e), (g), 2026-10-02 (A5)), partly built | Every collection is `{items[, next_cursor]}`, keyset cursors, a lenient clamped `limit`; admin users keep offset as the one exception | [SPEC-03 § ADR-16](SPEC-03-platform-ops.md#adr-16) |
 | ADR-17 | Every module emits bus events; notify tells the Superadmins | accepted (Decisions 2026-10-01b (D3), 2026-10-02 (A11)), not built | No exemption from ADR-08's rule: `account` and `layout` emit, and the Superadmins (effective `*`) get each admin change in the bell | [SPEC-05 § ADR-17](SPEC-05-notification-module.md#adr-17) |
+| ADR-18 | Backups: a separate locked bucket, age-encrypted, cluster globals included | accepted (Decisions 2026-10-19 (C2), (C5), (C6)), not built | Backups go to their own bucket under a worker-only key, locked N days; every object is age-encrypted to an offline identity, with a nightly `.env` copy; each set is the cluster globals plus an owner-preserving dump, drilled in a throwaway Postgres | [SPEC-03 § ADR-18](SPEC-03-platform-ops.md#adr-18) |
 
 **When to write one.** A choice that (a) is expensive to reverse, (b) crosses
 module boundaries, or (c) contradicts a previous record or the scope cut gets a
 record, always filed inside a spec — under `## Decision records` in the one
-that owns its subject — with the next unused number; this README holds only
+that owns its subject — with the next unused number (ADR-19 next); this README holds only
 the index above. Day-to-day feature
 decisions belong in [feature-inventory.md](../feature-inventory.md) as `D-N`
 entries; specs cite both kinds by ID.
@@ -988,3 +1072,13 @@ entries; specs cite both kinds by ID.
   still held (ADR-01, 08, 10, 15, 16, 17) moved verbatim into SPEC-03, SPEC-09,
   SPEC-01 and SPEC-05, so every record now lives in a spec and this README
   keeps only the index. No owner question is open.
+- **2026-10-19** — an owner review of SPEC-03 (fourteen points, twenty-three
+  mechanical items). Five decisions ("Decisions recorded 2026-10-19"): C1
+  re-affirmed [ADR-03](SPEC-03-platform-ops.md#adr-03) (production is the VPS
+  with R2; the Windows machine is development); C3 amended
+  [ADR-04](SPEC-04-media-image-pipeline.md#adr-04) (no media backup); C2, C5
+  and C6 became [ADR-18](SPEC-03-platform-ops.md#adr-18) (backups in a
+  separate locked bucket, age-encrypted, cluster globals included; SPEC-03 P0.7
+  promoted from P2). SPEC-03 rev 3 states them, rewrites §11 rows 1–3 and 11
+  and appends rows 12–18 (gap total 286 → 293). Nine questions stay open in
+  SPEC-03 §10 (Q-C4, Q-C7…Q-C14).

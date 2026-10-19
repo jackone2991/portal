@@ -586,7 +586,7 @@ Source: [backend/internal/platform/](../../backend/internal/platform/).
 - **Lint** — `golangci-lint` (incl. depguard enforcing module-boundary rules) + `pnpm lint`. Optional pre-commit hook via `lefthook` [D-9].
 - **CI/CD** — done: `.github/workflows/ci.yml` — `backend` (sqlc generate → go build/vet/test `-race`; sqlc output is not committed, so there is no sqlc drift gate), `lint` (depguard), `openapi` (parse + regenerate-and-diff, ADR-10), `frontend` (typecheck + build), `link-check` (ADR-11). Planned per [D-9]: `release.yml`, migration-roundtrip, security, and openapi handler-drift jobs.
 - **Observability** — opt-in `--profile observability` in `docker-compose.yml`: Loki + Prometheus + Tempo + Grafana + GlitchTip *(planned per [D-8]; deferred for v1 by ADR-01 — not in `docker-compose.yml` yet)*.
-- **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; quarterly restore drill. Targets + procedures in `docs/operations/backups.md` [D-10].
+- **Backups** — `pgbackrest` (Postgres), MinIO → R2 replication, Dragonfly `BGSAVE`; quarterly restore drill [D-10]. — **superseded by [SPEC-03](specs/SPEC-03-platform-ops.md)** (the shipped `ops` module, reshaped 2026-10-19 by [ADR-18](specs/SPEC-03-platform-ops.md#adr-18)): nightly cluster globals + `pg_dump`, age-encrypted, in a separate locked bucket; no media backup (C3). Procedures in [backup-restore.md](../operations/backup-restore.md) (planned here as `docs/operations/backups.md`, which never existed).
 - **Secrets** — `.env` in dev, Compose/K8s secrets (or optional SOPS) in prod; rotation policy per secret class in `docs/operations/secrets.md` [D-11].
 - **GitNexus** — code-intelligence index (see `<!-- gitnexus:start -->` section in `CLAUDE.md`); run impact analysis before symbol edits.
 
@@ -812,7 +812,7 @@ Decisions deferred. Each affects at least one upcoming phase; many should land b
 
 8. ~~**Observability stack.**~~ → **Resolved [D-8]** — Grafana stack (Loki + Prometheus + Tempo + Grafana) + GlitchTip behind opt-in `--profile observability` compose flag.
 9. ~~**CI/CD.**~~ → **Resolved [D-9]** — GitHub Actions; drift + roundtrip checks; coverage targets per module.
-10. ~~**Backups.**~~ → **Resolved [D-10]** — `pgbackrest` + MinIO→R2 replication + Dragonfly `BGSAVE`; quarterly restore drill; RPO/RTO matrix per surface.
+10. ~~**Backups.**~~ → **Resolved [D-10]** — `pgbackrest` + MinIO→R2 replication + Dragonfly `BGSAVE`; quarterly restore drill; RPO/RTO matrix per surface. — **superseded by [SPEC-03](specs/SPEC-03-platform-ops.md)** and [ADR-18](specs/SPEC-03-platform-ops.md#adr-18) (see the D-10 note).
 11. ~~**Secret management in production.**~~ → **Resolved [D-11]** — tiered: `.env` (dev), Compose/K8s secrets (prod), SOPS optional, Vault deferred. Rotation policy per secret class.
 12. ~~**Down-migration policy.**~~ → **Resolved [D-12]** — production is forward-only; downs are dev + CI roundtrip only; revert via new forward migration.
 13. ~~**Transcode capacity planning.**~~ → **Resolved [D-13]** — software x264 default, NVENC/VAAPI opt-in; per-user + per-tenant quotas; backpressure on queue depth.
@@ -998,6 +998,8 @@ Lands in Phase 0.
 
 ### D-10 — Backups: pgbackrest + MinIO→R2 + Dragonfly BGSAVE; restore drills *(resolves §16.B-10)*
 
+> **Superseded by [SPEC-03](specs/SPEC-03-platform-ops.md)** — written 2026-07-10 and shipped as the `ops` module (`0012`), then reshaped on 2026-10-19 by [ADR-18](specs/SPEC-03-platform-ops.md#adr-18) (Decisions 2026-10-19 (C2), (C5), (C6)). What holds instead of the text below: a nightly logical backup — `pg_dumpall --globals-only` plus an owner-preserving `pg_dump -Fc`, both age-encrypted, with an encrypted `.env` copy — in a separate `portal-backups` bucket locked for N days, restored by a drill into a throwaway `postgres:18`; **no** `pgbackrest`/WAL streaming, **no** media replication or copy (Decision 2026-10-19 (C3), [ADR-04](specs/SPEC-04-media-image-pipeline.md#adr-04) amended), **no** Dragonfly snapshot. The RPO/RTO table below is not a target: RPO, RTO, schedule and retention are open in SPEC-03 §10 Q-C4. The procedures are [backup-restore.md](../operations/backup-restore.md). The body is kept as the 2026-05 decision.
+
 Untested backups don't exist. Different surfaces need different recovery targets.
 
 **RPO / RTO targets** (proposed; stakeholder confirmation outstanding):
@@ -1017,7 +1019,7 @@ Untested backups don't exist. Different surfaces need different recovery targets
 - **Encryption at rest** in the backup bucket; per-tenant key if available.
 - **Discipline** — quarterly restore drill (pick a random snapshot, restore to a sandbox, verify a recent transaction appears). Prometheus metric `backup_last_success_timestamp` → page on staleness.
 
-New doc: `docs/operations/backups.md`. Pre-prod-launch deliverable.
+New doc: planned as `docs/operations/backups.md`, which never existed — written instead as [backup-restore.md](../operations/backup-restore.md) (SPEC-03). Pre-prod-launch deliverable.
 
 ### D-11 — Secrets: tiered (.env dev, Compose/K8s secrets prod, SOPS optional, Vault deferred) *(resolves §16.B-11)*
 
