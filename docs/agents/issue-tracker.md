@@ -17,7 +17,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 ## How this relates to `docs/product/backlog.md`
 
-The backlog is the triaged *list* of open work ([ADR-11](../adr/11-docs-canonicalisation.md):
+The backlog is the triaged *list* of open work ([ADR-11](../product/specs/SPEC-06-docs-canonicalisation.md#adr-11):
 one owner per fact); GitHub Issues are the *tickets*. A backlog line becomes issues when
 it is built — `/to-spec` → `/to-tickets` create them — and the line then links to them
 (`#NN`). Closing the last issue closes the line (moved to § Closed with the issue numbers

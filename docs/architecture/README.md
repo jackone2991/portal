@@ -2,7 +2,7 @@
 
 **Status:** current · **Last verified:** 2026-07-07
 
-How Portal is designed. Decisions live in [../adr/](../adr/README.md); this section
+How Portal is designed. Decisions live in [the specs' Decision records](../product/specs/README.md#decision-records); this section
 holds the design documents themselves.
 
 | Document | Role |

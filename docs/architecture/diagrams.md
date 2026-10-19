@@ -11,8 +11,8 @@ diffable, version-controlled).
 | Style | Tier | Meaning |
 |---|---|---|
 | green | **SHIPPED** | running today, verifiable on the stack |
-| blue | **NEXT** | committed + specified (SPEC-01…03, notification — ADR-08 order) |
-| grey, dashed | **DEFERRED** | designed, explicitly out of scope (ADR-01; re-entry conditions in [briefs/04](../product/briefs/04-deferred.md)) |
+| blue | **NEXT** | committed + specified (SPEC-04, 14, 12, notification — ADR-08 order) |
+| grey, dashed | **DEFERRED** | designed, explicitly out of scope (ADR-01; re-entry conditions in [backlog.md § Deferred](../product/backlog.md)) |
 
 Eight views:
 
@@ -21,7 +21,7 @@ Eight views:
 3. [Module boundary rules](#3-module-boundary-rules) — what may import what
 4. [Authenticated request flow](#4-authenticated-request-flow) — the middleware chain
 5. [Local password login](#5-local-password-login-sequence) — `/auth/login` (ADR-06)
-6. [Media pipeline](#6-media-pipeline-video--image) — video + image (SPEC-01)
+6. [Media pipeline](#6-media-pipeline-video--image) — video + image (SPEC-04)
 7. [Life-stream event flow](#7-life-stream-event-flow) — the ADR-08 integration seam
 8. [Roadmap](#8-roadmap) — ADR-08 build order
 
@@ -33,7 +33,7 @@ What actually runs (SHIPPED) plus the committed additions (NEXT). The long-horiz
 extras (CDN edge tier, LiveKit, mediamtx, observability stack, Stripe, sysjobs)
 are DEFERRED and intentionally **not drawn** — see
 [deferred/multi-tenant-backend.md](deferred/multi-tenant-backend.md) and
-[briefs/04](../product/briefs/04-deferred.md) for those designs.
+[backlog.md § Deferred](../product/backlog.md) for those designs.
 
 ```mermaid
 graph TB
@@ -113,9 +113,9 @@ graph TB
 
     subgraph DOMAIN[Domain modules — internal/modules/]
         account[account — SHIPPED<br/>auth + RBAC + audit]:::shipped
-        media[media — SHIPPED<br/>assets + transcode<br/>NEXT: image kind + variants<br/>+ delete SPEC-01]:::shipped
-        comic[comic — NEXT<br/>chapters + pages + reader<br/>SPEC-02]:::next
-        bank[bank — NEXT<br/>finance LEDGER scope<br/>ADR-08 · SPEC-03]:::next
+        media[media — SHIPPED<br/>assets + transcode<br/>NEXT: image kind + variants<br/>+ delete SPEC-04]:::shipped
+        comic[comic — NEXT<br/>chapters + pages + reader<br/>SPEC-14]:::next
+        bank[bank — NEXT<br/>finance LEDGER scope<br/>ADR-08 · SPEC-12]:::next
         notification[notification — NEXT<br/>life stream consumer<br/>owns notify:*]:::next
         movie[movie — skeleton]:::skel
         music[music — skeleton]:::skel
@@ -307,7 +307,7 @@ reuse detection (chain revocation + `auth.refresh.reuse_detected` audit) happen 
 ## 6. Media pipeline (video + image)
 
 The SHIPPED video path plus the NEXT image branch and lifecycle ops from
-[SPEC-01](../product/specs/SPEC-01-media-image-pipeline.md). One dispatch seam:
+[SPEC-04](../product/specs/SPEC-04-media-image-pipeline.md). One dispatch seam:
 kind decides the worker task.
 
 ```mermaid
@@ -333,9 +333,9 @@ sequenceDiagram
         Q->>W: deliver
         W->>F: ffprobe → ffmpeg h264/aac single-rendition HLS
         W->>S3: upload playlist + segments
-        W->>F: NEXT SPEC-01: extract poster frame<br/>(min(10% duration, 10s), 640w WebP)
+        W->>F: NEXT SPEC-04: extract poster frame<br/>(min(10% duration, 10s), 640w WebP)
         W->>S3: NEXT: poster variant
-    else kind = image — NEXT SPEC-01
+    else kind = image — NEXT SPEC-04
         A->>Q: enqueue media:process_image
         Q->>W: deliver
         W->>F: probe (reject animated / >12k px)<br/>auto-orient → strip metadata
@@ -349,7 +349,7 @@ sequenceDiagram
     Note over U,S3: Playback/serve — SHIPPED: HLS via API proxy;<br/>NEXT: images served from variant URLs (reader uses medium, grid uses thumb)
 
     rect rgb(240, 248, 255)
-        Note over U,S3: NEXT SPEC-01 — delete lifecycle
+        Note over U,S3: NEXT SPEC-04 — delete lifecycle
         U->>A: DELETE /api/v1/assets/{id} (media:asset:delete:own)
         A->>A: status=deleting (hidden from listings)
         A->>S3: purge all keys (original, HLS, variants)
@@ -382,7 +382,7 @@ graph LR
     classDef deferred fill:#e0e0e0,stroke:#9e9e9e,color:#555,stroke-dasharray:4
 
     media[media<br/>asset_ready]:::next
-    comic[comic<br/>chapter_published]:::next
+    comic[comic<br/>published → bell only]:::next
     bank[bank<br/>transaction_created/updated/deleted<br/>budget_exceeded P1]:::next
 
     BUS{{Asynq bus<br/>naming: module:event<br/>payload = IDs + minimum context}}:::next
@@ -421,9 +421,9 @@ graph LR
 
     V1[v1 demo loop — DONE<br/>auth → upload → HLS → playback]:::done
 
-    S1[SPEC-01<br/>media image pipeline<br/>≈4–5 d]:::next
-    S2[SPEC-02<br/>comic vertical<br/>≈4–5 d]:::next
-    S3[SPEC-03<br/>finance ledger<br/>≈7 d]:::next
+    S1[SPEC-04<br/>media image pipeline<br/>≈4–5 d]:::next
+    S2[SPEC-14<br/>comic vertical<br/>≈4–5 d]:::next
+    S3[SPEC-12<br/>finance ledger<br/>≈7 d]:::next
     N[notification module<br/>life stream backbone]:::next
 
     TIME[time facet<br/>calendar · tasks · reminders]:::later
@@ -449,13 +449,13 @@ graph LR
 
 **Gate rules (new):**
 
-- SPEC-03 is **not** gated on MFA (ledger holds no credentials — ADR-08); TOTP
+- SPEC-12 is **not** gated on MFA (ledger holds no credentials — ADR-08); TOTP
   re-enters only with credential-holding bank features.
 - The notification module waits for at least two event producers to exist
-  (SPEC-02 + SPEC-03) so the life stream launches non-empty.
-- movie/music/story open only after SPEC-02 proves the vertical pattern.
+  (SPEC-14 + SPEC-12) so the life stream launches non-empty.
+- movie/music/story open only after SPEC-14 proves the vertical pattern.
 - Social/search re-enter with real second users; tenancy with household users —
-  re-entry conditions live in [briefs/04](../product/briefs/04-deferred.md).
+  re-entry conditions live in [backlog.md § Deferred](../product/backlog.md).
 
 ---
 

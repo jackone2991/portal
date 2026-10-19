@@ -1,7 +1,7 @@
 # Portal — Architecture Overview
 
 **Status:** current · **Last verified:** 2026-07-07
-**Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [../adr/](../adr/README.md)
+**Companions:** [diagrams.md](diagrams.md) (visual views) · [security.md](security.md) (authn/authz spec) · [frontend.md](frontend.md) · decisions in [Decision records](../product/specs/README.md#decision-records)
 **Live implementation status:** `MILESTONE_CHECKS.md` (deleted in `f11cf3f`) — trust it over any prose here.
 
 This is the narrative architecture of record. It describes the system in three
@@ -9,11 +9,11 @@ tiers and keeps them separate on purpose:
 
 - **SHIPPED** — running today, verifiable on the stack.
 - **NEXT** — committed and specified ([product/specs/](../product/specs/README.md), ADR-08 order).
-- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../adr/01-v1-scope-cut.md), re-entry conditions in [briefs/04](../product/briefs/04-deferred.md)).
+- **DEFERRED** — designed but explicitly out of scope ([ADR-01](../product/specs/SPEC-03-platform-ops.md#adr-01), re-entry conditions in [backlog.md § Deferred](../product/backlog.md)).
 
 ## 1. What Portal is, architecturally
 
-A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../adr/08-life-os-pivot.md)):
+A **self-hosted life OS** ([vision](../product/vision.md), [ADR-08](../product/specs/SPEC-09-life-stream-home.md#adr-08)):
 one identity, many life facets (money, time, learning, social, entertainment),
 one VPS. The architecture that serves this is:
 
@@ -34,12 +34,14 @@ always the same: the envelope.
    across another module's tables. This is the single load-bearing rule
    ([MODULES.md](../../backend/MODULES.md) is authoritative).
 2. **The event bus is the product, not plumbing.** Under the life-OS positioning,
-   domain events (`bank:transaction_created`, `comic:chapter_published`,
-   `media:asset_ready`) are the raw material of the user's **life stream**. Every
+   domain events (`bank:transaction_created`, `media:playback_completed`,
+   `people:birthday_upcoming`) are the raw material of the user's **life
+   stream**; library events (`media:asset_ready`, `comic:published`) go to the
+   bell instead. Every
    new domain module emits at least one event from its first release (ADR-08).
    Registry: [reference/events.md](../reference/events.md).
 3. **One identity, one authorization engine.** Local password auth (Argon2id,
-   short-lived JWT + rotating refresh with reuse detection — [ADR-06](../adr/06-local-auth-model.md));
+   short-lived JWT + rotating refresh with reuse detection — [ADR-06](../product/specs/SPEC-01-account-identity-admin.md#adr-06));
    role-hierarchy RBAC with grammar `<resource>:<action>[:<scope>]`, enforced only
    via `RequirePermission` ([ADR-02], [security.md](security.md)). No ad-hoc checks.
 4. **Contracts and generated code are sacred.** Schema changes via numbered
@@ -82,13 +84,13 @@ transcode failure is design-intent only, rate-limiter built but not mounted on
 
 ### NEXT (committed, specified — ADR-08 order)
 
-1. **[SPEC-01](../product/specs/SPEC-01-media-image-pipeline.md)** — image asset
+1. **[SPEC-04](../product/specs/SPEC-04-media-image-pipeline.md)** — image asset
    kind (`media:process_image`, WebP variants, EXIF strip), real video posters,
    `DELETE /assets` + purge janitor, media library page, `media:asset_ready` emit.
-2. **[SPEC-02](../product/specs/SPEC-02-comic-vertical.md)** — comic vertical
+2. **[SPEC-14](../product/specs/SPEC-14-comic-vertical.md)** — comic vertical
    end-to-end; the reference implementation of the *media → domain vertical*
    pattern that movie/music/story will copy.
-3. **[SPEC-03](../product/specs/SPEC-03-finance-ledger.md)** — finance ledger in
+3. **[SPEC-12](../product/specs/SPEC-12-finance-ledger.md)** — finance ledger in
    module `bank` (ledger scope per ADR-08: manual multi-account bookkeeping;
    derived balances; paired-leg transfers; import-ready schema). **Not** gated on
    MFA — it holds no bank credentials; TOTP gates *real bank integration* only.
@@ -102,7 +104,7 @@ policy-bundle/file-gated authorization ([deferred/access-policies.md](deferred/a
 TOTP/step-up (unlock condition: credential-holding or money-moving features);
 social baseline at scale, search, creator economy, marketplace, safety workers,
 observability stack, LiveKit/mediamtx, CDN edge tier. Each with an explicit
-re-entry condition in [briefs/04-deferred.md](../product/briefs/04-deferred.md).
+re-entry condition in [backlog.md § Deferred](../product/backlog.md).
 
 ## 4. Cross-cutting views
 
@@ -127,8 +129,8 @@ Inventory: [reference/events.md](../reference/events.md).
 **Frontend.** RSC-first shells, client islands (D-33); TanStack owns server state,
 Zustand UI state (D-32); versioned template layer `src/templates/v{N}` (v1 =
 Olympus light). Budgets (LCP < 2.5 s, initial JS < 200 KB) in
-[frontend.md](frontend.md) §8 bind all new pages, including SPEC-02's reader and
-SPEC-03's `(bank)` group.
+[frontend.md](frontend.md) §8 bind all new pages, including SPEC-14's reader and
+SPEC-12's `(bank)` group.
 
 **Error contract.** RFC 7807 `Problem` on every non-2xx; `type` URIs double as
 i18n keys (D-7).
@@ -143,20 +145,20 @@ i18n keys (D-7).
   discipline.
 - **OpenAPI drift.** The auth-path drift is fixed — the spec now carries
   `/auth/register` and no `/auth/callback` (reconciled per
-  [ADR-10](../adr/10-openapi-contract-direction.md)), and ci.yml adds a codegen
+  [ADR-10](../product/specs/SPEC-03-platform-ops.md#adr-10)), and ci.yml adds a codegen
   drift gate. Residual risk: handlers are still **hand-written**, so one can
-  diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-02
+  diverge from the spec semantically (e.g. comic publish is `POST` while SPEC-14
   documents `PATCH {status}`); the codegen-vs-handwritten decision (backlog §9)
   is still open.
 - **Public-ish HLS + finance data on one box.** Acceptable at n=1; both flip with
   the first real second user (playback ACL; revisit admin wildcard reach into
-  `bank:*` — flagged in SPEC-03 and ADR-08).
+  `bank:*` — flagged in SPEC-12 and ADR-08).
 - **Single-VPS blast radius.** Backups/retention are P3 backlog; the ledger raises
-  the stakes — schedule Postgres dumps before SPEC-03 dogfooding ends.
+  the stakes — schedule Postgres dumps before SPEC-12 dogfooding ends.
 
 ## 6. How to change this architecture
 
-Expensive-to-reverse or cross-module choices → new ADR ([adr/README.md](../adr/README.md));
+Expensive-to-reverse or cross-module choices → new decision record ([specs/README § Decision records](../product/specs/README.md#decision-records));
 feature-level decisions → `D-N` entries in [feature-inventory](../product/feature-inventory.md);
 diagrams updated **in the same PR** as the change they depict; this overview's
 tier lists updated when a spec ships (move item SHIPPED-ward, never edit history).

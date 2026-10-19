@@ -1,6 +1,6 @@
 # Portal — Vision
 
-**Status:** current (ratification pending [ADR-08](../adr/08-life-os-pivot.md)) · **Last verified:** 2026-07-07
+**Status:** current ([ADR-08](specs/SPEC-09-life-stream-home.md#adr-08), accepted) · **Last verified:** 2026-10-01
 
 ## One sentence
 
@@ -18,8 +18,10 @@ login, on one VPS you control.
 
 Two architectural assets make "one platform" beat "one best app per domain":
 
-1. **The event bus.** Modules couple only through Asynq events
-   (`<module>:<event>`). Every life domain emits events, so the feed surface
+1. **The event bus.** Modules couple asynchronously only through Asynq events
+   (`<module>:<event>`); synchronous reads go through each module's `api/`
+   package ([backend/MODULES.md](../../backend/MODULES.md)). Every life domain
+   emits events, so the feed surface
    becomes the user's **life stream** — "spent 500k today", "mom's birthday in 3
    days", "finished chapter 3" — a timeline of a life, not of a network.
 2. **One identity + RBAC** across every facet, instead of five accounts in five
@@ -29,24 +31,26 @@ Two architectural assets make "one platform" beat "one best app per domain":
 
 First user: the owner-operator (n=1 is a feature, not a bug — a life OS is useful
 from one user). Second ring, later: the household — the tenant module's
-`kind: household` and the deferred multi-tenancy design (ADR-07) exist for exactly
-this, when real second users appear.
+`kind: household` and the tenancy/RLS model
+([ADR-07](specs/SPEC-01-account-identity-admin.md#adr-07), executed) exist for
+exactly this, when real second users appear.
 
 ## The facets and where they stand
 
 | Facet | Modules | State |
 |---|---|---|
-| Entertainment | `media` (real), `comic`/`movie`/`music`/`story` | media works; comic is the first vertical (SPEC-02) |
-| Money | `bank` (ledger scope) | SPEC-03; real-bank integration deferred behind TOTP |
-| Time | calendar/events/reminders | UI widgets exist; next facet after money (briefs/04) |
-| Social | posts, friends, messaging | UI shell built; deliberately demoted until n>1 |
-| Learning | stories, library | skeleton; unshaped |
+| Entertainment | `media`, `comic`, `music`, `movie`, `story` | comic was the first vertical ([SPEC-14](specs/SPEC-14-comic-vertical.md)); music has its full UI ([SPEC-15](specs/SPEC-15-music-vertical.md)); movie and story have a backend but no reader yet ([SPEC-16](specs/SPEC-16-movie-vertical.md), [SPEC-17](specs/SPEC-17-story-vertical.md)) |
+| Money | `bank` (ledger scope) | [SPEC-12](specs/SPEC-12-finance-ledger.md), expanding through [SPEC-13](specs/SPEC-13-ledger-expansion.md); real-bank integration deferred behind TOTP |
+| Time | calendar/events/reminders | calendar widget exists; birthdays shipped as contact data ([SPEC-11](specs/SPEC-11-people-registry.md)); next facet after money (backlog § Deferred) |
+| Social | connections between accounts; posts, messaging | only the first slice exists — mutual connections ([SPEC-18](specs/SPEC-18-social-connections.md)), built once approval-gated registration made the instance n>1; everything else stays deferred |
+| Learning | stories, library | story is the entertainment vertical above (SPEC-17); otherwise unshaped |
 
 ## Operating constraints (inherited from ADR-01)
 
-1 developer · 2-week build bursts · ≤ $100/month · a single VPS. Every scope
+1 developer · 2-week build bursts · ≤ $100/month · a single VPS
+([ADR-01](specs/SPEC-03-platform-ops.md#adr-01)). Every scope
 decision answers to this envelope. Deferred-with-conditions list:
-[briefs/04-deferred.md](briefs/04-deferred.md).
+[backlog.md § Deferred](backlog.md).
 
 ## Success, honestly measured at n=1
 
